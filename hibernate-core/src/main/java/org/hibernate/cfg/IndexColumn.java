@@ -12,6 +12,8 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Join;
 
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+
 /**
  * index column
  *
@@ -134,8 +136,8 @@ public class IndexColumn extends AnnotatedColumn {
 			MetadataBuildingContext buildingContext) {
 		final IndexColumn column;
 		if ( ann != null ) {
-			final String sqlType = BinderHelper.isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			final String name = BinderHelper.isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
+			final String sqlType = isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
+			final String name = isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
 			//TODO move it to a getter based system and remove the constructor
 // The JPA OrderColumn annotation defines no table element...
 //			column = new IndexColumn(
@@ -198,8 +200,8 @@ public class IndexColumn extends AnnotatedColumn {
 			MetadataBuildingContext buildingContext) {
 		final IndexColumn column;
 		if ( ann != null ) {
-			final String sqlType = BinderHelper.isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			final String name = BinderHelper.isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() : ann.name();
+			final String sqlType = isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
+			final String name = isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() : ann.name();
 			//TODO move it to a getter based system and remove the constructor
 			column = new IndexColumn(
 					false,

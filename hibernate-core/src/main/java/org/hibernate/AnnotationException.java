@@ -7,9 +7,7 @@
 package org.hibernate;
 
 /**
- * Annotation related exception.
- *
- * The EJB3 EG will probably set a generic exception.  I'll then use this one.
+ * An exception that occurs while reading mapping annotations.
  *
  * @author Emmanuel Bernard
  */

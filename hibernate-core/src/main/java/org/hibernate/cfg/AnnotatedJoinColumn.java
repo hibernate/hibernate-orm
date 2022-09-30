@@ -29,6 +29,7 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -39,6 +40,10 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+
+import static org.hibernate.cfg.BinderHelper.findColumnOwner;
+import static org.hibernate.cfg.BinderHelper.getRelativePath;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 
 /**
  * Wrap state of an EJB3 @JoinColumn annotation
@@ -123,7 +128,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
 		setBuildingContext( buildingContext );
-		setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+		setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		bind();
 		this.referencedColumn = referencedColumn;
 		this.mappedBy = mappedBy;
@@ -175,7 +180,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		formulaColumn.setBuildingContext( buildingContext );
 		formulaColumn.setPropertyHolder( propertyHolder );
 		formulaColumn.setJoins( joins );
-		formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+		formulaColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		formulaColumn.bind();
 		return formulaColumn;
 	}
@@ -254,7 +259,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			if ( !BinderHelper.isEmptyOrNullAnnotationValue( mappedBy ) ) {
 				throw new AnnotationException(
 						"Illegal attempt to define a @JoinColumn with a mappedBy association: "
-								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
+								+ getRelativePath( propertyHolder, propertyName )
 				);
 			}
 			AnnotatedJoinColumn joinColumn = new AnnotatedJoinColumn();
@@ -267,7 +272,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
-			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+			joinColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 			joinColumn.setImplicit( false );
 			joinColumn.bind();
 			return joinColumn;
@@ -277,9 +282,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			joinColumn.setMappedBy( mappedBy );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
-			joinColumn.setPropertyName(
-					BinderHelper.getRelativePath( propertyHolder, propertyName )
-			);
+			joinColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 			// property name + suffix is an "explicit" column name
 			if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
@@ -302,10 +305,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else {
 			setImplicit( false );
-			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.columnDefinition() ) ) {
+			if ( !isEmptyAnnotationValue( annJoin.columnDefinition() ) ) {
 				setSqlType( getBuildingContext().getObjectNameNormalizer().applyGlobalQuoting( annJoin.columnDefinition() ) );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.name() ) ) {
+			if ( !isEmptyAnnotationValue( annJoin.name() ) ) {
 				setLogicalColumnName( annJoin.name() );
 			}
 			setNullable( annJoin.nullable() );
@@ -314,7 +317,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setUpdatable( annJoin.updatable() );
 			setReferencedColumn( annJoin.referencedColumnName() );
 
-			if ( BinderHelper.isEmptyAnnotationValue( annJoin.table() ) ) {
+			if ( isEmptyAnnotationValue( annJoin.table() ) ) {
 				setExplicitTableName( "" );
 			}
 			else {
@@ -342,13 +345,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext context) {
 
-		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-
-		Column col = identifier.getColumns().get(0);
-		String defaultName = context.getMetadataCollector().getLogicalColumnName(
+		final String defaultName = context.getMetadataCollector().getLogicalColumnName(
 				identifier.getTable(),
-				col.getQuotedName()
+				identifier.getColumns().get(0).getQuotedName()
 		);
+		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 
 		if ( pkJoinAnn != null || joinAnn != null ) {
 			String colName;
@@ -364,25 +365,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				columnDefinition = joinAnn.columnDefinition();
 				referencedColumnName = joinAnn.referencedColumnName();
 			}
-
-			final String sqlType;
-			if ( columnDefinition.isEmpty() ) {
-				sqlType = null;
-			}
-			else {
-				sqlType = normalizer.toDatabaseIdentifierText( columnDefinition );
-			}
-
-			final String name;
-			if ( colName != null && colName.isEmpty() ) {
-				name = normalizer.normalizeIdentifierQuotingAsString( defaultName );
-			}
-			else {
-				name = context.getObjectNameNormalizer().normalizeIdentifierQuotingAsString( colName );
-			}
 			return new AnnotatedJoinColumn(
-					sqlType,
-					name,
+					columnDefinition.isEmpty()
+							? null
+							: normalizer.toDatabaseIdentifierText( columnDefinition ),
+					colName != null && colName.isEmpty()
+							? normalizer.normalizeIdentifierQuotingAsString( defaultName )
+							: normalizer.normalizeIdentifierQuotingAsString( colName ),
 					null,
 					false,
 					false,
@@ -399,10 +388,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			);
 		}
 		else {
-			defaultName = context.getObjectNameNormalizer().normalizeIdentifierQuotingAsString( defaultName );
 			return new AnnotatedJoinColumn(
 					null,
-					defaultName,
+					normalizer.normalizeIdentifierQuotingAsString( defaultName ),
 					null,
 					false,
 					false,
@@ -495,36 +483,26 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	private String buildDefaultColumnName(final PersistentClass referencedEntity, final String logicalReferencedColumn) {
-		final Database database = getBuildingContext().getMetadataCollector().getDatabase();
+		final InFlightMetadataCollector metadataCollector = getBuildingContext().getMetadataCollector();
+		final Database database = metadataCollector.getDatabase();
 		final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
 		final PhysicalNamingStrategy physicalNamingStrategy = getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy();
 
-		Identifier columnIdentifier;
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
 		boolean ownerSide = getPropertyName() != null;
-
 		boolean isRefColumnQuoted = StringHelper.isQuoted( logicalReferencedColumn );
 
+		Identifier columnIdentifier;
 		if ( mappedBySide ) {
 			// NOTE : While it is completely misleading here to allow for the combination
 			//		of a "JPA ElementCollection" to be mappedBy, the code that uses this
 			// 		class relies on this behavior for handling the inverse side of
 			// 		many-to-many mappings
-
-			final AttributePath attributePath = AttributePath.parse( mappedByPropertyName );
-			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
-			if ( getPropertyHolder().isEntity() ) {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ENTITY;
-			}
-			else if ( JPA2ElementCollection ) {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
-			}
-			else {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
-			}
-
 			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new ImplicitJoinColumnNameSource() {
+						final AttributePath attributePath = AttributePath.parse( mappedByPropertyName );
+						final ImplicitJoinColumnNameSource.Nature implicitNamingNature = getImplicitNature();
+
 						private final EntityNaming entityNaming = new EntityNaming() {
 							@Override
 							public String getClassName() {
@@ -542,9 +520,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 							}
 						};
 
-						private final Identifier referencedTableName = getBuildingContext().getMetadataCollector()
-								.getDatabase()
-								.toIdentifier( mappedByTableName );
+						private final Identifier referencedTableName = database.toIdentifier( mappedByTableName );
 
 						@Override
 						public Nature getNature() {
@@ -569,18 +545,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						@Override
 						public Identifier getReferencedColumnName() {
 							if ( logicalReferencedColumn != null ) {
-								return getBuildingContext().getMetadataCollector()
-										.getDatabase()
-										.toIdentifier( logicalReferencedColumn );
+								return database.toIdentifier( logicalReferencedColumn );
 							}
 
 							if ( mappedByEntityName == null || mappedByPropertyName == null ) {
 								return null;
 							}
 
-							final PersistentClass mappedByEntityBinding = getBuildingContext().getMetadataCollector()
-									.getEntityBinding( mappedByEntityName );
-							final Property mappedByProperty = mappedByEntityBinding.getProperty( mappedByPropertyName );
+							final Property mappedByProperty = metadataCollector.getEntityBinding( mappedByEntityName )
+									.getProperty( mappedByPropertyName );
 							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
 							if ( value.getSelectables().isEmpty() ) {
 								throw new AnnotationException(
@@ -613,9 +586,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 										)
 								);
 							}
-							return getBuildingContext().getMetadataCollector()
-									.getDatabase()
-									.toIdentifier( ( (Column) selectable ).getQuotedName() );
+							return database.toIdentifier( ( (Column) selectable ).getQuotedName() );
 						}
 
 						@Override
@@ -631,23 +602,12 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 		}
 		else if ( ownerSide ) {
-			final String logicalTableName = getBuildingContext().getMetadataCollector().getLogicalTableName(
-					referencedEntity.getTable()
-			);
+			final String logicalTableName = metadataCollector.getLogicalTableName( referencedEntity.getTable() );
 
-			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
-			if ( JPA2ElementCollection ) {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
-			}
-			else if ( getPropertyHolder().isEntity() ) {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ENTITY;
-			}
-			else {
-				implicitNamingNature = ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
-			}
-
-			columnIdentifier = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy().determineJoinColumnName(
+			columnIdentifier =implicitNamingStrategy.determineJoinColumnName(
 					new ImplicitJoinColumnNameSource() {
+						final ImplicitJoinColumnNameSource.Nature implicitNamingNature = getImplicitNature();
+
 						private final EntityNaming entityNaming = new EntityNaming() {
 							@Override
 							public String getClassName() {
@@ -666,12 +626,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						};
 
 						private final AttributePath attributePath = AttributePath.parse( getPropertyName() );
-						private final Identifier referencedTableName = getBuildingContext().getMetadataCollector()
-								.getDatabase()
-								.toIdentifier( logicalTableName );
-						private final Identifier referencedColumnName = getBuildingContext().getMetadataCollector()
-								.getDatabase()
-								.toIdentifier( logicalReferencedColumn );
+						private final Identifier referencedTableName = database.toIdentifier( logicalTableName );
+						private final Identifier referencedColumnName = database.toIdentifier( logicalReferencedColumn );
 
 						@Override
 						public Nature getNature() {
@@ -707,8 +663,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 			// HHH-11826 magic. See Ejb3Column and the HHH-6005 comments
 			if ( columnIdentifier.getText().contains( "_collection&&element_" ) ) {
-				columnIdentifier = Identifier.toIdentifier( columnIdentifier.getText().replace( "_collection&&element_", "_" ),
-														columnIdentifier.isQuoted() );
+				columnIdentifier = Identifier.toIdentifier(
+						columnIdentifier.getText().replace( "_collection&&element_", "_" ),
+						columnIdentifier.isQuoted()
+				);
 			}
 
 			//one element was quoted so we quote
@@ -718,7 +676,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
-					getBuildingContext().getMetadataCollector().getLogicalTableName( referencedEntity.getTable() )
+					metadataCollector.getLogicalTableName( referencedEntity.getTable() )
 			);
 
 			// is an intra-entity hierarchy table join so copy the name by default
@@ -748,6 +706,18 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 		return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, database.getJdbcEnvironment() )
 				.render( database.getJdbcEnvironment().getDialect() );
+	}
+
+	private ImplicitJoinColumnNameSource.Nature getImplicitNature() {
+		if ( getPropertyHolder().isEntity() ) {
+			return ImplicitJoinColumnNameSource.Nature.ENTITY;
+		}
+		else if ( JPA2ElementCollection ) {
+			return ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
+		}
+		else {
+			return ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
+		}
 	}
 
 	/**
@@ -820,17 +790,14 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		boolean noReferencedColumn = true;
 		//build the list of potential tables
 		if ( columns.length == 0 ) return NO_REFERENCE; //shortcut
-		Object columnOwner = BinderHelper.findColumnOwner(
-				referencedEntity,
-				columns[0].getReferencedColumn(),
-				context
-		);
+		Object columnOwner = findColumnOwner( referencedEntity, columns[0].getReferencedColumn(), context );
 		if ( columnOwner == null ) {
 			try {
 				throw new MappingException(
 						"Unable to find column with logical name: "
-								+ columns[0].getReferencedColumn() + " in " + referencedEntity.getTable() + " and its related "
-								+ "supertables and secondary tables"
+								+ columns[0].getReferencedColumn()
+								+ " in " + referencedEntity.getTable()
+								+ " and its related supertables and secondary tables"
 				);
 			}
 			catch (MappingException e) {
@@ -889,7 +856,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 */
 	public void overrideFromReferencedColumnIfNecessary(Column column) {
 		Column mappingColumn = getMappingColumn();
-		if (mappingColumn != null) {
+		if ( mappingColumn != null ) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not
 			if ( StringHelper.isEmpty( sqlType ) ) {
@@ -924,16 +891,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			currentJoinColumn.setPropertyHolder( propertyHolder );
 			currentJoinColumn.setJoins( secondaryTables );
 			currentJoinColumn.setBuildingContext( buildingContext );
-			currentJoinColumn.setPropertyName(
-					BinderHelper.getRelativePath( propertyHolder, propertyName )
-			);
+			currentJoinColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 			currentJoinColumn.setMappedBy( mappedBy );
 			currentJoinColumn.bind();
-
-			joinColumns = new AnnotatedJoinColumn[] {
-					currentJoinColumn
-
-			};
+			joinColumns = new AnnotatedJoinColumn[] { currentJoinColumn };
 		}
 		else {
 			joinColumns = new AnnotatedJoinColumn[annJoins.length];
@@ -946,7 +907,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				currentJoinColumn.setPropertyHolder( propertyHolder );
 				currentJoinColumn.setJoins( secondaryTables );
 				currentJoinColumn.setBuildingContext( buildingContext );
-				currentJoinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+				currentJoinColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );
 				currentJoinColumn.setNullable( false ); //I break the spec, but it's for good

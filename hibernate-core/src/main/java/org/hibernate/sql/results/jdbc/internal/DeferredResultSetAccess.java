@@ -169,49 +169,54 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		return usesFollowOnLocking;
 	}
 
+	protected void bindParameters(PreparedStatement preparedStatement) throws SQLException {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+
+		// set options
+		if ( queryOptions != null ) {
+			if ( queryOptions.getFetchSize() != null ) {
+				preparedStatement.setFetchSize( queryOptions.getFetchSize() );
+			}
+			if ( queryOptions.getTimeout() != null ) {
+				preparedStatement.setQueryTimeout( queryOptions.getTimeout() );
+			}
+		}
+
+		// bind parameters
+		// 		todo : validate that all query parameters were bound?
+		int paramBindingPosition = 1;
+		paramBindingPosition += limitHandler.bindLimitParametersAtStartOfQuery( limit, preparedStatement, paramBindingPosition );
+		for ( JdbcParameterBinder parameterBinder : jdbcSelect.getParameterBinders() ) {
+			parameterBinder.bindParameterValue(
+					preparedStatement,
+					paramBindingPosition++,
+					jdbcParameterBindings,
+					executionContext
+			);
+		}
+
+		paramBindingPosition += limitHandler.bindLimitParametersAtEndOfQuery( limit, preparedStatement, paramBindingPosition );
+
+		if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getMaxRows() != null ) {
+			limitHandler.setMaxRows( limit, preparedStatement );
+		}
+		else {
+			final int maxRows = jdbcSelect.getMaxRows();
+			if ( maxRows != Integer.MAX_VALUE ) {
+				preparedStatement.setMaxRows( maxRows );
+			}
+		}
+	}
+
 	private void executeQuery() {
 		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
-		final QueryOptions queryOptions = executionContext.getQueryOptions();
 
 		try {
 			LOG.tracef( "Executing query to retrieve ResultSet : %s", finalSql );
 			// prepare the query
 			preparedStatement = statementCreator.apply( finalSql );
 
-			// set options
-			if ( queryOptions != null ) {
-				if ( queryOptions.getFetchSize() != null ) {
-					preparedStatement.setFetchSize( queryOptions.getFetchSize() );
-				}
-				if ( queryOptions.getTimeout() != null ) {
-					preparedStatement.setQueryTimeout( queryOptions.getTimeout() );
-				}
-			}
-
-			// bind parameters
-			// 		todo : validate that all query parameters were bound?
-			int paramBindingPosition = 1;
-			paramBindingPosition += limitHandler.bindLimitParametersAtStartOfQuery( limit, preparedStatement, paramBindingPosition );
-			for ( JdbcParameterBinder parameterBinder : jdbcSelect.getParameterBinders() ) {
-				parameterBinder.bindParameterValue(
-						preparedStatement,
-						paramBindingPosition++,
-						jdbcParameterBindings,
-						executionContext
-				);
-			}
-
-			paramBindingPosition += limitHandler.bindLimitParametersAtEndOfQuery( limit, preparedStatement, paramBindingPosition );
-
-			if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getMaxRows() != null ) {
-				limitHandler.setMaxRows( limit, preparedStatement );
-			}
-			else {
-				final int maxRows = jdbcSelect.getMaxRows();
-				if ( maxRows != Integer.MAX_VALUE ) {
-					preparedStatement.setMaxRows( maxRows );
-				}
-			}
+			bindParameters( preparedStatement );
 
 			final SessionEventListenerManager eventListenerManager = executionContext.getSession()
 					.getEventListenerManager();
@@ -229,31 +234,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos );
 			}
 
-			// For dialects that don't support an offset clause
-			final int rowsToSkip;
-			if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getFirstRow() != null && !limitHandler.supportsLimitOffset() ) {
-				rowsToSkip = limit.getFirstRow();
-			}
-			else {
-				rowsToSkip = jdbcSelect.getRowsToSkip();
-			}
-			if ( rowsToSkip != 0 ) {
-				try {
-					resultSet.absolute( rowsToSkip );
-				}
-				catch (SQLException ex) {
-					// This could happen with the jTDS driver which throws an exception on non-scrollable result sets
-					// To avoid throwing a wrong exception in case this was some other error, check if we can advance to next
-					try {
-						resultSet.next();
-					}
-					catch (SQLException ex2) {
-						throw ex;
-					}
-					// Traverse to the actual row
-					for (int i = 1; i < rowsToSkip && resultSet.next(); i++) {}
-				}
-			}
+			skipRows( resultSet );
 			logicalConnection.getResourceRegistry().register( resultSet, preparedStatement );
 
 		}
@@ -265,6 +246,34 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 		finally {
 			logicalConnection.afterStatement();
+		}
+	}
+
+	protected void skipRows(ResultSet resultSet) throws SQLException {
+		// For dialects that don't support an offset clause
+		final int rowsToSkip;
+		if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getFirstRow() != null && !limitHandler.supportsLimitOffset() ) {
+			rowsToSkip = limit.getFirstRow();
+		}
+		else {
+			rowsToSkip = jdbcSelect.getRowsToSkip();
+		}
+		if ( rowsToSkip != 0 ) {
+			try {
+				resultSet.absolute( rowsToSkip );
+			}
+			catch (SQLException ex) {
+				// This could happen with the jTDS driver which throws an exception on non-scrollable result sets
+				// To avoid throwing a wrong exception in case this was some other error, check if we can advance to next
+				try {
+					resultSet.next();
+				}
+				catch (SQLException ex2) {
+					throw ex;
+				}
+				// Traverse to the actual row
+				for (int i = 1; i < rowsToSkip && resultSet.next(); i++) {}
+			}
 		}
 	}
 

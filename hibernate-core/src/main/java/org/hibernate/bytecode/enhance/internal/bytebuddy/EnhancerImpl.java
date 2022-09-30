@@ -22,11 +22,13 @@ import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
 
+import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
+import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
@@ -68,6 +70,21 @@ import net.bytebuddy.pool.TypePool;
 public class EnhancerImpl implements Enhancer {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
+	private static final Annotation HIBERNATE_VERSION_ANNOTATION;
+
+	static {
+		HIBERNATE_VERSION_ANNOTATION = new EnhancementInfo() {
+			@Override
+			public String version() {
+				return Version.getVersionString();
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return EnhancementInfo.class;
+			}
+		};
+	}
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
@@ -159,6 +176,8 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return null;
 		}
+
+		builder = builder.annotateType( HIBERNATE_VERSION_ANNOTATION );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );

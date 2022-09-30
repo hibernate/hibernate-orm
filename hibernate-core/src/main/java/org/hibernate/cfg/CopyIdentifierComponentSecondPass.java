@@ -28,6 +28,9 @@ import org.hibernate.mapping.SimpleValue;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -79,13 +82,13 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		Map<String, AnnotatedJoinColumn> columnByReferencedName = CollectionHelper.mapOfSize( joinColumns.length);
+		Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( joinColumns.length);
 		for (AnnotatedJoinColumn joinColumn : joinColumns) {
 			final String referencedColumnName = joinColumn.getReferencedColumn();
-			if ( referencedColumnName == null || BinderHelper.isEmptyAnnotationValue( referencedColumnName ) ) {
+			if ( referencedColumnName == null || isEmptyAnnotationValue( referencedColumnName ) ) {
 				break;
 			}
-			//JPA 2 requires referencedColumnNames to be case insensitive
+			//JPA 2 requires referencedColumnNames to be case-insensitive
 			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation

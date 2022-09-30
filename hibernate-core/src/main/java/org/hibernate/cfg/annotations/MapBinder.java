@@ -62,7 +62,11 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 
+import static org.hibernate.cfg.BinderHelper.PRIMITIVE_NAMES;
+import static org.hibernate.cfg.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * Implementation to bind a Map
@@ -174,7 +178,7 @@ public class MapBinder extends CollectionBinder {
 			//this is an EJB3 @MapKey
 			PersistentClass associatedClass = persistentClasses.get( collType.getName() );
 			if ( associatedClass == null ) throw new AnnotationException( "Associated class not found: " + collType );
-			Property mapProperty = BinderHelper.findPropertyByName( associatedClass, mapKeyPropertyName );
+			Property mapProperty = findPropertyByName( associatedClass, mapKeyPropertyName );
 			if ( mapProperty == null ) {
 				throw new AnnotationException(
 						"Map key property not found: " + collType + "." + mapKeyPropertyName
@@ -228,7 +232,7 @@ public class MapBinder extends CollectionBinder {
 			else {
 				final XClass keyXClass;
 				AnnotatedClassType classType;
-				if ( BinderHelper.PRIMITIVE_NAMES.contains( mapKeyType ) ) {
+				if ( PRIMITIVE_NAMES.contains( mapKeyType ) ) {
 					classType = AnnotatedClassType.NONE;
 					keyXClass = null;
 				}
@@ -246,7 +250,7 @@ public class MapBinder extends CollectionBinder {
 
 				CollectionPropertyHolder holder = buildPropertyHolder(
 						mapValue,
-						StringHelper.qualify( mapValue.getRole(), "mapkey" ),
+						qualify( mapValue.getRole(), "mapkey" ),
 						keyXClass,
 						property,
 						propertyHolder,
@@ -361,8 +365,8 @@ public class MapBinder extends CollectionBinder {
 						element.disableForeignKey();
 					}
 					else {
-						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKey.name() ) );
-						element.setForeignKeyDefinition( StringHelper.nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+						element.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+						element.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
 					}
 				}
 			}

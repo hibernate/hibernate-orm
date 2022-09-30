@@ -34,6 +34,8 @@ import org.hibernate.usertype.UserCollectionType;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.util.StringHelper.qualify;
+
 /**
  * Bind a list to the underlying Hibernate configuration
  *
@@ -102,7 +104,7 @@ public class ListBinder extends CollectionBinder {
 	private void bindIndex(XProperty property, XClass collType, final MetadataBuildingContext buildingContext) {
 		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 				collection,
-				StringHelper.qualify( collection.getRole(), "key" ),
+				qualify( collection.getRole(), "key" ),
 				null,
 				null,
 				propertyHolder,

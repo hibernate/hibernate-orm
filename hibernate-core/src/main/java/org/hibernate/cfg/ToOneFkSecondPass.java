@@ -20,6 +20,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 
+import static org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference;
+
 /**
  * Enable a proper set of the FK columns in respect with the id column order
  * Allow the correct implementation of the default EJB3 values which needs both
@@ -99,7 +101,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 				);
 			}
 			manyToOne.setPropertyName( path );
-			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
+			createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
 			TableBinder.bindFk( ref, null, columns, manyToOne, unique, buildingContext );
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null

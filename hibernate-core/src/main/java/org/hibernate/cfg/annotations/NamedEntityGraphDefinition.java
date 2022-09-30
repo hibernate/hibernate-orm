@@ -10,6 +10,8 @@ import jakarta.persistence.NamedEntityGraph;
 
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * Models the definition of a {@link NamedEntityGraph} annotation
  *
@@ -25,9 +27,7 @@ public class NamedEntityGraphDefinition {
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
 		this.entityName = entityName;
-		this.name = StringHelper.isNotEmpty( annotation.name() )
-				? annotation.name()
-				: jpaEntityName;
+		this.name = isNotEmpty( annotation.name() ) ? annotation.name() : jpaEntityName;
 		if ( name == null ) {
 			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
 		}

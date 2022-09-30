@@ -38,6 +38,8 @@ import org.hibernate.mapping.Table;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getRelativePath;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Wrap state of an EJB3 @Column annotation
@@ -107,7 +109,7 @@ public class AnnotatedColumn {
 	}
 
 	public boolean isFormula() {
-		return StringHelper.isNotEmpty( formulaString );
+		return isNotEmpty( formulaString );
 	}
 
 	@SuppressWarnings("UnusedDeclaration")
@@ -229,7 +231,7 @@ public class AnnotatedColumn {
 	}
 
 	public void bind() {
-		if ( StringHelper.isNotEmpty( formulaString ) ) {
+		if ( isNotEmpty( formulaString ) ) {
 			LOG.debugf( "Binding formula %s", formulaString );
 			formula = new Formula();
 			formula.setFormula( formulaString );
@@ -252,7 +254,7 @@ public class AnnotatedColumn {
 			if ( checkConstraint !=null ) {
 				mappingColumn.setCheckConstraint( checkConstraint );
 			}
-			if ( StringHelper.isNotEmpty( comment ) ) {
+			if ( isNotEmpty( comment ) ) {
 				mappingColumn.setComment( comment );
 			}
 			if ( generatedAs != null ) {
@@ -274,22 +276,22 @@ public class AnnotatedColumn {
 			String sqlType,
 			boolean unique,
 			boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( formulaString ) ) {
-			this.formula = new Formula();
-			this.formula.setFormula( formulaString );
+		if ( isNotEmpty( formulaString ) ) {
+			formula = new Formula();
+			formula.setFormula( formulaString );
 		}
 		else {
-			this.mappingColumn = new Column();
+			mappingColumn = new Column();
 			redefineColumnName( columnName, propertyName, applyNamingStrategy );
-			this.mappingColumn.setLength( length );
+			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision
-				this.mappingColumn.setPrecision( precision );
-				this.mappingColumn.setScale( scale );
+				mappingColumn.setPrecision( precision );
+				mappingColumn.setScale( scale );
 			}
-			this.mappingColumn.setNullable( nullable );
-			this.mappingColumn.setSqlType( sqlType );
-			this.mappingColumn.setUnique( unique );
-			this.mappingColumn.setCheckConstraint( checkConstraint );
+			mappingColumn.setNullable( nullable );
+			mappingColumn.setSqlType( sqlType );
+			mappingColumn.setUnique( unique );
+			mappingColumn.setCheckConstraint( checkConstraint );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -301,8 +303,8 @@ public class AnnotatedColumn {
 				}
 			}
 
-			this.mappingColumn.setResolvedCustomRead( readExpression );
-			this.mappingColumn.setCustomWrite( writeExpression );
+			mappingColumn.setResolvedCustomRead( readExpression );
+			mappingColumn.setCustomWrite( writeExpression );
 		}
 	}
 
@@ -311,7 +313,7 @@ public class AnnotatedColumn {
 	}
 
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( columnName ) ) {
+		if ( isNotEmpty( columnName ) ) {
 			mappingColumn.setName( processColumnName( columnName, applyNamingStrategy ) );
 		}
 		else {
@@ -323,7 +325,7 @@ public class AnnotatedColumn {
 	}
 
 	private String processColumnName(String columnName, boolean applyNamingStrategy) {
-		if (applyNamingStrategy) {
+		if ( applyNamingStrategy ) {
 			Database database = context.getMetadataCollector().getDatabase();
 			return context.getBuildingOptions().getPhysicalNamingStrategy()
 					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
@@ -368,8 +370,10 @@ public class AnnotatedColumn {
 
 		// HHH-6005 magic
 		if ( implicitName.getText().contains( "_collection&&element_" ) ) {
-			implicitName = Identifier.toIdentifier( implicitName.getText().replace( "_collection&&element_", "_" ),
-					implicitName.isQuoted() );
+			implicitName = Identifier.toIdentifier(
+					implicitName.getText().replace( "_collection&&element_", "_" ),
+					implicitName.isQuoted()
+			);
 		}
 
 		return context.getBuildingOptions().getPhysicalNamingStrategy()
@@ -433,7 +437,7 @@ public class AnnotatedColumn {
 
 	protected void addColumnBinding(SimpleValue value) {
 		final String logicalColumnName;
-		if ( StringHelper.isNotEmpty( this.logicalColumnName ) ) {
+		if ( isNotEmpty( this.logicalColumnName ) ) {
 			logicalColumnName = this.logicalColumnName;
 		}
 		else {
@@ -492,7 +496,7 @@ public class AnnotatedColumn {
 			throw new AssertionFailure( "Should not call getTable() on column w/o persistent class defined" );
 		}
 
-		return StringHelper.isNotEmpty( explicitTableName )
+		return isNotEmpty( explicitTableName )
 			&& !propertyHolder.getTable().getName().equals( explicitTableName );
 	}
 
@@ -652,7 +656,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumn[] buildColumnsOrFormulaFromAnnotation(
 			jakarta.persistence.Column[] columnAnns,
 			org.hibernate.annotations.Formula formulaAnn,
-			Comment commentAnn,
+			Comment comment,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -670,129 +674,153 @@ public class AnnotatedColumn {
 			return new AnnotatedColumn[] { formulaColumn };
 		}
 		else {
-			jakarta.persistence.Column[] actualCols = columnAnns;
-			jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
-					StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
-			);
-			if ( overriddenCols != null ) {
-				//check for overridden first
-				if ( columnAnns != null && overriddenCols.length != columnAnns.length ) {
-					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
-				}
-				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
-				LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
-			}
-
-			AnnotatedColumn[] columns;
+			jakarta.persistence.Column[]  actualCols = overrideColumns( columnAnns, propertyHolder, inferredData);
 			if ( actualCols == null ) {
-				columns = buildImplicitColumn(
+				return buildImplicitColumn(
 						inferredData,
 						suffixForDefaultColumnName,
 						secondaryTables,
 						propertyHolder,
-						commentAnn,
+						comment,
 						nullability,
 						context
 				);
 			}
 			else {
-				final int length = actualCols.length;
-				columns = new AnnotatedColumn[length];
-				for (int index = 0; index < length; index++) {
+				return buildExplicitColumns(
+						comment,
+						propertyHolder,
+						inferredData,
+						suffixForDefaultColumnName,
+						secondaryTables,
+						context,
+						actualCols
+				);
+			}
+		}
+	}
 
-					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-					final Database database = context.getMetadataCollector().getDatabase();
+	private static jakarta.persistence.Column[] overrideColumns(
+			jakarta.persistence.Column[] columnAnns,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData ) {
+		final jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
+				StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
+		);
+		if ( overriddenCols != null ) {
+			//check for overridden first
+			if ( columnAnns != null && overriddenCols.length != columnAnns.length ) {
+				throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
+			}
+			LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
+			return overriddenCols.length == 0 ? null : overriddenCols;
+		}
+		else {
+			return columnAnns;
+		}
+	}
 
-					jakarta.persistence.Column col = actualCols[index];
-
-					final String sqlType;
-					if ( col.columnDefinition().isEmpty() ) {
-						sqlType = null;
-					}
-					else {
-						sqlType = normalizer.applyGlobalQuoting( col.columnDefinition() );
-					}
-
-					final String tableName;
-					if ( StringHelper.isEmpty( col.table() ) ) {
-						tableName = "";
-					}
-					else {
-						tableName = database.getJdbcEnvironment()
-								.getIdentifierHelper()
-								.toIdentifier( col.table() )
-								.render();
+	private static AnnotatedColumn[] buildExplicitColumns(
+			Comment comment,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context,
+			jakarta.persistence.Column[] actualCols) {
+		final int length = actualCols.length;
+		final AnnotatedColumn[] columns = new AnnotatedColumn[length];
+		for (int index = 0; index < length; index++) {
+			final jakarta.persistence.Column column = actualCols[index];
+			final Database database = context.getMetadataCollector().getDatabase();
+			final String sqlType = column.columnDefinition().isEmpty() ? null
+					: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
+			final String tableName = StringHelper.isEmpty( column.table() ) ? ""
+					: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
 //						final Identifier logicalName = database.getJdbcEnvironment()
 //								.getIdentifierHelper()
-//								.toIdentifier( col.table() );
+//								.toIdentifier( column.table() );
 //						final Identifier physicalName = physicalNamingStrategy.toPhysicalTableName( logicalName );
 //						tableName = physicalName.render( database.getDialect() );
-					}
-
-					final String columnName;
-					if ( col.name() != null && col.name().isEmpty() ) {
-						columnName = null;
-					}
-					else {
-						// NOTE : this is the logical column name, not the physical!
-						columnName = database.getJdbcEnvironment()
-								.getIdentifierHelper()
-								.toIdentifier( col.name() )
-								.render();
-					}
-
-					AnnotatedColumn column = new AnnotatedColumn();
-
-					column.setImplicit( false );
-					column.setSqlType( sqlType );
-					column.setLength( (long) col.length() );
-					column.setPrecision( col.precision() );
-					column.setScale( col.scale() );
-					if ( StringHelper.isEmpty( columnName ) && ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
-						column.setLogicalColumnName( inferredData.getPropertyName() + suffixForDefaultColumnName );
-					}
-					else {
-						column.setLogicalColumnName( columnName );
-					}
-
-					column.setPropertyName(
-							BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
-					);
-					column.setNullable(
-						col.nullable()
-					); //TODO force to not null if available? This is a (bad) user choice.
-					if ( commentAnn != null ) {
-						column.setComment( commentAnn.value() );
-					}
-					column.setUnique( col.unique() );
-					column.setInsertable( col.insertable() );
-					column.setUpdatable( col.updatable() );
-					column.setExplicitTableName( tableName );
-					column.setPropertyHolder( propertyHolder );
-					column.setJoins( secondaryTables );
-					column.setBuildingContext( context );
-					column.applyColumnDefault( inferredData, length );
-					column.applyGeneratedAs( inferredData, length );
-					column.applyCheckConstraint( inferredData, length );
-					column.extractDataFromPropertyData(inferredData);
-					column.bind();
-					columns[index] = column;
-				}
-			}
-
-			return columns;
+			columns[index] = buildColumn(
+					comment,
+					propertyHolder,
+					inferredData,
+					suffixForDefaultColumnName,
+					secondaryTables,
+					context,
+					length,
+					database,
+					column,
+					sqlType,
+					tableName
+			);
 		}
+		return columns;
+	}
+
+	private static AnnotatedColumn buildColumn(
+			Comment comment,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context,
+			int length,
+			Database database,
+			jakarta.persistence.Column col,
+			String sqlType,
+			String tableName) {
+
+		final AnnotatedColumn column = new AnnotatedColumn();
+		column.setLogicalColumnName( getLogicalColumnName( inferredData, suffixForDefaultColumnName, database, col ) );
+		column.setImplicit( false );
+		column.setSqlType(sqlType);
+		column.setLength( (long) col.length() );
+		column.setPrecision( col.precision() );
+		column.setScale( col.scale() );
+		column.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
+		column.setNullable( col.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
+		if ( comment != null ) {
+			column.setComment( comment.value() );
+		}
+		column.setUnique( col.unique() );
+		column.setInsertable( col.insertable() );
+		column.setUpdatable( col.updatable() );
+		column.setExplicitTableName( tableName );
+		column.setPropertyHolder( propertyHolder );
+		column.setJoins( secondaryTables );
+		column.setBuildingContext( context );
+		column.applyColumnDefault( inferredData, length );
+		column.applyGeneratedAs( inferredData, length );
+		column.applyCheckConstraint( inferredData, length );
+		column.extractDataFromPropertyData( inferredData );
+		column.bind();
+		return column;
+	}
+
+	private static String getLogicalColumnName(
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Database database,
+			jakarta.persistence.Column column) {
+		final String columnName = column.name() != null && column.name().isEmpty() ? null
+				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
+		// NOTE : this is the logical column name, not the physical!
+		return StringHelper.isEmpty( columnName ) && !StringHelper.isEmpty(suffixForDefaultColumnName)
+				? inferredData.getPropertyName() + suffixForDefaultColumnName
+				: columnName;
 	}
 
 	private void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			ColumnDefault columnDefaultAnn = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
-			if ( columnDefaultAnn != null ) {
+			ColumnDefault columnDefault = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
+			if ( columnDefault != null ) {
 				if (length!=1) {
 					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
 				}
-				setDefaultValue( columnDefaultAnn.value() );
+				setDefaultValue( columnDefault.value() );
 			}
 		}
 		else {
@@ -805,12 +833,12 @@ public class AnnotatedColumn {
 	private void applyGeneratedAs(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			GeneratedColumn generatedAnn = getOverridableAnnotation( xProperty, GeneratedColumn.class, context );
-			if ( generatedAnn != null ) {
+			GeneratedColumn generatedColumn = getOverridableAnnotation( xProperty, GeneratedColumn.class, context );
+			if ( generatedColumn != null ) {
 				if (length!=1) {
 					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
 				}
-				setGeneratedAs( generatedAnn.value() );
+				setGeneratedAs( generatedColumn.value() );
 			}
 		}
 		else {
@@ -823,12 +851,12 @@ public class AnnotatedColumn {
 	private void applyCheckConstraint(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			Check columnDefaultAnn = AnnotationBinder.getOverridableAnnotation( xProperty, Check.class, context );
-			if ( columnDefaultAnn != null ) {
+			Check check = AnnotationBinder.getOverridableAnnotation( xProperty, Check.class, context );
+			if ( check != null ) {
 				if (length!=1) {
 					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");
 				}
-				setCheckConstraint( columnDefaultAnn.constraints() );
+				setCheckConstraint( check.constraints() );
 			}
 		}
 		else {
@@ -844,33 +872,27 @@ public class AnnotatedColumn {
 			XProperty property = inferredData.getProperty();
 			if ( property != null ) {
 				if ( propertyHolder.isComponent() ) {
-					processExpression( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
+					processColumnTransformerExpressions( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
 				}
-				processExpression( property.getAnnotation( ColumnTransformer.class ) );
+				processColumnTransformerExpressions( property.getAnnotation( ColumnTransformer.class ) );
 				ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
 				if (annotations != null) {
 					for ( ColumnTransformer annotation : annotations.value() ) {
-						processExpression( annotation );
+						processColumnTransformerExpressions( annotation );
 					}
 				}
 			}
 		}
 	}
 
-	private void processExpression(ColumnTransformer annotation) {
-		if ( annotation == null ) {
-			return;
-		}
-
-		final String nonNullLogicalColumnName = logicalColumnName != null
-				? logicalColumnName
-				//use the default for annotations
-				: "";
-
-		if ( StringHelper.isEmpty( annotation.forColumn() )
-				|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
-			readExpression = StringHelper.nullIfEmpty( annotation.read() );
-			writeExpression = StringHelper.nullIfEmpty( annotation.write() );
+	private void processColumnTransformerExpressions(ColumnTransformer annotation) {
+		if ( annotation != null ) {
+			if ( StringHelper.isEmpty( annotation.forColumn() )
+					// "" is the default value for annotations
+					|| annotation.forColumn().equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
+				readExpression = StringHelper.nullIfEmpty( annotation.read() );
+				writeExpression = StringHelper.nullIfEmpty( annotation.write() );
+			}
 		}
 	}
 
@@ -882,14 +904,31 @@ public class AnnotatedColumn {
 			Comment comment,
 			Nullability nullability,
 			MetadataBuildingContext context) {
-		AnnotatedColumn column = new AnnotatedColumn();
-		AnnotatedColumn[] columns = new AnnotatedColumn[1];
-		columns[0] = column;
+		final AnnotatedColumn[] columns = new AnnotatedColumn[1];
+		columns[0] = bindImplicitColumn(
+				inferredData,
+				suffixForDefaultColumnName,
+				secondaryTables,
+				propertyHolder,
+				comment,
+				nullability,
+				context
+		);
+		return columns;
+	}
 
+	private static AnnotatedColumn bindImplicitColumn(
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			PropertyHolder propertyHolder,
+			Comment comment,
+			Nullability nullability,
+			MetadataBuildingContext context) {
+		final AnnotatedColumn column = new AnnotatedColumn();
 		if ( comment != null ) {
 			column.setComment( comment.value() );
 		}
-
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL
 				&& inferredData.getClassOrElement().isPrimitive()
@@ -897,13 +936,10 @@ public class AnnotatedColumn {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();
-		column.setPropertyName(
-				BinderHelper.getRelativePath( propertyHolder, propertyName )
-		);
-		column.setPropertyHolder( propertyHolder );
-		column.setJoins( secondaryTables );
-		column.setBuildingContext( context );
-
+		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		column.setPropertyHolder(propertyHolder);
+		column.setJoins(secondaryTables);
+		column.setBuildingContext(context);
 		// property name + suffix is an "explicit" column name
 		boolean implicit = StringHelper.isEmpty( suffixForDefaultColumnName );
 		if ( !implicit ) {
@@ -915,49 +951,43 @@ public class AnnotatedColumn {
 		column.applyCheckConstraint( inferredData, 1 );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
-
-		return columns;
+		return column;
 	}
 
 	public static void checkPropertyConsistency(AnnotatedColumn[] columns, String propertyName) {
 		int nbrOfColumns = columns.length;
-
 		if ( nbrOfColumns > 1 ) {
 			for (int currentIndex = 1; currentIndex < nbrOfColumns; currentIndex++) {
-
-				if (columns[currentIndex].isFormula() || columns[currentIndex - 1].isFormula()) {
-					continue;
-				}
-
-				if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
-					throw new AnnotationException(
-							"Mixing insertable and non insertable columns in a property is not allowed: " + propertyName
-					);
-				}
-				if ( columns[currentIndex].isNullable() != columns[currentIndex - 1].isNullable() ) {
-					throw new AnnotationException(
-							"Mixing nullable and non nullable columns in a property is not allowed: " + propertyName
-					);
-				}
-				if ( columns[currentIndex].isUpdatable() != columns[currentIndex - 1].isUpdatable() ) {
-					throw new AnnotationException(
-							"Mixing updatable and non updatable columns in a property is not allowed: " + propertyName
-					);
-				}
-				if ( !columns[currentIndex].getTable().equals( columns[currentIndex - 1].getTable() ) ) {
-					throw new AnnotationException(
-							"Mixing different tables in a property is not allowed: " + propertyName
-					);
+				if ( !columns[currentIndex].isFormula() && !columns[currentIndex - 1].isFormula() ) {
+					if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
+						throw new AnnotationException(
+								"Mixing insertable and non insertable columns in a property is not allowed: " + propertyName
+						);
+					}
+					if ( columns[currentIndex].isNullable() != columns[currentIndex - 1].isNullable() ) {
+						throw new AnnotationException(
+								"Mixing nullable and non nullable columns in a property is not allowed: " + propertyName
+						);
+					}
+					if ( columns[currentIndex].isUpdatable() != columns[currentIndex - 1].isUpdatable() ) {
+						throw new AnnotationException(
+								"Mixing updatable and non updatable columns in a property is not allowed: " + propertyName
+						);
+					}
+					if ( !columns[currentIndex].getTable().equals( columns[currentIndex - 1].getTable() ) ) {
+						throw new AnnotationException(
+								"Mixing different tables in a property is not allowed: " + propertyName
+						);
+					}
 				}
 			}
 		}
-
 	}
 
 	public void addIndex(Index index, boolean inSecondPass) {
-		if ( index == null ) return;
-		String indexName = index.name();
-		addIndex( indexName, inSecondPass );
+		if ( index != null ) {
+			addIndex( index.name(), inSecondPass );
+		}
 	}
 
 	void addIndex(String indexName, boolean inSecondPass) {

@@ -12,7 +12,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Define the laziness options available for a ToOne (ie OneToOne or ManyToOne) association.
+ * Define the laziness options available for a {@link jakarta.persistence.OneToOne}
+ * or {@link jakarta.persistence.ManyToOne}) association.
  *
  * @author Emmanuel Bernard
  */

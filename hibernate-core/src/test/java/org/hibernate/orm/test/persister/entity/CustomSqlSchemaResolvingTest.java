@@ -55,7 +55,7 @@ public class CustomSqlSchemaResolvingTest {
 				"DELETE FROM FOO WHERE id = ?", deleteQuery );
 		
 		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
-				"UPDATE FOO SET name = ? WHERE id = ? ", updateQuery );
+				"UPDATE FOO SET name = ? WHERE id = ?", updateQuery );
 
 		scope.inTransaction( session -> {
 			CustomEntity entity = new CustomEntity();

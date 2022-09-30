@@ -12,6 +12,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+
 /**
  * Discriminator column
  *
@@ -42,51 +44,69 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 	}
 
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
-			DiscriminatorType type, DiscriminatorColumn discAnn,
+			DiscriminatorType type,
+			DiscriminatorColumn discAnn,
 			DiscriminatorFormula discFormulaAnn,
 			MetadataBuildingContext context) {
-		AnnotatedDiscriminatorColumn discriminatorColumn = new AnnotatedDiscriminatorColumn();
+		final AnnotatedDiscriminatorColumn discriminatorColumn = new AnnotatedDiscriminatorColumn();
 		discriminatorColumn.setBuildingContext( context );
-		discriminatorColumn.setImplicit( true );
 		if ( discFormulaAnn != null ) {
 			discriminatorColumn.setImplicit( false );
 			discriminatorColumn.setFormula( discFormulaAnn.value() );
 		}
 		else if ( discAnn != null ) {
 			discriminatorColumn.setImplicit( false );
-			if ( !BinderHelper.isEmptyAnnotationValue( discAnn.columnDefinition() ) ) {
-				discriminatorColumn.setSqlType(
-						discAnn.columnDefinition()
-				);
+			if ( !isEmptyAnnotationValue( discAnn.columnDefinition() ) ) {
+				discriminatorColumn.setSqlType( discAnn.columnDefinition() );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( discAnn.name() ) ) {
+			if ( !isEmptyAnnotationValue( discAnn.name() ) ) {
 				discriminatorColumn.setLogicalColumnName( discAnn.name() );
 			}
 			discriminatorColumn.setNullable( false );
 		}
-		if ( DiscriminatorType.CHAR.equals( type ) ) {
-			discriminatorColumn.setDiscriminatorTypeName( "character" );
-			discriminatorColumn.setImplicit( false );
-		}
-		else if ( DiscriminatorType.INTEGER.equals( type ) ) {
-			discriminatorColumn.setDiscriminatorTypeName( "integer" );
-			discriminatorColumn.setImplicit( false );
-		}
-		else if ( DiscriminatorType.STRING.equals( type ) || type == null ) {
-			if ( discAnn != null ) discriminatorColumn.setLength( (long) discAnn.length() );
-			discriminatorColumn.setDiscriminatorTypeName( "string" );
-		}
 		else {
-			throw new AssertionFailure( "Unknown discriminator type: " + type );
+			discriminatorColumn.setImplicit( true );
 		}
+		setDiscriminatorType( type, discAnn, discriminatorColumn );
 		discriminatorColumn.bind();
 		return discriminatorColumn;
 	}
 
+	private static void setDiscriminatorType(
+			DiscriminatorType type,
+			DiscriminatorColumn discAnn,
+			AnnotatedDiscriminatorColumn discriminatorColumn) {
+		if ( type == null ) {
+			discriminatorColumn.setDiscriminatorTypeName( "string" );
+		}
+		else {
+			switch ( type ) {
+				case CHAR:
+					discriminatorColumn.setDiscriminatorTypeName( "character" );
+					discriminatorColumn.setImplicit( false );
+					break;
+				case INTEGER:
+					discriminatorColumn.setDiscriminatorTypeName( "integer" );
+					discriminatorColumn.setImplicit( false );
+					break;
+				case STRING:
+					discriminatorColumn.setDiscriminatorTypeName( "string" );
+					if ( discAnn != null ) {
+						discriminatorColumn.setLength( (long) discAnn.length() );
+					}
+					break;
+				default:
+					throw new AssertionFailure( "Unknown discriminator type: " + type );
+			}
+		}
+	}
+
 	@Override
 	public String toString() {
-		return String.format("DiscriminatorColumn{logicalColumnName'%s', discriminatorTypeName='%s'}",
-				getLogicalColumnName(), discriminatorTypeName
+		return String.format(
+				"DiscriminatorColumn{logicalColumnName'%s', discriminatorTypeName='%s'}",
+				getLogicalColumnName(),
+				discriminatorTypeName
 		);
 	}
 }

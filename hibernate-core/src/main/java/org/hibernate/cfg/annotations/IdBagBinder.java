@@ -35,6 +35,8 @@ import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
+import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -170,7 +172,7 @@ public class IdBagBinder extends BagBinder {
 			buildingContext.getMetadataCollector().addSecondPass( secondPass );
 		}
 		else {
-			BinderHelper.makeIdGenerator(
+			makeIdGenerator(
 					id,
 					property,
 					generatorType,

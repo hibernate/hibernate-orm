@@ -30,12 +30,12 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
 
-	MetadataBuildingContext buildingContext;
-	Collection collection;
+//	MetadataBuildingContext buildingContext;
+	private final Collection collection;
 
 	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection) {
 		this.collection = collection;
-		this.buildingContext = buildingContext;
+//		this.buildingContext = buildingContext;
 	}
 
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
@@ -49,8 +49,9 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 		if ( LOG.isDebugEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
-			if ( collection.isIndexed() )
+			if ( collection.isIndexed() ) {
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
+			}
 			if ( collection.isOneToMany() ) {
 				msg += ", one-to-many: "
 					+ ( (OneToMany) collection.getElement() ).getReferencedEntityName();

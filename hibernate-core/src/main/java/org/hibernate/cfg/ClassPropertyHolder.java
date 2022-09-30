@@ -259,10 +259,14 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					final Value originalValue = prop.getValue();
 					if ( originalValue instanceof SimpleValue ) {
 						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( ( (SimpleValue) originalValue ).getTypeName() ) ) {
+						if ( inferredData.getTypeName().equals( getTypeName( originalValue ) ) ) {
 							superclass.addDeclaredProperty( prop );
 							return;
 						}
+					}
+					if ( originalValue instanceof Component ) {
+						superclass.addDeclaredProperty( prop );
+						return;
 					}
 					// If the property depends on a type variable, we have to copy it and the Value
 					final Property actualProperty = prop.copy();
@@ -294,12 +298,37 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					else {
 						setTypeName( value, inferredData.getTypeName() );
 					}
+//					if ( value instanceof Component ) {
+//						Component component = ( (Component) value );
+//						Iterator<Property> propertyIterator = component.getPropertyIterator();
+//						while ( propertyIterator.hasNext() ) {
+//							Property property = propertyIterator.next();
+//							try {
+//								property.getGetter( component.getComponentClass() );
+//							}
+//							catch (PropertyNotFoundException e) {
+//								propertyIterator.remove();
+//							}
+//						}
+//					}
 					actualProperty.setValue( value );
 					superclass.addDeclaredProperty( actualProperty );
 					break;
 				}
 			}
 		}
+	}
+
+	private String getTypeName(Value value) {
+		if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			final String typeName = component.getTypeName();
+			if ( typeName != null ) {
+				return typeName;
+			}
+			return component.getComponentClassName();
+		}
+		return ( (SimpleValue) value ).getTypeName();
 	}
 
 	private void setTypeName(Value value, String typeName) {
@@ -311,7 +340,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		else if ( value instanceof Component ) {
 			final Component component = (Component) value;
 			component.setComponentClassName( typeName );
-			component.setTypeName( typeName );
+			if ( component.getTypeName() != null ) {
+				component.setTypeName( typeName );
+			}
 		}
 		else if ( value instanceof SimpleValue ) {
 			( (SimpleValue) value ).setTypeName( typeName );

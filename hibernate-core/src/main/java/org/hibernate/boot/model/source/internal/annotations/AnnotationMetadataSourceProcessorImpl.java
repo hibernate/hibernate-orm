@@ -19,6 +19,7 @@ import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -169,42 +170,34 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processTypeDefinitions() {
-
 	}
 
 	@Override
 	public void processQueryRenames() {
-
 	}
 
 	@Override
 	public void processNamedQueries() {
-
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-
 	}
 
 	@Override
 	public void processFetchProfiles() {
-
 	}
 
 	@Override
 	public void prepareForEntityHierarchyProcessing() {
-
 	}
 
 	@Override
@@ -215,16 +208,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				rootMetadataBuildingContext
 		);
 
-
 		for ( XClass clazz : orderedClasses ) {
 			if ( processedEntityNames.contains( clazz.getName() ) ) {
 				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
-				continue;
 			}
-
-			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
-			AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
-			processedEntityNames.add( clazz.getName() );
+			else {
+				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
+				AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
+				processedEntityNames.add( clazz.getName() );
+			}
 		}
 	}
 
@@ -270,16 +262,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) {
-			return;
-		}
-		//process superclass first
-		orderHierarchy( copy, newList, original, clazz.getSuperclass() );
-		if ( original.contains( clazz ) ) {
-			if ( !newList.contains( clazz ) ) {
-				newList.add( clazz );
+		if ( clazz != null && !reflectionManager.equals( clazz, Object.class ) ) {
+			//process superclass first
+			orderHierarchy( copy, newList, original, clazz.getSuperclass() );
+			if ( original.contains( clazz ) ) {
+				if ( !newList.contains( clazz ) ) {
+					newList.add( clazz );
+				}
+				copy.remove( clazz );
 			}
-			copy.remove( clazz );
 		}
 	}
 
@@ -292,12 +283,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processResultSetMappings() {
-
 	}
 
 	@Override
 	public void finishUp() {
-
 	}
 
 	private static class AttributeConverterManager implements AttributeConverterDefinitionCollector {

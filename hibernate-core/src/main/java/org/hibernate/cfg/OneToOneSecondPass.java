@@ -30,6 +30,10 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.type.ForeignKeyDirection;
 
+import static org.hibernate.cfg.BinderHelper.findPropertyByName;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+import static org.hibernate.internal.util.StringHelper.qualify;
+
 /**
  * We have to handle OneToOne in a second pass because:
  * -
@@ -93,7 +97,7 @@ public class OneToOneSecondPass implements SecondPass {
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
 		value.setConstrained( !optional );
-		final ForeignKeyDirection foreignKeyDirection = !BinderHelper.isEmptyAnnotationValue( mappedBy )
+		final ForeignKeyDirection foreignKeyDirection = !isEmptyAnnotationValue( mappedBy )
 				? ForeignKeyDirection.TO_PARENT
 				: ForeignKeyDirection.FROM_PARENT;
 		value.setForeignKeyType(foreignKeyDirection);
@@ -120,7 +124,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional );
-		if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
+		if ( isEmptyAnnotationValue( mappedBy ) ) {
 			/*
 			 * we need to check if the columns are in the right order
 			 * if not, then we need to create a many to one and formula
@@ -130,7 +134,7 @@ public class OneToOneSecondPass implements SecondPass {
 			boolean rightOrder = true;
 
 			if ( rightOrder ) {
-				String path = StringHelper.qualify( propertyHolder.getPath(), propertyName );
+				String path = qualify( propertyHolder.getPath(), propertyName );
 				final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
 						value,
 						joinColumns,
@@ -155,20 +159,20 @@ public class OneToOneSecondPass implements SecondPass {
 				if ( otherSide == null ) {
 					throw new MappingException( "Unable to find entity: " + value.getReferencedEntityName() );
 				}
-				otherSideProperty = BinderHelper.findPropertyByName( otherSide, mappedBy );
+				otherSideProperty = findPropertyByName( otherSide, mappedBy );
 			}
 			catch (MappingException e) {
 				throw new AnnotationException(
-						"Unknown mappedBy in: " + StringHelper.qualify( ownerEntity, ownerProperty )
+						"Unknown mappedBy in: " + qualify( ownerEntity, ownerProperty )
 								+ ", referenced property unknown: "
-								+ StringHelper.qualify( value.getReferencedEntityName(), mappedBy )
+								+ qualify( value.getReferencedEntityName(), mappedBy )
 				);
 			}
 			if ( otherSideProperty == null ) {
 				throw new AnnotationException(
-						"Unknown mappedBy in: " + StringHelper.qualify( ownerEntity, ownerProperty )
+						"Unknown mappedBy in: " + qualify( ownerEntity, ownerProperty )
 								+ ", referenced property unknown: "
-								+ StringHelper.qualify( value.getReferencedEntityName(), mappedBy )
+								+ qualify( value.getReferencedEntityName(), mappedBy )
 				);
 			}
 			if ( otherSideProperty.getValue() instanceof OneToOne ) {
@@ -238,11 +242,11 @@ public class OneToOneSecondPass implements SecondPass {
 			else {
 				throw new AnnotationException(
 						"Referenced property not a (One|Many)ToOne: "
-								+ StringHelper.qualify(
+								+ qualify(
 								otherSide.getEntityName(), mappedBy
 						)
 								+ " in mappedBy of "
-								+ StringHelper.qualify( ownerEntity, ownerProperty )
+								+ qualify( ownerEntity, ownerProperty )
 				);
 			}
 		}

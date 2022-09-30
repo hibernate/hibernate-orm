@@ -15,6 +15,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 
+import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
+
 /**
  * @author Andrea Boriero
  */
@@ -52,6 +54,6 @@ public class IdGeneratorResolverSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> idGeneratorDefinitionMap) throws MappingException {
-		BinderHelper.makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifierGeneratorDefinition );
+		makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifierGeneratorDefinition );
 	}
 }

@@ -152,7 +152,7 @@ public class BinderHelper {
 				embeddedComp.setEmbedded( true );
 				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
 				for (Property property : properties) {
-					Property clone = BinderHelper.shallowCopy( property );
+					Property clone = shallowCopy( property );
 					clone.setInsertable( false );
 					clone.setUpdateable( false );
 					clone.setNaturalIdentifier( false );

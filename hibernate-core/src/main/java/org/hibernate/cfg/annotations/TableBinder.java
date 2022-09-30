@@ -48,6 +48,12 @@ import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isQuoted;
+import static org.hibernate.internal.util.StringHelper.unquote;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+
 /**
  * Table related operations
  *
@@ -141,13 +147,13 @@ public class TableBinder {
 		final Identifier ownerEntityTableNameIdentifier = toIdentifier( ownerEntityTable );
 
 		//logicalName only accurate for assoc table...
-		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
-		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
+		final String unquotedOwnerTable = unquote( ownerEntityTable );
+		final String unquotedAssocTable = unquote( associatedEntityTable );
 
 		final ObjectNameSource nameSource = buildNameContext();
 
-		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
-		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
+		final boolean ownerEntityTableQuoted = isQuoted( ownerEntityTable );
+		final boolean associatedEntityTableQuoted = isQuoted( associatedEntityTable );
 		final NamingStrategyHelper namingStrategyHelper = new NamingStrategyHelper() {
 			@Override
 			public Identifier determineImplicitName(final MetadataBuildingContext buildingContext) {
@@ -446,7 +452,7 @@ public class TableBinder {
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		final Identifier logicalName;
-		if ( StringHelper.isNotEmpty( nameSource.getExplicitName() ) ) {
+		if ( isNotEmpty( nameSource.getExplicitName() ) ) {
 			logicalName = namingStrategyHelper.handleExplicitName( nameSource.getExplicitName(), buildingContext );
 		}
 		else {
@@ -478,12 +484,8 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		schema = BinderHelper.isEmptyOrNullAnnotationValue( schema )
-				? null
-				: schema;
-		catalog = BinderHelper.isEmptyOrNullAnnotationValue( catalog )
-				? null
-				: catalog;
+		schema = isEmptyOrNullAnnotationValue( schema )  ? null : schema;
+		catalog = isEmptyOrNullAnnotationValue( catalog ) ? null : catalog;
 
 		final Table table;
 		if ( denormalizedSuperTableXref != null ) {
@@ -543,7 +545,7 @@ public class TableBinder {
 					: columns[0].getPropertyHolder().getPersistentClass();
 		}
 		final String mappedByProperty = columns[0].getMappedBy();
-		if ( StringHelper.isNotEmpty( mappedByProperty ) ) {
+		if ( isNotEmpty( mappedByProperty ) ) {
 			/*
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
@@ -764,7 +766,7 @@ public class TableBinder {
 			result = java.util.Collections.emptyList();
 		}
 		else {
-			result = CollectionHelper.arrayList( annotations.length );
+			result = arrayList( annotations.length );
 			for ( UniqueConstraint uc : annotations ) {
 				result.add(
 						new UniqueConstraintHolder()

@@ -51,7 +51,9 @@ import org.jboss.logging.Logger;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * @author Emmanuel Bernard
@@ -265,7 +267,7 @@ public class PropertyBinder {
 				}
 				else {
 					rootClass.setIdentifierProperty( prop );
-					final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+					final org.hibernate.mapping.MappedSuperclass superclass = getMappedSuperclassOrNull(
 							declaringClass,
 							inheritanceStatePerClass,
 							buildingContext
@@ -368,19 +370,19 @@ public class PropertyBinder {
 			if ( property.isAnnotationPresent(Version.class) ) {
 				throw new AnnotationException(
 						"@OptimisticLock(excluded=true) incompatible with @Version: "
-								+ StringHelper.qualify(holder.getPath(), name)
+								+ qualify( holder.getPath(), name )
 				);
 			}
 			if ( property.isAnnotationPresent(Id.class) ) {
 				throw new AnnotationException(
 						"@OptimisticLock(excluded=true) incompatible with @Id: "
-								+ StringHelper.qualify(holder.getPath(), name)
+								+ qualify( holder.getPath(), name )
 				);
 			}
 			if ( property.isAnnotationPresent(EmbeddedId.class) ) {
 				throw new AnnotationException(
 						"@OptimisticLock(excluded=true) incompatible with @EmbeddedId: "
-								+ StringHelper.qualify(holder.getPath(), name)
+								+ qualify( holder.getPath(), name )
 				);
 			}
 		}
@@ -414,7 +416,7 @@ public class PropertyBinder {
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
 					throw new AnnotationException(
-							"Only one generator annotation is allowed: " + StringHelper.qualify(
+							"Only one generator annotation is allowed: " + qualify(
 									holder.getPath(),
 									name
 							)
@@ -451,7 +453,7 @@ public class PropertyBinder {
 
 			throw new AnnotationException(
 					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "
-							+ StringHelper.qualify( holder.getPath(), name )
+							+ qualify( holder.getPath(), name )
 			);
 		}
 
@@ -487,7 +489,7 @@ public class PropertyBinder {
 		}
 		catch (Exception e) {
 			throw new AnnotationException(
-					"Exception occurred during processing of generator annotation: " + StringHelper.qualify(
+					"Exception occurred during processing of generator annotation: " + qualify(
 							holder.getPath(),
 							name
 					), e

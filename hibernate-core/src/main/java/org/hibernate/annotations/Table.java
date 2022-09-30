@@ -43,6 +43,8 @@ public @interface Table {
 
 	/**
 	 * A check constraint, written in native SQL.
+	 * <p>
+	 * <em>Useful for secondary tables, otherwise use {@link Check}.</em>
 	 *
 	 * @see Check
 	 */
@@ -50,6 +52,8 @@ public @interface Table {
 
 	/**
 	 * Specifies comment to add to the generated DDL for the table.
+	 * <p>
+	 * <em>Useful for secondary tables, otherwise use {@link Comment}.</em>
 	 *
 	 * @see Comment
 	 */

@@ -33,6 +33,8 @@ import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getPath;
+import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
@@ -139,7 +141,7 @@ class ColumnsBuilder {
 		}
 		else if ( joinColumns == null && property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 			throw new AnnotationException( "@Any requires an explicit @JoinColumn(s): "
-					+ BinderHelper.getPath( propertyHolder, inferredData ) );
+					+ getPath( propertyHolder, inferredData ) );
 		}
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
@@ -179,7 +181,7 @@ class ColumnsBuilder {
 			if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
 				throw new AnnotationException(
 						"JoinTable.name() on a @ToOne association has to be explicit: "
-								+ BinderHelper.getPath( propertyHolder, inferredData )
+								+ getPath( propertyHolder, inferredData )
 				);
 			}
 		}
@@ -275,7 +277,7 @@ class ColumnsBuilder {
 
 	AnnotatedColumn[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
 		AnnotatedColumn[] result = columns;
-		final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
+		final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 				isId,
 				propertyHolder,
 				property.getName(),

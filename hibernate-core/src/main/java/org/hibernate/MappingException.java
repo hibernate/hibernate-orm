@@ -7,8 +7,8 @@
 package org.hibernate;
 
 /**
- * An exception that occurs while reading mapping sources (xml/annotations), usually as a result of something
- * screwy in the O-R mappings.
+ * An exception that occurs while reading mapping sources (xml/annotations),
+ * usually as a result of something screwy in the O-R mappings.
  *
  * @author Gavin King
  */

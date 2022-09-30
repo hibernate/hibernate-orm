@@ -90,9 +90,9 @@ public class BeanValidationIntegrator implements Integrator {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
-		Object modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
+		Object modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
 		if ( modeSetting == null ) {
-			modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
+			modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
 		}
 		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
 		if ( modes.size() > 1 ) {
@@ -159,11 +159,11 @@ public class BeanValidationIntegrator implements Integrator {
 
 	private boolean isBeanValidationApiAvailable(ClassLoaderService classLoaderService) {
 		try {
-			classLoaderService.classForName( BV_CHECK_CLASS );
+			classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
 		}
 		catch (Exception e) {
 			try {
-				classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
+				classLoaderService.classForName( BV_CHECK_CLASS );
 			}
 			catch (Exception e2) {
 				return false;

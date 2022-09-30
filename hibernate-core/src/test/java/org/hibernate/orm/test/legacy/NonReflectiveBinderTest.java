@@ -41,7 +41,7 @@ public class NonReflectiveBinderTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( "javax.persistence.validation.mode", "none" )
+				.applySetting( "jakarta.persistence.validation.mode", "none" )
 				.build();
 		metadata = new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/legacy/Wicked.hbm.xml" )

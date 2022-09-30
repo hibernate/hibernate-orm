@@ -45,7 +45,7 @@ public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
+		cfg.setProperty( "jakarta.persistence.validation.mode", "AUTO" );
 	}
 
 	@Override

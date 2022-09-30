@@ -1544,7 +1544,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void explicitSkipLockedLockCombo();
 
 	@LogMessage(level = INFO)
-	@Message(value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448)
+	@Message(value = "'jakarta.persistence.validation.mode' named multiple values : %s", id = 448)
 	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)

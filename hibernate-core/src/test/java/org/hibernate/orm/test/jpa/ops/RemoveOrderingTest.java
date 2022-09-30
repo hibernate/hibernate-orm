@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				RemoveOrderingTest.Person.class, RemoveOrderingTest.Company.class
 		},
-		integrationSettings = { @Setting(name = AvailableSettings.JPA_VALIDATION_MODE, value = "NONE") }
+		integrationSettings = { @Setting(name = AvailableSettings.JAKARTA_VALIDATION_MODE, value = "NONE") }
 )
 public class RemoveOrderingTest {
 

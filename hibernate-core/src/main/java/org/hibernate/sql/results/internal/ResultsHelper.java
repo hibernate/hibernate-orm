@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,6 +43,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -59,12 +61,21 @@ public class ResultsHelper {
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValues jdbcValues) {
+		return createRowReader( executionContext, lockOptions, rowTransformer, transformedResultJavaType, jdbcValues.getValuesMapping());
+	}
+
+	public static <R> RowReader<R> createRowReader(
+			ExecutionContext executionContext,
+			LockOptions lockOptions,
+			RowTransformer<R> rowTransformer,
+			Class<R> transformedResultJavaType,
+			JdbcValuesMapping jdbcValuesMapping) {
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
 		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
 		final List<Initializer> initializers = new ArrayList<>();
 
-		final List<DomainResultAssembler<?>> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
+		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
 				new AssemblerCreationState() {
 
 					@Override

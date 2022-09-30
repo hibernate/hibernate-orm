@@ -27,7 +27,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable<EntityAction>, AfterTransactionCompletionProcess {
+		implements ComparableEntityAction, Executable, Serializable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Object id;
@@ -152,12 +152,13 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(EntityAction action) {
+	public int compareTo(ComparableEntityAction action) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( action.entityName );
-		return roleComparison != 0 ? roleComparison
+		final int roleComparison = entityName.compareTo( action.getEntityName() );
+		return roleComparison != 0
+				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, action.id );
+				: persister.getIdentifierType().compare( id, action.getId() );
 	}
 
 	/**

@@ -12,8 +12,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Define the laziness options available for a {@link jakarta.persistence.OneToOne}
+ * Specify the laziness of a {@link jakarta.persistence.OneToOne}
  * or {@link jakarta.persistence.ManyToOne}) association.
+ * <p>
+ * This is an alternative to specifying the JPA
+ * {@link jakarta.persistence.FetchType}.
  *
  * @author Emmanuel Bernard
  */
@@ -21,7 +24,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LazyToOne {
 	/**
-	 * Specify the laziness option.
+	 * The laziness of the association.
 	 */
-	LazyToOneOption value();
+	LazyToOneOption value() default LazyToOneOption.PROXY;
 }

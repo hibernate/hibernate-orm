@@ -12,7 +12,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Define the lazy status of a collection.
+ * Specify the laziness of a collection, either a
+ * {@link jakarta.persistence.OneToMany} or
+ * {@link jakarta.persistence.ManyToMany} association,
+ * or an {@link jakarta.persistence.ElementCollection}.
+ * <p>
+ * This is an alternative to specifying the JPA
+ * {@link jakarta.persistence.FetchType}.
  *
  * @author Emmanuel Bernard
  */
@@ -20,7 +26,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LazyCollection {
 	/**
-	 * The laziness option for the collection.
+	 * The laziness of the collection.
 	 */
-	LazyCollectionOption value();
+	LazyCollectionOption value() default LazyCollectionOption.TRUE;
 }

@@ -75,6 +75,14 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 				);
 	}
 
+	protected LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	protected List<JdbcParameter> getJdbcParameters() {
+		return jdbcParameters;
+	}
+
 	@Override
 	public Loadable getLoadable() {
 		return persister;

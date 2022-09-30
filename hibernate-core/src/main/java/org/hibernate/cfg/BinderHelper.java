@@ -7,7 +7,10 @@
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,23 +21,30 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
@@ -938,21 +948,17 @@ public class BinderHelper {
 			MetadataBuildingContext buildingContext) {
 		final XClass persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
 					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			PropertyData pd = buildingContext.getMetadataCollector().getPropertyAnnotatedWithIdAndToOne(
-					persistentXClass,
-					propertyName
-			);
+			PropertyData pd = metadataCollector.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
 			if ( pd == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-				pd = buildingContext.getMetadataCollector().getPropertyAnnotatedWithMapsId(
-						persistentXClass,
-						propertyName
-				);
+				pd = metadataCollector.getPropertyAnnotatedWithMapsId( persistentXClass, propertyName );
 			}
 			return pd;
 		}
-		return buildingContext.getMetadataCollector()
-				.getPropertyAnnotatedWithMapsId( persistentXClass, isId ? "" : propertyName);
+		else {
+			return metadataCollector.getPropertyAnnotatedWithMapsId( persistentXClass, isId ? "" : propertyName);
+		}
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
@@ -973,5 +979,63 @@ public class BinderHelper {
 			}
 		}
 		return ret;
+	}
+
+	public static boolean hasToOneAnnotation(XAnnotatedElement property) {
+		return property.isAnnotationPresent(ManyToOne.class)
+			|| property.isAnnotationPresent(OneToOne.class);
+	}
+
+	public static <T extends Annotation> T getOverridableAnnotation(
+			XAnnotatedElement element,
+			Class<T> annotationType,
+			MetadataBuildingContext context) {
+		Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+		Iterator<Annotation> annotations =
+				Arrays.stream( element.getAnnotations() )
+						.flatMap(annotation -> {
+							try {
+								Method value = annotation.annotationType().getDeclaredMethod("value");
+								Class<?> returnType = value.getReturnType();
+								if ( returnType.isArray()
+										&& returnType.getComponentType().isAnnotationPresent(Repeatable.class)
+										&& returnType.getComponentType().isAnnotationPresent(DialectOverride.OverridesAnnotation.class) ) {
+									return Stream.of( (Annotation[]) value.invoke(annotation) );
+								}
+							}
+							catch (NoSuchMethodException ignored) {}
+							catch (Exception e) {
+								throw new AssertionFailure("could not read @DialectOverride annotation", e);
+							}
+							return Stream.of(annotation);
+						}).iterator();
+		while ( annotations.hasNext() ) {
+			Annotation annotation = annotations.next();
+			Class<? extends Annotation> type = annotation.annotationType();
+			DialectOverride.OverridesAnnotation overridesAnnotation = type.getAnnotation(DialectOverride.OverridesAnnotation.class);
+			if ( overridesAnnotation != null
+					&& overridesAnnotation.value().equals(annotationType) ) {
+				try {
+					//noinspection unchecked
+					Class<? extends Dialect> overrideDialect = (Class<? extends Dialect>)
+							type.getDeclaredMethod("dialect").invoke(annotation);
+					if ( overrideDialect.isAssignableFrom( dialect.getClass() ) ) {
+						DialectOverride.Version before = (DialectOverride.Version)
+								type.getDeclaredMethod("before").invoke(annotation);
+						DialectOverride.Version sameOrAfter = (DialectOverride.Version)
+								type.getDeclaredMethod("sameOrAfter").invoke(annotation);
+						if ( dialect.getVersion().isBefore( before.major(), before.minor() )
+							&& dialect.getVersion().isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
+							//noinspection unchecked
+							return (T) type.getDeclaredMethod("override").invoke(annotation);
+						}
+					}
+				}
+				catch (Exception e) {
+					throw new AssertionFailure("could not read @DialectOverride annotation", e);
+				}
+			}
+		}
+		return element.getAnnotation( annotationType );
 	}
 }

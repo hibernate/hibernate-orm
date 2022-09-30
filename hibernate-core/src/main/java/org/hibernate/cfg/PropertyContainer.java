@@ -48,10 +48,6 @@ import jakarta.persistence.Transient;
  * @author Hardy Ferentschik
  */
 class PropertyContainer {
-//
-//    static {
-//        System.setProperty("jboss.i18n.generate-proxies", "true");
-//    }
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyContainer.class.getName());
 

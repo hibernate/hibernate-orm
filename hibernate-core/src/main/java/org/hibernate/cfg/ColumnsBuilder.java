@@ -32,7 +32,7 @@ import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
-import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 

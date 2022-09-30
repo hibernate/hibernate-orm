@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.TestForIssue;
@@ -39,7 +40,7 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
+			Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() ) );
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,11 +75,11 @@ public class InheritanceState {
 		}
 	}
 
-	boolean hasTable() {
+	public boolean hasTable() {
 		return !hasParents() || !InheritanceType.SINGLE_TABLE.equals( getType() );
 	}
 
-	boolean hasDenormalizedTable() {
+	public boolean hasDenormalizedTable() {
 		return hasParents() && InheritanceType.TABLE_PER_CLASS.equals( getType() );
 	}
 
@@ -150,7 +151,7 @@ public class InheritanceState {
 		isEmbeddableSuperclass = embeddableSuperclass;
 	}
 
-	void postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
+	public void postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
 		//make sure we run elements to process
 		getElementsToProcess();
 		addMappedSuperClassInMetadata( persistenceClass );
@@ -319,7 +320,7 @@ public class InheritanceState {
 		}
 	}
 
-	static final class ElementsToProcess {
+	public static final class ElementsToProcess {
 		private final List<PropertyData> properties;
 		private final int idPropertyCount;
 

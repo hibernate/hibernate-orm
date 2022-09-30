@@ -6,7 +6,7 @@
  */
 package org.hibernate.event.internal;
 
-class EventUtil {
+public class EventUtil {
 	public static String getLoggableName(String entityName, Object entity) {
 		return entityName == null ? entity.getClass().getName() : entityName;
 	}

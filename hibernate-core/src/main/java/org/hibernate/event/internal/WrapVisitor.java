@@ -52,7 +52,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType collectionType)
+	protected Object processCollection(Object collection, CollectionType collectionType)
 			throws HibernateException {
 
 		if ( collection == null || collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -146,7 +146,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void processValue(int i, Object[] values, Type[] types) {
+	protected void processValue(int i, Object[] values, Type[] types) {
 		Object result = processValue( values[i], types[i] );
 		if ( result != null ) {
 			substitute = true;
@@ -155,7 +155,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	protected Object processComponent(Object component, CompositeType componentType) throws HibernateException {
 		if ( component != null ) {
 			Object[] values = componentType.getPropertyValues( component, getSession() );
 			Type[] types = componentType.getSubtypes();

@@ -580,15 +580,15 @@ public abstract class AbstractEntityPersister
 		return sqlLazyUpdateStrings;
 	}
 
-	protected ExecuteUpdateResultCheckStyle[] getInsertResultCheckStyles() {
+	public ExecuteUpdateResultCheckStyle[] getInsertResultCheckStyles() {
 		return insertResultCheckStyles;
 	}
 
-	protected ExecuteUpdateResultCheckStyle[] getUpdateResultCheckStyles() {
+	public ExecuteUpdateResultCheckStyle[] getUpdateResultCheckStyles() {
 		return updateResultCheckStyles;
 	}
 
-	protected ExecuteUpdateResultCheckStyle[] getDeleteResultCheckStyles() {
+	public ExecuteUpdateResultCheckStyle[] getDeleteResultCheckStyles() {
 		return deleteResultCheckStyles;
 	}
 

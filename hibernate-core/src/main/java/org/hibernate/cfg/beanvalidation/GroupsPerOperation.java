@@ -56,9 +56,9 @@ public class GroupsPerOperation {
 	}
 
 	public static Class<?>[] buildGroupsForOperation(Operation operation, Map settings, ClassLoaderAccess classLoaderAccess) {
-		Object property = settings.get( operation.getGroupPropertyName() );
+		Object property = settings.get( operation.getJakartaGroupPropertyName() );
 		if ( property == null ) {
-			property = settings.get( operation.getJakartaGroupPropertyName() );
+			property = settings.get( operation.getGroupPropertyName() );
 		}
 
 		if ( property == null ) {
@@ -92,7 +92,7 @@ public class GroupsPerOperation {
 		}
 
 		//null is bad and excluded by instanceof => exception is raised
-		throw new HibernateException( JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
+		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
 	}
 
 	public Class<?>[] get(Operation operation) {

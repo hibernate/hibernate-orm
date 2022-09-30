@@ -84,7 +84,7 @@ public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 				Default.class.getName() + ", " + Strict.class.getName()
 		);
 		cfg.setProperty( "hibernate.validator.apply_to_ddl", "false" );
-		cfg.setProperty( "javax.persistence.validation.mode", "auto" );
+		cfg.setProperty( "jakarta.persistence.validation.mode", "auto" );
 	}
 
 	@Override

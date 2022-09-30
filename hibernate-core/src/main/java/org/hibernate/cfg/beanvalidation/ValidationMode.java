@@ -54,7 +54,7 @@ public enum ValidationMode {
 				return valueOf( modeProperty.trim().toUpperCase(Locale.ROOT) );
 			}
 			catch ( IllegalArgumentException e ) {
-				throw new HibernateException( "Unknown validation mode in " + BeanValidationIntegrator.MODE_PROPERTY + ": " + modeProperty );
+				throw new HibernateException( "Unknown validation mode in " + BeanValidationIntegrator.JAKARTA_MODE_PROPERTY + ": " + modeProperty );
 			}
 		}
 	}

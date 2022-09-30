@@ -469,7 +469,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		return -1;
 	}
 
-	private JdbcValues resolveJdbcValuesSource(
+	public JdbcValues resolveJdbcValuesSource(
 			String queryIdentifier,
 			JdbcSelect jdbcSelect,
 			boolean canBeCached,
@@ -588,7 +588,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	private static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
+	public static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
 		private final ResultSetAccess resultSetAccess;
 		private String[] columnNames;
 		private BasicType<?>[] types;

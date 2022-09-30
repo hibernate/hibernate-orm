@@ -112,16 +112,43 @@ public class EntityUpdateAction extends EntityAction {
 				: naturalIdMapping.extractNaturalIdFromEntityState( previousState, session );
 	}
 
-	public Object[] getState() {
+	protected Object[] getState() {
 		return state;
 	}
 
-	public Object[] getPreviousState() {
+	protected Object[] getPreviousState() {
 		return previousState;
+	}
+
+	protected Object getNextVersion() {
+		return nextVersion;
+	}
+
+	protected int[] getDirtyFields() {
+		return dirtyFields;
+	}
+	protected boolean hasDirtyCollection() {
+		return hasDirtyCollection;
+	}
+
+	protected NaturalIdMapping getNaturalIdMapping() {
+		return naturalIdMapping;
+	}
+
+	protected Object getPreviousNaturalIdValues() {
+		return previousNaturalIdValues;
 	}
 
 	public Object getRowId() {
 		return rowId;
+	}
+
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
+	}
+
+	protected void setCacheEntry(Object cacheEntry) {
+		this.cacheEntry = cacheEntry;
 	}
 
 	@Override
@@ -229,7 +256,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private Object getPreviousVersion() {
+	protected Object getPreviousVersion() {
 		final EntityPersister persister = getPersister();
 		if ( persister.isVersionPropertyGenerated() ) {
 			// we need to grab the version value from the entity, otherwise

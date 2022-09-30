@@ -266,7 +266,7 @@ public class DefaultMergeEventListener
 			super( entity, id, session );
 		}
 		@Override
-		Object processCollection(Object collection, CollectionType collectionType) throws HibernateException {
+		protected Object processCollection(Object collection, CollectionType collectionType) throws HibernateException {
 			if ( collection instanceof PersistentCollection ) {
 				final PersistentCollection<?> coll = (PersistentCollection<?>) collection;
 				final CollectionPersister persister = getSession().getFactory()

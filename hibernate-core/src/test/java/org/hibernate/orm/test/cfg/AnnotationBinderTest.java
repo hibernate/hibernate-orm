@@ -16,6 +16,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -32,7 +33,7 @@ public class AnnotationBinderTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
+			Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() ) );
 
 	@Test
 	public void testInvalidPrimaryKeyJoinColumnAnnotationMessageContainsClassName() throws Exception {
@@ -47,7 +48,7 @@ public class AnnotationBinderTest {
 
 			assertTrue( "Expected warning HHH00137 but it wasn't triggered", triggerable.wasTriggered() );
 			assertTrue(
-					"Expected invalid class name in warning HHH00137 message but it does not apper to be present; got " + triggerable.triggerMessage(),
+					"Expected invalid class name in warning HHH00137 message but it does not appear to be present; got " + triggerable.triggerMessage(),
 					triggerable.triggerMessage()
 							.matches( ".*\\b\\Q" + InvalidPrimaryKeyJoinColumnAnnotationEntity.class.getName() + "\\E\\b.*" )
 			);

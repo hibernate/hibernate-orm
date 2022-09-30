@@ -37,7 +37,7 @@ import org.hibernate.mapping.Table;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -851,7 +851,7 @@ public class AnnotatedColumn {
 	private void applyCheckConstraint(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			Check check = AnnotationBinder.getOverridableAnnotation( xProperty, Check.class, context );
+			Check check = getOverridableAnnotation( xProperty, Check.class, context );
 			if ( check != null ) {
 				if (length!=1) {
 					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");

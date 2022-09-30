@@ -140,6 +140,14 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 	}
 
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
+	}
+
+	public Limit getLimit() {
+		return limit;
+	}
+
 	@Override
 	public ResultSet getResultSet() {
 		if ( resultSet == null ) {

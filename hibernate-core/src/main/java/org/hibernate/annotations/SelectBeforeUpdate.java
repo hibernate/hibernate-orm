@@ -17,10 +17,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * should be fetched from the database when the entity is reattached using
  * {@link org.hibernate.Session#update(Object)}.
  *
+ * @deprecated Since {@link org.hibernate.Session#update(Object)} is deprecated
+ *
  * @author Steve Ebersole
  */
 @Target( TYPE )
 @Retention( RUNTIME )
+@Deprecated(since = "6.2")
 public @interface SelectBeforeUpdate {
 	/**
 	 * @deprecated When {@code false}, this annotation has no effect.

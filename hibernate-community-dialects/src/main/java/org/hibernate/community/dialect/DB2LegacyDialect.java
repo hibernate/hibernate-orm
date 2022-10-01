@@ -176,8 +176,9 @@ public class DB2LegacyDialect extends Dialect {
 			case VARBINARY:
 				// should use 'varbinary' since version 11
 				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

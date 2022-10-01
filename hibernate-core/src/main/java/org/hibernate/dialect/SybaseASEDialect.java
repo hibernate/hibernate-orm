@@ -102,8 +102,9 @@ public class SybaseASEDialect extends SybaseDialect {
 				return "date";
 			case TIME:
 				return "time";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

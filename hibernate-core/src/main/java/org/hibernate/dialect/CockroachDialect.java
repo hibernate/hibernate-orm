@@ -202,8 +202,10 @@ public class CockroachDialect extends Dialect {
 
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

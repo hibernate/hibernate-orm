@@ -618,8 +618,10 @@ public class OracleLegacyDialect extends Dialect {
 			case BINARY:
 			case VARBINARY:
 				return "raw($l)";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

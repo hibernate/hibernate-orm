@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;

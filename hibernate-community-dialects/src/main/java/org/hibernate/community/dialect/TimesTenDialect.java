@@ -104,8 +104,10 @@ public class TimesTenDialect extends Dialect {
 			//`timestamp` has more precision than `tt_timestamp`
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

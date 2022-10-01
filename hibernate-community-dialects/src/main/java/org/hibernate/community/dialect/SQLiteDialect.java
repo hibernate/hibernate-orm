@@ -130,8 +130,9 @@ public class SQLiteDialect extends Dialect {
 			case BINARY:
 			case VARBINARY:
 				return "blob";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

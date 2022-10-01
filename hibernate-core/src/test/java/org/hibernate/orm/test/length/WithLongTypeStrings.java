@@ -1,24 +1,20 @@
 package org.hibernate.orm.test.length;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import static org.hibernate.Length.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
-public class WithLongStrings {
+public class WithLongTypeStrings {
     @Id
     @GeneratedValue
     public int id;
 
-    @Column(length = LONG)
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     public String longish;
 
-    @Column(length = LONG16)
-    public String long16;
-
-    @Column(length = LONG32)
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
     public String long32;
 }

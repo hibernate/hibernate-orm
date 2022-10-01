@@ -194,8 +194,9 @@ public class H2LegacyDialect extends Dialect {
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

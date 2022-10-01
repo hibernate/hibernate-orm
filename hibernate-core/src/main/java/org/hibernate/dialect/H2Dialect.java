@@ -18,7 +18,6 @@ import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
@@ -32,8 +31,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -57,7 +54,6 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -95,7 +91,6 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
  * @author Thomas Mueller
  */
 public class H2Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2Dialect.class );
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 4, 197 );
 
 	private final boolean ansiSequence;
@@ -170,8 +165,9 @@ public class H2Dialect extends Dialect {
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

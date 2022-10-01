@@ -226,10 +226,10 @@ public class SqlTypes {
 	public final static int NULL = Types.NULL;
 
 	/**
-	 * The constant in the Java programming language that indicates
-	 * that the SQL type is database-specific and
-	 * gets mapped to a Java object that can be accessed via
-	 * the methods {@code getObject} and {@code setObject}.
+	 * The constant in the Java programming language that indicates that the
+	 * SQL type is database-specific and is mapped to a Java object that can
+	 * be accessed via the methods {@link java.sql.ResultSet#getObject} and
+	 * {@link java.sql.PreparedStatement#setObject}.
 	 *
 	 * @see Types#OTHER
 	 */
@@ -246,8 +246,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code DISTINCT}.
+	 * as a type code, that identifies the generic SQL type {@code DISTINCT}.
 	 *
 	 * @see Types#DISTINCT
 	 */
@@ -255,8 +254,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code STRUCT}.
+	 * as a type code, that identifies the generic SQL type {@code STRUCT}.
 	 *
 	 * @see Types#STRUCT
 	 */
@@ -264,8 +262,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code ARRAY}.
+	 * as a type code, that identifies the generic SQL type {@code ARRAY}.
 	 *
 	 * @see Types#ARRAY
 	 */
@@ -273,8 +270,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code BLOB}.
+	 * as a type code, that identifies the generic SQL type {@code BLOB}.
 	 *
 	 * @see Types#ARRAY
 	 */
@@ -282,8 +278,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code CLOB}.
+	 * as a type code, that identifies the generic SQL type {@code CLOB}.
 	 *
 	 * @see Types#CLOB
 	 */
@@ -291,8 +286,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code REF}.
+	 * as a type code, that identifies the generic SQL type {@code REF}.
 	 *
 	 * @see Types#REF
 	 */
@@ -406,8 +400,7 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code UUID}.
+	 * as a type code, that identifies the generic SQL type {@code UUID}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
 	 */
@@ -415,15 +408,14 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code JSON}.
+	 * as a type code, that identifies the generic SQL type {@code JSON}.
 	 */
 	public static final int JSON = 3001;
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code INET} for IPv4 or IPv6 addresses.
+	 * as a type code, that identifies the generic SQL type {@code INET}
+	 * for IPv4 or IPv6 addresses.
 	 */
 	public static final int INET = 3002;
 
@@ -439,7 +431,8 @@ public class SqlTypes {
 	/**
 	 * The constant in the Java programming language, sometimes referred to
 	 * as a type code, that identifies the generic SQL type
-	 * {@code INTERVAL SECOND} for a temporal amount in terms of seconds and fractional seconds.
+	 * {@code INTERVAL SECOND} for a temporal amount in terms of seconds and
+	 * fractional seconds.
 	 */
 	public static final int INTERVAL_SECOND = 3100;
 
@@ -447,22 +440,19 @@ public class SqlTypes {
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code GEOMETRY}.
+	 * as a type code, that identifies the generic SQL type {@code GEOMETRY}.
 	 */
 	public static final int GEOMETRY = 3200;
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code POINT}.
+	 * as a type code, that identifies the generic SQL type {@code POINT}.
 	 */
 	public static final int POINT = 3201;
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to
-	 * as a type code, that identifies the generic SQL type
-	 * {@code GEOGRAPHY}.
+	 * as a type code, that identifies the generic SQL type {@code GEOGRAPHY}.
 	 *
 	 * @since 6.0.1
 	 */

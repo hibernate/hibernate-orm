@@ -87,8 +87,9 @@ public class CacheDialect extends Dialect {
 				return "image";
 			case CLOB:
 				return "text";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

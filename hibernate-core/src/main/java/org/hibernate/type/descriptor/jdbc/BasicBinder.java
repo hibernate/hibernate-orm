@@ -22,8 +22,6 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
-	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
-	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;

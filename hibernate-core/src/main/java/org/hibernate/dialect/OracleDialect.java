@@ -21,7 +21,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
-import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
@@ -584,15 +583,19 @@ public class OracleDialect extends Dialect {
 				// on Oracle is that date has no fractional seconds
 			case TIME_WITH_TIMEZONE:
 				return "timestamp($p) with time zone";
+
 			case VARCHAR:
 				return "varchar2($l char)";
 			case NVARCHAR:
 				return "nvarchar2($l)";
+
 			case BINARY:
 			case VARBINARY:
 				return "raw($l)";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

@@ -121,8 +121,9 @@ public class TeradataDialect extends Dialect {
 				return "byte($l)";
 			case VARBINARY:
 				return "varbyte($l)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

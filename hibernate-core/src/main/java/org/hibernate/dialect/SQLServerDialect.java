@@ -146,8 +146,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return "datetime2($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetimeoffset($p)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

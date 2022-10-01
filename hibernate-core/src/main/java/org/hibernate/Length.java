@@ -54,6 +54,11 @@ public final class Length {
 	 * the maximum length that fits in 32 bits.
 	 * Used to select a variable-length SQL type large
 	 * enough to contain any Java string.
+	 * <p>
+	 * This is also the default length for a column
+	 * declared using
+	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARCHAR)} or
+	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARBINARY)}.
 	 */
 	public static final int LONG32 = Integer.MAX_VALUE;
 	/**

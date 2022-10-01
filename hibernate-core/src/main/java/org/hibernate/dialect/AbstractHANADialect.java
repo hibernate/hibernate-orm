@@ -223,8 +223,9 @@ public abstract class AbstractHANADialect extends Dialect {
 			// map tinyint to smallint since tinyint is unsigned on HANA
 			case TINYINT:
 				return "smallint";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

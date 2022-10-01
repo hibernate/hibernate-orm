@@ -89,8 +89,9 @@ public class MaxDBDialect extends Dialect {
 				return "long byte";
 			case CLOB:
 				return "long varchar";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

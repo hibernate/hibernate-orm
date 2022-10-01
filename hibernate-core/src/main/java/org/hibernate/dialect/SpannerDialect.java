@@ -121,8 +121,10 @@ public class SpannerDialect extends Dialect {
 				return "string(max)";
 			case BLOB:
 				return "bytes(max)";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

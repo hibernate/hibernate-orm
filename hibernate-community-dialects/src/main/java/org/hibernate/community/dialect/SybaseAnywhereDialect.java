@@ -71,8 +71,10 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 			case NCLOB:
 				return "ntext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

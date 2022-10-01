@@ -135,8 +135,9 @@ public class InformixDialect extends Dialect {
 			case VARCHAR:
 			case NVARCHAR:
 				return "lvarchar($l)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

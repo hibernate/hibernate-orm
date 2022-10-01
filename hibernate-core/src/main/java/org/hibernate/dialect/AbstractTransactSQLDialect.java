@@ -87,8 +87,10 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 				return "text";
 			case NCLOB:
 				return "ntext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

@@ -182,8 +182,10 @@ public class MySQLDialect extends Dialect {
 			case NCLOB:
 			case CLOB:
 				return "longtext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

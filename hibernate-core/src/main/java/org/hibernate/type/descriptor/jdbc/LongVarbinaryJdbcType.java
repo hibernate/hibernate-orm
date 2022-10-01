@@ -16,11 +16,23 @@ import java.sql.Types;
 public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 	public static final LongVarbinaryJdbcType INSTANCE = new LongVarbinaryJdbcType();
 
+	private final int jdbcTypeCode;
+
 	public LongVarbinaryJdbcType() {
+		this(Types.LONGVARBINARY);
+	}
+
+	public LongVarbinaryJdbcType(int jdbcTypeCode) {
+		this.jdbcTypeCode = jdbcTypeCode;
+	}
+
+	@Override
+	public String toString() {
+		return "LongVarbinaryTypeDescriptor";
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.LONGVARBINARY;
+		return jdbcTypeCode;
 	}
 }

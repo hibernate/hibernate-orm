@@ -150,8 +150,9 @@ public class FirebirdDialect extends Dialect {
 			case CLOB:
 			case NCLOB:
 				return "blob sub_type text";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

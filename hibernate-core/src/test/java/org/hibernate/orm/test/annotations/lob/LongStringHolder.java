@@ -20,7 +20,7 @@ import jakarta.persistence.Id;
 /**
  * An entity containing data that is materialized into a String immediately.
  * The hibernate type mapped for {@link #LONGVARCHAR} determines the SQL type
- * asctually used.
+ * actually used.
  * 
  * @author Gail Badner
  */

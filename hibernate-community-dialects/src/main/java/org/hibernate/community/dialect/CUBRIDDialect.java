@@ -85,8 +85,9 @@ public class CUBRIDDialect extends Dialect {
 				return "datetime";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetimetz";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

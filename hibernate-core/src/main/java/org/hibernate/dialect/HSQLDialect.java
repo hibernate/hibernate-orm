@@ -120,9 +120,9 @@ public class HSQLDialect extends Dialect {
 			//HSQL has no 'nclob' type, but 'clob' is Unicode (See HHH-10364)
 			case NCLOB:
 				return "clob";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

@@ -420,6 +420,29 @@ public abstract class Dialect implements ConversionContext {
 	 * alternative to
 	 * {@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
 	 * for simple registrations.
+	 * <p>
+	 * Note that:
+	 * <ol>
+	 * <li> Implementations of this method are expected to define a
+	 *      sensible mapping for{@link Types#NCLOB} {@link Types#NCHAR},
+	 *      and {@link Types#NVARCHAR}. On some database, these types
+	 *      are simply remapped to {@code CLOB}, {@code CHAR}, and
+	 *      {@code VARCHAR}.
+	 * <li> Mappings for {@link Types#TIMESTAMP} and
+	 *      {@link Types#TIMESTAMP_WITH_TIMEZONE} should support explicit
+	 *      specification of precision if possible.
+	 * <li> As specified by {@link DdlTypeRegistry#getDescriptor(int)},
+	 *      this method never receives {@link Types#LONGVARCHAR},
+	 *      {@link Types#LONGNVARCHAR}, nor {@link Types#LONGVARBINARY},
+	 *      which are considered synonyms for their non-{@code LONG}
+	 *      counterparts.
+	 * <li> On the other hand, the types {@link SqlTypes#LONG32VARCHAR},
+	 *      {@link SqlTypes#LONG32NVARCHAR}, and
+	 *      {@link SqlTypes#LONG32VARBINARY} are <em>not</em> synonyms,
+	 *      and implementations of this method must define sensible
+	 *      mappings, for example to database-native {@code TEXT} or
+	 *      {@code CLOB} types.
+	 * </ol>
 	 *
 	 * @param sqlTypeCode a SQL {@link SqlTypes type code}
 	 * @return a column type name, with $l, $p, $s placeholders for

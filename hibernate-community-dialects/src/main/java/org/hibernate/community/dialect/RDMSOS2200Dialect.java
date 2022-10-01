@@ -153,8 +153,9 @@ public class RDMSOS2200Dialect extends Dialect {
 				return "blob($l)";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return columnType( TIMESTAMP );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

@@ -160,23 +160,28 @@ public class PostgreSQLDialect extends Dialect {
 			case TINYINT:
 				// no tinyint, not even in Postgres 11
 				return "smallint";
+
 			// there are no nchar/nvarchar types in Postgres
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
+
 			// since there's no real difference between TEXT and VARCHAR,
 			// except for the length limit, we can just use 'text' for the
 			// "long" string types
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
+
 			case BLOB:
 			case CLOB:
 			case NCLOB:
 				// use oid as the blob/clob type on Postgres because
-				// the JDBC driver doesn't allow using bytea/text through LOB APIs
+				// the JDBC driver doesn't allow using bytea/text via
+				// LOB APIs
 				return "oid";
+
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)
 			case BINARY:
@@ -186,8 +191,10 @@ public class PostgreSQLDialect extends Dialect {
 
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

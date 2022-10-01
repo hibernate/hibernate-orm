@@ -111,8 +111,9 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 				return getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
 			case TIME:
 				return getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

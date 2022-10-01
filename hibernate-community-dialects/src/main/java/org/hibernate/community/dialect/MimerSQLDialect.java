@@ -97,8 +97,9 @@ public class MimerSQLDialect extends Dialect {
 			case CLOB:
 			case NCLOB:
 				return "nclob(2G)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

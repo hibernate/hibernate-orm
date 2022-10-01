@@ -122,24 +122,25 @@ public class DerbyDialect extends Dialect {
 
 			case VARBINARY:
 				return "varchar($l) for bit data";
-			case LONG32VARBINARY:
-				return "long varchar for bit data";
+
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
 				return columnType( VARCHAR );
-			case LONG32VARCHAR:
-				return "long varchar";
+
 			case BLOB:
 				return "blob";
 			case CLOB:
 			case NCLOB:
 				return "clob";
+
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override

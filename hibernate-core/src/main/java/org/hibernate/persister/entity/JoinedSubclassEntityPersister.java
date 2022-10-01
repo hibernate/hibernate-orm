@@ -121,7 +121,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 //	private final int[] subclassFormulaTableNumberClosure;
 	private final String[] subclassColumnClosure;
 
-	private final boolean[] subclassTableSequentialSelect;
+//	private final boolean[] subclassTableSequentialSelect;
 //	private final boolean[] subclassTableIsLazyClosure;
 	private final boolean[] isInverseSubclassTable;
 	private final boolean[] isNullableSubclassTable;
@@ -311,7 +311,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		ArrayList<String> subclassTableNames = new ArrayList<>();
 		ArrayList<Boolean> isConcretes = new ArrayList<>();
-		ArrayList<Boolean> isDeferreds = new ArrayList<>();
+//		ArrayList<Boolean> isDeferreds = new ArrayList<>();
 //		ArrayList<Boolean> isLazies = new ArrayList<>();
 		ArrayList<Boolean> isInverses = new ArrayList<>();
 		ArrayList<Boolean> isNullables = new ArrayList<>();
@@ -319,10 +319,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		keyColumns = new ArrayList<>();
 		for ( Table table : persistentClass.getSubclassTableClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( table ) );
-			isDeferreds.add( Boolean.FALSE );
-//			isLazies.add( Boolean.FALSE );
-			isInverses.add( Boolean.FALSE );
-			isNullables.add( Boolean.FALSE );
+//			isDeferreds.add( false );
+//			isLazies.add( false );
+			isInverses.add( false );
+			isNullables.add( false );
 			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
@@ -338,7 +338,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final Table joinTable = join.getTable();
 
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( joinTable ) );
-			isDeferreds.add( join.isSequentialSelect() );
+//			isDeferreds.add( join.isSequentialSelect() );
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 //			isLazies.add( join.isLazy() );
@@ -356,7 +356,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		String[] naturalOrderSubclassTableNameClosure = ArrayHelper.toStringArray( subclassTableNames );
 		String[][] naturalOrderSubclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( keyColumns );
 		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
-		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
+//		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
 //		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		isInverseSubclassTable = ArrayHelper.toBooleanArray( isInverses );
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
@@ -729,10 +729,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isInverseTable[j];
 	}
 
-	@Override
-	protected boolean isSubclassTableSequentialSelect(int j) {
-		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
-	}
+//	@Override
+//	protected boolean isSubclassTableSequentialSelect(int j) {
+//		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
+//	}
 
 	/*public void postInstantiate() throws MappingException {
 		super.postInstantiate();

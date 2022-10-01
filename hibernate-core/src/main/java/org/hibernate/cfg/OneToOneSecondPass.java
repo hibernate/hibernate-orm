@@ -279,7 +279,6 @@ public class OneToOneSecondPass implements SecondPass {
 
 		//TODO support @ForeignKey
 		join.setKey( key );
-		join.setSequentialSelect( false );
 		//TODO support for inverse and optional
 		join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
 		key.setCascadeDeleteEnabled( false );

@@ -243,6 +243,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
@@ -611,9 +612,9 @@ public abstract class AbstractEntityPersister
 		return deleteCallable[j];
 	}
 
-	protected boolean isSubclassTableSequentialSelect(int j) {
-		return false;
-	}
+//	protected boolean isSubclassTableSequentialSelect(int j) {
+//		return false;
+//	}
 
 	/**
 	 * Decide which tables need to be updated.
@@ -627,7 +628,6 @@ public abstract class AbstractEntityPersister
 	 * @return Array of booleans indicating which table require updating.
 	 */
 	public boolean[] getTableUpdateNeeded(final int[] dirtyProperties, boolean hasDirtyCollection) {
-
 		if ( dirtyProperties == null ) {
 			return getTableHasColumns(); // for objects that came in via update()
 		}
@@ -697,31 +697,31 @@ public abstract class AbstractEntityPersister
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
-		this.factory = creationContext.getSessionFactory();
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
+		factory = creationContext.getSessionFactory();
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
 
-		this.navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
+		navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
 
-		SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
+		final SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
-			this.canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
-			this.canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
 			this.cacheAccessStrategy = cacheAccessStrategy;
-			this.isLazyPropertiesCacheable = bootDescriptor.getRootClass().isLazyPropertiesCacheable();
 			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
+			canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
+			canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
+			isLazyPropertiesCacheable = bootDescriptor.getRootClass().isLazyPropertiesCacheable();
 		}
 		else {
-			this.canWriteToCache = false;
-			this.canReadFromCache = false;
 			this.cacheAccessStrategy = null;
-			this.isLazyPropertiesCacheable = true;
 			this.naturalIdRegionAccessStrategy = null;
+			canWriteToCache = false;
+			canReadFromCache = false;
+			isLazyPropertiesCacheable = true;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
+		entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
 
-		this.entityEntryFactory = entityMetamodel.isMutable()
+		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE
 				: ImmutableEntityEntryFactory.INSTANCE;
 
@@ -1855,74 +1855,12 @@ public abstract class AbstractEntityPersister
 	@Override
 	public String selectFragment(String alias, String suffix) {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final String rootTableName = getRootTableName();
 		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
 				LockOptions.NONE,
-				(fetchParent, querySpec, creationState) -> {
-					final List<Fetch> fetches = new ArrayList<>();
-
-					fetchParent.getReferencedMappingContainer().visitFetchables(
-							fetchable -> {
-								// Ignore plural attributes
-								if ( fetchable instanceof PluralAttributeMapping ) {
-									return;
-								}
-								FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-								final boolean selectable;
-								if ( fetchable instanceof AttributeMapping ) {
-									if ( fetchParent instanceof EmbeddableResultGraphNode && ( (EmbeddableResultGraphNode) fetchParent ).getReferencedMappingContainer() == getIdentifierMapping() ) {
-										selectable = true;
-									}
-									else {
-										final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
-										final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-										selectable = !isSubclassTableSequentialSelect( tableNumber )
-												&& propertySelectable[propertyNumber];
-									}
-								}
-								else {
-									selectable = true;
-								}
-								if ( fetchable instanceof BasicValuedModelPart ) {
-									// Ignore lazy basic columns
-									if ( fetchTiming == FetchTiming.DELAYED ) {
-										return;
-									}
-								}
-								else if ( fetchable instanceof Association ) {
-									final Association association = (Association) fetchable;
-									// Ignore the fetchable if the FK is on the other side
-									if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-										return;
-									}
-									// Ensure the FK comes from the root table
-									if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-										return;
-									}
-									fetchTiming = FetchTiming.DELAYED;
-								}
-
-								if ( selectable ) {
-									final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-									final Fetch fetch = fetchParent.generateFetchableFetch(
-											fetchable,
-											navigablePath,
-											fetchTiming,
-											true,
-											null,
-											creationState
-									);
-									fetches.add( fetch );
-								}
-							},
-							null
-					);
-
-					return fetches;
-				},
+				this::fetchProcessor,
 				true,
 				getFactory()
 		);
@@ -2027,6 +1965,77 @@ public abstract class AbstractEntityPersister
 			expression = sql.substring( "select ".length() );
 		}
 		return expression;
+	}
+
+	private List<Fetch> fetchProcessor(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
+		final List<Fetch> fetches = new ArrayList<>();
+		final String rootTableName = getRootTableName();
+		fetchParent.getReferencedMappingContainer().visitFetchables(
+				fetchable -> {
+					// Ignore plural attributes
+					if ( !(fetchable instanceof PluralAttributeMapping ) ) {
+						final FetchTiming fetchTiming;
+						if ( fetchable instanceof BasicValuedModelPart ) {
+							// Ignore lazy basic columns
+							fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+							if ( fetchTiming == FetchTiming.DELAYED ) {
+								return;
+							}
+						}
+						else if ( fetchable instanceof Association ) {
+							final Association association = (Association) fetchable;
+							// Ignore the fetchable if the FK is on the other side
+							if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+								return;
+							}
+							// Ensure the FK comes from the root table
+							if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
+								return;
+							}
+							fetchTiming = FetchTiming.DELAYED;
+						}
+						else {
+							fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+						}
+
+						if ( fetchTiming == null ) {
+							throw new AssertionFailure("fetchTiming was null");
+						}
+
+						if ( isSelectable( fetchParent, fetchable ) ) {
+							final Fetch fetch = fetchParent.generateFetchableFetch(
+									fetchable,
+									fetchParent.resolveNavigablePath( fetchable ),
+									fetchTiming,
+									true,
+									null,
+									creationState
+							);
+							fetches.add( fetch );
+						}
+					}
+				},
+				null
+		);
+		return fetches;
+	}
+
+	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+		if ( fetchable instanceof AttributeMapping ) {
+			if ( fetchParent instanceof EmbeddableResultGraphNode
+					&& ( (EmbeddableResultGraphNode) fetchParent).getReferencedMappingContainer() == getIdentifierMapping() ) {
+				return true;
+			}
+			else {
+				final int propertyNumber = ( (AttributeMapping) fetchable).getStateArrayPosition();
+//				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+//				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
+				return propertySelectable[propertyNumber];
+			}
+		}
+		else {
+			return true;
+		}
 	}
 
 	@Override
@@ -4285,11 +4294,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-
 		prepareLoader( singleIdEntityLoader );
 		prepareLoader( multiIdEntityLoader );
-
-		doPostInstantiate();
 	}
 
 	private void prepareLoader(Loader loader) {
@@ -4297,10 +4303,6 @@ public abstract class AbstractEntityPersister
 			( (Preparable) loader ).prepare();
 		}
 	}
-
-	protected void doPostInstantiate() {
-	}
-
 	/**
 	 * Load an instance using either the {@code forUpdateLoader} or the outer joining {@code loader},
 	 * depending upon the value of the {@code lock} parameter
@@ -4767,14 +4769,10 @@ public abstract class AbstractEntityPersister
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
-		final Object naturalIdSnapshot;
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
-			naturalIdSnapshot = null;
-		}
-		else {
-			naturalIdSnapshot = naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot, session );
-		}
+		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
+				? null
+				: naturalIdMapping.extractNaturalIdFromEntityState(entitySnapshot, session);
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
 		naturalIdResolutions.manageLocalResolution(
@@ -4787,17 +4785,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id;
-		if ( canExtractIdOutOfEntity() ) {
-			id = getIdentifier( entity, session );
-		}
-		else {
-			id = null;
-		}
+		final Object id = canExtractIdOutOfEntity() ? getIdentifier(entity, session) : null;
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
-			return Boolean.TRUE;
+			return true;
 		}
 
 		// check the version unsaved-value, if appropriate
@@ -4823,7 +4815,7 @@ public abstract class AbstractEntityPersister
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {
-				return Boolean.FALSE;
+				return false;
 			}
 		}
 

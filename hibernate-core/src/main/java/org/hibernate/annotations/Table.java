@@ -68,26 +68,19 @@ public @interface Table {
 	ForeignKey foreignKey() default @ForeignKey( name="" );
 
 	/**
-	 * Defines a fetching strategy for the secondary table.
-	 * <ul>
-	 * <li>If set to {@link FetchMode#JOIN}, the default, Hibernate will use an inner join to
-	 * retrieve a secondary table defined by a class or its superclasses and an outer join for
-	 * a secondary table defined by a subclass.
-	 * <li>If set to {@link FetchMode#SELECT} then Hibernate will use a sequential select for
-	 * a secondary table defined on a subclass, which will be issued only if a row turns out
-	 * to represent an instance of the subclass. Inner joins will still be used to retrieve a
-	 * secondary table defined by the class and its superclasses.
-	 * </ul>
-	 * <p>
-	 * <em>Only applies to secondary tables.</em>
+	 * @deprecated This setting has no effect in Hibernate 6
 	 */
+	@Deprecated(since = "6.2")
 	FetchMode fetch() default FetchMode.JOIN;
 
 	/**
 	 * If enabled, Hibernate will never insert or update the columns of the secondary table.
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
+	 *
+	 * @deprecated use {@link SecondaryRow#owned()}
 	 */
+	@Deprecated(since = "6.2")
 	boolean inverse() default false;
 
 	/**
@@ -96,7 +89,10 @@ public @interface Table {
 	 * by default, Hibernate avoids creating a row of null values.
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
+	 *
+	 * @deprecated use {@link SecondaryRow#optional()}
 	 */
+	@Deprecated(since = "6.2")
 	boolean optional() default true;
 
 	/**

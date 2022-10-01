@@ -26,7 +26,6 @@ public class Join implements AttributeContainer, Serializable {
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
-	private boolean sequentialSelect;
 	private boolean inverse;
 	private boolean optional;
 	private boolean disableForeignKeyCreation;
@@ -174,13 +173,6 @@ public class Join implements AttributeContainer, Serializable {
 
 	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {
 		return deleteCheckStyle;
-	}
-
-	public boolean isSequentialSelect() {
-		return sequentialSelect;
-	}
-	public void setSequentialSelect(boolean deferred) {
-		this.sequentialSelect = deferred;
 	}
 
 	public boolean isInverse() {

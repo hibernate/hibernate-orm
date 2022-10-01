@@ -13,15 +13,12 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of {@link Table}s.
+ * A grouping of {@link SecondaryRows}.
  *
- * @author Emmanuel Bernard
+ * @author Gavin King
  */
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface Tables {
-	/**
-	 * The table grouping.
-	 */
-	Table[] value();
+public @interface SecondaryRows {
+	SecondaryRow[] value();
 }

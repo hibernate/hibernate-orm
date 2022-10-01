@@ -129,7 +129,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
-	private final Map<Class<?>,String> entityNameByInheritenceClassMap;
+	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
@@ -439,7 +439,7 @@ public class EntityMetamodel implements Serializable {
 				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
 			}
 		}
-		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
+		entityNameByInheritanceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
 	private static GenerationStrategyPair buildGenerationStrategyPair(
@@ -1002,7 +1002,7 @@ public class EntityMetamodel implements Serializable {
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
 	public String findEntityNameByEntityClass(Class<?> inheritanceClass) {
-		return entityNameByInheritenceClassMap.get( inheritanceClass );
+		return entityNameByInheritanceClassMap.get( inheritanceClass );
 	}
 
 	@Override

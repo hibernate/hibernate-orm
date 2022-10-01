@@ -20,8 +20,9 @@ import java.io.Serializable;
  */
 public interface StatementInspector extends Serializable {
 	/**
-	 * Inspect the given SQL, possibly returning a different SQL to be used instead.  Note that returning {@code null}
-	 * is interpreted as returning the same SQL as was passed.
+	 * Inspect the given SQL, possibly returning a different SQL to be used instead.
+	 * Note that returning {@code null} is interpreted as returning the same SQL as
+	 * was passed.
 	 *
 	 * @param sql The SQL to inspect
 	 *

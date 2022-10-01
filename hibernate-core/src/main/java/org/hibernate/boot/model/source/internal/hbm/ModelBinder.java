@@ -1741,7 +1741,6 @@ public class ModelBinder {
 
 		bindCustomSql( secondaryTableSource, secondaryTableJoin );
 
-		secondaryTableJoin.setSequentialSelect( secondaryTableSource.getFetchStyle() == FetchStyle.SELECT );
 		secondaryTableJoin.setInverse( secondaryTableSource.isInverse() );
 		secondaryTableJoin.setOptional( secondaryTableSource.isOptional() );
 

@@ -50,7 +50,6 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
@@ -70,6 +69,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
@@ -1857,24 +1858,41 @@ public class EntityBinder {
 	}
 
 	private org.hibernate.annotations.Table findMatchingComplementaryTableAnnotation(Join join) {
-		String tableName = join.getTable().getQuotedName();
+		final String tableName = join.getTable().getQuotedName();
 		org.hibernate.annotations.Table table = annotatedClass.getAnnotation( org.hibernate.annotations.Table.class );
-		org.hibernate.annotations.Table matchingTable = null;
 		if ( table != null && tableName.equals( table.appliesTo() ) ) {
-			matchingTable = table;
+			return table;
 		}
 		else {
 			Tables tables = annotatedClass.getAnnotation( Tables.class );
 			if ( tables != null ) {
 				for (org.hibernate.annotations.Table current : tables.value()) {
 					if ( tableName.equals( current.appliesTo() ) ) {
-						matchingTable = current;
-						break;
+						return current;
 					}
 				}
 			}
+			return null;
 		}
-		return matchingTable;
+	}
+
+	private SecondaryRow findMatchingComplementarySecondaryRowAnnotation(Join join) {
+		final String tableName = join.getTable().getQuotedName();
+		SecondaryRow row = annotatedClass.getAnnotation( SecondaryRow.class );
+		if ( row != null && ( row.table().isEmpty() || tableName.equals( row.table() ) ) ) {
+			return row;
+		}
+		else {
+			SecondaryRows tables = annotatedClass.getAnnotation( SecondaryRows.class );
+			if ( tables != null ) {
+				for ( SecondaryRow current : tables.value() ) {
+					if ( tableName.equals( current.table() ) ) {
+						return current;
+					}
+				}
+			}
+			return null;
+		}
 	}
 
 	//Used for @*ToMany @JoinTable
@@ -1964,9 +1982,13 @@ public class EntityBinder {
 		//Has to do the work later because it needs persistentClass id!
 		LOG.debugf( "Adding secondary table to entity %s -> %s",
 				persistentClass.getEntityName(), join.getTable().getName() );
+		SecondaryRow matchingRow = findMatchingComplementarySecondaryRowAnnotation( join );
 		org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
-		if ( matchingTable != null ) {
-			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );
+		if ( matchingRow != null ) {
+			join.setInverse( !matchingRow.owned() );
+			join.setOptional( matchingRow.optional() );
+		}
+		else if ( matchingTable != null ) {
 			join.setInverse( matchingTable.inverse() );
 			join.setOptional( matchingTable.optional() );
 			String insertSql = matchingTable.sqlInsert().sql();
@@ -1996,7 +2018,6 @@ public class EntityBinder {
 		}
 		else {
 			//default
-			join.setSequentialSelect( false );
 			join.setInverse( false );
 			join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
 		}

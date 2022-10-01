@@ -114,7 +114,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerInitilaizer(
+	public void registerInitializer(
 			EntityKey entityKey,
 			Initializer initializer) {
 		if ( initializerMap == null ) {
@@ -125,7 +125,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerInitilaizer(EntityUniqueKey entityKey, Initializer initializer) {
+	public void registerInitializer(EntityUniqueKey entityKey, Initializer initializer) {
 		if ( initializerByUniquKeyMap == null ) {
 			initializerByUniquKeyMap = new HashMap<>();
 		}

@@ -39,7 +39,6 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -384,7 +383,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		this.entityKey = new EntityKey( id, concreteDescriptor );
 
 		if ( jdbcValuesSourceProcessingState.findInitializer( entityKey ) == null ) {
-			jdbcValuesSourceProcessingState.registerInitilaizer( entityKey, this );
+			jdbcValuesSourceProcessingState.registerInitializer( entityKey, this );
 		}
 
 		//		3) schedule the EntityKey for batch loading, if possible

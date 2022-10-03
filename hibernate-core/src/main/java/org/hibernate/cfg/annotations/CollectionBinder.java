@@ -114,7 +114,6 @@ import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolder;
-import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
@@ -158,9 +157,18 @@ import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.cfg.AnnotatedJoinColumns.buildJoinTableJoinColumns;
 import static org.hibernate.cfg.AnnotationBinder.fillComponent;
-import static org.hibernate.cfg.BinderHelper.*;
+import static org.hibernate.cfg.BinderHelper.buildAnyValue;
+import static org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference;
+import static org.hibernate.cfg.BinderHelper.getCascadeStrategy;
+import static org.hibernate.cfg.BinderHelper.getFetchMode;
+import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getPath;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+import static org.hibernate.cfg.BinderHelper.isPrimitive;
+import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
+import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromExternalName;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1294,34 +1302,35 @@ public abstract class CollectionBinder {
 			collection.setCustomSQLInsert(
 					sqlInsert.sql().trim(),
 					sqlInsert.callable(),
-					fromExternalName( sqlInsert.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlInsert.check() )
 			);
 
 		}
+
 		final SQLUpdate sqlUpdate = property.getAnnotation( SQLUpdate.class );
 		if ( sqlUpdate != null ) {
 			collection.setCustomSQLUpdate(
-					sqlUpdate.sql(),
+					sqlUpdate.sql().trim(),
 					sqlUpdate.callable(),
-					fromExternalName( sqlUpdate.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlUpdate.check() )
 			);
 		}
 
 		final SQLDelete sqlDelete = property.getAnnotation( SQLDelete.class );
 		if ( sqlDelete != null ) {
 			collection.setCustomSQLDelete(
-					sqlDelete.sql(),
+					sqlDelete.sql().trim(),
 					sqlDelete.callable(),
-					fromExternalName( sqlDelete.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlDelete.check() )
 			);
 		}
 
 		final SQLDeleteAll sqlDeleteAll = property.getAnnotation( SQLDeleteAll.class );
 		if ( sqlDeleteAll != null ) {
 			collection.setCustomSQLDeleteAll(
-					sqlDeleteAll.sql(),
+					sqlDeleteAll.sql().trim(),
 					sqlDeleteAll.callable(),
-					fromExternalName( sqlDeleteAll.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
 		}
 
@@ -2111,7 +2120,7 @@ public abstract class CollectionBinder {
 			parentPropertyHolder.startingProperty( property );
 		}
 
-		final CollectionPropertyHolder holder = PropertyHolderBuilder.buildPropertyHolder(
+		final CollectionPropertyHolder holder = buildPropertyHolder(
 				collection,
 				collection.getRole(),
 				elementClass,

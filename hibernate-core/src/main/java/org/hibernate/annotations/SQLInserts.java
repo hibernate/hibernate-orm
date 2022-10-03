@@ -13,13 +13,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of {@link SecondaryRow}s.
+ * A grouping of {@link SQLInsert}s.
  *
  * @since 6.2
  * @author Gavin King
  */
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface SecondaryRows {
-	SecondaryRow[] value();
+public @interface SQLInserts {
+	SQLInsert[] value();
 }

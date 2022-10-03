@@ -38,6 +38,7 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SharedCacheMode;
 
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -67,8 +68,11 @@ import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
@@ -143,7 +147,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromExternalName;
+import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1233,41 +1237,40 @@ public class EntityBinder {
 
 	private void bindCustomSql() {
 		//SQL overriding
-		SQLInsert sqlInsert = annotatedClass.getAnnotation( SQLInsert.class );
+		//TODO: tolerate non-empty table() member here
+
+		SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert(
 					sqlInsert.sql().trim(),
 					sqlInsert.callable(),
-					fromExternalName( sqlInsert.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlInsert.check() )
 			);
 
 		}
 
-		SQLUpdate sqlUpdate = annotatedClass.getAnnotation( SQLUpdate.class );
+		SQLUpdate sqlUpdate = findMatchingSqlAnnotation( "", SQLUpdate.class, SQLUpdates.class );
 		if ( sqlUpdate != null ) {
 			persistentClass.setCustomSQLUpdate(
 					sqlUpdate.sql().trim(),
 					sqlUpdate.callable(),
-					fromExternalName( sqlUpdate.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlUpdate.check() )
 			);
 		}
 
-		SQLDelete sqlDelete = annotatedClass.getAnnotation( SQLDelete.class );
+		SQLDelete sqlDelete = findMatchingSqlAnnotation( "", SQLDelete.class, SQLDeletes.class );
 		if ( sqlDelete != null ) {
 			persistentClass.setCustomSQLDelete(
 					sqlDelete.sql().trim(),
 					sqlDelete.callable(),
-					fromExternalName( sqlDelete.check().toString().toLowerCase(Locale.ROOT) )
+					fromResultCheckStyle( sqlDelete.check() )
 			);
 		}
 
 		SQLDeleteAll sqlDeleteAll = annotatedClass.getAnnotation( SQLDeleteAll.class );
 		if ( sqlDeleteAll != null ) {
-			persistentClass.setCustomSQLDelete(
-					sqlDeleteAll.sql().trim(),
-					sqlDeleteAll.callable(),
-					fromExternalName( sqlDeleteAll.check().toString().toLowerCase(Locale.ROOT) )
-			);
+			throw new AnnotationException("@SQLDeleteAll does not apply to entities: "
+					+ persistentClass.getEntityName());
 		}
 
 		Loader loader = annotatedClass.getAnnotation( Loader.class );
@@ -1816,7 +1819,8 @@ public class EntityBinder {
 
 	private void setForeignKeyNameIfDefined(Join join) {
 		// just awful..
-		org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
+		final String tableName = join.getTable().getQuotedName();
+		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
 		if ( matchingTable != null && !isEmptyAnnotationValue( matchingTable.foreignKey().name() ) ) {
 			key.setForeignKeyName( matchingTable.foreignKey().name() );
@@ -1854,8 +1858,7 @@ public class EntityBinder {
 		return null;
 	}
 
-	private org.hibernate.annotations.Table findMatchingComplementaryTableAnnotation(Join join) {
-		final String tableName = join.getTable().getQuotedName();
+	private org.hibernate.annotations.Table findMatchingComplementaryTableAnnotation(String tableName) {
 		org.hibernate.annotations.Table table = annotatedClass.getAnnotation( org.hibernate.annotations.Table.class );
 		if ( table != null && tableName.equals( table.appliesTo() ) ) {
 			return table;
@@ -1873,8 +1876,7 @@ public class EntityBinder {
 		}
 	}
 
-	private SecondaryRow findMatchingComplementarySecondaryRowAnnotation(Join join) {
-		final String tableName = join.getTable().getQuotedName();
+	private SecondaryRow findMatchingSecondaryRowAnnotation(String tableName) {
 		SecondaryRow row = annotatedClass.getAnnotation( SecondaryRow.class );
 		if ( row != null && ( row.table().isEmpty() || tableName.equals( row.table() ) ) ) {
 			return row;
@@ -1892,139 +1894,163 @@ public class EntityBinder {
 		}
 	}
 
+	private <T extends Annotation,R extends Annotation> T findMatchingSqlAnnotation(
+			String tableName,
+			Class<T> annotationType,
+			Class<R> repeatableType) {
+		final T sqlAnnotation = annotatedClass.getAnnotation( annotationType );
+		if ( sqlAnnotation != null ) {
+			if ( tableName.equals( tableMember( annotationType, sqlAnnotation ) ) ) {
+				return sqlAnnotation;
+			}
+		}
+		final R repeatable = annotatedClass.getAnnotation(repeatableType);
+		if ( repeatable != null ) {
+			for ( Annotation current : valueMember( repeatableType, repeatable ) ) {
+				@SuppressWarnings("unchecked")
+				final T sqlAnn = (T) current;
+				if ( tableName.equals( tableMember( annotationType, sqlAnn ) ) ) {
+					return sqlAnn;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static <T extends Annotation> String tableMember(Class<T> annotationType, T sqlAnnotation) {
+		if (SQLInsert.class.equals(annotationType)) {
+			return ((SQLInsert) sqlAnnotation).table();
+		}
+		else if (SQLUpdate.class.equals(annotationType)) {
+			return ((SQLUpdate) sqlAnnotation).table();
+		}
+		else if (SQLDelete.class.equals(annotationType)) {
+			return ((SQLDelete) sqlAnnotation).table();
+		}
+		else if (SQLDeleteAll.class.equals(annotationType)) {
+			return ((SQLDeleteAll) sqlAnnotation).table();
+		}
+		else {
+			throw new AssertionFailure("Unknown annotation type");
+		}
+	}
+
+	private static <T extends Annotation> Annotation[] valueMember(Class<T> repeatableType, T sqlAnnotation) {
+		if (SQLInserts.class.equals(repeatableType)) {
+			return ((SQLInserts) sqlAnnotation).value();
+		}
+		else if (SQLUpdates.class.equals(repeatableType)) {
+			return ((SQLUpdates) sqlAnnotation).value();
+		}
+		else if (SQLDeletes.class.equals(repeatableType)) {
+			return ((SQLDeletes) sqlAnnotation).value();
+		}
+		else {
+			throw new AssertionFailure("Unknown annotation type");
+		}
+	}
+
 	//Used for @*ToMany @JoinTable
 	public Join addJoin(JoinTable joinTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		return addJoin( null, joinTable, holder, noDelayInPkColumnCreation );
+		return addJoin(
+				holder,
+				noDelayInPkColumnCreation,
+				false,
+				joinTable.name(),
+				joinTable.schema(),
+				joinTable.catalog(),
+				joinTable.joinColumns(),
+				joinTable.uniqueConstraints()
+		);
 	}
 
 	public Join addJoin(SecondaryTable secondaryTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		return addJoin( secondaryTable, null, holder, noDelayInPkColumnCreation );
+		Join join = addJoin(
+				holder,
+				noDelayInPkColumnCreation,
+				true,
+				secondaryTable.name(),
+				secondaryTable.schema(),
+				secondaryTable.catalog(),
+				secondaryTable.pkJoinColumns(),
+				secondaryTable.uniqueConstraints()
+		);
+		TableBinder.addIndexes( join.getTable(), secondaryTable.indexes(), context );
+		return join;
 	}
 
 	private Join addJoin(
-			SecondaryTable secondaryTable,
-			JoinTable joinTable,
 			PropertyHolder propertyHolder,
-			boolean noDelayInPkColumnCreation) {
-		// A non-null propertyHolder means than we process the Pk creation without delay
-		Join join = new Join();
-		join.setPersistentClass( persistentClass );
-
-		final String schema;
-		final String catalog;
-		final Object joinColumns;
-		final List<UniqueConstraintHolder> uniqueConstraintHolders;
-
-		final QualifiedTableName logicalName;
-		if ( secondaryTable != null ) {
-			schema = secondaryTable.schema();
-			catalog = secondaryTable.catalog();
-			logicalName = new QualifiedTableName(
-				Identifier.toIdentifier( catalog ),
-				Identifier.toIdentifier( schema ),
-					context.getMetadataCollector()
-					.getDatabase()
-					.getJdbcEnvironment()
-					.getIdentifierHelper()
-					.toIdentifier( secondaryTable.name() )
-			);
-			joinColumns = secondaryTable.pkJoinColumns();
-			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( secondaryTable.uniqueConstraints() );
-		}
-		else if ( joinTable != null ) {
-			schema = joinTable.schema();
-			catalog = joinTable.catalog();
-			logicalName = new QualifiedTableName(
-				Identifier.toIdentifier( catalog ),
-				Identifier.toIdentifier( schema ),
+			boolean noDelayInPkColumnCreation,
+			boolean secondaryTable,
+			String name,
+			String schema,
+			String catalog,
+			Object joinColumns,
+			UniqueConstraint[] uniqueConstraints) {
+		final QualifiedTableName logicalName = new QualifiedTableName(
+				Identifier.toIdentifier(catalog),
+				Identifier.toIdentifier(schema),
 				context.getMetadataCollector()
 						.getDatabase()
 						.getJdbcEnvironment()
 						.getIdentifierHelper()
-						.toIdentifier( joinTable.name() )
-			);
-			joinColumns = joinTable.joinColumns();
-			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( joinTable.uniqueConstraints() );
-		}
-		else {
-			throw new AssertionFailure( "Both JoinTable and SecondaryTable are null" );
-		}
-
-		final Table table = TableBinder.buildAndFillTable(
-				schema,
-				catalog,
-				logicalName.getTableName(),
-				false,
-				uniqueConstraintHolders,
-				null,
-				null,
-				context,
-				null,
-				null
+						.toIdentifier(name)
 		);
+		return createJoin(
+				propertyHolder,
+				noDelayInPkColumnCreation,
+				secondaryTable,
+				joinColumns,
+				logicalName,
+				TableBinder.buildAndFillTable(
+						schema,
+						catalog,
+						logicalName.getTableName(),
+						false,
+						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
+						null,
+						null,
+						context,
+						null,
+						null
+				)
+		);
+	}
+
+	private Join createJoin(
+			PropertyHolder propertyHolder,
+			boolean noDelayInPkColumnCreation,
+			boolean secondaryTable,
+			Object joinColumns,
+			QualifiedTableName logicalName,
+			Table table) {
+		final Join join = new Join();
+		join.setPersistentClass( persistentClass );
 
 		final InFlightMetadataCollector.EntityTableXref tableXref
 				= context.getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );
 		assert tableXref != null : "Could not locate EntityTableXref for entity [" + persistentClass.getEntityName() + "]";
 		tableXref.addSecondaryTable( logicalName, join );
 
-		if ( secondaryTable != null ) {
-			TableBinder.addIndexes( table, secondaryTable.indexes(), context );
-		}
-
-			//no check constraints available on joins
+		//no check constraints available on joins
 		join.setTable( table );
 
 		//somehow keep joins() for later.
 		//Has to do the work later because it needs persistentClass id!
 		LOG.debugf( "Adding secondary table to entity %s -> %s",
 				persistentClass.getEntityName(), join.getTable().getName() );
-		SecondaryRow matchingRow = findMatchingComplementarySecondaryRowAnnotation( join );
-		org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
-		if ( matchingRow != null ) {
-			join.setInverse( !matchingRow.owned() );
-			join.setOptional( matchingRow.optional() );
-		}
-		else if ( matchingTable != null ) {
-			join.setInverse( matchingTable.inverse() );
-			join.setOptional( matchingTable.optional() );
-			String insertSql = matchingTable.sqlInsert().sql();
-			if ( !isEmptyAnnotationValue(insertSql) ) {
-				join.setCustomSQLInsert(
-						insertSql.trim(),
-						matchingTable.sqlInsert().callable(),
-						fromExternalName( matchingTable.sqlInsert().check().toString().toLowerCase(Locale.ROOT) )
-				);
-			}
-			String updateSql = matchingTable.sqlUpdate().sql();
-			if ( !isEmptyAnnotationValue(updateSql) ) {
-				join.setCustomSQLUpdate(
-						updateSql.trim(),
-						matchingTable.sqlUpdate().callable(),
-						fromExternalName( matchingTable.sqlUpdate().check().toString().toLowerCase(Locale.ROOT) )
-				);
-			}
-			String deleteSql = matchingTable.sqlDelete().sql();
-			if ( !isEmptyAnnotationValue(deleteSql) ) {
-				join.setCustomSQLDelete(
-						deleteSql.trim(),
-						matchingTable.sqlDelete().callable(),
-						fromExternalName( matchingTable.sqlDelete().check().toString().toLowerCase(Locale.ROOT) )
-				);
-			}
-		}
-		else {
-			//default
-			join.setInverse( false );
-			join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
-		}
+
+		handleSecondaryRowManagement( join );
+		processSecondaryTableCustomSql( join );
 
 		if ( noDelayInPkColumnCreation ) {
+			// A non-null propertyHolder means than we process the Pk creation without delay
 			createPrimaryColumnsToSecondaryTable( joinColumns, propertyHolder, join );
 		}
 		else {
 			final String quotedName = table.getQuotedName();
-			if ( secondaryTable != null ) {
+			if ( secondaryTable ) {
 				secondaryTablesFromAnnotation.put( quotedName, join );
 				secondaryTableFromAnnotationJoins.put( quotedName, joinColumns );
 			}
@@ -2035,6 +2061,87 @@ public class EntityBinder {
 		}
 
 		return join;
+	}
+
+	private void handleSecondaryRowManagement(Join join) {
+		final String tableName = join.getTable().getQuotedName();
+		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
+		final SecondaryRow matchingRow = findMatchingSecondaryRowAnnotation( tableName );
+		if ( matchingRow != null ) {
+			join.setInverse( !matchingRow.owned() );
+			join.setOptional( matchingRow.optional() );
+		}
+		else if ( matchingTable != null ) {
+			join.setInverse( matchingTable.inverse() );
+			join.setOptional( matchingTable.optional() );
+		}
+		else {
+			//default
+			join.setInverse( false );
+			join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
+		}
+	}
+
+	private void processSecondaryTableCustomSql(Join join) {
+		final String tableName = join.getTable().getQuotedName();
+		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
+
+		final SQLInsert sqlInsert = findMatchingSqlAnnotation( tableName, SQLInsert.class, SQLInserts.class );
+		if ( sqlInsert != null ) {
+			join.setCustomSQLInsert(
+					sqlInsert.sql().trim(),
+					sqlInsert.callable(),
+					fromResultCheckStyle( sqlInsert.check() )
+			);
+		}
+		else if ( matchingTable != null ) {
+			String insertSql = matchingTable.sqlInsert().sql();
+			if ( !isEmptyAnnotationValue(insertSql) ) {
+				join.setCustomSQLInsert(
+						insertSql.trim(),
+						matchingTable.sqlInsert().callable(),
+						fromResultCheckStyle( matchingTable.sqlInsert().check() )
+				);
+			}
+		}
+
+		final SQLUpdate sqlUpdate = findMatchingSqlAnnotation( tableName, SQLUpdate.class, SQLUpdates.class );
+		if ( sqlUpdate != null ) {
+			join.setCustomSQLUpdate(
+					sqlUpdate.sql().trim(),
+					sqlUpdate.callable(),
+					fromResultCheckStyle( sqlUpdate.check() )
+			);
+		}
+		else if ( matchingTable != null ) {
+			String updateSql = matchingTable.sqlUpdate().sql();
+			if ( !isEmptyAnnotationValue(updateSql) ) {
+				join.setCustomSQLUpdate(
+						updateSql.trim(),
+						matchingTable.sqlUpdate().callable(),
+						fromResultCheckStyle( matchingTable.sqlUpdate().check() )
+				);
+			}
+		}
+
+		final SQLDelete sqlDelete = findMatchingSqlAnnotation( tableName, SQLDelete.class, SQLDeletes.class );
+		if ( sqlDelete != null ) {
+			join.setCustomSQLDelete(
+					sqlDelete.sql().trim(),
+					sqlDelete.callable(),
+					fromResultCheckStyle( sqlDelete.check() )
+			);
+		}
+		else if ( matchingTable != null ) {
+			String deleteSql = matchingTable.sqlDelete().sql();
+			if ( !isEmptyAnnotationValue(deleteSql) ) {
+				join.setCustomSQLDelete(
+						deleteSql.trim(),
+						matchingTable.sqlDelete().callable(),
+						fromResultCheckStyle( matchingTable.sqlDelete().check() )
+				);
+			}
+		}
 	}
 
 	public java.util.Map<String, Join> getSecondaryTables() {

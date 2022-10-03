@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.annotations.ResultCheckStyle;
+
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
  * determining results (success/failure) is to be used.
@@ -47,6 +49,19 @@ public enum ExecuteUpdateResultCheckStyle {
 		return name;
 	}
 
+	public static ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
+		switch (style) {
+			case NONE:
+				return NONE;
+			case COUNT:
+				return COUNT;
+			case PARAM:
+				return PARAM;
+			default:
+				return null;
+		}
+	}
+
 	public static ExecuteUpdateResultCheckStyle fromExternalName(String name) {
 		if ( name.equalsIgnoreCase( NONE.name ) ) {
 			return NONE;
@@ -63,11 +78,6 @@ public enum ExecuteUpdateResultCheckStyle {
 	}
 
 	public static ExecuteUpdateResultCheckStyle determineDefault(String customSql, boolean callable) {
-		if ( customSql == null ) {
-			return COUNT;
-		}
-		else {
-			return callable ? PARAM : COUNT;
-		}
+		return customSql != null && callable ? PARAM : COUNT;
 	}
 }

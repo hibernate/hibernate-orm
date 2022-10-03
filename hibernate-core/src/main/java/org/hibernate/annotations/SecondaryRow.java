@@ -18,6 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see jakarta.persistence.SecondaryTable
  *
+ * @since 6.2
  * @author Gavin King
  */
 @Target(TYPE)

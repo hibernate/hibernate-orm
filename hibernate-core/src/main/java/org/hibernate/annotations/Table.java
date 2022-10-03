@@ -100,8 +100,9 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLInsert
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLInsert sqlInsert() default @SQLInsert(sql="");
 
 	/**
@@ -109,8 +110,9 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLUpdate
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLUpdate sqlUpdate() default @SQLUpdate(sql="");
 
 	/**
@@ -118,7 +120,8 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLDelete
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLDelete sqlDelete() default @SQLDelete(sql="");
 }

@@ -255,7 +255,7 @@ public class TypeHelper {
 						copyCache,
 						foreignKeyDirection
 				);
-				if ( target[i] != null && objects != null ) {
+				if ( componentType.isMutable() && target[i] != null && objects != null ) {
 					// Need to account for entity mode on the CompositeType interface, that seems not been used by any implementation
 					componentType.setPropertyValues( target[i], objects, EntityMode.POJO );
 				}

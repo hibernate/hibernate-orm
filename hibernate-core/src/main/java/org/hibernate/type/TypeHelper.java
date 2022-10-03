@@ -207,7 +207,7 @@ public class TypeHelper {
 						copyCache,
 						foreignKeyDirection
 				);
-				if ( target[i] != null && objects != null ) {
+				if ( componentType.isMutable() && target[i] != null && objects != null ) {
 					componentType.setPropertyValues( target[i], objects );
 				}
 				copied[i] = target[i];

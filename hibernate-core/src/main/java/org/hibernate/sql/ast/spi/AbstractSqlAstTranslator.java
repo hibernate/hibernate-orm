@@ -2083,7 +2083,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		rhsExpressions.get( lastIndex ).accept( this );
 
 		// Close all opened parenthesis
-		for ( i = optimized ? 1 : 0; i < lastIndex; i++ ) {
+		for ( i = optimized ? 1 : 0; i < lastIndex + 1; i++ ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}

@@ -242,25 +242,33 @@ public class CockroachLegacyDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == OTHER ) {
-			switch ( columnTypeName ) {
-				case "uuid":
-					jdbcTypeCode = UUID;
-					break;
-				case "json":
-				case "jsonb":
-					jdbcTypeCode = JSON;
-					break;
-				case "inet":
-					jdbcTypeCode = INET;
-					break;
-				case "geometry":
-					jdbcTypeCode = GEOMETRY;
-					break;
-				case "geography":
-					jdbcTypeCode = GEOGRAPHY;
-					break;
-			}
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+					case "json":
+					case "jsonb":
+						jdbcTypeCode = JSON;
+						break;
+					case "inet":
+						jdbcTypeCode = INET;
+						break;
+					case "geometry":
+						jdbcTypeCode = GEOMETRY;
+						break;
+					case "geography":
+						jdbcTypeCode = GEOGRAPHY;
+						break;
+				}
+				break;
+			case TIMESTAMP:
+				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
+				if ( "timestamptz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIMESTAMP_UTC;
+				}
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}

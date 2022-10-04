@@ -87,6 +87,7 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
@@ -250,25 +251,33 @@ public class CockroachDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == OTHER ) {
-			switch ( columnTypeName ) {
-				case "uuid":
-					jdbcTypeCode = UUID;
-					break;
-				case "json":
-				case "jsonb":
-					jdbcTypeCode = JSON;
-					break;
-				case "inet":
-					jdbcTypeCode = INET;
-					break;
-				case "geometry":
-					jdbcTypeCode = GEOMETRY;
-					break;
-				case "geography":
-					jdbcTypeCode = GEOGRAPHY;
-					break;
-			}
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+					case "json":
+					case "jsonb":
+						jdbcTypeCode = JSON;
+						break;
+					case "inet":
+						jdbcTypeCode = INET;
+						break;
+					case "geometry":
+						jdbcTypeCode = GEOMETRY;
+						break;
+					case "geography":
+						jdbcTypeCode = GEOGRAPHY;
+						break;
+				}
+				break;
+			case TIMESTAMP:
+				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
+				if ( "timestamptz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIMESTAMP_UTC;
+				}
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}

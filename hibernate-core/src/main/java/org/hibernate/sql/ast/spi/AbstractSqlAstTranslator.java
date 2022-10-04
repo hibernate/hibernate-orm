@@ -1950,8 +1950,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				break;
 			}
-			case EQUAL:
-			case NOT_EQUAL: {
+			case EQUAL: {
 				final String operatorText = operator.sqlText();
 				String separator = NO_SEPARATOR;
 				for ( int i = 0; i < size; i++ ) {
@@ -1960,6 +1959,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( operatorText );
 					rhsExpressions.get( i ).accept( this );
 					separator = " and ";
+				}
+				break;
+			}
+			case NOT_EQUAL: {
+				final String operatorText = operator.sqlText();
+				String separator = NO_SEPARATOR;
+				for ( int i = 0; i < size; i++ ) {
+					appendSql( separator );
+					lhsExpressions.get( i ).accept( this );
+					appendSql( operatorText );
+					rhsExpressions.get( i ).accept( this );
+					separator = " or ";
 				}
 				break;
 			}

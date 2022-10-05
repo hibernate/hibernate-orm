@@ -2077,7 +2077,7 @@ These operations can almost always be written in another way, without the use of
 [[hql-aggregate-functions-filter]]
 ==== `filter`
 
-All aggregate functions support the inclusion of a _filter clause_, a sort of mini-`where`-clause applying a restriction to just one item of the select list:
+All aggregate functions support the inclusion of a _filter clause_, a sort of mini-`where` applying a restriction to just one item of the select list:
 
 [[hql-aggregate-functions-filter-example]]
 //.Using filter with aggregate functions
@@ -2094,16 +2094,29 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
 ====
 
 [[hql-aggregate-functions-orderedset]]
-==== Ordered set aggregate functions
+==== Ordered set aggregate functions: `within group`
 
-_Ordered set aggregate functions_ are special aggregate functions that have:
+An _ordered set aggregate function_ is a special aggregate functions which has:
 
-- not only an optional filter clause, but also
-- a _within group clause_, a mini-`order by` clause.
+- not only an optional filter clause, as above, but also
+- a `within group` clause containing a mini-`order by` specification.
 
-IMPORTANT: Ordered set aggregate functions are not available on every database.
+There are two main types of ordered set aggregate function:
 
-The most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.
+- an _inverse distribution function_ calculates a value that characterizes the distribution of values within the group, for example, `percentile_cont(0.5)` is the median, and `percentile_cont(0.25)` is the lower quartile.
+- a _hypothetical set function_ determines the position of a "hypothetical" value within the ordered set of values.
+
+The following ordered set aggregate functions are available on many platforms:
+
+|===
+| Type | Functions
+
+| Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
+| Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
+| Other | `listagg()`
+|===
+
+Actually, the most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.
 This function has different names on different databases, but HQL abstracts these differences, and&mdash;following ANSI SQL&mdash;calls it `listagg()`.
 
 [[hql-aggregate-functions-within-group-example]]
@@ -2114,14 +2127,63 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-within-group-exam
 ----
 ====
 
-The following ordered set aggregate functions are also available on many platforms:
+[[hql-aggregate-functions-window]]
+==== Window functions: `over`
+
+A _window function_ is one which also has an `over` clause, which may specify:
+
+- window frame _partitioning_, with `partition by`, which is very similar to `group by`,
+- ordering, with `order by`, which defines the order of rows within a window frame, and/or
+- _windowing_, with `range`, `rows`, or `groups`, which define the bounds of the window frame within a partition.
+
+The default partitioning and ordering is taken from the `group by` and `order by` clauses of the query.
+Every partition runs in isolation, that is, rows can't leak across partitions.
+
+Like ordered set aggregate functions, window functions may optionally specify `filter` or `within group`.
+
+Window functions are similar to aggregate functions in the sense that they compute some value based on a "frame" comprising multiple rows.
+But unlike aggregate functions, window functions don't flatten rows within a window frame.
+
+The windowing clause specifies one of the following modes:
+
+* `rows` for frame start/end defined by a set number of rows, for example, `rows n preceding` means that only `n` preceding rows are part of a frame,
+* `range` for frame start/end defined by value offsets, for example, `range n preceding` means a preceding row is part of a frame if the `abs(value, lag(value) over(..)) <= N`, or
+* `groups` for frame start/end defined by group offsets, for example, `groups n preceding` means `n` preceding peer groups are part of a frame, a peer group being rows with equivalent values for `order by` expressions.
+
+The frame exclusion clause allows excluding rows around the current row:
+
+* `exclude current row` excludes the current row,
+* `exclude group` excludes rows of the peer group of the current row,
+* `exclude ties` excludes rows of the peer group of the current row, except the current row, and
+* `exclude no others` is the default, and does not exclude anything.
+
+IMPORTANT: Frame clause modes `range` and `groups`, as well as frame exclusion modes might not be available on every database.
+
+The default frame is `rows between unbounded preceding and current row exclude no others`,
+which means that all rows prior to the "current row" are considered.
+
+The following window functions are available on all major platforms:
 
 |===
-| Type | functions
+| Window function | Purpose | Signature
 
-| Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
-| Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
+| `row_number()` | The position of the current row within its frame | `row_number()`
+| `lead()` | The value of a subsequent row in the frame | `lead(x)`, `lead(x, i, x)`
+| `lag()` | The value of a previous row in the frame | `lag(x)`, `lag(x, i, x)`
+| `first_value()` | The value of a first row in the frame | `first_value(x)`
+| `last_value()` | The value of a last row in the frame | `last_value(x)`
+| `nth_value()` | The value of the `n`th row in the frame | `nth_value(x, n)`
 |===
+
+In principle every aggregate or ordered set aggregate function might also be used as a window function, just by specifying `over`, but not every function is supported on every database.
+
+[IMPORTANT]
+====
+Window functions and ordered set aggregate functions aren't available on every database.
+Even where they are available, support for particular features varies widely between databases.
+Therefore, we won't waste time going into further detail here.
+For more information about the syntax and semantics of these functions, consult the documentation for your dialect of SQL.
+====
 
 [[hql-where-clause]]
 === Restriction: `where`

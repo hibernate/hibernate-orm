@@ -136,6 +136,7 @@ import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpr
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
@@ -1402,22 +1403,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							if ( !sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions() ) {
 								return false;
 							}
-							final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
-									.getBasicTypeForJavaType( Integer.class );
 							identifierSelection = new SqlSelectionImpl(
 									1,
 									0,
-									new Over<>(
-										new SelfRenderingFunctionSqlAstExpression(
-												"row_number",
-												(appender, args, walker) -> appender.appendSql( "row_number()" ),
-												Collections.emptyList(),
-												rowNumberType,
-												rowNumberType
-										),
-										Collections.emptyList(),
-										Collections.emptyList()
-									)
+									SqmInsertStrategyHelper.createRowNumberingExpression( querySpec, sessionFactory )
 							);
 							selectClause.addSqlSelection( identifierSelection );
 							return true;

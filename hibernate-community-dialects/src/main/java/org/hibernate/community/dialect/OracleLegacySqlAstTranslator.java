@@ -329,6 +329,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
 		if ( !queryPart.hasSortSpecifications() ) {
 			// Oracle doesn't allow an empty over clause for the row_number() function
+			// For regular window function usage, we render a constant order by,
+			// but since this is used for emulating limit/offset anyway, this is fine
 			appendSql( "rownum" );
 		}
 		else {
@@ -344,8 +346,9 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
 					&& over.getExclusion() == FrameExclusion.NO_OTHERS ) {
-				// Oracle doesn't allow an empty over clause for the row_number() function
-				append( "rownum" );
+				// Oracle doesn't allow an empty over clause for the row_number() function,
+				// so we order by a constant
+				append( "row_number() over(order by 1)" );
 				return;
 			}
 		}

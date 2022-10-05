@@ -39,6 +39,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SortOrder;
@@ -267,23 +268,13 @@ public class CteInsertHandler implements InsertHandler {
 							);
 						}
 						if ( !assignsId && entityDescriptor.getIdentifierGenerator() instanceof PostInsertIdentifierGenerator ) {
-							final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
-									.getBasicTypeForJavaType( Integer.class );
 							querySpec.getSelectClause().addSqlSelection(
 									new SqlSelectionImpl(
 											1,
 											0,
-											new Over<>(
-													new SelfRenderingFunctionSqlAstExpression(
-															"row_number",
-															(appender, args, walker) -> appender.appendSql(
-																	"row_number()" ),
-															Collections.emptyList(),
-															rowNumberType,
-															rowNumberType
-													),
-													Collections.emptyList(),
-													Collections.emptyList()
+											SqmInsertStrategyHelper.createRowNumberingExpression(
+													querySpec,
+													sessionFactory
 											)
 									)
 							);
@@ -1000,23 +991,13 @@ public class CteInsertHandler implements InsertHandler {
 								idColumnReference
 						)
 				);
-				final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
-						.getBasicTypeForJavaType( Integer.class );
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
 								1,
 								0,
-								new Over<>(
-										new SelfRenderingFunctionSqlAstExpression(
-												"row_number",
-												(appender, args, walker) -> appender.appendSql(
-														"row_number()" ),
-												Collections.emptyList(),
-												rowNumberType,
-												rowNumberType
-										),
-										Collections.emptyList(),
-										Collections.emptyList()
+								SqmInsertStrategyHelper.createRowNumberingExpression(
+										querySpec,
+										sessionFactory
 								)
 						)
 				);

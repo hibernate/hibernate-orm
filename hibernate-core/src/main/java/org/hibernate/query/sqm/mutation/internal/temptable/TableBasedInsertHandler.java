@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -216,23 +217,13 @@ public class TableBasedInsertHandler implements InsertHandler {
 								);
 								insertStatement.getTargetColumnReferences().add( columnReference );
 								targetPathColumns.add( new Assignment( columnReference, columnReference ) );
-								final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
-										.getBasicTypeForJavaType( Integer.class );
 								querySpec.getSelectClause().addSqlSelection(
 										new SqlSelectionImpl(
 												1,
 												0,
-												new Over<>(
-														new SelfRenderingFunctionSqlAstExpression(
-																"row_number",
-																(appender, args, walker) -> appender.appendSql(
-																		"row_number()" ),
-																Collections.emptyList(),
-																rowNumberType,
-																rowNumberType
-														),
-														Collections.emptyList(),
-														Collections.emptyList()
+												SqmInsertStrategyHelper.createRowNumberingExpression(
+														querySpec,
+														sessionFactory
 												)
 										)
 								);

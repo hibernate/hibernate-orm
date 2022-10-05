@@ -5691,7 +5691,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			else if ( subquery != null && !supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
 				// For quantified relational comparisons, we can do an optimized emulation
-				if ( supportsRowValueConstructorSyntax() && all ) {
+				if ( !needsTupleComparisonEmulation( operator ) && all ) {
 					switch ( operator ) {
 						case LESS_THAN:
 						case LESS_THAN_OR_EQUAL:
@@ -5705,12 +5705,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							);
 							return;
 						}
-					}
-					// If we get here, this is an equality-like comparison, though we support scalar row value comparison
-					// For this special case, we can rely on scalar subquery handling, given that the subquery fetches only one row
-					if ( isFetchFirstRowOnly( subquery ) ) {
-						renderComparison( lhsTuple, operator, subquery );
-						return;
+						case NOT_EQUAL:
+						case EQUAL:
+						case DISTINCT_FROM:
+						case NOT_DISTINCT_FROM: {
+							// For this special case, we can rely on scalar subquery handling, given that the subquery fetches only one row
+							if ( isFetchFirstRowOnly( subquery ) ) {
+								renderComparison( lhsTuple, operator, subquery );
+								return;
+							}
+						}
 					}
 				}
 				emulateSubQueryRelationalRestrictionPredicate(
@@ -5722,7 +5726,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						all ? operator.negated() : operator
 				);
 			}
-			else if ( !supportsRowValueConstructorSyntax() ) {
+			else if ( needsTupleComparisonEmulation( operator ) ) {
 				rhsTuple = SqlTupleContainer.getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
@@ -5760,7 +5764,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							rhsTuple.getExpressions().get( 0 )
 					);
 				}
-				else if ( supportsRowValueConstructorSyntax() ) {
+				else if ( !needsTupleComparisonEmulation( comparisonPredicate.getOperator() ) ) {
 					renderComparison(
 							lhsExpression,
 							comparisonPredicate.getOperator(),
@@ -5791,6 +5795,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					comparisonPredicate.getRightHandExpression()
 			);
 		}
+	}
+
+	private boolean needsTupleComparisonEmulation(ComparisonOperator operator) {
+		if ( !supportsRowValueConstructorSyntax() ) {
+			return true;
+		}
+		switch ( operator ) {
+			case LESS_THAN:
+			case LESS_THAN_OR_EQUAL:
+			case GREATER_THAN:
+			case GREATER_THAN_OR_EQUAL:
+				return !supportsRowValueConstructorGtLtSyntax();
+		}
+		return false;
 	}
 
 	/**
@@ -5829,6 +5847,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean supportsRowValueConstructorSyntax() {
 		return true;
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
+	 * and <code>&ge;</code> operators.
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... where (FIRST_NAME, LAST_NAME) < ('Steve', 'Ebersole') ...".
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with relational comparison operators; false otherwise.
+	 */
+	protected boolean supportsRowValueConstructorGtLtSyntax() {
+		return supportsRowValueConstructorSyntax();
 	}
 
 	/**

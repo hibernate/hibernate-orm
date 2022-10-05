@@ -104,20 +104,30 @@ For example, the simplest query in HQL has no `select` clause at all:
 
 [[hql-select-simplest-example]]
 ====
-[source, SQL, indent=0]
+[source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-select-simplest-example]
 ----
 ====
 
+We don't necessarily _recommend_ leaving off the `select` list.
+
 [NOTE]
 ====
 JPQL requires a `select` clause, whereas HQL does not.
+
 Naturally, the previous query may be written with a `select` clause:
 
-[source, SQL, indent=0]
+[source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-select-simplest-jpql-example]
+----
+
+When there's no explicit `select` clause, the select list is implied by the result type of the query:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-select-no-from]
 ----
 
 For complicated queries, it's probably best to explicitly specify a `select` list.
@@ -142,7 +152,7 @@ Looking carefully at the BNF given above, you might notice that the `select` lis
 Of course, standard SQL, and JPQL, require that the `select` list comes at the beginning.
 But it's more natural to put it last:
 
-[source, SQL, indent=0]
+[source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-select-last-example]
 ----
@@ -169,7 +179,7 @@ For example:
 
 [[hql-update-example]]
 ====
-[source, SQL, indent=0]
+[source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-update-example]
 ----

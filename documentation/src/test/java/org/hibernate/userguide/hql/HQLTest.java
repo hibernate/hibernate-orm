@@ -155,7 +155,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test_hql_select_simplest_example() {
-
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			List<Object> objects = session.createQuery(
@@ -196,6 +195,33 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				String.class)
 			.getResultList();
 			//end::hql-select-last-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_select_no_from() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
+			//tag::hql-select-no-from[]
+
+			// result type Person, only the Person selected
+			List<Person> persons = session.createQuery(
+				"from Person join phones", Person.class)
+				.getResultList();
+			for (Person person: persons) {
+				//...
+			}
+
+			// result type Object[], both Person and Phone selected
+			List<Object[]> personsWithPhones = session.createQuery(
+				"from Person join phones", Object[].class)
+				.getResultList();
+			for (Object[] personWithPhone: personsWithPhones) {
+				Person p = (Person) personWithPhone[0];
+				Phone ph = (Phone) personWithPhone[1];
+				//...
+			}
+			//end::hql-select-no-from[]
 		});
 	}
 

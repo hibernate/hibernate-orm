@@ -3,6 +3,51 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.4.Final (October 05, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32106
+
+** Bug
+    * [HHH-15576] - Emulation of tuple comparison produces a wrong SQL query for NOT EQUAL operator
+    * [HHH-15572] - Emulation of tuple comparison produces a wrong SQL query, missing a closing parenthesis
+    * [HHH-15554] - Merge of an Entity with an immutable composite user type throws Exception 
+    * [HHH-15552] - Embeddable type cannot be cast to org.hibernate.usertype.CompositeUserType if referred to from a mapped superclass with generic parameter
+    * [HHH-15548] - PostgreSQL: java.util.Instant - Hibernate creates column with typecode 93 and then expects typecode 3003
+    * [HHH-15543] - CNFE with OracleDialect when JDBC driver classes are invisible
+    * [HHH-15542] - Stored Procedure, 'registerStoredProcedureParameter(..., ResultSet.class, ParameterMode.REF_CURSOR);' throws NPE : cannot invoke "org.hibernate.query.BindableType.getBindableJavaType()" because "parameterType" is null
+    * [HHH-15537] - Lateral subquery emulation fails on MySQL 5.7
+    * [HHH-15522] - Hibernate.isInitialized method not working for Envers Collections
+    * [HHH-15520] - ValueGeneration on @OneToOne leads to boot error 
+    * [HHH-15517] - "insert from select" With hibernate.default_schema Configured Doesn't Work With Hibernate 6
+    * [HHH-15514] - EntityTestCase Test failures with Hibernate ORM when run under security manager
+    * [HHH-15512] - Querying for an entity persisted but not flushed to the database causes the exception 'A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance'
+    * [HHH-15511] - CockroachDB dialect version incorrectly determined
+    * [HHH-15505] - Getter of loaded entity returns null when using bytecode enhancement on entity whose field is defined both in mapped superclass and concrete entity
+    * [HHH-15498] - Enum, Query fails to determine the ValueMapping for SqmParameter
+    * [HHH-15497] - Count query when counting polymorphic subclasses by type fails when run twice
+    * [HHH-15495] - BINARY (and by extension UUID) is no longer comparable in Hibernate 6
+    * [HHH-15482] - CoercionException in criteria simple case statement
+    * [HHH-15481] - NaturalId and Lazy create a class cast Exception
+    * [HHH-15235] - PropertyAccessException on OneToOne mapping after migration to Hibernate 5.6
+    * [HHH-15045] - onFlushDirty() invoked on parent entity in a @OneToOne relationship when no table columns are changed
+
+** Deprecation
+    * [HHH-15536] - Deprecate SharedSessionContractImplementor#getTransactionStartTimestamp() and CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()
+
+** Improvement
+    * [HHH-15578] - Add min/max emulation for uuid on PostgreSQL
+    * [HHH-15527] - Use SimpleInsertQueryPlan when query assigns id even if optimizer increment is bigger than 1
+    * [HHH-15500] - Cache key is huge since migration to 6
+
+** Task
+    * [HHH-15579] - Replace inaccessible docker image for SAP Hana with new version
+    * [HHH-15538] - Move Jenkinsfile timeout around shell command
+    * [HHH-15534] - Publish recent version of Hibernate Gradle plugin
+    * [HHH-15533] - Introduce versionless CI matrix entries for the PostgreSQL and MySQL minimum supported version
+    * [HHH-15494] - Upgrade to ANTLR 4.10.1
+
+
 Changes in 6.1.3.Final (September 08, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

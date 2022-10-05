@@ -480,7 +480,7 @@ hana() {
       --sysctl kernel.shmmni=4096 \
       --sysctl kernel.shmall=8388608 \
       -v $temp_dir:/config \
-      docker.io/store/saplabs/hanaexpress:2.00.045.00.20200121.1 \
+      docker.io/saplabs/hanaexpress:2.00.061.00.20220519.1 \
       --passwords-url file:///config/password.json \
       --agree-to-sap-license
     # Give the container some time to start

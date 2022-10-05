@@ -114,7 +114,7 @@ We don't necessarily _recommend_ leaving off the `select` list.
 
 [NOTE]
 ====
-JPQL requires a `select` clause, whereas HQL does not.
+HQL doesn't require a `select` clause, but JPQL _does_.
 
 Naturally, the previous query may be written with a `select` clause:
 
@@ -429,11 +429,12 @@ Again there is some flexibility.
 | Datetime | `java.sql.Timestamp` | `current_timestamp` | `current timestamp`
 |===
 
+Of these, only `local date`, `local time`, `local datetime`, `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
+
 [IMPORTANT]
 ====
-Of these, only `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
-
-However, the use of date and time types from the `java.sql` package is strongly discouraged, so we encourage the use of the HQL extensions.
+The use of date and time types from the `java.sql` package is strongly discouraged!
+Always use `java.time` types in new code.
 ====
 
 [[hql-duration-literals]]
@@ -445,6 +446,8 @@ There are two sorts of duration in HQL:
 * week/day/hour/minute/second/nanosecond durations.
 
 Literal duration expressions are of form `n unit`, for example `1 day` or `10 year` or `100 nanosecond`.
+
+The unit may be: `day`, `month`, `quarter`, `year`, `second`, `minute`, `hour`, or `nanosecond`.
 
 [NOTE]
 ====
@@ -734,6 +737,20 @@ include::{sourcedir}/HQLTest.java[tags=hql-coalesce-example]
 
 TIP: HQL allows `ifnull()` as a synonym for `coalesce()` in the case of exactly two arguments.
 
+[[hql-function-extract]]
+===== `extract()`
+Extracts a field of a datetime.
+
+Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time` and more.
+For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-extract-function-example]
+----
+====
+
 ===== `size()`
 
 The number of elements of a collection or to-many association.
@@ -746,6 +763,11 @@ include::{sourcedir}/HQLTest.java[tags=hql-size-example]
 ----
 ====
 
+[[jpql-string-functions]]
+==== JPQL functions for working with strings
+
+JPQL defines a number of functions for working with strings.
+
 ===== `concat()`
 Produces a string by concatenating its arguments.
 
@@ -755,6 +777,18 @@ Accepts a variable number of arguments.
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
+----
+====
+
+===== `locate()`
+Locates a string within another string.
+
+The third argument (optional) is used to specify a position at which to start the search.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-locate-function-example]
 ----
 ====
 
@@ -771,28 +805,10 @@ include::{sourcedir}/HQLTest.java[tags=hql-substring-function-example]
 ----
 ====
 
-===== `upper()`
-The given string, with lowercase characters converted to uppercase.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
-----
-====
-
-===== `lower()`
-The given string, with uppercase characters converted to lowercase.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
-----
-====
-
 ===== `trim()`
-Follows the semantics of the SQL `trim()` function.
+Follows the syntax and semantics of the ANSI SQL `trim()` function.
+
+May be used to trim `leading` characters, `trailing` characters, or both.
 
 ====
 [source, JAVA, indent=0]
@@ -801,87 +817,64 @@ include::{sourcedir}/HQLTest.java[tags=hql-trim-function-example]
 ----
 ====
 
-===== `length()`
-The length of a string.
+Finally, there's three more functions for working with strings that are easy to understand.
+
+|===
+| JPQL Function | Purpose | Signature
+
+| `length()` | The length of the string | `length(s)`
+| `upper()` | The string, with lowercase characters converted to uppercase | `upper(s)`
+| `lower()` | The string, with uppercase characters converted to lowercase | `lower(s)`
+|===
 
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-length-function-example]
 ----
-====
-
-===== `locate()`
-Locates a string within another string.
-
-The third argument (optional) is used to specify a position at which to start the search.
-
-====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/HQLTest.java[tags=hql-locate-function-example]
+include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
 ----
+//[source, JAVA, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
+//----
 ====
 
-===== `abs()`
-The magnitude of a numeric value.
+[[jpql-numeric-functions]]
+==== JPQL numeric functions
+
+Of course, JPQL also defines a number of functions for working with numeric values.
+
+|===
+| JPQL Function | Purpose | Signature
+
+| `abs()` | The magnitude of a number | `abs(x)`
+| `sign()` | The sign of a number | `sign(x)`
+| `mod()` | Remainder of integer division | `mod(n,d)`
+| `sqrt()` | Square root of a number | `sqrt(x)`
+| `exp()` | Exponential function | `exp(x)`
+| `power()` | Exponentiation | `power(x,y)`
+| `ln()` | Natural logarithm | `ln(x)`
+| `round()` | Numeric rounding | `round(number, places)`
+| `floor()` | Floor function | `floor(x)`
+| `ceiling()` | Ceiling function | `ceiling(x)`
+|===
 
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-abs-function-example]
 ----
-====
-
-===== `mod()`
-Calculates the remainder of dividing the first argument by the second.
-
-====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-mod-function-example]
 ----
-====
-
-===== `sqrt()`
-The square root of a numeric value.
-
-====
-[source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-sqrt-function-example]
 ----
 ====
-//
-//CURRENT_DATE::
-//Returns the database current date.
-//
-//====
-//[source, JAVA, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-current-date-function-example]
-//----
-//====
-//
-//CURRENT_TIME::
-//Returns the database current time.
-//
-//====
-//[source, JAVA, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-current-time-function-example]
-//----
-//====
-//
-//CURRENT_TIMESTAMP::
-//Returns the database current timestamp.
-//
-//====
-//[source, JAVA, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-current-timestamp-function-example]
-//----
-//====
 
 We have not included <<hql-aggregate-functions,aggregate functions>> in this list, because their purpose is more specialized.
 
@@ -913,38 +906,6 @@ include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
 ----
 ====
 
-[[hql-function-extract]]
-===== `extract()`
-Extracts a field of a datetime.
-
-Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time` and more.
-For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-extract-function-example]
-----
-====
-
-The following synonyms for `extract()` are also provided:
-
-|===
-| `year(x)` | `extract(year from x)`
-| `month(x)` | `extract(month from x)`
-| `day(x)` | `extract(day from x)`
-| `hour(x)` | `hour(year from x)`
-| `minute(x)` | `minute(year from x)`
-| `second(x)` | `second(year from x)`
-|===
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
-----
-====
-
 ===== `collate()`
 
 Selects a collation to be used for its string-valued argument.
@@ -962,28 +923,6 @@ Formats a date, time, or datetime according to a pattern.
 The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
-
-[[hql-function-sql]]
-===== `sql()`
-
-Renders a SQL fragment by unquoting the pattern string literal arguments.
-Use cases that require the use of SQL features that are unsupported in HQL,
-e.g. functions with special syntax, would usually require a switch to native queries,
-but the `sql` function provides a way to make use of certain SQL fragments within an HQL query.
-
-The syntax is `sql(pattern[, argN]*)`, where pattern must be a string literal but other arguments may be of any type.
-
-The pattern literal is unquoted and will be used for rendering the SQL fragment.
-Occurrences of question marks `?` in the pattern are replaced with additional arguments passed to the function.
-
-Examples:
-
-```sql
--- Cast to some native type
-select c from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
--- Use some native operator
-select h from Human h order by sql('(? <-> ?)', h.workLocation, h.homeLocation)
-```
 
 [[hql-list-functions]]
 ===== `element()` and `index()`
@@ -1028,20 +967,33 @@ Next, functions for working with numeric values:
 |===
 | HQL Function | Purpose | Signature | Notes on naming
 
-| `sign()` | The sign of a number | `sign(x)` | Universal in SQL dialects
-| `exp()` | Exponential function | `exp(x)` | Universal in SQL dialects
-| `power()` | Exponentiation | `power(x,y)` | Universal in SQL dialects
-| `ln()` | Natural logarithm | `ln(x)` | Very common in SQL dialects
 | `log10()` | Base-10 logarithm | `log10(x)` | Very common in SQL dialects
 | `log()` | Arbitrary-base logarithm | `log(b,x)` | Very common in SQL dialects
 | `pi` | &#960; | `pi` | Very common in SQL dialects
 | `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
-| `round()` | Numeric rounding | As usual: `round(number, places)` | Very common in SQL dialects
-| `floor()` | Floor function | `floor(x)` | Universal in SQL dialects
-| `ceiling()` | Ceiling function | `ceiling(x)` | Very common in SQL dialects
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` | Very common in SQL dialects
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
+
+Next, the following functions are abbreviations for `extract()`:
+
+|===
+| HQL Function | Long form using `extract()`
+
+| `year(x)` | `extract(year from x)`
+| `month(x)` | `extract(month from x)`
+| `day(x)` | `extract(day from x)`
+| `hour(x)` | `extract(year from x)`
+| `minute(x)` | `extract(year from x)`
+| `second(x)` | `extract(year from x)`
+|===
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
+----
+====
 
 Finally, functions that evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
 
@@ -1089,6 +1041,25 @@ Then at startup Hibernate will log a list of type signatures of all registered f
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-native-function-example]
+----
+====
+
+[[hql-function-sql]]
+==== Embedding native SQL in HQL
+
+The special function `sql()` allows the use of native SQL fragments inside an HQL query.
+
+The signature of this function is `sql(pattern[, argN]*)`, where `pattern` must be a string literal but the remaining arguments may be of any type.
+The pattern literal is unquoted and embedded in the generated SQL.
+Occurrences of `?` in the pattern are replaced with the remaining arguments of the function.
+
+====
+[source, SQL, indent=0]
+----
+-- Cast to some native type
+select c from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
+-- Use some native operator
+select h from Human h order by sql('(? <-> ?)', h.workLocation, h.homeLocation)
 ----
 ====
 

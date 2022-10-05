@@ -255,11 +255,11 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-insert-example[]
 			entityManager.createQuery(
-							"insert Person (id, name) " +
-									"values (101L, 'J A Doe III'), " +
-									"(102L, 'J X Doe'), " +
-									"(103L, 'John Doe, Jr')")
-					.executeUpdate();
+				"insert Person (id, name) " +
+				"values (101L, 'J A Doe III'), " +
+				"(102L, 'J X Doe'), " +
+				"(103L, 'John Doe, Jr')")
+			.executeUpdate();
 			//end::hql-insert-example[]
 		});
 	}
@@ -268,8 +268,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void hql_insert_with_sequence_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery(
-							"insert Person (name) values ('Jane Doe2')" )
-					.executeUpdate();
+				"insert Person (name) values ('Jane Doe2')" )
+			.executeUpdate();
 		});
 	}
 

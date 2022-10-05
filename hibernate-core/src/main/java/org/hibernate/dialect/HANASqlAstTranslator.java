@@ -149,6 +149,11 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	protected boolean supportsRowValueConstructorGtLtSyntax() {
+		return false;
+	}
+
+	@Override
 	protected String getFromDual() {
 		return " from sys.dummy";
 	}

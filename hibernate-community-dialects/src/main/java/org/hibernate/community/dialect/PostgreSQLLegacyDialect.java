@@ -39,6 +39,7 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -574,6 +575,60 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates();
 		}
+
+		if ( !supportsMinMaxOnUuid() ) {
+			queryEngine.getSqmFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			queryEngine.getSqmFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+		}
+	}
+
+	/**
+	 * Whether PostgreSQL supports `min(uuid)`/`max(uuid)` which it doesn't by default.
+	 * Since the emulation is not very performant, this can be overridden by users which
+	 * make sure that an aggregate function for uuid exists on their database.
+	 *
+	 * The following definitions can be used for this purpose:
+	 *
+	 * <code>
+	 * create or replace function min(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return least($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate min(uuid) (
+	 *     sfunc = min,
+	 *     stype = uuid,
+	 *     combinefunc = min,
+	 *     parallel = safe,
+	 *     sortop = operator (<)
+	 *     );
+	 *
+	 * create or replace function max(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return greatest($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate max(uuid) (
+	 *     sfunc = max,
+	 *     stype = uuid,
+	 *     combinefunc = max,
+	 *     parallel = safe,
+	 *     sortop = operator (>)
+	 *     );
+	 * </code>
+	 */
+	protected boolean supportsMinMaxOnUuid() {
+		return false;
 	}
 
 	@Override

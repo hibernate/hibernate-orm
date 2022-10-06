@@ -63,10 +63,10 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			keyColumns = Collections.emptyList();
 		}
 
-		return getTableString( table, keyColumns, context );
+		return getTableString( table, metadata, keyColumns, context );
 	}
 
-	private String[] getTableString(Table table, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
+	private String[] getTableString(Table table, Metadata metadata, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
 		String primaryKeyColNames = StreamSupport.stream( keyColumns.spliterator(), false )
 				.map( Column::getName )
 				.collect( Collectors.joining( "," ) );
@@ -75,10 +75,11 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 
 		for ( Column column : table.getColumns() ) {
-			String columnDeclaration =
+			final String sqlType = column.getSqlType( metadata.getDatabase().getTypeConfiguration(), spannerDialect, metadata );
+			final String columnDeclaration =
 					column.getName()
-							+ " " + column.getSqlType()
-							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( column.getSqlType() ) : " not null" );
+							+ " " + sqlType
+							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( sqlType ) : " not null" );
 			colsAndTypes.add( columnDeclaration );
 		}
 

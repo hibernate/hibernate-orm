@@ -34,12 +34,14 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -57,6 +59,8 @@ public class FunctionTests {
 		scope.inTransaction(
 				em -> {
 					EntityOfBasics entity = new EntityOfBasics();
+					entity.setTheInt(5);
+					entity.setTheDouble(1.0);
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
@@ -1419,6 +1423,22 @@ public class FunctionTests {
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123").getResultList().get(0),
 							is("Hello, 08:10:08 PM")
 					);
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMedian.class)
+	public void testMedian(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Object[]> list = session.createQuery("select median(e.theDouble), median(e.theInt) from EntityOfBasics e", Object[].class)
+							.list();
+					assertEquals( 1, list.size() );
+					Double d = (Double) list.get(0)[0];
+					Double i = (Double) list.get(0)[1];
+					assertEquals(d,1.0, 1e-5);
+					assertEquals(i,5.0, 1e-5);
 				}
 		);
 	}

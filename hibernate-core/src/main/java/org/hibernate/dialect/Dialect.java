@@ -828,7 +828,11 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		//aggregate functions, supported on every database
+		//standard aggregate functions count(), sum(), max(), min(), avg(),
+		//supported on every database
+
+		//Note that we don't include median() in this list, since it's difficult
+		//to implement on MySQL and Sybase ASE
 
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT );
 

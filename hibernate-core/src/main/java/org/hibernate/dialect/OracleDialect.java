@@ -174,6 +174,9 @@ public class OracleDialect extends Dialect {
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
 
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+
 		functionFactory.median();
 		functionFactory.stddev();
 		functionFactory.stddevPopSamp();

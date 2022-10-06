@@ -80,14 +80,6 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void degrees() {
-		functionRegistry.namedDescriptorBuilder( "degrees" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
-				.register();
-	}
-
 	/**
 	 * For databases where the first parameter is the base
 	 */
@@ -175,6 +167,36 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
+				.register();
+	}
+
+	/**
+	 * For Oracle, HANA
+	 */
+	public void radians_acos() {
+		functionRegistry.patternDescriptorBuilder( "radians", "(?1*acos(-1)/180)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	public void degrees() {
+		functionRegistry.namedDescriptorBuilder( "degrees" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	/**
+	 * For Oracle, HANA
+	 */
+	public void degrees_acos() {
+		functionRegistry.patternDescriptorBuilder( "degrees", "(?1/acos(-1)*180)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
 				.register();
 	}
 

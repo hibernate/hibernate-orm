@@ -1571,14 +1571,25 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_substring_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-substring-function-example[]
+
+			// JPQL-style
 			List<String> prefixes = entityManager.createQuery(
 				"select substring(p.number, 1, 2) " +
+				"from Call c " +
+				"join c.phone p",
+				String.class)
+				.getResultList();
+
+			// ANSI SQL-style
+			List<String> prefixes2 = entityManager.createQuery(
+				"select substring(p.number from 1 for 2) " +
 				"from Call c " +
 				"join c.phone p",
 				String.class)
 			.getResultList();
 			//end::hql-substring-function-example[]
 			assertEquals(2, prefixes.size());
+			assertEquals(2, prefixes2.size());
 		});
 	}
 
@@ -1614,12 +1625,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_trim_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-trim-function-example[]
+
+			// trim whitespace from both ends
 			List<String> names1 = entityManager.createQuery(
 				"select trim(p.name) " +
 				"from Person p ",
 				String.class)
 			.getResultList();
 
+			// trim leading spaces
 			List<String> names2 = entityManager.createQuery(
 				"select trim(leading ' ' from p.name) " +
 				"from Person p ",
@@ -1655,6 +1669,20 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Integer.class)
 			.getResultList();
 			//end::hql-locate-function-example[]
+			assertEquals(3, sizes.size());
+		});
+	}
+
+	@Test
+	public void test_hql_position_function_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-position-function-example[]
+			List<Integer> sizes = entityManager.createQuery(
+				"select position('John' in p.name) " +
+				"from Person p ",
+				Integer.class)
+			.getResultList();
+			//end::hql-position-function-example[]
 			assertEquals(3, sizes.size());
 		});
 	}

@@ -493,7 +493,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-java-constant-example]
 [[hql-entity-name-literals]]
 ==== Literal entity names
 
-Entity names may also occur as a literal value. They do not need to be qualified. See <<hql-treat-type>>.
+Entity names may also occur as a literal value. They do not need to be qualified. See <<hql-functions-typecasts>>.
 
 [[hql-expressions]]
 === Expressions
@@ -508,7 +508,7 @@ HQL defines two ways to concatenate strings:
 * the SQL-style concatenation operator, `||`, and
 * the JPQL-standard `concat()` function.
 
-See <<jpql-standardized-functions,below>> for details of the `concat()` function.
+See <<hql-functions-string,below>> for details of the `concat()` function.
 
 [[hql-concatenation-example]]
 //.Concatenation operation example
@@ -592,7 +592,8 @@ Just like in standard SQL, there are two forms of case expression:
 [TIP]
 ====
 Case expressions are verbose.
-It's often simpler to use the `coalesce()`, `nullif()`, or `ifnull()` functions.
+It's often simpler to use the `coalesce()`, `nullif()`, or `ifnull()` functions,
+as described below in <<hql-functions-null>>.
 ====
 
 [[hql-simple-case-expressions]]
@@ -653,11 +654,17 @@ include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 [[hql-exp-functions]]
 === Functions
 
-Both HQL and JPQL define some standard functions that are portable between databases.
+Both HQL and JPQL define some standard functions and make them portable between databases.
+
+[TIP]
+====
+A program that wishes to remain portable between Jakarta Persistence providers should in principle limit itself to the use of these functions.
+
+On the other hand, this is an extremely short list. Any nontrivial program will probably need to look beyond it.
+====
 
 In some cases, the syntax of these functions looks a bit funny at first, for example, `cast(number as String)`, or `extract(year from date)`, or even `trim(leading '.' from string)`.
 This syntax is inspired by standard ANSI SQL, and we promise you'll get used to it.
-
 
 [IMPORTANT]
 ====
@@ -668,10 +675,26 @@ For some functions, and always depending on the database, a HQL function invocat
 
 In addition, there are several ways to use a database function that's not known to Hibernate.
 
-[[hql-treat-type]]
+[[hql-functions-typecasts]]
 ==== Types and typecasts
 
-The special function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
+The following special functions make it possible to discover or narrow expression types:
+
+|===
+| Special function | Purpose | Signature | JPA standard
+
+| `type()` | The (concrete) entity name | `type(e)` | &check;
+| `treat()` | Narrow an entity type | `treat(e as Entity)` | &check;
+| `cast()` | Narrow a basic type | `cast(x as Type)` | &cross;
+| `str()` | Cast to a string | `str(x)` | &cross;
+|===
+
+Let's see what these functions do.
+
+[[hql-function-type]]
+===== `type()`
+
+The function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
 This is mainly useful when dealing with entity inheritance hierarchies.
 
 [[hql-entity-type-exp-example]]
@@ -683,7 +706,10 @@ include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
 ----
 ====
 
-The special function `treat()` may be used to narrow the type of an identification variable.
+[[hql-function-treat]]
+===== `treat()`
+
+The function `treat()` may be used to narrow the type of an identification variable.
 This is useful when dealing with entity inheritance hierarchies.
 
 [[hql-treat-example]]
@@ -699,29 +725,46 @@ This allows the attribute `cardNumber` declared by the subtype `CreditCardPaymen
 
 The `treat()` function may even occur in a <<hql-join-treat,join>>.
 
-[[jpql-standardized-functions]]
-==== JPQL standard functions
+[[hql-function-cast]]
+===== `cast()`
 
-Here we present the list of functions defined by JPQL.
+The function `cast()` has a similar syntax, but is used to narrow basic types.
+Its first argument is usually an attribute of an entity, or a more complex expression involving entity attributes.
 
-[TIP]
-====
-A program that wishes to remain portable between Jakarta Persistence providers should in principle limit itself to the use of these functions.
+The target type is an unqualified Java class name:
+`String`, `Long`, `Integer`, `Double`, `Float`, `Character`, `Byte`, `BigInteger`, `BigDecimal`, `LocalDate`, `LocalTime`, `LocalDateTime`, etc.
 
-On the other hand, this is an extremely short list. Any nontrivial program will probably need to look beyond it.
-====
-
-===== `nullif()`
-
-An abbreviated `case` expression that evaluates to null if its operands are equal.
-
-[[hql-nullif-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/HQLTest.java[tags=hql-nullif-example]
+include::{sourcedir}/HQLTest.java[tags=hql-cast-function-example]
 ----
 ====
+
+[[hql-function-str]]
+===== `str()`
+
+The function `str(x)` is a synonym for `cast(x as String)`.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
+----
+====
+
+[[hql-functions-null]]
+==== Functions for working with null values
+
+The following functions make it easy to deal with null values:
+
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `coalesce()` | First non-null argument | `coalesce(x, y, z)` | &check;
+| `ifnull()` | Second argument if first is null | `ifnull(x,y)` | &cross;
+| `nullif()` | `null` if arguments are equal | `nullif(x,y)` | &check;
+|===
 
 ===== `coalesce()`
 
@@ -735,11 +778,38 @@ include::{sourcedir}/HQLTest.java[tags=hql-coalesce-example]
 ----
 ====
 
-TIP: HQL allows `ifnull()` as a synonym for `coalesce()` in the case of exactly two arguments.
+===== `ifnull()`
+
+HQL allows `ifnull()` as a synonym for `coalesce()` in the case of exactly two arguments.
+
+===== `nullif()`
+
+Evaluates to null if its operands are equal, or to its first argument otherwise.
+
+[[hql-nullif-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-nullif-example]
+----
+====
+
+[[hql-functions-datetime]]
+==== Functions for working with dates and times
+
+There are two very important function for working with dates and times.
+
+|===
+| Special function | Purpose | Signature | JPA standard
+
+| `extract()` | Extract a datetime field | `extract(field from x)` | &check;
+| `format()` | Format a datetime as a string | `format(datetime as pattern)` | &cross;
+|===
 
 [[hql-function-extract]]
 ===== `extract()`
-Extracts a field of a datetime.
+
+The special function `extract()` obtains a single field of a date, time, or datetime.
 
 Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time` and more.
 For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
@@ -750,6 +820,227 @@ For a full list of field types, see the Javadoc for https://docs.jboss.org/hiber
 include::{sourcedir}/HQLTest.java[tags=hql-extract-function-example]
 ----
 ====
+
+The following functions are abbreviations for `extract()`:
+
+|===
+| Function | Long form using `extract()` | JPA standard
+
+| `year(x)` | `extract(year from x)` | &cross;
+| `month(x)` | `extract(month from x)` | &cross;
+| `day(x)` | `extract(day from x)` | &cross;
+| `hour(x)` | `extract(year from x)` | &cross;
+| `minute(x)` | `extract(year from x)` | &cross;
+| `second(x)` | `extract(year from x)` | &cross;
+|===
+
+TIP: These abbreviations aren't part of the JPQL standard, but on the other hand they're a lot less verbose.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
+----
+====
+
+[[hql-function-format]]
+===== `format()`
+
+This function formats a date, time, or datetime according to a pattern.
+
+The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
+
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
+
+[[hql-string-functions]]
+==== Functions for working with strings
+
+Naturally, there are a good number of functions for working with strings.
+
+|===
+| Function | Purpose | Syntax | JPA standard / ANSI SQL Standard
+
+| `upper()` | The string, with lowercase characters converted to uppercase | `upper(s)` | &check; / &check;
+| `lower()` | The string, with uppercase characters converted to lowercase | `lower(s)` | &check; / &check;
+| `length()` | The length of the string | `length(s)` | &check; / &cross;
+| `concat()` | Concatenate strings | `concat(x, y, z)` | &check; / &cross;
+| `locate()` | Location of string within a string | `locate(s, d)`, `locate(s, d, i)` | &check; / &cross;
+| `position()` | Similar to `locate()` | `position(pattern in string)` | &cross; / &check;
+| `substring()` | Substring of a string (JPQL-style) | `substring(s, i)`, `substring(s, i, l)` | &check; / &cross;
+| `substring()` | Substring of a string (ANSI SQL-style)
+| `substring(string from start)`, `substring(string from start for length)` | &cross; / &check;
+| `trim()` | Trim characters from string | See below | &check; / &check;
+| `overlay()` | For replacing a substring
+| `overlay(string placing replacement from start)`, `overlay(string placing replacement from start for length)` | &cross; / &check;
+| `pad()` | Pads a string with whitespace, or with a specified character
+| `pad(string with length)`, `pad(string with length leading)`, `pad(string with length trailing)`, or `pad(string with length leading character)` | &cross; / &cross;
+| `left()` | The leftmost characters of a string | `left(string, length)` | &cross; / &cross;
+| `right()` | The rightmost characters of a string | `right(string, length)`  | &cross; / &cross;
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | &cross; / &cross;
+| `collate()` | Select a collation | `collate(p.name as collation)` | &cross; / &cross;
+|===
+
+Let's take a closer look at just some of these.
+
+IMPORTANT: Contrary to Java, positions of characters within strings are indexed from 1 instead of 0!
+
+===== `concat()`
+
+Accepts a variable number of arguments, and produces a string by concatenating them.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
+----
+====
+
+===== `locate()`
+The JPQL function `locate()` determines the position of a substring within another string.
+
+- The optional third argument is used to specify a position at which to start the search.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-locate-function-example]
+----
+====
+
+===== `position()`
+
+The `position()` function has a similar purpose, but follows the ANSI SQL syntax.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-position-function-example]
+----
+====
+
+===== `substring()`
+Returns a substring of the given string.
+
+- The second argument specifies the position of the first character of the substring.
+- The optional third argument specifies the maximum length of the substring.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-substring-function-example]
+----
+====
+
+===== `trim()`
+The `trim()` function follows the syntax and semantics of ANSI SQL.
+It may be used to trim `leading` characters, `trailing` characters, or both.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-trim-function-example]
+----
+====
+
+Its BNF is funky:
+
+====
+[source, antlrv4, indent=0]
+----
+trimFunction
+    : "TRIM" "(" trimSpecification? trimCharacter? "FROM"? expression ")" ;
+trimSpecification
+    : "LEADING" | "TRAILING" | "BOTH" ;
+----
+====
+
+//====
+//[source, JAVA, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-length-function-example]
+//----
+//[source, JAVA, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
+//----
+//[source, JAVA, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
+//----
+//====
+
+===== `collate()`
+
+Selects a collation to be used for its string-valued argument.
+Collations are useful for <<hql-relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<hql-order-by,order by clause>>.
+
+For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
+
+IMPORTANT: Collations aren't very portable between databases.
+
+[[hql-functions-numeric]]
+==== Numeric functions
+
+Of course, we also have a number of functions for working with numeric values.
+
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `abs()` | The magnitude of a number | `abs(x)` | &check;
+| `sign()` | The sign of a number | `sign(x)` | &check;
+| `mod()` | Remainder of integer division | `mod(n,d)` | &check;
+| `sqrt()` | Square root of a number | `sqrt(x)` | &check;
+| `exp()` | Exponential function | `exp(x)` | &check;
+| `power()` | Exponentiation | `power(x,y)` | &check;
+| `ln()` | Natural logarithm | `ln(x)` | &check;
+| `round()` | Numeric rounding | `round(number, places)` | &check;
+| `floor()` | Floor function | `floor(x)` | &check;
+| `ceiling()` | Ceiling function | `ceiling(x)` | &check;
+
+| `log10()` | Base-10 logarithm | `log10(x)` | &cross;
+| `log()` | Arbitrary-base logarithm | `log(b,x)` | &cross;
+| `pi` | &#960; | `pi` | &cross;
+| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()`
+| Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | &cross;
+| `least()` | Return the smallest of the given arguments | `least(x, y, z)` |&cross;
+| `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | &cross;
+|===
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-abs-function-example]
+----
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-mod-function-example]
+----
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-sqrt-function-example]
+----
+====
+
+We have not included <<hql-aggregate-functions,aggregate functions>> in this list, because their purpose is more specialized.
+
+[[hql-functions-collections]]
+==== Functions for dealing with collections
+
+The following functions apply to any identification variable that refers to a joined collection.
+
+[[hql-collection-functions]]
+|===
+| Function | Purpose | JPA standard
+
+| `size()` | The size of a collection | &cross;
+| `element()` | The element of a list | &cross;
+| `index()` | The index of a list element | &cross;
+| `key()` | The key of a map entry | &cross;
+| `value()` | The value of a map entry | &cross;
+| `entry()` | The whole entry in a map | &cross;
+| `elements()` | See below | &cross;
+| `indices()` | See below | &cross;
+|===
 
 ===== `size()`
 
@@ -762,167 +1053,6 @@ The number of elements of a collection or to-many association.
 include::{sourcedir}/HQLTest.java[tags=hql-size-example]
 ----
 ====
-
-[[jpql-string-functions]]
-==== JPQL functions for working with strings
-
-JPQL defines a number of functions for working with strings.
-
-===== `concat()`
-Produces a string by concatenating its arguments.
-
-Accepts a variable number of arguments.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
-----
-====
-
-===== `locate()`
-Locates a string within another string.
-
-The third argument (optional) is used to specify a position at which to start the search.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-locate-function-example]
-----
-====
-
-===== `substring()`
-A substring of the given string.
-
-The second argument specifies the starting position, where position 1 is the first character of the string.
-The third (optional) argument specified the maximum length of the resulting string.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-substring-function-example]
-----
-====
-
-===== `trim()`
-Follows the syntax and semantics of the ANSI SQL `trim()` function.
-
-May be used to trim `leading` characters, `trailing` characters, or both.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-trim-function-example]
-----
-====
-
-Finally, there's three more functions for working with strings that are easy to understand.
-
-|===
-| JPQL Function | Purpose | Signature
-
-| `length()` | The length of the string | `length(s)`
-| `upper()` | The string, with lowercase characters converted to uppercase | `upper(s)`
-| `lower()` | The string, with uppercase characters converted to lowercase | `lower(s)`
-|===
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-length-function-example]
-----
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
-----
-//[source, JAVA, indent=0]
-//----
-//include::{sourcedir}/HQLTest.java[tags=hql-lower-function-example]
-//----
-====
-
-[[jpql-numeric-functions]]
-==== JPQL numeric functions
-
-Of course, JPQL also defines a number of functions for working with numeric values.
-
-|===
-| JPQL Function | Purpose | Signature
-
-| `abs()` | The magnitude of a number | `abs(x)`
-| `sign()` | The sign of a number | `sign(x)`
-| `mod()` | Remainder of integer division | `mod(n,d)`
-| `sqrt()` | Square root of a number | `sqrt(x)`
-| `exp()` | Exponential function | `exp(x)`
-| `power()` | Exponentiation | `power(x,y)`
-| `ln()` | Natural logarithm | `ln(x)`
-| `round()` | Numeric rounding | `round(number, places)`
-| `floor()` | Floor function | `floor(x)`
-| `ceiling()` | Ceiling function | `ceiling(x)`
-|===
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-abs-function-example]
-----
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-mod-function-example]
-----
-----
-include::{sourcedir}/HQLTest.java[tags=hql-sqrt-function-example]
-----
-====
-
-We have not included <<hql-aggregate-functions,aggregate functions>> in this list, because their purpose is more specialized.
-
-[[hql-functions]]
-==== Important HQL functions
-
-Beyond the JPQL standardized functions, HQL makes some additional functions available, and ensures that they are as portable as possible across all supported databases.
-
-[[hql-function-cast]]
-===== `cast()`
-A typecast for basic-typed values.
-
-The target type is an unqualified Java class name:
-`String`, `Long`, `Integer`, `Double`, `Float`, `Character`, `Byte`, `BigInteger`, `BigDecimal`, `LocalDate`, `LocalTime`, `LocalDateTime`, etc.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-cast-function-example]
-----
-====
-
-The function `str(x)` is a synonym for `cast(x as String)`.
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
-----
-====
-
-===== `collate()`
-
-Selects a collation to be used for its string-valued argument.
-Collations are useful for <<hql-relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<hql-order-by,order by clause>>.
-
-For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
-
-IMPORTANT: Collations aren't very portable between databases.
-
-[[hql-function-format]]
-===== `format()`
-
-Formats a date, time, or datetime according to a pattern.
-
-The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
-
-For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
 
 [[hql-list-functions]]
 ===== `element()` and `index()`
@@ -939,73 +1069,20 @@ A reference to a key, value, or entry of a <<hql-collection-valued-associations,
 
 Later, in <<hql-elements-indices>>, and in <<hql-aggregate-functions-collections>>, we will learn about these special functions for quantifying over the elements or indices of a particular collection.
 
-[[hql-more-functions]]
-==== More HQL functions
+[[hql-functions-model]]
+==== Functions for working with ids and versions
 
-Here we summarize the remaining standard functions defined by HQL.
-
-First, functions for working with strings:
-
-|===
-| HQL Function | Purpose | Syntax | Notes on syntax
-
-| `position()` | Similar to `locate()` | `position(pattern in string)` | Standard ANSI SQL
-| `substring()` | An alternative syntax for JPQL's `substring()`
-| `substring(string from start)`, `substring(string from start for length)` | Standard ANSI SQL
-| `overlay()` | For replacing a substring
-| `overlay(string placing replacement from start)`, `overlay(string placing replacement from start for length)` | Standard ANSI SQL
-| `pad()` | Pads a string with whitespace, or with a specified character
-| `pad(string with length)`, `pad(string with length leading)`, `pad(string with length trailing)`, or `pad(string with length leading character)`
-| Designed to look like `trim()`
-| `left()` | The leftmost characters of a string | `left(string, length)` | Common in SQL dialects
-| `right()` | The rightmost characters of a string | `right(string, length)`  | Common in SQL dialects
-| `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | Common in SQL dialects
-|===
-
-Next, functions for working with numeric values:
-
-|===
-| HQL Function | Purpose | Signature | Notes on naming
-
-| `log10()` | Base-10 logarithm | `log10(x)` | Very common in SQL dialects
-| `log()` | Arbitrary-base logarithm | `log(b,x)` | Very common in SQL dialects
-| `pi` | &#960; | `pi` | Very common in SQL dialects
-| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
-| `least()` | Return the smallest of the given arguments | `least(x, y, z)` | Very common in SQL dialects
-| `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
-|===
-
-Next, the following functions are abbreviations for `extract()`:
-
-|===
-| HQL Function | Long form using `extract()`
-
-| `year(x)` | `extract(year from x)`
-| `month(x)` | `extract(month from x)`
-| `day(x)` | `extract(day from x)`
-| `hour(x)` | `extract(year from x)`
-| `minute(x)` | `extract(year from x)`
-| `second(x)` | `extract(year from x)`
-|===
-
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
-----
-====
-
-Finally, functions that evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
+Finally, the following functions evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
 
 [[hql-model-functions]]
 |===
-| HQL Function | Purpose
+| Function | Purpose | JPA standard
 
-| `id()` | The value of the entity `@Id` attribute.
-| `version()` | The value of the entity `@Version` attribute.
-| `naturalid()` | The value of the entity `@NaturalId` attribute.
+| `id()` | The value of the entity `@Id` attribute. | &cross;
+| `version()` | The value of the entity `@Version` attribute. | &cross;
+| `naturalid()` | The value of the entity `@NaturalId` attribute. | &cross;
 | `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@ManyToOne`) association.
-           Mainly useful with <<associations-not-found,`@NotFound` mappings>>.
+Mainly useful with <<associations-not-found,`@NotFound` mappings>>. | &cross;
 |===
 
 [[hql-user-defined-functions]]
@@ -1222,7 +1299,7 @@ The type of the expression on the left, and the types of all the values on the r
 JPQL limits the legal types to string, numeric, date/time, and enum types, and in JPQL the left expression must be either:
 
 * a "state field", which means a simple attribute, excluding associations and embedded attributes, or
-* an entity type expression (see <<hql-treat-type>>).
+* an entity type expression (see <<hql-functions-typecasts>>).
 
 HQL is far more permissive. HQL itself does not restrict the type any way, though the database itself might.
 Even embedded attributes are allowed, although that feature depends on the level of support for tuple or "row value constructors" in the underlying database.
@@ -1642,7 +1719,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-join-treat-example]
 Here, the identification variable `ccp` declared to the right of `treat()` has the narrowed type `CreditCardPayment`, instead of the declared type `Payment`.
 This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced in the rest of the query.
 
-See <<hql-treat-type>> for more information about `treat()`.
+See <<hql-functions-typecasts>> for more information about `treat()`.
 
 [[hql-join-derived]]
 ==== Join subquery

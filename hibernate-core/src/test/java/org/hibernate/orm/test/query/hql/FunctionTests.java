@@ -322,20 +322,6 @@ public class FunctionTests {
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select function('ascii', 'x'), function('chr', 120) from EntityOfBasics w")
-							.list();
-					session.createQuery("from EntityOfBasics e where function('ascii', 'x') > 0")
-							.list();
-					session.createQuery("from EntityOfBasics e where function('chr', 120) = 'z'")
-							.list();
-
-					session.createQuery("select ascii('x'), chr(120) from EntityOfBasics w")
-							.list();
-					session.createQuery("from EntityOfBasics e where ascii('x') > 0")
-							.list();
-					session.createQuery("from EntityOfBasics e where chr(120) = 'z'")
-							.list();
-
 					assertThat( session.createQuery("select chr(65)").getSingleResult(), is('A') );
 					assertThat( session.createQuery("select ascii('A')").getSingleResult(), is(65) );
 				}

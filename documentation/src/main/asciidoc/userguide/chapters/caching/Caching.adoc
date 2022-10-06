@@ -612,6 +612,8 @@ and also log a warning about the missing cache.
 ====
 Note that caches created this way may not be suitable for production usage (unlimited size and no eviction in particular) unless the cache provider explicitly provides a specific configuration for default caches.
 
+Recent versions of Ehcache enable disk persistence (`<persistence strategy="localTempSwap"/>`) for the default cache causing performance degradation, it is highly recommended to define the caches explicitly (see Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-14544[HHH-14544]).
+
 Ehcache, in particular, allows to set such default configuration using cache templates. See the https://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations[Ehcache documentation] for more details.
 ====
 

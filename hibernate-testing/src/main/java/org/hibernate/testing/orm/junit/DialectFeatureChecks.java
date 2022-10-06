@@ -26,8 +26,6 @@ import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 
-import org.hibernate.testing.DialectCheck;
-
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
  *
@@ -464,7 +462,15 @@ abstract public class DialectFeatureChecks {
 			return !( dialect instanceof H2Dialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
-					|| dialect instanceof DerbyDialect);
+					|| dialect instanceof DerbyDialect );
+		}
+	}
+
+	public static class SupportsMedian implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof MySQLDialect
+					|| dialect instanceof SybaseDialect
+					|| dialect instanceof DerbyDialect );
 		}
 	}
 }

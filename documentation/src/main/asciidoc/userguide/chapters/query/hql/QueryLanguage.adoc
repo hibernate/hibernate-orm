@@ -1002,6 +1002,8 @@ Of course, we also have a number of functions for working with numeric values.
 | `pi` | &#960; | `pi` | &cross;
 | `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()`
 | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | &cross;
+| `degrees()` | Convert radians to degrees | `degrees(x)` | &cross;
+| `radians()` | Convert degrees to radians | `radians(x)` | &cross;
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` |&cross;
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | &cross;
 |===

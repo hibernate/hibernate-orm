@@ -922,6 +922,22 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	public void testDegreesRadians(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat(
+							session.createQuery("select degrees(pi)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( 180.0, 1e-9 )
+					);
+					assertThat(
+							session.createQuery("select radians(180.0)", Double.class).getSingleResult(),
+							IsCloseTo.closeTo( Math.PI, 1e-9 )
+					);
+				}
+		);
+	}
+
+	@Test
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

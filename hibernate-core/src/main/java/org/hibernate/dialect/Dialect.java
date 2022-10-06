@@ -787,6 +787,8 @@ public abstract class Dialect implements ConversionContext {
 	 * <li> <code>round(arg0, arg1)</code>
 	 * <li> <code>least(arg0, arg1, ...)</code>
 	 * <li> <code>greatest(arg0, arg1, ...)</code>
+	 * <li> <code>degrees(arg)</code>
+	 * <li> <code>radians(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>

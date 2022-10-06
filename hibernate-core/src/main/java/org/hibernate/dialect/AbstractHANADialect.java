@@ -376,6 +376,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+
 		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, typeConfiguration ) );
 	}

@@ -470,7 +470,8 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
-					|| dialect instanceof DerbyDialect );
+					|| dialect instanceof DerbyDialect )
+				|| dialect instanceof MariaDBDialect;
 		}
 	}
 }

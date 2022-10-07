@@ -104,6 +104,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
 			tableTypesList.add( "SYNONYM" );
 		}
+		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_ALIASES, configService.getSettings(), false ) ) {
+			tableTypesList.add( "ALIAS" );
+		}
 		Collections.addAll( tableTypesList, extraPhysicalTableTypes );
 		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
 

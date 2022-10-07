@@ -2043,6 +2043,12 @@ public interface AvailableSettings {
 	String ENABLE_SYNONYMS = "hibernate.synonyms";
 
 	/**
+	 * If enabled, allows schema update and validation to support DB2 aliases.  Due
+	 * to the infrequent use of this feature, this is disabled by default.
+	 */
+	String ENABLE_ALIASES = "hibernate.aliases";
+
+	/**
 	 * Specifies a comma-separated list of extra table types, in addition to the
 	 * default types {@code "TABLE"} and {@code "VIEW"}, to recognize as physical
 	 * tables when performing schema update, creation and validation.

@@ -24,6 +24,7 @@ import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.loader.BagFetchException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.sqm.ParsingException;
 
@@ -137,7 +138,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		else if ( exception instanceof QueryException || exception instanceof ParsingException) {
 			return new IllegalArgumentException( exception );
 		}
-		else if ( exception instanceof MultipleBagFetchException ) {
+		else if ( exception instanceof MultipleBagFetchException || exception instanceof BagFetchException ) {
 			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof TransientObjectException ) {

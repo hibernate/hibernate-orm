@@ -15,7 +15,6 @@ import org.hibernate.loader.BagFetchException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -116,18 +115,23 @@ public class BagFetchExceptionTest {
 	}
 
 	@Test
-	public void testFetchingABagAndJoiningAnotherCollectionShouldNotThrowAnException(SessionFactoryScope scope) {
+	public void testFetchingABagAndJoiningAnotherCollectionShouldThrowAnException(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					TypedQuery<Library> query = session.createQuery(
-							"SELECT l FROM Library AS l "
-									+ "LEFT JOIN FETCH l.books "
-									+ "LEFT JOIN l.movies",
-							Library.class
+					IllegalArgumentException thrown = assertThrows(
+							IllegalArgumentException.class,
+							() -> {
+								TypedQuery<Library> query = session.createQuery(
+										"SELECT l FROM Library AS l "
+												+ "LEFT JOIN FETCH l.movies "
+												+ "LEFT JOIN l.books ",
+										Library.class
+								);
+								query.getSingleResult();
+								// this query would return a Library entities with 4 movies instead of 2
+							}
 					);
-					Library library = query.getSingleResult();
-					assertThat( library ).isNotNull();
-					assertThat( library.movies.size() ).isEqualTo( 2 );
+					assertThat( thrown.getCause() ).isInstanceOf( BagFetchException.class );
 				}
 		);
 	}
@@ -180,10 +184,11 @@ public class BagFetchExceptionTest {
 								TypedQuery<Library> query = session.createQuery(
 										"SELECT l FROM Library AS l "
 												+ "LEFT JOIN FETCH l.movies m "
-												+ "LEFT JOIN m.authors",
+												+ "LEFT JOIN FETCH m.authors",
 										Library.class
 								);
 								query.getSingleResult();
+
 								// this query would return a Library entities with 4 movies instead of 2
 							}
 					);
@@ -209,7 +214,7 @@ public class BagFetchExceptionTest {
 				session -> {
 					TypedQuery<Library> query = session.createQuery(
 							"SELECT l FROM Library AS l "
-									+ "LEFT JOIN FETCH l.books "
+									+ "LEFT JOIN FETCH l.movies "
 									+ "LEFT JOIN FETCH l.city",
 							Library.class
 					);
@@ -226,7 +231,7 @@ public class BagFetchExceptionTest {
 				session -> {
 					TypedQuery<Library> query = session.createQuery(
 							"SELECT l FROM Library AS l "
-									+ "LEFT JOIN FETCH l.books "
+									+ "LEFT JOIN FETCH l.movies "
 									+ "LEFT JOIN FETCH l.city c",
 							Library.class
 					);
@@ -243,7 +248,7 @@ public class BagFetchExceptionTest {
 				session -> {
 					TypedQuery<Library> query = session.createQuery(
 							"SELECT l FROM Library AS l "
-									+ "LEFT JOIN l.books "
+									+ "LEFT JOIN l.movies "
 									+ "LEFT JOIN FETCH l.city",
 							Library.class
 					);

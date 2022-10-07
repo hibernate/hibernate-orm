@@ -258,6 +258,15 @@ is available to have Hibernate interpret a `List` with no `@OrderColumn` and no 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
 table.  `@CollectionId` is the annotation to configure this identifier
 
+[WARNING]
+====
+Trying to simultaneously fetch multiple bags causes an `org.hibernate.loader.MultipleBagFetchException`, while
+trying to simultaneously fetch a bag and fetch or join any other collection causes an `org.hibernate.loader.BagFetchException`.
+
+This because the result of these queries may contain duplicates and being a BAG and unordered List Hibernate cannot distinguish between
+duplicates that are just the result of the SQL query Cartesian Product and _legitimate_ BAG duplicates.
+
+====
 
 // todo (6.0) - finish
 

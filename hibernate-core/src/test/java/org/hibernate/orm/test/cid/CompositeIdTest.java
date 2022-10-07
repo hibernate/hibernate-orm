@@ -107,16 +107,16 @@ public class CompositeIdTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery(
-							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+							"from Customer c left join fetch c.orders o left join o.lineItems li left join li.product p" )
 							.list();
-					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertExecutedCount( 2 );
 				}
 		);
 
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Order o left join fetch o.lineItems li left join fetch li.product p" )
+					session.createQuery( "from Order o left join fetch o.lineItems li left join li.product p" )
 							.list();
 					statementInspector.assertExecutedCount( 1 );
 				}
@@ -291,7 +291,7 @@ public class CompositeIdTest {
 		scope.inTransaction(
 				session -> {
 					Customer c = (Customer) session.createQuery(
-							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+							"from Customer c left join fetch c.orders o left join o.lineItems li left join li.product p" )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( c.getOrders() ) );
 					assertEquals( c.getOrders().size(), 2 );

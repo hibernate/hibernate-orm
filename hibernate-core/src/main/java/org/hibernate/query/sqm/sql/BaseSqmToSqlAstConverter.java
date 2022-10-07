@@ -52,6 +52,7 @@ import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.loader.BagFetchException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -98,6 +99,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -436,6 +438,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private int fetchDepth;
 	private String currentBagRole;
+	private boolean containsCardinalityAlteringJoin;
 	private boolean resolvingCircularFetch;
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
@@ -2806,12 +2809,37 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		if ( pathSource instanceof PluralPersistentAttribute ) {
+
 			assert modelPart instanceof PluralAttributeMapping;
 
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
 
+			if ( pluralAttributeMapping.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() != CollectionClassification.BAG ) {
+				containsCardinalityAlteringJoin = true;
+			}
+
 			if ( sqmJoin.isFetched() ) {
 				containsCollectionFetches = true;
+			}
+
+			final ModelPartContainer modelPartContainer = lhsTableGroup.getModelPart();
+			if ( ownerTableGroup.isFetched()
+					&& !sqmJoin.isFetched()
+					&& modelPartContainer instanceof EntityCollectionPart
+					&& ( (EntityCollectionPart) modelPartContainer ).getCollectionDescriptor()
+					.getAttributeMapping()
+					.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
+				if ( isABagThatCanContainsDuplicates( pluralAttributeMapping ) ) {
+					// cannot join a collection belonging to a fetched BAG, it would produce a wrong cardinality for the BAG elements
+					throw new BagFetchException( sqmJoinNavigablePath.getIdentifierForTableGroup() );
+				}
+				else {
+					containsCardinalityAlteringJoin = true;
+				}
 			}
 
 			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
@@ -7061,11 +7089,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			if ( fetch != null ) {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
-							.getCollectionSemantics()
-							.getCollectionClassification();
-					if ( collectionClassification == CollectionClassification.BAG ) {
+					if ( isABagThatCanContainsDuplicates( (PluralAttributeMapping) fetchable ) ) {
+						if ( containsCardinalityAlteringJoin ) {
+							throw new BagFetchException( currentBagRole );
+						}
 						if ( currentBagRole != null ) {
 							throw new MultipleBagFetchException(
 									Arrays.asList(
@@ -7088,6 +7115,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				entityGraphTraversalState.backtrack( traversalResult );
 			}
 		}
+	}
+
+	private static boolean isABagThatCanContainsDuplicates(PluralAttributeMapping pluralAttributeMapping) {
+		final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
+				.getCollectionSemantics()
+				.getCollectionClassification();
+		return collectionClassification == CollectionClassification.BAG
+				&& !( pluralAttributeMapping.getCollectionDescriptor() instanceof OneToManyPersister );
 	}
 
 	@Override

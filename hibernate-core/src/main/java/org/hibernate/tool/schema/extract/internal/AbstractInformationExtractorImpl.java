@@ -25,6 +25,8 @@ import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -95,17 +97,21 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					)
 			);
 		}
-		extractionContext.getJdbcEnvironment().getDialect().augmentPhysicalTableTypes( physicalTableTypesList );
+		final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
+		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
 		this.extraPhysicalTableTypes = physicalTableTypesList.toArray( new String[0] );
 
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
+			if ( dialect instanceof DB2Dialect ) {
+				tableTypesList.add( "ALIAS" );
+			}
 			tableTypesList.add( "SYNONYM" );
 		}
 		Collections.addAll( tableTypesList, extraPhysicalTableTypes );
-		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
+		dialect.augmentRecognizedTableTypes( tableTypesList );
 
 		this.tableTypes = tableTypesList.toArray( new String[ tableTypesList.size() ] );
 	}

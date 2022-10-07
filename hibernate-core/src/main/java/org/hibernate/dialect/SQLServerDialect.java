@@ -257,6 +257,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						this,
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
+						"count_big",
 						"+",
 						"varchar(max)",
 						false

@@ -44,6 +44,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
 	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
+	private final String countFunctionName;
 	private final String concatOperator;
 	private final String concatArgumentCastType;
 	private final boolean castDistinctStringConcat;
@@ -63,6 +64,25 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatOperator,
 			String concatArgumentCastType,
 			boolean castDistinctStringConcat) {
+		this(
+				dialect,
+				typeConfiguration,
+				defaultArgumentRenderingMode,
+				"count",
+				concatOperator,
+				concatArgumentCastType,
+				castDistinctStringConcat
+		);
+	}
+
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String countFunctionName,
+			String concatOperator,
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -74,6 +94,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		);
 		this.dialect = dialect;
 		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
+		this.countFunctionName = countFunctionName;
 		this.concatOperator = concatOperator;
 		this.concatArgumentCastType = concatArgumentCastType;
 		this.castDistinctStringConcat = castDistinctStringConcat;
@@ -92,7 +113,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		final SqlAstNode arg = sqlAstArguments.get( 0 );
-		sqlAppender.appendSql( "count(" );
+		sqlAppender.appendSql( countFunctionName );
+		sqlAppender.appendSql( '(' );
 		final SqlTuple tuple;
 		if ( arg instanceof Distinct ) {
 			sqlAppender.appendSql( "distinct " );

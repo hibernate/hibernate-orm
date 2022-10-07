@@ -215,6 +215,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 						this,
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
+						"count_big",
 						"+",
 						"varchar(16384)",
 						false

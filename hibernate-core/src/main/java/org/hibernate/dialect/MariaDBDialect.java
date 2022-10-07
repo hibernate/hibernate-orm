@@ -33,6 +33,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
 
@@ -87,6 +88,11 @@ public class MariaDBDialect extends MySQLDialect {
 						.resolve( StandardBasicTypes.BOOLEAN )
 		);
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
+				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
 	}
 
 	@Override

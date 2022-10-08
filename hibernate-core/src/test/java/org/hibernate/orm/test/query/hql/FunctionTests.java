@@ -927,6 +927,16 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testStatisticalFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select var_samp(e.theDouble), var_pop(abs(e.theDouble)), stddev_samp(e.theDouble), stddev_pop(e.theDouble) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
 	public void testCurrentDateTimeFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

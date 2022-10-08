@@ -277,9 +277,10 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.median();
 		functionFactory.stddev();
 		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
 		functionFactory.regrLinearRegressionAggregates();
 		functionFactory.variance();
-		functionFactory.stdevVarianceSamp();
+		functionFactory.varianceSamp();
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
 		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
 		functionFactory.dateTrunc();

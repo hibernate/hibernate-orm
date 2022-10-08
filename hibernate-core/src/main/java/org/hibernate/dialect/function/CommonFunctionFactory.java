@@ -419,12 +419,7 @@ public class CommonFunctionFactory {
 	/**
 	 * DB2
 	 */
-	public void stdevVarianceSamp() {
-		functionRegistry.namedAggregateDescriptorBuilder( "stddev_samp" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
+	public void varianceSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance_samp" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )

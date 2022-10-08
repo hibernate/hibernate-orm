@@ -1023,7 +1023,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-sqrt-function-example]
 ----
 ====
 
-We have not included <<hql-aggregate-functions,aggregate functions>> in this list, because their purpose is more specialized.
+We haven't included <<hql-aggregate-functions,aggregate functions>>, <<hql-aggregate-functions-orderedset,ordered set aggregate functions>>, or <<hql-aggregate-functions-window>>
+in this list, because their purpose is more specialized, and because they come with extra special syntax.
 
 [[hql-functions-collections]]
 ==== Functions for dealing with collections
@@ -2023,6 +2024,8 @@ In the case of `sum()`, the rules for assigning a result type are:
 | `BigInteger` | `BigInteger`
 | `BigDecimal` |  `BigDecimal`
 |===
+
+There are also <<hql-aggregate-functions-orderedset,ordered set aggregate functions>>.
 
 [[hql-aggregate-functions-example]]
 //.Aggregate function examples

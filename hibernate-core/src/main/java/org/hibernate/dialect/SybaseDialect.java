@@ -208,6 +208,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
+		functionFactory.stddev();
+		functionFactory.variance();
+		functionFactory.stddevPopSamp_stdevp();
+		functionFactory.varPopSamp_varp();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(
 				"count",

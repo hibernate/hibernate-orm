@@ -511,11 +511,16 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.log();
 		if ( getVersion().isSameOrAfter(12) ) {
 			functionFactory.log10();
+			functionFactory.tanh();
+			functionFactory.sinh();
+			functionFactory.cosh();
+			functionFactory.moreHyperbolic();
 		}
 		else {
 			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
 		}
 		functionFactory.cbrt();
+		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.repeat();
 		functionFactory.md5();

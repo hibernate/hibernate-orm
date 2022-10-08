@@ -207,6 +207,9 @@ public class DB2Dialect extends Dialect {
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		functionFactory.cot();
+		functionFactory.sinh();
+		functionFactory.cosh();
+		functionFactory.tanh();
 		functionFactory.degrees();
 		functionFactory.log10();
 		functionFactory.radians();

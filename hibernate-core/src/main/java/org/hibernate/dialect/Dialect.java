@@ -785,6 +785,9 @@ public abstract class Dialect implements ConversionContext {
 	 * <li> <code>atan(arg)</code>
 	 * <li> <code>atan2(arg0, arg1)</code>
 	 * <li> <code>round(arg0, arg1)</code>
+	 * <li> <code>sinh(arg)</code>
+	 * <li> <code>tanh(arg)</code>
+	 * <li> <code>cosh(arg)</code>
 	 * <li> <code>least(arg0, arg1, ...)</code>
 	 * <li> <code>greatest(arg0, arg1, ...)</code>
 	 * <li> <code>degrees(arg)</code>
@@ -859,6 +862,13 @@ public abstract class Dialect implements ConversionContext {
 		//trig functions supported on almost every database
 
 		functionFactory.trigonometry();
+
+		//hyperbolic sinh and tanh are very useful but not supported on most
+		//databases, so emulate them here (cosh along for the ride)
+
+		functionFactory.sinh_exp();
+		functionFactory.cosh_exp();
+		functionFactory.tanh_exp();
 
 		//pi supported on most databases, but emulate it here
 

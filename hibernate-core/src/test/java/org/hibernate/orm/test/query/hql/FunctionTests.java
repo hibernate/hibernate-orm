@@ -1430,6 +1430,21 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testHyperbolic(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Math.sinh(1), (Double) session.createQuery("select sinh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+					assertEquals( Math.cosh(1), (Double) session.createQuery("select cosh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+					assertEquals( Math.tanh(1), (Double) session.createQuery("select tanh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+				}
+		);
+	}
+
+
+	@Test
 	public void testGrouping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

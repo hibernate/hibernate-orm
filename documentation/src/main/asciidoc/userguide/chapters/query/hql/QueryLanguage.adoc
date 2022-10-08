@@ -1000,8 +1000,10 @@ Of course, we also have a number of functions for working with numeric values.
 | `log10()` | Base-10 logarithm | `log10(x)` | &cross;
 | `log()` | Arbitrary-base logarithm | `log(b,x)` | &cross;
 | `pi` | &#960; | `pi` | &cross;
-| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()`
-| Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | &cross;
+| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`
+| Basic trigonometric functions | `sin(theta)`, `cos(theta)` | &cross;
+| `atan2()` | Two-argument arctangent (range `(-&#960;,&#960;]`) | `atan2(y, x)` | &cross;
+| `sinh()`, `cosh()`, `tanh()` | Hyperbolic functions | `sinh(x)`, `cosh(x)`, `tanh(x)` | &cross;
 | `degrees()` | Convert radians to degrees | `degrees(x)` | &cross;
 | `radians()` | Convert degrees to radians | `radians(x)` | &cross;
 | `least()` | Return the smallest of the given arguments | `least(x, y, z)` |&cross;

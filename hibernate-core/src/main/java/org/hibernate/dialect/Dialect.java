@@ -732,6 +732,12 @@ public abstract class Dialect implements ConversionContext {
 	 * <li> <code>any(arg)</code>						- aggregate function
 	 * <li> <code>every(arg)</code>						- aggregate function
 	 * </ul>
+	 * <ul>
+	 * <li> <code>var_samp(arg)</code>					- aggregate function
+	 * <li> <code>var_pop(arg)</code>					- aggregate function
+	 * <li> <code>stddev_samp(arg)</code>				- aggregate function
+	 * <li> <code>stddev_pop(arg)</code>				- aggregate function
+	 * </ul>
 	 *
 	 * <ul>
 	 * <li> <code>cast(arg as Type)</code>
@@ -2740,7 +2746,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the database/driver have bug in deleting rows that refer to other rows being deleted in the same query?
+	 * Does the database/driver have bug in deleting rows that refer to
+	 * other rows being deleted in the same query?
 	 *
 	 * @return {@code true} if the database/driver has this bug
 	 */
@@ -2767,7 +2774,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support commenting on tables, columns, etc?
+	 * Does this dialect support commenting on tables and columns?
 	 *
 	 * @return {@code true} if commenting is supported
 	 */
@@ -2798,53 +2805,62 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied before the table name?
+	 * For dropping a table, can the phrase "{@code if exists} be
+	 * applied before the table name?
 	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterTableName} should return true
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterTableName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the table name
+	 * @return {@code true} if {@code if exists} can be applied before the table name
 	 */
 	public boolean supportsIfExistsBeforeTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied after the table name?
+	 * For dropping a table, can the phrase {@code if exists} be
+	 * applied after the table name?
 	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeTableName} should return true
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeTableName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the table name
+	 * @return {@code true} if {@code if exists} can be applied after the table name
 	 */
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied before the constraint name?
+	 * For dropping a constraint with an {@code alter table} statement,
+	 * can the phrase {@code if exists} be applied before the constraint
+	 * name?
 	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterConstraintName} should return true
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the constraint name
+	 * @return {@code true} if {@code if exists} can be applied before the constraint name
 	 */
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
+	 * For dropping a constraint with an {@code alter table}, can the phrase
+	 * {@code if exists} be applied after the constraint name?
 	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeConstraintName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the constraint name
+	 * @return {@code true} if {@code if exists} can be applied after the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For an "alter table", can the phrase "if exists" be applied?
+	 * For an {@code alter table}, can the phrase "{@code if exists} be applied?
 	 *
-	 * @return {@code true} if the "if exists" can be applied after ALTER TABLE
+	 * @return {@code true} if {@code if exists} can be applied after {@code alter table}
 	 * @since 5.2.11
 	 */
 	public boolean supportsIfExistsAfterAlterTable() {
@@ -2852,11 +2868,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Generate a DROP TABLE statement
+	 * Generate a {@code DROP TABLE} statement
 	 *
 	 * @param tableName The name of the table to drop
 	 *
-	 * @return The DROP TABLE command
+	 * @return The {@code DROP TABLE} statement as a string
 	 */
 	public String getDropTableString(String tableName) {
 		final StringBuilder buf = new StringBuilder( "drop table " );
@@ -2873,8 +2889,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support column-level check constraints?
 	 *
-	 * @return True if column-level CHECK constraints are supported; false
-	 * otherwise.
+	 * @return True if column-level {@code CHECK} constraints are supported;
+	 *         false otherwise.
 	 */
 	public boolean supportsColumnCheck() {
 		return true;
@@ -2883,8 +2899,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support table-level check constraints?
 	 *
-	 * @return True if table-level CHECK constraints are supported; false
-	 * otherwise.
+	 * @return True if table-level {@code CHECK} constraints are supported;
+	 *         false otherwise.
 	 */
 	public boolean supportsTableCheck() {
 		return true;
@@ -2918,8 +2934,8 @@ public abstract class Dialect implements ConversionContext {
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Should LOBs (both BLOB and CLOB) be bound using stream operations (i.e.
-	 * {@link PreparedStatement#setBinaryStream}).
+	 * Should LOBs (both BLOB and CLOB) be bound using stream operations,
+	 * that is, using {@link PreparedStatement#setBinaryStream}).
 	 *
 	 * @return True if BLOBs and CLOBs should be bound using stream operations.
 	 * @since 3.2
@@ -3075,8 +3091,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is it supported to materialize a LOB locator outside the transaction in
-	 * which it was created?
+	 * Is it supported to materialize a LOB locator outside the transaction
+	 * in which it was created?
 	 * <p/>
 	 * Again, part of the trickiness here is the fact that this is largely
 	 * driver dependent.
@@ -3092,18 +3108,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support referencing the table being mutated in
-	 * a subquery.  The "table being mutated" is the table referenced in
-	 * an UPDATE or a DELETE query.  And so can that table then be
-	 * referenced in a subquery of said UPDATE/DELETE query.
-	 * <p/>
+	 * Does this dialect support referencing the table being mutated in a
+	 * subquery? The "table being mutated" is the table referenced in an
+	 * update or delete query. And so can that table then be referenced
+	 * in a subquery of the update or delete query?
+	 * <p>
 	 * For example, would the following two syntaxes be supported:<ul>
-	 * <li>delete from TABLE_A where ID not in ( select ID from TABLE_A )</li>
-	 * <li>update TABLE_A set NON_ID = 'something' where ID in ( select ID from TABLE_A)</li>
+	 * <li>{@code delete from TABLE_A where ID not in (select ID from TABLE_A)}</li>
+	 * <li>{@code update TABLE_A set NON_ID = 'something' where ID in (select ID from TABLE_A)}</li>
 	 * </ul>
 	 *
-	 * @return True if this dialect allows references the mutating table from
-	 * a subquery.
+	 * @return True if this dialect allows references the mutating table
+	 *         from a subquery.
 	 */
 	public boolean supportsSubqueryOnMutatingTable() {
 		return true;
@@ -3112,27 +3128,30 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does the dialect support an exists statement in the select clause?
 	 *
-	 * @return True if exists checks are allowed in the select clause; false otherwise.
+	 * @return True if exists checks are allowed in the select clause;
+	 *         false otherwise.
 	 */
 	public boolean supportsExistsInSelect() {
 		return true;
 	}
 
 	/**
-	 * For the underlying database, is READ_COMMITTED isolation implemented by
-	 * forcing readers to wait for write locks to be released?
+	 * For the underlying database, is {@code READ_COMMITTED} isolation
+	 * implemented by forcing readers to wait for write locks to be released?
 	 *
-	 * @return True if writers block readers to achieve READ_COMMITTED; false otherwise.
+	 * @return True if writers block readers to achieve {@code READ_COMMITTED};
+	 *         false otherwise.
 	 */
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return false;
 	}
 
 	/**
-	 * For the underlying database, is REPEATABLE_READ isolation implemented by
-	 * forcing writers to wait for read locks to be released?
+	 * For the underlying database, is {@code REPEATABLE_READ} isolation
+	 * implemented by forcing writers to wait for read locks to be released?
 	 *
-	 * @return True if readers block writers to achieve REPEATABLE_READ; false otherwise.
+	 * @return True if readers block writers to achieve {@code REPEATABLE_READ};
+	 *         false otherwise.
 	 */
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return false;
@@ -3142,8 +3161,9 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect support using a JDBC bind parameter as an argument
 	 * to a function or procedure call?
 	 *
-	 * @return Returns {@code true} if the database supports accepting bind params as args, {@code false} otherwise. The
-	 * default is {@code true}.
+	 * @return Returns {@code true} if the database supports accepting bind
+	 *         params as args, {@code false} otherwise. The default is
+	 *         {@code true}.
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public boolean supportsBindAsCallableArgument() {
@@ -3151,7 +3171,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support `count(a,b)`?
+	 * Does this dialect support {@code count(a,b)}?
 	 *
 	 * @return True if the database supports counting tuples; false otherwise.
 	 */
@@ -3160,7 +3180,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * If {@link #supportsTupleCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 * If {@link #supportsTupleCounts()} is true, does this dialect require
+	 * the tuple to be delimited with parens?
 	 *
 	 * @return boolean
 	 */
@@ -3169,9 +3190,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support `count(distinct a,b)`?
+	 * Does this dialect support {@code count(distinct a,b)}?
 	 *
-	 * @return True if the database supports counting distinct tuples; false otherwise.
+	 * @return True if the database supports counting distinct tuples;
+	 *         false otherwise.
 	 */
 	public boolean supportsTupleDistinctCounts() {
 		// oddly most database in fact seem to, so true is the default.
@@ -3179,7 +3201,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * If {@link #supportsTupleDistinctCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 * If {@link #supportsTupleDistinctCounts()} is true, does this dialect
+	 * require the tuple to be delimited with parens?
 	 *
 	 * @return boolean
 	 */
@@ -3188,8 +3211,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return the limit that the underlying database places on the number of elements in an {@code IN} predicate.
-	 * If the database defines no such limits, simply return zero or less-than-zero.
+	 * Return the limit that the underlying database places on the number of
+	 * elements in an {@code IN} predicate. If the database defines no such
+	 * limits, simply return zero or less-than-zero.
 	 *
 	 * @return int The limit, or zero-or-less to indicate no limit.
 	 */
@@ -3202,7 +3226,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Oracle expects all Lob values to be last in inserts and updates.
 	 *
 	 * @return boolean True if Lob values should be last, false if it
-	 * does not matter.
+	 *                 does not matter.
 	 */
 	public boolean forceLobAsLastValue() {
 		return false;
@@ -3218,12 +3242,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
-	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * Some dialects have trouble applying pessimistic locking depending
+	 * upon what other query options are specified (paging, ordering, etc).
+	 * This method allows these dialects to request that locking be applied
 	 * by subsequent selects.
 	 *
-	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
-	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 * @return {@code true} indicates that the dialect requests that locking
+	 *                      be applied by subsequent select;
+	 *         {@code false} (the default) indicates that locking
+	 *                      should be applied to the main SQL statement.
 	 *
 	 * @since 5.2
 	 */
@@ -3241,8 +3268,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
-	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 * Apply a hint to the query. The entire query is provided, allowing
+	 * full control over the placement and syntax of the hint.
+	 * <p>
+	 * By default, ignore the hint and simply return the query.
 	 *
 	 * @param query The query to which to apply the hint.
 	 * @param hintList The  hints to apply
@@ -3254,8 +3283,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
-	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 * Apply a hint to the query.  The entire query is provided, allowing
+	 * full control over the placement and syntax of the hint.
+	 * <p>
+	 * By default, ignore the hint and simply return the query.
 	 *
 	 * @param query The query to which to apply the hint.
 	 * @param hints The  hints to apply
@@ -3266,7 +3297,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Certain dialects support a subset of ScrollModes.  Provide a default to be used by Criteria and Query.
+	 * Certain dialects support a subset of {@code ScrollModes}.
+	 * Provide a default to be used by Criteria and Query.
 	 *
 	 * @return ScrollMode
 	 */
@@ -3275,8 +3307,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support offset in subqueries?  Ex:
-	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)
+	 * Does this dialect support {@code offset} in subqueries?
+	 * For example:
+	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)}
 	 *
 	 * @return boolean
 	 */
@@ -3285,8 +3318,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support the order by clause in subqueries?  Ex:
-	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)
+	 * Does this dialect support the {@code order by} clause in subqueries?
+	 * For example:
+	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)}
 	 *
 	 * @return boolean
 	 */
@@ -3295,8 +3329,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support subqueries in the select clause?  Ex:
-	 * select col1, (select col2 from Table2 where ..) from Table1
+	 * Does this dialect support subqueries in the {@code select} clause?
+	 * For example:
+	 * {@code select col1, (select col2 from Table2 where ...) from Table1}
 	 *
 	 * @return boolean
 	 */
@@ -3309,7 +3344,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param type The fetch clause type
 	 * @return {@code true} if the underlying database supports the given fetch clause type,
-	 * {@code false} otherwise.  The default is {@code false}.
+	 *         {@code false} otherwise. The default is {@code false}.
 	 */
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return false;
@@ -3319,14 +3354,15 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect support window functions like {@code row_number() over (..)}?
 	 *
 	 * @return {@code true} if the underlying database supports window functions,
-	 * {@code false} otherwise.  The default is {@code false}.
+	 *         {@code false} otherwise.  The default is {@code false}.
 	 */
 	public boolean supportsWindowFunctions() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect support the SQL lateral keyword or a proprietary alternative?
+	 * Does this dialect support the SQL {@code lateral} keyword or a
+	 * proprietary alternative?
 	 *
 	 * @return {@code true} if the underlying database supports lateral,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3412,7 +3448,8 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return boolean
 	 *
-	 * @throws SQLException Accessing the DatabaseMetaData can throw it.  Just re-throw and Hibernate will handle.
+	 * @throws SQLException Accessing the DatabaseMetaData can throw it.
+	 *                      Just rethrow and Hibernate will handle.
 	 */
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
@@ -3431,8 +3468,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Database has native support for SQL standard arrays which can be referred to through base type name.
-	 * Oracle for example doesn't support this, but instead has support for named arrays.
+	 * Database has native support for SQL standard arrays which
+	 * can be referred to by its base type name.
+	 * <p>
+	 * Oracle doesn't allow this, but instead has support for named
+	 * arrays.
 	 *
 	 * @return boolean
 	 * @since 6.1
@@ -3447,10 +3487,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @since 6.1
 	 */
 	public String getArrayTypeName(String elementTypeName) {
-		if ( supportsStandardArrays() ) {
-			return elementTypeName + " array";
-		}
-		return null;
+		return supportsStandardArrays() ? elementTypeName + " array" : null;
 	}
 
 	public void appendArrayLiteral(
@@ -3483,10 +3520,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is this SQL dialect known to support some kind of distinct from predicate.
-	 * <p/>
-	 * Basically, does it support syntax like
-	 * "... where FIRST_NAME IS DISTINCT FROM LAST_NAME"
+	 * Does this dialect support some kind of {@code distinct from}
+	 * predicate?
+	 * <p>
+	 * This is, does it support syntax like
+	 * {@code ... where FIRST_NAME IS DISTINCT FROM LAST_NAME}?
 	 *
 	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
 	 * @since 6.1
@@ -3521,7 +3559,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support non-query statements (e.g. INSERT, UPDATE, DELETE) with CTE (Common Table Expressions)?
+	 * Does this dialect support insert, update, and delete statements
+	 * with Common Table Expressions?
 	 *
 	 * @return {@code true} if non-query statements are supported with CTE
 	 */
@@ -3530,25 +3569,27 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) )
+	 * Does this dialect support {@code values} lists of form
+	 * {@code VALUES (1), (2), (3)}?
 	 *
-	 * @return {@code true} if VALUES list are supported
+	 * @return {@code true} if {@code values} list are supported
 	 */
 	public boolean supportsValuesList() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) ) for insert statements.
+	 * Does this dialect support {@code values} lists of form
+	 * {@code VALUES (1), (2), (3)} in insert statements?
 	 *
-	 * @return {@code true} if VALUES list are supported for insert statements
+	 * @return {@code true} if {@code values} list are supported in insert statements
 	 */
 	public boolean supportsValuesListForInsert() {
 		return true;
 	}
 
 	/**
-	 * Does this dialect/database support SKIP_LOCKED timeout.
+	 * Does this dialect support {@code SKIP_LOCKED} timeout.
 	 *
 	 * @return {@code true} if SKIP_LOCKED is supported
 	 */
@@ -3557,18 +3598,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support NO_WAIT timeout.
+	 * Does this dialect support {@code NO_WAIT} timeout.
 	 *
-	 * @return {@code true} if NO_WAIT is supported
+	 * @return {@code true} if {@code NO_WAIT} is supported
 	 */
 	public boolean supportsNoWait() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect/database support WAIT timeout.
+	 * Does this dialect support {@code WAIT} timeout.
 	 *
-	 * @return {@code true} if WAIT is supported
+	 * @return {@code true} if {@code WAIT} is supported
 	 */
 	public boolean supportsWait() {
 		return supportsNoWait();
@@ -3598,10 +3639,13 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Check whether the JDBC {@link Connection} supports creating LOBs via {@link Connection#createBlob()},
-	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
+	 * Check whether the JDBC {@link Connection} supports creating LOBs via
+	 * {@link Connection#createBlob()}, {@link Connection#createNClob()}, or
+	 * {@link Connection#createClob()}.
 	 *
-	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used if LOB creation is supported only starting from a given Driver version
+	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used
+	 *                         if LOB creation is supported only starting from
+	 *                         a given driver version
 	 *
 	 * @return {@code true} if LOBs can be created via the JDBC Connection.
 	 */
@@ -3641,10 +3685,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an HqlTranslator specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
-	 *
-	 * Note that {@link SessionFactoryOptions#getCustomHqlTranslator()} has higher precedence
+	 * Return an {@link HqlTranslator} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
+	 * <p>
+	 * Note that {@link SessionFactoryOptions#getCustomHqlTranslator()}
+	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.hql.internal.StandardHqlTranslator
 	 * @see QueryEngine#getHqlTranslator()
@@ -3654,11 +3699,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an SqmToSqlAstConverterFactory specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
-	 *
-	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()} has higher
-	 * precedence as it comes directly from the user config
+	 * Return a {@link SqmTranslatorFactory} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
+	 * <p>
+	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()}
+	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmTranslator
 	 * @see QueryEngine#getSqmTranslatorFactory()
@@ -3668,8 +3713,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an SqlAstTranslatorFactory specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
+	 * Return a {@link SqlAstTranslatorFactory} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
 	 *
 	 * @see StandardSqlAstTranslatorFactory
 	 * @see JdbcEnvironment#getSqlAstTranslatorFactory()
@@ -3854,13 +3899,14 @@ public abstract class Dialect implements ConversionContext {
 	}
 
     /**
-	 * Pluggable strategy for determining the Size to use for columns of
-	 * a given SQL type.
-	 *
-	 * Allows Dialects, integrators and users a chance to apply
-	 * column size defaults and limits in certain situations based on the mapped
-	 * SQL and Java types.  E.g. when mapping a UUID to a VARCHAR column
-	 * we know the default Size should be `Size#length == 36`.
+	 * Pluggable strategy for determining the {@link Size} to use for
+	 * columns of a given SQL type.
+	 * <p>
+	 * Allows dialects, integrators, and users a chance to apply column
+	 * size defaults and limits in certain situations based on the mapped
+	 * SQL and Java types. For example, when mapping a {@code UUID} to a
+	 * {@code VARCHAR} column, we know the default {@code Size} should
+	 * have {@link Size#getLength() Size.length == 36}.
 	 */
 	public interface SizeStrategy {
 		/**

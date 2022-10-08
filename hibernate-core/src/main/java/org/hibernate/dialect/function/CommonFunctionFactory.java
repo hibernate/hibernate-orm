@@ -64,14 +64,6 @@ public class CommonFunctionFactory {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// trigonometric/geometric functions
 
-	public void cosh() {
-		functionRegistry.namedDescriptorBuilder( "cosh" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
-	}
-
 	public void cot() {
 		functionRegistry.namedDescriptorBuilder( "cot" )
 				.setExactArgumentCount( 1 )
@@ -208,8 +200,40 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void sinh_exp() {
+		functionRegistry.patternDescriptorBuilder( "sinh", "((exp(?1)-exp(-?1))/2)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void cosh() {
+		functionRegistry.namedDescriptorBuilder( "cosh" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void cosh_exp() {
+		functionRegistry.patternDescriptorBuilder( "cosh", "((exp(?1)+exp(-?1))/2)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
 	public void tanh() {
 		functionRegistry.namedDescriptorBuilder( "tanh" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void tanh_exp() {
+		functionRegistry.patternDescriptorBuilder( "tanh", "((exp(2*?1)-1)/(exp(2*?1)+1))" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -302,9 +326,10 @@ public class CommonFunctionFactory {
 
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
-	 *
-	 * - On Postgres it means stdev_samp()
-	 * - On Oracle, DB2, MySQL it means stdev_pop()
+	 * <ul>
+	 * <li>On Postgres it means {@code stdev_samp()}
+	 * <li>On Oracle, DB2, MySQL it means {@code  stdev_pop()}
+	 * </ul>
 	 */
 	public void stddev() {
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev" )
@@ -316,9 +341,10 @@ public class CommonFunctionFactory {
 
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
-	 *
-	 * - On Postgres it means var_samp()
-	 * - On Oracle, DB2, MySQL it means var_pop()
+	 * <ul>
+	 * <li>On Postgres it means {@code var_samp()}
+	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()}
+	 * </ul>
 	 */
 	public void variance() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance" )

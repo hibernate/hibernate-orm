@@ -2008,13 +2008,15 @@ Aggregate functions are special functions that reduce the size of the result set
 The standard aggregate functions defined in both ANSI SQL and JPQL are:
 
 |===
-| Aggregate function | Argument type | Result type
+| Aggregate function | Argument type | Result type | JPA standard / ANSI SQL standard
 
-| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long`
-| `avg()` | Any numeric type | `Double`
-| `min()` | Any numeric type, or string | Same as the argument type
-| `max()` | Any numeric type, or string | Same as the argument type
-| `sum()` | Any numeric type | See table below
+| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long` | &check;/&check;
+| `avg()` | Any numeric type | `Double` | &check;/&check;
+| `min()` | Any numeric type, or string | Same as the argument type | &check;/&check;
+| `max()` | Any numeric type, or string | Same as the argument type | &check;/&check;
+| `sum()` | Any numeric type | See table below | &check;/&check;
+| `var_pop()`, `var_samp()` | Any numeric type | `Double` | &cross;/&check;
+| `stddev_pop()`, `stddev_samp()` | Any numeric type | `Double` | &cross;/&check;
 |===
 
 In the case of `sum()`, the rules for assigning a result type are:

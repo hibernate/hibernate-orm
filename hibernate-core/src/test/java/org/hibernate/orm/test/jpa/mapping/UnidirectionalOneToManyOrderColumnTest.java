@@ -180,6 +180,59 @@ public class UnidirectionalOneToManyOrderColumnTest {
 		);
 	}
 
+	@Test
+	public void testSwapElementsAtZeroAndOne(EntityManagerFactoryScope scope) {
+		long parentId = scope.fromTransaction(
+				entityManager -> {
+					ParentData parent = new ParentData();
+					entityManager.persist( parent );
+
+					String[] childrenStr = new String[] {"One", "Two"};
+					for ( String str : childrenStr ) {
+						ChildData child = new ChildData( str );
+						entityManager.persist( child );
+						parent.getChildren().add( child );
+					}
+
+					entityManager.flush();
+
+					List<ChildData> children = parent.getChildren();
+					ChildData child0 = children.get( 0 );
+					ChildData child1 = children.get( 1 );
+					children.set(0, child1);
+					children.set(1, child0);
+					
+					return parent.id;
+				}
+		);
+		// if the above works, then test on {"Two", "One"}
+	}
+
+	@Test
+	public void testAddAtZeroDeleteAtTwo(EntityManagerFactoryScope scope) {
+		long parentId = scope.fromTransaction(
+				entityManager -> {
+					ParentData parent = new ParentData();
+					entityManager.persist( parent );
+
+					String[] childrenStr = new String[] {"One", "Two"};
+					for ( String str : childrenStr ) {
+						ChildData child = new ChildData( str );
+						entityManager.persist( child );
+						parent.getChildren().add( child );
+					}
+
+					entityManager.flush();
+
+					List<ChildData> children = parent.getChildren();
+					children.add( 0, new ChildData( "Zero" ) );
+					children.remove( 2 );
+					return parent.id;
+				}
+		);
+		// if the above works, then test on {"Zero", "One"}
+	}
+
 	@Entity(name = "ParentData")
 	@Table(name = "PARENT")
 	public static class ParentData {

@@ -33,7 +33,6 @@ stage('Configure') {
 // 		buildEnv(defaultJdk, 'postgresql_9_5'),
 // 		buildEnv(defaultJdk, 'postgresql_13'),
 // 		buildEnv(defaultJdk, 'oracle'),
-		buildEnv(defaultJdk, 'oracle_ee'),
 // 		buildEnv(defaultJdk, 'db2'),
 // 		buildEnv(defaultJdk, 'mssql'),
 // 		buildEnv(defaultJdk, 'sybase'),
@@ -192,9 +191,6 @@ stage('Build') {
 									break;
 								case "oracle":
 									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "oracle_ee":
-									runTest("-Pdb=oracle_jenkins${state[buildEnv.tag]['additionalOptions']}", 'ORACLE_RDS')
 									break;
 								case "hana":
 									runTest("-Pdb=hana_jenkins${state[buildEnv.tag]['additionalOptions']}", 'HANA')

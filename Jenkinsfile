@@ -36,7 +36,6 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'postgresql' ),
 //		new BuildEnvironment( dbName: 'postgresql_14' ),
 //		new BuildEnvironment( dbName: 'oracle' ),
-		new BuildEnvironment( dbName: 'oracle_ee' ),
 //		new BuildEnvironment( dbName: 'db2' ),
 //		new BuildEnvironment( dbName: 'mssql' ),
 //		new BuildEnvironment( dbName: 'sybase' ),
@@ -212,9 +211,6 @@ stage('Build') {
 									break;
 								case "oracle":
 									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "oracle_ee":
-									runTest("-Pdb=oracle_jenkins${state[buildEnv.tag]['additionalOptions']}", 'ORACLE_RDS')
 									break;
 								case "hana":
 									runTest("-Pdb=hana_jenkins${state[buildEnv.tag]['additionalOptions']}", 'HANA')

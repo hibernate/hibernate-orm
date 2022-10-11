@@ -602,8 +602,12 @@ public class DerbyDialect extends Dialect {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 //				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-			if ( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState ) ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "40XL1":
+					case "40XL2":
+						throw new LockTimeoutException( message, sqlException, sql );
+				}
 			}
 			return null;
 		};

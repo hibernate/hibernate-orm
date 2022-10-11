@@ -728,12 +728,14 @@ public class MySQLDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) ) ) {
-					case 23000:
-						return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
-					default:
-						return null;
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				if ( sqlState != null ) {
+					switch ( Integer.parseInt( sqlState ) ) {
+						case 23000:
+							return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+					}
 				}
+				return null;
 			} );
 
 	@Override

@@ -24,7 +24,6 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
-def defaultJdk = '11'
 stage('Configure') {
 	this.environments = [
 //		new BuildEnvironment( dbName: 'h2' ),
@@ -59,7 +58,7 @@ stage('Configure') {
 		file 'job-configuration.yaml'
 		// We don't require the following, but the build helper plugin apparently does
 		jdk {
-			defaultTool "OpenJDK ${defaultJdk} Latest"
+			defaultTool DEFAULT_JDK_TOOL
 		}
 		maven {
 			defaultTool 'Apache Maven 3.8'
@@ -98,7 +97,7 @@ stage('Build') {
 				if ( buildEnv.testJdkVersion ) {
 					testJavaHome = tool(name: "OpenJDK ${buildEnv.testJdkVersion} Latest", type: 'jdk')
 				}
-				def javaHome = tool(name: "OpenJDK ${DEFAULT_JDK_VERSION} Latest", type: 'jdk')
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
 				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {

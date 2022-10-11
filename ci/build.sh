@@ -40,5 +40,12 @@ elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 fi
 
+# Only run checkstyle in the H2 build,
+# so that CI jobs give a more complete report
+# and developers can fix code style and non-H2 DB tests in parallel.
+if [ -n "$goal" ]; then
+  goal="$goal -x checkstyleMain"
+fi
+
 # Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
 exec ./gradlew clean check ${goal} "${@}" -Plog-test-progress=true --stacktrace

@@ -39,11 +39,13 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'db2' ),
 //		new BuildEnvironment( dbName: 'mssql' ),
 //		new BuildEnvironment( dbName: 'sybase' ),
-		new BuildEnvironment( dbName: 'hana', node: 'HANA' ),
-		new BuildEnvironment( dbName: 's390x', node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ),
+		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA', dbLockableResource: 'HANA' ),
+		new BuildEnvironment( node: 's390x' ),
+		new BuildEnvironment( dbName: 'tidb', node: 'tidb', dbLockableResource: 'TIDB',
+				additionalOptions: '-DdbHost=localhost:4000',
+				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 // Disable EDB for now as the image is not available anymore
-//		new BuildEnvironment( dbName: 'edb' ),
+//		new BuildEnvironment( dbName: 'edb', additionalOptions: '-DdbHost=localhost:5433' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
 		new BuildEnvironment( testJdkVersion: '18' ),
 		// We want to enable preview features when testing early-access builds of OpenJDK:
@@ -192,38 +194,25 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							switch (buildEnv.dbName) {
-								case "h2":
-								case "derby":
-								case "hsqldb":
-									runTest("-Pdb=${buildEnv.dbName}${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "mysql":
-								case "mysql8":
-									runTest("-Pdb=mysql_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "tidb":
-									runTest("-Pdb=tidb -DdbHost=localhost:4000${state[buildEnv.tag]['additionalOptions']}", 'TIDB')
-									break;
-								case "postgresql":
-								case "postgresql_14":
-									runTest("-Pdb=pgsql_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "oracle":
-									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "hana":
-									runTest("-Pdb=hana_jenkins${state[buildEnv.tag]['additionalOptions']}", 'HANA')
-									break;
-								case "edb":
-									runTest("-Pdb=edb_ci -DdbHost=localhost:5433${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "s390x":
-									runTest("-Pdb=h2${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								default:
-									runTest("-Pdb=${buildEnv.dbName}_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
+							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							withEnv(["RDBMS=${buildEnv.dbName}"]) {
+								try {
+									if (buildEnv.dbLockableResource == null) {
+										timeout( [time: 120, unit: 'MINUTES'] ) {
+											sh cmd
+										}
+									}
+									else {
+										lock(buildEnv.dbLockableResource) {
+											timeout( [time: 120, unit: 'MINUTES'] ) {
+												sh cmd
+											}
+										}
+									}
+								}
+								finally {
+									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
+								}
 							}
 						}
 					}
@@ -252,10 +241,12 @@ class BuildEnvironment {
 	String testJdkLauncherArgs
 	String dbName = 'h2'
 	String node
+	String dbLockableResource
+	String additionalOptions
 	String notificationRecipients
 
 	String toString() { getTag() }
-	String getTag() { "${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
+	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
 }
 
 void runBuildOnNode(String label, Closure body) {
@@ -281,28 +272,6 @@ void pruneDockerContainers() {
 		sh 'docker volume prune -f || true'
 	}
 }
-// Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
-void runTest(String goal, String lockableResource = null, boolean clean = true) {
-	String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
-	try {
-		if (lockableResource == null) {
-			timeout( [time: 120, unit: 'MINUTES'] ) {
-				sh cmd
-			}
-		}
-		else {
-			lock(lockableResource) {
-				timeout( [time: 120, unit: 'MINUTES'] ) {
-					sh cmd
-				}
-			}
-		}
-	}
-	finally {
-		junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-	}
-}
-
 
 void handleNotifications(currentBuild, buildEnv) {
 	def currentResult = getParallelResult(currentBuild, buildEnv.tag)

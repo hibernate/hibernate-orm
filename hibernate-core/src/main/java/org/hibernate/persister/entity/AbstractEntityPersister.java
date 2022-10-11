@@ -2941,7 +2941,7 @@ public abstract class AbstractEntityPersister
 
 		// append the SQL to return the generated identifier
 		if ( j == 0 && identityInsert && useInsertSelectIdentity() ) { //TODO: suck into Insert
-			result = getFactory().getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( result );
+			result = getFactory().getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( getKeyColumns( 0 )[0], result );
 		}
 
 		return result;

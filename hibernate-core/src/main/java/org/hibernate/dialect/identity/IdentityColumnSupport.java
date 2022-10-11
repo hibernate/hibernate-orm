@@ -57,6 +57,23 @@ public interface IdentityColumnSupport {
 	String appendIdentitySelectToInsert(String insertString);
 
 	/**
+	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
+	 * "select identity" clause to the  insert statement.
+	 * <p/>
+	 * Note, if {@link #supportsInsertSelectIdentity} == false then
+	 * the insert-string should be returned without modification.
+	 *
+	 * @param identityColumnName The name of the identity column
+	 * @param insertString The insert command
+	 *
+	 * @return The insert command with any necessary identity select
+	 * clause attached.
+	 */
+	default String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return appendIdentitySelectToInsert( insertString );
+	}
+
+	/**
 	 * Get the select command to use to retrieve the last generated IDENTITY
 	 * value for a particular table
 	 *

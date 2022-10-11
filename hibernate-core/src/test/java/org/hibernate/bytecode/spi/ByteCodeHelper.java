@@ -6,13 +6,8 @@
  */
 package org.hibernate.bytecode.spi;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.ZipInputStream;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -80,35 +75,4 @@ public class ByteCodeHelper {
 		return classBytes;
 	}
 
-	/**
-	 * Read class definition from a file.
-	 *
-	 * @param file The file to read.
-	 *
-	 * @return The class bytes
-	 *
-	 * @throws IOException Indicates a problem accessing the given stream.
-	 */
-	public static byte[] readByteCode(File file) throws IOException {
-		return ByteCodeHelper.readByteCode( new FileInputStream( file ) );
-	}
-
-	/**
-	 * Read class definition a zip (jar) file entry.
-	 *
-	 * @param zip The zip entry stream.
-	 *
-	 * @return The class bytes
-	 *
-	 * @throws IOException Indicates a problem accessing the given stream.
-	 */
-	public static byte[] readByteCode(ZipInputStream zip) throws IOException {
-		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		final InputStream in = new BufferedInputStream( zip );
-		int b;
-		while ( ( b = in.read() ) != -1 ) {
-			bout.write( b );
-		}
-		return bout.toByteArray();
-	}
 }

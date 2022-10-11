@@ -13,11 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static org.hibernate.bytecode.spi.ClassLoadingStrategyHelper.resolveClassLoadingStrategy;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -39,6 +39,7 @@ import net.bytebuddy.asm.MemberSubstitution;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -55,6 +56,8 @@ import net.bytebuddy.pool.TypePool;
 public final class ByteBuddyState {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyState.class );
+
+	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
 	private static final boolean DEBUG = false;
 
@@ -381,4 +384,14 @@ public final class ByteBuddyState {
 			// do nothing
 		}
 	}
+
+	private static ClassLoadingStrategy<ClassLoader> resolveClassLoadingStrategy(Class<?> originalClass) {
+		try {
+			return ClassLoadingStrategy.UsingLookup.of( MethodHandles.privateLookupIn( originalClass, LOOKUP ) );
+		}
+		catch (Throwable e) {
+			throw new HibernateException( LOG.bytecodeEnhancementFailedUnableToGetPrivateLookupFor( originalClass.getName() ), e );
+		}
+	}
+
 }

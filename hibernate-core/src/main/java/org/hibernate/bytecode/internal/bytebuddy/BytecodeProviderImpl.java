@@ -52,10 +52,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	/**
 	 * Constructs a ByteBuddy BytecodeProvider instance which attempts to auto-detect the target JVM version
-	 * from the currently running one, with a fallback on Java 8.
+	 * from the currently running one, with a fallback on Java 11.
 	 */
 	public BytecodeProviderImpl() {
-		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V8 ) );
+		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V11 ) );
 	}
 
 	/**

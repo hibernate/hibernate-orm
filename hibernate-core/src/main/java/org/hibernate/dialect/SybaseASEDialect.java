@@ -625,32 +625,33 @@ public class SybaseASEDialect extends SybaseDialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
 				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
-				switch ( JdbcExceptionHelper.extractSqlState( sqle ) ) {
-					// UNIQUE VIOLATION
-					case "S1000":
-						if (2601 == errorCode) {
-							return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
-						}
-						break;
-					case "23000":
-						if (546 == errorCode) {
-							// Foreign key violation
-							return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
-						}
-						break;
-//					// FOREIGN KEY VIOLATION
-//					case 23503:
-//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-//					// NOT NULL VIOLATION
-//					case 23502:
-//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-//					// TODO: RESTRICT VIOLATION
-//					case 23001:
-//						return null;
-					// ALL OTHER
-					default:
-						return null;
+				if ( sqlState != null ) {
+					switch ( sqlState ) {
+						// UNIQUE VIOLATION
+						case "S1000":
+							if ( 2601 == errorCode ) {
+								return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+							}
+							break;
+						case "23000":
+							if ( 546 == errorCode ) {
+								// Foreign key violation
+								return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+							}
+							break;
+	//					// FOREIGN KEY VIOLATION
+	//					case 23503:
+	//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+	//					// NOT NULL VIOLATION
+	//					case 23502:
+	//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+	//					// TODO: RESTRICT VIOLATION
+	//					case 23001:
+	//						return null;
+						// ALL OTHER
+					}
 				}
 				return null;
 			} );
@@ -660,34 +661,39 @@ public class SybaseASEDialect extends SybaseDialect {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( sqlState ) {
-				case "JZ0TO":
-				case "JZ006":
-					throw new LockTimeoutException( message, sqlException, sql );
-				case "S1000":
-					switch ( errorCode ) {
-						case 515:
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "JZ0TO":
+					case "JZ006":
+						throw new LockTimeoutException( message, sqlException, sql );
+					case "S1000":
+						switch ( errorCode ) {
+							case 515:
+								// Attempt to insert NULL value into column; column does not allow nulls.
+							case 2601:
+								// Unique constraint violation
+								final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+										sqlException );
+								return new ConstraintViolationException( message, sqlException, sql, constraintName );
+						}
+						break;
+					case "ZZZZZ":
+						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-						case 2601:
-							// Unique constraint violation
-							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+									sqlException );
 							return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
-				case "ZZZZZ":
-					if (515 == errorCode) {
-						// Attempt to insert NULL value into column; column does not allow nulls.
-						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
-				case "23000":
-					if (546 == errorCode) {
-						// Foreign key violation
-						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
+						}
+						break;
+					case "23000":
+						if ( 546 == errorCode ) {
+							// Foreign key violation
+							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+									sqlException );
+							return new ConstraintViolationException( message, sqlException, sql, constraintName );
+						}
+						break;
+				}
 			}
 			return null;
 		};

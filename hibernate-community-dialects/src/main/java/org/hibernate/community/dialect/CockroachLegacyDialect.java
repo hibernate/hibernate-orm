@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -86,6 +87,7 @@ import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
@@ -505,8 +507,14 @@ public class CockroachLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, temporalAccessor, true, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, temporalAccessor );
+				}
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
@@ -528,8 +536,8 @@ public class CockroachLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, date );
+				appender.appendSql( "time with time zone '" );
+				appendAsTime( appender, date, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
@@ -555,8 +563,8 @@ public class CockroachLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, calendar );
+				appender.appendSql( "time with time zone '" );
+				appendAsTime( appender, calendar, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:

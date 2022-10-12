@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.hibernate.LockMode;
@@ -4206,7 +4207,13 @@ public abstract class Dialect implements ConversionContext {
 		appender.appendSql( literal.getSeconds() );
 		appender.appendSql( '.' );
 		appender.appendSql( literal.getNano() );
-		appender.appendSql( '\'' );
+		appender.appendSql( "' second" );
+	}
+
+	public void appendUUIDLiteral(SqlAppender appender, UUID literal) {
+		appender.appendSql( "cast('" );
+		appender.appendSql( literal.toString() );
+		appender.appendSql( "' as uuid)" );
 	}
 
 	/**

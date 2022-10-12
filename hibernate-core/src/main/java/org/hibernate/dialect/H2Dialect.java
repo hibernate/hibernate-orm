@@ -9,7 +9,12 @@ package org.hibernate.dialect;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
@@ -84,6 +89,10 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
@@ -404,6 +413,105 @@ public class H2Dialect extends Dialect {
 			return "(?3-?2)";
 		}
 		return "datediff(?1,?2,?3)";
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) && supportsTimeWithTimeZoneLiteral() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, temporalAccessor );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeWithTimeZoneLiteral() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, date, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, date );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeWithTimeZoneLiteral() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, calendar, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, calendar );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public boolean supportsTimeWithTimeZoneLiteral() {
+		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
 	@Override

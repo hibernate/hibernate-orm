@@ -11,17 +11,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.OneToManyPersister;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * An unordered, unkeyed collection that can contain the same element
@@ -109,9 +115,46 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 		this.bag = (List<E>) collectionSemantics.instantiateRaw( elementCount, collectionDescriptor );
 
+		final StateInjector results;
+		if ( collectionDescriptor instanceof OneToManyPersister ) {
+			results = new NoDuplicatesStateInjector( bag );
+		}
+		else {
+			results = new StateInjector( bag );
+		}
+
 		if ( loadingState != null ) {
 			for ( int i = 0; i < elementCount; i++ ) {
-				bag.add( (E) loadingState.get( i ) );
+				results.inject( loadingState.get( i ) );
+			}
+		}
+	}
+
+	private static class StateInjector<R>{
+		private final List<R> bag;
+
+		public StateInjector(List<R> bag) {
+			this.bag = bag;
+		}
+
+		public void inject(R result) {
+			bag.add( result );
+		}
+	}
+
+	private static class NoDuplicatesStateInjector<R> extends StateInjector<R> {
+
+		private static final Object DUMP_VALUE = new Object();
+
+		private final IdentityHashMap<R, Object> added = new IdentityHashMap<>();
+
+		public NoDuplicatesStateInjector(List<R> results) {
+			super(results);
+		}
+
+		public void inject(R result) {
+			if ( added.put( result, DUMP_VALUE ) == null ) {
+				super.inject( result );
 			}
 		}
 	}

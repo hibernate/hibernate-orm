@@ -2833,7 +2833,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					.getMappedType()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG ) {
-				if ( isABagThatCanContainsDuplicates( pluralAttributeMapping ) ) {
+				// if a bag collection descriptor is a OneToManyPersister then it cannot contain duplicates
+				if ( !( pluralAttributeMapping.getCollectionDescriptor() instanceof OneToManyPersister) ) {
 					// cannot join a collection belonging to a fetched BAG, it would produce a wrong cardinality for the BAG elements
 					throw new BagFetchException( sqmJoinNavigablePath.getIdentifierForTableGroup() );
 				}
@@ -7089,8 +7090,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			if ( fetch != null ) {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
-					if ( isABagThatCanContainsDuplicates( (PluralAttributeMapping) fetchable ) ) {
-						if ( containsCardinalityAlteringJoin ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+					final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
+							.getCollectionSemantics()
+							.getCollectionClassification();
+					if ( collectionClassification == CollectionClassification.BAG ) {
+						if ( containsCardinalityAlteringJoin && !(pluralAttributeMapping.getCollectionDescriptor() instanceof OneToManyPersister)) {
+							// if the bag collection descriptor is not an instance of OneToManyPersister the bag can contain duplicates,
+							// having the query also a join that can alter the cardinality the result can contain duplicates prodiced by the cartesian product
 							throw new BagFetchException( currentBagRole );
 						}
 						if ( currentBagRole != null ) {
@@ -7117,13 +7124,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private static boolean isABagThatCanContainsDuplicates(PluralAttributeMapping pluralAttributeMapping) {
-		final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
-				.getCollectionSemantics()
-				.getCollectionClassification();
-		return collectionClassification == CollectionClassification.BAG
-				&& !( pluralAttributeMapping.getCollectionDescriptor() instanceof OneToManyPersister );
-	}
+//	private static boolean isABagThatCanContainsDuplicates(PluralAttributeMapping pluralAttributeMapping) {
+//		final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
+//				.getCollectionSemantics()
+//				.getCollectionClassification();
+//		return collectionClassification == CollectionClassification.BAG
+//				&& !( pluralAttributeMapping.getCollectionDescriptor() instanceof OneToManyPersister );
+//	}
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {

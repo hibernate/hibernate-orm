@@ -66,6 +66,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import jakarta.persistence.TemporalType;
 
@@ -786,6 +787,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
+	}
+
+	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
+		appender.appendSql( "cast('" );
+		appender.appendSql( literal.toString() );
+		appender.appendSql( "' as uniqueidentifier)" );
 	}
 
 	@Override

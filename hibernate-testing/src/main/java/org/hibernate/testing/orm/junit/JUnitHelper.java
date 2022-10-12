@@ -37,7 +37,7 @@ public class JUnitHelper {
 
 	public static boolean supportsParameterInjection(ParameterContext parameterContext, Class<?>... supportedTypes) {
 		for ( Class<?> supportedType : supportedTypes ) {
-			if ( parameterContext.getParameter().getType().isAssignableFrom( supportedType ) ) {
+			if ( supportedType.isAssignableFrom( parameterContext.getParameter().getType() ) ) {
 				return true;
 			}
 		}

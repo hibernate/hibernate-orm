@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1068,9 +1069,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			clazz = bindValue.getClass();
 		}
 
-		@SuppressWarnings("unchecked")
-		Class<? extends T> c = (Class<? extends T>) clazz;
-		return resolveParameterBindType( c );
+		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
+		Class<?> c = clazz;
+		do {
+			BindableType<?> type = resolveParameterBindType( c );
+			if ( type != null ) {
+				//noinspection unchecked
+				return (BindableType<? extends T>) type;
+			}
+			c = c.getSuperclass();
+		} while ( c != Object.class );
+		if ( !clazz.isEnum() && Serializable.class.isAssignableFrom( clazz ) ) {
+			//noinspection unchecked
+			return (BindableType<? extends T>) resolveParameterBindType( Serializable.class );
+		}
+		return null;
 	}
 
 	@Override

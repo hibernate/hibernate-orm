@@ -17,6 +17,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterUUIDData;
 
 /**
  * Specialized type mapping for {@link UUID} and the UUID SQL data type.
@@ -48,6 +49,11 @@ public class UUIDJdbcType implements JdbcType {
 	@Override
 	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
 		return UUID.class;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterUUIDData<>( javaType );
 	}
 
 	@Override

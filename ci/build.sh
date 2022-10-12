@@ -47,5 +47,10 @@ if [ -n "$goal" ]; then
   goal="$goal -x checkstyleMain"
 fi
 
+function logAndExec() {
+  echo 1>&2 "Executing:" "${@}"
+  exec "${@}"
+}
+
 # Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
-exec ./gradlew clean check ${goal} "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew clean check ${goal} "${@}" -Plog-test-progress=true --stacktrace

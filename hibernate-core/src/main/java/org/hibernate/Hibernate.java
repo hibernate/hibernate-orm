@@ -12,6 +12,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -85,8 +86,10 @@ public final class Hibernate {
 		if ( proxy instanceof HibernateProxy ) {
 			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
 		}
-		else if ( proxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) proxy ).$$_hibernate_getInterceptor();
+		else if ( ManagedTypeHelper.isPersistentAttributeInterceptable( proxy ) ) {
+			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
+					proxy );
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				return false;
 			}

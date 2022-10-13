@@ -19,6 +19,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -272,7 +273,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private static interface MappedIdentifierValueMarshaller {
 		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session);
 
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session);
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session);
 	}
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
@@ -312,7 +317,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						virtualIdComponent,
 						mappedIdClassComponentType,
 						identifier
-		);
+				);
 	}
 
 	private static class NormalMappedIdentifierValueMarshaller implements MappedIdentifierValueMarshaller {
@@ -335,7 +340,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session) {
 			virtualIdComponent.setPropertyValues(
 					entity,
 					mappedIdentifierType.getPropertyValues( id, session ),
@@ -385,7 +394,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					}
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				if ( subType.isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
+				if ( subType.isAssociationType() && !copierSubTypes[i].isAssociationType() ) {
 					propertyValues[i] = determineEntityId(
 							propertyValues[i],
 							(AssociationType) subType,
@@ -399,7 +408,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[extractedValues.length];
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -569,8 +582,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
-			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
-					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
+			if ( !lazyAttributesMetadata.isLazyAttribute( propertyName )
+					|| enhancementMetadata.isAttributeLoaded( entity, propertyName ) ) {
 				result[j] = getters[j].get( entity );
 			}
 			else {
@@ -714,11 +727,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		if ( session == null ) {
 			return;
 		}
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
-			if ( interceptor != null ) {
-				interceptor.setSession( session );
-			}
+		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, this::setSession, session );
+	}
+
+	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
+		final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
+				.extractLazyInterceptor( entity );
+		if ( interceptor != null ) {
+			interceptor.setSession( session );
 		}
 	}
 

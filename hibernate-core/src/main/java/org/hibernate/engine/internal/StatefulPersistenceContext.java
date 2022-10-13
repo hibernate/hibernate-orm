@@ -40,6 +40,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.loading.internal.LoadContexts;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -232,13 +233,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			} );
 		}
 
-		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {
-			if ( objectEntityEntryEntry.getKey() instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) objectEntityEntryEntry.getKey() ).$$_hibernate_getInterceptor();
-				if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-					( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
-				}
-			}
+		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {//TODO make this a forEach process within the container
+			//type-cache-pollution agent: always check for EnhancedEntity type first.
+			ManagedTypeHelper.processIfPersistentAttributeInterceptable( objectEntityEntryEntry.getKey(), StatefulPersistenceContext::unsetSession, null );
 		}
 
 		final SharedSessionContractImplementor session = getSession();
@@ -267,6 +264,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			loadContexts.cleanup();
 		}
 		naturalIdXrefDelegate = null;
+	}
+
+	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable, Object ignoredParam) {
+		final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
+			( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
+		}
 	}
 
 	@Override
@@ -673,8 +677,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//initialize + unwrap the object and return it
 			return li.getImplementation();
 		}
-		else if ( maybeProxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) maybeProxy;
+		else if ( ManagedTypeHelper.isPersistentAttributeInterceptable( maybeProxy ) ) {
+			final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( maybeProxy );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );

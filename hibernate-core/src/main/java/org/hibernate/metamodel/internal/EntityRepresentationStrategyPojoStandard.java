@@ -23,6 +23,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -99,8 +100,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
-		this.isBytecodeEnhanced = PersistentAttributeInterceptable.class.isAssignableFrom( mappedJavaType );
-
+		this.isBytecodeEnhanced = ManagedTypeHelper.isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {

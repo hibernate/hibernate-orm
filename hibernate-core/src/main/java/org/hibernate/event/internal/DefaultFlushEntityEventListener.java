@@ -15,9 +15,12 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -99,9 +102,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static boolean isUninitializedEnhanced(Object entity) {
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor =
-					( (PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
+					entity );
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
 			// the entity is an un-initialized enhancement-as-proxy reference
 			return interceptor instanceof EnhancementAsProxyLazinessInterceptor;
 		}

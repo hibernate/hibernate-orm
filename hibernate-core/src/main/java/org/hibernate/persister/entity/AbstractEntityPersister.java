@@ -71,6 +71,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
@@ -85,6 +86,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -4993,7 +4995,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof PersistentAttributeInterceptable && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
 					.extractLazyInterceptor( entity );
 			assert interceptor != null;
@@ -5003,9 +5005,11 @@ public abstract class AbstractEntityPersister
 		}
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
+	}
+
+	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
+		entity.$$_hibernate_clearDirtyAttributes();
 	}
 
 	@Override
@@ -5247,11 +5251,14 @@ public abstract class AbstractEntityPersister
 		if ( session == null ) {
 			return;
 		}
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
-			if ( interceptor != null ) {
-				interceptor.setSession( session );
-			}
+		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, this::setSession, session );
+	}
+
+	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
+		final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
+				.extractLazyInterceptor( entity );
+		if ( interceptor != null ) {
+			interceptor.setSession( session );
 		}
 	}
 

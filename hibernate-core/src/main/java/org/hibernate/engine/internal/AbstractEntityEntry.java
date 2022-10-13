@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -259,14 +260,16 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			getPersister().setValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
 
-		if( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
 
 		getPersistenceContext().getSession()
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
 				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+	}
+
+	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
+		entity.$$_hibernate_clearDirtyAttributes();
 	}
 
 	@Override
@@ -325,10 +328,10 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if ( entity instanceof SelfDirtinessTracker ) {
+		if ( ManagedTypeHelper.isSelfDirtinessTracker( entity ) ) {
 			boolean uninitializedProxy = false;
-			if ( entity instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+			if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+				final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( entity );
 				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
@@ -342,11 +345,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			// we never have to check an uninitialized proxy
 			return uninitializedProxy || !persister.hasCollections()
 					&& !persister.hasMutableProperties()
-					&& !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+					&& !ManagedTypeHelper.asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( entity );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// we never have to check an uninitialized proxy

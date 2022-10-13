@@ -17,6 +17,7 @@ import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -92,9 +93,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor =
-					( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
+					entity );
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// EARLY EXIT!!!
 				// nothing to check - the entity is an un-initialized enhancement-as-proxy reference

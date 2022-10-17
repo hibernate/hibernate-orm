@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -26,7 +27,8 @@ import jakarta.persistence.OneToOne;
 
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
-public class AssociationInEmbeddableTest extends BaseNonConfigCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-15606")
+public class LazyOneToOneMappedByInEmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {

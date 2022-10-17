@@ -10,4 +10,4 @@ SELECT
 FROM
     Account a
 WHERE
-    a.id = 2
+    a.id = 2 and a.active_status = true

@@ -556,7 +556,7 @@ include::{sourcedir}/FilterTest.java[tags=pc-filter-entity-example]
 include::{extrasdir}/pc-filter-entity-example.sql[]
 ----
 
-As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
+As you can see from the example above, just like an entity query, the filter prevents the entity from being loaded.
 ====
 
 Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.

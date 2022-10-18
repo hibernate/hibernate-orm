@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -29,7 +28,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, CacheKeyValueDescriptor {
+public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *

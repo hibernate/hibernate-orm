@@ -14,9 +14,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Comparator;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -259,8 +257,4 @@ public class DbTimestampJavaType<T> implements VersionJavaType<T>, TemporalJavaT
 		return delegate.resolveTypeForPrecision( precision, typeConfiguration );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return delegate.toCacheKeyDescriptor( sessionFactory );
-	}
 }

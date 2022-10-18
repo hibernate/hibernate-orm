@@ -301,6 +301,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		throw new UnsupportedOperationException( "AnyType not supported as part of cache key!" );
+	}
+
+	@Override
 	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache)
 			throws HibernateException {
 		if ( original == null ) {

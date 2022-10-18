@@ -7,10 +7,14 @@
 package org.hibernate.jpa.event.internal;
 
 import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.MapBackedClassValue;
 import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackType;
 
 /**
@@ -18,37 +22,39 @@ import org.hibernate.jpa.event.spi.CallbackType;
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-final class CallbackRegistryImpl implements CallbackRegistryImplementor {
-	private final HashMap<Class<?>, Callback[]> preCreates = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> postCreates = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> preRemoves = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> postRemoves = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> preUpdates = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> postUpdates = new HashMap<>();
-	private final HashMap<Class<?>, Callback[]> postLoads = new HashMap<>();
+final class CallbackRegistryImpl implements CallbackRegistry {
 
-	@Override
-	public boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType) {
-		final HashMap<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callbackType );
-		return notEmpty( map.get( entityClass ) );
+	private final MapBackedClassValue<Callback[]> preCreates;
+	private final MapBackedClassValue<Callback[]> postCreates;
+	private final MapBackedClassValue<Callback[]> preRemoves;
+	private final MapBackedClassValue<Callback[]> postRemoves;
+	private final MapBackedClassValue<Callback[]> preUpdates;
+	private final MapBackedClassValue<Callback[]> postUpdates;
+	private final MapBackedClassValue<Callback[]> postLoads;
+
+	public CallbackRegistryImpl(
+			Map<Class<?>, Callback[]> preCreates,
+			Map<Class<?>, Callback[]> postCreates,
+			Map<Class<?>, Callback[]> preRemoves,
+			Map<Class<?>, Callback[]> postRemoves,
+			Map<Class<?>, Callback[]> preUpdates,
+			Map<Class<?>, Callback[]> postUpdates,
+			Map<Class<?>, Callback[]> postLoads) {
+		this.preCreates = new MapBackedClassValue<>( preCreates );
+		this.postCreates = new MapBackedClassValue<>( postCreates );
+		this.preRemoves = new MapBackedClassValue<>( preRemoves );
+		this.postRemoves = new MapBackedClassValue<>( postRemoves );
+		this.preUpdates = new MapBackedClassValue<>( preUpdates );
+		this.postUpdates = new MapBackedClassValue<>( postUpdates );
+		this.postLoads = new MapBackedClassValue<>( postLoads );
 	}
 
 	@Override
-	public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
-		if ( callbacks == null || callbacks.length == 0 ) {
-			return;
-		}
-
-		for ( Callback callback : callbacks ) {
-			final HashMap<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callback.getCallbackType() );
-			Callback[] entityCallbacks = map.get( entityClass );
-			if ( entityCallbacks == null ) {
-				entityCallbacks = new Callback[0];
-			}
-			entityCallbacks = ArrayHelper.join( entityCallbacks, callback );
-			map.put( entityClass, entityCallbacks );
-		}
+	public boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType) {
+		final MapBackedClassValue<Callback[]> map = determineAppropriateCallbackMap( callbackType );
+		return notEmpty( map.get( entityClass ) );
 	}
 
 	@Override
@@ -90,6 +96,17 @@ final class CallbackRegistryImpl implements CallbackRegistryImplementor {
 		return callback( postLoads.get( bean.getClass() ), bean );
 	}
 
+	@Override
+	public void release() {
+		this.preCreates.dispose();
+		this.postCreates.dispose();
+		this.preRemoves.dispose();
+		this.postRemoves.dispose();
+		this.preUpdates.dispose();
+		this.postUpdates.dispose();
+		this.postLoads.dispose();
+	}
+
 	private boolean callback(Callback[] callbacks, Object bean) {
 		if ( callbacks != null && callbacks.length != 0 ) {
 			for ( Callback callback : callbacks ) {
@@ -102,7 +119,7 @@ final class CallbackRegistryImpl implements CallbackRegistryImplementor {
 		}
 	}
 
-	private HashMap<Class<?>, Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
+	private MapBackedClassValue<Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
 		if ( callbackType == CallbackType.PRE_PERSIST ) {
 			return preCreates;
 		}
@@ -134,16 +151,66 @@ final class CallbackRegistryImpl implements CallbackRegistryImplementor {
 		throw new PersistenceException( "Unrecognized JPA callback type [" + callbackType + "]" );
 	}
 
-	public void release() {
-		preCreates.clear();
-		postCreates.clear();
+	public static class Builder {
+		private final Map<Class<?>, Callback[]> preCreates = new HashMap<>();
+		private final Map<Class<?>, Callback[]> postCreates = new HashMap<>();
+		private final Map<Class<?>, Callback[]> preRemoves = new HashMap<>();
+		private final Map<Class<?>, Callback[]> postRemoves = new HashMap<>();
+		private final Map<Class<?>, Callback[]> preUpdates = new HashMap<>();
+		private final Map<Class<?>, Callback[]> postUpdates = new HashMap<>();
+		private final Map<Class<?>, Callback[]> postLoads = new HashMap<>();
 
-		preRemoves.clear();
-		postRemoves.clear();
+		public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
+			if ( callbacks == null || callbacks.length == 0 ) {
+				return;
+			}
 
-		preUpdates.clear();
-		postUpdates.clear();
+			for ( Callback callback : callbacks ) {
+				final Map<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callback.getCallbackType() );
+				Callback[] entityCallbacks = map.get( entityClass );
+				if ( entityCallbacks == null ) {
+					entityCallbacks = new Callback[0];
+				}
+				entityCallbacks = ArrayHelper.join( entityCallbacks, callback );
+				map.put( entityClass, entityCallbacks );
+			}
+		}
 
-		postLoads.clear();
+		private Map<Class<?>, Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
+			if ( callbackType == CallbackType.PRE_PERSIST ) {
+				return preCreates;
+			}
+
+			if ( callbackType == CallbackType.POST_PERSIST ) {
+				return postCreates;
+			}
+
+			if ( callbackType == CallbackType.PRE_REMOVE ) {
+				return preRemoves;
+			}
+
+			if ( callbackType == CallbackType.POST_REMOVE ) {
+				return postRemoves;
+			}
+
+			if ( callbackType == CallbackType.PRE_UPDATE ) {
+				return preUpdates;
+			}
+
+			if ( callbackType == CallbackType.POST_UPDATE ) {
+				return postUpdates;
+			}
+
+			if ( callbackType == CallbackType.POST_LOAD ) {
+				return postLoads;
+			}
+
+			throw new PersistenceException( "Unrecognized JPA callback type [" + callbackType + "]" );
+		}
+
+		protected CallbackRegistryImpl build() {
+			return new CallbackRegistryImpl( preCreates, postCreates, preRemoves, postRemoves, preUpdates, postUpdates, postLoads );
+		}
+
 	}
 }

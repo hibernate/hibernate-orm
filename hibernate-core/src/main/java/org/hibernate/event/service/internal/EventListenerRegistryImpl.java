@@ -43,7 +43,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -201,14 +201,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	// Builder
 
 	public static class Builder {
-		private final CallbackRegistryImplementor callbackRegistry;
+		private final CallbackRegistry callbackRegistry;
 		private final boolean jpaBootstrap;
 
 		private final Map<EventType<?>,EventListenerGroup<?>> listenerGroupMap = new TreeMap<>(
 				Comparator.comparing( EventType::ordinal )
 		);
 
-		public Builder(CallbackRegistryImplementor callbackRegistry, boolean jpaBootstrap) {
+		public Builder(CallbackRegistry callbackRegistry, boolean jpaBootstrap) {
 			this.callbackRegistry = callbackRegistry;
 			this.jpaBootstrap = jpaBootstrap;
 

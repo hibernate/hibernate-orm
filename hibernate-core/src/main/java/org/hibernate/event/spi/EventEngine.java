@@ -20,8 +20,8 @@ import org.hibernate.event.service.internal.EventListenerRegistryImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
 import org.hibernate.jpa.event.internal.CallbacksFactory;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -34,7 +34,7 @@ public class EventEngine {
 	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
-	private final CallbackRegistryImplementor callbackRegistry;
+	private final CallbackRegistry callbackRegistry;
 
 	public EventEngine(
 			MetadataImplementor mappings,
@@ -151,7 +151,7 @@ public class EventEngine {
 		return listenerRegistry;
 	}
 
-	public CallbackRegistryImplementor getCallbackRegistry() {
+	public CallbackRegistry getCallbackRegistry() {
 		return callbackRegistry;
 	}
 

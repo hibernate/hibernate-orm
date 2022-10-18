@@ -26,7 +26,6 @@ import org.hibernate.type.Type;
 @Internal
 public final class CacheKeyImplementation implements Serializable {
 	private final Object id;
-	private final CacheKeyValueDescriptor cacheKeyValueDescriptor;
 	private final String entityOrRoleName;
 	private final String tenantId;
 	private final int hashCode;
@@ -49,24 +48,14 @@ public final class CacheKeyImplementation implements Serializable {
 			final String entityOrRoleName,
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
-		this.id = id;
+		this.id = type.disassemble( id, factory );
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		final CacheKeyValueDescriptor cacheKeyValueDescriptor = type.toCacheKeyDescriptor( factory );
-		// Optimization for the very common case Integer/Long etc. which use the default cache key descriptor
-		// Doing this helps to avoid megamorphic call sites and reduces the cache key serialization size
-		if ( cacheKeyValueDescriptor == DefaultCacheKeyValueDescriptor.INSTANCE ) {
-			this.cacheKeyValueDescriptor = null;
-			this.hashCode = Objects.hashCode( id );
-		}
-		else {
-			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor;
-			this.hashCode = calculateHashCode();
-		}
+		this.hashCode = calculateHashCode( id, type, tenantId );
 	}
 
-	private int calculateHashCode() {
-		int result = cacheKeyValueDescriptor.getHashCode( id );
+	private static int calculateHashCode(Object id, Type type, String tenantId) {
+		int result = type.getHashCode( id );
 		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
@@ -88,18 +77,9 @@ public final class CacheKeyImplementation implements Serializable {
 			return false;
 		}
 		final CacheKeyImplementation that = (CacheKeyImplementation) other;
-		if ( !entityOrRoleName.equals( that.entityOrRoleName ) ) {
-			return false;
-		}
-		if ( cacheKeyValueDescriptor == null ) {
-			if ( !Objects.equals( id, that.id ) ) {
-				return false;
-			}
-		}
-		else if ( !cacheKeyValueDescriptor.isEqual( id, that.id ) ) {
-			return false;
-		}
-		return Objects.equals( tenantId, that.tenantId );
+		return entityOrRoleName.equals( that.entityOrRoleName )
+				&& Objects.deepEquals( id, that.id )
+				&& Objects.equals( tenantId, that.tenantId );
 	}
 
 	@Override

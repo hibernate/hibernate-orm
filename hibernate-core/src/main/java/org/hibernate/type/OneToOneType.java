@@ -15,6 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -136,6 +137,11 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		return null;
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		return null;
 	}
 

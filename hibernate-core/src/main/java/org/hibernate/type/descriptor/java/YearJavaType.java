@@ -10,9 +10,6 @@ import java.sql.Types;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -86,8 +83,4 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

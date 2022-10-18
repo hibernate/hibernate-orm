@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -84,6 +85,25 @@ public class SpecialOneToOneType extends OneToOneType {
 				);
 			}
 			return getIdentifierType(session).disassemble(id, session, owner);
+		}
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			// cache the actual id of the object, not the value of the
+			// property-ref, which might not be initialized
+			Object id = getIdentifier( value, sessionFactory );
+			if ( id == null ) {
+				throw new AssertionFailure(
+						"cannot cache a reference to an object with a null id: " +
+								getAssociatedEntityName()
+				);
+			}
+			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
 		}
 	}
 

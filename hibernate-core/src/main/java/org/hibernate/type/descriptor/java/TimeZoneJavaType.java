@@ -9,9 +9,6 @@ package org.hibernate.type.descriptor.java;
 import java.util.Comparator;
 import java.util.TimeZone;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -63,8 +60,4 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

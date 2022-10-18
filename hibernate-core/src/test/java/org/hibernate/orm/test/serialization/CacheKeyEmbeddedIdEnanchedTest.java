@@ -4,12 +4,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Map;
 
+import org.hibernate.Session;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.serialization.entity.BuildRecord;
 import org.hibernate.orm.test.serialization.entity.BuildRecordId;
 import org.hibernate.persister.entity.EntityPersister;
@@ -75,7 +78,20 @@ public class CacheKeyEmbeddedIdEnanchedTest extends BaseNonConfigCoreFunctionalT
 
 		assertEquals( key.hashCode(), keyClone.hashCode() );
 
-		final Object idClone = cacheKeysFactory.getEntityId( keyClone );
+		final Object idClone;
+		if ( cacheKeysFactory == SimpleCacheKeysFactory.INSTANCE ) {
+			idClone = cacheKeysFactory.getEntityId( keyClone );
+		}
+		else {
+			// DefaultCacheKeysFactory#getEntityId will return a disassembled version
+			try (Session session = sessionFactory().openSession()) {
+				idClone = persister.getIdentifierType().assemble(
+						(Serializable) cacheKeysFactory.getEntityId( keyClone ),
+						(SharedSessionContractImplementor) session,
+						null
+				);
+			}
+		}
 
 		assertEquals( id.hashCode(), idClone.hashCode() );
 		assertEquals( id, idClone );

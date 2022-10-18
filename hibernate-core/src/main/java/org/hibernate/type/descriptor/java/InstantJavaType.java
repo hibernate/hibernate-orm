@@ -19,12 +19,8 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -210,11 +206,6 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			Integer scale,
 			SharedSessionContractImplementor session) {
 		return Instant.now( ClockHelper.forPrecision( precision, session ) );
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 }

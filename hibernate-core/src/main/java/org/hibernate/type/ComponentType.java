@@ -21,9 +21,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.ComponentCacheKeyValueDescriptor;
-import org.hibernate.cache.internal.CustomComponentCacheKeyValueDescriptor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -67,7 +64,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final CompositeUserType<Object> compositeUserType;
 
 	private EmbeddableValuedModelPart mappingModelPart;
-	private transient CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
 		this.componentClass = component.isDynamic()
@@ -631,6 +627,23 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		if ( value == null ) {
+			return null;
+		}
+		else if ( compositeUserType != null ) {
+			return compositeUserType.disassemble( value );
+		}
+		else {
+			Object[] values = getPropertyValues( value );
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				values[i] = propertyTypes[i].disassemble( values[i], sessionFactory );
+			}
+			return values;
+		}
+	}
+
+	@Override
 	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
@@ -701,22 +714,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			loc += propertyNullness.length;
 		}
 		return result;
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		CacheKeyValueDescriptor cacheKeyValueDescriptor = this.cacheKeyValueDescriptor;
-		if ( cacheKeyValueDescriptor == null ) {
-			if ( compositeUserType != null ) {
-				cacheKeyValueDescriptor = new CustomComponentCacheKeyValueDescriptor( compositeUserType );
-			}
-			else {
-				cacheKeyValueDescriptor = new ComponentCacheKeyValueDescriptor( mappingModelPart, sessionFactory );
-			}
-			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor;
-		}
-
-		return cacheKeyValueDescriptor;
 	}
 
 	@Override

@@ -12,13 +12,9 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.JavaTypeCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
@@ -279,11 +275,4 @@ public interface JavaType<T> extends Serializable {
 		return createJavaType( parameterizedType );
 	}
 
-	default CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		if ( this instanceof CacheKeyValueDescriptor ) {
-			return (CacheKeyValueDescriptor) this;
-		}
-
-		return new JavaTypeCacheKeyValueDescriptor( this );
-	}
 }

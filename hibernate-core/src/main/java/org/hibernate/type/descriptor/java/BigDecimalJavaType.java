@@ -10,9 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -44,11 +42,6 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 	@Override
 	public int extractHashCode(BigDecimal value) {
 		return value.intValue();
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return BigNumberCacheKeyValueDescriptor.INSTANCE;
 	}
 
 	@SuppressWarnings("unchecked")

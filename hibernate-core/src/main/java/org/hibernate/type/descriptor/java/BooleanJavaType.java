@@ -6,10 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -178,11 +175,6 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 				characterValueFalse,
 				characterValueTrue
 		);
-	}
-
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
 	}
 
 }

@@ -20,11 +20,7 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
-import org.hibernate.cache.internal.DefaultCacheKeyValueDescriptor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.SqlTypes;
@@ -239,8 +235,4 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		return ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		return DefaultCacheKeyValueDescriptor.INSTANCE;
-	}
 }

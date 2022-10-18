@@ -1536,9 +1536,10 @@ This behavior may be slightly adjusted using the `@Polymorphism` annotation.
 See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
 
 [[hql-derived-root]]
-==== Derived root
+==== Derived roots
 
-A _derived root_ is a subquery which occurs in the `from` clause.
+A _derived root_ is an uncorrelated subquery which occurs in the `from` clause.
+It must declare an identification variable.
 
 [[hql-derived-root-example]]
 ====
@@ -1549,6 +1550,14 @@ include::{sourcedir}/HQLTest.java[tags=hql-derived-root-example, indent=0]
 ====
 
 This feature can be used to break a more complicated query into smaller pieces.
+
+[IMPORTANT]
+====
+We emphasize that a derived root must be an _uncorrelated_ subquery.
+It may not refer to other roots declared in the same `from` clause.
+====
+
+A subquery may also occur in a <<hql-join-derived, join>>, in which case it may be a correlated subquery.
 
 [[hql-join]]
 === Declaring joined entities
@@ -1727,10 +1736,14 @@ This allows the attribute `cardNumber` declared by the subtype `CreditCardPaymen
 See <<hql-functions-typecasts>> for more information about `treat()`.
 
 [[hql-join-derived]]
-==== Join subquery
+==== Subqueries in joins
 
-A `join` clause may contain a subquery.
-This is very similar to a <<hql-derived-root,derived root>>.
+A `join` clause may contain a subquery, either:
+
+- an uncorrelated subquery, which is almost the same as a <<hql-derived-root,derived root>>, except that it may have an `on` restriction, or
+- a _lateral join_, which is a correlated subquery, and may refer to other roots declared earlier in the same `from` clause.
+
+The `lateral` keyword just distinguishes the two cases.
 
 [[hql-derived-join-example]]
 ====
@@ -1740,13 +1753,24 @@ include::{sourcedir}/HQLTest.java[tags=hql-derived-join-example, indent=0]
 ----
 ====
 
-The `lateral` keyword allows the subquery to refer to aliases defined by previous `from` clauses.
+A lateral join may be an inner or left outer join, but not a right join, nor a full join.
 
-This is particularly useful for computing top-N elements of multiple groups.
+[TIP]
+====
+Traditional SQL doesn't allow correlated subqueries in the `from` clause.
+A lateral join is essentially just that, but with a different syntax to what you might expect.
+
+On some databases, `join lateral` is written `cross apply`.
+And on Postgres it's plain `lateral`, without `join`.
+
+It's almost as if they're _deliberately trying_ to confuse us.
+====
+
+Lateral joins are particularly useful for computing top-N elements of multiple groups.
 
 [IMPORTANT]
 ====
-Most databases support `lateral` natively, and Hibernate emulates the feature for databases which don't.
+Most databases support some flavor of `join lateral`, and Hibernate emulates the feature for databases which don't.
 But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
 ====
 
@@ -2105,7 +2129,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
 [[hql-aggregate-functions-orderedset]]
 ==== Ordered set aggregate functions: `within group`
 
-An _ordered set aggregate function_ is a special aggregate functions which has:
+An _ordered set aggregate function_ is a special aggregate function which has:
 
 - not only an optional filter clause, as above, but also
 - a `within group` clause containing a mini-`order by` specification.

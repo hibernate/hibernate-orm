@@ -25,12 +25,25 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
+sourceSets {
+    mySpecialSourceSet {
+        java {
+            srcDirs "src/mySpecialSourceSet/java"
+        }
+    }
+}
+
 hibernate {
     useSameVersion = false
+    sourceSet = 'mySpecialSourceSet'
     enhancement {
         lazyInitialization( true )
         dirtyTracking = true
     }
     jpaMetamodel {
     }
+}
+
+tasks.withType(JavaCompile).forEach {
+    logger.lifecycle "   - compile task : " + it.name
 }

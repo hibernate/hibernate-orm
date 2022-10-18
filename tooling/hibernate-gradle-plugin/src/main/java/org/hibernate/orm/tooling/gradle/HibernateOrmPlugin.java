@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
+import java.util.Set;
+
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -22,7 +24,6 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
 import org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationTask;
 
-import static org.hibernate.orm.tooling.gradle.Helper.determineCompileSourceSetName;
 import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
 import static org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationTask.COMPILE_META_TASK_NAME;
 import static org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationTask.GEN_TASK_NAME;
@@ -60,28 +61,30 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 				return;
 			}
 
-			graph.getAllTasks().forEach( (task) -> {
-				if ( task instanceof AbstractCompile ) {
-					final SourceSet sourceSetLocal = ormDsl.getSourceSet().get();
+			final SourceSet sourceSet = ormDsl.getSourceSet().get();
+			final Set<String> languages = ormDsl.getLanguages().getOrNull();
+			if ( languages == null ) {
+				return;
+			}
 
-					final String compiledSourceSetName = determineCompileSourceSetName( task.getName() );
-					if ( !sourceSetLocal.getName().equals( compiledSourceSetName ) ) {
-						return;
-					}
-
-					final AbstractCompile compileTask = (AbstractCompile) task;
-					//noinspection Convert2Lambda,NullableProblems
-					task.doLast( new Action<>() {
-						@Override
-						public void execute(Task t) {
-							final DirectoryProperty classesDirectory = compileTask.getDestinationDirectory();
-							final ClassLoader classLoader = Helper.toClassLoader( sourceSetLocal.getOutput().getClassesDirs() );
-
-							EnhancementHelper.enhance( classesDirectory, classLoader, ormDsl, project );
-						}
-					} );
+			for ( String language : languages ) {
+				final String languageCompileTaskName = sourceSet.getCompileTaskName( language );
+				final AbstractCompile languageCompileTask = (AbstractCompile) project.getTasks().findByName( languageCompileTaskName );
+				if ( languageCompileTask == null ) {
+					continue;
 				}
-			} );
+
+				//noinspection Convert2Lambda
+				languageCompileTask.doLast( new Action<>() {
+					@Override
+					public void execute(Task t) {
+						final DirectoryProperty classesDirectory = languageCompileTask.getDestinationDirectory();
+						final ClassLoader classLoader = Helper.toClassLoader( sourceSet.getOutput().getClassesDirs() );
+
+						EnhancementHelper.enhance( classesDirectory, classLoader, ormDsl, project );
+					}
+				} );
+			}
 		} );
 	}
 

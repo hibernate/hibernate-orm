@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 import org.gradle.api.Action;
@@ -15,6 +16,7 @@ import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
@@ -35,6 +37,7 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 
 	private final Property<Boolean> useSameVersion;
 	private final Property<SourceSet> sourceSet;
+	private final SetProperty<String> languages;
 
 	private final Provider<EnhancementSpec> enhancementDslAccess;
 	private final Provider<JpaMetamodelGenerationSpec> jpaMetamodelDslAccess;
@@ -49,6 +52,9 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 
 		sourceSet = project.getObjects().property( SourceSet.class );
 		sourceSet.convention( mainSourceSet( project ) );
+
+		languages = project.getObjects().setProperty( String.class );
+		languages.convention( Arrays.asList( "java", "kotlin" ) );
 
 		enhancementDslAccess = project.provider( () -> enhancementDsl );
 		jpaMetamodelDslAccess = project.provider( () -> jpaMetamodelDsl );
@@ -123,6 +129,21 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	 */
 	public void sourceSet(SourceSet sourceSet) {
 		setSourceSet( sourceSet );
+	}
+
+	/**
+	 * The languages used in the project
+	 */
+	public SetProperty<String> getLanguages() {
+		return languages;
+	}
+
+	public void setLanguages(Iterable<String> languages) {
+		this.languages.set( languages );
+	}
+
+	public void languages(String language) {
+		this.languages.add( language );
 	}
 
 	/**

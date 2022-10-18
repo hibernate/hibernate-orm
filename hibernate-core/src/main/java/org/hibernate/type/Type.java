@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -334,6 +333,24 @@ public interface Type extends Serializable {
 	boolean isMutable();
 
 	/**
+	 * Return a disassembled representation of the object.  This is the value Hibernate will use in as cache key,
+	 * so care should be taken to break values down to their simplest forms; for entities especially, this
+	 * means breaking them down into their constituent parts.
+	 *
+	 * For two disassembled objects A and B, {@link Object#equals(Object)} must behave like {@link #isEqual(Object, Object)}.
+	 *
+	 * @param value the value to cache
+	 * @param sessionFactory the session factory
+	 *
+	 * @return the disassembled, deep cloned state
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	default Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return disassemble( value, null, null );
+	}
+
+	/**
 	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
 	 * caching, so care should be taken to break values down to their simplest forms; for entities especially, this
 	 * means breaking them down into their constituent parts.
@@ -349,7 +366,7 @@ public interface Type extends Serializable {
 	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
+	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble(Object, SharedSessionContractImplementor, Object)}
 	 *
 	 * @param cached the disassembled state from the cache
 	 * @param session the originating session
@@ -431,11 +448,4 @@ public interface Type extends Serializable {
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
 
-	default CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		if ( this instanceof CacheKeyValueDescriptor ) {
-			return (CacheKeyValueDescriptor) this;
-		}
-
-		throw new HibernateException( "Type does not support use as a cache-key" );
-	}
 }

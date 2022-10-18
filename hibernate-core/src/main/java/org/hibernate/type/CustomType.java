@@ -15,7 +15,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -66,8 +65,6 @@ public class CustomType<J>
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
-
-	private transient CacheKeyValueDescriptor cacheKeyValueDescriptor;
 
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
@@ -196,6 +193,11 @@ public class CustomType<J>
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
 		return (Serializable) disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return (Serializable) disassemble( value, (SharedSessionContractImplementor) null );
 	}
 
 	@Override
@@ -392,31 +394,4 @@ public class CustomType<J>
 		return userType.getValueConverter();
 	}
 
-	@Override
-	public CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		CacheKeyValueDescriptor cacheKeyValueDescriptor = this.cacheKeyValueDescriptor;
-		if ( cacheKeyValueDescriptor == null ) {
-			this.cacheKeyValueDescriptor = cacheKeyValueDescriptor = new CustomTypeCacheKeyValueDescriptor( getUserType() );
-		}
-		return cacheKeyValueDescriptor;
-	}
-
-	private static final class CustomTypeCacheKeyValueDescriptor implements CacheKeyValueDescriptor {
-		private final UserType<Object> userType;
-
-		public CustomTypeCacheKeyValueDescriptor(UserType<?> userType) {
-			//noinspection unchecked
-			this.userType = (UserType<Object>) userType;
-		}
-
-		@Override
-		public int getHashCode(Object key) {
-			return userType.hashCode( key );
-		}
-
-		@Override
-		public boolean isEqual(Object key1, Object key2) {
-			return userType.equals( key1, key2 );
-		}
-	}
 }

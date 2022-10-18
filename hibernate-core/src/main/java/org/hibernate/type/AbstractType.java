@@ -62,6 +62,16 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			return (Serializable) deepCopy( value, sessionFactory );
+		}
+	}
+
+	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		if ( cached==null ) {

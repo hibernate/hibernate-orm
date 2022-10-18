@@ -453,6 +453,30 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
+	protected final Object getIdentifier(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		if ( isReferenceToIdentifierProperty() ) {
+			return getAssociatedEntityPersister( sessionFactory )
+					.getIdentifierMapping()
+					.getIdentifier( value );
+		}
+		else if ( value == null ) {
+			return null;
+		}
+		else {
+			EntityPersister entityPersister = getAssociatedEntityPersister( sessionFactory );
+			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
+			// We now have the value of the property-ref we reference.  However,
+			// we need to dig a little deeper, as that property might also be
+			// an entity type, in which case we need to resolve its identifier
+			Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
+			if ( type.isEntityType() ) {
+				propertyValue = ( (EntityType) type ).getIdentifier( propertyValue, sessionFactory );
+			}
+
+			return propertyValue;
+		}
+	}
+
 	/**
 	 * Generate a loggable representation of an instance of the value mapped by this type.
 	 *

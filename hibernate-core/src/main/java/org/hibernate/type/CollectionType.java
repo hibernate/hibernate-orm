@@ -264,6 +264,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		throw new UnsupportedOperationException( "CollectionType not supported as part of cache key!" );
+	}
+
+	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		//we must use the "remembered" uk value, since it is

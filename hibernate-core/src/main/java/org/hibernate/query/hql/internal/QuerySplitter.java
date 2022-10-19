@@ -400,8 +400,7 @@ public class QuerySplitter {
 			}
 			final SqmDerivedRoot<?> copy = new SqmDerivedRoot<>(
 					(SqmSubQuery<?>) sqmRoot.getQueryPart().accept( this ),
-					sqmRoot.getExplicitAlias(),
-					sqmRoot.isLateral()
+					sqmRoot.getExplicitAlias()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
 			sqmFromCopyMap.put( sqmRoot, copy );

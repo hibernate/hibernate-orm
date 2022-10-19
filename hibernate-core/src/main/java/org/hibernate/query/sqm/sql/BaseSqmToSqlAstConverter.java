@@ -2562,7 +2562,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					identifierVariable,
 					columnNames,
 					tableGroupProducer.getCompatibleTableExpressions(),
-					derivedRoot.isLateral(),
+					false,
 					true,
 					creationContext.getSessionFactory()
 			);

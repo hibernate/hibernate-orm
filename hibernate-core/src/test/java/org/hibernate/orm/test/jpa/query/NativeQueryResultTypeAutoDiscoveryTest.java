@@ -35,6 +35,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -261,6 +262,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	@Test
 	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps DATE and TIME to TIMESTAMP")
+	@SkipForDialect(value = PostgresPlusDialect.class, comment = "EDB maps DATE and TIME to TIMESTAMP")
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,

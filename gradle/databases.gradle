@@ -10,7 +10,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 // build a map of the database settings to use.
 ext {
         db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
-        def dbHost = System.getProperty( 'dbHost', 'localhost' )
+        dbHost = System.getProperty( 'dbHost', 'localhost' )
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',
@@ -353,5 +353,6 @@ ext {
 def processTestResourcesTask = project.tasks.findByName( 'processTestResources' )
 if ( processTestResourcesTask != null ) {
         processTestResourcesTask.inputs.property( 'db', db )
+        processTestResourcesTask.inputs.property( 'dbHost', dbHost )
         processTestResourcesTask.filter( ReplaceTokens, tokens: dbBundle[db] )
 }

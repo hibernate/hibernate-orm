@@ -143,18 +143,8 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery) {
-		return from( subquery, false );
-	}
-
-	@Override
-	public <X> SqmDerivedRoot<X> fromLateral(Subquery<X> subquery) {
-		return from( subquery, true );
-	}
-
-	@Override
-	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery, boolean lateral) {
 		validateComplianceFromSubQuery();
-		final SqmDerivedRoot<X> root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null, lateral );
+		final SqmDerivedRoot<X> root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null );
 		addRoot( root );
 		return root;
 	}

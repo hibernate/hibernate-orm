@@ -115,9 +115,15 @@ postgresql_14() {
 }
 
 edb() {
-    #$CONTAINER_CLI login containers.enterprisedb.com
+    edb_10
+}
+
+edb_10() {
     $CONTAINER_CLI rm -f edb || true
-    $CONTAINER_CLI run --name edb -e ACCEPT_EULA=Yes -e DATABASE_USER=hibernate_orm_test -e DATABASE_USER_PASSWORD=hibernate_orm_test -e ENTERPRISEDB_PASSWORD=hibernate_orm_test -e DATABASE_NAME=hibernate_orm_test -e PGPORT=5433 -p 5433:5433 --mount type=tmpfs,destination=/edbvolume -d containers.enterprisedb.com/edb/edb-as-lite:v11
+    # The version of the base image can be seen and updated in ./edb/Dockerfile
+    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+    (cd edb; $CONTAINER_CLI build -t edb-test:latest .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:latest
 }
 
 db2() {

@@ -134,6 +134,7 @@ xjc {
 
 task copyBundleResourcesXml (type: Copy) {
     inputs.property( "db", db )
+    inputs.property( "dbHost", dbHost )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
         // Escape

@@ -64,12 +64,12 @@ public class BindingTypeHelper {
 			Object value,
 			JdbcMapping baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( value == null || !( baseType.getJavaTypeDescriptor() instanceof TemporalJavaType<?> ) ) {
+		if ( value == null || !( baseType.getJdbcJavaType() instanceof TemporalJavaType<?> ) ) {
 			return baseType;
 		}
 
 		final Class<?> javaType = value.getClass();
-		final TemporalType temporalType = ( (TemporalJavaType<?>) baseType.getJavaTypeDescriptor() ).getPrecision();
+		final TemporalType temporalType = ( (TemporalJavaType<?>) baseType.getJdbcJavaType() ).getPrecision();
 		switch ( temporalType ) {
 			case TIMESTAMP: {
 				return (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, (BindableType<?>) baseType, typeConfiguration );

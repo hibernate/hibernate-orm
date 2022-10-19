@@ -55,7 +55,6 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
@@ -2109,10 +2108,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				final SqmExpression<?> r = (SqmExpression<?>) rightExpressionContext.accept( this );
 				if ( l instanceof AnyDiscriminatorSqmPath && r instanceof SqmLiteralEntityType ) {
 					left = l;
-					right = createDiscriminatorValue( (AnyDiscriminatorSqmPath) left, rightExpressionContext );
+					right = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) left, rightExpressionContext );
 				}
 				else if ( r instanceof AnyDiscriminatorSqmPath && l instanceof SqmLiteralEntityType ) {
-					left = createDiscriminatorValue( (AnyDiscriminatorSqmPath) r, leftExpressionContext );
+					left = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) r, leftExpressionContext );
 					right = r;
 				}
 				else {
@@ -2154,7 +2153,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private <T> SqmExpression<T> createDiscriminatorValue(
-			AnyDiscriminatorSqmPath anyDiscriminatorTypeSqmPath,
+			AnyDiscriminatorSqmPath<T> anyDiscriminatorTypeSqmPath,
 			HqlParser.ExpressionContext valueExpressionContext) {
 		return new SqmAnyDiscriminatorValue<>(
 				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
@@ -2392,7 +2391,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( expression.getJavaType() != Boolean.class ) {
 			throw new SemanticException( "Non-boolean expression used in predicate context: " + ctx.getText() );
 		}
-		return new SqmBooleanExpressionPredicate( expression, creationContext.getNodeBuilder() );
+		@SuppressWarnings("unchecked")
+		final SqmExpression<Boolean> booleanExpression = expression;
+		return new SqmBooleanExpressionPredicate( booleanExpression, creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -2433,7 +2434,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( ctx.getChildCount() != 5 ) {
 				return idPath;
 			}
-			final HqlParser.PathContinuationContext pathContinuationContext = (HqlParser.PathContinuationContext) ctx.getChild( 4 );
+//			final HqlParser.PathContinuationContext pathContinuationContext = (HqlParser.PathContinuationContext) ctx.getChild( 4 );
 
 			throw new NotYetImplementedFor6Exception( "Path continuation from `id()` reference not yet implemented" );
 		}
@@ -2538,7 +2539,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		}
 
-		return new SqmFkExpression( (SqmEntityValuedSimplePath<?>) sqmPath, creationContext.getNodeBuilder() );
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) sqmPath, creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -3360,7 +3361,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				value = Integer.parseUnsignedInt( text, 16 );
 				type = resolveExpressibleTypeBasic( Integer.class );
 			}
-			//noinspection unchecked
 			return new SqmLiteral<>(
 					value,
 					type,
@@ -3557,10 +3557,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 
+		//TODO: this fragment of code is extremely fragile and lacking in typesafety!
 		final ParseTree argumentChild = ctx.getChild( 2 );
 		final List<SqmTypedNode<?>> functionArguments;
 		if ( argumentChild instanceof HqlParser.GenericFunctionArgumentsContext ) {
-			functionArguments = (List<SqmTypedNode<?>>) argumentChild.accept( this );
+			@SuppressWarnings("unchecked")
+			List<SqmTypedNode<?>> node = (List<SqmTypedNode<?>>) argumentChild.accept(this);
+			functionArguments = node;
 		}
 		else if ( "*".equals( argumentChild.getText() ) ) {
 			functionArguments = Collections.singletonList( new SqmStar( getCreationContext().getNodeBuilder() ) );

@@ -43,6 +43,7 @@ jobs:
           - rdbms: mariadb
           - rdbms: postgresql
           - rdbms: postgresql_14
+          - rdbms: edb
           - rdbms: oracle
           - rdbms: db2
           - rdbms: mssql

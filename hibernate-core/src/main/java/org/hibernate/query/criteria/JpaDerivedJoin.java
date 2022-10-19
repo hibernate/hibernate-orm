@@ -15,4 +15,12 @@ import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 @Incubating
 public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, SqmQualifiedJoin<T,T>, JpaJoinedFrom<T,T> {
 
+	/**
+	 * Specifies whether the subquery part can access previous from node aliases.
+	 * Normally, subqueries in the from clause are unable to access other from nodes,
+	 * but when specifying them as lateral, they are allowed to do so.
+	 * Refer to the SQL standard definition of LATERAL for more details.
+	 */
+	boolean isLateral();
+
 }

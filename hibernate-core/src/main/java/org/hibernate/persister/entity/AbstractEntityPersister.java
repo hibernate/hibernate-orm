@@ -2510,6 +2510,13 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyNameClosure;
 	}
 
+	private static boolean isPrefix(final AttributeMapping attributeMapping, final String currentAttributeName) {
+		final String attributeName = attributeMapping.getAttributeName();
+		final int nameLength = attributeName.length();
+		return currentAttributeName.startsWith( attributeName )
+			&& ( currentAttributeName.length() == nameLength || currentAttributeName.charAt(nameLength) == '.' );
+	}
+
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
 		if ( attributeNames == null || attributeNames.length == 0 ) {
@@ -2522,11 +2529,7 @@ public abstract class AbstractEntityPersister
 
 		int index = 0;
 		for ( final AttributeMapping attributeMapping : attributeMappings ) {
-			final String attributeName = attributeMapping.getAttributeName();
-			final int nameLength = attributeName.length();
-			final String currentAttributeName = attributeNames[index];
-			if ( currentAttributeName.startsWith( attributeName ) && (
-					( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+			if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 				fields.add( attributeMapping.getStateArrayPosition() );
 				index++;
 				if ( index < attributeNames.length ) {
@@ -2565,19 +2568,10 @@ public abstract class AbstractEntityPersister
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
 			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
 			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
-			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0; i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
+			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0;
+					i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
-				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						// Consider mutable properties as dirty if we don't have a previous state
-						( previousState == null || previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
-								( propertyCheckability[i]
-										&& propertyTypes[i].isDirty(
-										previousState[i],
-										currentState[i],
-										propertyColumnUpdateable[i],
-										session
-								) ) );
-				if ( dirty ) {
+				if ( isDirty( currentState, previousState, propertyTypes, propertyCheckability, i, session ) ) {
 					fields.add( i );
 				}
 			}
@@ -2591,11 +2585,8 @@ public abstract class AbstractEntityPersister
 			int index = 0;
 			for ( final AttributeMapping attributeMapping : attributeMappings ) {
 				final String attributeName = attributeMapping.getAttributeName();
-				final int nameLength = attributeName.length();
-				final String currentAttributeName = attributeNames[index];
-				final int position = attributeMapping.getStateArrayPosition();
-				if ( currentAttributeName.startsWith( attributeName ) && (
-						( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+				if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
+					final int position = attributeMapping.getStateArrayPosition();
 					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
 						fields.add( position );
 					}
@@ -2621,6 +2612,27 @@ public abstract class AbstractEntityPersister
 		return ArrayHelper.toIntArray( fields );
 	}
 
+	private boolean isDirty(
+			Object[] currentState,
+			Object[] previousState,
+			Type[] propertyTypes,
+			boolean[] propertyCheckability,
+			int i,
+			SessionImplementor session) {
+		return currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				// Consider mutable properties as dirty if we don't have a previous state
+				&& ( previousState == null
+						|| previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| propertyCheckability[i]
+								&& propertyTypes[i].isDirty(
+										previousState[i],
+										currentState[i],
+										propertyColumnUpdateable[i],
+										session
+								)
+				);
+	}
+
 	protected String[] getSubclassColumnAliasClosure() {
 		return subclassColumnAliasClosure;
 	}
@@ -2631,17 +2643,17 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		String[] rawAliases = subclassPropertyAliases.get( propertyName );
-
+		final String[] rawAliases = subclassPropertyAliases.get( propertyName );
 		if ( rawAliases == null ) {
 			return null;
 		}
-
-		String[] result = new String[rawAliases.length];
-		for ( int i = 0; i < rawAliases.length; i++ ) {
-			result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+		else {
+			final String[] result = new String[rawAliases.length];
+			for ( int i = 0; i < rawAliases.length; i++ ) {
+				result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+			}
+			return result;
 		}
-		return result;
 	}
 
 	@Override

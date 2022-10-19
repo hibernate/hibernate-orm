@@ -79,7 +79,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 					@Override
 					public void execute(Task t) {
 						final DirectoryProperty classesDirectory = languageCompileTask.getDestinationDirectory();
-						final ClassLoader classLoader = Helper.toClassLoader( sourceSet.getOutput().getClassesDirs() );
+						final ClassLoader classLoader = Helper.toClassLoader( sourceSet, project );
 
 						EnhancementHelper.enhance( classesDirectory, classLoader, ormDsl, project );
 					}

@@ -38,26 +38,6 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 */
 	<X> JpaDerivedRoot<X> from(Subquery<X> subquery);
 
-	/**
-	 * Create and add a query root corresponding to the given lateral subquery,
-	 * forming a cartesian product with any existing roots.
-	 *
-	 * @param subquery  the subquery
-	 * @return query root corresponding to the given subquery
-	 */
-	<X> JpaDerivedRoot<X> fromLateral(Subquery<X> subquery);
-
-	/**
-	 * Create and add a query root corresponding to the given subquery,
-	 * forming a cartesian product with any existing roots.
-	 * If the subquery is marked as lateral, it may access previous from elements.
-	 *
-	 * @param subquery  the subquery
-	 * @param lateral whether to allow access to previous from elements in the subquery
-	 * @return query root corresponding to the given subquery
-	 */
-	<X> JpaDerivedRoot<X> from(Subquery<X> subquery, boolean lateral);
-
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);
 

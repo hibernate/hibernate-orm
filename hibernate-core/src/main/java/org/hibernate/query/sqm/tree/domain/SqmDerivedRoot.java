@@ -28,16 +28,13 @@ import org.hibernate.spi.NavigablePath;
 public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	private final SqmSubQuery<T> subQuery;
-	private final boolean lateral;
 
 	public SqmDerivedRoot(
 			SqmSubQuery<T> subQuery,
-			String alias,
-			boolean lateral) {
+			String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
-				lateral,
 				new AnonymousTupleType<>( subQuery ),
 				alias
 		);
@@ -46,7 +43,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	protected SqmDerivedRoot(
 			NavigablePath navigablePath,
 			SqmSubQuery<T> subQuery,
-			boolean lateral,
 			SqmPathSource<T> pathSource,
 			String alias) {
 		super(
@@ -57,7 +53,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 				subQuery.nodeBuilder()
 		);
 		this.subQuery = subQuery;
-		this.lateral = lateral;
 	}
 
 	@Override
@@ -71,7 +66,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 				new SqmDerivedRoot<>(
 						getNavigablePath(),
 						getQueryPart().copy( context ),
-						isLateral(),
 						getReferencedPathSource(),
 						getExplicitAlias()
 				)
@@ -83,11 +77,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	@Override
 	public SqmSubQuery<T> getQueryPart() {
 		return subQuery;
-	}
-
-	@Override
-	public boolean isLateral() {
-		return lateral;
 	}
 
 	@Override

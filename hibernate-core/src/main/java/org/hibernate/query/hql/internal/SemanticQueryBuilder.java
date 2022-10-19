@@ -1661,10 +1661,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					StrictJpaComplianceViolation.Type.FROM_SUBQUERY
 			);
 		}
-		final ParseTree firstChild = ctx.getChild( 0 );
-		final boolean lateral = ( (TerminalNode) firstChild ).getSymbol().getType() == HqlParser.LATERAL;
-		final int subqueryIndex = lateral ? 2 : 1;
-		final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) ctx.getChild( subqueryIndex ).accept( this );
+
+		final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) ctx.getChild(1).accept( this );
 
 		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
 		final HqlParser.VariableContext identificationVariableDefContext;
@@ -1680,7 +1678,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
-		final SqmRoot<?> sqmRoot = new SqmDerivedRoot<>( subQuery, alias, lateral );
+		final SqmRoot<?> sqmRoot = new SqmDerivedRoot<>( subQuery, alias );
 
 		pathRegistry.register( sqmRoot );
 

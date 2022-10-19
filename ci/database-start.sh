@@ -12,6 +12,8 @@ elif [ "$RDBMS" == 'postgresql' ]; then
   bash $DIR/../docker_db.sh postgresql
 elif [ "$RDBMS" == 'postgresql_13' ]; then
   bash $DIR/../docker_db.sh postgresql_13
+elif [ "$RDBMS" == 'edb' ]; then
+  bash $DIR/../docker_db.sh edb
 elif [ "$RDBMS" == 'db2' ]; then
   bash $DIR/../docker_db.sh db2
 elif [ "$RDBMS" == 'oracle' ]; then

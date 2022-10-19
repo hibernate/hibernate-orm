@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import jakarta.persistence.Column;
@@ -106,6 +107,7 @@ public class DateArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect( value = PostgresPlusDialect.class, comment = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testQuery() {
 		inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getByData", TableWithDateArrays.class );
@@ -128,6 +130,7 @@ public class DateArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
+	@SkipForDialect( value = PostgresPlusDialect.class, comment = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testNativeQuery() {
 		inSession( em -> {
 			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
@@ -143,6 +146,7 @@ public class DateArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsArrayDataTypes.class)
+	@SkipForDialect( value = PostgresPlusDialect.class, comment = "The 'date' type is a synonym for timestamp on Oracle and PostgresPlus, so untyped reading produces Timestamps")
 	public void testNativeQueryUntyped() {
 		inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithDateArrays.Native.getByIdUntyped" );

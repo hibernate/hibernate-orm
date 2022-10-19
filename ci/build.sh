@@ -7,7 +7,7 @@ if [ "$RDBMS" == "h2" ]; then
 elif [ "$RDBMS" == "derby" ]; then
   goal="-Pdb=derby"
 elif [ "$RDBMS" == "edb" ]; then
-  goal="-Pdb=edb_ci"
+  goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "hsqldb" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql8" ]; then

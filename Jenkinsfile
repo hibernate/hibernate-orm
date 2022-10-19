@@ -34,6 +34,7 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'mariadb' ),
 //		new BuildEnvironment( dbName: 'postgresql' ),
 //		new BuildEnvironment( dbName: 'postgresql_13' ),
+//		new BuildEnvironment( dbName: 'edb' ),
 //		new BuildEnvironment( dbName: 'oracle' ),
 //		new BuildEnvironment( dbName: 'db2' ),
 //		new BuildEnvironment( dbName: 'mssql' ),
@@ -194,12 +195,7 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "edb":
-									docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
-		// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
-		// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-		// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
-										docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
-									}
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;

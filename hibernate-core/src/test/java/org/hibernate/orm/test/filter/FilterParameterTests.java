@@ -27,6 +27,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
@@ -81,6 +82,7 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
 	public void testYesNoMismatch(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
@@ -150,6 +152,7 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts strings to integral types")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts strings to integral types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts strings to integral types")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
 	public void testMismatch(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );

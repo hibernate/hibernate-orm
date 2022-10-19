@@ -29,7 +29,9 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(dialectClass = HSQLDialect.class)
 @SkipForDialect(dialectClass = DerbyDialect.class)
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
-@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 9)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 9, matchSubTypes = true)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, matchSubTypes = true)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 11, matchSubTypes = true) // 'generated always' was added in 12
 public class GeneratedAlwaysTest {
 
     @Test

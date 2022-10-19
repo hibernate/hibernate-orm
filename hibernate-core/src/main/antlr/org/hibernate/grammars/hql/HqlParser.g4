@@ -176,8 +176,8 @@ entityWithJoins
  * A root entity declaration in the 'from' clause, with optional identification variable
  */
 fromRoot
-	: entityName variable?									# RootEntity
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# RootSubquery
+	: entityName variable?							# RootEntity
+	| LEFT_PAREN subquery RIGHT_PAREN variable?		# RootSubquery
 	;
 
 /**

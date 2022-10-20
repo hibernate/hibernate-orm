@@ -89,6 +89,7 @@ import org.hibernate.boot.jaxb.mapping.JaxbSecondaryTable;
 import org.hibernate.boot.jaxb.mapping.JaxbSequenceGenerator;
 import org.hibernate.boot.jaxb.mapping.JaxbSqlResultSetMapping;
 import org.hibernate.boot.jaxb.mapping.JaxbStoredProcedureParameter;
+import org.hibernate.boot.jaxb.mapping.JaxbSynchronizedTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
 import org.hibernate.boot.jaxb.mapping.JaxbUniqueConstraint;
@@ -102,6 +103,7 @@ import org.hibernate.cfg.annotations.reflection.PersistentAttributeFilter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.AvailableHints;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -2201,7 +2203,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 
 			ann.setValue( "resultSetMappings", element.getResultSetMapping().toArray( new String[0] ) );
-			buildQueryHints( element.getHint(), ann );
+			buildQueryHints( element.getHint(), ann, Collections.emptyMap() );
 			namedStoredProcedureQueries.add( AnnotationFactory.create( ann ) );
 		}
 		return namedStoredProcedureQueries;
@@ -2530,14 +2532,26 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private static void buildQueryHints(List<JaxbQueryHint> elements, AnnotationDescriptor ann) {
-		List<QueryHint> queryHints = new ArrayList<>( elements.size() );
-		for ( JaxbQueryHint hint : elements ) {
+	private static void buildQueryHints(
+			List<JaxbQueryHint> elements,
+			AnnotationDescriptor ann,
+			Map<String, String> additionalHints) {
+		List<QueryHint> queryHints = new ArrayList<>( elements.size() + additionalHints.size() );
+		for ( Map.Entry<String, String> entry : additionalHints.entrySet() ) {
 			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
+			hintDescriptor.setValue( "name", entry.getKey() );
+			hintDescriptor.setValue( "value", entry.getValue() );
+			queryHints.add( AnnotationFactory.create( hintDescriptor ) );
+		}
+		for ( JaxbQueryHint hint : elements ) {
 			String value = hint.getName();
 			if ( value == null ) {
 				throw new AnnotationException( "<hint> without name. " + SCHEMA_VALIDATION );
 			}
+			if ( additionalHints.containsKey( value ) ) {
+				continue;
+			}
+			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
 			hintDescriptor.setValue( "name", value );
 			value = hint.getValue();
 			if ( value == null ) {
@@ -2558,7 +2572,15 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor ann = new AnnotationDescriptor( NamedQuery.class );
 			copyAttribute( ann, "name", element.getName(), false );
 			copyAttribute( ann, "query", element.getQuery(), true );
-			buildQueryHints( element.getHint(), ann );
+			Map<String, String> additionalHints = new HashMap<>();
+			addHint( additionalHints, AvailableHints.HINT_CACHEABLE, element.isCacheable() );
+			addHint( additionalHints, AvailableHints.HINT_CACHE_MODE, element.getCacheMode() );
+			addHint( additionalHints, AvailableHints.HINT_CACHE_REGION, element.getCacheRegion() );
+			addHint( additionalHints, AvailableHints.HINT_COMMENT, element.getComment() );
+			addHint( additionalHints, AvailableHints.HINT_FETCH_SIZE, element.getFetchSize() );
+			addHint( additionalHints, AvailableHints.HINT_FLUSH_MODE, element.getFlushMode() );
+			addHint( additionalHints, AvailableHints.HINT_TIMEOUT, element.getTimeout() );
+			buildQueryHints( element.getHint(), ann, additionalHints );
 			copyAttribute( ann, "lock-mode", element.getLockMode(), false );
 			namedQueries.add( AnnotationFactory.create( ann ) );
 		}
@@ -2574,7 +2596,16 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor ann = new AnnotationDescriptor( NamedNativeQuery.class );
 			copyAttribute( ann, "name", element.getName(), false );
 			copyAttribute( ann, "query", element.getQuery(), true );
-			buildQueryHints( element.getHint(), ann );
+			Map<String, String> additionalHints = new HashMap<>();
+			addHint( additionalHints, AvailableHints.HINT_CACHEABLE, element.isCacheable() );
+			addHint( additionalHints, AvailableHints.HINT_CACHE_MODE, element.getCacheMode() );
+			addHint( additionalHints, AvailableHints.HINT_CACHE_REGION, element.getCacheRegion() );
+			addHint( additionalHints, AvailableHints.HINT_COMMENT, element.getComment() );
+			addHint( additionalHints, AvailableHints.HINT_FETCH_SIZE, element.getFetchSize() );
+			addHint( additionalHints, AvailableHints.HINT_FLUSH_MODE, element.getFlushMode() );
+			addHint( additionalHints, AvailableHints.HINT_TIMEOUT, element.getTimeout() );
+			addSynchronizationsHint( additionalHints, element.getSynchronizations() );
+			buildQueryHints( element.getHint(), ann, additionalHints );
 			String clazzName = element.getResultClass();
 			if ( StringHelper.isNotEmpty( clazzName ) ) {
 				Class clazz;
@@ -2592,6 +2623,27 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			namedQueries.add( AnnotationFactory.create( ann ) );
 		}
 		return namedQueries;
+	}
+
+	private static void addHint(Map<String, String> hints, String hint, Object value) {
+		if ( value != null ) {
+			hints.put( hint, value.toString() );
+		}
+	}
+
+	private static void addSynchronizationsHint(
+			Map<String, String> hints,
+			List<JaxbSynchronizedTable> synchronizations) {
+		if ( synchronizations.isEmpty() ) {
+			return;
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append( synchronizations.get( 0 ).getTable() );
+		for ( int i = 1; i < synchronizations.size(); i++ ) {
+			sb.append( ' ' );
+			sb.append( synchronizations.get( i ).getTable() );
+		}
+		hints.put( AvailableHints.HINT_NATIVE_SPACES, sb.toString() );
 	}
 
 	private TableGenerator getTableGenerator(ManagedType root, XMLContext.Default defaults) {

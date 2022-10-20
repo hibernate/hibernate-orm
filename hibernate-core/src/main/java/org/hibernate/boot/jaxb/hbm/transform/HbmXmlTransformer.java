@@ -205,7 +205,6 @@ public class HbmXmlTransformer {
 
 		final JaxbPersistenceUnitMetadata metadata = new JaxbPersistenceUnitMetadata();
 		ormRoot.setPersistenceUnitMetadata( metadata );
-		metadata.setXmlMappingMetadataComplete( new JaxbEmptyType() );
 
 		transfer( hbmXmlMapping::getPackage, ormRoot::setPackage );
 		transfer( hbmXmlMapping::getCatalog, ormRoot::setCatalog );

@@ -369,7 +369,6 @@ public abstract class AbstractEntityPersister
 //	private final String[] subclassColumnClosure;
 //	private final boolean[] subclassColumnLazyClosure;
 	private final String[] subclassColumnAliasClosure;
-	private final boolean[] subclassColumnSelectableClosure;
 //	private final String[] subclassColumnReaderTemplateClosure;
 //	private final String[] subclassFormulaClosure;
 //	private final String[] subclassFormulaTemplateClosure;
@@ -947,7 +946,6 @@ public abstract class AbstractEntityPersister
 		ArrayList<Boolean> definedBySubclass = new ArrayList<>();
 //		ArrayList<int[]> propColumnNumbers = new ArrayList<>();
 //		ArrayList<int[]> propFormulaNumbers = new ArrayList<>();
-		ArrayList<Boolean> columnSelectables = new ArrayList<>();
 		ArrayList<Boolean> propNullables = new ArrayList<>();
 
 		for ( Property prop : bootDescriptor.getSubclassPropertyClosure() ) {
@@ -991,7 +989,10 @@ public abstract class AbstractEntityPersister
 //					formulaTemplates.add( template );
 					forms[i] = template;
 //					formulas.add( selectable.getText( dialect ) );
-					formulaAliases.add( selectable.getAlias( dialect ) );
+					final String formulaAlias = selectable.getAlias( dialect );
+					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
+						formulaAliases.add( formulaAlias );
+					}
 //					formulasLazy.add( lazy );
 				}
 				else {
@@ -1001,9 +1002,11 @@ public abstract class AbstractEntityPersister
 //					formnos[l] = -1;
 //					columns.add( colName );
 					cols[i] = colName;
-					aliases.add( selectable.getAlias( dialect, prop.getValue().getTable() ) );
+					final String columnAlias = selectable.getAlias( dialect, prop.getValue().getTable() );
+					if ( prop.isSelectable() && !aliases.contains( columnAlias ) ) {
+						aliases.add( columnAlias );
+					}
 //					columnsLazy.add( lazy );
-					columnSelectables.add( prop.isSelectable() );
 
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate(
@@ -1027,7 +1030,6 @@ public abstract class AbstractEntityPersister
 //		subclassColumnClosure = ArrayHelper.toStringArray( columns );
 		subclassColumnAliasClosure = ArrayHelper.toStringArray( aliases );
 //		subclassColumnLazyClosure = ArrayHelper.toBooleanArray( columnsLazy );
-		subclassColumnSelectableClosure = ArrayHelper.toBooleanArray( columnSelectables );
 //		subclassColumnReaderTemplateClosure = ArrayHelper.toStringArray( columnReaderTemplates );
 
 //		subclassFormulaClosure = ArrayHelper.toStringArray( formulas );
@@ -1936,10 +1938,6 @@ public abstract class AbstractEntityPersister
 			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
 			final String selectAlias;
 			if ( !columnReference.isColumnExpressionFormula() ) {
-				// Skip over columns that are not selectable like in the fetch generation
-				while ( !subclassColumnSelectableClosure[columnIndex] ) {
-					columnIndex++;
-				}
 				selectAlias = columnAliases[columnIndex++] + suffix;
 			}
 			else {
@@ -2639,6 +2637,7 @@ public abstract class AbstractEntityPersister
 				);
 	}
 
+	// returns the aliases of the selectable columns
 	protected String[] getSubclassColumnAliasClosure() {
 		return subclassColumnAliasClosure;
 	}

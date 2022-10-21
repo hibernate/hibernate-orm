@@ -39,9 +39,9 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'db2' ),
 //		new BuildEnvironment( dbName: 'mssql' ),
 //		new BuildEnvironment( dbName: 'sybase' ),
-		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA', dbLockableResource: 'HANA' ),
+		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA' ),
 		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb', dbLockableResource: 'TIDB',
+		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
 				additionalOptions: '-DdbHost=localhost:4000',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 // Disable EDB for now as the image is not available anymore

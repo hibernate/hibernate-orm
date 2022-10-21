@@ -26,7 +26,8 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true )
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
+		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
 
 	helper.configure {
@@ -164,12 +165,7 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "edb":
-									docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
-		// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
-		// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-		// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
-										docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
-									}
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
@@ -185,7 +181,7 @@ stage('Build') {
 										}
 									}
 									else {
-										lock(label: buildEnv.dbLockableResource, variable: 'LOCKED_RESOURCE') {
+										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
 												cmd += " -DdbHost=${LOCKED_RESOURCE}"
 											}

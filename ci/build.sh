@@ -30,8 +30,8 @@ elif [ "$RDBMS" == "mssql" ]; then
   goal="-Pdb=mssql_ci"
 elif [ "$RDBMS" == "hana" ]; then
   goal="-Pdb=hana_ci"
-elif [ "$RDBMS" == "hana_jenkins" ]; then
-  goal="-Pdb=hana_jenkins"
+elif [ "$RDBMS" == "hana_cloud" ]; then
+  goal="-Pdb=hana_cloud"
 elif [ "$RDBMS" == "sybase" ]; then
   goal="-Pdb=sybase_ci"
 elif [ "$RDBMS" == "tidb" ]; then

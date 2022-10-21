@@ -39,13 +39,12 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'db2' ),
 //		new BuildEnvironment( dbName: 'mssql' ),
 //		new BuildEnvironment( dbName: 'sybase' ),
-		new BuildEnvironment( dbName: 'hana_jenkins', node: 'HANA' ),
+// Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
+// 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
 		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
 				additionalOptions: '-DdbHost=localhost:4000',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
-// Disable EDB for now as the image is not available anymore
-//		new BuildEnvironment( dbName: 'edb' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
 		new BuildEnvironment( testJdkVersion: '18' ),
 		// We want to enable preview features when testing early-access builds of OpenJDK:
@@ -58,6 +57,9 @@ stage('Configure') {
 	if ( env.CHANGE_ID ) {
 		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ) )
+		}
+		if ( pullRequest.labels.contains( 'hana' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
 		}
 	}
 
@@ -211,7 +213,7 @@ stage('Build') {
 										}
 									}
 									else {
-										lock(label: buildEnv.dbLockableResource, variable: 'LOCKED_RESOURCE') {
+										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
 												cmd += " -DdbHost=${LOCKED_RESOURCE}"
 											}

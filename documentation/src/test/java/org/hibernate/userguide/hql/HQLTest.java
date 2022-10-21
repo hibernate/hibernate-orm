@@ -3142,16 +3142,31 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-derived-join-example[]
-			List<Tuple> calls = entityManager.createQuery(
-				"select longest.duration " +
+			List<Tuple> calls1 = entityManager.createQuery(
+					"from Phone p " +
+					"left join (" +
+					"  select c.duration as duration, c.phone.id as cid" +
+					"  from Call c" +
+					"  order by c.duration desc" +
+					"  limit 1" +
+					"  ) as longest on cid = p.id " +
+					"where p.number = :phoneNumber " +
+					"select longest.duration",
+					Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
+
+			//same, but using 'join lateral' instead of 'on'
+			List<Tuple> calls2 = entityManager.createQuery(
 				"from Phone p " +
 				"left join lateral (" +
-				"  select c.duration as duration " +
+				"  select c.duration as duration" +
 				"  from p.calls c" +
 				"  order by c.duration desc" +
-				"  limit 1 " +
-				"  ) longest " +
-				"where p.number = :phoneNumber",
+				"  limit 1" +
+				"  ) as longest " +
+				"where p.number = :phoneNumber " +
+				"select longest.duration",
 				Tuple.class)
 			.setParameter("phoneNumber", "123-456-7890")
 			.getResultList();

@@ -271,7 +271,7 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 hana_cloud : [
-                        'db.dialect' : 'org.hibernate.dialect.HANACloudColumnStoreDialect',
+                        'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
                         'jdbc.user'  : 'HIBERNATE_TEST',
                         'jdbc.pass'  : 'H1bernate_test',

@@ -26,7 +26,7 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true, dbLockableResource: 'cockroachdb', dbLockResourceAsHost: true )
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true )
 	];
 
 	helper.configure {

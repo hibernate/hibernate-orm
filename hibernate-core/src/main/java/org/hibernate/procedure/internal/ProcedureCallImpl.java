@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
@@ -66,6 +67,7 @@ import org.jboss.logging.Logger;
  * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}
  *
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 public class ProcedureCallImpl<R>
 		extends AbstractProducedQuery<R>
@@ -814,13 +816,25 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
-		paramBindings.getBinding( getParameterMetadata().getQueryParameter( name ) ).setBindValue( value );
+		QueryParameterBinding<Object> binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( name ) );
+		if ( value instanceof TypedParameterValue ) {
+			binding.setBindValue( ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
+		}
+		else {
+			binding.setBindValue( value );
+		}
 		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
-		paramBindings.getBinding( getParameterMetadata().getQueryParameter( position ) ).setBindValue( value );
+		QueryParameterBinding<Object> binding = paramBindings.getBinding( getParameterMetadata().getQueryParameter( position ) );
+		if ( value instanceof TypedParameterValue ) {
+			binding.setBindValue( ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
+		}
+		else {
+			binding.setBindValue( value );
+		}
 		return this;
 	}
 

@@ -26,7 +26,7 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-		new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ))
+		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true, dbLockableResource: 'cockroachdb', dbLockResourceAsHost: true )
 	];
 
 	helper.configure {
@@ -185,7 +185,10 @@ stage('Build') {
 										}
 									}
 									else {
-										lock(buildEnv.dbLockableResource) {
+										lock(label: buildEnv.dbLockableResource, variable: 'LOCKED_RESOURCE') {
+											if ( buildEnv.dbLockResourceAsHost ) {
+												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+											}
 											timeout( [time: buildEnv.longRunning ? 240 : 120, unit: 'MINUTES'] ) {
 												sh cmd
 											}
@@ -224,6 +227,7 @@ class BuildEnvironment {
 	String dbName = 'h2'
 	String node
 	String dbLockableResource
+	boolean dbLockResourceAsHost
 	String additionalOptions
 	String notificationRecipients
 	boolean longRunning

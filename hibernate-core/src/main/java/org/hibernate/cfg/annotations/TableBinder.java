@@ -22,7 +22,6 @@ import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
@@ -30,7 +29,6 @@ import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -546,10 +544,8 @@ public class TableBinder {
 		}
 		final String mappedByProperty = columns[0].getMappedBy();
 		if ( isNotEmpty( mappedByProperty ) ) {
-			/*
-			 * Get the columns of the mapped-by property
-			 * copy them and link the copy to the actual value
-			 */
+			// Get the columns of the mapped-by property
+			// copy them and link the copy to the actual value
 			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Value propertyVal = associatedClass.getRecursiveProperty( columns[0].getMappedBy() ).getValue();
@@ -558,8 +554,9 @@ public class TableBinder {
 				Value element = ((Collection) propertyVal).getElement();
 				if ( element == null ) {
 					throw new AnnotationException(
-							"Illegal use of mappedBy on both sides of the relationship: "
+							"Both sides of the bidirectional association '"
 									+ associatedClass.getEntityName() + "." + mappedByProperty
+									+ "' specify 'mappedBy'"
 					);
 				}
 				mappedByColumns = element.getColumns();
@@ -573,10 +570,8 @@ public class TableBinder {
 			}
 		}
 		else if ( columns[0].isImplicit() ) {
-			/*
-			 * if columns are implicit, then create the columns based on the
-			 * referenced entity id columns
-			 */
+			// if columns are implicit, then create the columns based on the
+			// referenced entity id columns
 			List<Column> idColumns = referencedEntity instanceof JoinedSubclass
 					? referencedEntity.getKey().getColumns()
 					: referencedEntity.getIdentifier().getColumns();
@@ -600,7 +595,7 @@ public class TableBinder {
 						referencedPropertyName = collection.getReferencedPropertyName();
 					}
 					else {
-						throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
+						throw new AnnotationException( "The '@JoinColumn' for a secondary table must reference the primary key" );
 					}
 
 				}
@@ -621,9 +616,7 @@ public class TableBinder {
 							"Cannot find synthProp: " + referencedEntity.getEntityName() + "." + referencedPropertyName
 					);
 				}
-				linkJoinColumnWithValueOverridingNameIfImplicit(
-						referencedEntity, synthProp.getValue(), columns, value
-				);
+				linkJoinColumnWithValueOverridingNameIfImplicit( referencedEntity, synthProp.getValue(), columns, value );
 				if ( value instanceof SortableValue ) {
 					( (SortableValue) value ).sortProperties();
 				}
@@ -633,10 +626,10 @@ public class TableBinder {
 					//implicit case, we hope PK and FK columns are in the same order
 					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
 						throw new AnnotationException(
-								"A Foreign key referring " + referencedEntity.getEntityName()
-										+ " from " + associatedClass.getEntityName()
-										+ " has the wrong number of column. should be " + referencedEntity.getIdentifier()
-										.getColumnSpan()
+								"A foreign key that references '" + referencedEntity.getEntityName()
+										+ "' from entity '" + associatedClass.getEntityName()
+										+ "' has " + columns.length + " columns but the primary key has "
+										+ referencedEntity.getIdentifier().getColumnSpan() + " columns"
 						);
 					}
 					linkJoinColumnWithValueOverridingNameIfImplicit(
@@ -667,7 +660,7 @@ public class TableBinder {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
 						final String colName = col.getQuotedName(dialect);
-						for (AnnotatedJoinColumn joinCol : columns) {
+						for ( AnnotatedJoinColumn joinCol : columns ) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
 									referencedEntity.getTable(),

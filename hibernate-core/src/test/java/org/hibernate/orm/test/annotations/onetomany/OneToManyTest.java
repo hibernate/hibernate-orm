@@ -397,7 +397,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 				.build();
 		}
 		catch ( AnnotationException e ) {
-			assertTrue(e.getMessage().contains( "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn" ));
+			assertTrue(e.getMessage().contains( "is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" ));
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

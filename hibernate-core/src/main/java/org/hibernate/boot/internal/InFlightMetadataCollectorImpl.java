@@ -114,8 +114,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 /**
- * The implementation of the in-flight Metadata collector contract.
- *
+ * The implementation of the {@linkplain InFlightMetadataCollector in-flight
+ * metadata collector contract}.
+ * <p>
  * The usage expectation is that this class is used until all Metadata info is
  * collected and then {@link #buildMetadataInstance} is called to generate
  * the complete (and immutable) Metadata object.
@@ -161,7 +162,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
-	private Map<Class, MappedSuperclass> mappedSuperClasses;
+	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
@@ -1845,24 +1846,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			Map<String, Set<FkSecondPass>> isADependencyOf,
 			String startTable,
 			String currentTable) {
-
 		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
-
-		// bottom out
-		if ( dependencies == null || dependencies.size() == 0 ) {
-			return;
-		}
-
-		for ( FkSecondPass sp : dependencies ) {
-			String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
-			if ( dependentTable.compareTo( startTable ) == 0 ) {
-				throw new AnnotationException( "Foreign key circularity dependency involving the following tables: " + startTable + ", " + dependentTable );
-			}
-			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
-			if ( !orderedFkSecondPasses.contains( sp ) ) {
-				orderedFkSecondPasses.add( 0, sp );
+		if ( dependencies != null ) {
+			for ( FkSecondPass sp : dependencies ) {
+				String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
+				if ( dependentTable.compareTo( startTable ) == 0 ) {
+					throw new AnnotationException( "Circular foreign key dependency involving tables '"
+							+ startTable + "' and '" + dependentTable + "'" );
+				}
+				buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
+				if ( !orderedFkSecondPasses.contains( sp ) ) {
+					orderedFkSecondPasses.add( 0, sp );
+				}
 			}
 		}
+		// else bottom out
 	}
 
 	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {
@@ -2177,7 +2175,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				sb.append( columnName ).append( ", " );
 			}
 			sb.setLength( sb.length() - 2 );
-			sb.append( ") on table " ).append( table.getName() ).append( ": database column " );
+			sb.append( ") on table '" ).append( table.getName() ).append( "' since the column " );
 			for ( Column column : unbound ) {
 				sb.append("'").append( column.getName() ).append( "', " );
 			}
@@ -2185,7 +2183,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				sb.append("'").append( column.getName() ).append( "', " );
 			}
 			sb.setLength( sb.length() - 2 );
-			sb.append( " not found. Make sure that you use the correct column name which depends on the naming strategy in use (it may not be the same as the property name in the entity, especially for relational types)" );
+			sb.append( " was not found (specify the correct column name, which depends on the naming strategy, and may not be the same as the entity property name)" );
 			throw new AnnotationException( sb.toString() );
 		}
 	}

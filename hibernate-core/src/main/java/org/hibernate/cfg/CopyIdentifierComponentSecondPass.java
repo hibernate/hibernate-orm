@@ -10,17 +10,16 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -38,18 +37,20 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private static final Logger log = Logger.getLogger( CopyIdentifierComponentSecondPass.class );
 
 	private final String referencedEntityName;
+	private final String propertyName;
 	private final Component component;
 	private final MetadataBuildingContext buildingContext;
 	private final AnnotatedJoinColumn[] joinColumns;
 
 	public CopyIdentifierComponentSecondPass(
 			Component comp,
-			String referencedEntityName,
+			String referencedEntityName, String propertyName,
 			AnnotatedJoinColumn[] joinColumns,
 			MetadataBuildingContext buildingContext) {
 		super( comp, joinColumns );
 		this.component = comp;
 		this.referencedEntityName = referencedEntityName;
+		this.propertyName = propertyName;
 		this.buildingContext = buildingContext;
 		this.joinColumns = joinColumns;
 	}
@@ -68,17 +69,26 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
-		// TODO better error names
 		if ( referencedPersistentClass == null ) {
-			throw new AnnotationException( "Unknown entity name: " + referencedEntityName );
+			// TODO: much better error message if this is something that can really happen!
+			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
 		}
-		if ( ! ( referencedPersistentClass.getIdentifier() instanceof Component ) ) {
-			throw new AssertionFailure(
-					"Unexpected identifier type on the referenced entity when mapping a @MapsId: "
-							+ referencedEntityName
+		KeyValue identifier = referencedPersistentClass.getIdentifier();
+		if ( !(identifier instanceof Component) ) {
+			// The entity with the @MapsId annotation has a composite
+			// id type, but the referenced entity has a basic-typed id.
+			// Therefore, the @MapsId annotation should have specified
+			// a property of the composite id that has the foreign key
+			throw new AnnotationException(
+					"Missing 'value' in '@MapsId' annotation of association '" + propertyName
+							+ "' of entity '" + component.getOwner().getEntityName()
+							+ "' with composite identifier type"
+							+ " ('@MapsId' must specify a property of the '@EmbeddedId' class which has the foreign key of '"
+							+ referencedEntityName + "')"
 			);
 		}
-		Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
+
+		Component referencedComponent = (Component) identifier;
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
@@ -184,22 +194,24 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				String logicalColumnName = null;
 				if ( isExplicitReference ) {
 					logicalColumnName = column.getName();
-					//JPA 2 requires referencedColumnNames to be case insensitive
+					//JPA 2 requires referencedColumnNames to be case-insensitive
 					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
 				}
 				else {
 					joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
 					index.getAndIncrement();
 				}
-				if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
+				if ( joinColumn == null && !joinColumns[0].isNameDeferred() ) {
 					throw new AnnotationException(
-							isExplicitReference ?
-									"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
-									"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
+							"Property '" + propertyName
+									+ "' of entity '" + component.getOwner().getEntityName()
+									+ "' must have a '@JoinColumn' which references the foreign key column '"
+									+ logicalColumnName + "'"
 					);
 				}
-				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
-						.getName();
+				final String columnName = joinColumn == null || joinColumn.isNameDeferred()
+						? "tata_" + column.getName()
+						: joinColumn.getName();
 
 				final Database database = buildingContext.getMetadataCollector().getDatabase();
 				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();

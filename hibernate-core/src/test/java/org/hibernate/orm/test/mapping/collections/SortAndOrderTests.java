@@ -23,7 +23,6 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
@@ -47,7 +46,7 @@ public class SortAndOrderTests {
 			fail( "Expecting to fail" );
 		}
 		catch (AnnotationException expected) {
-			assertThat( expected ).hasMessageStartingWith( "Illegal combination of ordering and sorting annotations" );
+			assertThat( expected ).hasMessageContaining( "both sorted and ordered" );
 		}
 	}
 

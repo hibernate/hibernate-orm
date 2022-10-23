@@ -227,7 +227,8 @@ public class InheritanceState {
 			}
 
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
-				throw new AnnotationException( "No identifier specified for entity: " + clazz.getName() );
+				throw new AnnotationException( "Entity '" + clazz.getName() + "' has no identifier"
+						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)" );
 			}
 			elements.trimToSize();
 			elementsToProcess = new ElementsToProcess( elements, idPropertyCount );
@@ -268,7 +269,8 @@ public class InheritanceState {
 				}
 			}
 		}
-		throw new AnnotationException( "No identifier specified for entity: " + clazz );
+		throw new AnnotationException( "Entity '" + clazz.getName() + "' has no identifier"
+				+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)" );
 	}
 
 	private void getMappedSuperclassesTillNextEntityOrdered() {

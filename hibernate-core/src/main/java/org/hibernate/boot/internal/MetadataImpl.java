@@ -79,7 +79,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final List<Component> composites;
-	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
+	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
@@ -99,7 +99,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			MetadataBuildingOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
-			Map<Class, MappedSuperclass> mappedSuperclassMap,
+			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
 			Map<String, FilterDefinition> filterDefinitionMap,
@@ -398,29 +398,40 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
 		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
 
-		for ( Map.Entry<?,?> entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !(entry.getKey() instanceof String) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
-			if ( ! propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				continue;
-			}
-			final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
-				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+		for ( Map.Entry<String,Object> entry : cfgService.getSettings().entrySet() ) {
+			final String propertyName = entry.getKey();
+			if ( propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
+				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final String listeners = (String) entry.getValue();
+				appendListeners( eventListenerRegistry, classLoaderService, listeners, eventType );
 			}
 		}
 	}
 
-	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+	private <T> void appendListeners(
+			EventListenerRegistry eventListenerRegistry,
+			ClassLoaderService classLoaderService,
+			String listeners,
+			EventType<T> eventType) {
+		final EventListenerGroup<T> eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+		for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( listeners ) ) {
+			@SuppressWarnings("unchecked")
+			T listener = (T) instantiate( listenerImpl, classLoaderService );
+			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
+				throw new HibernateException( "Event listener '" + listenerImpl  + "' must implement '"
+						+ eventType.baseListenerInterface().getName() + "'");
+			}
+			eventListenerGroup.appendListener( listener );
+		}
+	}
+
+	private static Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
 		try {
 			return classLoaderService.classForName( listenerImpl ).newInstance();
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+			throw new HibernateException( "Could not instantiate event listener '" + listenerImpl + "'", e );
 		}
 	}
 
@@ -484,7 +495,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return fetchProfileMap;
 	}
 
-	public Map<Class, MappedSuperclass> getMappedSuperclassMap() {
+	public Map<Class<?>, MappedSuperclass> getMappedSuperclassMap() {
 		return mappedSuperclassMap;
 	}
 

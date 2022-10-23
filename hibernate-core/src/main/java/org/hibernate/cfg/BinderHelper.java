@@ -76,13 +76,14 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
 import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
-
 /**
  * @author Emmanuel Bernard
  */
@@ -749,7 +750,9 @@ public class BinderHelper {
 					buildingContext
 			);
 			if ( gen == null ) {
-				throw new AnnotationException( "Unknown named generator (@GeneratedValue#generatorName): " + generatorName );
+				throw new AnnotationException( "No id generator was declared with the name '" + generatorName
+						+ "' specified by '@GeneratedValue'"
+						+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
 			}
 			//This is quite vague in the spec but a generator could override the generator choice
 			String identifierGeneratorStrategy = gen.getStrategy();
@@ -1000,9 +1003,7 @@ public class BinderHelper {
 	}
 
 	public static String getAnnotationValueStringOrNull(String value) {
-		return isEmptyOrNullAnnotationValue( value )
-				? null
-				: value;
+		return isEmptyOrNullAnnotationValue( value ) ? null : value;
 	}
 
 	public static Any buildAnyValue(
@@ -1159,7 +1160,7 @@ public class BinderHelper {
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		Map<String,String> ret = new HashMap<>();
 		for ( SqlFragmentAlias aliase : aliases ) {
-			if ( StringHelper.isNotEmpty( aliase.table() ) ) {
+			if ( isNotEmpty( aliase.table() ) ) {
 				ret.put( aliase.alias(), aliase.table() );
 			}
 		}

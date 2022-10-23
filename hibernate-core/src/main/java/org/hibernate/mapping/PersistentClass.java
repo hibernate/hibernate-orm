@@ -33,6 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
+import org.hibernate.type.Type;
 
 /**
  * Mapping for an entity.
@@ -704,11 +705,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	public void validate(Mapping mapping) throws MappingException {
 		for ( Property prop : getProperties() ) {
 			if ( !prop.isValid( mapping ) ) {
+				Type type = prop.getType();
+				int actualColumns = prop.getColumnSpan();
+				int requiredColumns = type.getColumnSpan(mapping);
 				throw new MappingException(
-						"property mapping has wrong number of columns: " +
-								StringHelper.qualify( getEntityName(), prop.getName() ) +
-								" type: " +
-								prop.getType().getName()
+						"Property '" + StringHelper.qualify( getEntityName(), prop.getName() )
+								+ "' maps to " + actualColumns + " columns but " + requiredColumns
+								+ " columns are required (type '" + type.getName()
+								+ "' spans " + requiredColumns + " columns)"
 				);
 			}
 		}
@@ -1001,11 +1005,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 				Column col = (Column) columnOrFormula;
 				if ( !distinctColumns.add( col.getName() ) ) {
 					throw new MappingException(
-							"Repeated column in mapping for entity: " +
-									getEntityName() +
-									" column: " +
-									col.getName() +
-									" (should be mapped with insert=\"false\" update=\"false\")"
+							"Column '" + col.getName()
+									+ "' is duplicated in mapping for entity '" + getEntityName()
+									+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
 					);
 				}
 			}
@@ -1014,14 +1016,15 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
 			throws MappingException {
-		for (Property prop : properties) {
-			if ( prop.getValue() instanceof Component ) { //TODO: remove use of instanceof!
-				Component component = (Component) prop.getValue();
+		for ( Property prop : properties ) {
+			Value value = prop.getValue();
+			if ( value instanceof Component ) {
+				Component component = (Component) value;
 				checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
 			}
 			else {
 				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, prop.getValue() );
+					checkColumnDuplication( distinctColumns, value);
 				}
 			}
 		}

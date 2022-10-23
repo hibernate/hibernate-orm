@@ -560,8 +560,7 @@ public final class AnnotationBinder {
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
 		if ( clazzToProcess.isAnnotationPresent( Entity.class )
 				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
-			throw new AnnotationException( "An entity cannot be annotated with both @Entity and @MappedSuperclass: "
-					+ clazzToProcess.getName() );
+			throw new AnnotationException( "Type '"+ clazzToProcess.getName() + "' is annotated both '@Entity' and '@MappedSuperclass'");
 		}
 
 		if ( clazzToProcess.isAnnotationPresent( Inheritance.class )
@@ -995,21 +994,17 @@ public final class AnnotationBinder {
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( hasIdAnnotation(element) ) {
 			inFlightPropertyDataList.add( 0, propertyAnnotatedElement );
-			/*
-			 * The property must be put in hibernate.properties as it's a system wide property. Fixable?
-			 * TODO support true/false/default on the property instead of present / not present
-			 * TODO is @Column mandatory?
-			 * TODO add method support
-			 */
+			// The property must be put in hibernate.properties as it's a system wide property. Fixable?
+			//TODO support true/false/default on the property instead of present / not present
+			//TODO is @Column mandatory?
+			//TODO add method support
 			if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
 				if ( element.isAnnotationPresent( Id.class ) && element.isAnnotationPresent( Column.class ) ) {
 					String columnName = element.getAnnotation( Column.class ).name();
 					for ( XProperty prop : declaringClass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
 						if ( !prop.isAnnotationPresent( MapsId.class ) ) {
-							/*
-							 * The detection of a configured individual JoinColumn differs between Annotation
-							 * and XML configuration processing.
-							 */
+							//The detection of a configured individual JoinColumn differs between Annotation
+							//and XML configuration processing.
 							boolean isRequiredAnnotationPresent = false;
 							JoinColumns groupAnnotation = prop.getAnnotation( JoinColumns.class );
 							if ( (prop.isAnnotationPresent( JoinColumn.class )
@@ -1106,8 +1101,9 @@ public final class AnnotationBinder {
 				}
 				else {
 					throw new AnnotationException(
-							"@Parent cannot be applied outside an embeddable object: "
-									+ getPath( propertyHolder, inferredData )
+							"Property '" + getPath( propertyHolder, inferredData )
+									+ "' is annotated '@Parent' but is not a member of an embeddable class"
+
 					);
 				}
 			}
@@ -1292,19 +1288,20 @@ public final class AnnotationBinder {
 			PropertyBinder propertyBinder) {
 		if (isIdentifierMapper) {
 			throw new AnnotationException(
-					"@IdClass class should not have @Version property"
+					"Class '" + propertyHolder.getEntityName()
+							+ "' is annotated '@IdClass' and may not have a property annotated '@Version'"
 			);
 		}
 		if ( !( propertyHolder.getPersistentClass() instanceof RootClass ) ) {
 			throw new AnnotationException(
-					"Unable to define/override @Version on a subclass: "
-							+ propertyHolder.getEntityName()
+					"Entity '" + propertyHolder.getEntityName()
+							+ "' is a subclass in an entity class hierarchy and may not have a property annotated '@Version'"
 			);
 		}
 		if ( !propertyHolder.isEntity() ) {
 			throw new AnnotationException(
-					"Unable to define @Version on an embedded class: "
-							+ propertyHolder.getEntityName()
+					"Embedded class '" + propertyHolder.getEntityName()
+							+ "' may not have a property annotated '@Version'"
 			);
 		}
 		if ( LOG.isTraceEnabled() ) {
@@ -1387,12 +1384,19 @@ public final class AnnotationBinder {
 		);
 
 		if ( isComponent || compositeUserType != null ) {
-			String referencedEntityName = null;
+			final String referencedEntityName;
+			final String propertyName;
 			if ( isOverridden ) {
+				// careful: not always a @MapsId property, sometimes it's from an @IdClass
 				PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
 						isId, propertyHolder, property.getName(), context
 				);
 				referencedEntityName = mapsIdProperty.getClassOrElementName();
+				propertyName = mapsIdProperty.getPropertyName();
+			}
+			else {
+				referencedEntityName = null;
+				propertyName = null;
 			}
 
 			propertyBinder = bindComponent(
@@ -1406,6 +1410,7 @@ public final class AnnotationBinder {
 					isId,
 					inheritanceStatePerClass,
 					referencedEntityName,
+					propertyName,
 					determineCustomInstantiator( property, returnedClass, context ),
 					compositeUserType,
 					isOverridden ? (AnnotatedJoinColumn[]) columns : null
@@ -1524,9 +1529,9 @@ public final class AnnotationBinder {
 			throw new AnnotationException(
 					String.format(
 							Locale.ROOT,
-							"@Columns not allowed on a @Any property [%s]; @Column or @Formula is used to map the discriminator" +
-									"and only one is allowed",
-							getPath(propertyHolder, inferredData)
+							"Property '%s' is annotated '@Any' and may not have a '@Columns' annotation "
+									+ "(a single '@Column' or '@Formula' must be used to map the discriminator, and '@JoinColumn's must be used to map the foreign key) ",
+							getPath( propertyHolder, inferredData )
 					)
 			);
 		}
@@ -1561,8 +1566,8 @@ public final class AnnotationBinder {
 		if ( property.isAnnotationPresent( Column.class )
 				|| property.isAnnotationPresent( Columns.class ) ) {
 			throw new AnnotationException(
-					"@Column(s) not allowed on a @OneToOne property: "
-							+ getPath(propertyHolder, inferredData)
+					"Property '"+ getPath( propertyHolder, inferredData )
+							+ "' is a '@OneToOne' association and may not use '@Column' to specify column mappings (use '@PrimaryKeyJoinColumn' instead)"
 			);
 		}
 
@@ -1631,8 +1636,8 @@ public final class AnnotationBinder {
 		if ( property.isAnnotationPresent( Column.class )
 				|| property.isAnnotationPresent( Columns.class ) ) {
 			throw new AnnotationException(
-					"@Column(s) not allowed on a @ManyToOne property: "
-							+ getPath(propertyHolder, inferredData)
+					"Property '"+ getPath( propertyHolder, inferredData )
+							+ "' is a '@ManyToOne' association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
 			);
 		}
 
@@ -1830,8 +1835,9 @@ public final class AnnotationBinder {
 			MetadataBuildingContext buildingContext) {
 		if ( isIdentifierMapper ) {
 			throw new AnnotationException(
-					"@IdClass class should not have @Id nor @EmbeddedId properties: "
-							+ getPath( propertyHolder, inferredData )
+					"Property '"+ getPath( propertyHolder, inferredData )
+							+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'"
+
 			);
 		}
 		XClass entityXClass = inferredData.getClassOrElement();
@@ -1931,6 +1937,7 @@ public final class AnnotationBinder {
 			boolean isId, //is an identifier
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			String referencedEntityName, //is a component who is overridden by a @MapsId
+			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			AnnotatedJoinColumn[] columns) {
@@ -1947,6 +1954,7 @@ public final class AnnotationBinder {
 			SecondPass sp = new CopyIdentifierComponentSecondPass(
 					comp,
 					referencedEntityName,
+					propertyName,
 					columns,
 					buildingContext
 			);
@@ -1972,16 +1980,18 @@ public final class AnnotationBinder {
 			comp.setKey( true );
 			if ( propertyHolder.getPersistentClass().getIdentifier() != null ) {
 				throw new AnnotationException(
-						comp.getComponentClassName()
-								+ " must not have @Id properties when used as an @EmbeddedId: "
+						"Embeddable class '" + comp.getComponentClassName()
+								+ "' may not have a property annotated '@Id' since it is used by '"
 								+ getPath( propertyHolder, inferredData )
+								+ "' as an '@EmbeddedId'"
 				);
 			}
 			if ( referencedEntityName == null && comp.getPropertySpan() == 0 ) {
 				throw new AnnotationException(
-						comp.getComponentClassName()
-								+ " has no persistent id property: "
+						"Embeddable class '" + comp.getComponentClassName()
+								+ "' may not be used as an '@EmbeddedId' by '"
 								+ getPath( propertyHolder, inferredData )
+								+ "' because it has no properties"
 				);
 			}
 		}
@@ -2136,9 +2146,10 @@ public final class AnnotationBinder {
 					if ( propertyHolder.isInIdClass() ) {
 						if ( entityPropertyData == null ) {
 							throw new AnnotationException(
-									"Property of @IdClass not found in entity "
-											+ baseInferredData.getPropertyClass().getName() + ": "
-											+ idClassPropertyData.getPropertyName()
+									"Property '" + getPath( propertyHolder, idClassPropertyData )
+											+ "' belongs to an '@IdClass' but has no matching property in entity class '"
+											+ baseInferredData.getPropertyClass().getName()
+											+ "' (every property of the '@IdClass' must have a corresponding persistent property in the '@Entity' class)"
 							);
 						}
 						final boolean hasXToOneAnnotation = hasToOneAnnotation( entityPropertyData.getProperty() );
@@ -2439,8 +2450,8 @@ public final class AnnotationBinder {
 				toOne.setFetchMode( FetchMode.SELECT );
 			}
 			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
-				throw new AnnotationException( "Use of FetchMode.SUBSELECT not allowed for to-one associations: "
-						+ property.getName() );
+				throw new AnnotationException( "Association '" + property.getName()
+						+ "' is annotated '@Fetch(SUBSELECT)' but is not many-valued");
 			}
 			else {
 				throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );

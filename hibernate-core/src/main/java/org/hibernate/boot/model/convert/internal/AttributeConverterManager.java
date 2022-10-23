@@ -30,7 +30,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.classmate.ResolvedType;
-import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 
 /**
  * @implNote It is important that all {@link RegisteredConversion} be registered
@@ -95,22 +96,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		final Class<?> domainType;
 		if ( conversion.getExplicitDomainType().equals( void.class ) ) {
 			// the registration did not define an explicit domain-type, so inspect the converter
-			final ClassmateContext classmateContext = context.getClassmateContext();
-			final ResolvedType converterType = classmateContext.getTypeResolver().resolve( conversion.getConverterType() );
-			final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
-			if ( converterParamTypes == null ) {
-				throw new AnnotationException(
-						"Could not extract type parameter information from AttributeConverter implementation ["
-								+ conversion.getConverterType().getName() + "]"
-				);
-			}
-			else if ( converterParamTypes.size() != 2 ) {
-				throw new AnnotationException(
-						"Unexpected type parameter information for AttributeConverter implementation [" +
-								conversion.getConverterType().getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
-				);
-			}
-
+			final List<ResolvedType> converterParamTypes = resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
 			domainType = converterParamTypes.get( 0 ).getErasedType();
 		}
 		else {
@@ -122,13 +108,13 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		if ( existingRegistration != null ) {
 			if ( !conversion.equals( existingRegistration ) ) {
 				throw new AnnotationException(
-						"Attempt to register non-matching `@ConverterRegistration` descriptors for `AttributeConverter` "
-								+ conversion.getConverterType().getName()
+						"Conflicting '@ConverterRegistration' descriptors for attribute converter '"
+								+ conversion.getConverterType().getName() + "'"
 				);
 			}
 			else {
 				if ( log.isDebugEnabled() ) {
-					log.debugf( "Skipping duplicate `@ConverterRegistration` for `%s`", conversion.getConverterType().getName() );
+					log.debugf( "Skipping duplicate '@ConverterRegistration' for '%s'", conversion.getConverterType().getName() );
 				}
 			}
 		}

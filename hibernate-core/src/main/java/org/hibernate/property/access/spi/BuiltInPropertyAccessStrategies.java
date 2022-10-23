@@ -14,7 +14,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyNoopImpl;
 
 /**
- * Describes the built-in externally-nameable PropertyAccessStrategy implementations.
+ * Describes the built-in externally-nameable {@link PropertyAccessStrategy} implementations.
  *
  * @author Steve Ebersole
  */
@@ -24,8 +24,7 @@ public enum BuiltInPropertyAccessStrategies {
 	MIXED( "mixed", PropertyAccessStrategyMixedImpl.INSTANCE ),
 	MAP( "map", PropertyAccessStrategyMapImpl.INSTANCE ),
 	EMBEDDED( "embedded", PropertyAccessStrategyEmbeddedImpl.INSTANCE ),
-	NOOP( "noop", PropertyAccessStrategyNoopImpl.INSTANCE )
-	;
+	NOOP( "noop", PropertyAccessStrategyNoopImpl.INSTANCE );
 
 	private final String externalName;
 	private final PropertyAccessStrategy strategy;
@@ -44,22 +43,11 @@ public enum BuiltInPropertyAccessStrategies {
 	}
 
 	public static BuiltInPropertyAccessStrategies interpret(String name) {
-		if ( BASIC.externalName.equals( name ) ) {
-			return BASIC;
+		for ( BuiltInPropertyAccessStrategies strategy : values() ) {
+			if ( strategy.externalName.equals( name ) ) {
+				return strategy;
+			}
 		}
-		else if ( FIELD.externalName.equals( name ) ) {
-			return FIELD;
-		}
-		else if ( MAP.externalName.equals( name ) ) {
-			return MAP;
-		}
-		else if ( EMBEDDED.externalName.equals( name ) ) {
-			return EMBEDDED;
-		}
-		else if ( NOOP.externalName.equals( name ) ) {
-			return NOOP;
-		}
-
 		return null;
 	}
 }

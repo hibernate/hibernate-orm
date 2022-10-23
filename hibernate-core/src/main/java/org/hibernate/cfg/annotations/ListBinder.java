@@ -22,7 +22,6 @@ import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.List;
@@ -73,7 +72,7 @@ public class ListBinder extends CollectionBinder {
 			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
 			final boolean isEmbedded,
 			final XProperty property,
-			final XClass collType,
+			final XClass elementType,
 			final NotFoundAction notFoundAction,
 			final boolean unique,
 			final TableBinder assocTableBinder,
@@ -84,7 +83,7 @@ public class ListBinder extends CollectionBinder {
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses,
-						collType,
+						elementType,
 						fkJoinColumns,
 						keyColumns,
 						inverseColumns,
@@ -96,12 +95,12 @@ public class ListBinder extends CollectionBinder {
 						notFoundAction,
 						buildingContext
 				);
-				bindIndex( property, collType, buildingContext );
+				bindIndex( property, elementType, buildingContext );
 			}
 		};
 	}
 
-	private void bindIndex(XProperty property, XClass collType, final MetadataBuildingContext buildingContext) {
+	private void bindIndex(XProperty property, XClass elementType, final MetadataBuildingContext buildingContext) {
 		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 				collection,
 				qualify( collection.getRole(), "key" ),
@@ -120,7 +119,7 @@ public class ListBinder extends CollectionBinder {
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
-		valueBinder.setType( property, collType, null, null );
+		valueBinder.setType( property, elementType, null, null );
 //			valueBinder.setExplicitType( "integer" );
 		SimpleValue indexValue = valueBinder.make();
 		indexColumn.linkWithValue( indexValue );

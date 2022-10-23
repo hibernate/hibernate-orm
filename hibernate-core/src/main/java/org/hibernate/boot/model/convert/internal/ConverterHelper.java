@@ -97,14 +97,15 @@ public class ConverterHelper {
 		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
 		if ( converterParamTypes == null ) {
 			throw new AnnotationException(
-					"Could not extract type parameter information from AttributeConverter implementation ["
-							+ converterClass.getName() + "]"
+					"Could not extract type argument from attribute converter class '"
+							+ converterClass.getName() + "'"
 			);
 		}
 		else if ( converterParamTypes.size() != 2 ) {
 			throw new AnnotationException(
-					"Unexpected type parameter information for AttributeConverter implementation [" +
-							converterClass.getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
+					"Unexpected type argument for attribute converter class '"
+							+ converterClass.getName()
+							+ "' (expected 2 type arguments, but found " + converterParamTypes.size() + ")"
 			);
 		}
 		return converterParamTypes;

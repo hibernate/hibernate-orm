@@ -78,7 +78,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	// incoming "configuration" values
 
 	private String explicitTypeName;
-	private Map<Object,Object> explicitLocalTypeParams;
+	private Map<String,String> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
@@ -117,7 +117,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		this.explicitTypeName = original.explicitTypeName;
 		this.explicitLocalTypeParams = original.explicitLocalTypeParams == null
 				? null
-				: new HashMap(original.explicitLocalTypeParams);
+				: new HashMap<>(original.explicitLocalTypeParams);
 		this.explicitJavaTypeAccess = original.explicitJavaTypeAccess;
 		this.explicitJdbcTypeAccess = original.explicitJdbcTypeAccess;
 		this.explicitMutabilityPlanAccess = original.explicitMutabilityPlanAccess;
@@ -264,11 +264,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			return;
 		}
 
-		throw new IllegalStateException(
-				"BasicValue [" + ownerName + "." + propertyName +
-						"] already had column associated: `" + column.getText() +
-						"` -> `" + incomingColumn.getText() + "`"
-		);
+//		throw new IllegalStateException(
+//				"BasicValue [" + ownerName + "." + propertyName +
+//						"] already had column associated: `" + column.getText() +
+//						"` -> `" + incomingColumn.getText() + "`"
+//		);
 	}
 
 	@Override
@@ -665,8 +665,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						name,
 						typeNamedClass,
 						null,
-						null,
-						typeConfiguration
+						null
 				);
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
@@ -754,7 +753,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return typeConfiguration;
 	}
 
-	public void setExplicitTypeParams(Map<Object,Object> explicitLocalTypeParams) {
+	public void setExplicitTypeParams(Map<String,String> explicitLocalTypeParams) {
 		this.explicitLocalTypeParams = explicitLocalTypeParams;
 	}
 
@@ -772,7 +771,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class );
 				try {
-					//noinspection rawtypes
 					final Class<AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 					setAttributeConverterDescriptor( new ClassBasedConverterDescriptor(
 							converterClass,

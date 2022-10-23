@@ -59,7 +59,7 @@ import org.hibernate.usertype.UserCollectionType;
 import jakarta.persistence.AttributeConverter;
 
 /**
- * An in-flight representation of Metadata while Metadata is being built.
+ * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.
  *
  * @author Steve Ebersole
  *

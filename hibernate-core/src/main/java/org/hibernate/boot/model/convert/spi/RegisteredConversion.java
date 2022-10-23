@@ -94,7 +94,7 @@ public class RegisteredConversion {
 		return explicitDomainType;
 	}
 
-	public Class<?> getConverterType() {
+	public Class<? extends AttributeConverter<?,?>> getConverterType() {
 		return converterType;
 	}
 

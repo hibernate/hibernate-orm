@@ -25,10 +25,8 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -68,7 +66,7 @@ public abstract class QueryBinder {
 		}
 
 		if ( isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
 
 		final String queryName = queryAnn.name();
@@ -111,7 +109,7 @@ public abstract class QueryBinder {
 		}
 
 		if ( isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
 		final String registrationName = queryAnn.name();
@@ -165,7 +163,7 @@ public abstract class QueryBinder {
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
 		if ( isEmptyAnnotationValue( registrationName ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
 		final String resultSetMappingName = queryAnn.resultSetMapping();
@@ -189,16 +187,11 @@ public abstract class QueryBinder {
 				.setComment( getAnnotationValueStringOrNull( queryAnn.comment() ) );
 
 		if ( queryAnn.callable() ) {
-			final NamedProcedureCallDefinition definition = createStoredProcedure(
-					builder, context,
-					() -> illegalCallSyntax(
-							queryAnn,
-							queryAnn.query()
-					)
-			);
+			final NamedProcedureCallDefinition definition =
+					createStoredProcedure( builder, context, () -> illegalCallSyntax( queryAnn ) );
 			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
 			DeprecationLogger.DEPRECATION_LOGGER.warn(
-					"Marking named native queries as callable is no longer supported; use `@jakarta.persistence.NamedStoredProcedureQuery` instead.  Ignoring."
+					"Marking named native queries as callable is no longer supported; use '@jakarta.persistence.NamedStoredProcedureQuery' instead. Ignoring."
 			);
 		}
 		else {
@@ -343,7 +336,7 @@ public abstract class QueryBinder {
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
 		if ( isEmptyAnnotationValue( registrationName ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
 
 
@@ -432,7 +425,7 @@ public abstract class QueryBinder {
 		final String registrationName = annotation.name();
 
 		if ( isEmptyAnnotationValue( registrationName ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+			throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
 		}
 
 		final NamedProcedureCallDefinitionImpl def = new NamedProcedureCallDefinitionImpl( annotation );
@@ -537,15 +530,8 @@ public abstract class QueryBinder {
 		return i;
 	}
 
-	private static AnnotationException illegalCallSyntax(
-			org.hibernate.annotations.NamedNativeQuery queryAnn,
-			String sqlString) {
-		return new AnnotationException(
-				String.format(
-						"Callable named native query [%s] doesn't use the JDBC call syntax: %s",
-						queryAnn.name(),
-						sqlString
-				)
-		);
+	private static AnnotationException illegalCallSyntax(org.hibernate.annotations.NamedNativeQuery queryAnn) {
+		return new AnnotationException( "Callable 'NamedNativeQuery' named '" + queryAnn.name()
+				+ "' does not use the JDBC call syntax" );
 	}
 }

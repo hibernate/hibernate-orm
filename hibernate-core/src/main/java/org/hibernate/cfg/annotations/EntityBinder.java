@@ -260,7 +260,7 @@ public class EntityBinder {
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
 		inheritanceState.postProcess( persistentClass, entityBinder );
 
-		Set<String> idPropertiesIfIdClass = handleIdClass(
+		final Set<String> idPropertiesIfIdClass = handleIdClass(
 				persistentClass,
 				inheritanceState,
 				context,
@@ -360,7 +360,7 @@ public class EntityBinder {
 		final XClass classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
 			final IdClass idClass = classWithIdClass.getAnnotation( IdClass.class );
-			//noinspection unchecked
+			@SuppressWarnings("unchecked")
 			final XClass compositeClass = context.getBootstrapContext().getReflectionManager().toXClass( idClass.value() );
 			final PropertyData inferredData = new PropertyPreloadedData(
 					entityBinder.getPropertyAccessType(), "id", compositeClass
@@ -501,18 +501,14 @@ public class EntityBinder {
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 
-		/*
-		 * Fill simple value and property since and Id is a property
-		 */
-		PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		// Fill simple value and property since and Id is a property
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
 		if ( !(persistentClass instanceof RootClass) ) {
-			throw new AnnotationException(
-					"Unable to define/override @Id(s) on a subclass: "
-							+ propertyHolder.getEntityName()
-			);
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+					+ "' is a subclass in an entity inheritance hierarchy and may not redefine the identifier of the root entity" );
 		}
-		RootClass rootClass = (RootClass) persistentClass;
-		Component id = AnnotationBinder.fillComponent(
+		final RootClass rootClass = (RootClass) persistentClass;
+		final Component id = AnnotationBinder.fillComponent(
 				propertyHolder,
 				inferredData,
 				baseInferredData,
@@ -529,10 +525,13 @@ public class EntityBinder {
 		);
 		id.setKey( true );
 		if ( rootClass.getIdentifier() != null ) {
-			throw new AnnotationException( id.getComponentClassName() + " must not have @Id properties when used as an @EmbeddedId" );
+			throw new AssertionFailure( "Entity '" + persistentClass.getEntityName()
+					+ "' has an '@IdClass' and may not have an identifier property" );
 		}
 		if ( id.getPropertySpan() == 0 ) {
-			throw new AnnotationException( id.getComponentClassName() + " has no persistent id property" );
+			throw new AnnotationException( "Class '" + id.getComponentClassName()
+					+ " is the '@IdClass' for the entity '" + persistentClass.getEntityName()
+					+ "' but has no persistent properties" );
 		}
 
 		rootClass.setIdentifier( id );
@@ -926,19 +925,18 @@ public class EntityBinder {
 			InheritanceState.ElementsToProcess elementsToProcess,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 
-		Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
+		final Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
 				boolean subclassAndSingleTableStrategy =
 						inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 								&& inheritanceState.hasParents();
-				Nullability nullability = subclassAndSingleTableStrategy
-						? Nullability.FORCED_NULL
-						: Nullability.NO_CONSTRAINT;
 				AnnotationBinder.processElementAnnotations(
 						propertyHolder,
-						nullability,
+						subclassAndSingleTableStrategy
+								? Nullability.FORCED_NULL
+								: Nullability.NO_CONSTRAINT,
 						propertyAnnotatedElement,
 						classGenerators,
 						entityBinder,
@@ -955,15 +953,16 @@ public class EntityBinder {
 		}
 
 		if ( missingIdProperties.size() != 0 ) {
-			StringBuilder missings = new StringBuilder();
+			final StringBuilder missings = new StringBuilder();
 			for ( String property : missingIdProperties ) {
-				missings.append( property ).append( ", " );
+				if ( missings.length() > 0 ) {
+					missings.append(", ");
+				}
+				missings.append("'").append( property ).append( "'" );
 			}
-			throw new AnnotationException(
-					"Unable to find properties ("
-							+ missings.substring( 0, missings.length() - 2 )
-							+ ") in entity annotated with @IdClass:" + persistentClass.getEntityName()
-			);
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+					+ "' has an '@IdClass' with properties " + missings
+					+ " which do not match properties of the entity class" );
 		}
 	}
 
@@ -1292,10 +1291,15 @@ public class EntityBinder {
 			String condition = filter.condition();
 			if ( isEmptyAnnotationValue( condition ) ) {
 				final FilterDefinition definition = context.getMetadataCollector().getFilterDefinition( filterName );
-				condition = definition == null ? null : definition.getDefaultFilterCondition();
+				if ( definition == null ) {
+					throw new AnnotationException( "Entity '" + name
+							+ "' has a '@Filter' for an undefined filter named '" + filterName + "'" );
+				}
+				condition = definition.getDefaultFilterCondition();
 				if ( isEmpty( condition ) ) {
-					throw new AnnotationException( "no filter condition found for filter "
-							+ filterName + " in " + this.name );
+					throw new AnnotationException( "Entity '" + name +
+							"' has a '@Filter' with no 'condition' and no default condition was given by the '@FilterDef' named '"
+							+ filterName + "'" );
 				}
 			}
 			persistentClass.addFilter(
@@ -1329,7 +1333,8 @@ public class EntityBinder {
 		if ( persisterAnn != null ) {
 			Class clazz = persisterAnn.impl();
 			if ( !EntityPersister.class.isAssignableFrom(clazz) ) {
-				throw new AnnotationException( "persister class does not implement EntityPersister: " + clazz.getName() );
+				throw new AnnotationException( "Persister class '" + clazz.getName()
+						+ "'  does not implement EntityPersister" );
 			}
 			persistentClass.setEntityPersisterClass( clazz );
 		}
@@ -1365,9 +1370,8 @@ public class EntityBinder {
 				persistentClass.setDiscriminatorValue( name );
 			}
 			else if ( "character".equals( discriminator.getType().getName() ) ) {
-				throw new AnnotationException(
-						"Using default @DiscriminatorValue for a discriminator of type CHAR is not safe"
-				);
+				throw new AnnotationException( "Entity '" + name
+						+ "' has a discriminator of character type and must specify its '@DiscriminatorValue'" );
 			}
 			else if ( "integer".equals( discriminator.getType().getName() ) ) {
 				persistentClass.setDiscriminatorValue( String.valueOf( name.hashCode() ) );
@@ -1527,9 +1531,8 @@ public class EntityBinder {
 			case "non-lazy":
 				return false;
 			default:
-				throw new AnnotationException( "Unknown @Cache.include value [" + effectiveCache.include() + "] : "
-						+ annotatedClass.getName()
-				);
+				throw new AnnotationException( "Class '" + annotatedClass.getName()
+						+ "' has a '@Cache' with undefined option 'include=\"" + effectiveCache.include() + "\"'" );
 		}
 	}
 
@@ -2049,7 +2052,7 @@ public class EntityBinder {
 	public void processComplementaryTableDefinitions(org.hibernate.annotations.Table table) {
 		//comment and index are processed here
 		if ( table == null ) return;
-		String appliedTable = table.appliesTo();
+		final String appliedTable = table.appliesTo();
 		Table hibTable = null;
 		for ( Table pcTable : persistentClass.getTableClosure() ) {
 			if ( pcTable.getQuotedName().equals( appliedTable ) ) {
@@ -2068,9 +2071,9 @@ public class EntityBinder {
 			}
 		}
 		if ( hibTable == null ) {
-			throw new AnnotationException(
-					"@org.hibernate.annotations.Table references an unknown table: " + appliedTable
-			);
+			throw new AnnotationException( "Entity '" + name
+					+ "' has a '@org.hibernate.annotations.Table' annotation which 'appliesTo' an unknown table named '"
+					+ appliedTable + "'" );
 		}
 		if ( !isEmptyAnnotationValue( table.comment() ) ) {
 			hibTable.setComment( table.comment() );

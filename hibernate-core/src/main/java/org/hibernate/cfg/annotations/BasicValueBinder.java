@@ -8,7 +8,6 @@ package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -132,7 +131,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private String explicitBasicTypeName;
 	private Class<? extends UserType<?>> explicitCustomType;
-	private Map explicitLocalTypeParams;
+	private Map<String,String> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
 	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
@@ -302,9 +301,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			throw new AssertionFailure( "`BasicValueBinder#setColumns` should be called before `BasicValueBinder#setType`" );
 		}
 
-		if ( columns.length != 1 ) {
-			throw new AssertionFailure( "Expecting just one column, but found `" + Arrays.toString( columns ) + "`" );
-		}
+//		if ( columns.length != 1 ) {
+//			throw new AssertionFailure( "Expecting just one column, but found `" + Arrays.toString( columns ) + "`" );
+//		}
 
 		final XClass modelTypeXClass = isArray
 				? modelXProperty.getElementClass()
@@ -377,8 +376,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.explicitLocalTypeParams = extractTypeParams( params );
 	}
 
-	@SuppressWarnings("unchecked")
-	private Map extractTypeParams(Parameter[] parameters) {
+	private Map<String,String> extractTypeParams(Parameter[] parameters) {
 		if ( parameters == null || parameters.length == 0 ) {
 			return Collections.emptyMap();
 		}
@@ -387,7 +385,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return Collections.singletonMap( parameters[0].name(), parameters[0].value() );
 		}
 
-		final Map map = new HashMap();
+		final Map<String,String> map = new HashMap<>();
 		for ( Parameter parameter: parameters ) {
 			map.put( parameter.name(), parameter.value() );
 		}
@@ -740,7 +738,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			else {
 				throw new AnnotationException(
 						String.format(
-								"Attribute [%s.%s] was annotated as enumerated, but its java type is not an enum [%s]",
+								"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
 								declaringClassName,
 								attributeDescriptor.getName(),
 								attributeType.getName()

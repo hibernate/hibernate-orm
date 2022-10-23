@@ -10,8 +10,6 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -241,12 +239,12 @@ class PropertyContainer {
 	}
 
 	private static List<XProperty> verifyAndInitializePersistentAttributes(XClass xClass, Map<String, XProperty> localAttributeMap) {
-		ArrayList<XProperty> output = new ArrayList( localAttributeMap.size() );
+		ArrayList<XProperty> output = new ArrayList<>( localAttributeMap.size() );
 		for ( XProperty xProperty : localAttributeMap.values() ) {
-			if ( !xProperty.isTypeResolved() && !discoverTypeWithoutReflection( xProperty ) ) {
-				String msg = "Property " + StringHelper.qualify( xClass.getName(), xProperty.getName() ) +
-						" has an unbound type and no explicit target entity. Resolve this Generic usage issue" +
-						" or set an explicit target attribute (eg @OneToMany(target=) or use an explicit @Type";
+			if ( !xProperty.isTypeResolved() && !discoverTypeWithoutReflection( xClass, xProperty ) ) {
+				String msg = "Property '" + StringHelper.qualify( xClass.getName(), xProperty.getName() ) +
+						"' has an unbound type and no explicit target entity (resolve this generics usage issue" +
+						" or set an explicit target attribute with '@OneToMany(target=)' or use an explicit '@Type')";
 				throw new AnnotationException( msg );
 			}
 			output.add( xProperty );
@@ -340,46 +338,47 @@ class PropertyContainer {
 		return classDefinedAccessType;
 	}
 
-	private static boolean discoverTypeWithoutReflection(XProperty p) {
-		if ( p.isAnnotationPresent( OneToOne.class ) && !p.getAnnotation( OneToOne.class )
+	private static boolean discoverTypeWithoutReflection(XClass clazz, XProperty property) {
+		if ( property.isAnnotationPresent( OneToOne.class ) && !property.getAnnotation( OneToOne.class )
 				.targetEntity()
 				.equals( void.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( OneToMany.class ) && !p.getAnnotation( OneToMany.class )
+		else if ( property.isAnnotationPresent( OneToMany.class ) && !property.getAnnotation( OneToMany.class )
 				.targetEntity()
 				.equals( void.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( ManyToOne.class ) && !p.getAnnotation( ManyToOne.class )
+		else if ( property.isAnnotationPresent( ManyToOne.class ) && !property.getAnnotation( ManyToOne.class )
 				.targetEntity()
 				.equals( void.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( ManyToMany.class ) && !p.getAnnotation( ManyToMany.class )
+		else if ( property.isAnnotationPresent( ManyToMany.class ) && !property.getAnnotation( ManyToMany.class )
 				.targetEntity()
 				.equals( void.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
+		else if ( property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( ManyToAny.class ) ) {
-			if ( !p.isCollection() && !p.isArray() ) {
-				throw new AnnotationException( "@ManyToAny used on a non collection non array property: " + p.getName() );
+		else if ( property.isAnnotationPresent( ManyToAny.class ) ) {
+			if ( !property.isCollection() && !property.isArray() ) {
+				throw new AnnotationException( "Property '" + StringHelper.qualify( clazz.getName(), property.getName() )
+						+ "' annotated '@ManyToAny' is neither a collection nor an array" );
 			}
 			return true;
 		}
-		else if ( p.isAnnotationPresent( Basic.class ) ) {
+		else if ( property.isAnnotationPresent( Basic.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( Type.class ) ) {
+		else if ( property.isAnnotationPresent( Type.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( JavaType.class ) ) {
+		else if ( property.isAnnotationPresent( JavaType.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( Target.class ) ) {
+		else if ( property.isAnnotationPresent( Target.class ) ) {
 			return true;
 		}
 		return false;

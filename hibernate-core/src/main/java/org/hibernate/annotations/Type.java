@@ -15,9 +15,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Applies a custom {@link UserType} for the column mapping
- *
- * Generally, mutually exclusive with the compositional approach of
+ * Specifies a custom {@link UserType} for the annotated attribute mapping.
+ * <p>
+ * This is usually mutually exclusive with the compositional approach of
  * {@link JavaType}, {@link JdbcType}, etc.
  */
 @java.lang.annotation.Target({METHOD, FIELD})
@@ -25,16 +25,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Type {
 
 	/**
-	 * The custom type implementor class
+	 * The implementation class which implements {@link UserType}.
 	 */
 	Class<? extends UserType<?>> value();
 
 	/**
-	 * Parameters to be injected into the custom type after
-	 * it is instantiated.
-	 *
-	 * The type should implement {@link org.hibernate.usertype.ParameterizedType}
-	 * to receive the parameters
+	 * Parameters to be injected into the custom type after it is
+	 * instantiated. The {@link UserType} implementation must implement
+	 * {@link org.hibernate.usertype.ParameterizedType} to receive the
+	 * parameters.
 	 */
 	Parameter[] parameters() default {};
 }

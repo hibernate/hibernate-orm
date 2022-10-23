@@ -44,9 +44,8 @@ public class PkDrivenByDefaultMapsIdSecondPass extends FkSecondPass {
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		PersistentClass referencedEntity = persistentClasses.get( referencedEntityName );
 		if ( referencedEntity == null ) {
-			throw new AnnotationException(
-					"Unknown entity name: " + referencedEntityName
-			);
+			// TODO: much better error message if this is something that can really happen!
+			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'" );
 		}
 		TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit(
 				referencedEntity,

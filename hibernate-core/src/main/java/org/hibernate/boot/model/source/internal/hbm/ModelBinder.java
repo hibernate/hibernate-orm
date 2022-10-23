@@ -9,7 +9,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -2384,7 +2383,7 @@ public class ModelBinder {
 
 	private BasicType<?> resolveExplicitlyNamedAnyDiscriminatorType(
 			String typeName,
-			Properties parameters,
+			Map<String,String> parameters,
 			Any.MetaValue discriminatorMapping) {
 		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
 
@@ -2432,7 +2431,9 @@ public class ModelBinder {
 
 			if ( typeInstance instanceof ParameterizedType ) {
 				if ( parameters != null ) {
-					( (ParameterizedType) typeInstance ).setParameterValues( parameters );
+					Properties properties = new Properties();
+					properties.putAll( parameters );
+					( (ParameterizedType) typeInstance ).setParameterValues( properties );
 				}
 			}
 
@@ -2808,9 +2809,9 @@ public class ModelBinder {
 
 	private static class TypeResolution {
 		private final String typeName;
-		private final Properties parameters;
+		private final Map<String,String> parameters;
 
-		public TypeResolution(String typeName, Properties parameters) {
+		public TypeResolution(String typeName, Map<String,String> parameters) {
 			this.typeName = typeName;
 			this.parameters = parameters;
 		}
@@ -2824,7 +2825,7 @@ public class ModelBinder {
 		}
 
 		String typeName = typeSource.getName();
-		Properties typeParameters = new Properties();
+		Map<String,String> typeParameters = new HashMap<>();
 
 		final TypeDefinition typeDefinition = sourceDocument.getMetadataCollector().getTypeDefinition( typeName );
 		if ( typeDefinition != null ) {
@@ -4246,12 +4247,11 @@ public class ModelBinder {
 
 	private String columns(Value value) {
 		final StringBuilder builder = new StringBuilder();
-		final Iterator<Selectable> selectableItr = value.getColumnIterator();
-		while ( selectableItr.hasNext() ) {
-			builder.append( selectableItr.next().getText() );
-			if ( selectableItr.hasNext() ) {
+		for ( Selectable selectable : value.getSelectables() ) {
+			if ( builder.length()>0) {
 				builder.append( ", " );
 			}
+			builder.append( selectable.getText() );
 		}
 		return builder.toString();
 	}

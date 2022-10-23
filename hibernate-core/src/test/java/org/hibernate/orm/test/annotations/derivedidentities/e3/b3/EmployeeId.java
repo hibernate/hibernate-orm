@@ -6,8 +6,8 @@ import java.io.Serializable;
 
 @Embeddable
 public class EmployeeId implements Serializable {
-	@Column(length = 32)
+	@Column(name="firstname", length = 32)
 	String firstName;
-	@Column(length = 32)
+	@Column(name="lastname", length = 32)
 	String lastName;
 }

@@ -57,24 +57,22 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * @author Steve Ebersole
  * @author John Verhaeg
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class TypeDefinition implements Serializable {
 	public static final AtomicInteger NAME_COUNTER = new AtomicInteger();
 
 	private final String name;
-	private final Class typeImplementorClass;
+	private final Class<?> typeImplementorClass;
 	private final String[] registrationKeys;
-	private final Properties parameters;
+	private final Map<String,String> parameters;
 
 	private BasicValue.Resolution<?> reusableResolution;
 
 
 	public TypeDefinition(
 			String name,
-			Class typeImplementorClass,
+			Class<?> typeImplementorClass,
 			String[] registrationKeys,
-			Properties parameters,
-			TypeConfiguration typeConfiguration) {
+			Map<String,String> parameters) {
 		this.name = name;
 		this.typeImplementorClass = typeImplementorClass;
 		this.registrationKeys= registrationKeys;
@@ -85,7 +83,7 @@ public class TypeDefinition implements Serializable {
 		return name;
 	}
 
-	public Class getTypeImplementorClass() {
+	public Class<?> getTypeImplementorClass() {
 		return typeImplementorClass;
 	}
 
@@ -93,13 +91,13 @@ public class TypeDefinition implements Serializable {
 		return registrationKeys;
 	}
 
-	public Properties getParameters() {
+	public Map<String,String> getParameters() {
 		return parameters;
 	}
 
 	public BasicValue.Resolution<?> resolve(
-			Map localConfigParameters,
-			MutabilityPlan explicitMutabilityPlan,
+			Map<?,?> localConfigParameters,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
@@ -107,7 +105,6 @@ public class TypeDefinition implements Serializable {
 			if ( reusableResolution == null ) {
 				reusableResolution = createResolution( name, Collections.emptyMap(), indicators, context );
 			}
-
 			return reusableResolution;
 		}
 		else {
@@ -134,7 +131,7 @@ public class TypeDefinition implements Serializable {
 	private static BasicValue.Resolution<?> createResolution(
 			String name,
 			Class<?> typeImplementorClass,
-			Properties parameters,
+			Map<?,?> parameters,
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
@@ -153,34 +150,32 @@ public class TypeDefinition implements Serializable {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
 			}
 
-			final Properties combinedTypeParameters;
-
-			if ( CollectionHelper.isNotEmpty( usageSiteProperties ) ) {
-				combinedTypeParameters = new Properties( parameters );
-				combinedTypeParameters.putAll( usageSiteProperties );
+			final Properties combinedTypeParameters = new Properties();
+			if ( parameters!=null ) {
+				combinedTypeParameters.putAll( parameters );
 			}
-			else {
-				combinedTypeParameters = parameters;
+			if ( usageSiteProperties!=null ) {
+				combinedTypeParameters.putAll( usageSiteProperties );
 			}
 
 			injectParameters( typeInstance, combinedTypeParameters );
 
 			if ( typeInstance instanceof UserType ) {
-				final UserType<Object> userType = (UserType<Object>) typeInstance;
-				final CustomType<Object> customType = new CustomType<>( userType, typeConfiguration );
+				final UserType<?> userType = (UserType<?>) typeInstance;
+				final CustomType<?> customType = new CustomType<>( userType, typeConfiguration );
 
 				return new UserTypeResolution( customType, null, combinedTypeParameters );
 			}
 
 			if ( typeInstance instanceof BasicType ) {
-				final BasicType resolvedBasicType = (BasicType) typeInstance;
-				return new BasicValue.Resolution<Object>() {
+				final BasicType<?> resolvedBasicType = (BasicType<?>) typeInstance;
+				return new BasicValue.Resolution<>() {
 					@Override
 					public JdbcMapping getJdbcMapping() {
 						return resolvedBasicType;
 					}
 
-					@Override
+					@Override @SuppressWarnings({"rawtypes", "unchecked"})
 					public BasicType getLegacyResolvedBasicType() {
 						return resolvedBasicType;
 					}
@@ -190,8 +185,8 @@ public class TypeDefinition implements Serializable {
 						return combinedTypeParameters;
 					}
 
-					@Override
-					public JavaType<Object> getDomainJavaType() {
+					@Override @SuppressWarnings({"rawtypes", "unchecked"})
+					public JavaType getDomainJavaType() {
 						return resolvedBasicType.getMappedJavaType();
 					}
 
@@ -210,8 +205,8 @@ public class TypeDefinition implements Serializable {
 						return resolvedBasicType.getValueConverter();
 					}
 
-					@Override
-					public MutabilityPlan<Object> getMutabilityPlan() {
+					@Override @SuppressWarnings({"rawtypes", "unchecked"})
+					public MutabilityPlan getMutabilityPlan() {
 						// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
 						return resolvedBasicType.isMutable()
 								? getDomainJavaType().getMutabilityPlan()
@@ -229,22 +224,23 @@ public class TypeDefinition implements Serializable {
 					.resolveDescriptor( typeImplementorClass );
 			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
 			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+			@SuppressWarnings({"rawtypes", "unchecked"})
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
 
-			return new BasicValue.Resolution<Object>() {
+			return new BasicValue.Resolution<>() {
 				@Override
 				public JdbcMapping getJdbcMapping() {
 					return resolved;
 				}
 
-				@Override
+				@Override  @SuppressWarnings({"rawtypes", "unchecked"})
 				public BasicType getLegacyResolvedBasicType() {
 					return legacyType;
 				}
 
-				@Override
-				public JavaType<Object> getDomainJavaType() {
-					return (JavaType) resolved.getMappedJavaType();
+				@Override @SuppressWarnings({"rawtypes", "unchecked"})
+				public JavaType getDomainJavaType() {
+					return resolved.getMappedJavaType();
 				}
 
 				@Override
@@ -262,8 +258,8 @@ public class TypeDefinition implements Serializable {
 					return resolved.getValueConverter();
 				}
 
-				@Override
-				public MutabilityPlan<Object> getMutabilityPlan() {
+				@Override @SuppressWarnings({"rawtypes", "unchecked"})
+				public MutabilityPlan getMutabilityPlan() {
 					// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
 					return resolved.isMutable()
 							? getDomainJavaType().getMutabilityPlan()
@@ -281,47 +277,31 @@ public class TypeDefinition implements Serializable {
 			String name, Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
 		if ( Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) ) {
-			if ( name != null ) {
-				return instanceProducer.produceBeanInstance( name, typeImplementorClass );
-			}
-			else {
-				return instanceProducer.produceBeanInstance( typeImplementorClass );
-			}
+			return name != null
+					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
+					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			final ManagedBean typeBean;
-			if ( name != null ) {
-				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
-						.getBean( name, typeImplementorClass, instanceProducer );
-			}
-			else {
-				typeBean = serviceRegistry.getService( ManagedBeanRegistry.class )
-						.getBean( typeImplementorClass, instanceProducer );
-			}
-
+			ManagedBeanRegistry beanRegistry = serviceRegistry.getService(ManagedBeanRegistry.class);
+			final ManagedBean<?> typeBean = name != null
+					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
+					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
 			return typeBean.getBeanInstance();
 		}
 	}
 
 	public static BasicValue.Resolution<?> createLocalResolution(
 			String name,
-			Class typeImplementorClass,
-			MutabilityPlan explicitMutabilityPlan,
-			Map localTypeParams,
+			Class<?> typeImplementorClass,
+			MutabilityPlan<?> explicitMutabilityPlan,
+			Map<?,?> localTypeParams,
 			MetadataBuildingContext buildingContext) {
-		name = name + ':' + NAME_COUNTER.getAndIncrement();
-
-		final Properties properties = new Properties();
-		properties.putAll( localTypeParams );
-
-		final TypeConfiguration typeConfiguration = buildingContext.getBootstrapContext().getTypeConfiguration();
-
 		return createResolution(
-				name,
+				name + ':' + NAME_COUNTER.getAndIncrement(),
 				typeImplementorClass,
-				properties,
+				localTypeParams,
 				null,
-				typeConfiguration.getCurrentBaseSqlTypeIndicators(),
+				buildingContext.getBootstrapContext().getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);
 	}

@@ -93,12 +93,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			ManyToOne manyToOne = (ManyToOne) value;
 			PersistentClass ref = persistentClasses.get( manyToOne.getReferencedEntityName() );
 			if ( ref == null ) {
-				throw new AnnotationException(
-						"@OneToOne or @ManyToOne on "
-								+ StringHelper.qualify( entityClassName, path )
-								+ " references an unknown entity: "
-								+ manyToOne.getReferencedEntityName()
-				);
+				throw new AnnotationException( "Association '" + StringHelper.qualify( entityClassName, path )
+						+ "' targets an unknown entity named '" + manyToOne.getReferencedEntityName() + "'" );
 			}
 			manyToOne.setPropertyName( path );
 			createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );

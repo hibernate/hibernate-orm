@@ -63,8 +63,8 @@ public class UserWithUnimplementedCollectionTest extends BaseCoreFunctionalTestC
 		}
 		catch (Exception e) {
 			assertThat( e ).isInstanceOf( AnnotationException.class );
-			assertThat( e ).hasMessageStartingWith( "Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @CollectionOfElements:" );
-			assertThat( e ).hasMessageEndingWith( ".emailAddresses" );
+			assertThat( e ).hasMessageEndingWith( "is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'" );
+			assertThat( e ).hasMessageContaining( ".emailAddresses" );
 		}
 	}
 

@@ -9,10 +9,8 @@ public class Dependent {
 	@EmbeddedId
 	DependentId id;
 
-	@JoinColumns({
-			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
-	})
+	@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME")
+	@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
 	@MapsId("empPK")
 	@ManyToOne
 	Employee emp;

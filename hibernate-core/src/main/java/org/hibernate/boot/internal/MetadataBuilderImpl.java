@@ -449,7 +449,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							throw new AnnotationException(
 									String.format(
 											Locale.ROOT,
-											"`%s` should specify either `%s` or `%s` - %s",
+											"'%s' should specify either '%s' or '%s' (was '%s')",
 											AvailableSettings.DEFAULT_LIST_SEMANTICS,
 											java.util.List.class.getName(),
 											java.util.Collection.class.getName(),

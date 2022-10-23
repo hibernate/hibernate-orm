@@ -7,15 +7,14 @@
 package org.hibernate.usertype;
 
 import java.lang.annotation.Annotation;
+import java.util.Properties;
 
 /**
- * Types who implements this interface will have in the setParameterValues an
- * instance of the class DynamicParameterizedType$ParameterType instead of
- * the key PARAMETER_TYPE = "org.hibernate.type.ParameterType"
- * 
- * The interface ParameterType provides some methods to read information
- * dynamically for build the type
- * 
+ * Types which implement this interface will have
+ * {@link ParameterizedType#setParameterValues(Properties)} called with an
+ * instance of the class {@link DynamicParameterizedType.ParameterType}
+ * instead of the key {@value PARAMETER_TYPE}.
+ *
  * @author Janario Oliveira
  */
 public interface DynamicParameterizedType extends ParameterizedType {

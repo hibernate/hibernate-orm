@@ -38,6 +38,7 @@ import org.hibernate.mapping.Table;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -297,8 +298,9 @@ public class AnnotatedColumn {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
 				if ( numberOfJdbcParams != 1 ) {
 					throw new AnnotationException(
-							"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
-							+ propertyName + "] and column [" + logicalColumnName + "]"
+							"Write expression in '@ColumnTransformer' for property '" + propertyName
+							+ "' and column '" + logicalColumnName + "'"
+							+ " must contain exactly one placeholder character ('?')"
 					);
 				}
 			}
@@ -512,8 +514,8 @@ public class AnnotatedColumn {
 
 		if ( join == null ) {
 			throw new AnnotationException(
-					"Cannot find the expected secondary table: no "
-							+ explicitTableName + " available for " + propertyHolder.getClassName()
+					"Secondary table '" + explicitTableName + "' for property '" + propertyHolder.getClassName()
+					+ "' is not declared (use '@SecondaryTable' to declare the secondary table)"
 			);
 		}
 
@@ -710,7 +712,12 @@ public class AnnotatedColumn {
 		if ( overriddenCols != null ) {
 			//check for overridden first
 			if ( columnAnns != null && overriddenCols.length != columnAnns.length ) {
-				throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
+				//TODO: unfortunately, we never actually see this nice error message, since
+				//      PersistentClass.validate() gets called first and produces a worse message
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' specifies " + columnAnns.length
+						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
+						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
 			LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
 			return overriddenCols.length == 0 ? null : overriddenCols;
@@ -959,24 +966,24 @@ public class AnnotatedColumn {
 		if ( nbrOfColumns > 1 ) {
 			for (int currentIndex = 1; currentIndex < nbrOfColumns; currentIndex++) {
 				if ( !columns[currentIndex].isFormula() && !columns[currentIndex - 1].isFormula() ) {
-					if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
-						throw new AnnotationException(
-								"Mixing insertable and non insertable columns in a property is not allowed: " + propertyName
-						);
-					}
 					if ( columns[currentIndex].isNullable() != columns[currentIndex - 1].isNullable() ) {
 						throw new AnnotationException(
-								"Mixing nullable and non nullable columns in a property is not allowed: " + propertyName
+								"Column mappings for property '" + propertyName + "' mix nullable with 'not null'"
+						);
+					}
+					if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
+						throw new AnnotationException(
+								"Column mappings for property '" + propertyName + "' mix insertable with 'insertable=false'"
 						);
 					}
 					if ( columns[currentIndex].isUpdatable() != columns[currentIndex - 1].isUpdatable() ) {
 						throw new AnnotationException(
-								"Mixing updatable and non updatable columns in a property is not allowed: " + propertyName
+								"Column mappings for property '" + propertyName + "' mix updatable with 'updatable=false'"
 						);
 					}
 					if ( !columns[currentIndex].getTable().equals( columns[currentIndex - 1].getTable() ) ) {
 						throw new AnnotationException(
-								"Mixing different tables in a property is not allowed: " + propertyName
+								"Column mappings for property '" + propertyName + "' mix distinct secondary tables"
 						);
 					}
 				}

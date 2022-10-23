@@ -24,13 +24,11 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -166,10 +164,9 @@ public class PropertyBinder {
 
 	private void validateBind() {
 		if ( property.isAnnotationPresent( Immutable.class ) ) {
-			throw new AnnotationException(
-					"@Immutable on property not allowed. " +
-							"Only allowed on entity level or on a collection."
-			);
+			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+					+ "' may not be '@Immutable'"
+					+ " ('@Immutable' may only be applied to entities and collections)" );
 		}
 		if ( !declaringClassSet ) {
 			throw new AssertionFailure( "declaringClass has not been set before a bind" );
@@ -292,12 +289,14 @@ public class PropertyBinder {
 	}
 
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
-		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation = property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation =
+				property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( propertyAnnotation != null ) {
 			return propertyAnnotation.value();
 		}
 
-		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation =
+				embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( classAnnotation != null ) {
 			return classAnnotation.value();
 		}
@@ -341,7 +340,9 @@ public class PropertyBinder {
 		NaturalId naturalId = property.getAnnotation(NaturalId.class);
 		if ( naturalId != null ) {
 			if ( !entityBinder.isRootEntity() ) {
-				throw new AnnotationException( "@NaturalId only valid on root entity (or its @MappedSuperclasses)" );
+				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+						+ "' belongs to an entity subclass and may not be annotated '@NaturalId'" +
+						" (only a property of a root '@Entity' or a '@MappedSuperclass' may be a '@NaturalId')" );
 			}
 			if ( !naturalId.mutable() ) {
 				updatable = false;
@@ -368,22 +369,16 @@ public class PropertyBinder {
 	private void validateOptimisticLock(OptimisticLock lockAnn) {
 		if ( lockAnn.excluded() ) {
 			if ( property.isAnnotationPresent(Version.class) ) {
-				throw new AnnotationException(
-						"@OptimisticLock(excluded=true) incompatible with @Version: "
-								+ qualify( holder.getPath(), name )
-				);
+				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Version'" );
 			}
 			if ( property.isAnnotationPresent(Id.class) ) {
-				throw new AnnotationException(
-						"@OptimisticLock(excluded=true) incompatible with @Id: "
-								+ qualify( holder.getPath(), name )
-				);
+				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Id'" );
 			}
 			if ( property.isAnnotationPresent(EmbeddedId.class) ) {
-				throw new AnnotationException(
-						"@OptimisticLock(excluded=true) incompatible with @EmbeddedId: "
-								+ qualify( holder.getPath(), name )
-				);
+				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}
 		}
 	}
@@ -409,25 +404,18 @@ public class PropertyBinder {
 	 */
 	private ValueGeneration getValueGenerationFromAnnotations(XProperty property) {
 		AnnotationValueGeneration<?> valueGeneration = null;
-
 		for ( Annotation annotation : property.getAnnotations() ) {
 			AnnotationValueGeneration<?> candidate = getValueGenerationFromAnnotation( property, annotation );
-
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
-					throw new AnnotationException(
-							"Only one generator annotation is allowed: " + qualify(
-									holder.getPath(),
-									name
-							)
-					);
+					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+							+ "' has multiple 'ValueGenerationType' annotations" );
 				}
 				else {
 					valueGeneration = candidate;
 				}
 			}
 		}
-
 		return valueGeneration;
 	}
 
@@ -439,7 +427,6 @@ public class PropertyBinder {
 			XProperty property,
 			A annotation) {
 		final ValueGenerationType generatorAnnotation = annotation.annotationType().getAnnotation( ValueGenerationType.class );
-
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
@@ -451,9 +438,9 @@ public class PropertyBinder {
 				&& property.isAnnotationPresent(Version.class)
 				&& valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
 
-			throw new AnnotationException(
-					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "
-							+ qualify( holder.getPath(), name )
+			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+					+ "' is annotated '@Generated(INSERT)' and '@Version' (use '@Generated(ALWAYS)' instead)"
+
 			);
 		}
 

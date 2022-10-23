@@ -18,7 +18,6 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.PropertyBinder;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
@@ -31,6 +30,7 @@ import org.hibernate.mapping.SortableValue;
 import org.hibernate.type.ForeignKeyDirection;
 
 import static org.hibernate.cfg.BinderHelper.findPropertyByName;
+import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -125,12 +125,10 @@ public class OneToOneSecondPass implements SecondPass {
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional );
 		if ( isEmptyAnnotationValue( mappedBy ) ) {
-			/*
-			 * we need to check if the columns are in the right order
-			 * if not, then we need to create a many to one and formula
-			 * but actually, since entities linked by a one to one need
-			 * to share the same composite id class, this cannot happen in hibernate
-			 */
+			// we need to check if the columns are in the right order
+			// if not, then we need to create a many to one and formula
+			// but actually, since entities linked by a one to one need
+			// to share the same composite id class, this cannot happen in hibernate
 			boolean rightOrder = true;
 
 			if ( rightOrder ) {
@@ -154,26 +152,21 @@ public class OneToOneSecondPass implements SecondPass {
 		else {
 			value.setMappedByProperty( mappedBy );
 			PersistentClass otherSide = persistentClasses.get( value.getReferencedEntityName() );
+			if ( otherSide == null ) {
+				throw new MappingException( "Association '" + getPath( propertyHolder, inferredData )
+						+ "' targets unknown entity type '" + value.getReferencedEntityName() + "'" );
+			}
 			Property otherSideProperty;
 			try {
-				if ( otherSide == null ) {
-					throw new MappingException( "Unable to find entity: " + value.getReferencedEntityName() );
-				}
 				otherSideProperty = findPropertyByName( otherSide, mappedBy );
 			}
 			catch (MappingException e) {
-				throw new AnnotationException(
-						"Unknown mappedBy in: " + qualify( ownerEntity, ownerProperty )
-								+ ", referenced property unknown: "
-								+ qualify( value.getReferencedEntityName(), mappedBy )
-				);
+				otherSideProperty = null;
 			}
 			if ( otherSideProperty == null ) {
-				throw new AnnotationException(
-						"Unknown mappedBy in: " + qualify( ownerEntity, ownerProperty )
-								+ ", referenced property unknown: "
-								+ qualify( value.getReferencedEntityName(), mappedBy )
-				);
+				throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
+						+ "' is 'mappedBy' a property named '" + mappedBy
+						+ "' which does not exist in the target entity type '" + value.getReferencedEntityName() + "'" );
 			}
 			if ( otherSideProperty.getValue() instanceof OneToOne ) {
 				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
@@ -228,7 +221,9 @@ public class OneToOneSecondPass implements SecondPass {
 				// HHH-6813
 				// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
 				// Bar: @Id @OneToOne Foo foo
-				boolean referenceToPrimaryKey  = ( mappedBy == null ) || otherSide.getIdentifier() instanceof Component && ! ( (Component) otherSide.getIdentifier() ).hasProperty( mappedBy ) ;
+				boolean referenceToPrimaryKey  = mappedBy == null
+						|| otherSide.getIdentifier() instanceof Component
+							&& ! ( (Component) otherSide.getIdentifier() ).hasProperty( mappedBy );
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
 				String propertyRef = value.getReferencedPropertyName();
@@ -240,14 +235,10 @@ public class OneToOneSecondPass implements SecondPass {
 				}
 			}
 			else {
-				throw new AnnotationException(
-						"Referenced property not a (One|Many)ToOne: "
-								+ qualify(
-								otherSide.getEntityName(), mappedBy
-						)
-								+ " in mappedBy of "
-								+ qualify( ownerEntity, ownerProperty )
-				);
+				throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
+						+ "' is 'mappedBy' a property named '" + mappedBy
+						+ "' of the target entity type '" + value.getReferencedEntityName()
+						+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 			}
 		}
 		value.sortProperties();

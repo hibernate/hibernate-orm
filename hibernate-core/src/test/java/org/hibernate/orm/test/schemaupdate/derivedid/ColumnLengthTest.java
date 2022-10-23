@@ -16,7 +16,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
@@ -122,10 +121,8 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 		@EmbeddedId
 		DependentId id;
 		@MapsId("empPK")
-		@JoinColumns({
-				@JoinColumn(name = "FK1", referencedColumnName = "first_name"),
-				@JoinColumn(name = "FK2", referencedColumnName = "last_name")
-		})
+		@JoinColumn(name = "FK1", referencedColumnName = "first_name")
+		@JoinColumn(name = "FK2", referencedColumnName = "last_name")
 		@ManyToOne
 		Employee emp;
 	}

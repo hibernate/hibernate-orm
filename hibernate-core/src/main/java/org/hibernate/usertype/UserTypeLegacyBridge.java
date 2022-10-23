@@ -16,8 +16,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
 /**
- * Convenience UserType implementation to mimic the legacy `@Type` annotation
- * which based on the {@code hbm.xml} mapping's String-based type support
+ * Convenience {@link UserType} implementation which mimics the legacy <code>@Type</code>
+ * annotation which was based on the {@code hbm.xml} mapping's string-based type support.
  *
  * @see Type
  */

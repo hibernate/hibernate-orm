@@ -140,8 +140,8 @@ class ColumnsBuilder {
 			);
 		}
 		else if ( joinColumns == null && property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
-			throw new AnnotationException( "@Any requires an explicit @JoinColumn(s): "
-					+ getPath( propertyHolder, inferredData ) );
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+					+ "' is annotated '@Any' and must declare at least one '@JoinColumn'" );
 		}
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
@@ -179,21 +179,19 @@ class ColumnsBuilder {
 					buildingContext
 			);
 			if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
+				//TODO: I don't see why this restriction makes sense (use the same defaulting rule as for many-valued)
 				throw new AnnotationException(
-						"JoinTable.name() on a @ToOne association has to be explicit: "
-								+ getPath( propertyHolder, inferredData )
+						"Single-valued association " + getPath( propertyHolder, inferredData )
+								+ " has a '@JoinTable' annotation with no explicit 'name'"
 				);
 			}
 		}
 		else {
 			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
-			String mappedBy = oneToOneAnn != null
-					? oneToOneAnn.mappedBy()
-					: null;
 			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
 					comment,
-					mappedBy,
+					oneToOneAnn != null ? oneToOneAnn.mappedBy() : null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData.getPropertyName(),
@@ -215,7 +213,8 @@ class ColumnsBuilder {
 			joinColumnAnnotations = joinColumnAnnotation.value();
 			int length = joinColumnAnnotations.length;
 			if ( length == 0 ) {
-				throw new AnnotationException( "Cannot bind an empty @JoinColumns" );
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' has an empty '@JoinColumns' annotation" );
 			}
 		}
 
@@ -243,7 +242,8 @@ class ColumnsBuilder {
 			joinColumnOrFormulaAnnotations = joinColumnsOrFormulasAnnotations.value();
 			int length = joinColumnOrFormulaAnnotations.length;
 			if ( length == 0 ) {
-				throw new AnnotationException( "Cannot bind an empty @JoinColumnsOrFormulas" );
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' has an empty '@JoinColumnsOrFormulas' annotation" );
 			}
 		}
 

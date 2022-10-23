@@ -15,13 +15,13 @@ import org.hibernate.id.IdentifierGenerator;
 
 /**
  * Meta-annotation used to mark another annotation as providing configuration
- * for a custom {@link org.hibernate.id.IdentifierGenerator}.
+ * for a custom {@link IdentifierGenerator}.
  */
 @Target( value = ElementType.ANNOTATION_TYPE )
 @Retention( RetentionPolicy.RUNTIME )
 public @interface IdGeneratorType {
 	/**
-	 * The IdentifierGenerator being configured
+	 * The {@link IdentifierGenerator} being configured
 	 */
 	Class<? extends IdentifierGenerator> value();
 }

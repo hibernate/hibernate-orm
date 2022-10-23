@@ -103,7 +103,8 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		);
 		if ( column == null ) {
 			throw new AnnotationException(
-					"@Index references a unknown column: " + columnName
+					"Table '" + table.getName() + "' has no column named '" + columnName
+							+ "' matching the column specified in '@Index'"
 			);
 		}
 		if ( unique ) {

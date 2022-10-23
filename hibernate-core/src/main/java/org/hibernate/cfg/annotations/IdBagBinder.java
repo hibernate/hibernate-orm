@@ -16,7 +16,6 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IdGeneratorResolverSecondPass;

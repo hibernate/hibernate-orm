@@ -73,7 +73,7 @@ public class OverrideOneToOneJoinColumnTest {
 			);
 
 			assertTrue(
-					ex.getMessage().startsWith( "Illegal attempt to define a @JoinColumn with a mappedBy association:" ),
+					ex.getMessage().contains( "is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" ),
 					"Should disallow exactly because of @JoinColumn override on side with mappedBy"
 			);
 		}

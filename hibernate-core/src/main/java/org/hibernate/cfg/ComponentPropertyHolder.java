@@ -270,11 +270,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	public void addProperty(Property prop, AnnotatedColumn[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
-		/*
-		 * Check table matches between the component and the columns
-		 * if not, change the component table if no properties are set
-		 * if a property is set already the core cannot support that
-		 */
+		// Check table matches between the component and the columns
+		// if not, change the component table if no properties are set
+		// if a property is set already the core cannot support that
 		if (columns != null) {
 			Table table = columns[0].getTable();
 			if ( !table.equals( component.getTable() ) ) {
@@ -283,8 +281,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				}
 				else {
 					throw new AnnotationException(
-							"A component cannot hold properties split into 2 different tables: "
-									+ this.getPath()
+							"Embeddable class '" + component.getComponentClassName()
+									+ "' has properties mapped to two different tables"
+									+ " (all properties of the embeddable class must map to the same table)"
 					);
 				}
 			}

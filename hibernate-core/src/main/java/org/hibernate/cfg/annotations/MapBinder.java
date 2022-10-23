@@ -24,7 +24,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.AnnotatedColumn;
@@ -34,7 +33,6 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -165,7 +163,7 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void bindKeyFromAssociationTable(
-			XClass collType,
+			XClass elementType,
 			Map<String, PersistentClass> persistentClasses,
 			String mapKeyPropertyName,
 			XProperty property,
@@ -176,17 +174,19 @@ public class MapBinder extends CollectionBinder {
 			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
-			PersistentClass associatedClass = persistentClasses.get( collType.getName() );
-			if ( associatedClass == null ) throw new AnnotationException( "Associated class not found: " + collType );
+			PersistentClass associatedClass = persistentClasses.get( elementType.getName() );
+			if ( associatedClass == null ) {
+				throw new AnnotationException( "Association '" + safeCollectionRole()
+						+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
+			}
 			Property mapProperty = findPropertyByName( associatedClass, mapKeyPropertyName );
 			if ( mapProperty == null ) {
-				throw new AnnotationException(
-						"Map key property not found: " + collType + "." + mapKeyPropertyName
-				);
+				throw new AnnotationException( "Map key property '" + mapKeyPropertyName
+						+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
 			}
 			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
 			// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
-			InheritanceState inheritanceState = inheritanceStatePerClass.get( collType );
+			InheritanceState inheritanceState = inheritanceStatePerClass.get( elementType );
 			PersistentClass targetPropertyPersistentClass = InheritanceType.JOINED.equals( inheritanceState.getType() ) ?
 					mapProperty.getPersistentClass() :
 					associatedClass;

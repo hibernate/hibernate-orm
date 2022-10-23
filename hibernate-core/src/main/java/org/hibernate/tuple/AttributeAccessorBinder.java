@@ -34,7 +34,7 @@ public class AttributeAccessorBinder implements AttributeBinder<AttributeAccesso
 			property.setPropertyAccessorName( type.getName() );
 		}
 		else {
-			throw new AnnotationException("@AttributeAccessor must specify a PropertyAccessStrategy type");
+			throw new AnnotationException("'@AttributeAccessor' annotation must specify a 'strategy'");
 		}
 
 	}

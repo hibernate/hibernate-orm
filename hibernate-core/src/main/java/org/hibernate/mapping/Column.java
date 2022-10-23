@@ -196,18 +196,10 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return object instanceof Column && equals( (Column) object );
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean equals(Column column) {
-		if ( null == column ) {
-			return false;
-		}
-		if ( this == column ) {
-			return true;
-		}
-
-		return isQuoted() ?
-				name.equals( column.name ) :
-				name.equalsIgnoreCase( column.name );
+		return column != null && (
+				this == column || isQuoted() ? name.equals( column.name ) : name.equalsIgnoreCase( column.name )
+		);
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {

@@ -258,8 +258,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( ann != null ) {
 			if ( !BinderHelper.isEmptyOrNullAnnotationValue( mappedBy ) ) {
 				throw new AnnotationException(
-						"Illegal attempt to define a @JoinColumn with a mappedBy association: "
-								+ getRelativePath( propertyHolder, propertyName )
+						"Association '" + getRelativePath( propertyHolder, propertyName )
+								+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'"
 				);
 			}
 			AnnotatedJoinColumn joinColumn = new AnnotatedJoinColumn();
@@ -428,10 +428,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	public static void checkIfJoinColumn(Object columns, PropertyHolder holder, PropertyData property) {
 		if ( !( columns instanceof AnnotatedJoinColumn[] ) ) {
 			throw new AnnotationException(
-					"@Column cannot be used on an association property: "
-							+ holder.getEntityName()
-							+ "."
-							+ property.getPropertyName()
+					"Property '" + getRelativePath( holder, property.getPropertyName() )
+							+ "' is an association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
 			);
 		}
 	}
@@ -559,9 +557,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
-												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (no columns)",
+												"Association '%s' is 'mappedBy' a property '%s' of entity '%s' with no columns",
+												propertyHolder.getPath(),
 												mappedByPropertyName,
-												propertyHolder.getPath()
+												mappedByEntityName
 										)
 								);
 							}
@@ -570,7 +569,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
-												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (formula)",
+												"Association '%s' is 'mappedBy' a property '%s' of entity '%s' which maps to a formula",
 												mappedByPropertyName,
 												propertyHolder.getPath()
 										)
@@ -580,7 +579,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 								throw new AnnotationException(
 										String.format(
 												Locale.ENGLISH,
-												"mapped-by [%s] defined for attribute [%s] referenced an invalid property (multiple columns)",
+												"Association '%s' is 'mappedBy' a property '%s' of entity '%s' with multiple columns",
 												mappedByPropertyName,
 												propertyHolder.getPath()
 										)
@@ -604,7 +603,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		else if ( ownerSide ) {
 			final String logicalTableName = metadataCollector.getLogicalTableName( referencedEntity.getTable() );
 
-			columnIdentifier =implicitNamingStrategy.determineJoinColumnName(
+			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new ImplicitJoinColumnNameSource() {
 						final ImplicitJoinColumnNameSource.Nature implicitNamingNature = getImplicitNature();
 
@@ -794,10 +793,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( columnOwner == null ) {
 			try {
 				throw new MappingException(
-						"Unable to find column with logical name: "
+						"No column with logical name '"
 								+ columns[0].getReferencedColumn()
-								+ " in " + referencedEntity.getTable()
-								+ " and its related supertables and secondary tables"
+								+ "' in table '" + referencedEntity.getTable().getName()
+								+ "' for entity '" + referencedEntity.getEntityName()
+								+ "', nor in its related superclass tables and secondary tables"
 				);
 			}
 			catch (MappingException e) {
@@ -821,8 +821,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				catch (MappingException me) {
 					//rewrite the exception
 					throw new MappingException(
-							"Unable to find column with logical name: "
-									+ logicalReferencedColumnName + " in " + matchingTable.getName()
+							"No column with logical name '" + logicalReferencedColumnName
+									+ "' in table '" + matchingTable.getName() + "'"
 					);
 				}
 				noReferencedColumn = false;

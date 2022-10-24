@@ -28,6 +28,7 @@ apply from: rootProject.file( 'gradle/databases.gradle' )
 apply plugin: 'org.hibernate.orm.database-service'
 
 apply plugin: 'java-library'
+apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'org.hibernate.orm.database-service'
 
 apply plugin: 'checkstyle'

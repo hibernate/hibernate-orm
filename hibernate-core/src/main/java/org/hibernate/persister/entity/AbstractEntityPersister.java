@@ -4996,17 +4996,9 @@ public abstract class AbstractEntityPersister
 		if ( entity instanceof PersistentAttributeInterceptable && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
 					.extractLazyInterceptor( entity );
-			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
-						entity,
-						getIdentifier( entity, session ),
-						session
-				);
-			}
-			else {
-				if ( interceptor.getLinkedSession() == null ) {
-					interceptor.setSession( session );
-				}
+			assert interceptor != null;
+			if ( interceptor.getLinkedSession() == null ) {
+				interceptor.setSession( session );
 			}
 		}
 

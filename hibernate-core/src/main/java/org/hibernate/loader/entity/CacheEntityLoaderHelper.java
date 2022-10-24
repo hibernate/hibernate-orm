@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -22,6 +23,8 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -374,6 +377,18 @@ public class CacheEntityLoaderHelper {
 		entity = instanceToLoad == null
 				? source.instantiate( subclassPersister, entityId )
 				: instanceToLoad;
+
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			PersistentAttributeInterceptor persistentAttributeInterceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
+			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				persister.getBytecodeEnhancementMetadata().injectInterceptor(
+						entity,
+						entityId,
+						source
+				);
+			}
+		}
 
 		// make it circular-reference safe
 		TwoPhaseLoad.addUninitializedCachedEntity(

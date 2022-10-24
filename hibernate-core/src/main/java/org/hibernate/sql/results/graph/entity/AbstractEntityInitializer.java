@@ -705,6 +705,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState
 		);
 
+		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
+			PersistentAttributeInterceptor persistentAttributeInterceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
+			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
+				concreteDescriptor.getBytecodeEnhancementMetadata().injectInterceptor(
+						toInitialize,
+						entityIdentifier,
+						session
+				);
+			}
+		}
 		concreteDescriptor.setPropertyValues( toInitialize, resolvedEntityState );
 
 		persistenceContext.addEntity( entityKey, toInitialize );

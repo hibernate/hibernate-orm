@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
@@ -13,11 +14,19 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Custom SQL expression used to read the value from and write a value to a column.
- * Use for direct object loading/saving as well as queries.
- * The write expression must contain exactly one '?' placeholder for the value. 
- *
- * For example: <code>read="decrypt(credit_card_num)" write="encrypt(?)"</code>
+ * Specifies custom SQL expressions used to read and write to a column in all generated SQL
+ * involving the annotated persistent attribute.
+ * <ul>
+ * <li>A <code>write</code> expression must contain exactly one JDBC-style '?' placeholder.
+ * <li>A <code>read</code> expression may not contain JDBC-style placeholders.
+ * </ul>
+ * For example:
+ * <pre>
+ * {@code @Column(name="credit_card_num")
+ * @ColumnTransformer(read="decrypt(credit_card_num)"
+ *                    write="encrypt(?)")
+ * String creditCardNumber;}
+ * </pre>
  *
  * @see ColumnTransformers
  *
@@ -28,9 +37,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(ColumnTransformers.class)
 public @interface ColumnTransformer {
 	/**
-	 * (Logical) column name for which the expression is used.
-	 *
-	 * This can be left out if the property is bound to a single column
+	 * The name of the mapped column, if a persistent attribute maps to multiple columns.
+	 * Optional if a persistent attribute is mapped to a single column
 	 */
 	String forColumn() default "";
 
@@ -40,8 +48,8 @@ public @interface ColumnTransformer {
 	String read() default "";
 
 	/**
-	 * Custom SQL expression used to write to the column. The write expression must contain exactly
-	 * one '?' placeholder for the value.
+	 * Custom SQL expression used to write to the column. The expression must contain exactly
+	 * one JDBC-style '?' placeholder.
 	 */
 	String write() default "";
 }

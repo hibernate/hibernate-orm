@@ -74,6 +74,7 @@ public class EntityMetamodel implements Serializable {
 	private final String rootName;
 	private EntityType entityType;
 
+	private final int subclassId;
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
 
@@ -151,6 +152,7 @@ public class EntityMetamodel implements Serializable {
 		// Improves performance of EntityKey#equals by avoiding content check in String#equals
 		name = persistentClass.getEntityName().intern();
 		rootName = persistentClass.getRootClass().getEntityName().intern();
+		subclassId = persistentClass.getSubclassId();
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
 				persistentClass,
@@ -890,6 +892,10 @@ public class EntityMetamodel implements Serializable {
 
 	public String getRootName() {
 		return rootName;
+	}
+
+	public int getSubclassId() {
+		return subclassId;
 	}
 
 	public EntityType getEntityType() {

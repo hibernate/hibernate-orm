@@ -1221,7 +1221,7 @@ public abstract class AbstractEntityPersister
 				// of this class, not its subclasses, but since we
 				// are reusing code used for sequential selects, we
 				// use the subclass closure
-				partsToSelect.add( getAttributeMappings().get( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
+				partsToSelect.add( getAttributeMapping( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 			}
 
 			if ( partsToSelect.isEmpty() ) {
@@ -2915,8 +2915,8 @@ public abstract class AbstractEntityPersister
 		final Update update = createUpdate().setTableName( getTableName( j ) );
 
 		boolean hasColumns = false;
-		for ( int index = 0; index < attributeMappings.size(); index++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( index );
+		for ( int index = 0; index < attributeMappings.length; index++ ) {
+			final AttributeMapping attributeMapping = attributeMappings[index];
 			if ( isPropertyOfTable( index, j ) ) {
 				// `attributeMapping` is an attribute of the table we are updating
 
@@ -3039,8 +3039,8 @@ public abstract class AbstractEntityPersister
 
 		final Insert insert = createInsert().setTableName( getTableName( j ) );
 
-		for ( int index = 0; index < attributeMappings.size(); index++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( index );
+		for ( int index = 0; index < attributeMappings.length; index++ ) {
+			final AttributeMapping attributeMapping = attributeMappings[index];
 			if ( isPropertyOfTable( index, j ) ) {
 				// `attributeMapping` is an attribute of the table we are updating
 
@@ -5117,10 +5117,10 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			if ( hasSubclasses() ) {
-				for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				for ( int i = 0; i < attributeMappings.length; i++ ) {
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
-						final Setter setter = attributeMappings.get( i ).getPropertyAccess().getSetter();
+						final Setter setter = attributeMappings[i].getPropertyAccess().getSetter();
 						setter.set( object, value );
 					}
 				}
@@ -5153,8 +5153,8 @@ public abstract class AbstractEntityPersister
 			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+			for ( int i = 0; i < attributeMappings.length; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings[i];
 				final AttributeMetadataAccess attributeMetadataAccess = attributeMapping.getAttributeMetadataAccess();
 				if ( ! lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
 						|| enhancementMetadata.isAttributeLoaded( object, attributeMapping.getAttributeName() ) ) {
@@ -5175,7 +5175,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, int i) {
-		return attributeMappings.get( i ).getAttributeMetadataAccess()
+		return attributeMappings[i].getAttributeMetadataAccess()
 				.resolveAttributeMetadata( this )
 				.getPropertyAccess()
 				.getGetter()
@@ -5370,9 +5370,9 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( entity );
 		}
 
-		final Object[] result = new Object[this.attributeMappings.size()];
-		for ( int i = 0; i < this.attributeMappings.size(); i++ ) {
-			result[i] = this.attributeMappings.get( i ).getPropertyAccess().getGetter().getForInsert(
+		final Object[] result = new Object[this.attributeMappings.length];
+		for ( int i = 0; i < this.attributeMappings.length; i++ ) {
+			result[i] = this.attributeMappings[i].getPropertyAccess().getGetter().getForInsert(
 					entity,
 					mergeMap,
 					session
@@ -5668,7 +5668,7 @@ public abstract class AbstractEntityPersister
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 
-	private List<AttributeMapping> attributeMappings;
+	private AttributeMapping[] attributeMappings;
 	protected Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
 	protected List<Fetchable> staticFetchableList;
 
@@ -5676,13 +5676,15 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		attributeMappings.forEach( action );
+		for ( AttributeMapping attributeMapping : attributeMappings ) {
+			action.accept( attributeMapping );
+		}
 	}
 
 	@Override
 	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
+		for ( int i = 0; i < attributeMappings.length; i++ ) {
+			consumer.accept( i, attributeMappings[i] );
 		}
 	}
 
@@ -5770,7 +5772,7 @@ public abstract class AbstractEntityPersister
 					if ( hasUpdateGeneratedProperties() ) {
 						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.UPDATE );
 					}
-					staticFetchableList = new ArrayList<>( attributeMappings.size() );
+					staticFetchableList = new ArrayList<>( attributeMappings.length );
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
 					return true;
 				}
@@ -5910,13 +5912,11 @@ public abstract class AbstractEntityPersister
 		// in the collected names.  iterate here because it is already alphabetical
 
 		final List<SingularAttributeMapping> collectedAttrMappings = new ArrayList<>();
-		this.attributeMappings.forEach(
-				(attributeMapping) -> {
-					if ( attributeNames.contains( attributeMapping.getAttributeName() ) ) {
-						collectedAttrMappings.add( (SingularAttributeMapping) attributeMapping );
-					}
-				}
-		);
+		for ( AttributeMapping attributeMapping : attributeMappings ) {
+			if ( attributeNames.contains( attributeMapping.getAttributeName() ) ) {
+				collectedAttrMappings.add( (SingularAttributeMapping) attributeMapping );
+			}
+		}
 
 		if ( collectedAttrMappings.size() <= 1 ) {
 			throw new MappingException( "Expected multiple natural-id attributes, but found only one: " + getEntityName() );
@@ -6106,12 +6106,12 @@ public abstract class AbstractEntityPersister
 			// force calculation of `attributeMappings`
 			getAttributeMappings();
 		}
-		return attributeMappings.size();
+		return attributeMappings.length;
 	}
 
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
-		return attributeMappings.get( position );
+		return attributeMappings[position];
 	}
 
 	@Override
@@ -6132,6 +6132,14 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityMappingType getSuperMappingType() {
 		return superMappingType;
+	}
+
+	@Override
+	public Collection<EntityMappingType> getSubMappingTypes() {
+		if ( subclassMappingTypes == null ) {
+			return Collections.emptyList();
+		}
+		return subclassMappingTypes.values();
 	}
 
 	@Override
@@ -6534,18 +6542,18 @@ public abstract class AbstractEntityPersister
 	@Override
 	public List<AttributeMapping> getAttributeMappings() {
 		if ( attributeMappings == null ) {
-			attributeMappings = new ArrayList<>();
+			ArrayList<AttributeMapping> attributeMappings = new ArrayList<>();
 
 			if ( superMappingType != null ) {
 				superMappingType.visitAttributeMappings( attributeMappings::add );
 			}
 
 			attributeMappings.addAll( declaredAttributeMappings.values() );
-
+			this.attributeMappings = attributeMappings.toArray(new AttributeMapping[0]);
 			// subclasses?  it depends on the usage
 		}
 
-		return attributeMappings;
+		return Arrays.asList( attributeMappings );
 	}
 
 	@Override
@@ -6769,7 +6777,9 @@ public abstract class AbstractEntityPersister
 			visitSubTypeAttributeMappings( fetchableConsumer );
 		}
 		else {
-			attributeMappings.forEach( fetchableConsumer );
+			for ( AttributeMapping attributeMapping : attributeMappings ) {
+				fetchableConsumer.accept( attributeMapping );
+			}
 		}
 	}
 
@@ -6785,9 +6795,9 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final int size = attributeMappings.size();
+		final int size = attributeMappings.length;
 		for ( int i = 0; i < size; i++ ) {
-			fetchableConsumer.accept( i, attributeMappings.get( i ) );
+			fetchableConsumer.accept( i, attributeMappings[i] );
 		}
 		if ( treatTargetType.isTypeOrSuperType( this ) ) {
 			if ( subclassMappingTypes != null ) {
@@ -6810,7 +6820,9 @@ public abstract class AbstractEntityPersister
 	public void visitAttributeMappings(
 			Consumer<? super AttributeMapping> action,
 			EntityMappingType targetType) {
-		attributeMappings.forEach( action );
+		for ( AttributeMapping attributeMapping : attributeMappings ) {
+			action.accept( attributeMapping );
+		}
 	}
 
 	@Override
@@ -6823,9 +6835,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer selectableConsumer) {
 		int span = 0;
-		final List<AttributeMapping> mappings = getAttributeMappings();
-		for ( int i = 0; i < mappings.size(); i++ ) {
-			span += mappings.get( i ).forEachSelectable( span + offset, selectableConsumer );
+		for ( AttributeMapping attributeMapping : attributeMappings ) {
+			span += attributeMapping.forEachSelectable( span + offset, selectableConsumer );
 		}
 		return span;
 	}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -167,6 +169,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
 
+	default int getSubclassId() {
+		return getEntityPersister().getEntityMetamodel().getSubclassId();
+	}
+
 	default boolean hasSubclasses() {
 		return getEntityPersister().getEntityMetamodel().hasSubclasses();
 	}
@@ -196,6 +202,16 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	default EntityMappingType getSuperMappingType() {
 		return null;
+	}
+
+	default Collection<EntityMappingType> getSubMappingTypes() {
+		final MappingMetamodelImplementor mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
+		final Set<String> subclassEntityNames = getSubclassEntityNames();
+		final List<EntityMappingType> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
+		for ( String subclassEntityName : subclassEntityNames ) {
+			mappingTypes.add( mappingMetamodel.getEntityDescriptor( subclassEntityName ) );
+		}
+		return mappingTypes;
 	}
 
 	default boolean isTypeOrSuperType(EntityMappingType targetType) {
@@ -314,6 +330,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	// Customer <- DomesticCustomer <- OtherCustomer
 
+	@Deprecated(forRemoval = true)
 	default Object[] extractConcreteTypeStateValues(
 			Map<AttributeMapping, DomainResultAssembler> assemblerMapping,
 			RowProcessingState rowProcessingState) {

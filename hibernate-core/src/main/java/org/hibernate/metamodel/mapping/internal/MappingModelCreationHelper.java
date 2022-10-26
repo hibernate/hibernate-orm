@@ -1009,7 +1009,7 @@ public class MappingModelCreationHelper {
 				// case of ToOne with @PrimaryKeyJoinColumn
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						table.getColumn( 0 ),
+						table.getPrimaryKey().getColumn( 0 ),
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						dialect,

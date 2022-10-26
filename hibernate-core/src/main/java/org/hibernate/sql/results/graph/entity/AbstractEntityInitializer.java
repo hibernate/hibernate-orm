@@ -32,6 +32,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -677,8 +678,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 
-		final Object entity = persistenceContext.getEntity( entityKey );
-		assert entity == null || entity == toInitialize;
+		// Only call PersistenceContext#getEntity within the assert expression, as it is costly
+		assert NullnessHelper.coalesce( persistenceContext.getEntity( entityKey ), toInitialize ) == toInitialize;
 
 		final Object entityIdentifier = entityKey.getIdentifier();
 

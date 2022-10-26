@@ -23,7 +23,7 @@ public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
 
 	public PropertyAccessEnhancedImpl(
 			PropertyAccessStrategy strategy,
-			Class containerJavaType,
+			Class<?> containerJavaType,
 			String propertyName) {
 		super( strategy, containerJavaType, propertyName );
 	}

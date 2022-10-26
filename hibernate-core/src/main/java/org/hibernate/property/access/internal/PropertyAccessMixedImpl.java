@@ -40,7 +40,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 
 	public PropertyAccessMixedImpl(
 			PropertyAccessStrategy strategy,
-			Class containerJavaType,
+			Class<?> containerJavaType,
 			String propertyName) {
 		this.strategy = strategy;
 
@@ -79,7 +79,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		}
 	}
 
-	protected static Field fieldOrNull(Class containerJavaType, String propertyName) {
+	protected static Field fieldOrNull(Class<?> containerJavaType, String propertyName) {
 		try {
 			return ReflectHelper.findField( containerJavaType, propertyName );
 		}

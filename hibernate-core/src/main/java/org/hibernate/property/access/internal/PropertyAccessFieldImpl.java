@@ -27,7 +27,7 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 
 	public PropertyAccessFieldImpl(
 			PropertyAccessStrategyFieldImpl strategy,
-			Class containerJavaType,
+			Class<?> containerJavaType,
 			final String propertyName) {
 		this.strategy = strategy;
 

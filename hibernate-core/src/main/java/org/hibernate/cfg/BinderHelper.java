@@ -76,6 +76,12 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
+import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
 
 /**
  * @author Emmanuel Bernard
@@ -102,7 +108,7 @@ public class BinderHelper {
 	 * create a property copy reusing the same value
 	 */
 	public static Property shallowCopy(Property property) {
-		Property clone = new Property();
+		Property clone = new SyntheticProperty();
 		clone.setCascade( property.getCascade() );
 		clone.setInsertable( property.isInsertable() );
 		clone.setLazy( property.isLazy() );
@@ -118,143 +124,275 @@ public class BinderHelper {
 		return clone;
 	}
 
-
+	/**
+	 * Here we address a fundamental problem: the {@code @JoinColumn}
+	 * annotation specifies the referenced column in the target table
+	 * via {@code referencedColumnName}, but Hibernate needs to know
+	 * which property or field of the target entity class holds the
+	 * value of the referenced column at the Java level. (It's going
+	 * to need the value when it writes the association.)
+	 * <p>
+	 * Complicating this hugely is the fact that an association might
+	 * be based on a composite key with multiple {@code @JoinColumns},
+	 * and so the referenced columns might even be spread out over
+	 * multiple fields or properties of the target entity. There's
+	 * even some extra minor complications resulting from multi-table
+	 * inheritance and secondary tables.
+	 * <p>
+	 * The solution here is:
+	 * <ul>
+	 * <li>if the referenced columns correspond to exactly one property
+	 *     of the target entity, we're good, just use it, or
+	 * <li>otherwise, if a composite key is spread out over multiple
+	 *     properties, then create a "synthetic" {@link Component} in
+	 *     the model that aggregates these properties and is considered
+	 *     the target of the association.
+	 * </ul>
+	 * Certain limitations arise from the way this solution is currently
+	 * implemented: for example, if a referenced column belongs to a
+	 * property of an {@code @Embeddable}, then every column of that
+	 * embeddable must occur in the list of referenced columns, and the
+	 * order of the columns must line up! Some of these limitations
+	 * could be relaxed using by writing a better algorithm for building
+	 * the synthetic {@link Component}.
+	 */
 	public static void createSyntheticPropertyReference(
 			AnnotatedJoinColumn[] columns,
 			PersistentClass ownerEntity,
+			//associated entity only used for more precise exception
 			PersistentClass associatedEntity,
 			Value value,
 			boolean inverse,
 			MetadataBuildingContext context) {
-		//associated entity only used for more precise exception, yuk!
-		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) {
-			return;
-		}
-		int fkEnum = AnnotatedJoinColumn.checkReferencedColumnsType( columns, ownerEntity, context );
-		PersistentClass associatedClass = columns[0].getPropertyHolder() != null ?
-				columns[0].getPropertyHolder().getPersistentClass() :
-				null;
-		if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
-			/*
-			 * Create a synthetic property to refer to including an
-			 * embedded component value containing all the properties
-			 * mapped to the referenced columns
-			 * We need to shallow copy those properties to mark them
-			 * as non insertable / non updatable
-			 */
-			String syntheticPropertyName =
-					"_" + associatedClass.getEntityName().replace('.', '_') +
-					"_" + columns[0].getPropertyName().replace('.', '_');
-			if ( inverse ) {
-				// Use a different name for inverse synthetic properties to avoid duplicate properties for self-referencing models
-				syntheticPropertyName += "_inverse";
-			}
-			//find properties associated to a certain column
-			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), context );
-			List<Property> properties = findPropertiesByColumns( columnOwner, columns, context );
-			//create an embeddable component
-			Property synthProp;
-			if ( properties != null ) {
-                        //todo how about properties.size() == 1, this should be much simpler
-				Component embeddedComp = columnOwner instanceof PersistentClass ?
-						new Component( context, (PersistentClass) columnOwner ) :
-						new Component( context, (Join) columnOwner );
-				embeddedComp.setEmbedded( true );
-				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
-				for (Property property : properties) {
-					Property clone = shallowCopy( property );
-					clone.setInsertable( false );
-					clone.setUpdateable( false );
-					clone.setNaturalIdentifier( false );
-					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
-					embeddedComp.addProperty( clone );
-				}
-				embeddedComp.sortProperties();
-				synthProp = new SyntheticProperty();
-				synthProp.setName( syntheticPropertyName );
-				synthProp.setPersistentClass( ownerEntity );
-				synthProp.setUpdateable( false );
-				synthProp.setInsertable( false );
-				synthProp.setValue( embeddedComp );
-				synthProp.setPropertyAccessorName( "embedded" );
-				ownerEntity.addProperty( synthProp );
-				//make it unique
-				embeddedComp.createUniqueKey();
-			}
-			else {
-				//TODO use a ToOne type doing a second select
-				StringBuilder columnsList = new StringBuilder();
-				columnsList.append( "referencedColumnNames(" );
-				for (AnnotatedJoinColumn column : columns) {
-					columnsList.append( column.getReferencedColumn() ).append( ", " );
-				}
-				columnsList.setLength( columnsList.length() - 2 );
-				columnsList.append( ") " );
 
-				if ( associatedEntity != null ) {
-					//overridden destination
-					columnsList.append( "of " )
-							.append( associatedEntity.getEntityName() )
-							.append( "." )
-							.append( columns[0].getPropertyName() )
-							.append( " " );
-				}
-				else {
-					if ( columns[0].getPropertyHolder() != null ) {
-						columnsList.append( "of " )
-								.append( columns[0].getPropertyHolder().getEntityName() )
-								.append( "." )
-								.append( columns[0].getPropertyName() )
-								.append( " " );
-					}
-				}
-				columnsList.append( "referencing " )
-						.append( ownerEntity.getEntityName() )
-						.append( " not mapped to a single property" );
-				throw new AnnotationException( columnsList.toString() );
-			}
+		// TODO: instead of pulling info like the property name and whether
+		//       it's on the owning side off the zeroth column coming in, we
+		//       should receive it directly in the argument list, or from a
+		//       Property instance
+		final AnnotatedJoinColumn firstColumn = columns[0];
+		if ( !firstColumn.isImplicit()
+				// only necessary for owning side of association
+				&& isEmpty( firstColumn.getMappedBy() )
+				// not necessary for a primary key reference
+				&& checkReferencedColumnsType( columns, ownerEntity, context ) == NON_PK_REFERENCE ) {
 
-			/*
-			 * creating the property ref to the new synthetic property
-			 */
-			if ( value instanceof ToOne ) {
-				( (ToOne) value ).setReferencedPropertyName( syntheticPropertyName );
-				( (ToOne) value ).setReferenceToPrimaryKey( false );
-				context.getMetadataCollector().addUniquePropertyReference(
-						ownerEntity.getEntityName(),
-						syntheticPropertyName
-				);
+			// all the columns have to belong to the same table;
+			// figure out which table has the columns by looking
+			// for a PersistentClass or Join in the hierarchy of
+			// the target entity which has the first column
+			final Object columnOwner = findColumnOwner( ownerEntity, firstColumn.getReferencedColumn(), context );
+			for ( AnnotatedJoinColumn col: columns ) {
+				Object owner = findColumnOwner( ownerEntity, col.getReferencedColumn(), context );
+				if ( owner == null ) {
+					throw new AnnotationException("A '@JoinColumn' for association "
+							+ associationMessage( associatedEntity, columns[0] )
+							+ " references a column named '" + col.getReferencedColumn()
+							+ "' which is not mapped by the target entity" );
+				}
+				if ( owner != columnOwner ) {
+					throw new AnnotationException( "The '@JoinColumn's for association "
+							+ associationMessage( associatedEntity, columns[0] )
+							+ " reference columns of different tables mapped by the target entity ('"
+							+ col.getReferencedColumn() + "' belongs to a different table to '"
+							+ firstColumn.getReferencedColumn() + "'" );
+				}
 			}
-			else if ( value instanceof Collection ) {
-				( (Collection) value ).setReferencedPropertyName( syntheticPropertyName );
-				//not unique because we could create a mtm wo association table
-				context.getMetadataCollector().addPropertyReference(
-						ownerEntity.getEntityName(),
-						syntheticPropertyName
-				);
-			}
-			else {
-				throw new AssertionFailure(
-						"Do a property ref on an unexpected Value type: "
-								+ value.getClass().getName()
-				);
-			}
-			context.getMetadataCollector().addPropertyReferencedAssociation(
-					( inverse ? "inverse__" : "" ) + associatedClass.getEntityName(),
-					columns[0].getPropertyName(),
-					syntheticPropertyName
+			// find all properties mapped to each column
+			final List<Property> properties = findPropertiesByColumns( columnOwner, columns, associatedEntity, context );
+			// create a Property along with the new synthetic
+			// Component if necessary (or reuse the existing
+			// Property that matches exactly)
+			final Property property = referencedProperty( ownerEntity, inverse, columns, columnOwner, properties, context );
+			// register the mapping with the InFlightMetadataCollector
+			registerSyntheticProperty(
+					ownerEntity,
+					value,
+					inverse,
+					firstColumn.getPropertyHolder().getPersistentClass(),
+					firstColumn.getPropertyName(),
+					property.getName(),
+					context
 			);
 		}
 	}
 
+	/**
+	 * If the referenced columns correspond to exactly one property
+	 * of the primary table of the exact target entity subclass,
+	 * just use that property. Otherwise, if a composite key is
+	 * spread out over multiple properties, then create a "synthetic"
+	 * {@link Component} that aggregates these properties and is
+	 * considered the target of the association. This method adds
+	 * the property holding the synthetic component to the target
+	 * entity {@link PersistentClass} by side effect.
+	 */
+	private static Property referencedProperty(
+			PersistentClass ownerEntity,
+			boolean inverse,
+			AnnotatedJoinColumn[] columns,
+			Object columnOwner,
+			List<Property> properties,
+			MetadataBuildingContext context) {
+		if ( properties.size() == 1
+				// necessary to handle the case where the columnOwner is a supertype
+				&& ownerEntity == columnOwner
+				//TODO: this is only necessary because of a NotYetImplementedFor6Exception
+				//      in MappingMetamodelCreationHelper.interpretToOneKeyDescriptor
+				//      and ideally we should remove this last condition once that is fixed
+				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
+			// no need to make a synthetic property
+			return properties.get(0);
+		}
+		else {
+			// Create a synthetic Property whose Value is a synthetic
+			// embeddable component containing the target properties
+			// mapped to the referenced columns. We need to shallow
+			// clone those properties to mark them as non-insertable
+			// and non-updatable
+			final AnnotatedJoinColumn firstColumn = columns[0];
+			final PersistentClass associatedClass = firstColumn.getPropertyHolder().getPersistentClass();
+			final String syntheticPropertyName = syntheticPropertyName( firstColumn.getPropertyName(), inverse, associatedClass );
+			return makeSyntheticComponentProperty( ownerEntity, columnOwner, context, syntheticPropertyName, properties );
+		}
+	}
+
+	private static void registerSyntheticProperty(
+			PersistentClass ownerEntity,
+			Value value,
+			boolean inverse,
+			PersistentClass associatedClass,
+			String propertyName,
+			String syntheticPropertyName,
+			MetadataBuildingContext context) {
+		if ( value instanceof ToOne ) {
+			( (ToOne) value).setReferencedPropertyName( syntheticPropertyName );
+			( (ToOne) value).setReferenceToPrimaryKey( false );
+			context.getMetadataCollector().addUniquePropertyReference(
+					ownerEntity.getEntityName(),
+					syntheticPropertyName
+			);
+		}
+		else if ( value instanceof Collection ) {
+			( (Collection) value).setReferencedPropertyName( syntheticPropertyName );
+			//not unique because we could create a mtm wo association table
+			context.getMetadataCollector().addPropertyReference(
+					ownerEntity.getEntityName(),
+					syntheticPropertyName
+			);
+		}
+		else {
+			throw new AssertionFailure(
+					"Do a property ref on an unexpected Value type: "
+							+ value.getClass().getName()
+			);
+		}
+		context.getMetadataCollector().addPropertyReferencedAssociation(
+				( inverse ? "inverse__" : "" ) + associatedClass.getEntityName(),
+				propertyName,
+				syntheticPropertyName
+		);
+	}
+
+	private static String syntheticPropertyName(
+			String propertyName,
+			boolean inverse,
+			PersistentClass associatedClass) {
+		String syntheticPropertyName =
+				"_" + associatedClass.getEntityName().replace('.', '_') +
+				"_" + propertyName.replace('.', '_');
+		if (inverse) {
+			// Use a different name for inverse synthetic properties to avoid duplicate properties for self-referencing models
+			syntheticPropertyName += "_inverse";
+		}
+		return syntheticPropertyName;
+	}
+
+	private static String associationMessage(PersistentClass associatedEntity, AnnotatedJoinColumn firstColumn) {
+		StringBuilder message = new StringBuilder();
+		if ( associatedEntity != null ) {
+			message.append( "'" )
+					.append( associatedEntity.getEntityName() )
+					.append( "." )
+					.append( firstColumn.getPropertyName() )
+					.append( "'" );
+		}
+		else {
+			if ( firstColumn.getPropertyHolder() != null ) {
+				message.append( "'" )
+						.append( firstColumn.getPropertyHolder().getEntityName() )
+						.append( "." )
+						.append( firstColumn.getPropertyName() )
+						.append( "'" );
+			}
+		}
+		return message.toString();
+	}
+
+	private static Property makeSyntheticComponentProperty(
+			PersistentClass ownerEntity,
+			Object persistentClassOrJoin,
+			MetadataBuildingContext context,
+			String syntheticPropertyName,
+			List<Property> properties) {
+		Component embeddedComp = persistentClassOrJoin instanceof PersistentClass
+				? new Component( context, (PersistentClass) persistentClassOrJoin )
+				: new Component( context, (Join) persistentClassOrJoin );
+		embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
+		embeddedComp.setEmbedded( true );
+		Property property = makeComponent( ownerEntity, context, syntheticPropertyName, embeddedComp, properties );
+		property.setPropertyAccessorName( "embedded" );
+		ownerEntity.addProperty( property );
+		embeddedComp.createUniqueKey(); //make it unique
+		return property;
+	}
+
+	private static Property makeComponent(
+			PersistentClass ownerEntity,
+			MetadataBuildingContext context,
+			String name,
+			Component embeddedComp,
+			List<Property> properties) {
+		for ( Property property : properties ) {
+			Property clone = cloneProperty( ownerEntity, context, property );
+			embeddedComp.addProperty( clone );
+		}
+		embeddedComp.sortProperties();
+		Property synthProp = new SyntheticProperty();
+		synthProp.setName( name );
+		synthProp.setPersistentClass( ownerEntity );
+		synthProp.setUpdateable( false );
+		synthProp.setInsertable( false );
+		synthProp.setValue( embeddedComp );
+		return synthProp;
+	}
+
+	private static Property cloneProperty(PersistentClass ownerEntity, MetadataBuildingContext context, Property property) {
+		if ( property.isComposite() ) {
+			Component component = (Component) property.getValue();
+			Component copy = new Component( context, component );
+			copy.setComponentClassName( component.getComponentClassName() );
+			copy.setEmbedded( component.isEmbedded() );
+			Property clone = makeComponent( ownerEntity, context, property.getName(), copy, component.getProperties() );
+			clone.setPropertyAccessorName( property.getPropertyAccessorName() );
+			return clone;
+		}
+		else {
+			Property clone = shallowCopy( property );
+			clone.setInsertable( false );
+			clone.setUpdateable( false );
+			clone.setNaturalIdentifier( false );
+			clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
+			return clone;
+		}
+	}
 
 	private static List<Property> findPropertiesByColumns(
 			Object columnOwner,
 			AnnotatedJoinColumn[] columns,
+			PersistentClass associatedEntity,
 			MetadataBuildingContext context) {
-		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
-		List<Column> orderedColumns = new ArrayList<>( columns.length );
-		Table referencedTable;
+
+		final Table referencedTable;
 		if ( columnOwner instanceof PersistentClass ) {
 			referencedTable = ( (PersistentClass) columnOwner ).getTable();
 		}
@@ -268,66 +406,126 @@ public class BinderHelper {
 							"columnOwner neither PersistentClass nor Join: " + columnOwner.getClass()
 			);
 		}
-		//build the list of column names
-		for (AnnotatedJoinColumn column1 : columns) {
+
+		// Build the list of column names in the exact order they were
+		// specified by the @JoinColumn annotations.
+		final List<Column> orderedColumns = new ArrayList<>( columns.length );
+		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		for ( AnnotatedJoinColumn joinColumn : columns ) {
 			Column column = new Column(
 					context.getMetadataCollector().getPhysicalColumnName(
 							referencedTable,
-							column1.getReferencedColumn()
+							joinColumn.getReferencedColumn()
 					)
 			);
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}
-		boolean isPersistentClass = columnOwner instanceof PersistentClass;
-		List<Property> properties = isPersistentClass ?
-				( (PersistentClass) columnOwner ).getProperties() :
-				( (Join) columnOwner ).getProperties();
-		for (Property property : properties) {
-			matchColumnsByProperty( property, columnsToProperty );
+
+		// Now, for each column find the properties of the target entity
+		// which are mapped to that column. (There might be multiple such
+		// properties for each column.)
+		if ( columnOwner instanceof PersistentClass ) {
+			PersistentClass persistentClass = (PersistentClass) columnOwner;
+			for ( Property property : persistentClass.getProperties() ) {
+				matchColumnsByProperty( property, columnsToProperty );
+			}
+			matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
 		}
-		if ( isPersistentClass ) {
-			matchColumnsByProperty( ( (PersistentClass) columnOwner ).getIdentifierProperty(), columnsToProperty );
+		else {
+			for ( Property property : ((Join) columnOwner).getProperties() ) {
+				matchColumnsByProperty( property, columnsToProperty );
+			}
 		}
 
-		//first naive implementation
-		//only check 1 columns properties
-		//TODO make it smarter by checking correctly ordered multi column properties
+		// Now we need to line up the properties with the columns in the
+		// same order they were specified by the @JoinColumn annotations
+		// this is very tricky because a single property might span
+		// multiple columns.
+		// TODO: For now we only consider the first property that matched
+		//       each column, but this means we will reject some mappings
+		//       that could be made to work for a different choice of
+		//       properties (it's also not very deterministic)
 		List<Property> orderedProperties = new ArrayList<>();
-		for (Column column : orderedColumns) {
-			boolean found = false;
-			for (Property property : columnsToProperty.get( column ) ) {
-				if ( property.getColumnSpan() == 1 ) {
-					orderedProperties.add( property );
-					found = true;
-					break;
-				}
+		int lastPropertyColumnIndex = 0;
+		Property currentProperty = null;
+		for ( Column column : orderedColumns ) {
+			Set<Property> properties = columnsToProperty.get( column );
+			if ( properties.isEmpty() ) {
+				// no property found which maps to this column
+				throw new AnnotationException( "Referenced column '" + column.getName()
+						+ "' in '@JoinColumn' for " + associationMessage( associatedEntity, columns[0] )
+						+ " is not mapped by any property of the target entity" );
 			}
-			if ( !found ) {
-				//have to find it the hard way
-				return null;
+			for ( Property property : properties ) {
+				if ( property == currentProperty ) {
+					// we have the next column of the previous property
+					if ( !property.getColumns().get( lastPropertyColumnIndex ).equals( column ) ) {
+						// the columns have to occur in the right order in the property
+						throw new AnnotationException( "Referenced column '" + column.getName()
+								+ "' mapped by target property '" + property.getName()
+								+ "' occurs out of order in the list of '@JoinColumn's for association "
+								+ associationMessage( associatedEntity, columns[0] ) );
+					}
+					lastPropertyColumnIndex++;
+					if ( lastPropertyColumnIndex == currentProperty.getColumnSpan() ) {
+						//we have exhausted the columns in this property
+						currentProperty = null;
+						lastPropertyColumnIndex = 0;
+					}
+				}
+				else if ( currentProperty != null ) {
+					// we didn't use up all the columns of the previous property
+					throw new AnnotationException( "Target property '" + property.getName() + "' has "
+							+ property.getColumnSpan() + " columns which must be referenced by a '@JoinColumn' for "
+							+ associationMessage( associatedEntity, columns[0] )
+							+ " (every column mapped by '" + property.getName()
+							+ "' must occur exactly once as a 'referencedColumnName', and in the correct order)" );
+				}
+				else if ( orderedProperties.contains( property ) ) {
+					// we already used up all the columns of this property
+					throw new AnnotationException( "Target property '" + property.getName() + "' has only "
+							+ property.getColumnSpan() + " columns which may be referenced by a '@JoinColumn' for "
+							+ associationMessage( associatedEntity, columns[0] )
+							+ " (each column mapped by '" + property.getName()
+							+ "' may only occur once as a 'referencedColumnName')" );
+
+				}
+				else {
+					// we have the first column of a new property
+					orderedProperties.add( property );
+					if ( property.getColumnSpan() > 1 ) {
+						if ( !property.getColumns().get(0).equals( column ) ) {
+							// the columns have to occur in the right order in the property
+							throw new AnnotationException("Referenced column '" + column.getName()
+									+ "' mapped by target property '" + property.getName()
+									+ "' occurs out of order in the list of '@JoinColumn's");
+						}
+						currentProperty = property;
+						lastPropertyColumnIndex = 1;
+					}
+				}
+				break; // we're only considering the first matching property for now
 			}
 		}
 		return orderedProperties;
 	}
 
 	private static void matchColumnsByProperty(Property property, Map<Column, Set<Property>> columnsToProperty) {
-		if ( property == null ) {
-			return;
-		}
-		if ( "noop".equals( property.getPropertyAccessorName() )
-				|| "embedded".equals( property.getPropertyAccessorName() ) ) {
-			return;
-		}
-// FIXME cannot use subproperties because the caller needs top level properties
-//		if ( property.isComposite() ) {
-//			Iterator subProperties = ( (Component) property.getValue() ).getPropertyIterator();
-//			while ( subProperties.hasNext() ) {
-//				matchColumnsByProperty( (Property) subProperties.next(), columnsToProperty );
+		if ( property != null
+				&& NOOP != interpret( property.getPropertyAccessorName() )
+				&& EMBEDDED != interpret( property.getPropertyAccessorName() ) ) {
+			//TODO: we can't return subproperties because the caller
+			//      needs top level properties, but this results in
+			//      a limitation where I need to be referencing all
+			//      columns of an embeddable instead of just some
+//			if ( property.isComposite() ) {
+//				for ( Property sp : ( (Component) property.getValue() ).getProperties() ) {
+//					matchColumnsByProperty( sp, columnsToProperty );
+//				}
 //			}
-//		}
-		else {
-			for (Selectable selectable : property.getSelectables()) {
+//			else {
+			for ( Selectable selectable : property.getSelectables() ) {
 				//can be a Formula, so we don't cast
 				//noinspection SuspiciousMethodCalls
 				if ( columnsToProperty.containsKey( selectable ) ) {
@@ -335,6 +533,7 @@ public class BinderHelper {
 					columnsToProperty.get( selectable ).add( property );
 				}
 			}
+//			}
 		}
 	}
 
@@ -476,30 +675,23 @@ public class BinderHelper {
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {
-		if ( StringHelper.isEmpty( columnName ) ) {
+		if ( isEmpty( columnName ) ) {
 			//shortcut for implicit referenced column names
 			return persistentClass;
 		}
 		PersistentClass current = persistentClass;
-		Object result;
-		boolean found = false;
-		do {
-			result = current;
-			Table currentTable = current.getTable();
+		while ( current != null ) {
 			try {
-				context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
-				found = true;
+				context.getMetadataCollector().getPhysicalColumnName( current.getTable(), columnName );
+				return current;
 			}
 			catch (MappingException me) {
 				//swallow it
 			}
-			Iterator<Join> joins = current.getJoinIterator();
-			while ( !found && joins.hasNext() ) {
-				result = joins.next();
-				currentTable = ( (Join) result ).getTable();
+			for ( Join join : current.getJoins() ) {
 				try {
-					context.getMetadataCollector().getPhysicalColumnName( currentTable, columnName );
-					found = true;
+					context.getMetadataCollector().getPhysicalColumnName( join.getTable(), columnName );
+					return join;
 				}
 				catch (MappingException me) {
 					//swallow it
@@ -507,8 +699,7 @@ public class BinderHelper {
 			}
 			current = current.getSuperclass();
 		}
-		while ( !found && current != null );
-		return found ? result : null;
+		return null;
 	}
 
 	/**
@@ -531,15 +722,10 @@ public class BinderHelper {
 		Properties params = new Properties();
 
 		//always settable
-		params.setProperty(
-				PersistentIdentifierGenerator.TABLE, table.getName()
-		);
+		params.setProperty( PersistentIdentifierGenerator.TABLE, table.getName() );
 
 		if ( id.getColumnSpan() == 1 ) {
-			params.setProperty(
-					PersistentIdentifierGenerator.PK,
-					id.getColumns().get(0).getName()
-			);
+			params.setProperty( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 		params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );

@@ -394,17 +394,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
-		while ( !( type instanceof JdbcMapping ) ) {
-			//ManyToOneType doesn't implement JdbcMapping
-			type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( mapping );
-			if ( type instanceof ComponentType ) {
-				type = ( (ComponentType) type ).getSubtypes()[typeIndex];
-				while (type instanceof ComponentType) {
-					type = ( (ComponentType) type ).getSubtypes()[0];
-				}
-			}
+		int index = 0;
+		if ( type instanceof EntityType ) {
+			EntityType entityType = (EntityType) type;
+			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
-		return type;
+		else if ( type instanceof ComponentType ) {
+			for (Type subtype : ((ComponentType) type).getSubtypes() ) {
+				Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
+				if ( result != null ) {
+					return result;
+				}
+				index += subtype.getColumnSpan( mapping );
+			}
+			return null;
+		}
+		else if ( typeIndex == 0 ) {
+			return type;
+		}
+		else  {
+			return null;
+		}
 	}
 
 	public String getSqlType() {

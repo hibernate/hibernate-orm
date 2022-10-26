@@ -16,8 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,7 +36,6 @@ import static org.junit.Assert.assertTrue;
 public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
 
     private LazyEntity entity;
-
     private Long entityId;
 
     @Override
@@ -56,69 +53,82 @@ public class LazyBasicPropertyAccessTest extends BaseCoreFunctionalTestCase {
     public void prepare() {
         doInHibernate( this::sessionFactory, s -> {
             LazyEntity entity = new LazyEntity();
-            entity.description = "desc";
+            entity.setDescription( "desc" );
             s.persist( entity );
-            entityId = entity.id;
+            entityId = entity.getId();
         } );
     }
 
     @Test
-    public void execute() {
+    public void test() {
         doInHibernate( this::sessionFactory, s -> {
             entity = s.get( LazyEntity.class, entityId );
 
             Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( entity );
 
-            assertEquals( "desc", entity.description );
+            assertEquals( "desc", entity.getDescription() );
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
         doInHibernate( this::sessionFactory, s -> {
-            entity.description = "desc1";
+            entity.setDescription( "desc1" );
             s.update( entity );
 
-            // Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
+            //Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( entity, "description" );
 
-            assertEquals( "desc1", entity.description );
+            assertEquals( "desc1", entity.getDescription() );
             assertTrue( isPropertyInitialized( entity, "description" ) );
         } );
 
         doInHibernate( this::sessionFactory, s -> {
             entity = s.get( LazyEntity.class, entityId );
-            assertEquals( "desc1", entity.description );
+            assertEquals( "desc1", entity.getDescription() );
         } );
 
         doInHibernate( this::sessionFactory, s -> {
-            entity.description = "desc2";
+            entity.setDescription( "desc2" );
             LazyEntity mergedEntity = (LazyEntity) s.merge( entity );
 
-            //Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
+            // Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( mergedEntity, "description" );
 
-            assertEquals( "desc2", mergedEntity.description );
+            assertEquals( "desc2", mergedEntity.getDescription() );
             assertTrue( isPropertyInitialized( mergedEntity, "description" ) );
         } );
 
         doInHibernate( this::sessionFactory, s -> {
             LazyEntity entity = s.get( LazyEntity.class, entityId );
-            assertEquals( "desc2", entity.description );
+            assertEquals( "desc2", entity.getDescription() );
         } );
     }
 
     // --- //
 
     @Entity
-    @Access( AccessType.FIELD )
-    @Table( name = "LAZY_PROPERTY_ENTITY" )
+    @Table( name = "LAZY_FIELD_ENTITY" )
     private static class LazyEntity {
+        Long id;
+        String description;
 
         @Id
         @GeneratedValue
-        Long id;
+        Long getId() {
+            return id;
+        }
+
+        void setId(Long id) {
+            this.id = id;
+        }
 
         @Basic( fetch = FetchType.LAZY )
-        String description;
+        String getDescription() {
+            return description;
+        }
+
+        void setDescription(String description) {
+            this.description = description;
+        }
     }
 }

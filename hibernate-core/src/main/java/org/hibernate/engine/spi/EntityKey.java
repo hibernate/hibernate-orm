@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
@@ -103,7 +102,7 @@ public final class EntityKey implements Serializable {
 
 	private boolean samePersistentType(final EntityKey otherKey) {
 		return otherKey.persister == persister
-			|| Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
+			|| otherKey.persister.getRootEntityName().equals( persister.getRootEntityName() );
 	}
 
 	@Override

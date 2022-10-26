@@ -31,10 +31,10 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	private final PropertyAccessStrategyEmbeddedImpl strategy;
 	private final GetterImpl getter;
 
-	@SuppressWarnings("UnusedParameters")
 	public PropertyAccessEmbeddedImpl(
 			PropertyAccessStrategyEmbeddedImpl strategy,
-			Class containerType,
+			Class<?> containerType,
+			@SuppressWarnings("UnusedParameters")
 			String propertyName) {
 		this.strategy = strategy;
 		this.getter = new GetterImpl( containerType );
@@ -56,9 +56,9 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	}
 
 	private static class GetterImpl implements Getter {
-		private final Class containerType;
+		private final Class<?> containerType;
 
-		public GetterImpl(Class containerType) {
+		public GetterImpl(Class<?> containerType) {
 			this.containerType = containerType;
 		}
 

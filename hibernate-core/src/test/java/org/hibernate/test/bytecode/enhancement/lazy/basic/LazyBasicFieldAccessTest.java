@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement.lazy.basic;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -63,7 +64,37 @@ public class LazyBasicFieldAccessTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    public void execute() {
+    public void testAttachedUpdate() {
+        doInHibernate( this::sessionFactory, s -> {
+            entity = s.get( LazyEntity.class, entityId );
+
+            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+            checkDirtyTracking( entity );
+
+            assertEquals( "desc", entity.description );
+            assertTrue( isPropertyInitialized( entity, "description" ) );
+        } );
+
+        doInHibernate( this::sessionFactory, s -> {
+            entity = s.get( LazyEntity.class, entityId );
+            Assert.assertFalse( isPropertyInitialized( entity, "description" ) );
+            entity.description = "desc1";
+
+            checkDirtyTracking( entity, "description" );
+
+            assertEquals( "desc1", entity.description );
+            assertTrue( isPropertyInitialized( entity, "description" ) );
+        } );
+
+        doInHibernate( this::sessionFactory, s -> {
+            entity = s.get( LazyEntity.class, entityId );
+            assertEquals( "desc1", entity.description );
+        } );
+    }
+
+    @Test
+    @TestForIssue(jiraKey = "HHH-11882")
+    public void testDetachedUpdate() {
         doInHibernate( this::sessionFactory, s -> {
             entity = s.get( LazyEntity.class, entityId );
 
@@ -78,7 +109,6 @@ public class LazyBasicFieldAccessTest extends BaseCoreFunctionalTestCase {
             entity.description = "desc1";
             s.update( entity );
 
-            // Assert.assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
             checkDirtyTracking( entity, "description" );
 
             assertEquals( "desc1", entity.description );
@@ -102,7 +132,7 @@ public class LazyBasicFieldAccessTest extends BaseCoreFunctionalTestCase {
         } );
 
         doInHibernate( this::sessionFactory, s -> {
-            LazyEntity entity = s.get( LazyEntity.class, entityId );
+            entity = s.get( LazyEntity.class, entityId );
             assertEquals( "desc2", entity.description );
         } );
     }

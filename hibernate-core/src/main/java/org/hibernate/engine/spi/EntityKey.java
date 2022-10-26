@@ -106,7 +106,7 @@ public final class EntityKey implements Serializable {
 			return true;
 		}
 		else {
-			return Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
+			return otherKey.persister.getRootEntityName().equals( persister.getRootEntityName() );
 		}
 	}
 

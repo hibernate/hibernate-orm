@@ -26,11 +26,20 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
  * @author Luis Barreiro
  */
 public class EnhancedSetterImpl extends SetterFieldImpl {
+
+	private static final int COMPOSITE_TRACKER_MASK = 1;
+	private static final int COMPOSITE_OWNER = 2;
+	private static final int PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK = 4;
+
 	private final String propertyName;
+	private final int enhancementState;
 
 	public EnhancedSetterImpl(Class<?> containerClass, String propertyName, Field field) {
 		super( containerClass, propertyName, field );
 		this.propertyName = propertyName;
+		this.enhancementState = ( CompositeOwner.class.isAssignableFrom( containerClass ) ? COMPOSITE_OWNER : 0 )
+				| ( CompositeTracker.class.isAssignableFrom( field.getType() ) ? COMPOSITE_TRACKER_MASK : 0 )
+				| ( PersistentAttributeInterceptable.class.isAssignableFrom( containerClass ) ? PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK : 0 );
 	}
 
 	@Override
@@ -38,12 +47,12 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 		super.set( target, value );
 
 		// This sets the component relation for dirty tracking purposes
-		if ( target instanceof CompositeOwner && value instanceof CompositeTracker ) {
+		if ( ( enhancementState & COMPOSITE_OWNER ) != 0 && ( ( enhancementState & COMPOSITE_TRACKER_MASK ) != 0 || value instanceof CompositeTracker ) ) {
 			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
 		}
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterwards
-		if ( target instanceof PersistentAttributeInterceptable ) {
+		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
 				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );

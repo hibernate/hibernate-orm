@@ -147,8 +147,9 @@ public class EntityMetamodel implements Serializable {
 			RuntimeModelCreationContext creationContext) {
 		this.sessionFactory = creationContext.getSessionFactory();
 
-		name = persistentClass.getEntityName();
-		rootName = persistentClass.getRootClass().getEntityName();
+		// Improves performance of EntityKey#equals by avoiding content check in String#equals
+		name = persistentClass.getEntityName().intern();
+		rootName = persistentClass.getRootClass().getEntityName().intern();
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
 				persistentClass,

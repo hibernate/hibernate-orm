@@ -220,7 +220,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			String defaultSchema);
 
 	public String toString() {
-		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
+		return getClass().getSimpleName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
 
 	/**

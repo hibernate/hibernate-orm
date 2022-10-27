@@ -427,7 +427,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getName() + ')';
+		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
 	public String getCheckConstraint() {

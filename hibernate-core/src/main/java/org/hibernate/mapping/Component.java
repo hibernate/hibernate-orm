@@ -405,7 +405,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + properties.toString() + ')';
+		return getClass().getSimpleName() + '(' + componentClassName + ')';
 	}
 
 	private IdentifierGenerator builtIdentifierGenerator;

@@ -192,7 +192,7 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public String toString() {
-		return getClass().getName() + '(' + table.toString() + ')';
+		return getClass().getSimpleName() + '(' + table.getName() + ')';
 	}
 
 	public boolean isLazy() {

@@ -753,7 +753,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getEntityName() + ')';
+		return getClass().getSimpleName() + '(' + getEntityName() + ')';
 	}
 
 	public List<Join> getJoins() {

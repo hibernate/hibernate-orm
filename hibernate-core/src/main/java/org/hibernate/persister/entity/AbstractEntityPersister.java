@@ -3841,10 +3841,28 @@ public abstract class AbstractEntityPersister
 		if ( entry == null && !isMutable() ) {
 			throw new IllegalStateException( "Updating immutable entity that is not in session yet" );
 		}
-		if ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) {
+		if ( dirtyFields != null && entityMetamodel.isDynamicUpdate() ) {
 			// We need to generate the UPDATE SQL when dynamic-update="true"
 			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
 			// don't need to check laziness (dirty checking algorithm handles that)
+			updateStrings = new String[span];
+			for ( int j = 0; j < span; j++ ) {
+				updateStrings[j] = tableUpdateNeeded[j] ?
+						generateUpdateString( propsToUpdate, j, oldFields, j == 0 && rowId != null ) :
+						null;
+			}
+		}
+		else if ( dirtyFields != null && hasUninitializedLazyProperties( object ) && hasLazyDirtyFields( dirtyFields ) ) {
+			// We need to generate the UPDATE SQL when there are dirty lazy fields
+			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
+			// don't need to check laziness (dirty checking algorithm handles that)
+			final boolean[] propertyLaziness = getPropertyLaziness();
+			// we add also all the non lazy properties because dynamic update is false
+			for ( int i = 0; i < propertyLaziness.length; i++ ) {
+				if ( propertyLaziness[i] == false ) {
+					propsToUpdate[i] = true;
+				}
+			}
 			updateStrings = new String[span];
 			for ( int j = 0; j < span; j++ ) {
 				updateStrings[j] = tableUpdateNeeded[j] ?
@@ -3898,6 +3916,16 @@ public abstract class AbstractEntityPersister
 				);
 			}
 		}
+	}
+
+	private boolean hasLazyDirtyFields(int[] dirtyFields) {
+		final boolean[] propertyLaziness = getPropertyLaziness();
+		for ( int i = 0; i < dirtyFields.length; i++ ) {
+			if ( propertyLaziness[dirtyFields[i]] ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -52,7 +52,8 @@ public class EntityTypeImpl<J>
 				persistentClass.getEntityName(),
 				javaType,
 				superType,
-				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
+				persistentClass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned(),
 				jpaMetamodel

@@ -430,7 +430,16 @@ public class BinderHelper {
 			for ( Property property : persistentClass.getProperties() ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
-			matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
+			if ( persistentClass.hasIdentifierProperty() ) {
+				matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
+			}
+			else {
+				// special case for entities with multiple @Id properties
+				Component key = persistentClass.getIdentifierMapper();
+				for ( Property p : key.getProperties() ) {
+					matchColumnsByProperty( p, columnsToProperty );
+				}
+			}
 		}
 		else {
 			for ( Property property : ((Join) columnOwner).getProperties() ) {

@@ -762,7 +762,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	}
 
 	public String toString() {
-		StringBuilder buf = new StringBuilder().append( getClass().getName() )
+		StringBuilder buf = new StringBuilder().append( getClass().getSimpleName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
 			buf.append( getCatalog() ).append( "." );

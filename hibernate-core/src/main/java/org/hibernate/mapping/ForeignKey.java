@@ -228,7 +228,7 @@ public class ForeignKey extends Constraint {
 
 	public String toString() {
 		if ( !isReferenceToPrimaryKey() ) {
-			return getClass().getName()
+			return getClass().getSimpleName()
 					+ '(' + getTable().getName() + getColumns()
 					+ " ref-columns:" + '(' + getReferencedColumns() + ") as " + getName() + ")";
 		}

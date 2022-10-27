@@ -216,4 +216,8 @@ public class OneToMany implements Value {
 				: null;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

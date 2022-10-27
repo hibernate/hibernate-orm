@@ -2653,7 +2653,7 @@ public abstract class CollectionBinder {
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}
-		TableBinder.bindFk( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
+		TableBinder.bindForeignKey( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
 		key.sortProperties();
 	}
 
@@ -2703,7 +2703,7 @@ public abstract class CollectionBinder {
 			if ( notFoundAction == NotFoundAction.IGNORE ) {
 				value.disableForeignKey();
 			}
-			TableBinder.bindFk( referencedEntity, null, columns, value, unique, buildingContext );
+			TableBinder.bindForeignKey( referencedEntity, null, columns, value, unique, buildingContext );
 		}
 	}
 

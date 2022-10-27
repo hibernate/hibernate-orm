@@ -41,6 +41,6 @@ public class JoinedSubclassFkSecondPass extends FkSecondPass {
 	}
 
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		TableBinder.bindFk( entity.getSuperclass(), entity, columns, value, false, buildingContext );
+		TableBinder.bindForeignKey( entity.getSuperclass(), entity, columns, value, false, buildingContext );
 	}
 }

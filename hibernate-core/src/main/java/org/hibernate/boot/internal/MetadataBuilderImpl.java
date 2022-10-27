@@ -66,7 +66,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -622,11 +621,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 								if ( value == null ) {
 									return null;
 								}
-
-								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-										AvailableSettings.JPA_SHARED_CACHE_MODE,
-										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
-								);
 
 								if ( value instanceof SharedCacheMode ) {
 									return (SharedCacheMode) value;

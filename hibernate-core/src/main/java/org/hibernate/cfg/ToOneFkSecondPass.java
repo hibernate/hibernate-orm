@@ -98,7 +98,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			}
 			manyToOne.setPropertyName( path );
 			createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
-			TableBinder.bindFk( ref, null, columns, manyToOne, unique, buildingContext );
+			TableBinder.bindForeignKey( ref, null, columns, manyToOne, unique, buildingContext );
 			/*
 			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */

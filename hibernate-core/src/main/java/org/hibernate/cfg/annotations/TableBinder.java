@@ -26,6 +26,7 @@ import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.ObjectNameSource;
+import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
@@ -46,6 +47,9 @@ import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
+import static org.hibernate.cfg.AnnotatedJoinColumn.NO_REFERENCE;
+import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
@@ -525,7 +529,7 @@ public class TableBinder {
 		return table;
 	}
 
-	public static void bindFk(
+	public static void bindForeignKey(
 			PersistentClass referencedEntity,
 			PersistentClass destinationEntity,
 			AnnotatedJoinColumn[] columns,
@@ -538,167 +542,198 @@ public class TableBinder {
 			associatedClass = destinationEntity;
 		}
 		else {
-			associatedClass = columns[0].getPropertyHolder() == null
-					? null
-					: columns[0].getPropertyHolder().getPersistentClass();
+			PropertyHolder holder = columns[0].getPropertyHolder();
+			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
+
 		final String mappedByProperty = columns[0].getMappedBy();
 		if ( isNotEmpty( mappedByProperty ) ) {
-			// Get the columns of the mapped-by property
+			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
-			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
-
-			final Value propertyVal = associatedClass.getRecursiveProperty( columns[0].getMappedBy() ).getValue();
-			final List<Column> mappedByColumns;
-			if ( propertyVal instanceof Collection ) {
-				Value element = ((Collection) propertyVal).getElement();
-				if ( element == null ) {
-					throw new AnnotationException(
-							"Both sides of the bidirectional association '"
-									+ associatedClass.getEntityName() + "." + mappedByProperty
-									+ "' specify 'mappedBy'"
-					);
-				}
-				mappedByColumns = element.getColumns();
-			}
-			else {
-				mappedByColumns = propertyVal.getColumns();
-			}
-			for ( Column column: mappedByColumns ) {
-				columns[0].overrideFromReferencedColumnIfNecessary( column );
-				columns[0].linkValueUsingAColumnCopy( column, value );
-			}
+			bindUnownedAssociation( columns, value, associatedClass, mappedByProperty );
 		}
 		else if ( columns[0].isImplicit() ) {
-			// if columns are implicit, then create the columns based on the
-			// referenced entity id columns
-			List<Column> idColumns = referencedEntity instanceof JoinedSubclass
-					? referencedEntity.getKey().getColumns()
-					: referencedEntity.getIdentifier().getColumns();
-			for ( Column column: idColumns ) {
-				columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
-				columns[0].overrideFromReferencedColumnIfNecessary( column );
-			}
+			// if columns are implicit, then create the columns based
+			// on the referenced entity id columns
+			bindImplicitColumns( referencedEntity, columns, value );
 		}
 		else {
-			int fkEnum = AnnotatedJoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
-			if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
-				String referencedPropertyName;
-				if ( value instanceof ToOne ) {
-					referencedPropertyName = ( (ToOne) value ).getReferencedPropertyName();
-				}
-				else if ( value instanceof DependantValue ) {
-					String propertyName = columns[0].getPropertyName();
-					if ( propertyName != null ) {
-						Collection collection = (Collection)
-								referencedEntity.getRecursiveProperty( propertyName ).getValue();
-						referencedPropertyName = collection.getReferencedPropertyName();
-					}
-					else {
-						throw new AnnotationException( "The '@JoinColumn' for a secondary table must reference the primary key" );
-					}
-
-				}
-				else {
-					throw new AssertionFailure(
-							"Do a property ref on an unexpected Value type: "
-									+ value.getClass().getName()
-					);
-				}
-				if ( referencedPropertyName == null ) {
-					throw new AssertionFailure(
-							"No property ref found while expected"
-					);
-				}
-				Property synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
-				if ( synthProp == null ) {
-					throw new AssertionFailure(
-							"Cannot find synthProp: " + referencedEntity.getEntityName() + "." + referencedPropertyName
-					);
-				}
-				linkJoinColumnWithValueOverridingNameIfImplicit( referencedEntity, synthProp.getValue(), columns, value );
-				if ( value instanceof SortableValue ) {
-					( (SortableValue) value ).sortProperties();
-				}
-			}
-			else {
-				if ( AnnotatedJoinColumn.NO_REFERENCE == fkEnum ) {
-					//implicit case, we hope PK and FK columns are in the same order
-					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
-						throw new AnnotationException(
-								"A foreign key that references '" + referencedEntity.getEntityName()
-										+ "' from entity '" + associatedClass.getEntityName()
-										+ "' has " + columns.length + " columns but the primary key has "
-										+ referencedEntity.getIdentifier().getColumnSpan() + " columns"
-						);
-					}
-					linkJoinColumnWithValueOverridingNameIfImplicit(
-							referencedEntity,
-							referencedEntity.getIdentifier(),
-							columns,
-							value
-					);
-					if ( value instanceof SortableValue ) {
-						( (SortableValue) value ).sortProperties();
-					}
-				}
-				else {
-					// Ensure the component is sorted so that we can simply set sorted to true on the to-one
-					KeyValue key = referencedEntity.getKey();
-					if ( key instanceof Component ) {
-						( (Component) key).sortProperties();
-					}
-					//explicit referencedColumnName
-					List<Column> idColumns = key.getColumns();
-					//works cause the pk has to be on the primary table
-					if ( idColumns.isEmpty() ) {
-						LOG.debug( "No column in the identifier" );
-					}
-					final Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
-							.getJdbcEnvironment().getDialect();
-					for ( Column col: idColumns ) {
-						boolean match = false;
-						//for each PK column, find the associated FK column.
-						final String colName = col.getQuotedName(dialect);
-						for ( AnnotatedJoinColumn joinCol : columns ) {
-							String referencedColumn = joinCol.getReferencedColumn();
-							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
-									referencedEntity.getTable(),
-									referencedColumn
-							);
-							//In JPA 2 referencedColumnName is case-insensitive
-							if ( referencedColumn.equalsIgnoreCase( colName ) ) {
-								//proper join column
-								if ( joinCol.isNameDeferred() ) {
-									joinCol.linkValueUsingDefaultColumnNaming(
-											col, referencedEntity, value
-									);
-								}
-								else {
-									joinCol.linkWithValue( value );
-								}
-								joinCol.overrideFromReferencedColumnIfNecessary( col );
-								match = true;
-								break;
-							}
-						}
-						if ( !match ) {
-							throw new AnnotationException(
-									"Column name " + col.getName() + " of "
-											+ referencedEntity.getEntityName() + " not found in JoinColumns.referencedColumnName"
-							);
-						}
-					}
-
-					if ( value instanceof ToOne ) {
-						( (ToOne) value ).setSorted( true );
-					}
-				}
-			}
+			bindExplicitColumns( referencedEntity, columns, value, buildingContext, associatedClass );
 		}
 		value.createForeignKey();
 		if ( unique ) {
 			value.createUniqueKey();
+		}
+	}
+
+	private static void bindExplicitColumns(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value,
+			MetadataBuildingContext buildingContext,
+			PersistentClass associatedClass) {
+		switch ( checkReferencedColumnsType( columns, referencedEntity, buildingContext ) ) {
+			case NON_PK_REFERENCE: {
+				bindNonPkReference( referencedEntity, columns, value );
+				break;
+			}
+			case NO_REFERENCE: {
+				bindImplicitPkReference( referencedEntity, columns, value, associatedClass );
+				break;
+			}
+			default: {
+				bindPkReference( referencedEntity, columns, value, associatedClass, buildingContext );
+			}
+		}
+	}
+
+	private static void bindImplicitPkReference(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value,
+			PersistentClass associatedClass) {
+		//implicit case, we hope PK and FK columns are in the same order
+		if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
+			throw new AnnotationException(
+					"An association that targets entity '" + referencedEntity.getEntityName()
+							+ "' from entity '" + associatedClass.getEntityName()
+							+ "' has " + columns.length + " '@JoinColumn's but the primary key has "
+							+ referencedEntity.getIdentifier().getColumnSpan() + " columns"
+			);
+		}
+		linkJoinColumnWithValueOverridingNameIfImplicit(
+				referencedEntity,
+				referencedEntity.getIdentifier(),
+				columns,
+				value
+		);
+		if ( value instanceof SortableValue ) {
+			( (SortableValue) value).sortProperties();
+		}
+	}
+
+	private static void bindPkReference(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value,
+			PersistentClass associatedClass,
+			MetadataBuildingContext buildingContext) {
+		// ensure the composite key is sorted so that we can simply
+		// set sorted to true on the ToOne (below)
+		final KeyValue key = referencedEntity.getKey();
+		if ( key instanceof Component ) {
+			( (Component) key).sortProperties();
+		}
+		// works because the pk has to be on the primary table
+		final Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
+				.getJdbcEnvironment().getDialect();
+		for ( Column col: key.getColumns() ) {
+			boolean match = false;
+			// for each PK column, find the associated FK column.
+			final String colName = col.getQuotedName( dialect );
+			for ( AnnotatedJoinColumn joinCol : columns ) {
+				final String referencedColumn = buildingContext.getMetadataCollector()
+						.getPhysicalColumnName( referencedEntity.getTable(), joinCol.getReferencedColumn() );
+				// in JPA 2 referencedColumnName is case-insensitive
+				if ( referencedColumn.equalsIgnoreCase( colName ) ) {
+					// correct join column
+					if ( joinCol.isNameDeferred() ) {
+						joinCol.linkValueUsingDefaultColumnNaming( col, referencedEntity, value );
+					}
+					else {
+						joinCol.linkWithValue( value );
+					}
+					joinCol.overrideFromReferencedColumnIfNecessary( col );
+					match = true;
+					break;
+				}
+			}
+			if ( !match ) {
+				// we can only get here if there's a dupe PK column in the @JoinColumns
+				throw new AnnotationException(
+						"An association that targets entity '" + referencedEntity.getEntityName()
+								+ "' from entity '" + associatedClass.getEntityName()
+								+ "' has no '@JoinColumn' referencing column '"+ col.getName()
+				);
+			}
+		}
+		if ( value instanceof ToOne ) {
+			( (ToOne) value).setSorted( true );
+		}
+	}
+
+	private static void bindNonPkReference(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value) {
+		final String referencedPropertyName;
+		if ( value instanceof ToOne ) {
+			referencedPropertyName = ( (ToOne) value).getReferencedPropertyName();
+		}
+		else if ( value instanceof DependantValue ) {
+			final String propertyName = columns[0].getPropertyName();
+			if ( propertyName != null ) {
+				Collection collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
+				referencedPropertyName = collection.getReferencedPropertyName();
+			}
+			else {
+				throw new AnnotationException( "The '@JoinColumn' for a secondary table must reference the primary key" );
+			}
+
+		}
+		else {
+			throw new AssertionFailure( "Property ref to an unexpected Value type: " + value.getClass().getName() );
+		}
+		if ( referencedPropertyName == null ) {
+			throw new AssertionFailure( "No property ref found" );
+		}
+
+		final Property synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
+		if ( synthProp == null ) {
+			throw new AssertionFailure( "Cannot find synthetic property: "
+					+ referencedEntity.getEntityName() + "." + referencedPropertyName );
+		}
+		linkJoinColumnWithValueOverridingNameIfImplicit( referencedEntity, synthProp.getValue(), columns, value );
+		( (SortableValue) value).sortProperties();
+	}
+
+	private static void bindImplicitColumns(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value) {
+		final List<Column> idColumns = referencedEntity instanceof JoinedSubclass
+				? referencedEntity.getKey().getColumns()
+				: referencedEntity.getIdentifier().getColumns();
+		for ( Column column: idColumns ) {
+			columns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
+			columns[0].overrideFromReferencedColumnIfNecessary( column );
+		}
+	}
+
+	private static void bindUnownedAssociation(
+			AnnotatedJoinColumn[] columns,
+			SimpleValue value,
+			PersistentClass associatedClass,
+			String mappedByProperty) {
+		for ( Column column: mappedByColumns( associatedClass, mappedByProperty ) ) {
+			columns[0].overrideFromReferencedColumnIfNecessary( column );
+			columns[0].linkValueUsingAColumnCopy( column, value);
+		}
+	}
+
+	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
+		LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
+		final Value value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
+		if ( value instanceof Collection ) {
+			final Value element = ((Collection) value).getElement();
+			if ( element == null ) {
+				throw new AnnotationException( "Both sides of the bidirectional association '"
+						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
+			}
+			return element.getColumns();
+		}
+		else {
+			return value.getColumns();
 		}
 	}
 
@@ -707,10 +742,10 @@ public class TableBinder {
 			Value value,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue simpleValue) {
-		List<Column> valueColumns = value.getColumns();
+		final List<Column> valueColumns = value.getColumns();
 		for ( int i = 0; i < columns.length; i++ ) {
-			AnnotatedJoinColumn joinCol = columns[i];
-			Column synthCol = valueColumns.get(i);
+			final AnnotatedJoinColumn joinCol = columns[i];
+			final Column synthCol = valueColumns.get(i);
 			if ( joinCol.isNameDeferred() ) {
 				//this has to be the default value
 				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, simpleValue );

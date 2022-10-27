@@ -6,10 +6,9 @@
  */
 package org.hibernate.cfg;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
@@ -779,73 +778,60 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			AnnotatedJoinColumn[] columns,
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
-		//convenient container to find whether a column is an id one or not
-		Set<Column> idColumns = new HashSet<>();
-		for ( Selectable selectable : referencedEntity.getKey().getSelectables() ) {
-			idColumns.add( (Column) selectable );
+		if ( columns.length == 0 ) {
+			return NO_REFERENCE; //shortcut
 		}
 
-		boolean isFkReferencedColumnName = false;
-		boolean noReferencedColumn = true;
-		//build the list of potential tables
-		if ( columns.length == 0 ) return NO_REFERENCE; //shortcut
-		Object columnOwner = findColumnOwner( referencedEntity, columns[0].getReferencedColumn(), context );
+		final Object columnOwner = findColumnOwner( referencedEntity, columns[0].getReferencedColumn(), context );
 		if ( columnOwner == null ) {
 			try {
 				throw new MappingException(
-						"No column with logical name '"
-								+ columns[0].getReferencedColumn()
-								+ "' in table '" + referencedEntity.getTable().getName()
-								+ "' for entity '" + referencedEntity.getEntityName()
-								+ "', nor in its related superclass tables and secondary tables"
+						"A '@JoinColumn' references a column named '" + columns[0].getReferencedColumn()
+								+ "' but the target entity '" + referencedEntity.getEntityName()
+								+ "' has no property which maps to this column"
 				);
 			}
 			catch (MappingException e) {
 				throw new RecoverableException( e.getMessage(), e );
 			}
 		}
-		Table matchingTable = columnOwner instanceof PersistentClass ?
-				( (PersistentClass) columnOwner ).getTable() :
-				( (Join) columnOwner ).getTable();
-		//check each referenced column
-		for (AnnotatedJoinColumn ejb3Column : columns) {
-			String logicalReferencedColumnName = ejb3Column.getReferencedColumn();
+		final Table table = columnOwner instanceof PersistentClass
+				? ( (PersistentClass) columnOwner ).getTable()
+				: ( (Join) columnOwner ).getTable();
+
+		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
+		boolean explicitColumnReference = false;
+		for ( AnnotatedJoinColumn column : columns ) {
+			final String logicalReferencedColumnName = column.getReferencedColumn();
 			if ( StringHelper.isNotEmpty( logicalReferencedColumnName ) ) {
-				String referencedColumnName;
-				try {
-					referencedColumnName = context.getMetadataCollector().getPhysicalColumnName(
-							matchingTable,
-							logicalReferencedColumnName
-					);
-				}
-				catch (MappingException me) {
-					//rewrite the exception
-					throw new MappingException(
-							"No column with logical name '" + logicalReferencedColumnName
-									+ "' in table '" + matchingTable.getName() + "'"
-					);
-				}
-				noReferencedColumn = false;
-				Column refCol = new Column( referencedColumnName );
-				boolean contains = idColumns.contains( refCol );
-				if ( !contains ) {
-					isFkReferencedColumnName = true;
-					break; //we know the state
+				explicitColumnReference = true;
+				if ( !keyColumns.contains( column( context, table, logicalReferencedColumnName ) ) ) {
+					// we have a column which does not belong to the PK
+					return NON_PK_REFERENCE;
 				}
 			}
 		}
-		if ( isFkReferencedColumnName ) {
-			return NON_PK_REFERENCE;
-		}
-		else if ( noReferencedColumn ) {
-			return NO_REFERENCE;
-		}
-		else if ( idColumns.size() != columns.length ) {
-			//reference use PK but is a subset or a superset
-			return NON_PK_REFERENCE;
+		if ( explicitColumnReference ) {
+			// if we got to here, all the columns belong to the PK
+			return keyColumns.size() == columns.length
+					// we have all the PK columns
+					? PK_REFERENCE
+					// we have a subset of the PK columns
+					: NON_PK_REFERENCE;
 		}
 		else {
-			return PK_REFERENCE;
+			// there were no nonempty referencedColumnNames
+			return NO_REFERENCE;
+		}
+	}
+
+	private static Column column(MetadataBuildingContext context, Table table, String logicalReferencedColumnName) {
+		try {
+			return new Column( context.getMetadataCollector().getPhysicalColumnName( table, logicalReferencedColumnName ) );
+		}
+		catch (MappingException me) {
+			throw new MappingException( "No column with logical name '" + logicalReferencedColumnName
+					+ "' in table '" + table.getName() + "'" );
 		}
 	}
 

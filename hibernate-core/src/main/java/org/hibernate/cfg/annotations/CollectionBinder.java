@@ -37,6 +37,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -1068,10 +1069,10 @@ public abstract class CollectionBinder {
 		this.tableBinder = tableBinder;
 	}
 
-	/*
- 		@deprecated : Use {@link #setElementType(XClass)} instead.
+	/**
+	 * @deprecated : Use {@link #setElementType(XClass)} instead.
 	 */
-	@Deprecated(since = "6.1")
+	@Deprecated(since = "6.1") @Remove
 	public void setCollectionType(XClass collectionType) {
 		// NOTE: really really badly named.  This is actually NOT the collection-type, but rather the collection-element-type!
 		this.collectionElementType = collectionType;
@@ -2675,7 +2676,7 @@ public abstract class CollectionBinder {
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}
-		TableBinder.bindFk( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
+		TableBinder.bindForeignKey( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
 		key.sortProperties();
 	}
 
@@ -2694,7 +2695,7 @@ public abstract class CollectionBinder {
 	 * collection element
 	 * Otherwise delegates to the usual algorithm
 	 */
-	public static void bindManytoManyInverseFk(
+	public void bindManytoManyInverseFk(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
@@ -2722,7 +2723,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			createSyntheticPropertyReference( columns, referencedEntity, null, value, true, buildingContext );
-			TableBinder.bindFk( referencedEntity, null, columns, value, unique, buildingContext );
+			TableBinder.bindForeignKey( referencedEntity, null, columns, value, unique, buildingContext );
 		}
 	}
 

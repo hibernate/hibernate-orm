@@ -84,6 +84,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
+
 /**
  * @author Emmanuel Bernard
  */

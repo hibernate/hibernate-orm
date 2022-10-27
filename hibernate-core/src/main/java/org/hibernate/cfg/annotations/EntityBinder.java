@@ -1812,7 +1812,7 @@ public class EntityBinder {
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
-		TableBinder.bindFk( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
+		TableBinder.bindForeignKey( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
 		key.sortProperties();
 		join.createPrimaryKey();
 		join.createForeignKey();

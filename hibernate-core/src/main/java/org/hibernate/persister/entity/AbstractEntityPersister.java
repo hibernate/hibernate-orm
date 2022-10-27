@@ -4350,6 +4350,8 @@ public abstract class AbstractEntityPersister
 		doLateInit();
 		prepareLoader( singleIdEntityLoader );
 		prepareLoader( multiIdEntityLoader );
+
+		doPostInstantiate();
 	}
 
 	private void prepareLoader(Loader loader) {

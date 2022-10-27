@@ -125,7 +125,7 @@ dependencyResolutionManagement {
             version( "junit5", "5.8.2" )
             version( "assertj", "3.14.0" )
             version( "mockito", "4.3.1" )
-            version( "byteman", "4.0.16" )
+            version( "byteman", "4.0.20" ) //Compatible with JDK20
             version( "shrinkwrap", "1.2.6" )
             version( "shrinkwrapDescriptors", "2.0.0" )
 

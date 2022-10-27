@@ -245,6 +245,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
@@ -389,6 +390,7 @@ public abstract class AbstractEntityPersister
 	private String sqlLazyUpdateByRowIdString;
 
 	private String[] sqlDeleteStrings;
+	private String[] sqlDeleteNoVersionCheckStrings;
 	private String[] sqlInsertStrings;
 	private String[] sqlUpdateStrings;
 	private String[] sqlLazyUpdateStrings;
@@ -560,6 +562,10 @@ public abstract class AbstractEntityPersister
 		return sqlDeleteStrings;
 	}
 
+	public String[] getSQLDeleteNoVersionCheckStrings() {
+		return sqlDeleteNoVersionCheckStrings;
+	}
+
 	public String[] getSQLInsertStrings() {
 		return sqlInsertStrings;
 	}
@@ -609,6 +615,7 @@ public abstract class AbstractEntityPersister
 		return deleteCallable[j];
 	}
 
+	@Deprecated(forRemoval = true)
 	protected boolean isSubclassTableSequentialSelect(int j) {
 		return false;
 	}
@@ -625,7 +632,6 @@ public abstract class AbstractEntityPersister
 	 * @return Array of booleans indicating which table require updating.
 	 */
 	public boolean[] getTableUpdateNeeded(final int[] dirtyProperties, boolean hasDirtyCollection) {
-
 		if ( dirtyProperties == null ) {
 			return getTableHasColumns(); // for objects that came in via update()
 		}
@@ -695,31 +701,31 @@ public abstract class AbstractEntityPersister
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
-		this.factory = creationContext.getSessionFactory();
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
+		factory = creationContext.getSessionFactory();
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
 
-		this.navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
+		navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
 
-		SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
+		final SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
-			this.canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
-			this.canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
 			this.cacheAccessStrategy = cacheAccessStrategy;
-			this.isLazyPropertiesCacheable = bootDescriptor.getRootClass().isLazyPropertiesCacheable();
 			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
+			canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
+			canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
+			isLazyPropertiesCacheable = bootDescriptor.getRootClass().isLazyPropertiesCacheable();
 		}
 		else {
-			this.canWriteToCache = false;
-			this.canReadFromCache = false;
 			this.cacheAccessStrategy = null;
-			this.isLazyPropertiesCacheable = true;
 			this.naturalIdRegionAccessStrategy = null;
+			canWriteToCache = false;
+			canReadFromCache = false;
+			isLazyPropertiesCacheable = true;
 		}
 
-		this.entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
+		entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
 
-		this.entityEntryFactory = entityMetamodel.isMutable()
+		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE
 				: ImmutableEntityEntryFactory.INSTANCE;
 
@@ -1853,74 +1859,12 @@ public abstract class AbstractEntityPersister
 	@Override
 	public String selectFragment(String alias, String suffix) {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final String rootTableName = getRootTableName();
 		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
 				LockOptions.NONE,
-				(fetchParent, querySpec, creationState) -> {
-					final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-					final int size = fetchableContainer.getNumberOfFetchables();
-					final List<Fetch> fetches = new ArrayList<>( size );
-
-					for ( int i = 0; i < size; i++ ) {
-						final Fetchable fetchable = fetchableContainer.getFetchable( i );
-						// Ignore plural attributes
-						if ( fetchable instanceof PluralAttributeMapping ) {
-							continue;
-						}
-						FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-						final boolean selectable;
-						if ( fetchable instanceof AttributeMapping ) {
-							if ( fetchParent instanceof EmbeddableResultGraphNode && ( (EmbeddableResultGraphNode) fetchParent ).getReferencedMappingContainer() == getIdentifierMapping() ) {
-								selectable = true;
-							}
-							else {
-								final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
-								final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-								selectable = !isSubclassTableSequentialSelect( tableNumber )
-										&& propertySelectable[propertyNumber];
-							}
-						}
-						else {
-							selectable = true;
-						}
-						if ( fetchable instanceof BasicValuedModelPart ) {
-							// Ignore lazy basic columns
-							if ( fetchTiming == FetchTiming.DELAYED ) {
-								continue;
-							}
-						}
-						else if ( fetchable instanceof Association ) {
-							final Association association = (Association) fetchable;
-							// Ignore the fetchable if the FK is on the other side
-							if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-								continue;
-							}
-							// Ensure the FK comes from the root table
-							if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-								continue;
-							}
-							fetchTiming = FetchTiming.DELAYED;
-						}
-
-						if ( selectable ) {
-							final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-							final Fetch fetch = fetchParent.generateFetchableFetch(
-									fetchable,
-									navigablePath,
-									fetchTiming,
-									true,
-									null,
-									creationState
-							);
-							fetches.add( fetch );
-						}
-					}
-
-					return fetches;
-				},
+				this::fetchProcessor,
 				true,
 				getFactory()
 		);
@@ -2025,6 +1969,78 @@ public abstract class AbstractEntityPersister
 			expression = sql.substring( "select ".length() );
 		}
 		return expression;
+	}
+
+	private List<Fetch> fetchProcessor(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
+		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
+		final int size = fetchableContainer.getNumberOfFetchables();
+		final List<Fetch> fetches = new ArrayList<>( size );
+
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable fetchable = fetchableContainer.getFetchable( i );
+			// Ignore plural attributes
+			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
+				final FetchTiming fetchTiming;
+				if ( fetchable instanceof BasicValuedModelPart ) {
+					// Ignore lazy basic columns
+					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+					if ( fetchTiming == FetchTiming.DELAYED ) {
+						continue;
+					}
+				}
+				else if ( fetchable instanceof Association ) {
+					final Association association = (Association) fetchable;
+					// Ignore the fetchable if the FK is on the other side
+					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+						continue;
+					}
+					// Ensure the FK comes from the root table
+					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
+						continue;
+					}
+					fetchTiming = FetchTiming.DELAYED;
+				}
+				else {
+					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+				}
+
+				if ( fetchTiming == null ) {
+					throw new AssertionFailure("fetchTiming was null");
+				}
+
+				if ( isSelectable( fetchParent, fetchable ) ) {
+					final Fetch fetch = fetchParent.generateFetchableFetch(
+							fetchable,
+							fetchParent.resolveNavigablePath( fetchable ),
+							fetchTiming,
+							true,
+							null,
+							creationState
+					);
+					fetches.add( fetch );
+				}
+			}
+		}
+
+		return fetches;
+	}
+
+	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+		if ( fetchable instanceof AttributeMapping ) {
+			if ( fetchParent instanceof EmbeddableResultGraphNode
+					&& ( (EmbeddableResultGraphNode) fetchParent).getReferencedMappingContainer() == getIdentifierMapping() ) {
+				return true;
+			}
+			else {
+				final int propertyNumber = ( (AttributeMapping) fetchable).getStateArrayPosition();
+//				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+//				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
+				return propertySelectable[propertyNumber];
+			}
+		}
+		else {
+			return true;
+		}
 	}
 
 	@Override
@@ -2499,6 +2515,13 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyNameClosure;
 	}
 
+	private static boolean isPrefix(final AttributeMapping attributeMapping, final String currentAttributeName) {
+		final String attributeName = attributeMapping.getAttributeName();
+		final int nameLength = attributeName.length();
+		return currentAttributeName.startsWith( attributeName )
+			&& ( currentAttributeName.length() == nameLength || currentAttributeName.charAt(nameLength) == '.' );
+	}
+
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
 		if ( attributeNames == null || attributeNames.length == 0 ) {
@@ -2511,11 +2534,7 @@ public abstract class AbstractEntityPersister
 
 		int index = 0;
 		for ( final AttributeMapping attributeMapping : attributeMappings ) {
-			final String attributeName = attributeMapping.getAttributeName();
-			final int nameLength = attributeName.length();
-			final String currentAttributeName = attributeNames[index];
-			if ( currentAttributeName.startsWith( attributeName ) && (
-					( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+			if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 				fields.add( attributeMapping.getStateArrayPosition() );
 				index++;
 				if ( index < attributeNames.length ) {
@@ -2554,19 +2573,10 @@ public abstract class AbstractEntityPersister
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
 			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
 			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
-			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0; i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
+			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0;
+					i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
-				final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						// Consider mutable properties as dirty if we don't have a previous state
-						( previousState == null || previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
-								( propertyCheckability[i]
-										&& propertyTypes[i].isDirty(
-										previousState[i],
-										currentState[i],
-										propertyColumnUpdateable[i],
-										session
-								) ) );
-				if ( dirty ) {
+				if ( isDirty( currentState, previousState, propertyTypes, propertyCheckability, i, session ) ) {
 					fields.add( i );
 				}
 			}
@@ -2580,11 +2590,8 @@ public abstract class AbstractEntityPersister
 			int index = 0;
 			for ( final AttributeMapping attributeMapping : attributeMappings ) {
 				final String attributeName = attributeMapping.getAttributeName();
-				final int nameLength = attributeName.length();
-				final String currentAttributeName = attributeNames[index];
-				final int position = attributeMapping.getStateArrayPosition();
-				if ( currentAttributeName.startsWith( attributeName ) && (
-						( currentAttributeName.length() == nameLength || currentAttributeName.charAt( nameLength ) == '.' ) ) ) {
+				if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
+					final int position = attributeMapping.getStateArrayPosition();
 					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
 						fields.add( position );
 					}
@@ -2610,6 +2617,27 @@ public abstract class AbstractEntityPersister
 		return ArrayHelper.toIntArray( fields );
 	}
 
+	private boolean isDirty(
+			Object[] currentState,
+			Object[] previousState,
+			Type[] propertyTypes,
+			boolean[] propertyCheckability,
+			int i,
+			SessionImplementor session) {
+		return currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				// Consider mutable properties as dirty if we don't have a previous state
+				&& ( previousState == null
+						|| previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| propertyCheckability[i]
+								&& propertyTypes[i].isDirty(
+										previousState[i],
+										currentState[i],
+										propertyColumnUpdateable[i],
+										session
+								)
+				);
+	}
+
 	protected String[] getSubclassColumnAliasClosure() {
 		return subclassColumnAliasClosure;
 	}
@@ -2620,17 +2648,17 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		String[] rawAliases = subclassPropertyAliases.get( propertyName );
-
+		final String[] rawAliases = subclassPropertyAliases.get( propertyName );
 		if ( rawAliases == null ) {
 			return null;
 		}
-
-		String[] result = new String[rawAliases.length];
-		for ( int i = 0; i < rawAliases.length; i++ ) {
-			result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+		else {
+			final String[] result = new String[rawAliases.length];
+			for ( int i = 0; i < rawAliases.length; i++ ) {
+				result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+			}
+			return result;
 		}
-		return result;
 	}
 
 	@Override
@@ -3148,11 +3176,20 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Generate the SQL that deletes a row by id (and version)
+	* @deprecated Use {@link #generateDeleteString(int, boolean)} instead
 	 */
+	@Deprecated
 	public String generateDeleteString(int j) {
+		return generateDeleteString( j, true );
+	}
+
+	/**
+	 * Generate the SQL that deletes a row by id (and version)
+	 */
+	public String generateDeleteString(int j, boolean includeVersion) {
 		final Delete delete = createDelete().setTableName( getTableName( j ) )
 				.addPrimaryKeyColumns( getKeyColumns( j ) );
-		if ( j == 0 ) {
+		if ( includeVersion && j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
@@ -3344,11 +3381,9 @@ public abstract class AbstractEntityPersister
 
 		// TODO : shouldn't inserts be Expectations.NONE?
 		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() &&
-						jdbcBatchSizeToUse > 1 &&
-						getIdentifierGenerator().supportsJdbcBatchInserts();
-
+		final boolean useBatch = expectation.canBeBatched()
+				&& session.getConfiguredJdbcBatchSize() > 1
+				&& getIdentifierGenerator().supportsJdbcBatchInserts();
 		if ( useBatch && insertBatchKey == null ) {
 			insertBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
@@ -3486,7 +3521,6 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
 		// IMPLEMENTATION NOTE: If Session#saveOrUpdate or #update is used to update an entity, then
 		//                      Hibernate does not have a database snapshot of the existing entity.
 		//                      As a result, oldFields will be null.
@@ -3494,11 +3528,10 @@ public abstract class AbstractEntityPersister
 		// because there is no way to know that there is actually a row to update. If the update
 		// was batched in this case, the batch update would fail and there is no way to fallback to
 		// an insert.
-		final boolean useBatch =
-				expectation.canBeBatched() &&
-						isBatchable() &&
-						jdbcBatchSizeToUse > 1 &&
-						( oldFields != null || !isNullableTable( j ) );
+		final boolean useBatch = expectation.canBeBatched()
+				&& isBatchable()
+				&& session.getConfiguredJdbcBatchSize() > 1
+				&& ( oldFields != null || !isNullableTable( j ) );
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",
@@ -3635,10 +3668,14 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final boolean useVersion = j == 0 && isVersioned();
+		final boolean useVersion = j == 0 && isVersioned()
+				&& object != null; // null object signals that we're deleting an unloaded proxy
 		final boolean callable = isDeleteCallable( j );
 		final Expectation expectation = Expectations.appropriateExpectation( deleteResultCheckStyles[j] );
-		final boolean useBatch = j == 0 && isBatchable() && expectation.canBeBatched();
+		final boolean useBatch = j == 0
+				&& isBatchable()
+				&& expectation.canBeBatched()
+				&& session.getConfiguredJdbcBatchSize() > 1;
 		if ( useBatch && deleteBatchKey == null ) {
 			deleteBatchKey = new BasicBatchKey(
 					getEntityName() + "#DELETE",
@@ -3681,12 +3718,12 @@ public abstract class AbstractEntityPersister
 
 				index += expectation.prepare( delete );
 
-				// Do the key. The key is immutable so we can use the _current_ object state - not necessarily
-				// the state at the time the delete was issued
+				// Do the key. The key is immutable, so we can use the _current_ object state,
+				// not necessarily the state at the time the delete operation was issued
 				getIdentifierType().nullSafeSet( delete, id, index, session );
 				index += getIdentifierColumnSpan();
 
-				// We should use the _current_ object state (ie. after any updates that occurred during flush)
+				// We should use the _current_ object state (after any updates that occurred during flush)
 
 				if ( useVersion ) {
 					getVersionType().nullSafeSet( delete, version, index, session );
@@ -3818,10 +3855,28 @@ public abstract class AbstractEntityPersister
 		if ( entry == null && !isMutable() ) {
 			throw new IllegalStateException( "Updating immutable entity that is not in session yet" );
 		}
-		if ( ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) ) {
+		if ( dirtyFields != null && entityMetamodel.isDynamicUpdate() ) {
 			// We need to generate the UPDATE SQL when dynamic-update="true"
 			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
 			// don't need to check laziness (dirty checking algorithm handles that)
+			updateStrings = new String[span];
+			for ( int j = 0; j < span; j++ ) {
+				updateStrings[j] = tableUpdateNeeded[j] ?
+						generateUpdateString( propsToUpdate, j, oldFields, j == 0 && rowId != null ) :
+						null;
+			}
+		}
+		else if ( dirtyFields != null && hasUninitializedLazyProperties( object ) && hasLazyDirtyFields( dirtyFields ) ) {
+			// We need to generate the UPDATE SQL when there are dirty lazy fields
+			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
+			// don't need to check laziness (dirty checking algorithm handles that)
+			final boolean[] propertyLaziness = getPropertyLaziness();
+			// we add also all the non lazy properties because dynamic update is false
+			for ( int i = 0; i < propertyLaziness.length; i++ ) {
+				if ( propertyLaziness[i] == false ) {
+					propsToUpdate[i] = true;
+				}
+			}
 			updateStrings = new String[span];
 			for ( int j = 0; j < span; j++ ) {
 				updateStrings[j] = tableUpdateNeeded[j] ?
@@ -3875,6 +3930,16 @@ public abstract class AbstractEntityPersister
 				);
 			}
 		}
+	}
+
+	private boolean hasLazyDirtyFields(int[] dirtyFields) {
+		final boolean[] propertyLaziness = getPropertyLaziness();
+		for ( int i = 0; i < dirtyFields.length; i++ ) {
+			if ( propertyLaziness[dirtyFields[i]] ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -4012,37 +4077,42 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
-		final int span = getTableSpan();
-		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
+		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking()
+				&& object != null; // null object signals that we're deleting an unloaded proxy
+
 		Object[] loadedState = null;
 		if ( isImpliedOptimisticLocking ) {
 			// need to treat this as if it where optimistic-lock="all" (dirty does *not* make sense);
 			// first we need to locate the "loaded" state
 			//
 			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
-			final EntityKey key = session.generateEntityKey( id, this );
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			Object entity = persistenceContext.getEntity( key );
+			Object entity = persistenceContext.getEntity( session.generateEntityKey( id, this ) );
 			if ( entity != null ) {
 				EntityEntry entry = persistenceContext.getEntry( entity );
 				loadedState = entry.getLoadedState();
 			}
 		}
 
-		final String[] deleteStrings;
-		if ( isImpliedOptimisticLocking && loadedState != null ) {
-			// we need to utilize dynamic delete statements
-			deleteStrings = generateSQLDeleteStrings( loadedState );
-		}
-		else {
-			// otherwise, utilize the static delete statements
-			deleteStrings = getSQLDeleteStrings();
-		}
-
-		for ( int j = span - 1; j >= 0; j-- ) {
+		final String[] deleteStrings = getSQLDeleteStrings( object, isImpliedOptimisticLocking, loadedState );
+		for ( int j = getTableSpan() - 1; j >= 0; j-- ) {
 			delete( id, version, j, object, deleteStrings[j], session, loadedState );
 		}
+	}
 
+	private String[] getSQLDeleteStrings(Object object, boolean isImpliedOptimisticLocking, Object[] loadedState) {
+		if ( isImpliedOptimisticLocking && loadedState != null ) {
+			// we need to utilize dynamic delete statements
+			return generateSQLDeleteStrings(loadedState);
+		}
+		else if ( object != null ) {
+			// otherwise, utilize the static delete statements
+			return getSQLDeleteStrings();
+		}
+		else {
+			// deleting an unloaded proxy
+			return getSQLDeleteNoVersionCheckStrings();
+		}
 	}
 
 	protected boolean isAllOrDirtyOptLocking() {
@@ -4063,7 +4133,7 @@ public abstract class AbstractEntityPersister
 			Type[] types = getPropertyTypes();
 			for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 				if ( isPropertyOfTable( i, j ) && versionability[i] ) {
-					// this property belongs to the table and it is not specifically
+					// This property belongs to the table, and it's not explicitly
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
 					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );
@@ -4215,6 +4285,7 @@ public abstract class AbstractEntityPersister
 		//insert/update/delete SQL
 		final int joinSpan = getTableSpan();
 		sqlDeleteStrings = new String[joinSpan];
+		sqlDeleteNoVersionCheckStrings = new String[joinSpan];
 		sqlInsertStrings = new String[joinSpan];
 		sqlUpdateStrings = new String[joinSpan];
 		sqlLazyUpdateStrings = new String[joinSpan];
@@ -4229,16 +4300,19 @@ public abstract class AbstractEntityPersister
 		for ( int j = 0; j < joinSpan; j++ ) {
 			sqlInsertStrings[j] = customSQLInsert[j] == null
 					? generateInsertString( getPropertyInsertability(), j )
-					: substituteBrackets( customSQLInsert[j]);
+					: substituteBrackets( customSQLInsert[j] );
 			sqlUpdateStrings[j] = customSQLUpdate[j] == null
 					? generateUpdateString( getPropertyUpdateability(), j, false )
-					: substituteBrackets( customSQLUpdate[j]);
+					: substituteBrackets( customSQLUpdate[j] );
 			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null
 					? generateUpdateString( getNonLazyPropertyUpdateability(), j, false )
-					: substituteBrackets( customSQLUpdate[j]);
+					: substituteBrackets( customSQLUpdate[j] );
 			sqlDeleteStrings[j] = customSQLDelete[j] == null
-					? generateDeleteString( j )
-					: substituteBrackets( customSQLDelete[j]);
+					? generateDeleteString( j, true )
+					: substituteBrackets( customSQLDelete[j] );
+			sqlDeleteNoVersionCheckStrings[j] = customSQLDelete[j] == null
+					? generateDeleteString( j, false )
+					: substituteBrackets( customSQLDelete[j] ); //TODO: oops, fix!
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -4274,11 +4348,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-
 		prepareLoader( singleIdEntityLoader );
 		prepareLoader( multiIdEntityLoader );
-
-		doPostInstantiate();
 	}
 
 	private void prepareLoader(Loader loader) {
@@ -4287,6 +4358,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Deprecated(forRemoval = true)
 	protected void doPostInstantiate() {
 	}
 
@@ -4746,14 +4818,10 @@ public abstract class AbstractEntityPersister
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
-		final Object naturalIdSnapshot;
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-		if ( entitySnapshot == StatefulPersistenceContext.NO_ROW ) {
-			naturalIdSnapshot = null;
-		}
-		else {
-			naturalIdSnapshot = naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot, session );
-		}
+		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
+				? null
+				: naturalIdMapping.extractNaturalIdFromEntityState(entitySnapshot, session);
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
 		naturalIdResolutions.manageLocalResolution(
@@ -4766,17 +4834,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id;
-		if ( canExtractIdOutOfEntity() ) {
-			id = getIdentifier( entity, session );
-		}
-		else {
-			id = null;
-		}
+		final Object id = canExtractIdOutOfEntity() ? getIdentifier(entity, session) : null;
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
-			return Boolean.TRUE;
+			return true;
 		}
 
 		// check the version unsaved-value, if appropriate
@@ -4802,7 +4864,7 @@ public abstract class AbstractEntityPersister
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
 			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
 			if ( ce != null ) {
-				return Boolean.FALSE;
+				return false;
 			}
 		}
 

@@ -764,24 +764,24 @@ public class ModelBinder {
 			String unsavedValue,
 			SimpleValue identifierValue) {
 		if ( generator != null ) {
-			String generatorName = generator.getStrategy();
-			Properties params = new Properties();
+			final Map<String,Object> params = new HashMap<>();
 
 			// see if the specified generator name matches a registered <identifier-generator/>
-			IdentifierGeneratorDefinition generatorDef = sourceDocument.getMetadataCollector().getIdentifierGenerator( generatorName );
+			String generatorName = generator.getStrategy();
+			final IdentifierGeneratorDefinition generatorDef = sourceDocument.getMetadataCollector()
+					.getIdentifierGenerator( generatorName );
 			if ( generatorDef != null ) {
 				generatorName = generatorDef.getStrategy();
 				params.putAll( generatorDef.getParameters() );
 			}
-
 			identifierValue.setIdentifierGeneratorStrategy( generatorName );
 
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
+			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer );
 
 			params.putAll( generator.getParameters() );
 
-			identifierValue.setIdentifierGeneratorProperties( params );
+			identifierValue.setIdentifierGeneratorParameters( params );
 		}
 
 		identifierValue.getTable().setIdentifierValue( identifierValue );

@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
@@ -730,13 +729,13 @@ public class BinderHelper {
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
 
-		Properties params = new Properties();
+		final Map<String,Object> params = new HashMap<>();
 
 		//always settable
-		params.setProperty( PersistentIdentifierGenerator.TABLE, table.getName() );
+		params.put( PersistentIdentifierGenerator.TABLE, table.getName() );
 
 		if ( id.getColumnSpan() == 1 ) {
-			params.setProperty( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
+			params.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 		params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
@@ -764,17 +763,16 @@ public class BinderHelper {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
 			}
 			//checkIfMatchingGenerator(gen, generatorType, generatorName);
-			for ( Map.Entry<?,?> elt : gen.getParameters().entrySet() ) {
-				if ( elt.getKey() == null ) {
-					continue;
+			for ( Map.Entry<String,String> elt : gen.getParameters().entrySet() ) {
+				if ( elt.getKey() != null ) {
+					params.put( elt.getKey(), elt.getValue() );
 				}
-				params.setProperty( (String) elt.getKey(), (String) elt.getValue() );
 			}
 		}
 		if ( "assigned".equals( generatorType ) ) {
 			id.setNullValue( "undefined" );
 		}
-		id.setIdentifierGeneratorProperties( params );
+		id.setIdentifierGeneratorParameters( params );
 	}
 
 	/**

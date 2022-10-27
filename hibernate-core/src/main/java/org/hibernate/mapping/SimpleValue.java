@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +22,7 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -85,7 +87,7 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean isNationalized;
 	private boolean isLob;
 
-	private Properties identifierGeneratorProperties;
+	private Map<String,Object> identifierGeneratorParameters;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
 
@@ -120,9 +122,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
 		this.isLob = original.isLob;
-		this.identifierGeneratorProperties = original.identifierGeneratorProperties == null
-				? null
-				: new Properties( original.identifierGeneratorProperties );
+		this.identifierGeneratorParameters = original.identifierGeneratorParameters;
 		this.identifierGeneratorStrategy = original.identifierGeneratorStrategy;
 		this.nullValue = original.nullValue;
 		this.table = original.table;
@@ -494,8 +494,8 @@ public abstract class SimpleValue implements KeyValue {
 			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
 		}
 
-		if ( identifierGeneratorProperties != null ) {
-			params.putAll( identifierGeneratorProperties );
+		if ( identifierGeneratorParameters != null ) {
+			params.putAll(identifierGeneratorParameters);
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
@@ -556,28 +556,43 @@ public abstract class SimpleValue implements KeyValue {
 		);
 	}
 
+	public Map<String, Object> getIdentifierGeneratorParameters() {
+		return identifierGeneratorParameters;
+	}
+
+	public void setIdentifierGeneratorParameters(Map<String, Object> identifierGeneratorParameters) {
+		this.identifierGeneratorParameters = identifierGeneratorParameters;
+	}
+
+	/**
+	 * @deprecated use {@link #getIdentifierGeneratorParameters()}
+	 */
+	@Deprecated @Remove
 	public Properties getIdentifierGeneratorProperties() {
-		return identifierGeneratorProperties;
+		Properties properties = new Properties();
+		properties.putAll( identifierGeneratorParameters );
+		return properties;
 	}
 
 	/**
-	 * Sets the identifierGeneratorProperties.
-	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
+	@Deprecated @Remove
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
-		this.identifierGeneratorProperties = identifierGeneratorProperties;
+		this.identifierGeneratorParameters = new HashMap<>();
+		identifierGeneratorProperties.forEach((key, value) -> {
+			if (key instanceof String) {
+				identifierGeneratorParameters.put((String) key, value);
+			}
+		});
 	}
 
 	/**
-	 * Sets the identifierGeneratorProperties.
-	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
-	public void setIdentifierGeneratorProperties(Map identifierGeneratorProperties) {
-		if ( identifierGeneratorProperties != null ) {
-			Properties properties = new Properties();
-			properties.putAll( identifierGeneratorProperties );
-			setIdentifierGeneratorProperties( properties );
-		}
+	@Deprecated @Remove
+	public void setIdentifierGeneratorProperties(Map<String,Object> identifierGeneratorProperties) {
+		this.identifierGeneratorParameters = identifierGeneratorProperties;
 	}
 
 	public String getNullValue() {
@@ -634,7 +649,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		for (Selectable selectable : getSelectables()) {
+		for ( Selectable selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable

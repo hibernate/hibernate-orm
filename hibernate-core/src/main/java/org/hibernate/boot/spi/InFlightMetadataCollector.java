@@ -362,9 +362,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	class CollectionTypeRegistrationDescriptor {
 		private final Class<? extends UserCollectionType> implementation;
-		private final Properties parameters;
+		private final Map<String,String> parameters;
 
-		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Properties parameters) {
+		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Map<String,String> parameters) {
 			this.implementation = implementation;
 			this.parameters = parameters;
 		}
@@ -373,7 +373,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			return implementation;
 		}
 
-		public Properties getParameters() {
+		public Map<String,String> getParameters() {
 			return parameters;
 		}
 	}

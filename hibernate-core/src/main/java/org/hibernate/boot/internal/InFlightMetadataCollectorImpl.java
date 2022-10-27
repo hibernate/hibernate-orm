@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -457,9 +456,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		final Properties parameters;
+		final Map<String,String> parameters;
 		if ( registrationAnnotation.parameters().length > 0 ) {
-			parameters = new Properties();
+			parameters = new HashMap<>();
 			for ( Parameter parameter : registrationAnnotation.parameters() ) {
 				parameters.put( parameter.name(), parameter.value() );
 			}

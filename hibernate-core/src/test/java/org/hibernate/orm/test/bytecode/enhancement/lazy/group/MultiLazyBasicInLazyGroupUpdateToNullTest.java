@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.bytecode.enhancement.lazy.basic;
+package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -24,12 +25,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 @RunWith(BytecodeEnhancerRunner.class)
-@CustomEnhancementContext({ EnhancerTestContext.class, NoDirtyCheckingContext.class })
-public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
+@CustomEnhancementContext( { EnhancerTestContext.class, NoDirtyCheckingContext.class} )
+public class MultiLazyBasicInLazyGroupUpdateToNullTest extends BaseCoreFunctionalTestCase {
 
 	private Long entityId;
 
@@ -42,60 +43,58 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 	public void prepare() {
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = new LazyEntity();
+			entity.setEagerProperty( "eager" );
+			entity.setLazyProperty1( "update1" );
+			entity.setLazyProperty2( "update2" );
 			s.persist( entity );
 			entityId = entity.getId();
 		} );
 	}
 
 	@Test
-	public void updateSomeLazyProperty() {
-		// null -> non-null
+	public void updateOneLazyProperty() {
+		// non-null -> null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( "update1" );
+			entity.setLazyProperty1( null );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update1", entity.getLazyProperty1() );
-			assertNull( entity.getLazyProperty2() );
+			assertNull( entity.getLazyProperty1() );
+			assertNotNull( entity.getLazyProperty2() );
+			assertNotNull( entity.getEagerProperty() );
 		} );
+	}
 
-		// non-null -> non-null
+	@Test
+	public void updateOneEagerPropertyAndOneLazyProperty() {
+		// non-null -> null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( "update2" );
+			entity.setEagerProperty( null );
+			entity.setLazyProperty1( null );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update2", entity.getLazyProperty1() );
-			assertNull( entity.getLazyProperty2() );
+			assertNull( entity.getEagerProperty() );
+			assertNull( entity.getLazyProperty1() );
+			assertNotNull( entity.getLazyProperty2() );
 		} );
 	}
 
 	@Test
 	public void updateAllLazyProperties() {
-		// null -> non-null
+		// non-null -> null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( "update1" );
-			entity.setLazyProperty2( "update2_1" );
+			entity.setLazyProperty1( null );
+			entity.setLazyProperty2( null );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update1", entity.getLazyProperty1() );
-			assertEquals( "update2_1", entity.getLazyProperty2() );
-		} );
-
-		// non-null -> non-null
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( "update2" );
-			entity.setLazyProperty2( "update2_2" );
-		} );
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update2", entity.getLazyProperty1() );
-			assertEquals( "update2_2", entity.getLazyProperty2() );
+			assertNull( entity.getLazyProperty1() );
+			assertNull( entity.getLazyProperty2() );
+			assertNotNull( entity.getEagerProperty() );
 		} );
 	}
 
@@ -105,10 +104,15 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 		@Id
 		@GeneratedValue
 		Long id;
-		// ALL properties must be lazy in order to reproduce the problem.
+		// We need at least one eager property to avoid a different problem.
+		@Basic
+		String eagerProperty;
 		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("group1")
 		String lazyProperty1;
+		// We need multiple lazy properties to reproduce the problem.
 		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("group2")
 		String lazyProperty2;
 
 		Long getId() {
@@ -117,6 +121,14 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 
 		void setId(Long id) {
 			this.id = id;
+		}
+
+		public String getEagerProperty() {
+			return eagerProperty;
+		}
+
+		public void setEagerProperty(String eagerProperty) {
+			this.eagerProperty = eagerProperty;
 		}
 
 		public String getLazyProperty1() {

@@ -82,7 +82,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
     }
 
     @Test
-    @FailureExpected( jiraKey = "HHH-10747" )
+//    @FailureExpected( jiraKey = "HHH-10747" )
     public void testProperty() {
         doInHibernate( this::sessionFactory, s -> {
             ItemProperty input = new ItemProperty();

@@ -8,11 +8,14 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +29,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @RunWith(BytecodeEnhancerRunner.class)
+@CustomEnhancementContext( { EnhancerTestContext.class, NoDirtyCheckingContext.class} )
 public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestCase {
 
 	private Long entityId;
@@ -54,6 +58,8 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update1", entity.getLazyProperty1() );
+			assertNull(entity.getLazyProperty2());
+			assertNull(entity.getEagerProperty());
 		} );
 
 		// non-null -> non-null
@@ -64,16 +70,8 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update2", entity.getLazyProperty1() );
-		} );
-
-		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( null );
-		} );
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertNull( entity.getLazyProperty1() );
+			assertNull(entity.getLazyProperty2());
+			assertNull(entity.getEagerProperty());
 		} );
 	}
 
@@ -82,37 +80,27 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		// null -> non-null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setEagerProperty( "update1" );
+			entity.setEagerProperty( "eager_update1" );
 			entity.setLazyProperty1( "update1" );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update1", entity.getEagerProperty() );
+			assertEquals( "eager_update1", entity.getEagerProperty() );
 			assertEquals( "update1", entity.getLazyProperty1() );
+			assertNull(entity.getLazyProperty2());
 		} );
 
 		// non-null -> non-null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setEagerProperty( "update2" );
+			entity.setEagerProperty( "eager_update2" );
 			entity.setLazyProperty1( "update2" );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertEquals( "update2", entity.getEagerProperty() );
+			assertEquals( "eager_update2", entity.getEagerProperty() );
 			assertEquals( "update2", entity.getLazyProperty1() );
-		} );
-
-		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setEagerProperty( null );
-			entity.setLazyProperty1( null );
-		} );
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertNull( entity.getEagerProperty() );
-			assertNull( entity.getLazyProperty1() );
+			assertNull(entity.getLazyProperty2());
 		} );
 	}
 
@@ -122,36 +110,26 @@ public class MultiLazyBasicInLazyGroupUpdateTest extends BaseCoreFunctionalTestC
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update1" );
-			entity.setLazyProperty2( "update1" );
+			entity.setLazyProperty2( "update2_1" );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update1", entity.getLazyProperty1() );
-			assertEquals( "update1", entity.getLazyProperty2() );
+			assertEquals( "update2_1", entity.getLazyProperty2() );
+			assertNull( entity.getEagerProperty() );
 		} );
 
 		// non-null -> non-null
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			entity.setLazyProperty1( "update2" );
-			entity.setLazyProperty2( "update2" );
+			entity.setLazyProperty2( "update2_2" );
 		} );
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
 			assertEquals( "update2", entity.getLazyProperty1() );
-			assertEquals( "update2", entity.getLazyProperty2() );
-		} );
-
-		// non-null -> null
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setLazyProperty1( null );
-			entity.setLazyProperty2( null );
-		} );
-		doInHibernate( this::sessionFactory, s -> {
-			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			assertNull( entity.getLazyProperty1() );
-			assertNull( entity.getLazyProperty2() );
+			assertEquals( "update2_2", entity.getLazyProperty2() );
+			assertNull( entity.getEagerProperty() );
 		} );
 	}
 

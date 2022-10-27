@@ -5,12 +5,11 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.Where;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,54 +19,27 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel(annotatedClasses = {MiscTest.EntityA.class, MiscTest.EntityB.class, MiscTest.A.class, MiscTest.B.class})
+@DomainModel(annotatedClasses = {Misc2Test.A.class, Misc2Test.B.class})
 @SessionFactory
-public class MiscTest {
+@TestForIssue(jiraKey = "HHH-15277")
+public class Misc2Test {
     @Test
     public void test(SessionFactoryScope scope) {
-        scope.inTransaction(s->{
-            EntityA a = new EntityA();
-            EntityB b = new EntityB();
-            a.entityB = b;
-            b.entityA = a;
-            s.persist(a);
-            s.persist(b);
-        });
         scope.inTransaction(s-> {
-            String aIdOne = "boo";
+            String aid = "boo";
 
-            A a2 = new A(aIdOne, "baa");
+            A a = new A(aid, "baa");
             B b = new B("some2", "thing2");
-            s.persist(a2);
-            a2.b_R1 = b;
-            b.a_R1 = a2;
+            s.persist(a);
+            a.b_R1 = b;
+            b.a_R1 = a;
             s.persist(b);
 
             A result = s.createQuery("SELECT a FROM A a WHERE a.id.aOne = :param", A.class)
-                    .setParameter("param", aIdOne).getSingleResult();
-            assertEquals( result.id.aOne, aIdOne );
+                    .setParameter("param", aid).getSingleResult();
+            assertEquals( result.id.aOne, aid );
         });
-    }
-
-    @Entity
-    public static class EntityA implements Serializable {
-        @Id long entityBKey;
-        @Id boolean flag;
-        @OneToOne(mappedBy = "entityA")
-        public EntityB entityB;
-    }
-
-    @Entity
-    public static class EntityB implements Serializable {
-        @Id long entityBKey;
-        @Id boolean flag;
-        @OneToOne
-        @JoinColumn(name = "entityBKey", referencedColumnName = "entityBKey", insertable = false, updatable = false)
-        @JoinColumn(name = "flag", referencedColumnName = "flag", insertable = false, updatable = false)
-        @Where(clause = "flag=1")
-        public EntityA entityA;
     }
 
     @Entity(name = "A")
@@ -90,10 +62,10 @@ public class MiscTest {
     @Embeddable
     public static class AId implements Serializable {
 
-        @Column(name = "a_one", nullable = false, length = 4096)
+        @Column(name = "a_one", nullable = false)
         private String aOne;
 
-        @Column(name = "a_two", nullable = false, length = 4096)
+        @Column(name = "a_two", nullable = false)
         private String aTwo;
 
         private AId() {}
@@ -148,10 +120,10 @@ public class MiscTest {
     @Embeddable
     public static class BId implements Serializable {
 
-        @Column(name = "b_one", nullable = false, length = 4096)
+        @Column(name = "b_one", nullable = false)
         private String bOne = new String("");
 
-        @Column(name = "b_two", nullable = false, length = 4096)
+        @Column(name = "b_two", nullable = false)
         private String bTwo = new String("");
 
         private BId() {}

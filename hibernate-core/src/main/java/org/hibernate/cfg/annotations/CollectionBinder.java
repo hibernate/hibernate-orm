@@ -233,7 +233,7 @@ public abstract class CollectionBinder {
 	private SortComparator comparatorSort;
 
 	private String explicitType;
-	private final Properties explicitTypeParameters = new Properties();
+	private final Map<String,String> explicitTypeParameters = new HashMap<>();
 
 	protected CollectionBinder(
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
@@ -758,7 +758,7 @@ public abstract class CollectionBinder {
 			// todo (6.0) - technically, these should no longer be needed
 			binder.explicitType = typeAnnotation.type().getName();
 			for ( Parameter param : typeAnnotation.parameters() ) {
-				binder.explicitTypeParameters.setProperty( param.name(), param.value() );
+				binder.explicitTypeParameters.put( param.name(), param.value() );
 			}
 		}
 		else {
@@ -798,7 +798,7 @@ public abstract class CollectionBinder {
 	private static ManagedBean<? extends UserCollectionType> createCustomType(
 			String role,
 			Class<? extends UserCollectionType> implementation,
-			Properties parameters,
+			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
 		final StandardServiceRegistry serviceRegistry = buildingContext.getBuildingOptions().getServiceRegistry();
 		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
@@ -812,7 +812,9 @@ public abstract class CollectionBinder {
 				// a separate bean instance which means uniquely naming it
 				final ManagedBean<? extends UserCollectionType> typeBean = beanRegistry.getBean( role, implementation );
 				final UserCollectionType type = typeBean.getBeanInstance();
-				( (ParameterizedType) type ).setParameterValues( parameters );
+				final Properties properties = new Properties();
+				properties.putAll( parameters );
+				( (ParameterizedType) type ).setParameterValues( properties );
 				return typeBean;
 			}
 			else {

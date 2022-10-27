@@ -1240,7 +1240,8 @@ public abstract class CollectionBinder {
 		if (!isMappedBy
 				&& oneToMany
 				&& property.isAnnotationPresent( OnDelete.class )
-				&& !property.isAnnotationPresent( JoinColumn.class )) {
+				&& !property.isAnnotationPresent( JoinColumn.class )
+				&& !property.isAnnotationPresent( JoinColumns.class )) {
 			String message = "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn: ";
 			message += qualify( propertyHolder.getPath(), propertyName );
 			throw new AnnotationException( message );

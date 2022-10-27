@@ -925,7 +925,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + columns + ')';
+		return getClass().getSimpleName() + '(' + columns + ')';
 	}
 
 	public Object accept(ValueVisitor visitor) {

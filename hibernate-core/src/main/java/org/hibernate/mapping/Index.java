@@ -213,7 +213,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + "(" + getName() + ")";
+		return getClass().getSimpleName() + "(" + getName() + ")";
 	}
 
 	@Override

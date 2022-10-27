@@ -274,7 +274,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public String toString() {
-		return getClass().getName() + '(' + name + ')';
+		return getClass().getSimpleName() + '(' + name + ')';
 	}
 	
 	public void setLazy(boolean lazy) {

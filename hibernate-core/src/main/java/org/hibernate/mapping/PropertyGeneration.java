@@ -58,6 +58,6 @@ public class PropertyGeneration implements Serializable {
 	}
 	
 	public String toString() {
-		return getClass().getName() + "(" + getName() + ")";
+		return getClass().getSimpleName() + "(" + getName() + ")";
 	}
 }

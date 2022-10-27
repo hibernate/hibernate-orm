@@ -92,6 +92,6 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String toString() {
-		return this.getClass().getName() + "( " + formula + " )";
+		return this.getClass().getSimpleName() + "( " + formula + " )";
 	}
 }

@@ -409,7 +409,7 @@ public class PropertyBinder {
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-							+ "' has multiple 'ValueGenerationType' annotations" );
+							+ "' has multiple '@ValueGenerationType' annotations" );
 				}
 				else {
 					valueGeneration = candidate;

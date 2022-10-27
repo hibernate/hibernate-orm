@@ -720,7 +720,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getRole() + ')';
+		return getClass().getSimpleName() + '(' + getRole() + ')';
 	}
 
 	public java.util.Set<String> getSynchronizedTables() {

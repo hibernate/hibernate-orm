@@ -200,21 +200,20 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void sortColumns(int[] originalOrder) {
-		if ( columns.size() == 1 ) {
-			return;
-		}
-		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
-		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
-		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
-		for ( int i = 0; i < originalOrder.length; i++ ) {
-			final int originalIndex = originalOrder[i];
-			final Selectable selectable = originalColumns[originalIndex];
-			if ( selectable instanceof Column ) {
-				( (Column) selectable ).setTypeIndex( i );
+		if ( columns.size() > 1 ) {
+			final Selectable[] originalColumns = columns.toArray( new Selectable[0] );
+			final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
+			final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
+			for ( int i = 0; i < originalOrder.length; i++ ) {
+				final int originalIndex = originalOrder[i];
+				final Selectable selectable = originalColumns[originalIndex];
+				if ( selectable instanceof Column ) {
+					( (Column) selectable ).setTypeIndex( i );
+				}
+				columns.set( i, selectable );
+				insertability.set( i, originalInsertability[originalIndex] );
+				updatability.set( i, originalUpdatability[originalIndex] );
 			}
-			columns.set( i, selectable );
-			insertability.set( i, originalInsertability[originalIndex] );
-			updatability.set( i, originalUpdatability[originalIndex] );
 		}
 	}
 

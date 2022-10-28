@@ -15,7 +15,7 @@ import org.hibernate.mapping.Join;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 
 /**
- * index column
+ * An {@link jakarta.persistence.OrderColumn} annotation
  *
  * @author inger
  */

@@ -37,8 +37,7 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
 
 /**
- * The mapping for a component, composite element,
- * composite identifier, etc.
+ * The mapping for an embeddable class.
  *
  * @author Gavin King
  * @author Steve Ebersole

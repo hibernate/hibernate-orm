@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 
@@ -15,7 +16,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 
 /**
- * Discriminator column
+ * A {@link jakarta.persistence.DiscriminatorColumn} annotation
  *
  * @author Emmanuel Bernard
  */

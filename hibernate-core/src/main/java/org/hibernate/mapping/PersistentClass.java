@@ -36,7 +36,7 @@ import org.hibernate.sql.Alias;
 import org.hibernate.type.Type;
 
 /**
- * Mapping for an entity.
+ * The mapping for an entity.
  *
  * @author Gavin King
  */

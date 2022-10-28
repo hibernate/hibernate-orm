@@ -43,8 +43,7 @@ import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
- * Wrap state of an EJB3 @Column annotation
- * and build the Hibernate column mapping element
+ * A {@link jakarta.persistence.Column} annotation
  *
  * @author Emmanuel Bernard
  */

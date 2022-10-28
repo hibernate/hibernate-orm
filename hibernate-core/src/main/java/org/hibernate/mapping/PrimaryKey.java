@@ -14,7 +14,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
- * A primary key constraint
+ * A primary key constraint.
  *
  * @author Gavin King
  * @author Steve Ebersole

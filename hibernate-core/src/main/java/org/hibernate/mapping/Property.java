@@ -31,7 +31,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * Represents a property as part of an entity or a component.
+ * Represents a property or field of an {@link PersistentClass entity}
+ * or {@link Component embeddable class}.
  *
  * @author Gavin King
  */

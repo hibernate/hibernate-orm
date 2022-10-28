@@ -92,8 +92,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				() -> {
 					// todo (6.0) : how to make sure things we need are ready to go?
 					// 		- e.g., here, we need access to the sub-attributes
-					final List<AttributeMapping> subAttributes = targetMappingType.getEmbeddableTypeDescriptor().getAttributeMappings();
-					if ( subAttributes.isEmpty() ) {
+					if ( targetMappingType.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings() == 0 ) {
 						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
 						return false;
 					}

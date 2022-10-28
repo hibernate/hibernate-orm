@@ -927,11 +927,6 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public int getNumberOfFetchables() {
-		return indexDescriptor == null ? 1 : 2;
-	}
-
-	@Override
 	public String toString() {
 		return "PluralAttribute(" + getCollectionDescriptor().getRole() + ")";
 	}

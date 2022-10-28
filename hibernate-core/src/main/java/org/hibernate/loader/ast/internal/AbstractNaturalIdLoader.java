@@ -54,6 +54,9 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -99,25 +102,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						null,
 						creationState
 				),
-				(fetchParent, querySpec, creationState) -> {
-					final List<Fetch> fetches = new ArrayList<>( naturalIdMapping.getNaturalIdAttributes().size() );
-					fetchParent.getReferencedMappingContainer().visitFetchables(
-							fetchable -> {
-								final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-								final Fetch fetch = fetchParent.generateFetchableFetch(
-										fetchable,
-										navigablePath,
-										fetchable.getMappedFetchOptions().getTiming(),
-										true,
-										null,
-										creationState
-								);
-								fetches.add( fetch );
-							},
-							entityDescriptor
-					);
-					return fetches;
-				},
+				AbstractNaturalIdLoader::visitFetches,
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
 					return statsEnabled ? System.nanoTime() : -1;
@@ -326,27 +311,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						null,
 						creationState
 				),
-				(fetchParent, querySpec, creationState) -> {
-					final List<Fetch> fetches = new ArrayList<>();
-
-					fetchParent.getReferencedMappingContainer().visitFetchables(
-							(fetchable) -> {
-								final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-								final Fetch fetch = fetchParent.generateFetchableFetch(
-										fetchable,
-										navigablePath,
-										fetchable.getMappedFetchOptions().getTiming(),
-										true,
-										null,
-										creationState
-								);
-								fetches.add( fetch );
-							},
-							null
-					);
-
-					return fetches;
-				},
+				AbstractNaturalIdLoader::visitFetches,
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
 					return statsEnabled ? System.nanoTime() : -1L;
@@ -454,5 +419,28 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		}
 
 		return results.get( 0 );
+	}
+
+	private static List<Fetch> visitFetches(
+			FetchParent fetchParent,
+			QuerySpec querySpec,
+			LoaderSqlAstCreationState creationState) {
+		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
+		final int size = fetchableContainer.getNumberOfFetchables();
+		final List<Fetch> fetches = new ArrayList<>( size );
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable fetchable = fetchableContainer.getFetchable( i );
+			final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
+			final Fetch fetch = fetchParent.generateFetchableFetch(
+					fetchable,
+					navigablePath,
+					fetchable.getMappedFetchOptions().getTiming(),
+					true,
+					null,
+					creationState
+			);
+			fetches.add( fetch );
+		}
+		return fetches;
 	}
 }

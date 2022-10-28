@@ -185,6 +185,17 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		switch ( position ) {
+			case 0:
+				return getDiscriminatorPart();
+			case 1:
+				return getKeyPart();
+		}
+		throw new IndexOutOfBoundsException(position);
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
@@ -311,6 +322,12 @@ public class DiscriminatedAssociationAttributeMapping
 	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getDiscriminatorPart() );
 		fetchableConsumer.accept( getKeyPart() );
+	}
+
+	@Override
+	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		fetchableConsumer.accept( 0, getDiscriminatorPart() );
+		fetchableConsumer.accept( 1, getKeyPart() );
 	}
 
 	@Override

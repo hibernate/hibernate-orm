@@ -244,6 +244,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -1857,64 +1858,64 @@ public abstract class AbstractEntityPersister
 				new SimpleFromClauseAccessImpl(),
 				LockOptions.NONE,
 				(fetchParent, querySpec, creationState) -> {
-					final List<Fetch> fetches = new ArrayList<>();
+					final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
+					final int size = fetchableContainer.getNumberOfFetchables();
+					final List<Fetch> fetches = new ArrayList<>( size );
 
-					fetchParent.getReferencedMappingContainer().visitFetchables(
-							fetchable -> {
-								// Ignore plural attributes
-								if ( fetchable instanceof PluralAttributeMapping ) {
-									return;
-								}
-								FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-								final boolean selectable;
-								if ( fetchable instanceof AttributeMapping ) {
-									if ( fetchParent instanceof EmbeddableResultGraphNode && ( (EmbeddableResultGraphNode) fetchParent ).getReferencedMappingContainer() == getIdentifierMapping() ) {
-										selectable = true;
-									}
-									else {
-										final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
-										final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-										selectable = !isSubclassTableSequentialSelect( tableNumber )
-												&& propertySelectable[propertyNumber];
-									}
-								}
-								else {
-									selectable = true;
-								}
-								if ( fetchable instanceof BasicValuedModelPart ) {
-									// Ignore lazy basic columns
-									if ( fetchTiming == FetchTiming.DELAYED ) {
-										return;
-									}
-								}
-								else if ( fetchable instanceof Association ) {
-									final Association association = (Association) fetchable;
-									// Ignore the fetchable if the FK is on the other side
-									if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-										return;
-									}
-									// Ensure the FK comes from the root table
-									if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-										return;
-									}
-									fetchTiming = FetchTiming.DELAYED;
-								}
+					for ( int i = 0; i < size; i++ ) {
+						final Fetchable fetchable = fetchableContainer.getFetchable( i );
+						// Ignore plural attributes
+						if ( fetchable instanceof PluralAttributeMapping ) {
+							continue;
+						}
+						FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+						final boolean selectable;
+						if ( fetchable instanceof AttributeMapping ) {
+							if ( fetchParent instanceof EmbeddableResultGraphNode && ( (EmbeddableResultGraphNode) fetchParent ).getReferencedMappingContainer() == getIdentifierMapping() ) {
+								selectable = true;
+							}
+							else {
+								final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
+								final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+								selectable = !isSubclassTableSequentialSelect( tableNumber )
+										&& propertySelectable[propertyNumber];
+							}
+						}
+						else {
+							selectable = true;
+						}
+						if ( fetchable instanceof BasicValuedModelPart ) {
+							// Ignore lazy basic columns
+							if ( fetchTiming == FetchTiming.DELAYED ) {
+								continue;
+							}
+						}
+						else if ( fetchable instanceof Association ) {
+							final Association association = (Association) fetchable;
+							// Ignore the fetchable if the FK is on the other side
+							if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+								continue;
+							}
+							// Ensure the FK comes from the root table
+							if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
+								continue;
+							}
+							fetchTiming = FetchTiming.DELAYED;
+						}
 
-								if ( selectable ) {
-									final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-									final Fetch fetch = fetchParent.generateFetchableFetch(
-											fetchable,
-											navigablePath,
-											fetchTiming,
-											true,
-											null,
-											creationState
-									);
-									fetches.add( fetch );
-								}
-							},
-							null
-					);
+						if ( selectable ) {
+							final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
+							final Fetch fetch = fetchParent.generateFetchableFetch(
+									fetchable,
+									navigablePath,
+									fetchTiming,
+									true,
+									null,
+									creationState
+							);
+							fetches.add( fetch );
+						}
+					}
 
 					return fetches;
 				},
@@ -5052,31 +5053,23 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			if ( hasSubclasses() ) {
-				visitAttributeMappings(
-						attribute -> {
-							final int stateArrayPosition = attribute.getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value );
-							}
-						}
-				);
+				for ( int i = 0; i < attributeMappings.size(); i++ ) {
+					final Object value = values[i];
+					if ( value != UNFETCHED_PROPERTY ) {
+						final Setter setter = attributeMappings.get( i ).getPropertyAccess().getSetter();
+						setter.set( object, value );
+					}
+				}
 			}
 			else {
-				visitFetchables(
-						fetchable -> {
-							final AttributeMapping attribute = (AttributeMapping) fetchable;
-							final int stateArrayPosition = attribute.getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value );
-							}
-
-						},
-						null
-				);
+				for ( int i = 0; i < staticFetchableList.size(); i++ ) {
+					final AttributeMapping attribute = (AttributeMapping) staticFetchableList.get( i );
+					final Object value = values[i];
+					if ( value != UNFETCHED_PROPERTY ) {
+						final Setter setter = attribute.getPropertyAccess().getSetter();
+						setter.set( object, value );
+					}
+				}
 			}
 		}
 	}
@@ -6066,7 +6059,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
-		declaredAttributeMappings.forEach( (key,value) -> action.accept( value ) );
+		declaredAttributeMappings.values().forEach( action );
 	}
 
 	@Override
@@ -6665,22 +6658,33 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitKeyFetchables(
-			Consumer<Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
-//		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
-//		if ( identifierMapping instanceof FetchableContainer ) {
-//			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
-//			( (FetchableContainer) identifierMapping ).visitFetchables( fetchableConsumer, treatTargetType );
-//		}
-//		else {
-//			fetchableConsumer.accept( (Fetchable) identifierMapping );
-//		}
+	public void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		// No-op
+	}
+
+	@Override
+	public void visitKeyFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		// No-op
 	}
 
 	@Override
 	public int getNumberOfFetchables() {
-		return attributeMappings.size();
+		return getStaticFetchableList().size();
+	}
+
+	@Override
+	public int getNumberOfKeyFetchables() {
+		return 0;
+	}
+
+	@Override
+	public Fetchable getKeyFetchable(int position) {
+		throw new IndexOutOfBoundsException( position );
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getStaticFetchableList().get( position );
 	}
 
 	@Override
@@ -6699,6 +6703,35 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			attributeMappings.forEach( fetchableConsumer );
+		}
+	}
+
+	@Override
+	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		if ( treatTargetType == null ) {
+			final List<Fetchable> fetchableList = getStaticFetchableList();
+			final int size = fetchableList.size();
+			for ( int i = 0; i < size; i++ ) {
+				fetchableConsumer.accept( i, fetchableList.get( i ) );
+			}
+			// EARLY EXIT!!!
+			return;
+		}
+
+		final int size = attributeMappings.size();
+		for ( int i = 0; i < size; i++ ) {
+			fetchableConsumer.accept( i, attributeMappings.get( i ) );
+		}
+		if ( treatTargetType.isTypeOrSuperType( this ) ) {
+			if ( subclassMappingTypes != null ) {
+				int offset = size;
+				for ( EntityMappingType subtype : subclassMappingTypes.values() ) {
+					final Collection<AttributeMapping> declaredAttributeMappings = subtype.getDeclaredAttributeMappings();
+					for ( AttributeMapping declaredAttributeMapping : declaredAttributeMappings ) {
+						fetchableConsumer.accept( offset++, declaredAttributeMapping );
+					}
+				}
+			}
 		}
 	}
 
@@ -6734,7 +6767,9 @@ public abstract class AbstractEntityPersister
 	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		visitAttributeMappings( action );
 		if ( subclassMappingTypes != null ) {
-			subclassMappingTypes.forEach( (s, subType) -> subType.visitDeclaredAttributeMappings( action ) );
+			for ( EntityMappingType subType : subclassMappingTypes.values() ) {
+				subType.visitDeclaredAttributeMappings( action );
+			}
 		}
 	}
 

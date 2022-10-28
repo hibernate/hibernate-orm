@@ -40,6 +40,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -210,6 +211,17 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public int getNumberOfFetchables() {
 		return 2;
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		switch ( position ) {
+			case 0:
+				return getDiscriminatorPart();
+			case 1:
+				return getKeyPart();
+		}
+		throw new IndexOutOfBoundsException(position);
 	}
 
 	@Override

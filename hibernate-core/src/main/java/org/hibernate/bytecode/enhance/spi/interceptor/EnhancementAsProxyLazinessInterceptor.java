@@ -145,9 +145,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 					if ( writtenValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
 						for ( String writtenFieldName : writtenFieldNames ) {
-							List<AttributeMapping> attributeMappings = entityPersister.getAttributeMappings();
-							for ( int index = 0; index < attributeMappings.size(); index++ ) {
-								if ( writtenFieldName.contains( attributeMappings.get( index ).getAttributeName() ) ) {
+							final int size = entityPersister.getNumberOfAttributeMappings();
+							for ( int index = 0; index < size; index++ ) {
+								if ( writtenFieldName.contains( entityPersister.getAttributeMapping( index ).getAttributeName() ) ) {
 									entityPersister.setValue(
 											target,
 											index,

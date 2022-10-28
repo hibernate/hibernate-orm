@@ -136,7 +136,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			MappingModelCreationProcess creationProcess,
 			ManagedMappingType declaringType,
 			List<? extends AttributeMapping> attributeMappings) {
-		if ( inverseMappingType.getAttributeMappings().isEmpty() ) {
+		final int size = inverseMappingType.getNumberOfAttributeMappings();
+		if ( size == 0 ) {
 			return false;
 		}
 		//noinspection unchecked
@@ -145,7 +146,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		mappings.clear();
 		int currentIndex = 0;
 		// We copy the attributes from the inverse mappings and replace the selection mappings
-		for ( AttributeMapping attributeMapping : inverseMappingType.getAttributeMappings() ) {
+		for ( int j = 0; j < size; j++ ) {
+			AttributeMapping attributeMapping = inverseMappingType.getAttributeMapping( j );
 			if ( attributeMapping instanceof BasicAttributeMapping ) {
 				final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 				final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
@@ -161,7 +163,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
 				ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor==null ) {
+				if ( foreignKeyDescriptor == null ) {
 					// This is expected to happen when processing a
 					// PostInitCallbackEntry because the callbacks
 					// are not ordered. The exception is caught in
@@ -191,7 +193,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
 				final SelectableMapping[] subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
-				for (int i = 0; i < subMappings.length; i++) {
+				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
 				}
 				attributeMapping = MappingModelCreationHelper.createInverseModelPart(

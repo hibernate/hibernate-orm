@@ -31,6 +31,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -90,22 +91,19 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
 		this.usesStandardInstantiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
 
-		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
-		this.rowState = new Object[ numOfAttrs ];
-		this.assemblers = arrayList( numOfAttrs );
+		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+		this.rowState = new Object[ size ];
+		this.assemblers = arrayList( size );
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
+			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
-		embeddableTypeDescriptor.visitFetchables(
-				stateArrayContributor -> {
-					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
+			final DomainResultAssembler<?> stateAssembler = fetch == null
+					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
+					: fetch.createAssembler( this, creationState );
 
-					final DomainResultAssembler<?> stateAssembler = fetch == null
-							? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-							: fetch.createAssembler( this, creationState );
-
-					assemblers.add( stateAssembler );
-				},
-				null
-		);
+			assemblers.add( stateAssembler );
+		}
 
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )

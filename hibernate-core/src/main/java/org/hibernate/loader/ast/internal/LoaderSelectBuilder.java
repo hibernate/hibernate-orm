@@ -674,11 +674,15 @@ public class LoaderSelectBuilder {
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
-			referencedMappingContainer.visitKeyFetchables(
-					fetchable -> processor.accept( fetchable, true ), null );
+			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
+			for ( int i = 0; i < size; i++ ) {
+				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true );
+			}
 		}
-		referencedMappingContainer.visitFetchables(
-				fetchable -> processor.accept( fetchable, false ), null );
+		final int size = referencedMappingContainer.getNumberOfFetchables();
+		for ( int i = 0; i < size; i++ ) {
+			processor.accept( referencedMappingContainer.getFetchable( i ), false );
+		}
 		return fetches;
 	}
 

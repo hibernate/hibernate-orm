@@ -194,9 +194,10 @@ public abstract class AbstractCompositeIdentifierMapping
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			if ( attributeMapping instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;

@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,13 +23,17 @@ import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SqlFragmentAlias;
@@ -169,20 +174,13 @@ public class BinderHelper {
 			boolean inverse,
 			MetadataBuildingContext context) {
 
-		// TODO: instead of pulling info like the property name and whether
-		//       it's on the owning side off the zeroth column coming in, we
-		//       should receive it directly in the argument list, or from a
-		//       Property instance
-		final AnnotatedJoinColumn firstColumn = columns[0];
-		if ( !firstColumn.isImplicit()
-				// not necessary for a primary key reference
-				&& checkReferencedColumnsType( columns, targetEntity, context ) == NON_PK_REFERENCE ) {
-
+		// this work is not necessary for a primary key reference
+		if ( checkReferencedColumnsType( columns, targetEntity, context ) == NON_PK_REFERENCE ) { // && !firstColumn.isImplicit()
 			// all the columns have to belong to the same table;
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findColumnOwner( targetEntity, firstColumn.getReferencedColumn(), context );
+			final Object columnOwner = findColumnOwner( targetEntity, columns[0].getReferencedColumn(), context );
 			checkColumnInSameTable( columns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
 			final List<Property> properties = findPropertiesByColumns( columnOwner, columns, associatedEntity, context );
@@ -203,8 +201,10 @@ public class BinderHelper {
 					targetEntity,
 					value,
 					inverse,
-					firstColumn.getPropertyHolder().getPersistentClass(),
-					firstColumn.getPropertyName(),
+					associatedEntity,
+					propertyName,
+//					columns[0].getPropertyHolder().getPersistentClass(),
+//					columns[0].getPropertyName(),
 					property.getName(),
 					context
 			);
@@ -1261,4 +1261,98 @@ public class BinderHelper {
 		}
 		return element.getAnnotation( annotationType );
 	}
+
+	public static FetchMode getFetchMode(FetchType fetch) {
+		return fetch == FetchType.EAGER ? FetchMode.JOIN : FetchMode.SELECT;
+	}
+
+	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
+		switch (cascade) {
+			case ALL:
+				return CascadeType.ALL;
+			case PERSIST:
+				return CascadeType.PERSIST;
+			case MERGE:
+				return CascadeType.MERGE;
+			case REMOVE:
+				return CascadeType.REMOVE;
+			case REFRESH:
+				return CascadeType.REFRESH;
+			case DETACH:
+				return CascadeType.DETACH;
+			default:
+				throw new AssertionFailure("unknown cascade type: " + cascade);
+		}
+	}
+
+	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] ejbCascades) {
+		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
+		if ( ejbCascades != null && ejbCascades.length > 0 ) {
+			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
+				cascadeTypes.add( convertCascadeType( cascade ) );
+			}
+		}
+		return cascadeTypes;
+	}
+
+	public static String getCascadeStrategy(
+			jakarta.persistence.CascadeType[] ejbCascades,
+			Cascade hibernateCascadeAnnotation,
+			boolean orphanRemoval,
+			boolean forcePersist) {
+		EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
+		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
+		if ( hibernateCascades != null && hibernateCascades.length > 0 ) {
+			cascadeTypes.addAll( Arrays.asList( hibernateCascades ) );
+		}
+		if ( orphanRemoval ) {
+			cascadeTypes.add( CascadeType.DELETE_ORPHAN );
+			cascadeTypes.add( CascadeType.REMOVE );
+		}
+		if ( forcePersist ) {
+			cascadeTypes.add( CascadeType.PERSIST );
+		}
+		return renderCascadeTypeList( cascadeTypes );
+	}
+
+	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
+		StringBuilder cascade = new StringBuilder();
+		for ( CascadeType cascadeType : cascadeTypes) {
+			switch ( cascadeType ) {
+				case ALL:
+					cascade.append( "," ).append( "all" );
+					break;
+				case SAVE_UPDATE:
+					cascade.append( "," ).append( "save-update" );
+					break;
+				case PERSIST:
+					cascade.append( "," ).append( "persist" );
+					break;
+				case MERGE:
+					cascade.append( "," ).append( "merge" );
+					break;
+				case LOCK:
+					cascade.append( "," ).append( "lock" );
+					break;
+				case REFRESH:
+					cascade.append( "," ).append( "refresh" );
+					break;
+				case REPLICATE:
+					cascade.append( "," ).append( "replicate" );
+					break;
+				case DETACH:
+					cascade.append( "," ).append( "evict" );
+					break;
+				case DELETE:
+				case REMOVE:
+					cascade.append( "," ).append( "delete" );
+					break;
+				case DELETE_ORPHAN:
+					cascade.append( "," ).append( "delete-orphan" );
+					break;
+			}
+		}
+		return cascade.length() > 0 ? cascade.substring( 1 ) : "none";
+	}
+
 }

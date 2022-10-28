@@ -10,14 +10,10 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OrderBy;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.AnnotatedColumn;
-import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
@@ -69,12 +65,12 @@ public class ListBinder extends CollectionBinder {
             public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass( persistentClasses );
-				bindIndex( property, getElementType(), buildingContext );
+				bindIndex();
 			}
 		};
 	}
 
-	private void bindIndex(XProperty property, XClass elementType, final MetadataBuildingContext buildingContext) {
+	private void bindIndex() {
 		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 				collection,
 				qualify( collection.getRole(), "key" ),
@@ -93,23 +89,23 @@ public class ListBinder extends CollectionBinder {
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
-		valueBinder.setType( property, elementType, null, null );
+		valueBinder.setType( property, getElementType(), null, null );
 //			valueBinder.setExplicitType( "integer" );
-		SimpleValue indexValue = valueBinder.make();
+		final SimpleValue indexValue = valueBinder.make();
 		indexColumn.linkWithValue( indexValue );
 		listValueMapping.setIndex( indexValue );
 		listValueMapping.setBaseIndex( indexColumn.getBase() );
 		if ( listValueMapping.isOneToMany() && !listValueMapping.getKey().isNullable() && !listValueMapping.isInverse() ) {
-			String entityName = ( (OneToMany) listValueMapping.getElement() ).getReferencedEntityName();
-			PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
-			IndexBackref ib = new IndexBackref();
-			ib.setName( '_' + propertyName + "IndexBackref" );
-			ib.setUpdateable( false );
-			ib.setSelectable( false );
-			ib.setCollectionRole( listValueMapping.getRole() );
-			ib.setEntityName( listValueMapping.getOwner().getEntityName() );
-			ib.setValue( listValueMapping.getIndex() );
-			referenced.addProperty( ib );
+			final String entityName = ( (OneToMany) listValueMapping.getElement() ).getReferencedEntityName();
+			final PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
+			final IndexBackref backref = new IndexBackref();
+			backref.setName( '_' + propertyName + "IndexBackref" );
+			backref.setUpdateable( false );
+			backref.setSelectable( false );
+			backref.setCollectionRole( listValueMapping.getRole() );
+			backref.setEntityName( listValueMapping.getOwner().getEntityName() );
+			backref.setValue( listValueMapping.getIndex() );
+			referenced.addProperty( backref );
 		}
 	}
 }

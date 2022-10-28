@@ -155,10 +155,11 @@ import static org.hibernate.cfg.AnnotatedColumn.checkPropertyConsistency;
 import static org.hibernate.cfg.AnnotatedJoinColumn.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.cfg.AnnotatedJoinColumn.buildJoinTableJoinColumns;
 import static org.hibernate.cfg.AnnotationBinder.fillComponent;
-import static org.hibernate.cfg.AnnotationBinder.getCascadeStrategy;
 import static org.hibernate.cfg.BinderHelper.PRIMITIVE_NAMES;
 import static org.hibernate.cfg.BinderHelper.buildAnyValue;
 import static org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference;
+import static org.hibernate.cfg.BinderHelper.getCascadeStrategy;
+import static org.hibernate.cfg.BinderHelper.getFetchMode;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
@@ -1416,7 +1417,7 @@ public abstract class CollectionBinder {
 			}
 		}
 		else {
-			collection.setFetchMode( AnnotationBinder.getFetchMode( jpaFetchType ) );
+			collection.setFetchMode( getFetchMode( jpaFetchType ) );
 		}
 	}
 

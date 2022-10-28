@@ -9,10 +9,10 @@ package org.hibernate.cfg;
 import org.hibernate.AnnotationException;
 
 /**
- * Indicates an internal attempt to mark a column as non-nullable (because its part
- * of a PK, etc) but we cannot force that column to be non-nullable.
- * <p/>
- * Typically this indicates that the "column" is actually a formula.
+ * Indicates an internal attempt to mark a column as non-nullable
+ * (because it's part of a primary key, for example) when we cannot
+ * force that column to be non-nullable. This usually indicates that
+ * the "column" is actually a formula.
  *
  * @author Steve Ebersole
  */

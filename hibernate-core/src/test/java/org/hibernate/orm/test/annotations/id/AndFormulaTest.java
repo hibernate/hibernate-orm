@@ -57,7 +57,7 @@ public class AndFormulaTest {
 			fail( "Expecting failure from invalid mapping" );
 		}
 		catch (CannotForceNonNullableException e) {
-			assertThat( e.getMessage(), startsWith( "Identifier property [" ) );
+			assertThat( e.getMessage(), startsWith( "Identifier property " ) );
 		}
 	}
 

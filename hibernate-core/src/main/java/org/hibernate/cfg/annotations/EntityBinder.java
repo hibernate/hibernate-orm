@@ -806,23 +806,18 @@ public class EntityBinder {
 			MetadataBuildingContext context,
 			InheritanceState inheritanceState,
 			EntityBinder entityBinder) {
-		final boolean isRoot = !inheritanceState.hasParents();
 
 		DiscriminatorColumn discAnn = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
 		DiscriminatorType discriminatorType = discAnn != null ? discAnn.discriminatorType() : DiscriminatorType.STRING;
-		
+
 		DiscriminatorFormula discFormulaAnn = getOverridableAnnotation( clazzToProcess, DiscriminatorFormula.class, context );
 
-		AnnotatedDiscriminatorColumn discriminatorColumn = null;
-		if ( isRoot ) {
-			discriminatorColumn = buildDiscriminatorColumn(
-					discriminatorType,
-					discAnn,
-					discFormulaAnn,
-					context
-			);
-		}
+		final boolean isRoot = !inheritanceState.hasParents();
+		final AnnotatedDiscriminatorColumn discriminatorColumn = isRoot
+				? buildDiscriminatorColumn( discriminatorType, discAnn, discFormulaAnn, context )
+				: null;
 		if ( discAnn != null && !isRoot ) {
+			//TODO: shouldn't this be an error?!
 			LOG.invalidDiscriminatorAnnotation( clazzToProcess.getName() );
 		}
 
@@ -1808,7 +1803,7 @@ public class EntityBinder {
 	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] annotatedJoinColumns, MetadataBuildingContext buildingContext) {
 		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
-		setFKNameIfDefined( join );
+		setForeignKeyNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
 		TableBinder.bindForeignKey( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
 		key.sortProperties();
@@ -1817,7 +1812,7 @@ public class EntityBinder {
 		persistentClass.addJoin( join );
 	}
 
-	private void setFKNameIfDefined(Join join) {
+	private void setForeignKeyNameIfDefined(Join join) {
 		// just awful..
 		org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
 		final SimpleValue key = (SimpleValue) join.getKey();

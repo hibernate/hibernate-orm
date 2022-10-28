@@ -58,10 +58,7 @@ public abstract class ObjectNameNormalizer {
 	 */
 	public String normalizeIdentifierQuotingAsString(String identifierText) {
 		final Identifier identifier = normalizeIdentifierQuoting( identifierText );
-		if ( identifier == null ) {
-			return null;
-		}
-		return identifier.render( database().getDialect() );
+		return identifier == null ? null : identifier.render( database().getDialect() );
 	}
 
 	public String toDatabaseIdentifierText(String identifierText) {

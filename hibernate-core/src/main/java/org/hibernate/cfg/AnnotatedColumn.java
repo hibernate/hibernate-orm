@@ -40,6 +40,7 @@ import org.jboss.logging.Logger;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -310,7 +311,7 @@ public class AnnotatedColumn {
 	}
 
 	public boolean isNameDeferred() {
-		return mappingColumn == null || StringHelper.isEmpty( mappingColumn.getName() );
+		return mappingColumn == null || isEmpty( mappingColumn.getName() );
 	}
 
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
@@ -655,7 +656,7 @@ public class AnnotatedColumn {
 	}
 
 	public static AnnotatedColumn[] buildColumnsOrFormulaFromAnnotation(
-			jakarta.persistence.Column[] columnAnns,
+			jakarta.persistence.Column[] columns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment comment,
 			Nullability nullability,
@@ -675,7 +676,7 @@ public class AnnotatedColumn {
 			return new AnnotatedColumn[] { formulaColumn };
 		}
 		else {
-			jakarta.persistence.Column[]  actualCols = overrideColumns( columnAnns, propertyHolder, inferredData);
+			jakarta.persistence.Column[]  actualCols = overrideColumns( columns, propertyHolder, inferredData);
 			if ( actualCols == null ) {
 				return buildImplicitColumn(
 						inferredData,
@@ -702,7 +703,7 @@ public class AnnotatedColumn {
 	}
 
 	private static jakarta.persistence.Column[] overrideColumns(
-			jakarta.persistence.Column[] columnAnns,
+			jakarta.persistence.Column[] columns,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData ) {
 		final jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
@@ -710,11 +711,11 @@ public class AnnotatedColumn {
 		);
 		if ( overriddenCols != null ) {
 			//check for overridden first
-			if ( columnAnns != null && overriddenCols.length != columnAnns.length ) {
+			if ( columns != null && overriddenCols.length != columns.length ) {
 				//TODO: unfortunately, we never actually see this nice error message, since
 				//      PersistentClass.validate() gets called first and produces a worse message
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-						+ "' specifies " + columnAnns.length
+						+ "' specifies " + columns.length
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
@@ -722,7 +723,7 @@ public class AnnotatedColumn {
 			return overriddenCols.length == 0 ? null : overriddenCols;
 		}
 		else {
-			return columnAnns;
+			return columns;
 		}
 	}
 
@@ -741,7 +742,7 @@ public class AnnotatedColumn {
 			final Database database = context.getMetadataCollector().getDatabase();
 			final String sqlType = column.columnDefinition().isEmpty() ? null
 					: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
-			final String tableName = StringHelper.isEmpty( column.table() ) ? ""
+			final String tableName = isEmpty( column.table() ) ? ""
 					: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
 //						final Identifier logicalName = database.getJdbcEnvironment()
 //								.getIdentifierHelper()
@@ -813,7 +814,7 @@ public class AnnotatedColumn {
 		final String columnName = column.name() != null && column.name().isEmpty() ? null
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
 		// NOTE : this is the logical column name, not the physical!
-		return StringHelper.isEmpty( columnName ) && !StringHelper.isEmpty(suffixForDefaultColumnName)
+		return isEmpty( columnName ) && isNotEmpty( suffixForDefaultColumnName )
 				? inferredData.getPropertyName() + suffixForDefaultColumnName
 				: columnName;
 	}
@@ -823,16 +824,14 @@ public class AnnotatedColumn {
 		if ( xProperty != null ) {
 			ColumnDefault columnDefault = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
 			if ( columnDefault != null ) {
-				if (length!=1) {
+				if ( length!=1 ) {
 					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
 				}
 				setDefaultValue( columnDefault.value() );
 			}
 		}
 		else {
-			LOG.trace(
-					"Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty"
-			);
+			LOG.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -848,9 +847,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace(
-					"Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty"
-			);
+			LOG.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -866,9 +863,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace(
-					"Could not perform @Check lookup as 'PropertyData' did not give access to XProperty"
-			);
+			LOG.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -893,7 +888,7 @@ public class AnnotatedColumn {
 
 	private void processColumnTransformerExpressions(ColumnTransformer annotation) {
 		if ( annotation != null ) {
-			if ( StringHelper.isEmpty( annotation.forColumn() )
+			if ( isEmpty( annotation.forColumn() )
 					// "" is the default value for annotations
 					|| annotation.forColumn().equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
 				readExpression = StringHelper.nullIfEmpty( annotation.read() );
@@ -947,7 +942,7 @@ public class AnnotatedColumn {
 		column.setJoins(secondaryTables);
 		column.setBuildingContext(context);
 		// property name + suffix is an "explicit" column name
-		boolean implicit = StringHelper.isEmpty( suffixForDefaultColumnName );
+		boolean implicit = isEmpty( suffixForDefaultColumnName );
 		if ( !implicit ) {
 			column.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
 		}

@@ -22,8 +22,6 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.orm.UnclosedFixtureResourcesLogging;
 
-import org.jboss.logging.Logger;
-
 /**
  * Metadata about various types of callback methods on a given test class.
  *

@@ -178,26 +178,12 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
- * JSR 175 annotation binder which reads the annotations from classes, applies the
- * principles of the EJB3 spec and produces the Hibernate configuration-time metamodel
- * (the classes in the {@link org.hibernate.mapping} package)
- * <p/>
- * Some design description
- * I tried to remove any link to annotation except from the 2 first level of
- * method call.
- * It'll enable to:
- *   - facilitate annotation overriding
- *   - mutualize one day xml and annotation binder (probably a dream though)
- *   - split this huge class in smaller mapping oriented classes
- *
- * bindSomething usually create the mapping container and is accessed by one of the 2 first level method
- * makeSomething usually create the mapping container and is accessed by bindSomething[else]
- * fillSomething take the container into parameter and fill it.
+ * Reads annotations from Java classes and produces the Hibernate configuration-time metamodel,
+ * that is, the objects defined in the package {@link org.hibernate.mapping}.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@SuppressWarnings("deprecation")
 public final class AnnotationBinder {
 	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
 
@@ -1262,8 +1248,7 @@ public final class AnnotationBinder {
 						columnsBuilder,
 						columns,
 						returnedClass,
-						propertyBinder,
-						isId
+						propertyBinder
 				);
 			}
 		}
@@ -1349,18 +1334,16 @@ public final class AnnotationBinder {
 			ColumnsBuilder columnsBuilder,
 			AnnotatedColumn[] columns,
 			XClass returnedClass,
-			PropertyBinder propertyBinder,
-			boolean isId) {
-		//define whether the type is a component or not
+			PropertyBinder propertyBinder) {
 
-		boolean isComponent = false;
-
-		//Overrides from @MapsId if needed
-		boolean isOverridden = false;
-		if ( isId || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
-			//the associated entity could be using an @IdClass making the overridden property a component
-			PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
-					isId,
+		// overrides from @MapsId or @IdClass if needed
+		final boolean isComposite;
+		final boolean isOverridden;
+		final AnnotatedColumn[] actualColumns;
+		if ( propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
+			// the associated entity could be using an @IdClass making the overridden property a component
+			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
+					propertyBinder.isId(),
 					propertyHolder,
 					property.getName(),
 					context
@@ -1368,143 +1351,210 @@ public final class AnnotationBinder {
 			if ( overridingProperty != null ) {
 				isOverridden = true;
 				final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
-				if ( state != null ) {
-					isComponent = state.hasIdClassOrEmbeddedId();
-				}
+				isComposite = state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 				//Get the new column
-				columns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty(isId);
-			}
-		}
-
-		isComponent = isComponent || isEmbedded( property, returnedClass );
-		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType(
-				inferredData.getProperty(),
-				inferredData.getClassOrElement(),
-				context
-		);
-
-		if ( isComponent || compositeUserType != null ) {
-			final String referencedEntityName;
-			final String propertyName;
-			if ( isOverridden ) {
-				// careful: not always a @MapsId property, sometimes it's from an @IdClass
-				PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-						isId, propertyHolder, property.getName(), context
-				);
-				referencedEntityName = mapsIdProperty.getClassOrElementName();
-				propertyName = mapsIdProperty.getPropertyName();
+				actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( propertyBinder.isId() );
 			}
 			else {
-				referencedEntityName = null;
-				propertyName = null;
+				isOverridden = false;
+				isComposite = isEmbedded( property, returnedClass );
+				actualColumns = columns;
 			}
+		}
+		else {
+			isOverridden = false;
+			isComposite = isEmbedded( property, returnedClass );
+			actualColumns = columns;
+		}
 
-			propertyBinder = bindComponent(
-					inferredData,
+		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType( inferredData, context );
+
+		if ( isComposite || compositeUserType != null ) {
+			propertyBinder = createCompositeBinder(
 					propertyHolder,
-					entityBinder.getPropertyAccessor(property),
+					inferredData,
 					entityBinder,
 					isIdentifierMapper,
-					context,
 					isComponentEmbedded,
-					isId,
+					context,
 					inheritanceStatePerClass,
-					referencedEntityName,
-					propertyName,
-					determineCustomInstantiator( property, returnedClass, context ),
-					compositeUserType,
-					isOverridden ? (AnnotatedJoinColumn[]) columns : null
+					property,
+					actualColumns,
+					returnedClass,
+					propertyBinder,
+					isOverridden,
+					compositeUserType
 			);
 		}
 		else {
-			//provide the basic property mapping
-			boolean optional = true;
-			boolean lazy = false;
-			if ( property.isAnnotationPresent( Basic.class ) ) {
-				Basic ann = property.getAnnotation( Basic.class );
-				optional = ann.optional();
-				lazy = ann.fetch() == FetchType.LAZY;
-			}
-			//implicit type will check basic types and Serializable classes
-			if ( isId || !optional && nullability != Nullability.FORCED_NULL ) {
-				//force columns to not null
-				for ( AnnotatedColumn col : columns) {
-					if ( isId && col.isFormula() ) {
-						throw new CannotForceNonNullableException(
-								String.format(
-										Locale.ROOT,
-										"Identifier property [%s] cannot contain formula mapping [%s]",
-										HCANNHelper.annotatedElementSignature(property),
-										col.getFormulaString()
-								)
-						);
-					}
-					col.forceNotNull();
-				}
-			}
-
-			propertyBinder.setLazy( lazy );
-			propertyBinder.setColumns(columns);
-			if ( isOverridden ) {
-				final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-						isId, propertyHolder, property.getName(), context
-				);
-				propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );
-			}
-
-			propertyBinder.makePropertyValueAndBind();
-
+			createBasicBinder(
+					propertyHolder,
+					inferredData,
+					nullability,
+					context,
+					property,
+					actualColumns,
+					propertyBinder,
+					isOverridden
+			);
 		}
 		if ( isOverridden ) {
-			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-					isId, propertyHolder, property.getName(), context
+			handleGeneratorsForOverriddenId(
+					propertyHolder,
+					classGenerators,
+					context,
+					property,
+					propertyBinder
 			);
-			final IdentifierGeneratorDefinition.Builder foreignGeneratorBuilder =
-					new IdentifierGeneratorDefinition.Builder();
-			foreignGeneratorBuilder.setName( "Hibernate-local--foreign generator" );
-			foreignGeneratorBuilder.setStrategy( "foreign" );
-			foreignGeneratorBuilder.addParam( "property", mapsIdProperty.getPropertyName() );
-			final IdentifierGeneratorDefinition foreignGenerator = foreignGeneratorBuilder.build();
-
-			if ( isGlobalGeneratorNameGlobal( context ) ) {
-				SecondPass secondPass = new IdGeneratorResolverSecondPass(
-						(SimpleValue) propertyBinder.getValue(),
-						property,
-						foreignGenerator.getStrategy(),
-						foreignGenerator.getName(),
-						context,
-						foreignGenerator
-				);
-				context.getMetadataCollector().addSecondPass( secondPass );
-			}
-			else {
-				Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>(classGenerators);
-				localGenerators.put( foreignGenerator.getName(), foreignGenerator );
-
-				makeIdGenerator(
-						(SimpleValue) propertyBinder.getValue(),
-						property,
-						foreignGenerator.getStrategy(),
-						foreignGenerator.getName(),
-						context,
-						localGenerators
-				);
-			}
 		}
-		if (isId) {
+		else if ( propertyBinder.isId() ) {
 			//components and regular basic types create SimpleValue objects
-			if ( !isOverridden ) {
-				processId(
-						propertyHolder,
-						inferredData,
-						(SimpleValue) propertyBinder.getValue(),
-						classGenerators,
-						isIdentifierMapper,
-						context
-				);
+			processId(
+					propertyHolder,
+					inferredData,
+					(SimpleValue) propertyBinder.getValue(),
+					classGenerators,
+					isIdentifierMapper,
+					context
+			);
+		}
+		return actualColumns;
+	}
+
+	private static void handleGeneratorsForOverriddenId(
+			PropertyHolder propertyHolder,
+			Map<String, IdentifierGeneratorDefinition> classGenerators,
+			MetadataBuildingContext context,
+			XProperty property,
+			PropertyBinder propertyBinder) {
+		final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
+				propertyBinder.isId(), propertyHolder, property.getName(), context
+		);
+		final IdentifierGeneratorDefinition.Builder foreignGeneratorBuilder =
+				new IdentifierGeneratorDefinition.Builder();
+		foreignGeneratorBuilder.setName( "Hibernate-local--foreign generator" );
+		foreignGeneratorBuilder.setStrategy( "foreign" );
+		foreignGeneratorBuilder.addParam( "property", mapsIdProperty.getPropertyName() );
+		final IdentifierGeneratorDefinition foreignGenerator = foreignGeneratorBuilder.build();
+		if ( isGlobalGeneratorNameGlobal(context) ) {
+			SecondPass secondPass = new IdGeneratorResolverSecondPass(
+					(SimpleValue) propertyBinder.getValue(),
+					property,
+					foreignGenerator.getStrategy(),
+					foreignGenerator.getName(),
+					context,
+					foreignGenerator
+			);
+			context.getMetadataCollector().addSecondPass( secondPass );
+		}
+		else {
+			final Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>(classGenerators);
+			localGenerators.put( foreignGenerator.getName(), foreignGenerator );
+			makeIdGenerator(
+					(SimpleValue) propertyBinder.getValue(),
+					property,
+					foreignGenerator.getStrategy(),
+					foreignGenerator.getName(),
+					context,
+					localGenerators
+			);
+		}
+	}
+
+	private static void createBasicBinder(
+			PropertyHolder propertyHolder,
+			PropertyData inferrredData,
+			Nullability nullability,
+			MetadataBuildingContext context,
+			XProperty property,
+			AnnotatedColumn[] columns,
+			PropertyBinder propertyBinder,
+			boolean isOverridden) {
+		//provide the basic property mapping
+		final boolean optional;
+		final boolean lazy;
+		if ( property.isAnnotationPresent( Basic.class ) ) {
+			Basic ann = property.getAnnotation( Basic.class );
+			optional = ann.optional();
+			lazy = ann.fetch() == FetchType.LAZY;
+		}
+		else {
+			optional = true;
+			lazy = false;
+		}
+
+		//implicit type will check basic types and Serializable classes
+		if ( propertyBinder.isId() || !optional && nullability != Nullability.FORCED_NULL ) {
+			//force columns to not null
+			for ( AnnotatedColumn col : columns ) {
+				if ( propertyBinder.isId() && col.isFormula() ) {
+					throw new CannotForceNonNullableException( "Identifier property '"
+							+ getPath( propertyHolder, inferrredData ) + "' cannot map to a '@Formula'" );
+				}
+				col.forceNotNull();
 			}
 		}
-		return columns;
+
+		propertyBinder.setLazy( lazy );
+		propertyBinder.setColumns( columns );
+		if (isOverridden) {
+			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
+					propertyBinder.isId(), propertyHolder, property.getName(), context
+			);
+			propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );
+		}
+
+		propertyBinder.makePropertyValueAndBind();
+	}
+
+	private static PropertyBinder createCompositeBinder(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MetadataBuildingContext context,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			XProperty property,
+			AnnotatedColumn[] columns,
+			XClass returnedClass,
+			PropertyBinder propertyBinder,
+			boolean isOverridden,
+			Class<? extends CompositeUserType<?>> compositeUserType) {
+		final String referencedEntityName;
+		final String propertyName;
+		final AnnotatedJoinColumn[] actualColumns;
+		if ( isOverridden ) {
+			// careful: not always a @MapsId property, sometimes it's from an @IdClass
+			PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
+					propertyBinder.isId(), propertyHolder, property.getName(), context
+			);
+			referencedEntityName = mapsIdProperty.getClassOrElementName();
+			propertyName = mapsIdProperty.getPropertyName();
+			actualColumns = (AnnotatedJoinColumn[]) columns;
+		}
+		else {
+			referencedEntityName = null;
+			propertyName = null;
+			actualColumns = null;
+		}
+
+		return bindComponent(
+				inferredData,
+				propertyHolder,
+				entityBinder.getPropertyAccessor( property ),
+				entityBinder,
+				isIdentifierMapper,
+				context,
+				isComponentEmbedded,
+				propertyBinder.isId(),
+				inheritanceStatePerClass,
+				referencedEntityName,
+				propertyName,
+				determineCustomInstantiator( property, returnedClass, context ),
+				compositeUserType,
+				actualColumns
+		);
 	}
 
 	private static boolean isEmbedded(XProperty property, XClass returnedClass) {
@@ -1759,9 +1809,11 @@ public final class AnnotationBinder {
 	}
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
-			XProperty property,
-			XClass returnedClass,
+			PropertyData inferredData,
 			MetadataBuildingContext context) {
+		final XProperty property = inferredData.getProperty();
+		final XClass returnedClass = inferredData.getClassOrElement();
+
 		if ( property != null ) {
 			final CompositeType compositeType = property.getAnnotation( CompositeType.class );
 			if ( compositeType != null ) {
@@ -1941,9 +1993,9 @@ public final class AnnotationBinder {
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			AnnotatedJoinColumn[] columns) {
-		Component comp;
+		final Component component;
 		if ( referencedEntityName != null ) {
-			comp = createComponent(
+			component = createComponent(
 					propertyHolder,
 					inferredData,
 					isComponentEmbedded,
@@ -1952,7 +2004,7 @@ public final class AnnotationBinder {
 					buildingContext
 			);
 			SecondPass sp = new CopyIdentifierComponentSecondPass(
-					comp,
+					component,
 					referencedEntityName,
 					propertyName,
 					columns,
@@ -1961,7 +2013,7 @@ public final class AnnotationBinder {
 			buildingContext.getMetadataCollector().addSecondPass( sp );
 		}
 		else {
-			comp = fillComponent(
+			component = fillComponent(
 					propertyHolder,
 					inferredData,
 					propertyAccessor,
@@ -1977,18 +2029,18 @@ public final class AnnotationBinder {
 			);
 		}
 		if ( isId ) {
-			comp.setKey( true );
+			component.setKey( true );
 			if ( propertyHolder.getPersistentClass().getIdentifier() != null ) {
 				throw new AnnotationException(
-						"Embeddable class '" + comp.getComponentClassName()
+						"Embeddable class '" + component.getComponentClassName()
 								+ "' may not have a property annotated '@Id' since it is used by '"
 								+ getPath( propertyHolder, inferredData )
 								+ "' as an '@EmbeddedId'"
 				);
 			}
-			if ( referencedEntityName == null && comp.getPropertySpan() == 0 ) {
+			if ( referencedEntityName == null && component.getPropertySpan() == 0 ) {
 				throw new AnnotationException(
-						"Embeddable class '" + comp.getComponentClassName()
+						"Embeddable class '" + component.getComponentClassName()
 								+ "' may not be used as an '@EmbeddedId' by '"
 								+ getPath( propertyHolder, inferredData )
 								+ "' because it has no properties"
@@ -1996,9 +2048,9 @@ public final class AnnotationBinder {
 			}
 		}
 		PropertyBinder binder = new PropertyBinder();
-		binder.setDeclaringClass(inferredData.getDeclaringClass());
+		binder.setDeclaringClass( inferredData.getDeclaringClass() );
 		binder.setName( inferredData.getPropertyName() );
-		binder.setValue( comp );
+		binder.setValue( component );
 		binder.setProperty( inferredData.getProperty() );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setEmbedded( isComponentEmbedded );

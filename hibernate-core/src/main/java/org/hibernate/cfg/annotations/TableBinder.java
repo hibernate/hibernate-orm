@@ -547,11 +547,10 @@ public class TableBinder {
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
-		final String mappedByProperty = columns[0].getMappedBy();
-		if ( isNotEmpty( mappedByProperty ) ) {
+		if ( columns[0].hasMappedBy() ) {
 			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
-			bindUnownedAssociation( columns, value, associatedClass, mappedByProperty );
+			bindUnownedAssociation( columns, value, associatedClass, columns[0].getMappedBy() );
 		}
 		else if ( columns[0].isImplicit() ) {
 			// if columns are implicit, then create the columns based
@@ -575,20 +574,20 @@ public class TableBinder {
 			PersistentClass associatedClass) {
 		switch ( checkReferencedColumnsType( columns, referencedEntity, buildingContext ) ) {
 			case NON_PK_REFERENCE: {
-				bindNonPkReference( referencedEntity, columns, value );
+				bindNonPrimaryKeyReference( referencedEntity, columns, value );
 				break;
 			}
 			case NO_REFERENCE: {
-				bindImplicitPkReference( referencedEntity, columns, value, associatedClass );
+				bindImplicitPrimaryKeyReference( referencedEntity, columns, value, associatedClass );
 				break;
 			}
 			default: {
-				bindPkReference( referencedEntity, columns, value, associatedClass, buildingContext );
+				bindPrimaryKeyReference( referencedEntity, columns, value, associatedClass, buildingContext );
 			}
 		}
 	}
 
-	private static void bindImplicitPkReference(
+	private static void bindImplicitPrimaryKeyReference(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
@@ -613,7 +612,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void bindPkReference(
+	private static void bindPrimaryKeyReference(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
@@ -663,7 +662,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void bindNonPkReference(
+	private static void bindNonPrimaryKeyReference(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumn[] columns,
 			SimpleValue value) {
@@ -680,7 +679,6 @@ public class TableBinder {
 			else {
 				throw new AnnotationException( "The '@JoinColumn' for a secondary table must reference the primary key" );
 			}
-
 		}
 		else {
 			throw new AssertionFailure( "Property ref to an unexpected Value type: " + value.getClass().getName() );

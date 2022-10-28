@@ -372,7 +372,7 @@ public class MapBinder extends CollectionBinder {
 			}
 
 			if ( isIndexOfEntities ) {
-				bindManytoManyInverseFk(
+				bindManyToManyInverseForeignKey(
 						collectionEntity,
 						mapKeyManyToManyColumns,
 						element,

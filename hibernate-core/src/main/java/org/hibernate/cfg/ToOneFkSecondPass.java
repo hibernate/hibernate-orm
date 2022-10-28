@@ -90,18 +90,16 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
-			ManyToOne manyToOne = (ManyToOne) value;
-			PersistentClass ref = persistentClasses.get( manyToOne.getReferencedEntityName() );
-			if ( ref == null ) {
+			final ManyToOne manyToOne = (ManyToOne) value;
+			final PersistentClass referencedEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
+			if ( referencedEntity == null ) {
 				throw new AnnotationException( "Association '" + StringHelper.qualify( entityClassName, path )
 						+ "' targets an unknown entity named '" + manyToOne.getReferencedEntityName() + "'" );
 			}
 			manyToOne.setPropertyName( path );
-			createSyntheticPropertyReference( columns, ref, null, manyToOne, false, buildingContext );
-			TableBinder.bindForeignKey( ref, null, columns, manyToOne, unique, buildingContext );
-			/*
-			 * HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
-			 */
+			createSyntheticPropertyReference( columns, referencedEntity, null, manyToOne, false, buildingContext );
+			TableBinder.bindForeignKey( referencedEntity, null, columns, manyToOne, unique, buildingContext );
+			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
 		}
 		else if ( value instanceof OneToOne ) {

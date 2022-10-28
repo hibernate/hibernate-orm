@@ -535,6 +535,10 @@ public class PropertyBinder {
 		this.isId = id;
 	}
 
+	public boolean isId() {
+		return isId;
+	}
+
 	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 	}

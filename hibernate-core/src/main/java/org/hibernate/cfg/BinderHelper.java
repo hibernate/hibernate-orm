@@ -163,6 +163,7 @@ public class BinderHelper {
 			//associated entity only used for more precise exception
 			PersistentClass associatedEntity,
 			Value value,
+			//true when we do the reverse side of a @ManyToMany
 			boolean inverse,
 			MetadataBuildingContext context) {
 
@@ -173,7 +174,7 @@ public class BinderHelper {
 		final AnnotatedJoinColumn firstColumn = columns[0];
 		if ( !firstColumn.isImplicit()
 				// only necessary for owning side of association
-				&& isEmpty( firstColumn.getMappedBy() )
+				&& !firstColumn.hasMappedBy()
 				// not necessary for a primary key reference
 				&& checkReferencedColumnsType( columns, ownerEntity, context ) == NON_PK_REFERENCE ) {
 
@@ -301,7 +302,7 @@ public class BinderHelper {
 		String syntheticPropertyName =
 				"_" + associatedClass.getEntityName().replace('.', '_') +
 				"_" + propertyName.replace('.', '_');
-		if (inverse) {
+		if ( inverse ) {
 			// Use a different name for inverse synthetic properties to avoid duplicate properties for self-referencing models
 			syntheticPropertyName += "_inverse";
 		}

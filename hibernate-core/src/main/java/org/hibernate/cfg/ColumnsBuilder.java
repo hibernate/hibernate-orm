@@ -79,7 +79,7 @@ class ColumnsBuilder {
 
 	public ColumnsBuilder extractMetadata() {
 		columns = null;
-		joinColumns = buildExplicitJoinColumns(property, inferredData);
+		joinColumns = buildExplicitJoinColumns( property, inferredData );
 
 
 		Comment comment = property.getAnnotation(Comment.class);
@@ -164,7 +164,7 @@ class ColumnsBuilder {
 		return this;
 	}
 
-	AnnotatedJoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
+	private AnnotatedJoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
 		AnnotatedJoinColumn[] joinColumns;
 		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
 		Comment comment = property.getAnnotation(Comment.class);
@@ -201,23 +201,10 @@ class ColumnsBuilder {
 		return joinColumns;
 	}
 
-	AnnotatedJoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
-		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
-		JoinColumn[] joinColumnAnnotations = null;
+	private AnnotatedJoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
+		// process @JoinColumns before @Columns to handle collection of entities properly
 
-		if ( property.isAnnotationPresent( JoinColumn.class ) ) {
-			joinColumnAnnotations = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
-		}
-		else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
-			JoinColumns joinColumnAnnotation = property.getAnnotation( JoinColumns.class );
-			joinColumnAnnotations = joinColumnAnnotation.value();
-			int length = joinColumnAnnotations.length;
-			if ( length == 0 ) {
-				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-						+ "' has an empty '@JoinColumns' annotation" );
-			}
-		}
-
+		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations(property, inferredData);
 		if ( joinColumnAnnotations != null ) {
 			return AnnotatedJoinColumn.buildJoinColumns(
 					joinColumnAnnotations,
@@ -230,24 +217,8 @@ class ColumnsBuilder {
 			);
 		}
 
-		JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = null;
-
-		if ( property.isAnnotationPresent( JoinColumnOrFormula.class ) ) {
-			joinColumnOrFormulaAnnotations = new JoinColumnOrFormula[] {
-					property.getAnnotation( JoinColumnOrFormula.class ) };
-		}
-		else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
-			JoinColumnsOrFormulas joinColumnsOrFormulasAnnotations = property.getAnnotation(
-					JoinColumnsOrFormulas.class );
-			joinColumnOrFormulaAnnotations = joinColumnsOrFormulasAnnotations.value();
-			int length = joinColumnOrFormulaAnnotations.length;
-			if ( length == 0 ) {
-				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-						+ "' has an empty '@JoinColumnsOrFormulas' annotation" );
-			}
-		}
-
-		if (joinColumnOrFormulaAnnotations != null) {
+		final JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = joinColumnOrFormulaAnnotations( property, inferredData );
+		if ( joinColumnOrFormulaAnnotations != null ) {
 			return AnnotatedJoinColumn.buildJoinColumnsOrFormulas(
 					joinColumnOrFormulaAnnotations,
 					null,
@@ -258,12 +229,11 @@ class ColumnsBuilder {
 			);
 		}
 
-		if (property.isAnnotationPresent( JoinFormula.class)) {
-			JoinFormula ann = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
-			AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
+		if ( property.isAnnotationPresent( JoinFormula.class) ) {
+			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
+			final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
 			annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinFormula(
-					ann,
-					null,
+					joinFormula,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData.getPropertyName(),
@@ -275,29 +245,57 @@ class ColumnsBuilder {
 		return null;
 	}
 
+	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(XProperty property, PropertyData inferredData) {
+		if ( property.isAnnotationPresent( JoinColumnOrFormula.class ) ) {
+			return new JoinColumnOrFormula[] { property.getAnnotation( JoinColumnOrFormula.class ) };
+		}
+		else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
+			JoinColumnsOrFormulas joinColumnsOrFormulasAnnotations = property.getAnnotation( JoinColumnsOrFormulas.class );
+			final JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = joinColumnsOrFormulasAnnotations.value();
+			if ( joinColumnOrFormulaAnnotations.length == 0 ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
+						+ "' has an empty '@JoinColumnsOrFormulas' annotation" );
+			}
+			return joinColumnOrFormulaAnnotations;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private JoinColumn[] getJoinColumnAnnotations(XProperty property, PropertyData inferredData) {
+		if ( property.isAnnotationPresent( JoinColumn.class ) ) {
+			return new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
+		}
+		else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
+			final JoinColumns joinColumnAnnotation = property.getAnnotation( JoinColumns.class );
+			final JoinColumn[] joinColumnAnnotations = joinColumnAnnotation.value();
+			if ( joinColumnAnnotations.length == 0 ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
+						+ "' has an empty '@JoinColumns' annotation" );
+			}
+			return joinColumnAnnotations;
+		}
+		else {
+			return null;
+		}
+	}
+
 	AnnotatedColumn[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		AnnotatedColumn[] result = columns;
 		final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
 				isId,
 				propertyHolder,
 				property.getName(),
 				buildingContext
 		);
-		if ( overridingProperty != null ) {
-			result = buildExcplicitOrDefaultJoinColumn( overridingProperty );
-		}
-		return result;
+		return overridingProperty != null ? buildExplicitOrDefaultJoinColumn( overridingProperty ) : columns;
 	}
 
 	/**
 	 * useful to override a column either by @MapsId or by @IdClass
 	 */
-	AnnotatedColumn[] buildExcplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
-		AnnotatedColumn[] result;
-		result = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
-		if (result == null) {
-			result = buildDefaultJoinColumnsForXToOne( overridingProperty.getProperty(), overridingProperty);
-		}
-		return result;
+	private AnnotatedColumn[] buildExplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
+		final AnnotatedColumn[] columns = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
+		return columns == null ? buildDefaultJoinColumnsForXToOne( overridingProperty.getProperty(), overridingProperty ) : columns;
 	}
 }

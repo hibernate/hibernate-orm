@@ -1009,8 +1009,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 */
 	private class TableColumnNameBinding implements Serializable {
 		private final String tableName;
-		private Map<Identifier, String> logicalToPhysical = new HashMap<>();
-		private Map<String, Identifier> physicalToLogical = new HashMap<>();
+		private final Map<Identifier, String> logicalToPhysical = new HashMap<>();
+		private final Map<String, Identifier> physicalToLogical = new HashMap<>();
 
 		private TableColumnNameBinding(String tableName) {
 			this.tableName = tableName;
@@ -1105,14 +1105,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		Table currentTable = table;
-		String physicalName = null;
-
 		while ( currentTable != null ) {
 			final TableColumnNameBinding binding = columnNameBindingByTableMap.get( currentTable );
 			if ( binding != null ) {
-				physicalName = binding.logicalToPhysical.get( logicalName );
+				final String physicalName = binding.logicalToPhysical.get( logicalName );
 				if ( physicalName != null ) {
-					break;
+					return physicalName;
 				}
 			}
 
@@ -1124,12 +1122,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			}
 		}
 
-		if ( physicalName == null ) {
-			throw new MappingException(
-					"Unable to find column with logical name " + logicalName.render() + " in table " + table.getName()
-			);
-		}
-		return physicalName;
+		throw new MappingException( "Unable to find column with logical name " + logicalName.render()
+				+ " in table " + table.getName() );
 	}
 
 	@Override

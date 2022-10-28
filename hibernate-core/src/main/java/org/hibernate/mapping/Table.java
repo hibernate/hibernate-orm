@@ -35,7 +35,7 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.jboss.logging.Logger;
 
 /**
- * A relational table
+ * A relational database table.
  *
  * @author Gavin King
  */

@@ -35,7 +35,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
- * A column of a relational database table
+ * A column of a relational database {@link Table table}.
  *
  * @author Gavin King
  */

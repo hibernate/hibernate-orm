@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A relational constraint.
+ * A constraint on a relational database table.
  *
  * @author Gavin King
  * @author Brett Meyer

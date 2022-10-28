@@ -10,12 +10,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A relational unique key constraint
+ * A unique key constraint.
  *
  * @author Brett Meyer
  */

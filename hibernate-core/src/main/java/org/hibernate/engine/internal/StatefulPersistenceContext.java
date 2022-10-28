@@ -37,7 +37,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -68,6 +67,9 @@ import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * A <strong>stateful</strong> implementation of the {@link PersistenceContext} contract meaning that we maintain this
@@ -599,8 +601,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			// or an uninitialized enhanced entity ("bytecode proxy")...
-			if ( value instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptable bytecodeProxy = (PersistentAttributeInterceptable) value;
+			if ( isPersistentAttributeInterceptable( value ) ) {
+				final PersistentAttributeInterceptable bytecodeProxy = asPersistentAttributeInterceptable( value );
 				final BytecodeLazyAttributeInterceptor interceptor = (BytecodeLazyAttributeInterceptor) bytecodeProxy.$$_hibernate_getInterceptor();
 				if ( interceptor != null ) {
 					interceptor.setSession( getSession() );
@@ -670,8 +672,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//initialize + unwrap the object and return it
 			return li.getImplementation();
 		}
-		else if ( ManagedTypeHelper.isPersistentAttributeInterceptable( maybeProxy ) ) {
-			final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( maybeProxy );
+		else if ( isPersistentAttributeInterceptable( maybeProxy ) ) {
+			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( maybeProxy );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );

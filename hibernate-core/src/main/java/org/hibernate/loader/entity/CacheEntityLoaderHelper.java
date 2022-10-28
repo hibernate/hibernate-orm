@@ -21,9 +21,7 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -44,6 +42,9 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 
 /**
@@ -331,7 +332,7 @@ public class CacheEntityLoaderHelper {
 		// make it circular-reference safe
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
-		if ( ( entity instanceof ManagedEntity ) ) {
+		if ( ( isManagedEntity( entity ) ) ) {
 			statefulPersistenceContext.addReferenceEntry(
 					entity,
 					Status.READ_ONLY
@@ -378,8 +379,8 @@ public class CacheEntityLoaderHelper {
 				? source.instantiate( subclassPersister, entityId )
 				: instanceToLoad;
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor persistentAttributeInterceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
 			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				persister.getBytecodeEnhancementMetadata().injectInterceptor(

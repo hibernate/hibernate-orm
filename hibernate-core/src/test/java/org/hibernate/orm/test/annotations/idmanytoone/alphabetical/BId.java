@@ -10,17 +10,14 @@ package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
 import java.io.Serializable;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 @Embeddable
 public class BId implements Serializable {
 
 	@ManyToOne
-	@JoinColumns( {
-	@JoinColumn( name = "aId", nullable = false ),
+	@JoinColumn( name = "aId", nullable = false )
 	@JoinColumn( name = "bSequenceNumber", nullable = false )
-			} )
 	private C parent;
 
 	private int sequenceNumber;

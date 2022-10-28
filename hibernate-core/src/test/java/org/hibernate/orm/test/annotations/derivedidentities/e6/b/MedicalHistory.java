@@ -8,7 +8,6 @@ package org.hibernate.orm.test.annotations.derivedidentities.e6.b;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
@@ -22,10 +21,8 @@ public class MedicalHistory {
 	PersonId id;
 
 	@MapsId
-	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
-			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
-	})
+	@JoinColumn(name = "FK1", referencedColumnName = "firstName")
+	@JoinColumn(name = "FK2", referencedColumnName = "lastName")
 	@OneToOne
 	Person patient;
 }

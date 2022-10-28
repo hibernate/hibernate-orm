@@ -20,7 +20,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
@@ -31,7 +30,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.jboss.logging.Logger;
@@ -281,10 +279,8 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private String sourceCode;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
-				@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false)
+		@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
 		private SubEntity subEntity;
 
 		public Long getIdNum() {
@@ -413,10 +409,8 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private String indNum;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM"),
-				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM")
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM")
+		@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM")
 		private SubEntity subEntity;
 
 		public Long getIdNum() {

@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -54,10 +53,8 @@ public class WarehouseItem extends GenericObject {
 	}
 
 	@ManyToOne
-	@JoinColumns( {
-	@JoinColumn( name = "vendor_id", referencedColumnName = "vendor_id", insertable = false, updatable = false ),
+	@JoinColumn( name = "vendor_id", referencedColumnName = "vendor_id", insertable = false, updatable = false )
 	@JoinColumn( name = "item_id", referencedColumnName = "item_id", insertable = false, updatable = false )
-			} )
 	public ZItemCost getDefaultCost() {
 		return defaultCost;
 	}

@@ -10,7 +10,6 @@ package org.hibernate.orm.test.annotations.cid;
 import java.io.Serializable;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 /**
@@ -21,11 +20,9 @@ import jakarta.persistence.ManyToOne;
 @Embeddable
 public class ChildPk implements Serializable {
 	public int nthChild;
-	@ManyToOne()
-	@JoinColumns({
-	@JoinColumn(name = "parentLastName", referencedColumnName = "p_lname", nullable = false),
+	@ManyToOne
+	@JoinColumn(name = "parentLastName", referencedColumnName = "p_lname", nullable = false)
 	@JoinColumn(name = "parentFirstName", referencedColumnName = "firstName", nullable = false)
-			})
 	public Parent parent;
 
 	public boolean equals(Object o) {

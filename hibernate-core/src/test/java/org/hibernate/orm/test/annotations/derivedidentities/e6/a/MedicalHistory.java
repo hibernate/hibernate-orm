@@ -10,7 +10,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 
 /**
@@ -20,10 +19,8 @@ import jakarta.persistence.OneToOne;
 @IdClass(PersonId.class)
 public class MedicalHistory implements Serializable {
 	@Id
-	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
-			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
-	})
+	@JoinColumn(name = "FK1", referencedColumnName = "firstName")
+	@JoinColumn(name = "FK2", referencedColumnName = "lastName")
 	@OneToOne
 	Person patient;
 

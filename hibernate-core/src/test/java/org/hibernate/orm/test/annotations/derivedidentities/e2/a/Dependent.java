@@ -9,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -24,9 +23,7 @@ public class Dependent {
 	String name;
 	
 	@Id @ManyToOne
-	@JoinColumns({
-			@JoinColumn(name="FK1", referencedColumnName="firstName"),
-			@JoinColumn(name="FK2", referencedColumnName="lastName")
-	})
+	@JoinColumn(name="FK1", referencedColumnName="firstName")
+	@JoinColumn(name="FK2", referencedColumnName="lastName")
 	Employee emp;
 }

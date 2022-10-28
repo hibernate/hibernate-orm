@@ -33,10 +33,8 @@ public class OrderLine {
 	}
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-		@JoinColumn(name = "FACILITY_ID", referencedColumnName = "FACILITY_ID", nullable = false, updatable = false),
-		@JoinColumn(name = "PRODUCT_ID", referencedColumnName = "PRODUCT_ID", nullable = false, updatable = false)
-	})
+	@JoinColumn(name = "FACILITY_ID", referencedColumnName = "FACILITY_ID", nullable = false, updatable = false)
+	@JoinColumn(name = "PRODUCT_ID", referencedColumnName = "PRODUCT_ID", nullable = false, updatable = false)
 	public Product getProduct() {
 		return product;
 	}
@@ -46,10 +44,8 @@ public class OrderLine {
 	}
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-		@JoinColumn(name = "PURCHASE_ORG_ID", referencedColumnName = "PURCHASE_ORG_ID", nullable = false, insertable = false, updatable = false),
-		@JoinColumn(name = "ORDER_NUMBER", referencedColumnName = "ORDER_NUMBER", nullable = false, insertable = false, updatable = false)
-	})
+	@JoinColumn(name = "PURCHASE_ORG_ID", referencedColumnName = "PURCHASE_ORG_ID", nullable = false, insertable = false, updatable = false)
+	@JoinColumn(name = "ORDER_NUMBER", referencedColumnName = "ORDER_NUMBER", nullable = false, insertable = false, updatable = false)
 	public Order getHeader() {
 		return header;
 	}

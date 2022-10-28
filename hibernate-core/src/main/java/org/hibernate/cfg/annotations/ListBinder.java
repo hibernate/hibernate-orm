@@ -77,7 +77,7 @@ public class ListBinder extends CollectionBinder {
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
-		return new CollectionSecondPass( getBuildingContext(), ListBinder.this.collection ) {
+		return new CollectionSecondPass( ListBinder.this.collection ) {
 			@Override
             public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {

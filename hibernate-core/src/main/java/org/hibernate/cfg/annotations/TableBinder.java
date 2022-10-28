@@ -8,11 +8,12 @@ package org.hibernate.cfg.annotations;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.Index;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -114,7 +115,7 @@ public class TableBinder {
 		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
 	}
 
-	public void setJpaIndex(jakarta.persistence.Index[] jpaIndex){
+	public void setJpaIndex(Index[] jpaIndex){
 		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
 	}
 
@@ -757,8 +758,8 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
-		for (Index index : indexes) {
+	public static void addIndexes(Table hibTable, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext buildingContext) {
+		for ( org.hibernate.annotations.Index index : indexes ) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
 			buildingContext.getMetadataCollector().addSecondPass(
 					new IndexOrUniqueKeySecondPass( hibTable, index.name(), index.columnNames(), buildingContext )
@@ -766,13 +767,13 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table hibTable, jakarta.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
+	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
 		buildingContext.getMetadataCollector().addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
 	}
 
-	public static List<JPAIndexHolder> buildJpaIndexHolder(jakarta.persistence.Index[] indexes){
+	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes){
 		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
-		for(jakarta.persistence.Index index : indexes){
+		for ( Index index : indexes ) {
 			holders.add( new JPAIndexHolder( index ) );
 		}
 		return holders;

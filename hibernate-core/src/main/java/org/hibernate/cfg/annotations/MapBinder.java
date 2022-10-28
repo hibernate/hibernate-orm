@@ -103,7 +103,7 @@ public class MapBinder extends CollectionBinder {
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
-		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
+		return new CollectionSecondPass( MapBinder.this.collection ) {
 			public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass(

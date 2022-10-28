@@ -21,6 +21,8 @@ import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -30,9 +32,10 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
-
 import jakarta.persistence.UniqueConstraint;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -54,7 +57,6 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
@@ -76,7 +78,6 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
@@ -227,8 +228,8 @@ public abstract class CollectionBinder {
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
 
-	private jakarta.persistence.OrderBy jpaOrderBy;
-	private OrderBy sqlOrderBy;
+	private OrderBy jpaOrderBy;
+	private org.hibernate.annotations.OrderBy sqlOrderBy;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
 
@@ -290,8 +291,8 @@ public abstract class CollectionBinder {
 
 		collectionBinder.setBatchSize( property.getAnnotation( BatchSize.class ) );
 
-		collectionBinder.setJpaOrderBy( property.getAnnotation( jakarta.persistence.OrderBy.class ) );
-		collectionBinder.setSqlOrderBy( getOverridableAnnotation( property, OrderBy.class, context ) );
+		collectionBinder.setJpaOrderBy( property.getAnnotation( OrderBy.class ) );
+		collectionBinder.setSqlOrderBy( getOverridableAnnotation( property, org.hibernate.annotations.OrderBy.class, context ) );
 
 		collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 		collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
@@ -539,7 +540,7 @@ public abstract class CollectionBinder {
 			Comment comment) {
 
 		final jakarta.persistence.Column[] keyColumns = property.isAnnotationPresent(MapKeyColumn.class)
-				? new jakarta.persistence.Column[]{ new MapKeyColumnDelegator( property.getAnnotation(MapKeyColumn.class) ) }
+				? new jakarta.persistence.Column[] { new MapKeyColumnDelegator( property.getAnnotation(MapKeyColumn.class) ) }
 				: null;
 
 		final AnnotatedColumn[] mapColumns = buildColumnsFromAnnotations(
@@ -601,7 +602,7 @@ public abstract class CollectionBinder {
 			final UniqueConstraint[] uniqueConstraints;
 			final JoinColumn[] joins;
 			final JoinColumn[] inverseJoins;
-			final jakarta.persistence.Index[] jpaIndexes;
+			final Index[] jpaIndexes;
 
 
 			//JPA 2 has priority
@@ -731,7 +732,7 @@ public abstract class CollectionBinder {
 		this.jpaOrderBy = jpaOrderBy;
 	}
 
-	public void setSqlOrderBy(OrderBy sqlOrderBy) {
+	public void setSqlOrderBy(org.hibernate.annotations.OrderBy sqlOrderBy) {
 		this.sqlOrderBy = sqlOrderBy;
 	}
 
@@ -998,7 +999,7 @@ public abstract class CollectionBinder {
 				return CollectionClassification.LIST;
 			}
 			if ( property.isAnnotationPresent( jakarta.persistence.OrderBy.class )
-					|| property.isAnnotationPresent( OrderBy.class ) ) {
+					|| property.isAnnotationPresent( org.hibernate.annotations.OrderBy.class ) ) {
 				return CollectionClassification.BAG;
 			}
 			ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
@@ -1377,7 +1378,7 @@ public abstract class CollectionBinder {
 						"Collection '%s' is annotated both '@%s' and '@%s'",
 						safeCollectionRole(),
 						jakarta.persistence.OrderBy.class.getName(),
-						OrderBy.class.getName()
+						org.hibernate.annotations.OrderBy.class.getName()
 				)
 		);
 	}
@@ -1389,7 +1390,7 @@ public abstract class CollectionBinder {
 						"Collection '%s' is both sorted and ordered (only one of '@%s', '@%s', '@%s', and '@%s' may be used)",
 						safeCollectionRole(),
 						jakarta.persistence.OrderBy.class.getName(),
-						OrderBy.class.getName(),
+						org.hibernate.annotations.OrderBy.class.getName(),
 						SortComparator.class.getName(),
 						SortNatural.class.getName()
 				)
@@ -1497,7 +1498,7 @@ public abstract class CollectionBinder {
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
-		return new CollectionSecondPass( buildingContext, collection ) {
+		return new CollectionSecondPass( collection ) {
 			@Override
 			public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 				bindStarToManySecondPass(
@@ -1922,22 +1923,9 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
 
-		//give a chance to override the referenced property name
-		//has to do that here because the referencedProperty creation happens in a FKSecondPass for Many to one yuk!
-		if ( joinColumns.length > 0 && isNotEmpty( joinColumns[0].getMappedBy() ) ) {
-			String entityName = joinColumns[0].getManyToManyOwnerSideEntityName() != null ?
-					"inverse__" + joinColumns[0].getManyToManyOwnerSideEntityName() :
-					joinColumns[0].getPropertyHolder().getEntityName();
-			InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-			String propRef = metadataCollector.getPropertyReferencedAssociation(
-					entityName,
-					joinColumns[0].getMappedBy()
-			);
-			if ( propRef != null ) {
-				collValue.setReferencedPropertyName( propRef );
-				metadataCollector.addPropertyReference( collValue.getOwnerEntityName(), propRef );
-			}
-		}
+		// give a chance to override the referenced property name
+		// has to do that here because the referencedProperty creation happens in a FKSecondPass for ManyToOne yuk!
+		overrideReferencedPropertyName( collValue, joinColumns, buildingContext );
 
 		String propRef = collValue.getReferencedPropertyName();
 		//binding key reference using column
@@ -1954,7 +1942,7 @@ public abstract class CollectionBinder {
 		collValue.setKey( key );
 
 		if ( property != null ) {
-			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
+			final org.hibernate.annotations.ForeignKey fk = property.getAnnotation( org.hibernate.annotations.ForeignKey.class );
 			if ( fk != null && !isEmptyAnnotationValue( fk.name() ) ) {
 				key.setForeignKeyName( fk.name() );
 			}
@@ -2003,16 +1991,17 @@ public abstract class CollectionBinder {
 						}
 					}
 					else {
-						final jakarta.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
-								qualify( propertyHolder.getPath(), property.getName() )
-						);
-						if ( fkOverride != null && ( fkOverride.value() == ConstraintMode.NO_CONSTRAINT ||
-								fkOverride.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-							key.disableForeignKey();
-						}
-						else if ( fkOverride != null ) {
-							key.setForeignKeyName( nullIfEmpty( fkOverride.name() ) );
-							key.setForeignKeyDefinition( nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
+						final String propertyPath = qualify(propertyHolder.getPath(), property.getName());
+						final ForeignKey foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
+						if ( foreignKey != null ) {
+							if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT
+									|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
+								key.disableForeignKey();
+							}
+							else {
+								key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+								key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+							}
 						}
 						else {
 							final OneToMany oneToManyAnn = property.getAnnotation( OneToMany.class );
@@ -2045,6 +2034,26 @@ public abstract class CollectionBinder {
 		return key;
 	}
 
+	private static void overrideReferencedPropertyName(
+			Collection collValue,
+			AnnotatedJoinColumn[] joinColumns,
+			MetadataBuildingContext buildingContext) {
+		if ( joinColumns.length > 0 ) {
+			AnnotatedJoinColumn joinColumn = joinColumns[0];
+			if (isNotEmpty( joinColumn.getMappedBy() )) {
+				String entityName = joinColumn.getManyToManyOwnerSideEntityName() != null
+						? "inverse__" + joinColumn.getManyToManyOwnerSideEntityName()
+						: joinColumn.getPropertyHolder().getEntityName();
+				InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+				String propRef = metadataCollector.getPropertyReferencedAssociation( entityName, joinColumn.getMappedBy() );
+				if ( propRef != null ) {
+					collValue.setReferencedPropertyName( propRef );
+					metadataCollector.addPropertyReference( collValue.getOwnerEntityName(), propRef );
+				}
+			}
+		}
+	}
+
 	private void bindManyToManySecondPass(
 			Collection collValue,
 			Map<String, PersistentClass> persistentClasses,
@@ -2074,8 +2083,6 @@ public abstract class CollectionBinder {
 		logManyToManySecondPass( collValue, joinColumns, unique, isCollectionOfEntities, isManyToAny );
 		//check for user error
 		detectManyToManyProblems(
-				collValue,
-				joinColumns,
 				elementType,
 				property,
 				parentPropertyHolder,
@@ -2335,7 +2342,7 @@ public abstract class CollectionBinder {
 			collValue.setManyToManyOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
 		}
 
-		final ForeignKey fk = property.getAnnotation( ForeignKey.class );
+		final org.hibernate.annotations.ForeignKey fk = property.getAnnotation( org.hibernate.annotations.ForeignKey.class );
 		if ( fk != null && !isEmptyAnnotationValue( fk.name() ) ) {
 			element.setForeignKeyName( fk.name() );
 		}
@@ -2509,8 +2516,6 @@ public abstract class CollectionBinder {
 	}
 
 	private void detectManyToManyProblems(
-			Collection collValue,
-			AnnotatedJoinColumn[] joinColumns,
 			XClass elementType,
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
@@ -2608,7 +2613,7 @@ public abstract class CollectionBinder {
 		return null;
 	}
 
-	private String extractHqlOrderBy(jakarta.persistence.OrderBy jpaOrderBy) {
+	private String extractHqlOrderBy(OrderBy jpaOrderBy) {
 		if ( jpaOrderBy != null ) {
 			return jpaOrderBy.value(); // Null not possible. In case of empty expression, apply default ordering.
 		}

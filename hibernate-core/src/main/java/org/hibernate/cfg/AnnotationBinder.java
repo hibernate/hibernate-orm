@@ -42,7 +42,6 @@ import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
@@ -134,6 +133,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -2710,7 +2710,7 @@ public final class AnnotationBinder {
 	public static void bindForeignKeyNameAndDefinition(
 			SimpleValue value,
 			XProperty property,
-			jakarta.persistence.ForeignKey fkOverride,
+			ForeignKey fkOverride,
 			JoinColumn joinColumn,
 			JoinColumns joinColumns,
 			MetadataBuildingContext context) {
@@ -2724,7 +2724,7 @@ public final class AnnotationBinder {
 				value.disableForeignKey();
 			}
 			else {
-				final ForeignKey fk = property.getAnnotation( ForeignKey.class );
+				final org.hibernate.annotations.ForeignKey fk = property.getAnnotation( org.hibernate.annotations.ForeignKey.class );
 				if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
 					value.setForeignKeyName( fk.name() );
 				}
@@ -2749,7 +2749,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static boolean noConstraint(jakarta.persistence.ForeignKey joinColumns, MetadataBuildingContext context) {
+	private static boolean noConstraint(ForeignKey joinColumns, MetadataBuildingContext context) {
 		return joinColumns != null
 			&& ( joinColumns.value() == ConstraintMode.NO_CONSTRAINT
 				|| joinColumns.value() == ConstraintMode.PROVIDER_DEFAULT

@@ -423,6 +423,6 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public String toString() {
-		return super.toString() + "(" + getEntityName() + ")";
+		return getClass().getSimpleName() + "(" + getEntityName() + ")";
 	}
 }

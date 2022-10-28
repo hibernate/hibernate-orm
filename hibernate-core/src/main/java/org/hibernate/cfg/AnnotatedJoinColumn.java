@@ -887,7 +887,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( isNotEmpty( referencedColumn ) ) {
 			string.append( "referencedColumn='" ).append( referencedColumn ).append( "'" );
 		}
-		string.append( "'" );
+		string.append( ")" );
 		return string.toString();
 	}
 }

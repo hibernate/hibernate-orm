@@ -1020,7 +1020,7 @@ public class AnnotatedColumn {
 		if ( isNotEmpty( formulaString ) ) {
 			string.append( "formula='" ).append( formulaString ).append( "'" );
 		}
-		string.append( "'" );
+		string.append( ")" );
 		return string.toString();
 	}
 }

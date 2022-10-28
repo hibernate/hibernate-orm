@@ -808,15 +808,12 @@ public class EntityBinder {
 			EntityBinder entityBinder) {
 		final boolean isRoot = !inheritanceState.hasParents();
 
-		AnnotatedDiscriminatorColumn discriminatorColumn = null;
-		jakarta.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
-				jakarta.persistence.DiscriminatorColumn.class
-		);
-		DiscriminatorType discriminatorType = discAnn != null
-				? discAnn.discriminatorType()
-				: DiscriminatorType.STRING;
-
+		DiscriminatorColumn discAnn = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
+		DiscriminatorType discriminatorType = discAnn != null ? discAnn.discriminatorType() : DiscriminatorType.STRING;
+		
 		DiscriminatorFormula discFormulaAnn = getOverridableAnnotation( clazzToProcess, DiscriminatorFormula.class, context );
+
+		AnnotatedDiscriminatorColumn discriminatorColumn = null;
 		if ( isRoot ) {
 			discriminatorColumn = buildDiscriminatorColumn(
 					discriminatorType,

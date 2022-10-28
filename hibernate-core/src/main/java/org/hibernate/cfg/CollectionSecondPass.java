@@ -6,11 +6,9 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -30,12 +28,10 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
 
-//	MetadataBuildingContext buildingContext;
 	private final Collection collection;
 
-	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection) {
+	public CollectionSecondPass(Collection collection) {
 		this.collection = collection;
-//		this.buildingContext = buildingContext;
 	}
 
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
@@ -67,10 +63,11 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	private static String columns(Value val) {
 		StringBuilder columns = new StringBuilder();
-		Iterator<Selectable> iter = val.getColumnIterator();
-		while ( iter.hasNext() ) {
-			columns.append( iter.next().getText() );
-			if ( iter.hasNext() ) columns.append( ", " );
+		for ( Selectable selectable : val.getSelectables() ) {
+			if ( columns.length() > 0 ) {
+				columns.append( ", " );
+			}
+			columns.append( selectable.getText() );
 		}
 		return columns.toString();
 	}

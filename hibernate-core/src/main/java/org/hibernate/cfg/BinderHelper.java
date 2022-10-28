@@ -139,7 +139,7 @@ public class BinderHelper {
 	 * to need the value when it writes the association.)
 	 * <p>
 	 * Complicating this hugely is the fact that an association might
-	 * be based on a composite key with multiple {@code @JoinColumns},
+	 * be based on a composite key with multiple {@code @JoinColumn}s,
 	 * and so the referenced columns might even be spread out over
 	 * multiple fields or properties of the target entity. There's
 	 * even some extra minor complications resulting from multi-table
@@ -231,14 +231,14 @@ public class BinderHelper {
 			final Object owner = findColumnOwner( targetEntity, column.getReferencedColumn(), context );
 			if ( owner == null ) {
 				throw new AnnotationException( "A '@JoinColumn' for association "
-						+ associationMessage(associatedEntity, firstColumn)
+						+ associationMessage( associatedEntity, firstColumn )
 						+ " references a column named '" + column.getReferencedColumn()
 						+ "' which is not mapped by the target entity '"
 						+ targetEntity.getEntityName() + "'" );
 			}
 			if ( owner != columnOwner) {
 				throw new AnnotationException( "The '@JoinColumn's for association "
-						+ associationMessage(associatedEntity, firstColumn)
+						+ associationMessage( associatedEntity, firstColumn )
 						+ " reference columns of different tables mapped by the target entity '"
 						+ targetEntity.getEntityName() + "' ('" + column.getReferencedColumn() +
 						"' belongs to a different table to '" + firstColumn.getReferencedColumn() + "'" );
@@ -440,13 +440,15 @@ public class BinderHelper {
 		// specified by the @JoinColumn annotations.
 		final List<Column> orderedColumns = new ArrayList<>( columns.length );
 		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		for ( AnnotatedJoinColumn joinColumn : columns ) {
-			Column column = new Column(
-					context.getMetadataCollector().getPhysicalColumnName(
-							referencedTable,
-							joinColumn.getReferencedColumn()
-					)
-			);
+			final String referencedColumn = joinColumn.getReferencedColumn();
+			if ( isEmptyOrNullAnnotationValue( referencedColumn ) ) {
+				throw new AnnotationException("Association " + associationMessage( associatedEntity, joinColumn )
+						+ " has a '@JoinColumn' which does not specify the 'referencedColumnName'"
+						+ " (when an association has multiple '@JoinColumn's, they must each specify their 'referencedColumnName')");
+			}
+			final Column column = new Column( collector.getPhysicalColumnName( referencedTable, referencedColumn ) );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}
@@ -464,7 +466,7 @@ public class BinderHelper {
 			}
 			else {
 				// special case for entities with multiple @Id properties
-				Component key = persistentClass.getIdentifierMapper();
+				final Component key = persistentClass.getIdentifierMapper();
 				for ( Property p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}

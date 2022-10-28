@@ -52,33 +52,8 @@ public class IdBagBinder extends BagBinder {
 	}
 
 	@Override
-	protected boolean bindStarToManySecondPass(
-			Map<String, PersistentClass> persistentClasses,
-			XClass collType,
-			AnnotatedJoinColumn[] fkJoinColumns,
-			AnnotatedJoinColumn[] keyColumns,
-			AnnotatedJoinColumn[] inverseColumns,
-			AnnotatedColumn[] elementColumns,
-			boolean isEmbedded,
-			XProperty property,
-			boolean unique,
-			TableBinder associationTableBinder,
-			NotFoundAction notFoundAction,
-			MetadataBuildingContext buildingContext) {
-		boolean result = super.bindStarToManySecondPass(
-				persistentClasses,
-				collType,
-				fkJoinColumns,
-				keyColumns,
-				inverseColumns,
-				elementColumns,
-				isEmbedded,
-				property,
-				unique,
-				associationTableBinder,
-				notFoundAction,
-				getBuildingContext()
-		);
+	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
+		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
 		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
 		if ( collectionIdAnn == null ) {
@@ -120,7 +95,7 @@ public class IdBagBinder extends BagBinder {
 
 		valueBinder.setType(
 				property,
-				collType,
+				getElementType(),
 				null,
 				null
 		);

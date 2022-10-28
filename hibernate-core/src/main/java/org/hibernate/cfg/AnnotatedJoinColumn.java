@@ -66,21 +66,26 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	private String mappedByEntityName;
 	private String mappedByJpaEntityName;
 	private boolean JPA2ElementCollection;
+	private String manyToManyOwnerSideEntityName;
 
+	//TODO: this is a bad way to determine the ImplicitJoinColumnNameSource.Nature
+
+	@Deprecated
 	public void setJPA2ElementCollection(boolean JPA2ElementCollection) {
 		this.JPA2ElementCollection = JPA2ElementCollection;
 	}
 
-	// TODO hacky solution to get the information at property ref resolution
+	//TODO: this is a bad way to get the information at property ref resolution
+
+	@Deprecated
 	public String getManyToManyOwnerSideEntityName() {
 		return manyToManyOwnerSideEntityName;
 	}
 
+	@Deprecated
 	public void setManyToManyOwnerSideEntityName(String manyToManyOwnerSideEntityName) {
 		this.manyToManyOwnerSideEntityName = manyToManyOwnerSideEntityName;
 	}
-
-	private String manyToManyOwnerSideEntityName;
 
 	public void setReferencedColumn(String referencedColumn) {
 		this.referencedColumn = referencedColumn;
@@ -874,9 +879,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		return String.format(
-				"JoinColumn{logicalColumnName='%s', referencedColumn='%s', mappedBy='%s'}",
-				getLogicalColumnName(), referencedColumn, mappedBy
-		);
+		StringBuilder string = new StringBuilder();
+		string.append( getClass().getSimpleName() ).append( "(" );
+		if ( isNotEmpty( getLogicalColumnName() ) ) {
+			string.append( "column='" ).append( getLogicalColumnName() ).append( "'" );
+		}
+		if ( isNotEmpty( referencedColumn ) ) {
+			string.append( "referencedColumn='" ).append( referencedColumn ).append( "'" );
+		}
+		string.append( "'" );
+		return string.toString();
 	}
 }

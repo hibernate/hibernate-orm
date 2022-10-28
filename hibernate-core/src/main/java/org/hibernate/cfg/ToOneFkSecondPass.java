@@ -11,7 +11,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.TableBinder;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -21,6 +20,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 
 import static org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * Enable a proper set of the FK columns in respect with the id column order
@@ -30,6 +30,7 @@ import static org.hibernate.cfg.BinderHelper.createSyntheticPropertyReference;
  * @author Emmanuel Bernard
  */
 public class ToOneFkSecondPass extends FkSecondPass {
+	private final PersistentClass persistentClass;
 	private final MetadataBuildingContext buildingContext;
 	private final boolean unique;
 	private final String path;
@@ -39,13 +40,14 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			ToOne value,
 			AnnotatedJoinColumn[] columns,
 			boolean unique,
-			String entityClassName,
+			PersistentClass persistentClass,
 			String path,
 			MetadataBuildingContext buildingContext) {
 		super( value, columns );
+		this.persistentClass = persistentClass;
 		this.buildingContext = buildingContext;
 		this.unique = unique;
-		this.entityClassName = entityClassName;
+		this.entityClassName = persistentClass.getClassName();
 		this.path = entityClassName != null ? path.substring( entityClassName.length() + 1 ) : path;
 	}
 
@@ -56,8 +58,11 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	@Override
 	public boolean isInPrimaryKey() {
-		if ( entityClassName == null ) return false;
-		final PersistentClass persistentClass = buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
+		if ( entityClassName == null ) {
+			return false;
+		}
+		final PersistentClass persistentClass = buildingContext.getMetadataCollector()
+				.getEntityBinding( entityClassName );
 		Property property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
@@ -91,14 +96,21 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) value;
-			final PersistentClass referencedEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
-			if ( referencedEntity == null ) {
-				throw new AnnotationException( "Association '" + StringHelper.qualify( entityClassName, path )
+			final PersistentClass targetEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
+			if ( targetEntity == null ) {
+				throw new AnnotationException( "Association '" + qualify( entityClassName, path )
 						+ "' targets an unknown entity named '" + manyToOne.getReferencedEntityName() + "'" );
 			}
 			manyToOne.setPropertyName( path );
-			createSyntheticPropertyReference( columns, referencedEntity, null, manyToOne, false, buildingContext );
-			TableBinder.bindForeignKey( referencedEntity, null, columns, manyToOne, unique, buildingContext );
+			createSyntheticPropertyReference(
+					columns,
+					targetEntity,
+					persistentClass,
+					manyToOne,
+					false,
+					buildingContext
+			);
+			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
 			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
 		}

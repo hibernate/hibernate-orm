@@ -63,39 +63,13 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	@Override
-	public SecondPass getSecondPass(
-			final AnnotatedJoinColumn[] fkJoinColumns,
-			final AnnotatedJoinColumn[] keyColumns,
-			final AnnotatedJoinColumn[] inverseColumns,
-			final AnnotatedColumn[] elementColumns,
-			AnnotatedColumn[] mapKeyColumns,
-			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
-			final boolean isEmbedded,
-			final XProperty property,
-			final XClass elementType,
-			final NotFoundAction notFoundAction,
-			final boolean unique,
-			final TableBinder assocTableBinder,
-			final MetadataBuildingContext buildingContext) {
+	public SecondPass getSecondPass() {
 		return new CollectionSecondPass( ListBinder.this.collection ) {
 			@Override
             public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
-				bindStarToManySecondPass(
-						persistentClasses,
-						elementType,
-						fkJoinColumns,
-						keyColumns,
-						inverseColumns,
-						elementColumns,
-						isEmbedded,
-						property,
-						unique,
-						assocTableBinder,
-						notFoundAction,
-						buildingContext
-				);
-				bindIndex( property, elementType, buildingContext );
+				bindStarToManySecondPass( persistentClasses );
+				bindIndex( property, getElementType(), buildingContext );
 			}
 		};
 	}

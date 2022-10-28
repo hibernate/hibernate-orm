@@ -159,11 +159,12 @@ public class BinderHelper {
 	 */
 	public static void createSyntheticPropertyReference(
 			AnnotatedJoinColumn[] columns,
-			PersistentClass ownerEntity,
-			//associated entity only used for more precise exception
+			// the target entity of the association, to which the columns belong
+			PersistentClass targetEntity,
+			// the entity which declares the association (used for exception message)
 			PersistentClass associatedEntity,
 			Value value,
-			//true when we do the reverse side of a @ManyToMany
+			// true when we do the reverse side of a @ManyToMany
 			boolean inverse,
 			MetadataBuildingContext context) {
 
@@ -176,27 +177,28 @@ public class BinderHelper {
 				// only necessary for owning side of association
 				&& !firstColumn.hasMappedBy()
 				// not necessary for a primary key reference
-				&& checkReferencedColumnsType( columns, ownerEntity, context ) == NON_PK_REFERENCE ) {
+				&& checkReferencedColumnsType( columns, targetEntity, context ) == NON_PK_REFERENCE ) {
 
 			// all the columns have to belong to the same table;
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findColumnOwner( ownerEntity, firstColumn.getReferencedColumn(), context );
+			final Object columnOwner = findColumnOwner( targetEntity, firstColumn.getReferencedColumn(), context );
 			for ( AnnotatedJoinColumn col: columns ) {
-				Object owner = findColumnOwner( ownerEntity, col.getReferencedColumn(), context );
+				final Object owner = findColumnOwner( targetEntity, col.getReferencedColumn(), context );
 				if ( owner == null ) {
-					throw new AnnotationException("A '@JoinColumn' for association "
+					throw new AnnotationException( "A '@JoinColumn' for association "
 							+ associationMessage( associatedEntity, columns[0] )
 							+ " references a column named '" + col.getReferencedColumn()
-							+ "' which is not mapped by the target entity" );
+							+ "' which is not mapped by the target entity '"
+							+ targetEntity.getEntityName() + "'" );
 				}
 				if ( owner != columnOwner ) {
 					throw new AnnotationException( "The '@JoinColumn's for association "
 							+ associationMessage( associatedEntity, columns[0] )
-							+ " reference columns of different tables mapped by the target entity ('"
-							+ col.getReferencedColumn() + "' belongs to a different table to '"
-							+ firstColumn.getReferencedColumn() + "'" );
+							+ " reference columns of different tables mapped by the target entity '"
+							+ targetEntity.getEntityName() + "' ('" + col.getReferencedColumn() +
+							"' belongs to a different table to '" + firstColumn.getReferencedColumn() + "'" );
 				}
 			}
 			// find all properties mapped to each column
@@ -204,10 +206,10 @@ public class BinderHelper {
 			// create a Property along with the new synthetic
 			// Component if necessary (or reuse the existing
 			// Property that matches exactly)
-			final Property property = referencedProperty( ownerEntity, inverse, columns, columnOwner, properties, context );
+			final Property property = referencedProperty( targetEntity, inverse, columns, columnOwner, properties, context );
 			// register the mapping with the InFlightMetadataCollector
 			registerSyntheticProperty(
-					ownerEntity,
+					targetEntity,
 					value,
 					inverse,
 					firstColumn.getPropertyHolder().getPersistentClass(),

@@ -16,7 +16,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -89,31 +88,21 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	@Override
-	public SecondPass getSecondPass(
-			final AnnotatedJoinColumn[] fkJoinColumns,
-			final AnnotatedJoinColumn[] keyColumns,
-			final AnnotatedJoinColumn[] inverseColumns,
-			final AnnotatedColumn[] elementColumns,
-			final AnnotatedColumn[] mapKeyColumns,
-			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
-			final boolean isEmbedded,
-			final XProperty property,
-			final XClass collType,
-			final NotFoundAction notFoundAction,
-			final boolean unique,
-			final TableBinder assocTableBinder,
-			final MetadataBuildingContext buildingContext) {
+	SecondPass getSecondPass() {
 		return new CollectionSecondPass( MapBinder.this.collection ) {
 			public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
-				bindStarToManySecondPass(
-						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
-						isEmbedded, property, unique, assocTableBinder, notFoundAction, buildingContext
-				);
+				bindStarToManySecondPass( persistentClasses );
 				bindKeyFromAssociationTable(
-						collType, persistentClasses, mapKeyPropertyName, property, isEmbedded, buildingContext,
-						mapKeyColumns, mapKeyManyToManyColumns,
-						inverseColumns != null ? inverseColumns[0].getPropertyName() : null
+						getElementType(),
+						persistentClasses,
+						mapKeyPropertyName,
+						property,
+						isEmbedded,
+						buildingContext,
+						mapKeyColumns,
+						mapKeyManyToManyColumns,
+						inverseJoinColumns != null ? inverseJoinColumns[0].getPropertyName() : null
 				);
 				makeOneToManyMapKeyColumnNullableIfNotInProperty( property );
 			}

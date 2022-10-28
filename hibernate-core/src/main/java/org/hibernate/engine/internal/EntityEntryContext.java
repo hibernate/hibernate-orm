@@ -9,7 +9,6 @@ package org.hibernate.engine.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -23,6 +22,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManaged;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
@@ -91,8 +94,8 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
-			if ( ManagedTypeHelper.isManaged( entity ) ) {
-				final ManagedEntity managed = ManagedTypeHelper.asManagedEntity( entity );
+			if ( isManaged( entity ) ) {
+				final ManagedEntity managed = asManagedEntity( entity );
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
 					// We know that managedEntity is not associated with the same PersistenceContext.
@@ -151,8 +154,8 @@ public class EntityEntryContext {
 	}
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
-		if ( ManagedTypeHelper.isManaged( entity ) ) {
-			final ManagedEntity managedEntity = ManagedTypeHelper.asManagedEntity( entity );
+		if ( isManaged( entity ) ) {
+			final ManagedEntity managedEntity = asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated
 				return null;
@@ -253,7 +256,7 @@ public class EntityEntryContext {
 			immutableManagedEntityXref.remove( entity );
 
 		}
-		else if ( !(entity instanceof ManagedEntity) ) {
+		else if ( ! ( isManagedEntity( entity ) ) ) {
 			nonEnhancedEntityXref.remove( entity );
 		}
 

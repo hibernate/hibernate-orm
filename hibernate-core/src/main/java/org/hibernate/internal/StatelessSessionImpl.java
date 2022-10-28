@@ -24,7 +24,6 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -37,6 +36,9 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Concrete implementation of the {@link StatelessSession} API.
@@ -408,9 +410,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
-		else if ( association instanceof PersistentAttributeInterceptable) {
-			final PersistentAttributeInterceptor interceptor =
-					( (PersistentAttributeInterceptable) association ).$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( association ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
 				EnhancementAsProxyLazinessInterceptor proxyInterceptor =
 						(EnhancementAsProxyLazinessInterceptor) interceptor;

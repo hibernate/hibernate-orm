@@ -16,7 +16,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -27,6 +26,10 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 
 /**
  * @author Steve Ebersole
@@ -42,7 +45,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			boolean collectionsInDefaultFetchGroupEnabled,
 			Metadata metadata) {
 		final Class<?> mappedClass = persistentClass.getMappedClass();
-		final boolean enhancedForLazyLoading = ManagedTypeHelper.isPersistentAttributeInterceptableType( mappedClass );
+		final boolean enhancedForLazyLoading = isPersistentAttributeInterceptableType( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, metadata )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
@@ -142,13 +145,10 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
-		final PersistentAttributeInterceptable entity = ManagedTypeHelper.asPersistentAttributeInterceptable( persister.instantiate(
-				identifier,
-				session
-		) );
+		final PersistentAttributeInterceptable entity = asPersistentAttributeInterceptable( persister.instantiate( identifier, session ) );
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
-		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, BytecodeEnhancementMetadataPojoImpl::clearDirtyAttributes );
+		processIfSelfDirtinessTracker( entity, BytecodeEnhancementMetadataPojoImpl::clearDirtyAttributes );
 		// add the entity (proxy) instance to the PC
 		persistenceContext.addEnhancedProxy( entityKey, entity );
 
@@ -251,7 +251,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			);
 		}
 
-		ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
+		asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 	}
 
 	@Override
@@ -270,7 +270,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			);
 		}
 
-		final PersistentAttributeInterceptor interceptor = ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+		final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 		if ( interceptor == null ) {
 			return null;
 		}

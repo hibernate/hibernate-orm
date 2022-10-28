@@ -462,17 +462,16 @@ public interface EntityPersister
 
 	@Override
 	default void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> attributeMappings = getAttributeMappings();
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
+				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				attributeMapping.breakDownJdbcValues( values[ i ], valueConsumer, session );
 			}
 		}
 		else {
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
+				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}

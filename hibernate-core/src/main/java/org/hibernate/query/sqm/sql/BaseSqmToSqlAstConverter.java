@@ -374,6 +374,7 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
@@ -5356,7 +5357,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMappings().get( i );
+				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 				inferrableTypeAccessStack.push( () -> attributeMapping );
 				try {
 					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
@@ -7092,10 +7093,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
-
-		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, true ), null );
-		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, false ), null );
+		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
+		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
+		final int size = referencedMappingContainer.getNumberOfFetchables();
+		final List<Fetch> fetches = CollectionHelper.arrayList( keySize + size );
+		for ( int i = 0; i < keySize; i++ ) {
+			addFetch( fetches, fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
+		}
+		for ( int i = 0; i < size; i++ ) {
+			addFetch( fetches, fetchParent, referencedMappingContainer.getFetchable( i ), false );
+		}
 		return fetches;
 	}
 

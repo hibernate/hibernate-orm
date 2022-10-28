@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Andrea Boriero
@@ -86,13 +87,12 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) referenceModelPart;
 			if ( embeddableValuedModelPart.getFetchableName()
 					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
-				final List<Expression> expressions = new ArrayList<>( embeddableValuedModelPart.getNumberOfFetchables() );
-				embeddableValuedModelPart.visitFetchables(
-						fetchable -> {
-							expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
-						},
-						null
-				);
+				final int size = embeddableValuedModelPart.getNumberOfFetchables();
+				final List<Expression> expressions = new ArrayList<>( size );
+				for ( int i = 0; i < size; i++ ) {
+					final Fetchable fetchable = embeddableValuedModelPart.getFetchable( i );
+					expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
+				}
 				return new SqlTuple( expressions, embeddableValuedModelPart );
 			}
 			else {

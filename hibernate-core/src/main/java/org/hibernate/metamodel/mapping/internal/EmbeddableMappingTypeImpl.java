@@ -562,8 +562,21 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		return attributeMappings.get( position );
+	}
+
+	@Override
 	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		visitAttributeMappings( fetchableConsumer );
+	}
+
+	@Override
+	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		final int size = attributeMappings.size();
+		for ( int i = 0; i < size; i++ ) {
+			fetchableConsumer.accept( i, attributeMappings.get( i ) );
+		}
 	}
 
 	@Override
@@ -591,33 +604,31 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		final int size = attributeMappings.size();
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			assert values.length == attributeMappings.size();
+			assert values.length == size;
 
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final Object attributeValue = values[ i ];
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}
 		}
 		else {
-			attributeMappings.forEach(
-					(attributeMapping) -> {
-						final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
-						attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
-					}
-			);
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+			}
 		}
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> attributeMappings = getAttributeMappings();
-
-		final Object[] result = new Object[ attributeMappings.size() ];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+		final Object[] result = new Object[ getNumberOfAttributeMappings() ];
+		for ( int i = 0; i < result.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			result[i] = attributeMapping.disassemble( o, session );
 		}

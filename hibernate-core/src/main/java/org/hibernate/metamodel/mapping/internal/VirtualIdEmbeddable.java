@@ -33,6 +33,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -255,6 +256,11 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	@Override
 	public int getNumberOfFetchables() {
 		return getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return attributeMappings.get( position );
 	}
 
 	@Override

@@ -423,6 +423,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		return attributes.get( position );
+	}
+
+	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			if ( name.equals( attributes.get( i ).getAttributeName() ) ) {

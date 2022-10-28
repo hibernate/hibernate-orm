@@ -65,6 +65,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
@@ -577,6 +578,11 @@ public class EntityCollectionPart
 	@Override
 	public int getNumberOfFetchables() {
 		return entityMappingType.getNumberOfFetchables();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return entityMappingType.getFetchable( position );
 	}
 
 	public String getMappedBy() {

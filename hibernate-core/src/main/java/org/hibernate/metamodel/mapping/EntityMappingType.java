@@ -41,6 +41,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -464,6 +465,11 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	@Override
 	default int getNumberOfFetchables() {
 		return getEntityPersister().getNumberOfFetchables();
+	}
+
+	@Override
+	default Fetchable getFetchable(int position) {
+		return getEntityPersister().getFetchable( position );
 	}
 
 	@Override

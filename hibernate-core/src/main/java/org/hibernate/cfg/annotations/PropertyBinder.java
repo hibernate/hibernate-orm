@@ -93,10 +93,8 @@ public class PropertyBinder {
 		this.entityBinder = entityBinder;
 	}
 
-	/*
-	 * property can be null
-	 * prefer propertyName to property.getName() since some are overloaded
-	 */
+	// property can be null
+	// prefer propertyName to property.getName() since some are overloaded
 	private XProperty property;
 	private XClass returnedClass;
 	private boolean isId;
@@ -234,7 +232,7 @@ public class PropertyBinder {
 	}
 
 	private Property bind(Property prop) {
-		if (isId) {
+		if ( isId ) {
 			final RootClass rootClass = ( RootClass ) holder.getPersistentClass();
 			//if an xToMany, it has to be wrapped today.
 			//FIXME this poses a problem as the PK is the class instead of the associated class which is not really compliant with the spec

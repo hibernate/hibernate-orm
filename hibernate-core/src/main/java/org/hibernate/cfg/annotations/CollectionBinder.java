@@ -94,7 +94,6 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -245,6 +244,9 @@ public abstract class CollectionBinder {
 		this.buildingContext = buildingContext;
 	}
 
+	/**
+	 * The first pass at binding a collection.
+	 */
 	public static void bindCollection(
 			PropertyHolder propertyHolder,
 			Nullability nullability,
@@ -1506,8 +1508,10 @@ public abstract class CollectionBinder {
 		return isNotEmpty( mappedBy );
 	}
 
+	/**
+	 * Bind a {@link OneToMany} association.
+	 */
 	protected void bindOneToManySecondPass(Map<String, PersistentClass> persistentClasses) {
-
 		if ( property == null ) {
 			throw new AssertionFailure( "null was passed for argument property" );
 		}
@@ -1544,7 +1548,7 @@ public abstract class CollectionBinder {
 		bindFilters( false );
 		handleWhere( false );
 
-		PersistentClass targetEntity = persistentClasses.get( getElementType().getName() );
+		final PersistentClass targetEntity = persistentClasses.get( getElementType().getName() );
 		bindCollectionSecondPass( targetEntity, foreignJoinColumns, cascadeDeleteEnabled, buildingContext );
 
 		if ( !collection.isInverse() && !collection.getKey().isNullable() ) {
@@ -1955,14 +1959,16 @@ public abstract class CollectionBinder {
 		}
 	}
 
+	/**
+	 * Bind a {@link ManyToMany} association or {@link ElementCollection}.
+	 */
 	private void bindManyToManySecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-
 		if ( property == null ) {
 			throw new AssertionFailure( "null was passed for argument property" );
 		}
 
 		final XClass elementType = getElementType();
-		final PersistentClass targetEntity = persistentClasses.get( elementType.getName() );
+		final PersistentClass targetEntity = persistentClasses.get( elementType.getName() ); //null if this is an @ElementCollection
 		final String hqlOrderBy = extractHqlOrderBy( jpaOrderBy );
 
 		final boolean isCollectionOfEntities = targetEntity != null;
@@ -2482,14 +2488,17 @@ public abstract class CollectionBinder {
 			boolean cascadeDeleteEnabled,
 			MetadataBuildingContext context) {
 
-		createSyntheticPropertyReference(
-				joinColumns,
-				collection.getOwner(),
-				collection.getOwner(),
-				collection,
-				false,
-				context
-		);
+		if ( !hasMappedBy() ) {
+			createSyntheticPropertyReference(
+					joinColumns,
+					collection.getOwner(),
+					collection.getOwner(),
+					collection,
+					propertyName,
+					false,
+					context
+			);
+		}
 
 		final DependantValue key = buildCollectionKey(
 				collection,
@@ -2527,9 +2536,11 @@ public abstract class CollectionBinder {
 
 
 	/**
-	 * Bind the inverse foreign key of a {@link ManyToMany}.
-	 * If we are in a mappedBy case, read the columns from the associated
-	 * collection element. Otherwise, delegate to the usual algorithm.
+	 * Bind the inverse foreign key of a {@link ManyToMany}, that is, the columns
+	 * specified by {@code @JoinTable(inverseJoinColumns=...)}, which are the
+	 * columns that reference the target entity of the many-to-many association.
+	 * If we are in a {@code mappedBy} case, read the columns from the associated
+	 * collection element in the target entity.
 	 */
 	public void bindManyToManyInverseForeignKey(
 			PersistentClass targetEntity,
@@ -2560,6 +2571,7 @@ public abstract class CollectionBinder {
 					targetEntity,
 					collection.getOwner(),
 					value,
+					propertyName,
 					true,
 					context
 			);

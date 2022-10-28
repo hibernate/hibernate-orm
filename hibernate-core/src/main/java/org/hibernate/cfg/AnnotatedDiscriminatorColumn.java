@@ -46,31 +46,31 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
 			DiscriminatorType type,
-			DiscriminatorColumn discAnn,
-			DiscriminatorFormula discFormulaAnn,
+			DiscriminatorColumn discriminatorColumn,
+			DiscriminatorFormula discriminatorFormula,
 			MetadataBuildingContext context) {
-		final AnnotatedDiscriminatorColumn discriminatorColumn = new AnnotatedDiscriminatorColumn();
-		discriminatorColumn.setBuildingContext( context );
-		if ( discFormulaAnn != null ) {
-			discriminatorColumn.setImplicit( false );
-			discriminatorColumn.setFormula( discFormulaAnn.value() );
+		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn();
+		column.setBuildingContext( context );
+		if ( discriminatorFormula != null ) {
+			column.setImplicit( false );
+			column.setFormula( discriminatorFormula.value() );
 		}
-		else if ( discAnn != null ) {
-			discriminatorColumn.setImplicit( false );
-			if ( !isEmptyAnnotationValue( discAnn.columnDefinition() ) ) {
-				discriminatorColumn.setSqlType( discAnn.columnDefinition() );
+		else if ( discriminatorColumn != null ) {
+			column.setImplicit( false );
+			if ( !isEmptyAnnotationValue( discriminatorColumn.columnDefinition() ) ) {
+				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
-			if ( !isEmptyAnnotationValue( discAnn.name() ) ) {
-				discriminatorColumn.setLogicalColumnName( discAnn.name() );
+			if ( !isEmptyAnnotationValue( discriminatorColumn.name() ) ) {
+				column.setLogicalColumnName( discriminatorColumn.name() );
 			}
-			discriminatorColumn.setNullable( false );
+			column.setNullable( false );
 		}
 		else {
-			discriminatorColumn.setImplicit( true );
+			column.setImplicit( true );
 		}
-		setDiscriminatorType( type, discAnn, discriminatorColumn );
-		discriminatorColumn.bind();
-		return discriminatorColumn;
+		setDiscriminatorType( type, discriminatorColumn, column );
+		column.bind();
+		return column;
 	}
 
 	private static void setDiscriminatorType(

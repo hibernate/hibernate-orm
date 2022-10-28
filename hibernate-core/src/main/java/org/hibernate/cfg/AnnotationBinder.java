@@ -505,7 +505,7 @@ public final class AnnotationBinder {
 	}
 
 	/**
-	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound after its parent class.
+	 * Bind an annotated class. A subclass must be bound <em>after</em> its superclass.
 	 *
 	 * @param clazzToProcess entity to bind as {@code XClass} instance
 	 * @param inheritanceStatePerClass Metadata about the inheritance relationships for all mapped classes
@@ -1048,10 +1048,9 @@ public final class AnnotationBinder {
 			|| element.isAnnotationPresent(EmbeddedId.class);
 	}
 
-	/*
-	 * Process annotation of a particular property
+	/**
+	 * Process annotation of a particular property or field.
 	 */
-
 	public static void processElementAnnotations(
 			PropertyHolder propertyHolder,
 			Nullability nullability,

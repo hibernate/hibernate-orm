@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * The inverse part of a "non-aggregated" composite identifier.
@@ -153,31 +154,31 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 					navigablePath,
 					getContainingTableExpression()
 			);
-			int offset = 0;
-			for ( AttributeMapping attributeMapping : identifierValueMapper.getAttributeMappings() ) {
-				offset += attributeMapping.forEachSelectable(
-						offset,
-						(columnIndex, selection) -> {
-							final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
-									? defaultTableReference
-									: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
-							final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-									.resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													selection.getSelectionExpression()
-											),
-											sqlAstProcessingState -> new ColumnReference(
-													tableReference.getIdentificationVariable(),
-													selection,
-													sqlAstCreationState.getCreationContext().getSessionFactory()
-											)
-									);
+			identifierValueMapper.forEachSelectable(
+					0,
+					(columnIndex, selection) -> {
+						final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+								? defaultTableReference
+								: tableGroup.resolveTableReference(
+								navigablePath,
+								selection.getContainingTableExpression()
+						);
+						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
+								.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey(
+												tableReference,
+												selection.getSelectionExpression()
+										),
+										sqlAstProcessingState -> new ColumnReference(
+												tableReference.getIdentificationVariable(),
+												selection,
+												sqlAstCreationState.getCreationContext().getSessionFactory()
+										)
+								);
 
-							columnReferences.add( (ColumnReference) columnReference );
-						}
-				);
-			}
+						columnReferences.add( (ColumnReference) columnReference );
+					}
+			);
 
 			return new SqlTuple( columnReferences, this );
 		}
@@ -196,14 +197,13 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 					null,
 					null//sessionFactory
 			);
-			final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-			final List<AttributeMapping> idClassAttributeMappings = identifierValueMapper.getAttributeMappings();
-			final Object[] propertyValues = new Object[attributeMappings.size()];
+			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
 				if ( o == null ) {
-					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
+					final AttributeMapping idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
 						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
 					}
@@ -213,7 +213,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				else if ( attributeMapping instanceof ToOneAttributeMapping
-						&& !( idClassAttributeMappings.get( i ) instanceof ToOneAttributeMapping ) ) {
+						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
@@ -240,39 +240,35 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
-		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
-
-		getEmbeddableTypeDescriptor().forEachAttributeMapping(
-				(position, attribute) -> {
-					final AttributeMapping mappedIdAttributeMapping = mappedIdAttributeMappings.get( position );
-					final Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
-					if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-								.getEntityPersister();
-						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
-						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						// it is conceivable there is a proxy, so check that first
-						propertyValues[position] = persistenceContext.getProxy( entityKey );
-						if ( propertyValues[position] == null ) {
-							// otherwise look for an initialized version
-							propertyValues[position] = persistenceContext.getEntity( entityKey );
-							if ( propertyValues[position] == null ) {
-								propertyValues[position] = entityDescriptor
-										.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
-										.getPropertyAccess()
-										.getGetter()
-										.get( entity );
-							}
-						}
-					}
-					else {
-						propertyValues[position] = o;
+		final Object[] propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		for ( int position = 0; position < propertyValues.length; position++ ) {
+			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( position );
+			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
+			Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
+			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
+						.getEntityPersister();
+				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				// it is conceivable there is a proxy, so check that first
+				o = persistenceContext.getProxy( entityKey );
+				if ( o == null ) {
+					// otherwise look for an initialized version
+					o = persistenceContext.getEntity( entityKey );
+					if ( o == null ) {
+						o = entityDescriptor
+								.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
+								.getPropertyAccess()
+								.getGetter()
+								.get( entity );
 					}
 				}
-		);
-		getEmbeddableTypeDescriptor().setValues( entity, propertyValues );
+			}
+			propertyValues[position] = o;
+		}
+		embeddableTypeDescriptor.setValues( entity, propertyValues );
 	}
 
 	@Override
@@ -313,6 +309,11 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public int getNumberOfFetchables() {
-		return identifierValueMapper.getNumberOfFetchables();
+		return getPartMappingType().getNumberOfFetchables();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getPartMappingType().getFetchable( position );
 	}
 }

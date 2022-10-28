@@ -34,6 +34,7 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -166,32 +167,29 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.rowIdAssembler = null;
 		}
 
-		assemblerMap = new IdentityHashMap<>( entityDescriptor.getNumberOfAttributeMappings() );
+		final int size = entityDescriptor.getNumberOfFetchables();
+		assemblerMap = new IdentityHashMap<>( CollectionHelper.determineProperSizing( size ) );
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = (AttributeMapping) entityDescriptor.getFetchable( i );
 
-		entityDescriptor.visitFetchables(
-				fetchable -> {
-					final AttributeMapping attributeMapping = (AttributeMapping) fetchable;
+			// todo (6.0) : somehow we need to track whether all state is loaded/resolved
+			//		note that lazy proxies or uninitialized collections count against
+			//		that in the affirmative
 
-					// todo (6.0) : somehow we need to track whether all state is loaded/resolved
-					//		note that lazy proxies or uninitialized collections count against
-					//		that in the affirmative
+			final Fetch fetch = resultDescriptor.findFetch( attributeMapping );
 
-					final Fetch fetch = resultDescriptor.findFetch( fetchable );
+			final DomainResultAssembler<?> stateAssembler;
+			if ( fetch == null ) {
+				stateAssembler = new NullValueAssembler<>(
+						attributeMapping.getMappedType().getMappedJavaType()
+				);
+			}
+			else {
+				stateAssembler = fetch.createAssembler( this, creationState );
+			}
 
-					final DomainResultAssembler<?> stateAssembler;
-					if ( fetch == null ) {
-						stateAssembler = new NullValueAssembler<>(
-								attributeMapping.getMappedType().getMappedJavaType()
-						);
-					}
-					else {
-						stateAssembler = fetch.createAssembler( this, creationState );
-					}
-
-					assemblerMap.put( attributeMapping, stateAssembler );
-				},
-				null
-		);
+			assemblerMap.put( attributeMapping, stateAssembler );
+		}
 	}
 
 	private static void deepCopy(

@@ -30,6 +30,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -132,9 +133,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
 		if ( idMapping instanceof CompositeIdentifierMapping ) {
 			final CompositeIdentifierMapping compositeIdMapping = (CompositeIdentifierMapping) idMapping;
-			final List<AttributeMapping> attributeMappings = compositeIdMapping.getPartMappingType().getAttributeMappings();
-			if ( attributeMappings.size() == 1 ) {
-				final AttributeMapping singleIdAttribute = attributeMappings.get( 0 );
+			final EmbeddableMappingType partMappingType = compositeIdMapping.getPartMappingType();
+			if ( partMappingType.getNumberOfAttributeMappings() == 1 ) {
+				final AttributeMapping singleIdAttribute = partMappingType.getAttributeMapping( 0 );
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType parentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping parentIdTargetIdMapping = parentIdTargetMapping.getIdentifierMapping();

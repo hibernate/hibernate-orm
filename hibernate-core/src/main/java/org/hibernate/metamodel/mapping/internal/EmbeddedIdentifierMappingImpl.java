@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Support for {@link jakarta.persistence.EmbeddedId}
@@ -115,6 +116,10 @@ public class EmbeddedIdentifierMappingImpl
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getEmbeddableTypeDescriptor().getFetchable( position );
+	}
 
 	@Override
 	public PropertyAccess getPropertyAccess() {

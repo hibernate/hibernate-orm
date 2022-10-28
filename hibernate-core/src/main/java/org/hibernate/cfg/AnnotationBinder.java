@@ -175,6 +175,7 @@ import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
@@ -2405,20 +2406,23 @@ public final class AnnotationBinder {
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
 
+		final String fullPath = qualify( propertyHolder.getPath(), propertyName );
+
 		bindForeignKeyNameAndDefinition(
 				value,
 				property,
-				propertyHolder.getOverriddenForeignKey( StringHelper.qualify( propertyHolder.getPath(), propertyName ) ),
+				propertyHolder.getOverriddenForeignKey( fullPath ),
 				joinColumn,
 				joinColumns,
 				context
 		);
 
 		final FkSecondPass secondPass = new ToOneFkSecondPass(
-				value, columns,
+				value,
+				columns,
 				!optional && unique, //cannot have nullable and unique on certain DBs like Derby
-				propertyHolder.getEntityOwnerClassName(),
-				propertyHolder.getPath() + "." + propertyName,
+				propertyHolder.getPersistentClass(),
+				fullPath,
 				context
 		);
 		if ( inSecondPass ) {
@@ -2427,7 +2431,7 @@ public final class AnnotationBinder {
 		else {
 			context.getMetadataCollector().addSecondPass( secondPass );
 		}
-		AnnotatedColumn.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
+		AnnotatedColumn.checkPropertyConsistency( columns, qualify( propertyHolder.getEntityName(), propertyName ) );
 		//PropertyBinder binder = new PropertyBinder();
 		propertyBinder.setName( propertyName );
 		propertyBinder.setValue( value );

@@ -543,7 +543,7 @@ public class TableBinder {
 			associatedClass = destinationEntity;
 		}
 		else {
-			PropertyHolder holder = columns[0].getPropertyHolder();
+			final PropertyHolder holder = columns[0].getPropertyHolder();
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
@@ -594,6 +594,7 @@ public class TableBinder {
 			PersistentClass associatedClass) {
 		//implicit case, we hope PK and FK columns are in the same order
 		if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
+			// TODO: what about secondary tables?? associatedClass is null?
 			throw new AnnotationException(
 					"An association that targets entity '" + referencedEntity.getEntityName()
 							+ "' from entity '" + associatedClass.getEntityName()

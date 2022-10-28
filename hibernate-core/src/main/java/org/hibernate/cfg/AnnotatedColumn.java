@@ -481,11 +481,10 @@ public class AnnotatedColumn {
 	 * @throws AnnotationException missing secondary table
 	 */
 	public Table getTable() {
-		if ( table != null ){
+		if ( table != null ) {
 			return table;
 		}
-
-		if ( isSecondary() ) {
+		else if ( isSecondary() ) {
 			return getJoin().getTable();
 		}
 		else {
@@ -1013,9 +1012,15 @@ public class AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		return String.format(
-				"Column{table=%s, mappingColumn=%s, insertable=%s, updatable=%s, unique=%s}",
-				getTable(), mappingColumn.getName(), insertable, updatable, unique
-		);
+		StringBuilder string = new StringBuilder();
+		string.append( getClass().getSimpleName() ).append( "(" );
+		if ( isNotEmpty( logicalColumnName ) ) {
+			string.append( "column='" ).append( logicalColumnName ).append( "'" );
+		}
+		if ( isNotEmpty( formulaString ) ) {
+			string.append( "formula='" ).append( formulaString ).append( "'" );
+		}
+		string.append( "'" );
+		return string.toString();
 	}
 }

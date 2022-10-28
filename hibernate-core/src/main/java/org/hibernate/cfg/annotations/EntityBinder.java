@@ -1800,12 +1800,12 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] annotatedJoinColumns, MetadataBuildingContext buildingContext) {
-		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] joinColumns, MetadataBuildingContext context) {
+		DependantValue key = new DependantValue( context, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setForeignKeyNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
-		TableBinder.bindForeignKey( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
+		TableBinder.bindForeignKey( persistentClass, null, joinColumns, key, false, context );
 		key.sortProperties();
 		join.createPrimaryKey();
 		join.createForeignKey();

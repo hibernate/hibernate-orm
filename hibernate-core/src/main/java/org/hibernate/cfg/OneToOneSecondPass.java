@@ -122,28 +122,27 @@ public class OneToOneSecondPass implements SecondPass {
 			binder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
-		Property prop = binder.makeProperty();
-		prop.setOptional( optional );
+		Property property = binder.makeProperty();
+		property.setOptional( optional );
 		if ( isEmptyAnnotationValue( mappedBy ) ) {
 			// we need to check if the columns are in the right order
 			// if not, then we need to create a many to one and formula
 			// but actually, since entities linked by a one to one need
-			// to share the same composite id class, this cannot happen in hibernate
+			// to share the same composite id class, this cannot happen
 			boolean rightOrder = true;
 
 			if ( rightOrder ) {
-				String path = qualify( propertyHolder.getPath(), propertyName );
 				final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
 						value,
 						joinColumns,
-						!optional, //cannot have nullabe and unique on certain DBs
-						propertyHolder.getEntityOwnerClassName(),
-						path,
+						!optional, //cannot have nullable and unique on certain DBs
+						propertyHolder.getPersistentClass(),
+						qualify( propertyHolder.getPath(), propertyName ),
 						buildingContext
 				);
 				secondPass.doSecondPass( persistentClasses );
 				//no column associated since its a one to one
-				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
+				propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 			}
 //			else {
 				//this is a many to one with Formula
@@ -169,7 +168,7 @@ public class OneToOneSecondPass implements SecondPass {
 						+ "' which does not exist in the target entity type '" + value.getReferencedEntityName() + "'" );
 			}
 			if ( otherSideProperty.getValue() instanceof OneToOne ) {
-				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
+				propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 			}
 			else if ( otherSideProperty.getValue() instanceof ManyToOne ) {
 				Join otherSideJoin = null;
@@ -193,7 +192,7 @@ public class OneToOneSecondPass implements SecondPass {
 					manyToOne.setReferencedEntityName( value.getReferencedEntityName() );
 					manyToOne.setUnwrapProxy( value.isUnwrapProxy() );
 					manyToOne.markAsLogicalOneToOne();
-					prop.setValue( manyToOne );
+					property.setValue( manyToOne );
 					for ( Column column: otherSideJoin.getKey().getColumns() ) {
 						Column copy = new Column();
 						copy.setLength( column.getLength() );
@@ -210,10 +209,10 @@ public class OneToOneSecondPass implements SecondPass {
 						copy.setGeneratedAs(column.getGeneratedAs() );
 						manyToOne.addColumn( copy );
 					}
-					mappedByJoin.addProperty( prop );
+					mappedByJoin.addProperty( property );
 				}
 				else {
-					propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
+					propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 				}
 
 				value.setReferencedPropertyName( mappedBy );

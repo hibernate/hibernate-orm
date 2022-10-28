@@ -120,53 +120,57 @@ public enum CollectionClassification {
 		if ( value == null ) {
 			return null;
 		}
-
-		if ( value instanceof CollectionClassification ) {
-			return ( (CollectionClassification) value );
+		else if ( value instanceof CollectionClassification ) {
+			return (CollectionClassification) value;
 		}
-
-		if ( value instanceof String ) {
+		else if ( value instanceof String ) {
 			final String string = (String) value;
 			for ( CollectionClassification collectionClassification : values() ) {
 				if ( collectionClassification.name().equalsIgnoreCase( string ) ) {
 					return collectionClassification;
 				}
 			}
+			return null;
+		}
+		else if ( value instanceof Class ) {
+			return interpretClass( (Class<?>) value );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static CollectionClassification interpretClass(Class<?> configuredClass) {
+		if ( java.util.List.class.isAssignableFrom(configuredClass) ) {
+			return LIST;
+		}
+		if ( SortedSet.class.isAssignableFrom(configuredClass) ) {
+			return SORTED_SET;
+		}
+		if ( java.util.Set.class.isAssignableFrom(configuredClass) ) {
+			return SET;
+		}
+		if ( SortedMap.class.isAssignableFrom(configuredClass) ) {
+			return SORTED_MAP;
+		}
+		if ( java.util.Map.class.isAssignableFrom(configuredClass) ) {
+			return MAP;
+		}
+		if ( java.util.Collection.class.isAssignableFrom(configuredClass) ) {
+			return BAG;
 		}
 
-		if ( value instanceof Class ) {
-			final Class<?> configuredClass = (Class<?>) value;
-			if ( java.util.List.class.isAssignableFrom( configuredClass ) ) {
-				return LIST;
-			}
-			if ( SortedSet.class.isAssignableFrom( configuredClass ) ) {
-				return SORTED_SET;
-			}
-			if ( java.util.Set.class.isAssignableFrom( configuredClass ) ) {
-				return SET;
-			}
-			if ( SortedMap.class.isAssignableFrom( configuredClass ) ) {
-				return SORTED_MAP;
-			}
-			if ( java.util.Map.class.isAssignableFrom( configuredClass ) ) {
-				return MAP;
-			}
-			if ( java.util.Collection.class.isAssignableFrom( configuredClass ) ) {
-				return BAG;
-			}
-
-			BootLogging.BOOT_LOGGER.debugf(
-					"Unexpected Class specified for CollectionClassification resolution (`%s`) - " +
-							"should be one of `%s`, `%s`, `%s`, `%s`, `%s` or `%s`  (or subclass of)",
-					configuredClass.getName(),
-					java.util.List.class.getName(),
-					SortedSet.class.getName(),
-					java.util.Set.class.getName(),
-					SortedMap.class.isAssignableFrom( configuredClass ),
-					java.util.Map.class.isAssignableFrom( configuredClass ),
-					java.util.Collection.class.getName()
-			);
-		}
+		BootLogging.BOOT_LOGGER.debugf(
+				"Unexpected Class specified for CollectionClassification resolution (`%s`) - " +
+						"should be one of `%s`, `%s`, `%s`, `%s`, `%s` or `%s`  (or subclass of)",
+				configuredClass.getName(),
+				java.util.List.class.getName(),
+				SortedSet.class.getName(),
+				java.util.Set.class.getName(),
+				SortedMap.class.isAssignableFrom(configuredClass),
+				java.util.Map.class.isAssignableFrom(configuredClass),
+				java.util.Collection.class.getName()
+		);
 
 		return null;
 	}

@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -33,6 +32,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * A base implementation of EntityEntry
@@ -330,8 +332,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	private boolean isUnequivocallyNonDirty(Object entity) {
 		if ( ManagedTypeHelper.isSelfDirtinessTracker( entity ) ) {
 			boolean uninitializedProxy = false;
-			if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
-				final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( entity );
+			if ( isPersistentAttributeInterceptable( entity ) ) {
+				final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
@@ -348,8 +350,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 					&& !ManagedTypeHelper.asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
-		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptable interceptable = ManagedTypeHelper.asPersistentAttributeInterceptable( entity );
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// we never have to check an uninitialized proxy

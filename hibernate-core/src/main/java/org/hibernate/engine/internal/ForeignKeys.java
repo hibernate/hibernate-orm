@@ -145,8 +145,8 @@ public final class ForeignKeys {
 			// or 2) returnedValue was initialized, but not nullified.
 			// When bytecode-enhancement is used for dirty-checking, the change should
 			// only be tracked when returnedValue was nullified (1)).
-			if ( value != returnedValue && returnedValue == null && self instanceof SelfDirtinessTracker ) {
-				( (SelfDirtinessTracker) self ).$$_hibernate_trackChange( propertyName );
+			if ( value != returnedValue && returnedValue == null ) {
+				ManagedTypeHelper.processIfSelfDirtinessTracker( self, SelfDirtinessTracker::$$_hibernate_trackChange, propertyName );
 			}
 			return returnedValue;
 		}

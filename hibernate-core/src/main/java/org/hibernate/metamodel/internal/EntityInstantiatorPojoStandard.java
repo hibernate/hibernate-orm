@@ -6,14 +6,11 @@
  */
 package org.hibernate.metamodel.internal;
 
-
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.engine.internal.ManagedTypeHelper;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -22,6 +19,9 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * Support for instantiating entity values as POJO representation
@@ -48,7 +48,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 				? null
 				: resolveConstructor( getMappedPojoClass() );
 
-		this.applyBytecodeInterception = ManagedTypeHelper.isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		this.applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -81,7 +81,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 						.getLazyAttributeNames(),
 				null
 		);
-		ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
+		asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;
 	}
 

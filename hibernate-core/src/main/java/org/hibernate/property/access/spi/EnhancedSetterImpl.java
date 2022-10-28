@@ -10,12 +10,13 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * A specialized Setter implementation for handling setting values into
@@ -40,7 +41,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 		this.propertyName = propertyName;
 		this.enhancementState = ( CompositeOwner.class.isAssignableFrom( containerClass ) ? COMPOSITE_OWNER : 0 )
 				| ( CompositeTracker.class.isAssignableFrom( field.getType() ) ? COMPOSITE_TRACKER_MASK : 0 )
-				| ( ManagedTypeHelper.isPersistentAttributeInterceptableType( containerClass ) ? PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK : 0 );
+				| ( isPersistentAttributeInterceptableType( containerClass ) ? PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK : 0 );
 	}
 
 	@Override
@@ -54,9 +55,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterwards
 		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
-			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
-					target );
-			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
+			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
 				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
 			}

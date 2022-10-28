@@ -9,11 +9,13 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Do we have a dirty collection here?
@@ -32,9 +34,8 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
 		super( session );
 		EnhancementAsProxyLazinessInterceptor interceptor = null;
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor attributeInterceptor =
-					((PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			PersistentAttributeInterceptor attributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
 			}

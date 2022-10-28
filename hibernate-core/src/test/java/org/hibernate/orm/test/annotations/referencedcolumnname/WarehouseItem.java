@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 /**
@@ -62,10 +61,8 @@ public class WarehouseItem {
 	}
 
     @ManyToOne
-	@JoinColumns({
-     	@JoinColumn(name="vendor_id", referencedColumnName="vendor_id", insertable=false, updatable=false),
-     	@JoinColumn(name="item_id", referencedColumnName="item_id", insertable=false, updatable=false)
-     })
+	@JoinColumn(name="vendor_id", referencedColumnName="vendor_id", insertable=false, updatable=false)
+	@JoinColumn(name="item_id", referencedColumnName="item_id", insertable=false, updatable=false)
 	public ItemCost getDefaultCost() {
 		return defaultCost;
 	}

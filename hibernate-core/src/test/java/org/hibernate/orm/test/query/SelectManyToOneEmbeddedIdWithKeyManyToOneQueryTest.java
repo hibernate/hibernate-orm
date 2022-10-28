@@ -20,7 +20,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
@@ -28,7 +27,6 @@ import jakarta.persistence.Tuple;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(
 		annotatedClasses = {
@@ -120,10 +118,8 @@ public class SelectManyToOneEmbeddedIdWithKeyManyToOneQueryTest {
 		}
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "assoc_key", referencedColumnName = "id_key"),
-				@JoinColumn(name = "assoc_fk", referencedColumnName = "id_fk")
-		})
+		@JoinColumn(name = "assoc_key", referencedColumnName = "id_key")
+		@JoinColumn(name = "assoc_fk", referencedColumnName = "id_fk")
 		public EmbeddableTestEntity getManyToOne() {
 			return manyToOne;
 		}

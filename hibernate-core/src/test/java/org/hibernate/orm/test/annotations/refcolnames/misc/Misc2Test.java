@@ -6,7 +6,6 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import org.hibernate.testing.TestForIssue;
@@ -104,11 +103,8 @@ public class Misc2Test {
         private BId id;
         // secondary side of relationship
         @OneToOne(targetEntity = A.class, fetch = FetchType.LAZY)
-        @JoinColumns(value = {
-                @JoinColumn(name = "b_a_two", referencedColumnName = "a_two", nullable = true, insertable = true,
-                        updatable = true),
-                @JoinColumn(name = "b_a_one", referencedColumnName = "a_one", nullable = true, insertable = true,
-                        updatable = true)})
+        @JoinColumn(name = "b_a_two", referencedColumnName = "a_two")
+        @JoinColumn(name = "b_a_one", referencedColumnName = "a_one")
         private A a_R1;
 
         public B(String bOne, String bTwo) {

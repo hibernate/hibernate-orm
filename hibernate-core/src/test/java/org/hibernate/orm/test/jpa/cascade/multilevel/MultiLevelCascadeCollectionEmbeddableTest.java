@@ -21,7 +21,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
@@ -269,10 +268,8 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 		private AnotherSubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
-				@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false)
+		@JoinColumn(name = "PERSON", referencedColumnName = "FAMILY_IDENTIFIER", insertable = false, updatable = false)
 		private SubEntity subEntity;
 	}
 
@@ -336,10 +333,8 @@ public class MultiLevelCascadeCollectionEmbeddableTest {
 		private SubSubEntityId id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false),
-				@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM", insertable = false, updatable = false)
-		})
+		@JoinColumn(name = "ID_NUM", referencedColumnName = "ID_NUM", insertable = false, updatable = false)
+		@JoinColumn(name = "IND_NUM", referencedColumnName = "IND_NUM", insertable = false, updatable = false)
 		private SubEntity subEntity;
 	}
 

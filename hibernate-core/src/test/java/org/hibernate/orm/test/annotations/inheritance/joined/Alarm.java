@@ -11,7 +11,6 @@ package org.hibernate.orm.test.annotations.inheritance.joined;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 
 @Entity
@@ -21,8 +20,8 @@ public class Alarm extends EventInformation {
 	protected EventInformation eventInfo;
 
 	@OneToOne
-	@JoinColumns({@JoinColumn(name = "EVENTINFO_NOTIFICATIONID",
-			referencedColumnName = "NOTIFICATIONID")})
+	@JoinColumn(name = "EVENTINFO_NOTIFICATIONID",
+			referencedColumnName = "NOTIFICATIONID")
 	public EventInformation getEventInfo() {
 		return eventInfo;
 	}

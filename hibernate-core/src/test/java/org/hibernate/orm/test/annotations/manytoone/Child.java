@@ -12,7 +12,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -28,11 +27,9 @@ public class Child implements Serializable {
 	@GeneratedValue
 	public Integer id;
 
-	@ManyToOne()
-	@JoinColumns({
-	@JoinColumn(name = "parentCivility", referencedColumnName = "isMale"),
-	@JoinColumn(name = "parentLastName", referencedColumnName = "lastName"),
+	@ManyToOne
+	@JoinColumn(name = "parentCivility", referencedColumnName = "isMale")
+	@JoinColumn(name = "parentLastName", referencedColumnName = "lastName")
 	@JoinColumn(name = "parentFirstName", referencedColumnName = "firstName")
-			})
 	public Parent parent;
 }

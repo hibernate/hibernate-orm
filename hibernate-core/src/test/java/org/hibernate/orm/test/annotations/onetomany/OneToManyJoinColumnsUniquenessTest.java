@@ -16,7 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PersistenceException;
@@ -85,12 +84,8 @@ public class OneToManyJoinColumnsUniquenessTest {
 		private Long id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns(value = {
-				@JoinColumn(name = "b_to_a_1", referencedColumnName = "id_1", nullable = false)
-				,
-				@JoinColumn(name = "b_to_a_2", referencedColumnName = "id_2", nullable = false)
-		}
-		)
+		@JoinColumn(name = "b_to_a_1", referencedColumnName = "id_1", nullable = false)
+		@JoinColumn(name = "b_to_a_2", referencedColumnName = "id_2", nullable = false)
 		private EntityA entityA;
 
 		public EntityB() {

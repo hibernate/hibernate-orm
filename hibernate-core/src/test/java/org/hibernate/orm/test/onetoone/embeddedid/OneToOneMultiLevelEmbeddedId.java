@@ -18,7 +18,6 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -122,10 +121,8 @@ public class OneToOneMultiLevelEmbeddedId {
 
 		@Id
 		@OneToOne
-		@JoinColumns({
-				@JoinColumn(name = "ptid", referencedColumnName = "tid"),
-				@JoinColumn(name = "pnid", referencedColumnName = "nid")
-		})
+		@JoinColumn(name = "ptid", referencedColumnName = "tid")
+		@JoinColumn(name = "pnid", referencedColumnName = "nid")
 		private Secondary secondary;
 
 		public Primary() {

@@ -11,7 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -70,10 +69,8 @@ public class NaturalIdCachingTest extends BaseCoreFunctionalTestCase {
 		private Integer id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumns({
-			@JoinColumn(name="PROP_CODE", referencedColumnName = "CODE"),
-			@JoinColumn(name="PROP_ITEM", referencedColumnName = "ITEM")
-		})
+		@JoinColumn(name="PROP_CODE", referencedColumnName = "CODE")
+		@JoinColumn(name="PROP_ITEM", referencedColumnName = "ITEM")
 		private Property property;
 
 		private String severalOtherFields = "Several other fields ...";

@@ -10,7 +10,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 @Entity(name = "NestedLegacyEntity")
@@ -19,8 +18,8 @@ public class NestedLegacyEntity {
 
     @Id
     @ManyToOne
-    @JoinColumns({@JoinColumn(name = "legacyFk1", referencedColumnName = "primitivePk1"),
-            @JoinColumn(name = "legacyFk2", referencedColumnName = "primitivePk2")})
+    @JoinColumn(name = "legacyFk1", referencedColumnName = "primitivePk1")
+    @JoinColumn(name = "legacyFk2", referencedColumnName = "primitivePk2")
     private LegacyEntity legacyEntity;
 
     @Id

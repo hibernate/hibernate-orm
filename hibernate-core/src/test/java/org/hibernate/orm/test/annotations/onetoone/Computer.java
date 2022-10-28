@@ -14,7 +14,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 
 
@@ -29,10 +28,8 @@ public class Computer {
 	private SerialNumber serial;
 
 	@OneToOne(cascade = {CascadeType.PERSIST})
-	@JoinColumns({
-	@JoinColumn(name = "serialbrand", referencedColumnName = "brand"),
+	@JoinColumn(name = "serialbrand", referencedColumnName = "brand")
 	@JoinColumn(name = "serialmodel", referencedColumnName = "model")
-			})
 	public SerialNumber getSerial() {
 		return serial;
 	}

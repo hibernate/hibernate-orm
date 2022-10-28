@@ -49,6 +49,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
@@ -326,6 +327,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public int getNumberOfFetchables() {
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getEmbeddableTypeDescriptor().getFetchable( position );
 	}
 
 	@Override

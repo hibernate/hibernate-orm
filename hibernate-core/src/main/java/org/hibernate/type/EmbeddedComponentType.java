@@ -34,7 +34,7 @@ public class EmbeddedComponentType extends ComponentType {
 		}
 
 		final EmbeddableMappingType embeddable = mappingModelPart().getEmbeddableTypeDescriptor();
-		for ( int i = 0; i < embeddable.getAttributeMappings().size(); i++ ) {
+		for ( int i = 0; i < embeddable.getNumberOfAttributeMappings(); i++ ) {
 			final AttributeMapping attributeMapping = embeddable.getAttributeMapping( i );
 			final Getter getter = attributeMapping.getPropertyAccess().getGetter();
 			final Method getterMethod = getter.getMethod();

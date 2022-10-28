@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -179,15 +180,13 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				session.getSessionFactory()
 		);
 
-		final List<AttributeMapping> virtualIdAttribute = virtualIdEmbeddable.getAttributeMappings();
-		final List<AttributeMapping> idClassAttribute = getAttributeMappings();
-		final Object[] propertyValues = new Object[virtualIdAttribute.size()];
+		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
 		for ( int i = 0; i < propertyValues.length; i++ ) {
-			final AttributeMapping attributeMapping = virtualIdAttribute.get( i );
+			final AttributeMapping attributeMapping = virtualIdEmbeddable.getAttributeMapping( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
 			if ( o == null ) {
-				final AttributeMapping idClassAttributeMapping = idClassAttribute.get( i );
+				final AttributeMapping idClassAttributeMapping = getAttributeMapping( i );
 				if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
 					propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
 				}
@@ -197,7 +196,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
 			else if ( attributeMapping instanceof ToOneAttributeMapping
-					&& !( idClassAttribute.get( i ) instanceof ToOneAttributeMapping ) ) {
+					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 						toOneAttributeMapping.getSideNature().inverse()
@@ -340,6 +339,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		return attributeMappings.get( position );
+	}
+
+	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
 	}
@@ -415,12 +419,10 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> attributeMappings = getAttributeMappings();
-
 		// todo (6.0) : reduce to-one values to id here?
-		final Object[] result = new Object[ attributeMappings.size() ];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+		final Object[] result = new Object[ getNumberOfAttributeMappings() ];
+		for ( int i = 0; i < result.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			result[i] = attributeMapping.disassemble( o, session );
 		}

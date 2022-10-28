@@ -352,6 +352,11 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		return getEmbeddableTypeDescriptor().getFetchable( position );
+	}
+
+	@Override
 	public String toString() {
 		return "EmbeddedAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
 	}

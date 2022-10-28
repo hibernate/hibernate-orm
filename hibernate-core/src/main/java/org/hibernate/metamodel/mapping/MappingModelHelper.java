@@ -134,13 +134,17 @@ public class MappingModelHelper {
 		else if ( attribute1 instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embedded1 = (EmbeddableValuedModelPart) attribute1;
 			final EmbeddableValuedModelPart embedded2 = (EmbeddableValuedModelPart) attribute2;
-			final List<AttributeMapping> attrs1 = embedded1.getEmbeddableTypeDescriptor().getAttributeMappings();
-			final List<AttributeMapping> attrs2 = embedded2.getEmbeddableTypeDescriptor().getAttributeMappings();
-			if ( attrs1.size() != attrs2.size() ) {
+			final EmbeddableMappingType embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
+			final EmbeddableMappingType embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();
+			final int numberOfAttributeMappings = embeddableTypeDescriptor1.getNumberOfAttributeMappings();
+			if ( numberOfAttributeMappings != embeddableTypeDescriptor2.getNumberOfAttributeMappings() ) {
 				return false;
 			}
-			for ( int i = 0; i < attrs1.size(); i++ ) {
-				if ( !isCompatibleModelPart( attrs1.get( i ), attrs2.get( i ) ) ) {
+			for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+				if ( !isCompatibleModelPart(
+						embeddableTypeDescriptor1.getAttributeMapping( i ),
+						embeddableTypeDescriptor2.getAttributeMapping( i )
+				) ) {
 					return false;
 				}
 			}

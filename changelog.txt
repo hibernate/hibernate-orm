@@ -3,6 +3,51 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.5.Final (October 28, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32113
+
+** Bug
+    * [HHH-15622] - Query bug in @NamedEntityGraph when doing Eager loading of @OneToOne mappings in Single Table inheritance
+    * [HHH-15620] - HBM transformed model is wrongly marked metadata-complete
+    * [HHH-15619] - Named query from HBM doesn't apply cacheable configuration
+    * [HHH-15607] - @NamedEntityGraph is not working when try to load Basic attribute with OneToMany relation.
+    * [HHH-15605] - Parameter binding of converted TemporalJavaType fails
+    * [HHH-15597] - Gradle plugin should use full compilation classpath for enhancement
+    * [HHH-15592] - Use of JdbcExceptionHelper.extractSqlState in string switches causes NPE
+    * [HHH-15590] - UUIDJdbcType and VarcharUUIDJdbcType lack getJdbcLiteralFormatter implementation
+    * [HHH-15582] - SpannerDialect, schema update tries to create existing tables
+    * [HHH-15580] - Emulate lt/gt/le/ge tuple-comparisons when unsupported
+    * [HHH-15573] - SpannerDialect, schema creation generates SQL containing 'null' instead of the column type
+    * [HHH-15561] - Function "IDENTITY" not found when inserting audited revision using Hibernate Envers
+    * [HHH-15558] - Hibernate's Gradle plugin does not work with three-part source set names
+    * [HHH-15531] - Use dense_rank instead of row_number when query uses distinct
+    * [HHH-15528] - Add Cockroach to Jenkins nightly test matrix and fix issues
+    * [HHH-15277] - Reflection error when committing one to one relationship with embedded ids
+    * [HHH-14940] - Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn not working with CompositeKey (JoinColumns)
+    * [HHH-14687] - Cannot refer in JoinColumn to a field introduced by another JoinColumn
+    * [HHH-14544] -  Document Ehcache Performance degradation when the default cache is used
+    * [HHH-13054] - ManyToOne and referencedColumnName  => org.hibernate.AnnotationException: referencedColumnNames ... not mapped to a single property
+    * [HHH-12930] - non-primary embedded composite @ManyToOne mapping fails -> AnnotationException: referencedColumnNames ... not mapped to a single property
+
+** Improvement
+    * [HHH-15639] - Upgrade to ByteBuddy 1.12.18
+    * [HHH-15637] - Upgrade to Byteman 4.0.20
+    * [HHH-15636] - Indexed fetchable access via IndexedConsumer and by position
+    * [HHH-15635] - Avoid type pollution in EnhancedSetterImpl
+    * [HHH-15633] - Intern entity name to improve EntityKey#equals
+    * [HHH-15632] - Avoid unnecessary PersistenceContext#getEntity call in AbstractEntityInitializer
+    * [HHH-15616] - Mitigate performance impact of entity enhancement on Klass's _secondary_super_cache
+    * [HHH-15613] - remove lateral from roots and JpaDerivedFrom
+    * [HHH-15610] - Remove internal CacheKeyValueDescriptor uses from Type and JavaType
+    * [HHH-15585] - Add support for DB2 aliases for schema validation
+    * [HHH-15355] - Create virtual synthetic properties for multi-column inverse one-to-ones
+
+** Task
+    * [HHH-15615] - Add EDB PostgreSQL Advanced to test matrix and fix issues
+
+
 Changes in 6.1.4.Final (October 05, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

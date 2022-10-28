@@ -30,53 +30,53 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testBasicDDL() {
 		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
-		Column stateColumn = (Column) classMapping.getProperty( "state" ).getColumnIterator().next();
+		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get(0);
 		assertEquals( stateColumn.getLength(), (Long) 3L );
-		Column zipColumn = (Column) classMapping.getProperty( "zip" ).getColumnIterator().next();
+		Column zipColumn = classMapping.getProperty( "zip" ).getColumns().get(0);
 		assertEquals( zipColumn.getLength(), (Long) 5L );
 		assertFalse( zipColumn.isNullable() );
 	}
 
 	@Test
-	public void testApplyOnIdColumn() throws Exception {
+	public void testApplyOnIdColumn() {
 		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
-		Column serialColumn = (Column) classMapping.getIdentifierProperty().getColumnIterator().next();
+		Column serialColumn = classMapping.getIdentifierProperty().getColumns().get(0);
 		assertEquals( "Validator annotation not applied on ids", (Long) 2L, serialColumn.getLength() );
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5281" )
-	public void testLengthConstraint() throws Exception {
+	public void testLengthConstraint() {
 		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
-		Column modelColumn = (Column) classMapping.getProperty( "model" ).getColumnIterator().next();
+		Column modelColumn = classMapping.getProperty( "model" ).getColumns().get(0);
 		assertEquals( modelColumn.getLength(), (Long) 5L );
 	}
 
 	@Test
-	public void testApplyOnManyToOne() throws Exception {
+	public void testApplyOnManyToOne() {
 		PersistentClass classMapping = metadata().getEntityBinding( TvOwner.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "tv" ).getColumnIterator().next();
+		Column serialColumn = classMapping.getProperty( "tv" ).getColumns().get(0);
 		assertEquals( "Validator annotations not applied on associations", false, serialColumn.isNullable() );
 	}
 
 	@Test
-	public void testSingleTableAvoidNotNull() throws Exception {
+	public void testSingleTableAvoidNotNull() {
 		PersistentClass classMapping = metadata().getEntityBinding( Rock.class.getName() );
-		Column serialColumn = (Column) classMapping.getProperty( "bit" ).getColumnIterator().next();
+		Column serialColumn = classMapping.getProperty( "bit" ).getColumns().get(0);
 		assertTrue( "Notnull should not be applied on single tables", serialColumn.isNullable() );
 	}
 
 	@Test
-	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() throws Exception {
+	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() {
 		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
 		Property property = classMapping.getProperty( "tuner.frequency" );
-		Column serialColumn = (Column) property.getColumnIterator().next();
+		Column serialColumn = property.getColumns().get(0);
 		assertEquals(
 				"Validator annotations are applied on tuner as it is @NotNull", false, serialColumn.isNullable()
 		);
 
 		property = classMapping.getProperty( "recorder.time" );
-		serialColumn = (Column) property.getColumnIterator().next();
+		serialColumn = property.getColumns().get(0);
 		assertEquals(
 				"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
 		);

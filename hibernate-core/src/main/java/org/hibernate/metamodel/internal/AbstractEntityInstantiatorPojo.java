@@ -10,11 +10,13 @@ package org.hibernate.metamodel.internal;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * Base support for instantiating entity values as POJO representation
@@ -36,7 +38,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 		this.proxyInterface = persistentClass.getProxyInterface();
 
 		//TODO this PojoEntityInstantiator appears to not be reused ?!
-		this.applyBytecodeInterception = ManagedTypeHelper.isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		this.applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 	}
 
 	protected Object applyInterception(Object entity) {
@@ -52,7 +54,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 						.getLazyAttributeNames(),
 				null
 		);
-		ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
+		asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;
 	}
 

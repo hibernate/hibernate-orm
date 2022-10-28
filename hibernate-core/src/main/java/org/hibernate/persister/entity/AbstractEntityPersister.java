@@ -71,7 +71,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
@@ -268,6 +267,10 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -5032,7 +5035,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+		if ( isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
 					.extractLazyInterceptor( entity );
 			assert interceptor != null;
@@ -5042,7 +5045,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
-		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
+		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
@@ -5280,7 +5283,7 @@ public abstract class AbstractEntityPersister
 		if ( session == null ) {
 			return;
 		}
-		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, this::setSession, session );
+		processIfPersistentAttributeInterceptable( entity, this::setSession, session );
 	}
 
 	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {

@@ -22,7 +22,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -64,6 +63,8 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
@@ -705,8 +706,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState
 		);
 
-		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor persistentAttributeInterceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( toInitialize ) ) {
+			PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
 			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
 				concreteDescriptor.getBytecodeEnhancementMetadata().injectInterceptor(
@@ -906,8 +907,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return true;
 		}
 
-		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( toInitialize ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				if ( entry.getStatus() != Status.LOADING ) {
 					// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,

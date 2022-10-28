@@ -13,7 +13,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -26,6 +25,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Wrap collections in a Hibernate collection wrapper.
@@ -102,9 +104,8 @@ public class WrapVisitor extends ProxyVisitor {
 				return null;
 			}
 			else {
-				if ( entity instanceof PersistentAttributeInterceptable ) {
-					PersistentAttributeInterceptor attributeInterceptor =
-							((PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+				if ( isPersistentAttributeInterceptable( entity ) ) {
+					PersistentAttributeInterceptor attributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 					if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
 					}

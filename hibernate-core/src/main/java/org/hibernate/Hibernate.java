@@ -28,7 +28,6 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,6 +35,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.collection.spi.LazyInitializable;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Various utility functions for working with proxies and lazy collection references.
@@ -90,9 +92,8 @@ public final class Hibernate {
 		else if ( proxy instanceof LazyInitializable ) {
 			( (LazyInitializable) proxy ).forceInitialization();
 		}
-		else if ( proxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( proxy ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( proxy, null );
 			}
@@ -109,10 +110,8 @@ public final class Hibernate {
 		if ( proxy instanceof HibernateProxy ) {
 			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
 		}
-		else if ( ManagedTypeHelper.isPersistentAttributeInterceptable( proxy ) ) {
-			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
-					proxy );
-			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( proxy ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
 			return !(interceptor instanceof EnhancementAsProxyLazinessInterceptor);
 		}
 		else if ( proxy instanceof LazyInitializable ) {
@@ -230,8 +229,8 @@ public final class Hibernate {
 			entity = proxy;
 		}
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
 				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}

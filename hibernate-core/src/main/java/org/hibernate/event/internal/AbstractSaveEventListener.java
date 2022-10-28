@@ -37,6 +37,8 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+
 /**
  * A convenience base class for listeners responding to save events.
  *
@@ -106,9 +108,7 @@ public abstract class AbstractSaveEventListener<C>
 			boolean requiresImmediateIdAccess) {
 		callbackRegistry.preCreate( entity );
 
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Object generatedId = persister.getIdentifierGenerator().generate( source, entity );

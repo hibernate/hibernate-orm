@@ -65,6 +65,14 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
+	 * @param entity
+	 * @return true if and only if the entity implements {@see ManagedEntity}
+	 */
+	public static boolean isManagedEntity(final Object entity) {
+		return entity instanceof EnhancedEntity || entity instanceof ManagedEntity;
+	}
+
+	/**
 	 * @param type
 	 * @return true if and only if the type is assignable to a {@see PersistentAttributeInterceptable} type.
 	 */
@@ -138,6 +146,30 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
+	 * If the entity is implementing SelfDirtinessTracker, apply some action to it; this action should take
+	 * a parameter of type T.
+	 * It is first cast to SelfDirtinessTracker using an optimal strategy.
+	 * If the entity does not implement SelfDirtinessTracker, no operation is performed.
+	 * @param entity
+	 * @param action
+	 * @param optionalParam a parameter which can be passed to the action
+	 * @param <T> the type of the additional parameter.
+	 */
+	public static <T> void processIfSelfDirtinessTracker(
+			final Object entity,
+			final BiConsumer<SelfDirtinessTracker, T> action,
+			final T optionalParam) {
+		if ( entity instanceof EnhancedEntity ) {
+			EnhancedEntity e = (EnhancedEntity) entity;
+			action.accept( e, optionalParam );
+		}
+		else if ( entity instanceof SelfDirtinessTracker ) {
+			SelfDirtinessTracker e = (SelfDirtinessTracker) entity;
+			action.accept( e, optionalParam );
+		}
+	}
+
+	/**
 	 * Cast the object to PersistentAttributeInterceptable
 	 * (using this is highly preferrable over a direct cast)
 	 * @param entity the entity to cast
@@ -184,4 +216,5 @@ public final class ManagedTypeHelper {
 			return (SelfDirtinessTracker) entity;
 		}
 	}
+
 }

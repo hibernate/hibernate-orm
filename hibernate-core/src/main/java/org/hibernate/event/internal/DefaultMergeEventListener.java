@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,6 +45,11 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -115,9 +119,8 @@ public class DefaultMergeEventListener
 					entity = li.getImplementation();
 				}
 			}
-			else if ( original instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) original;
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			else if ( isPersistentAttributeInterceptable( original ) ) {
+				final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
@@ -257,9 +260,8 @@ public class DefaultMergeEventListener
 
 		event.setResult( copy );
 
-		if ( copy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) copy;
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( copy ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( copy ).$$_hibernate_getInterceptor();
 			if ( interceptor == null ) {
 				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
 			}
@@ -400,13 +402,11 @@ public class DefaultMergeEventListener
 			return source.getPersistenceContextInternal().unproxy( managed );
 		}
 
-		if ( incoming instanceof PersistentAttributeInterceptable
+		if ( isPersistentAttributeInterceptable( incoming )
 				&& persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 
-			final PersistentAttributeInterceptor incomingInterceptor =
-					( (PersistentAttributeInterceptable) incoming ).$$_hibernate_getInterceptor();
-			final PersistentAttributeInterceptor managedInterceptor =
-					( (PersistentAttributeInterceptable) managed ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor incomingInterceptor = asPersistentAttributeInterceptable( incoming ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor managedInterceptor = asPersistentAttributeInterceptable( managed ).$$_hibernate_getInterceptor();
 
 			// todo - do we need to specially handle the case where both `incoming` and `managed` are initialized, but
 			//		with different attributes initialized?
@@ -431,12 +431,13 @@ public class DefaultMergeEventListener
 
 	private void markInterceptorDirty(final Object entity, final Object target) {
 		// for enhanced entities, copy over the dirty attributes
-		if ( entity instanceof SelfDirtinessTracker && target instanceof SelfDirtinessTracker ) {
+		if ( isSelfDirtinessTracker( entity ) && isSelfDirtinessTracker( target ) ) {
 			// clear, because setting the embedded attributes dirties them
-			( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
+			final SelfDirtinessTracker selfDirtinessTrackerTarget = asSelfDirtinessTracker( target );
+			selfDirtinessTrackerTarget.$$_hibernate_clearDirtyAttributes();
 
-			for ( String fieldName : ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( fieldName );
+			for ( String fieldName : asSelfDirtinessTracker( entity ).$$_hibernate_getDirtyAttributes() ) {
+				selfDirtinessTrackerTarget.$$_hibernate_trackChange( fieldName );
 			}
 		}
 	}

@@ -107,6 +107,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 					targetEntity,
 					persistentClass,
 					manyToOne,
+					path,
 					false,
 					buildingContext
 			);

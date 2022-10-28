@@ -197,6 +197,9 @@ public class EntityBinder {
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
 
+	/**
+	 * Bind an entity class. This can be done in a single pass.
+	 */
 	public static void bindEntityClass(
 			XClass clazzToProcess,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
@@ -1555,7 +1558,6 @@ public class EntityBinder {
 		return new LocalCacheAnnotationStub( region, determineCacheConcurrencyStrategy( context ) );
 	}
 
-	@SuppressWarnings("ClassExplicitlyAnnotation")
 	private static class LocalCacheAnnotationStub implements Cache {
 		private final String region;
 		private final CacheConcurrencyStrategy usage;

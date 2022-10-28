@@ -164,6 +164,7 @@ public class BinderHelper {
 			// the entity which declares the association (used for exception message)
 			PersistentClass associatedEntity,
 			Value value,
+			String propertyName,
 			// true when we do the reverse side of a @ManyToMany
 			boolean inverse,
 			MetadataBuildingContext context) {
@@ -174,8 +175,6 @@ public class BinderHelper {
 		//       Property instance
 		final AnnotatedJoinColumn firstColumn = columns[0];
 		if ( !firstColumn.isImplicit()
-				// only necessary for owning side of association
-				&& !firstColumn.hasMappedBy()
 				// not necessary for a primary key reference
 				&& checkReferencedColumnsType( columns, targetEntity, context ) == NON_PK_REFERENCE ) {
 
@@ -184,29 +183,21 @@ public class BinderHelper {
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
 			final Object columnOwner = findColumnOwner( targetEntity, firstColumn.getReferencedColumn(), context );
-			for ( AnnotatedJoinColumn col: columns ) {
-				final Object owner = findColumnOwner( targetEntity, col.getReferencedColumn(), context );
-				if ( owner == null ) {
-					throw new AnnotationException( "A '@JoinColumn' for association "
-							+ associationMessage( associatedEntity, columns[0] )
-							+ " references a column named '" + col.getReferencedColumn()
-							+ "' which is not mapped by the target entity '"
-							+ targetEntity.getEntityName() + "'" );
-				}
-				if ( owner != columnOwner ) {
-					throw new AnnotationException( "The '@JoinColumn's for association "
-							+ associationMessage( associatedEntity, columns[0] )
-							+ " reference columns of different tables mapped by the target entity '"
-							+ targetEntity.getEntityName() + "' ('" + col.getReferencedColumn() +
-							"' belongs to a different table to '" + firstColumn.getReferencedColumn() + "'" );
-				}
-			}
+			checkColumnInSameTable( columns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
 			final List<Property> properties = findPropertiesByColumns( columnOwner, columns, associatedEntity, context );
 			// create a Property along with the new synthetic
 			// Component if necessary (or reuse the existing
 			// Property that matches exactly)
-			final Property property = referencedProperty( targetEntity, inverse, columns, columnOwner, properties, context );
+			final Property property = referencedProperty(
+					targetEntity,
+					associatedEntity,
+					propertyName,
+					inverse,
+					columnOwner,
+					properties,
+					context
+			);
 			// register the mapping with the InFlightMetadataCollector
 			registerSyntheticProperty(
 					targetEntity,
@@ -217,6 +208,41 @@ public class BinderHelper {
 					property.getName(),
 					context
 			);
+		}
+	}
+
+	/**
+	 * All the referenced columns must belong to the same table, that is
+	 * {@link #findColumnOwner(PersistentClass, String, MetadataBuildingContext)}
+	 * must return the same value for all of them.
+	 */
+	private static void checkColumnInSameTable(
+			AnnotatedJoinColumn[] columns,
+			PersistentClass targetEntity,
+			PersistentClass associatedEntity,
+			MetadataBuildingContext context,
+			Object columnOwner) {
+		final AnnotatedJoinColumn firstColumn = columns[0];
+		for ( AnnotatedJoinColumn column: columns) {
+			if ( column.hasMappedBy() ) {
+				// we should only get called for owning side of association
+				throw new AssertionFailure("no need to create synthetic properties for unowned collections");
+			}
+			final Object owner = findColumnOwner( targetEntity, column.getReferencedColumn(), context );
+			if ( owner == null ) {
+				throw new AnnotationException( "A '@JoinColumn' for association "
+						+ associationMessage(associatedEntity, firstColumn)
+						+ " references a column named '" + column.getReferencedColumn()
+						+ "' which is not mapped by the target entity '"
+						+ targetEntity.getEntityName() + "'" );
+			}
+			if ( owner != columnOwner) {
+				throw new AnnotationException( "The '@JoinColumn's for association "
+						+ associationMessage(associatedEntity, firstColumn)
+						+ " reference columns of different tables mapped by the target entity '"
+						+ targetEntity.getEntityName() + "' ('" + column.getReferencedColumn() +
+						"' belongs to a different table to '" + firstColumn.getReferencedColumn() + "'" );
+			}
 		}
 	}
 
@@ -232,8 +258,9 @@ public class BinderHelper {
 	 */
 	private static Property referencedProperty(
 			PersistentClass ownerEntity,
+			PersistentClass associatedEntity,
+			String propertyName,
 			boolean inverse,
-			AnnotatedJoinColumn[] columns,
 			Object columnOwner,
 			List<Property> properties,
 			MetadataBuildingContext context) {
@@ -253,9 +280,7 @@ public class BinderHelper {
 			// mapped to the referenced columns. We need to shallow
 			// clone those properties to mark them as non-insertable
 			// and non-updatable
-			final AnnotatedJoinColumn firstColumn = columns[0];
-			final PersistentClass associatedClass = firstColumn.getPropertyHolder().getPersistentClass();
-			final String syntheticPropertyName = syntheticPropertyName( firstColumn.getPropertyName(), inverse, associatedClass );
+			final String syntheticPropertyName = syntheticPropertyName( propertyName, inverse, associatedEntity );
 			return makeSyntheticComponentProperty( ownerEntity, columnOwner, context, syntheticPropertyName, properties );
 		}
 	}
@@ -826,7 +851,7 @@ public class BinderHelper {
 
 		final GeneratedValue generatedValueAnn = idXProperty.getAnnotation( GeneratedValue.class );
 		if ( generatedValueAnn == null ) {
-			// this should really never happen, but its easy to protect against it...
+			// this should really never happen, but it's easy to protect against it...
 			return new IdentifierGeneratorDefinition( "assigned", "assigned" );
 		}
 

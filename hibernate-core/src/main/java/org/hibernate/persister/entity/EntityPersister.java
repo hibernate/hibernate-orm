@@ -102,14 +102,12 @@ public interface EntityPersister
 		extends EntityMappingType, Loadable, RootTableGroupProducer, AttributeSource {
 
 	/**
-	 * The property name of the "special" identifier property in HQL
-	 */
-	String ENTITY_ID = "id";
-
-	/**
-	 * Finish the initialization of this object. {@link InFlightEntityMappingType#prepareMappingModel}
-	 * must be called for all entity persisters before calling this method.
-	 * <p/>
+	 * Finish the initialization of this object.
+	 * <p>
+	 * The method {@link InFlightEntityMappingType#prepareMappingModel}
+	 * must have been called for every entity persister before this method
+	 * is invoked.
+	 * <p>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
 	 * after all entity persisters have been instantiated.
 	 *
@@ -118,9 +116,10 @@ public interface EntityPersister
 	void postInstantiate() throws MappingException;
 
 	/**
-	 * Return the SessionFactory to which this persister "belongs".
+	 * Return the {@link org.hibernate.SessionFactory} to which this persister
+	 * belongs.
 	 *
-	 * @return The owning SessionFactory.
+	 * @return The owning {@code SessionFactory}.
 	 */
 	SessionFactoryImplementor getFactory();
 
@@ -157,14 +156,15 @@ public interface EntityPersister
 
 	/**
 	 * The strategy to use for SQM mutation statements where the target entity
-	 * has multiple tables.  Returns {@code null} to indicate that the entity
-	 * does not define multiple tables
+	 * has multiple tables. Returns {@code null} to indicate that the entity
+	 * does not have multiple tables.
 	 */
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
 	SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy();
+
 	/**
-	 * Retrieve the underlying entity metamodel instance...
+	 * Retrieve the underlying entity metamodel instance.
 	 *
 	 *@return The metamodel
 	 */
@@ -173,14 +173,15 @@ public interface EntityPersister
 	/**
 	 * Called from {@link EnhancementAsProxyLazinessInterceptor} to trigger load of
 	 * the entity's non-lazy state as well as the named attribute we are accessing
-	 * if it is still uninitialized after fetching non-lazy state
+	 * if it is still uninitialized after fetching non-lazy state.
 	 */
 	default Object initializeEnhancedEntityUsedAsProxy(
 			Object entity,
 			String nameOfAttributeBeingAccessed,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException(
-				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : " + getClass().getName()
+				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : "
+						+ getClass().getName()
 		);
 	}
 
@@ -280,20 +281,20 @@ public interface EntityPersister
 	boolean hasSubselectLoadableCollections();
 
 	/**
-	 * Determine whether this entity has any non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}
-	 * cascading.
+	 * Determine whether this entity has any
+	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
-	 * false otherwise (aka, no cascading).
+	 *         false otherwise (aka, no cascading).
 	 */
 	boolean hasCascades();
 
 	/**
-	 * Determine whether this entity has any {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete}
-	 * cascading.
+	 * Determine whether this entity has any
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
-	 * false otherwise.
+	 *         false otherwise.
 	 */
 	default boolean hasCascadeDelete() {
 		//bad default implementation for compatibility
@@ -407,12 +408,9 @@ public interface EntityPersister
 	 */
 	BasicType<?> getVersionType();
 
+	@SuppressWarnings("unchecked")
 	default VersionJavaType<Object> getVersionJavaType() {
-		final BasicType<?> versionType = getVersionType();
-		//noinspection unchecked
-		return versionType == null
-				? null
-				: (VersionJavaType<Object>) versionType.getJavaTypeDescriptor();
+		return (VersionJavaType<Object>) getVersionType().getJavaTypeDescriptor();
 	}
 
 	/**
@@ -431,11 +429,12 @@ public interface EntityPersister
 	boolean hasNaturalIdentifier();
 
 	/**
-	 * If the entity defines a natural id ({@link #hasNaturalIdentifier()}), which
-	 * properties make up the natural id.
+	 * If the entity defines a natural id, that is, if
+	 * {@link #hasNaturalIdentifier()} returns {@code true}, the indices
+	 * of the properties which make up the natural id.
 	 *
-	 * @return The indices of the properties making of the natural id; or
-	 * null, if no natural id is defined.
+	 * @return The indices of the properties making up the natural id;
+	 *         or null, if no natural id is defined.
 	 */
 	int[] getNaturalIdentifierProperties();
 
@@ -479,8 +478,8 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Determine whether this entity defines any lazy properties (ala
-	 * bytecode instrumentation).
+	 * Determine whether this entity defines any lazy properties (when bytecode
+	 * instrumentation is enabled).
 	 *
 	 * @return True if the entity has properties mapped as lazy; false otherwise.
 	 */
@@ -488,13 +487,15 @@ public interface EntityPersister
 
 	default NaturalIdLoader<?> getNaturalIdLoader() {
 		throw new UnsupportedOperationException(
-				"EntityPersister implementation `" + getClass().getName() + "` does not support `NaturalIdLoader`"
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'NaturalIdLoader'"
 		);
 	}
 
 	default MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
 		throw new UnsupportedOperationException(
-				"EntityPersister implementation `" + getClass().getName() + "` does not support `MultiNaturalIdLoader`"
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'MultiNaturalIdLoader'"
 		);
 	}
 
@@ -655,7 +656,8 @@ public interface EntityPersister
 	/**
 	 * Does this class have a cache.
 	 *
-	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()} depending on need
+	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()}
+	 *             depending on need
 	 */
 	@Deprecated
 	boolean hasCache();
@@ -699,8 +701,9 @@ public interface EntityPersister
 	boolean isSelectBeforeUpdateRequired();
 
 	/**
-	 * Get the current database state of the object, in a "hydrated" form, without
-	 * resolving identifiers
+	 * Get the current database state of the object, in a "hydrated" form,
+	 * without resolving identifiers.
+	 *
 	 * @return null if there is no row in the database
 	 */
 	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
@@ -708,9 +711,9 @@ public interface EntityPersister
 	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
 
 	/**
-	 * Get the current version of the object, or return null if there is no row for
-	 * the given identifier. In the case of unversioned data, return any object
-	 * if the row exists.
+	 * Get the current version of the object, or return null if there is no
+	 * row for the given identifier. In the case of unversioned data, return
+	 * any object if the row exists.
 	 */
 	Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
@@ -811,7 +814,7 @@ public interface EntityPersister
 	Class<?> getMappedClass();
 
 	/**
-	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface.
+	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface?
 	 */
 	boolean implementsLifecycle();
 
@@ -826,7 +829,7 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Set the given values to the mapped properties of the given object
+	 * Set the given values to the mapped properties of the given object.
 	 *
 	 * @deprecated Use {@link #setValues} instead
 	 */
@@ -838,7 +841,7 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Set the value of a particular property
+	 * Set the value of a particular property of the given instance.
 	 *
 	 * @deprecated Use {@link #setValue} instead
 	 */
@@ -871,7 +874,8 @@ public interface EntityPersister
 	Object getPropertyValue(Object object, String propertyName);
 
 	/**
-	 * Get the identifier of an instance (throw an exception if no identifier property)
+	 * Get the identifier of an instance from the object's identifier property.
+	 * Throw an exception if it has no identifier property.
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
@@ -881,7 +885,8 @@ public interface EntityPersister
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	/**
-	 * Get the version number (or timestamp) from the object's version property (or return null if not versioned)
+	 * Get the version number (or timestamp) from the object's version property.
+	 * Return {@code null} if it is not versioned.
 	 */
 	Object getVersion(Object object) throws HibernateException;
 
@@ -906,29 +911,39 @@ public interface EntityPersister
 	boolean hasUninitializedLazyProperties(Object object);
 
 	/**
-	 * Set the identifier and version of the given instance back to its "unsaved" value.
+	 * Set the identifier and version of the given instance back to its "unsaved"
+	 * value, that is, the value it had before it was made persistent.
 	 */
 	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
 	/**
-	 * A request has already identified the entity-name of this persister as the mapping for the given instance.
-	 * However, we still need to account for possible subclassing and potentially re-route to the more appropriate
+	 * Obtain the {@code EntityPersister} for the concrete class of the given
+	 * entity instance which participates in a mapped inheritance hierarchy
+	 * with this persister. The given instance must be an instance of a subclass
+	 * of the persistent class managed by this persister.
+	 * <p>
+	 * A request has already identified the entity name of this persister as the
+	 * mapping for the given instance. However, we still need to account for
+	 * possible subclassing and potentially reroute to the more appropriate
 	 * persister.
-	 * <p/>
-	 * For example, a request names {@code Animal} as the entity-name which gets resolved to this persister.  But the
-	 * actual instance is really an instance of {@code Cat} which is a subclass of {@code Animal}.  So, here the
-	 * {@code Animal} persister is being asked to return the persister specific to {@code Cat}.
-	 * <p/>
-	 * It is also possible that the instance is actually an {@code Animal} instance in the above example in which
-	 * case we would return {@code this} from this method.
+	 * <p>
+	 * For example, a request names {@code Animal} as the entity name which gets
+	 * resolved to this persister.  But the actual instance is really an instance
+	 * of {@code Cat} which is a subclass of {@code Animal}. So, here the
+	 * {@code Animal} persister is being asked to return the persister specific
+	 * to {@code Cat}.
+	 * <p>
+	 * It's also possible that the instance is actually an {@code Animal} instance
+	 * in the above example in which case we would return {@code this} from this
+	 * method.
 	 *
 	 * @param instance The entity instance
 	 * @param factory Reference to the SessionFactory
 	 *
 	 * @return The appropriate persister
 	 *
-	 * @throws HibernateException Indicates that instance was deemed to not be a subclass of the entity mapped by
-	 * this persister.
+	 * @throws HibernateException Indicates that instance was deemed to not be a
+	 *                            subclass of the entity mapped by this persister.
 	 */
 	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
@@ -977,4 +992,13 @@ public interface EntityPersister
 	}
 
 	boolean canUseReferenceCacheEntries();
+
+	/**
+	 * The property name of the "special" identifier property in HQL
+	 *
+	 * @deprecated this feature of HQL is now deprecated
+	 */
+	@Deprecated(since = "6.2")
+	String ENTITY_ID = "id";
+
 }

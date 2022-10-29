@@ -19,12 +19,13 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Hibernate extension to the JPA {@link Metamodel} contract
+ * Extensions to the JPA-defined {@link Metamodel} contract.
  *
  * @author Steve Ebersole
  *
- * @deprecated - Use {@link MappingMetamodel} or {@link org.hibernate.metamodel.model.domain.JpaMetamodel}
- * instead.  See {@link org.hibernate.metamodel.RuntimeMetamodels}
+ * @deprecated Use {@link MappingMetamodel} or
+ *             {@link org.hibernate.metamodel.model.domain.JpaMetamodel}
+ *             instead. See {@link org.hibernate.metamodel.RuntimeMetamodels}.
  */
 @Deprecated(since = "6.0")
 public interface MetamodelImplementor extends MappingMetamodel, Metamodel {

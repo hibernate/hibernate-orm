@@ -84,7 +84,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
 import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -180,7 +179,7 @@ public class BinderHelper {
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findColumnOwner( targetEntity, columns[0].getReferencedColumn(), context );
+			final Object columnOwner = findReferencedColumnOwner( targetEntity, columns[0], context );
 			checkColumnInSameTable( columns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
 			final List<Property> properties = findPropertiesByColumns( columnOwner, columns, associatedEntity, context );
@@ -203,8 +202,6 @@ public class BinderHelper {
 					inverse,
 					associatedEntity,
 					propertyName,
-//					columns[0].getPropertyHolder().getPersistentClass(),
-//					columns[0].getPropertyName(),
 					property.getName(),
 					context
 			);
@@ -228,7 +225,7 @@ public class BinderHelper {
 				// we should only get called for owning side of association
 				throw new AssertionFailure("no need to create synthetic properties for unowned collections");
 			}
-			final Object owner = findColumnOwner( targetEntity, column.getReferencedColumn(), context );
+			final Object owner = findReferencedColumnOwner( targetEntity, column, context );
 			if ( owner == null ) {
 				throw new AnnotationException( "A '@JoinColumn' for association "
 						+ associationMessage( associatedEntity, firstColumn )
@@ -442,13 +439,13 @@ public class BinderHelper {
 		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		for ( AnnotatedJoinColumn joinColumn : columns ) {
-			final String referencedColumn = joinColumn.getReferencedColumn();
-			if ( isEmptyOrNullAnnotationValue( referencedColumn ) ) {
+			if ( joinColumn.isReferenceImplicit() ) {
 				throw new AnnotationException("Association " + associationMessage( associatedEntity, joinColumn )
 						+ " has a '@JoinColumn' which does not specify the 'referencedColumnName'"
 						+ " (when an association has multiple '@JoinColumn's, they must each specify their 'referencedColumnName')");
 			}
-			final Column column = new Column( collector.getPhysicalColumnName( referencedTable, referencedColumn ) );
+			final String name = collector.getPhysicalColumnName( referencedTable, joinColumn.getReferencedColumn() );
+			final Column column = new Column( name );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new HashSet<>() );
 		}
@@ -697,13 +694,25 @@ public class BinderHelper {
 		if ( propertyHolder == null ) {
 			return propertyName;
 		}
-		String path = propertyHolder.getPath();
-		String entityName = propertyHolder.getPersistentClass().getEntityName();
+		final String path = propertyHolder.getPath();
+		final String entityName = propertyHolder.getPersistentClass().getEntityName();
 		if ( path.length() == entityName.length() ) {
 			return propertyName;
 		}
 		else {
 			return StringHelper.qualify( path.substring( entityName.length() + 1 ), propertyName );
+		}
+	}
+
+	public static Object findReferencedColumnOwner(
+			PersistentClass persistentClass,
+			AnnotatedJoinColumn joinColumn,
+			MetadataBuildingContext context) {
+		if ( joinColumn.isImplicit() || joinColumn.isReferenceImplicit() ) {
+			return persistentClass;
+		}
+		else {
+			return findColumnOwner( persistentClass, joinColumn.getReferencedColumn(), context );
 		}
 	}
 
@@ -715,10 +724,6 @@ public class BinderHelper {
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {
-		if ( isEmpty( columnName ) ) {
-			//shortcut for implicit referenced column names
-			return persistentClass;
-		}
 		PersistentClass current = persistentClass;
 		while ( current != null ) {
 			try {
@@ -1023,12 +1028,12 @@ public class BinderHelper {
 	}
 
 	public static boolean isEmptyAnnotationValue(String annotationString) {
-		return annotationString != null && annotationString.length() == 0;
+		return annotationString != null && annotationString.isEmpty();
 		//equivalent to (but faster) ANNOTATION_STRING_DEFAULT.equals( annotationString );
 	}
 
 	public static boolean isEmptyOrNullAnnotationValue(String annotationString) {
-		return annotationString == null || annotationString.length() == 0;
+		return annotationString == null || annotationString.isEmpty();
 	}
 
 	public static String getAnnotationValueStringOrNull(String value) {

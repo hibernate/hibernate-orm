@@ -30,6 +30,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
@@ -40,7 +41,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.cfg.BinderHelper.findColumnOwner;
+import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
@@ -54,34 +55,44 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Emmanuel Bernard
  */
 public class AnnotatedJoinColumn extends AnnotatedColumn {
-	/**
-	 * property name related to this column
-	 */
+
 	private String referencedColumn;
-	private String mappedBy;
-	//property name on the mapped by side if any
-	private String mappedByPropertyName;
-	//table name on the mapped by side if any
-	private String mappedByTableName;
-	private String mappedByEntityName;
-	private String mappedByJpaEntityName;
-	private boolean JPA2ElementCollection;
-	private String manyToManyOwnerSideEntityName;
 
-	//TODO: this is a bad way to determine the ImplicitJoinColumnNameSource.Nature
+	@Deprecated private String mappedBy;
+	@Deprecated private String mappedByPropertyName; //property name on the owning side if any
+	@Deprecated private String mappedByTableName; //table name on the mapped by side if any
+	@Deprecated private String mappedByEntityName;
+	@Deprecated private boolean JPA2ElementCollection;
+	@Deprecated private String manyToManyOwnerSideEntityName;
 
+	// due to @AnnotationOverride overriding rules,
+	// we don't want the constructor to be public
+	private AnnotatedJoinColumn() {
+		mappedBy = "";
+	}
+
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             hang this information somewhere else
+	 */
 	@Deprecated
 	public void setJPA2ElementCollection(boolean JPA2ElementCollection) {
 		this.JPA2ElementCollection = JPA2ElementCollection;
 	}
 
-	//TODO: this is a bad way to get the information at property ref resolution
-
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             get this information from somewhere else
+	 */
 	@Deprecated
 	public String getManyToManyOwnerSideEntityName() {
 		return manyToManyOwnerSideEntityName;
 	}
 
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             get this information from somewhere else
+	 */
 	@Deprecated
 	public void setManyToManyOwnerSideEntityName(String manyToManyOwnerSideEntityName) {
 		this.manyToManyOwnerSideEntityName = manyToManyOwnerSideEntityName;
@@ -91,25 +102,57 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		this.referencedColumn = referencedColumn;
 	}
 
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             get this information from somewhere else
+	 */
+	@Deprecated
 	public String getMappedBy() {
 		return mappedBy;
 	}
 
+	/**
+	 * @deprecated this is not column-level information, so it's better to
+	 *             hang all this information somewhere else
+	 */
+	public void setMappedBy(String entityName, String logicalTableName, String mappedByProperty) {
+		mappedByEntityName = entityName;
+		mappedByTableName = logicalTableName;
+		mappedByPropertyName = mappedByProperty;
+	}
+
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             hang this information somewhere else
+	 */
+	@Deprecated
 	public void setMappedBy(String mappedBy) {
 		this.mappedBy = mappedBy;
 	}
 
+	/**
+	 * @return true if the association mapping annotation did specify
+	 *         {@link jakarta.persistence.OneToMany#mappedBy() mappedBy},
+	 *         meaning that this {@code @JoinColumn} mapping belongs to an
+	 *         unowned many-valued association.
+	 */
 	public boolean hasMappedBy() {
-		return isNotEmpty( mappedBy );
+		return !isEmptyOrNullAnnotationValue( mappedBy );
 	}
 
-	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
-	private AnnotatedJoinColumn() {
-		setMappedBy("");
-	}
-
+	/**
+	 * The {@link JoinColumn#referencedColumnName() referencedColumnName}.
+	 */
 	public String getReferencedColumn() {
 		return referencedColumn;
+	}
+
+	/**
+	 * @return true if the {@code @JoinColumn} annotation did not specify the
+	 *         {@link JoinColumn#referencedColumnName() referencedColumnName}.
+	 */
+	public boolean isReferenceImplicit() {
+		return isEmptyOrNullAnnotationValue( referencedColumn );
 	}
 
 	public static AnnotatedJoinColumn[] buildJoinColumnsOrFormulas(
@@ -164,8 +207,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		formulaColumn.setReferencedColumn(joinFormula.referencedColumnName());
 		formulaColumn.setBuildingContext( buildingContext );
 		formulaColumn.setPropertyHolder( propertyHolder );
-		formulaColumn.setJoins( joins );
 		formulaColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		formulaColumn.setJoins( joins );
 		formulaColumn.bind();
 		return formulaColumn;
 	}
@@ -453,10 +496,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	private String buildDefaultColumnName(final PersistentClass referencedEntity, final String logicalReferencedColumn) {
-		final InFlightMetadataCollector metadataCollector = getBuildingContext().getMetadataCollector();
-		final Database database = metadataCollector.getDatabase();
-		final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
-		final PhysicalNamingStrategy physicalNamingStrategy = getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy();
+		final InFlightMetadataCollector collector = getBuildingContext().getMetadataCollector();
+		final Database database = collector.getDatabase();
+		final MetadataBuildingOptions options = getBuildingContext().getBuildingOptions();
+		final ImplicitNamingStrategy implicitNamingStrategy = options.getImplicitNamingStrategy();
+		final PhysicalNamingStrategy physicalNamingStrategy = options.getPhysicalNamingStrategy();
 
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
 		boolean ownerSide = getPropertyName() != null;
@@ -522,7 +566,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 								return null;
 							}
 
-							final Property mappedByProperty = metadataCollector.getEntityBinding( mappedByEntityName )
+							final Property mappedByProperty = collector.getEntityBinding( mappedByEntityName )
 									.getProperty( mappedByPropertyName );
 							final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
 							if ( value.getSelectables().isEmpty() ) {
@@ -542,6 +586,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 										String.format(
 												Locale.ENGLISH,
 												"Association '%s' is 'mappedBy' a property '%s' of entity '%s' which maps to a formula",
+												propertyHolder.getPath(),
 												mappedByPropertyName,
 												propertyHolder.getPath()
 										)
@@ -552,6 +597,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 										String.format(
 												Locale.ENGLISH,
 												"Association '%s' is 'mappedBy' a property '%s' of entity '%s' with multiple columns",
+												propertyHolder.getPath(),
 												mappedByPropertyName,
 												propertyHolder.getPath()
 										)
@@ -573,7 +619,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 		}
 		else if ( ownerSide ) {
-			final String logicalTableName = metadataCollector.getLogicalTableName( referencedEntity.getTable() );
+			final String logicalTableName = collector.getLogicalTableName( referencedEntity.getTable() );
 
 			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new ImplicitJoinColumnNameSource() {
@@ -647,7 +693,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
-					metadataCollector.getLogicalTableName( referencedEntity.getTable() )
+					collector.getLogicalTableName( referencedEntity.getTable() )
 			);
 
 			// is an intra-entity hierarchy table join so copy the name by default
@@ -679,6 +725,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				.render( database.getJdbcEnvironment().getDialect() );
 	}
 
+	/**
+	 * @deprecated this is not a column-level setting, so it's better to
+	 *             do this work somewhere else
+	 */
+	@Deprecated
 	private ImplicitJoinColumnNameSource.Nature getImplicitNature() {
 		if ( getPropertyHolder().isEntity() ) {
 			return ImplicitJoinColumnNameSource.Nature.ENTITY;
@@ -742,37 +793,34 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	public static final int NON_PK_REFERENCE = 2;
 
 	public static int checkReferencedColumnsType(
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumn[] joinColumns,
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
-		if ( columns.length == 0 ) {
+		if ( joinColumns.length == 0 ) {
 			return NO_REFERENCE; //shortcut
 		}
 
-		final Object columnOwner = findColumnOwner( referencedEntity, columns[0].getReferencedColumn(), context );
+		final Object columnOwner = findReferencedColumnOwner( referencedEntity, joinColumns[0], context );
 		if ( columnOwner == null ) {
 			try {
-				throw new MappingException(
-						"A '@JoinColumn' references a column named '" + columns[0].getReferencedColumn()
-								+ "' but the target entity '" + referencedEntity.getEntityName()
-								+ "' has no property which maps to this column"
-				);
+				throw new MappingException( "A '@JoinColumn' references a column named '"
+						+ joinColumns[0].getReferencedColumn() + "' but the target entity '"
+						+ referencedEntity.getEntityName() + "' has no property which maps to this column" );
 			}
-			catch (MappingException e) {
-				throw new RecoverableException( e.getMessage(), e );
+			catch (MappingException me) {
+				// we throw a recoverable exception here in case this
+				// is merely an ordering issue, so that the SecondPass
+				// will get reprocessed later
+				throw new RecoverableException( me.getMessage(), me );
 			}
 		}
-		final Table table = columnOwner instanceof PersistentClass
-				? ( (PersistentClass) columnOwner ).getTable()
-				: ( (Join) columnOwner ).getTable();
-
+		final Table table = getTable( columnOwner );
 		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
 		boolean explicitColumnReference = false;
-		for ( AnnotatedJoinColumn column : columns ) {
-			final String logicalReferencedColumnName = column.getReferencedColumn();
-			if ( isNotEmpty( logicalReferencedColumnName ) ) {
+		for ( AnnotatedJoinColumn column : joinColumns ) {
+			if ( !column.isReferenceImplicit() ) {
 				explicitColumnReference = true;
-				if ( !keyColumns.contains( column( context, table, logicalReferencedColumnName ) ) ) {
+				if ( !keyColumns.contains( column( context, table, column.getReferencedColumn() ) ) ) {
 					// we have a column which does not belong to the PK
 					return NON_PK_REFERENCE;
 				}
@@ -780,7 +828,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		if ( explicitColumnReference ) {
 			// if we got to here, all the columns belong to the PK
-			return keyColumns.size() == columns.length
+			return keyColumns.size() == joinColumns.length
 					// we have all the PK columns
 					? PK_REFERENCE
 					// we have a subset of the PK columns
@@ -790,6 +838,12 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			// there were no nonempty referencedColumnNames
 			return NO_REFERENCE;
 		}
+	}
+
+	private static Table getTable(Object persistentClassOrJoin) {
+		return persistentClassOrJoin instanceof PersistentClass
+				? ( (PersistentClass) persistentClassOrJoin ).getTable()
+				: ( (Join) persistentClassOrJoin ).getTable();
 	}
 
 	private static Column column(MetadataBuildingContext context, Table table, String logicalReferencedColumnName) {
@@ -841,9 +895,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			column.setImplicit( true );
 			column.setNullable( false ); //I break the spec, but it's for good
 			column.setPropertyHolder( propertyHolder );
+			column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 			column.setJoins( secondaryTables );
 			column.setBuildingContext( buildingContext );
-			column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 			column.setMappedBy( mappedBy );
 			column.bind();
 			return new AnnotatedJoinColumn[] { column };
@@ -856,9 +910,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 				column.setImplicit( true );
 				column.setPropertyHolder( propertyHolder );
+				column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 				column.setJoins( secondaryTables );
 				column.setBuildingContext( buildingContext );
-				column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 				column.setMappedBy( mappedBy );
 				column.setJoinAnnotation( joinColumn, propertyName );
 				column.setNullable( false ); //I break the spec, but it's for good
@@ -870,22 +924,18 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 	}
 
-	public void setMappedBy(String entityName, String jpaEntityName, String logicalTableName, String mappedByProperty) {
-		this.mappedByEntityName = entityName;
-		this.mappedByJpaEntityName = jpaEntityName;
-		this.mappedByTableName = logicalTableName;
-		this.mappedByPropertyName = mappedByProperty;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder string = new StringBuilder();
 		string.append( getClass().getSimpleName() ).append( "(" );
 		if ( isNotEmpty( getLogicalColumnName() ) ) {
-			string.append( "column='" ).append( getLogicalColumnName() ).append( "'" );
+			string.append( "column='" ).append( getLogicalColumnName() ).append( "'," );
 		}
 		if ( isNotEmpty( referencedColumn ) ) {
-			string.append( "referencedColumn='" ).append( referencedColumn ).append( "'" );
+			string.append( "referencedColumn='" ).append( referencedColumn ).append( "'," );
+		}
+		if ( string.charAt( string.length()-1 ) == ',' ) {
+			string.setLength( string.length()-1 );
 		}
 		string.append( ")" );
 		return string.toString();

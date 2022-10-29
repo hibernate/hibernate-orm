@@ -1941,20 +1941,20 @@ public abstract class CollectionBinder {
 	}
 
 	private void overrideReferencedPropertyName(
-			Collection collValue,
+			Collection collection,
 			AnnotatedJoinColumn[] joinColumns,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext context) {
 		if ( joinColumns.length > 0 ) {
 			AnnotatedJoinColumn joinColumn = joinColumns[0];
 			if ( hasMappedBy() ) {
-				String entityName = joinColumn.getManyToManyOwnerSideEntityName() != null
+				final String entityName = joinColumn.getManyToManyOwnerSideEntityName() != null
 						? "inverse__" + joinColumn.getManyToManyOwnerSideEntityName()
 						: joinColumn.getPropertyHolder().getEntityName();
-				InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-				String propRef = metadataCollector.getPropertyReferencedAssociation( entityName, mappedBy );
-				if ( propRef != null ) {
-					collValue.setReferencedPropertyName( propRef );
-					metadataCollector.addPropertyReference( collValue.getOwnerEntityName(), propRef );
+				final InFlightMetadataCollector collector = context.getMetadataCollector();
+				final String referencedProperty = collector.getPropertyReferencedAssociation( entityName, mappedBy );
+				if ( referencedProperty != null ) {
+					collection.setReferencedPropertyName( referencedProperty );
+					collector.addPropertyReference( collection.getOwnerEntityName(), referencedProperty );
 				}
 			}
 		}
@@ -2309,50 +2309,44 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleOwnedManyToMany(
-			Collection collValue,
+			Collection collection,
 			AnnotatedJoinColumn[] joinColumns,
 			TableBinder associationTableBinder,
 			XProperty property,
-			MetadataBuildingContext buildingContext,
+			MetadataBuildingContext context,
 			PersistentClass collectionEntity,
 			boolean isCollectionOfEntities) {
 		//TODO: only for implicit columns?
 		//FIXME NamingStrategy
-		for (AnnotatedJoinColumn column : joinColumns) {
-			String mappedByProperty = buildingContext.getMetadataCollector().getFromMappedBy(
-					collValue.getOwnerEntityName(), column.getPropertyName()
-			);
-			Table ownerTable = collValue.getOwner().getTable();
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
+		final PersistentClass owner = collection.getOwner();
+		for ( AnnotatedJoinColumn column : joinColumns ) {
 			column.setMappedBy(
-					collValue.getOwner().getEntityName(),
-					collValue.getOwner().getJpaEntityName(),
-					buildingContext.getMetadataCollector().getLogicalTableName( ownerTable ),
-					mappedByProperty
+					owner.getEntityName(),
+					collector.getLogicalTableName( owner.getTable() ),
+					collector.getFromMappedBy( owner.getEntityName(), column.getPropertyName() )
 			);
 //				String header = ( mappedByProperty == null ) ? mappings.getLogicalTableName( ownerTable ) : mappedByProperty;
 //				column.setDefaultColumnHeader( header );
 		}
 		if ( isEmpty( associationTableBinder.getName() ) ) {
 			//default value
-			PersistentClass owner = collValue.getOwner();
 			associationTableBinder.setDefaultName(
 					owner.getClassName(),
 					owner.getEntityName(),
 					owner.getJpaEntityName(),
-					buildingContext.getMetadataCollector().getLogicalTableName( owner.getTable() ),
+					collector.getLogicalTableName( owner.getTable() ),
 					collectionEntity != null ? collectionEntity.getClassName() : null,
 					collectionEntity != null ? collectionEntity.getEntityName() : null,
 					collectionEntity != null ? collectionEntity.getJpaEntityName() : null,
-					collectionEntity != null ? buildingContext.getMetadataCollector().getLogicalTableName(
-							collectionEntity.getTable()
-					) : null,
+					collectionEntity != null ? collector.getLogicalTableName( collectionEntity.getTable() ) : null,
 					joinColumns[0].getPropertyName()
 			);
 		}
 		associationTableBinder.setJPA2ElementCollection(
 				!isCollectionOfEntities && property.isAnnotationPresent(ElementCollection.class)
 		);
-		collValue.setCollectionTable( associationTableBinder.bind() );
+		collection.setCollectionTable( associationTableBinder.bind() );
 	}
 
 	private void handleUnownedManyToMany(

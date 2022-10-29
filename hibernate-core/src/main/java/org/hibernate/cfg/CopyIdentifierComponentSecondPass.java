@@ -27,7 +27,6 @@ import org.hibernate.mapping.SimpleValue;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
@@ -92,14 +91,12 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( joinColumns.length);
-		for (AnnotatedJoinColumn joinColumn : joinColumns) {
-			final String referencedColumnName = joinColumn.getReferencedColumn();
-			if ( referencedColumnName == null || isEmptyAnnotationValue( referencedColumnName ) ) {
-				break;
+		final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( joinColumns.length );
+		for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
+			if ( !joinColumn.isReferenceImplicit() ) {
+				//JPA 2 requires referencedColumnNames to be case-insensitive
+				columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase(Locale.ROOT), joinColumn );
 			}
-			//JPA 2 requires referencedColumnNames to be case-insensitive
-			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation
 		if ( columnByReferencedName.isEmpty() ) {
@@ -109,16 +106,28 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			}
 		}
 
-		MutableInteger index = new MutableInteger();
+		final MutableInteger index = new MutableInteger();
 		for ( Property referencedProperty : referencedComponent.getProperties() ) {
+			final Property property;
 			if ( referencedProperty.isComposite() ) {
-				Property property = createComponentProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
-				component.addProperty( property );
+				property = createComponentProperty(
+						referencedPersistentClass,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
 			}
 			else {
-				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
-				component.addProperty( property );
+				property = createSimpleProperty(
+						referencedPersistentClass,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
 			}
+			component.addProperty( property );
 		}
 	}
 

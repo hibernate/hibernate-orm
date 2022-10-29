@@ -785,6 +785,7 @@ public class AnnotatedColumn {
 		column.setLength( (long) col.length() );
 		column.setPrecision( col.precision() );
 		column.setScale( col.scale() );
+		column.setPropertyHolder( propertyHolder );
 		column.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		column.setNullable( col.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
 		if ( comment != null ) {
@@ -794,7 +795,6 @@ public class AnnotatedColumn {
 		column.setInsertable( col.insertable() );
 		column.setUpdatable( col.updatable() );
 		column.setExplicitTableName( tableName );
-		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );
 		column.setBuildingContext( context );
 		column.applyColumnDefault( inferredData, length );
@@ -936,10 +936,10 @@ public class AnnotatedColumn {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();
+		column.setPropertyHolder( propertyHolder );
 		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-		column.setPropertyHolder(propertyHolder);
-		column.setJoins(secondaryTables);
-		column.setBuildingContext(context);
+		column.setJoins( secondaryTables );
+		column.setBuildingContext( context );
 		// property name + suffix is an "explicit" column name
 		boolean implicit = isEmpty( suffixForDefaultColumnName );
 		if ( !implicit ) {
@@ -1015,10 +1015,13 @@ public class AnnotatedColumn {
 		StringBuilder string = new StringBuilder();
 		string.append( getClass().getSimpleName() ).append( "(" );
 		if ( isNotEmpty( logicalColumnName ) ) {
-			string.append( "column='" ).append( logicalColumnName ).append( "'" );
+			string.append( "column='" ).append( logicalColumnName ).append( "'," );
 		}
 		if ( isNotEmpty( formulaString ) ) {
-			string.append( "formula='" ).append( formulaString ).append( "'" );
+			string.append( "formula='" ).append( formulaString ).append( "'," );
+		}
+		if ( string.charAt( string.length()-1 ) == ',' ) {
+			string.setLength( string.length()-1 );
 		}
 		string.append( ")" );
 		return string.toString();

@@ -537,7 +537,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
-	private Property getRecursiveProperty(String propertyPath, List<Property> iter) throws MappingException {
+	private Property getRecursiveProperty(String propertyPath, List<Property> properties) throws MappingException {
 		Property property = null;
 		StringTokenizer st = new StringTokenizer( propertyPath, ".", false );
 		try {
@@ -565,7 +565,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 					}
 
 					if ( property == null ) {
-						property = getProperty( element, iter );
+						property = getProperty( element, properties );
 					}
 				}
 				else {

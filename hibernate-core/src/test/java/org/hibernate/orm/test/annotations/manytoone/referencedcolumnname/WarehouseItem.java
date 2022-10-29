@@ -8,6 +8,7 @@
 //$
 package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -15,7 +16,6 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class WarehouseItem extends GenericObject {
-
 
 	Item item;
 	Vendor vendor;
@@ -33,7 +33,7 @@ public class WarehouseItem extends GenericObject {
 
 	@ManyToOne
 //(fetch=FetchType.LAZY)
-	@JoinColumn( name = "ITEM_ID", unique = false, nullable = false, insertable = true, updatable = true )
+	@JoinColumn( name = "item_id", nullable = false)
 	public Item getItem() {
 		return item;
 	}
@@ -43,7 +43,7 @@ public class WarehouseItem extends GenericObject {
 	}
 
 	@ManyToOne( fetch = FetchType.LAZY )
-	@JoinColumn( name = "VENDOR_ID", unique = false, nullable = false, insertable = true, updatable = true )
+	@JoinColumn( name = "vendor_id",  nullable = false)
 	public Vendor getVendor() {
 		return vendor;
 	}

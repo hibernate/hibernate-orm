@@ -23,7 +23,7 @@ import org.junit.Test;
 public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-	public void testReoverableExceptionInFkOrdering() throws Exception {
+	public void testRecoverableExceptionInFkOrdering() throws Exception {
 		//SF should not blow up
 		Vendor v = new Vendor();
 		Item i = new Item();

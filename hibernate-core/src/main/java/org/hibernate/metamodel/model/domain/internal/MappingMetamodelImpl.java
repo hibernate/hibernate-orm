@@ -85,12 +85,10 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
 
 /**
- * Hibernate implementation of the JPA {@link jakarta.persistence.metamodel.Metamodel} contract.
- *
- * Really more of the mapping model then the domain model, though it does have reference to the `JpaMetamodel`
- *
- * NOTE : we suppress deprecation warnings because at the moment we still implement a deprecated API so
- * have to reference deprecated things
+ * Implementation of the JPA-defined contract {@link jakarta.persistence.metamodel.Metamodel}.
+ * <p>
+ * Really more of the {@linkplain MappingMetamodel mapping model} than the domain model, though
+ * it does have reference to the {@link org.hibernate.metamodel.model.domain.JpaMetamodel}.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -99,6 +97,9 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 public class MappingMetamodelImpl implements MappingMetamodelImplementor, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
+
+	//NOTE: we suppress deprecation warnings because at the moment we
+	//implement a deprecated API so have to override deprecated things
 
 	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
 
@@ -384,7 +385,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		representationStrategy.visitEntityNameResolvers( entityNameResolvers::add );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
 		return entityNameResolvers;
 	}
@@ -578,12 +579,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Map<String, EntityPersister> entityPersisters() {
 		return entityPersisterMap;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public CollectionPersister collectionPersister(String role) {
 		final CollectionPersister persister = collectionPersisterMap.get( role );
 		if ( persister == null ) {
@@ -592,17 +593,17 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		return persister;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Map<String, CollectionPersister> collectionPersisters() {
 		return collectionPersisterMap;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public EntityPersister entityPersister(Class<?> entityClass) {
 		return getEntityDescriptor( entityClass.getName() );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public EntityPersister entityPersister(String entityName) throws MappingException {
 		EntityPersister result = entityPersisterMap.get( entityName );
 		if ( result == null ) {
@@ -660,7 +661,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		return collectionPersisterMap.get( role );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return collectionRolesByEntityParticipant.get( entityName );
 	}

@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 /**
- * SPI extension of JpaMetamodel
+ * SPI extending {@link JpaMetamodel}.
  *
  * @author Steve Ebersole
  */

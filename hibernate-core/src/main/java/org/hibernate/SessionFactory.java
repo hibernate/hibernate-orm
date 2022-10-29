@@ -16,8 +16,6 @@ import javax.naming.Referenceable;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
 
 import jakarta.persistence.EntityGraph;

@@ -10,6 +10,8 @@ import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 
 /**
+ * SPI extending {@link RuntimeMetamodels}.
+ *
  * @author Steve Ebersole
  */
 public interface RuntimeMetamodelsImplementor extends RuntimeMetamodels {

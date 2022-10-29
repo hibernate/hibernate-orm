@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.unique;
 
-import java.util.Iterator;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -60,18 +58,19 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "unique (" );
-		final Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			final org.hibernate.mapping.Column column = columnIterator.next();
+		boolean first = true;
+		for ( org.hibernate.mapping.Column column : uniqueKey.getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				sb.append(", ");
+			}
 			sb.append( column.getQuotedName( dialect ) );
 			if ( uniqueKey.getColumnOrderMap().containsKey( column ) ) {
 				sb.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
 			}
-			if ( columnIterator.hasNext() ) {
-				sb.append( ", " );
-			}
 		}
-
 		return sb.append( ')' ).toString();
 	}
 

@@ -10,7 +10,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -106,8 +105,8 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 		ArrayList<String> dropStrings = new ArrayList<>();
 
-		for (Iterator<Index> index = table.getIndexIterator(); index.hasNext();) {
-			dropStrings.add( "drop index " + index.next().getName() );
+		for ( Index index : table.getIndexes().values() ) {
+			dropStrings.add( "drop index " + index.getName() );
 		}
 
 		dropStrings.add( this.spannerDialect.getDropTableString( context.format( table.getQualifiedTableName() ) ) );

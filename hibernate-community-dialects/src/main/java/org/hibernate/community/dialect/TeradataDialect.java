@@ -596,16 +596,16 @@ public class TeradataDialect extends Dialect {
 				indexNameForCreation = index.getName();
 			}
 
-			StringBuilder columnList = new StringBuilder();
+			final StringBuilder columnList = new StringBuilder();
 			boolean first = true;
-			for (Iterator<Column> column = index.getColumnIterator(); column.hasNext(); ) {
+			for ( Column column : index.getColumns() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					columnList.append( ", " );
 				}
-				columnList.append( column.next().getName() );
+				columnList.append( column.getName() );
 			}
 
 			return new String[] {

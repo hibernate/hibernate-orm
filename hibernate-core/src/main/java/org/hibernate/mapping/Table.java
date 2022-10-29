@@ -225,7 +225,9 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	 * Return the column which is identified by column provided as argument.
 	 *
 	 * @param column column with at least a name.
-	 * @return the underlying column or null if not inside this table. Note: the instance *can* be different than the input parameter, but the name will be the same.
+	 * @return the underlying column or null if not inside this table.
+	 *         Note: the instance *can* be different than the input parameter,
+	 *         but the name will be the same.
 	 */
 	public Column getColumn(Column column) {
 		if ( column == null ) {
@@ -337,49 +339,46 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		//		unique key is unnecessary because a primary key is already unique by definition.  We handle
 		//		this case specifically because some databases fail if you try to apply a unique key to
 		//		the primary key columns which causes schema export to fail in these cases.
-		if ( uniqueKeys.isEmpty() ) {
-			// nothing to do
-			return;
-		}
-		else if ( uniqueKeys.size() == 1 ) {
-			// we have to worry about condition 2 above, but not condition 1
-			final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
-			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
-				uniqueKeys.remove( uniqueKeyEntry.getKey() );
-			}
-		}
-		else {
-			// we have to check both conditions 1 and 2
-			final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
-			while ( uniqueKeyEntries.hasNext() ) {
-				final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
-				final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
-				boolean removeIt = false;
-
-				// condition 1 : check against other unique keys
-				for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
-					// make sure its not the same unique key
-					if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
-						continue;
-					}
-					if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
-							&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
-						removeIt = true;
-						break;
-					}
-				}
-
-				// condition 2 : check against pk
+		if ( !uniqueKeys.isEmpty() ) {
+			if ( uniqueKeys.size() == 1 ) {
+				// we have to worry about condition 2 above, but not condition 1
+				final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
 				if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
-					removeIt = true;
-				}
-
-				if ( removeIt ) {
-					//uniqueKeys.remove( uniqueKeyEntry.getKey() );
-					uniqueKeyEntries.remove();
+					uniqueKeys.remove( uniqueKeyEntry.getKey() );
 				}
 			}
+			else {
+				// we have to check both conditions 1 and 2
+				final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+				while ( uniqueKeyEntries.hasNext() ) {
+					final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
+					final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
+					boolean removeIt = false;
 
+					// condition 1 : check against other unique keys
+					for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
+						// make sure its not the same unique key
+						if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
+							continue;
+						}
+						if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
+								&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
+							removeIt = true;
+							break;
+						}
+					}
+
+					// condition 2 : check against pk
+					if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+						removeIt = true;
+					}
+
+					if ( removeIt ) {
+						//uniqueKeys.remove( uniqueKeyEntry.getKey() );
+						uniqueKeyEntries.remove();
+					}
+				}
+			}
 		}
 	}
 

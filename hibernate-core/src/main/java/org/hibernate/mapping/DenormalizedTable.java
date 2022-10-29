@@ -124,14 +124,12 @@ public class DenormalizedTable extends Table {
 
 	@Override
 	public Iterator<Index> getIndexIterator() {
-		List<Index> indexes = new ArrayList<>();
-		Iterator<Index> iter = includedTable.getIndexIterator();
-		while ( iter.hasNext() ) {
-			Index parentIndex = iter.next();
+		final List<Index> indexes = new ArrayList<>();
+		for ( Index parentIndex : includedTable.getIndexes().values() ) {
 			Index index = new Index();
 			index.setName( getName() + parentIndex.getName() );
 			index.setTable( this );
-			index.addColumns( parentIndex.getColumnIterator() );
+			index.addColumns( parentIndex.getColumns() );
 			indexes.add( index );
 		}
 		return new JoinedIterator<>(

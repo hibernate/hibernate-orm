@@ -8,7 +8,6 @@
 // $Id$
 package org.hibernate.orm.test.annotations.namingstrategy.charset;
 
-import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -67,14 +66,14 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		UniqueKey uniqueKey = metadata.getEntityBinding( Address.class.getName()).getTable().getUniqueKeyIterator().next();
+        UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( expectedUniqueKeyName(), uniqueKey.getName() );
 
 		org.hibernate.mapping.ForeignKey foreignKey =
-				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding( Address.class.getName()).getTable().getForeignKeyIterator().next();
+				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
 		assertEquals( expectedForeignKeyName(), foreignKey.getName() );
 
-		org.hibernate.mapping.Index index = metadata.getEntityBinding( Address.class.getName()).getTable().getIndexIterator().next();
+        org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( expectedIndexName(), index.getName() );
 	}
 

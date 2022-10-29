@@ -57,6 +57,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_CLASS_ARRAY;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+
 /**
  * @author Steve Ebersole
  */
@@ -310,18 +313,18 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		for ( Property property : bootType.getPropertyClosure() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
-			final PropertyAccess propertyAccess = makePropertyAccess(property);
+			final PropertyAccess propertyAccess = makePropertyAccess( property );
 
-			propertyAccessMap.put(property.getName(), propertyAccess);
+			propertyAccessMap.put( property.getName(), propertyAccess );
 
-			if (!(propertyAccess instanceof PropertyAccessBasicImpl)) {
+			if ( !(propertyAccess instanceof PropertyAccessBasicImpl) ) {
 				foundCustomAccessor = true;
 			}
 
-			getterNames.add(propertyAccess.getGetter().getMethodName());
-			getterTypes.add(propertyAccess.getGetter().getReturnTypeClass());
+			getterNames.add( propertyAccess.getGetter().getMethodName() );
+			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
 
-			setterNames.add(propertyAccess.getSetter().getMethodName());
+			setterNames.add( propertyAccess.getSetter().getMethodName() );
 		}
 
 		if ( foundCustomAccessor || ! Environment.useReflectionOptimizer() ) {
@@ -330,9 +333,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		return bytecodeProvider.getReflectionOptimizer(
 				javaTypeToReflect,
-				getterNames.toArray( new String[0] ),
-				setterNames.toArray( new String[0] ),
-				getterTypes.toArray( new Class[0] )
+				getterNames.toArray( EMPTY_STRING_ARRAY ),
+				setterNames.toArray( EMPTY_STRING_ARRAY ),
+				getterTypes.toArray( EMPTY_CLASS_ARRAY )
 		);
 	}
 

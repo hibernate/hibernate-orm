@@ -68,8 +68,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			// Try to find out the name of the primary key in case the dialect needs it to create an identity
 			String pkColName = null;
 			if ( table.hasPrimaryKey() ) {
-				Column pkColumn = table.getPrimaryKey().getColumns().iterator().next();
-				pkColName = pkColumn.getQuotedName( dialect );
+				pkColName = table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect );
 			}
 
 			boolean isFirst = true;
@@ -166,7 +165,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			applyComments( table, formattedTableName, sqlStrings );
 
-		applyInitCommands( table, sqlStrings, context );
+			applyInitCommands( table, sqlStrings, context );
 
 			return sqlStrings.toArray(StringHelper.EMPTY_STRINGS);
 		}

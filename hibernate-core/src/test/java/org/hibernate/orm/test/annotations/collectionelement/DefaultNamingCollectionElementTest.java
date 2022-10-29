@@ -289,7 +289,7 @@ public class DefaultNamingCollectionElementTest {
 			String propertyName,
 			String columnName) {
 		final Collection collection = metadataImplementor.getCollectionBinding( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+		final Iterator columnIterator = collection.getCollectionTable().getColumns().iterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
 			Column column = (Column) columnIterator.next();
@@ -409,7 +409,7 @@ public class DefaultNamingCollectionElementTest {
 		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getColumnIterator().next().getText() );
 
 		boolean hasOwnerFK = false;
-		for ( Iterator it = ownerCollection.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {
+		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
 			final ForeignKey fk = (ForeignKey) it.next();
 			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
 			if ( fk.getColumnSpan() > 1 ) {

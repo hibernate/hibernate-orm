@@ -6,12 +6,13 @@
  */
 package org.hibernate.dialect.unique;
 
-import java.util.Iterator;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
+
+import static org.hibernate.mapping.Index.buildSqlCreateIndexString;
 
 /**
  * DB2 does not allow unique constraints on nullable columns.  Rather than
@@ -33,11 +34,11 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		if ( hasNullable( uniqueKey ) ) {
-			return org.hibernate.mapping.Index.buildSqlCreateIndexString(
+			return buildSqlCreateIndexString(
 					context,
 					uniqueKey.getName(),
 					uniqueKey.getTable(),
-					uniqueKey.getColumnIterator(),
+					uniqueKey.getColumns(),
 					uniqueKey.getColumnOrderMap(),
 					true,
 					metadata
@@ -63,9 +64,8 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 	
 	private boolean hasNullable(UniqueKey uniqueKey) {
-		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.getColumnIterator();
-		while ( iter.hasNext() ) {
-			if ( iter.next().isNullable() ) {
+		for ( Column column : uniqueKey.getColumns() ) {
+			if ( column.isNullable() ) {
 				return true;
 			}
 		}

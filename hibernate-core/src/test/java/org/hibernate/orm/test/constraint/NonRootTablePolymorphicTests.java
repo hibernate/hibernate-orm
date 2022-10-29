@@ -6,9 +6,8 @@
  */
 package org.hibernate.orm.test.constraint;
 
-import java.util.Iterator;
 import java.util.List;
-import jakarta.persistence.CollectionTable;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -21,18 +20,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 
@@ -102,7 +97,7 @@ public class NonRootTablePolymorphicTests {
 							//		2) for the sub->child fk
 
 							assertThat( subclassTable.getForeignKeys().size(), is( 2 ) );
-							subclassTable.getForeignKeyIterator().forEachRemaining(
+							subclassTable.getForeignKeys().values().iterator().forEachRemaining(
 									(foreignKey) -> {
 										assertThat( foreignKey.getTable(), sameInstance( subclassTable ) );
 
@@ -167,7 +162,7 @@ public class NonRootTablePolymorphicTests {
 					assertThat( selectable.getText(), is( "parent_sub_fk" ) );
 
 					assertThat( subParent.getTable().getForeignKeys().size(), is( 1 ) );
-					final ForeignKey foreignKey = subParent.getTable().getForeignKeyIterator().next();
+					final ForeignKey foreignKey = subParent.getTable().getForeignKeys().values().iterator().next();
 
 					assertThat( foreignKey.getReferencedTable().getName(), is( "sub" ) );
 					assertThat( foreignKey.getTable(), sameInstance( toOne.getTable() ) );

@@ -347,9 +347,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		final Exporter<Index> exporter = dialect.getIndexExporter();
 
-		final Iterator<Index> indexItr = table.getIndexIterator();
-		while ( indexItr.hasNext() ) {
-			final Index index = indexItr.next();
+		for ( Index index : table.getIndexes().values() ) {
 			if ( !StringHelper.isEmpty( index.getName() ) ) {
 				IndexInformation existingIndex = null;
 				if ( tableInformation != null ) {

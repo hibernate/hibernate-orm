@@ -27,10 +27,10 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class Index implements RelationalModel, Exportable, Serializable {
-	private Table table;
-	private java.util.List<Column> columns = new ArrayList<>();
-	private java.util.Map<Column, String> columnOrderMap = new HashMap<>(  );
 	private Identifier name;
+	private Table table;
+	private final java.util.List<Column> columns = new ArrayList<>();
+	private final java.util.Map<Column, String> columnOrderMap = new HashMap<>(  );
 
 	@Override
 	public String sqlCreateString(Mapping mapping, SqlStringGenerationContext context, String defaultCatalog,

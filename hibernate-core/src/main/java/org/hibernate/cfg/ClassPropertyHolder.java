@@ -225,7 +225,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				persistentClass.addMappedsuperclassProperty(prop);
+				persistentClass.addMappedSuperclassProperty( prop );
 				addPropertyToMappedSuperclass( prop, declaringClass );
 			}
 			else {

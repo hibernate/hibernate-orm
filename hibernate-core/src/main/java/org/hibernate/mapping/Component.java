@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
@@ -43,16 +44,18 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable, SortableValue {
-	private final ArrayList<Property> properties = new ArrayList<>();
-	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
+
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
 	private PersistentClass owner;
 	private boolean dynamic;
-	private Map metaAttributes;
 	private boolean isKey;
 	private String roleName;
+
+	private final ArrayList<Property> properties = new ArrayList<>();
+	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
+	private Map<String,MetaAttribute> metaAttributes;
 
 	private Class<? extends EmbeddableInstantiator> customInstantiator;
 
@@ -60,9 +63,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private volatile Type type;
 
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private List<Selectable> cachedSelectables;
+	private transient List<Selectable> cachedSelectables;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private List<Column> cachedColumns;
+	private transient List<Column> cachedColumns;
+
+	private transient IdentifierGenerator builtIdentifierGenerator;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -96,7 +101,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
 		this.dynamic = original.dynamic;
-		this.metaAttributes = original.metaAttributes == null ? null : new HashMap(original.metaAttributes);
+		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>(original.metaAttributes);
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
 		this.customInstantiator = original.customInstantiator;
@@ -112,6 +117,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties.size();
 	}
 
+	@Deprecated @Remove
 	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
 	}
@@ -137,14 +143,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public int getColumnSpan() {
-		int n=0;
+		int span = 0;
 		for ( Property property : getProperties() ) {
-			n += property.getColumnSpan();
+			span += property.getColumnSpan();
 		}
-		return n;
+		return span;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public Iterator<Selectable> getColumnIterator() {
 		@SuppressWarnings("unchecked")
 		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
@@ -157,15 +163,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public List<Selectable> getSelectables() {
-		if ( cachedSelectables != null ) {
-			return cachedSelectables;
-		}
-		else {
+		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
-					.flatMap( p -> p.getSelectables().stream() )
-					.collect( Collectors.toList() );
-			return cachedSelectables;
+					.flatMap(p -> p.getSelectables().stream())
+					.collect(Collectors.toList());
 		}
+		return cachedSelectables;
 	}
 
 	@Override
@@ -268,17 +271,17 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Map getMetaAttributes() {
+	public Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
 	}
 
 	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
-		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
+		return metaAttributes==null ? null : metaAttributes.get(attributeName);
 	}
 
 	@Override
-	public void setMetaAttributes(Map metas) {
+	public void setMetaAttributes(Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
 	}
 
@@ -303,22 +306,21 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean[] getColumnInsertability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
-		int i=0;
+		final boolean[] result = new boolean[ getColumnSpan() ];
+		int i = 0;
 		for ( Property prop : getProperties() ) {
-			boolean[] chunk = prop.getValue().getColumnInsertability();
+			final boolean[] chunk = prop.getValue().getColumnInsertability();
 			if ( prop.isInsertable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
+				System.arraycopy( chunk, 0, result, i, chunk.length );
 			}
-			i+=chunk.length;
+			i += chunk.length;
 		}
 		return result;
 	}
 
 	@Override
 	public boolean hasAnyInsertableColumns() {
-		for ( int i = 0; i < properties.size(); i++ ) {
-			final Property property = properties.get( i );
+		for ( Property property : properties ) {
 			if ( property.getValue().hasAnyInsertableColumns() ) {
 				return true;
 			}
@@ -343,13 +345,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean hasAnyUpdatableColumns() {
-		for ( int i = 0; i < properties.size(); i++ ) {
-			final Property property = properties.get( i );
+		for ( Property property : properties ) {
 			if ( property.getValue().hasAnyUpdatableColumns() ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -407,8 +407,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public String toString() {
 		return getClass().getSimpleName() + '(' + componentClassName + ')';
 	}
-
-	private IdentifierGenerator builtIdentifierGenerator;
 
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
@@ -577,8 +575,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		// to be able to sort the other side of the foreign key accordingly
 		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded() || getBuildingContext() instanceof MappingDocument ) {
-			final Object[] originalProperties = properties.toArray();
+		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded()
+				|| getBuildingContext() instanceof MappingDocument ) {
+			final Property[] originalProperties = properties.toArray( new Property[0] );
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];
 			for ( int j = 0; j < originalPropertyOrder.length; j++ ) {
@@ -595,8 +594,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				// We have to re-order the primary key accordingly
 				final List<Column> columns = primaryKey.getColumns();
 				columns.clear();
-				for ( int i = 0; i < properties.size(); i++ ) {
-					for ( Selectable selectable : properties.get(i).getSelectables() ) {
+				for ( Property property : properties ) {
+					for ( Selectable selectable : property.getSelectables() ) {
 						if ( selectable instanceof Column ) {
 							columns.add( (Column) selectable );
 						}

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
@@ -258,7 +259,7 @@ public class Property implements Serializable, MetaAttributable {
 		return propertyAccessorName==null || "property".equals( propertyAccessorName );
 	}
 
-	public java.util.Map getMetaAttributes() {
+	public Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
 	}
 
@@ -266,7 +267,7 @@ public class Property implements Serializable, MetaAttributable {
 		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
 	}
 
-	public void setMetaAttributes(java.util.Map metas) {
+	public void setMetaAttributes(Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
 	}
 

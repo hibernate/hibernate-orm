@@ -59,24 +59,22 @@ public class AttributeOrderingTests {
 	}
 
 	public void verifyBootModel(DomainModelScope modelScope) {
-		final Consumer<Iterator<Property>> alphabeticOrderChecker = (properties) -> {
+		final Consumer<Iterator<Property>> alphabeticOrderChecker = properties -> {
 			String last = null;
 			while ( properties.hasNext() ) {
 				final String current = properties.next().getName();
-				if ( last != null ) {
-					assert last.compareTo( current ) < 0 : "not alphabetical : " + last + " -> " + current;
-				}
+				assert last == null || last.compareTo( current ) < 0 : "not alphabetical : " + last + " -> " + current;
 
 				last = current;
 			}
 		};
 
 		modelScope.getDomainModel().getEntityBindings().forEach(
-				(binding) -> alphabeticOrderChecker.accept( binding.getPropertyClosureIterator() )
+				binding -> alphabeticOrderChecker.accept( binding.getPropertyClosure().iterator() )
 		);
 
 		modelScope.getDomainModel().visitRegisteredComponents(
-				(binding) -> alphabeticOrderChecker.accept( binding.getPropertyIterator() )
+				binding -> alphabeticOrderChecker.accept( binding.getProperties().iterator() )
 		);
 	}
 

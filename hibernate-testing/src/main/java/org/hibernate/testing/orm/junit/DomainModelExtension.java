@@ -7,7 +7,6 @@
 package org.hibernate.testing.orm.junit;
 
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -255,32 +254,26 @@ public class DomainModelExtension
 		}
 
 		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
-			if ( entityBinding.isInherited() ) {
-				continue;
-			}
-
-			boolean hasLob = false;
-
-			final Iterator<Property> props = entityBinding.getPropertyClosureIterator();
-			while ( props.hasNext() ) {
-				final Property prop = props.next();
-				if ( prop.getValue().isSimpleValue() ) {
-					if ( isLob( (SimpleValue) prop.getValue() ) ) {
-						hasLob = true;
-						break;
+			if ( !entityBinding.isInherited() ) {
+				boolean hasLob = false;
+				for ( Property prop : entityBinding.getPropertyClosure() ) {
+					if ( prop.getValue().isSimpleValue() ) {
+						if ( isLob( (SimpleValue) prop.getValue() ) ) {
+							hasLob = true;
+							break;
+						}
 					}
 				}
-			}
 
-			if ( !hasLob ) {
-				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
-				entityBinding.setCached( true );
+				if ( !hasLob ) {
+					( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
+					entityBinding.setCached( true );
+				}
 			}
 		}
 
 		for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
 			boolean isLob = false;
-
 			if ( collectionBinding.getElement().isSimpleValue() ) {
 				isLob = isLob( (SimpleValue) collectionBinding.getElement() );
 			}
@@ -359,9 +352,6 @@ public class DomainModelExtension
 		public void releaseModel() {
 			model = null;
 		}
-	}
-
-	protected void afterMetadataBuilt(Metadata metadata) {
 	}
 
 }

@@ -8,7 +8,6 @@ package org.hibernate.testing.orm.junit;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -137,9 +136,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 			boolean hasLob = false;
 
-			final Iterator props = entityBinding.getPropertyClosureIterator();
-			while ( props.hasNext() ) {
-				final Property prop = (Property) props.next();
+			for ( Property prop : entityBinding.getPropertyClosure() ) {
 				if ( prop.getValue().isSimpleValue() ) {
 					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;

@@ -237,14 +237,11 @@ public class ToOneAttributeMapping
 					}
 					// Simple one-to-one mapped by cases
 					if ( bidirectionalAttributeName == null ) {
-						//noinspection deprecation
-						final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
-						while ( propertyClosureIterator.hasNext() ) {
-							final Property property = propertyClosureIterator.next();
-							if ( property.getValue() instanceof OneToOne
-									&& name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() )
-									&& ( (OneToOne) property.getValue() ).getReferencedEntityName().equals(
-									declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+						for ( Property property : entityBinding.getPropertyClosure() ) {
+							if (property.getValue() instanceof OneToOne
+									&& name.equals(((OneToOne) property.getValue()).getMappedByProperty())
+									&& ((OneToOne) property.getValue()).getReferencedEntityName().equals(
+									declaringType.getJavaType().getJavaType().getTypeName())) {
 								bidirectionalAttributeName = property.getName();
 								break;
 							}
@@ -252,15 +249,12 @@ public class ToOneAttributeMapping
 					}
 				}
 				else {
-					//noinspection deprecation
-					final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
-					while ( propertyClosureIterator.hasNext() ) {
-						final Property property = propertyClosureIterator.next();
+					for ( Property property : entityBinding.getPropertyClosure() ) {
 						final Value value = property.getValue();
-						if ( value instanceof Collection
-								&& name.equals( ( (Collection) value ).getMappedByProperty() )
-								&& ( (Collection) value ).getElement().getType().getName()
-								.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+						if (value instanceof Collection
+								&& name.equals(((Collection) value).getMappedByProperty())
+								&& ((Collection) value).getElement().getType().getName()
+								.equals(declaringType.getJavaType().getJavaType().getTypeName())) {
 							bidirectionalAttributeName = property.getName();
 							break;
 						}

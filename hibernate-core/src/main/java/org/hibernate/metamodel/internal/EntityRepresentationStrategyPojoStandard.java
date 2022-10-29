@@ -308,22 +308,20 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		boolean foundCustomAccessor = false;
 
-		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		while ( itr.hasNext() ) {
+		for ( Property property : bootType.getPropertyClosure() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
-			final Property property = itr.next();
-			final PropertyAccess propertyAccess = makePropertyAccess( property );
+			final PropertyAccess propertyAccess = makePropertyAccess(property);
 
-			propertyAccessMap.put( property.getName(), propertyAccess );
+			propertyAccessMap.put(property.getName(), propertyAccess);
 
-			if ( ! (propertyAccess instanceof PropertyAccessBasicImpl) ) {
+			if (!(propertyAccess instanceof PropertyAccessBasicImpl)) {
 				foundCustomAccessor = true;
 			}
 
-			getterNames.add( propertyAccess.getGetter().getMethodName() );
-			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
+			getterNames.add(propertyAccess.getGetter().getMethodName());
+			getterTypes.add(propertyAccess.getGetter().getReturnTypeClass());
 
-			setterNames.add( propertyAccess.getSetter().getMethodName() );
+			setterNames.add(propertyAccess.getSetter().getMethodName());
 		}
 
 		if ( foundCustomAccessor || ! Environment.useReflectionOptimizer() ) {

@@ -25,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 5.0
  */
-public interface MetadataImplementor extends Metadata, Mapping {
+public interface MetadataImplementor extends Metadata {
 	/**
 	 * Access to the options used to build this Metadata
 	 *

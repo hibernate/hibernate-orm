@@ -84,9 +84,8 @@ public class NonRootTablePolymorphicTests {
 					assertThat( rootRootTable, sameInstance( rootTable ) );
 					assertThat( rootRootTable.getName(), is( "root" ) );
 
-					final Iterator<Subclass> subclassIterator = root.getSubclassIterator();
-					while ( subclassIterator.hasNext() ) {
-						final JoinedSubclass subclass = (JoinedSubclass) subclassIterator.next();
+					for ( Subclass value : root.getSubclasses() ) {
+						final JoinedSubclass subclass = (JoinedSubclass) value;
 						final org.hibernate.mapping.Table subclassTable = subclass.getTable();
 
 						if ( subclass.getJpaEntityName().equals( "Sub" ) ) {

@@ -34,6 +34,9 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+
 /**
  * A relational database table.
  *
@@ -228,24 +231,19 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		if ( column == null ) {
 			return null;
 		}
-
-		Column myColumn = columns.get( column.getCanonicalName() );
-
-		return column.equals( myColumn ) ?
-				myColumn :
-				null;
+		final Column myColumn = columns.get( column.getCanonicalName() );
+		return column.equals( myColumn ) ? myColumn : null;
 	}
 
 	public Column getColumn(Identifier name) {
 		if ( name == null ) {
 			return null;
 		}
-
 		return columns.get( name.getCanonicalName() );
 	}
 
 	public Column getColumn(int n) {
-		Iterator<Column> iter = columns.values().iterator();
+		final Iterator<Column> iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -253,7 +251,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	}
 
 	public void addColumn(Column column) {
-		Column old = getColumn( column );
+		final Column old = getColumn( column );
 		if ( old == null ) {
 			if ( primaryKey != null ) {
 				for ( Column c : primaryKey.getColumns() ) {
@@ -269,8 +267,8 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 					}
 				}
 			}
-			this.columns.put( column.getCanonicalName(), column );
-			column.uniqueInteger = this.columns.size();
+			columns.put( column.getCanonicalName(), column );
+			column.uniqueInteger = columns.size();
 		}
 		else {
 			column.uniqueInteger = old.uniqueInteger;
@@ -283,24 +281,29 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	@Deprecated(since = "6.0")
 	public Iterator<Column> getColumnIterator() {
-		return columns.values().iterator();
+		return getColumns().iterator();
 	}
 
 	public Collection<Column> getColumns() {
 		return columns.values();
 	}
 
+	@Deprecated(since = "6.2")
 	public Iterator<Index> getIndexIterator() {
-		return indexes.values().iterator();
+		return getIndexes().values().iterator();
+	}
+
+	public Map<String, Index> getIndexes() {
+		return unmodifiableMap( indexes );
 	}
 
 	@Deprecated(since = "6.0")
 	public Iterator<ForeignKey> getForeignKeyIterator() {
-		return foreignKeys.values().iterator();
+		return getForeignKeys().values().iterator();
 	}
 
 	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
-		return Collections.unmodifiableMap( foreignKeys );
+		return unmodifiableMap( foreignKeys );
 	}
 
 	@Deprecated(since = "6.0")
@@ -310,7 +313,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	public Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
-		return uniqueKeys;
+		return unmodifiableMap( uniqueKeys );
 	}
 
 	private int sizeOfUniqueKeyMapOnLastCleanse;
@@ -381,7 +384,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	}
 
 	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
-		if ( primaryKey == null || ! primaryKey.getColumnIterator().hasNext() ) {
+		if ( primaryKey == null || primaryKey.getColumns().isEmpty() ) {
 			// happens for many-to-many tables
 			return false;
 		}
@@ -393,9 +396,9 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((catalog == null) ? 0 : catalog.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((schema == null) ? 0 : schema.hashCode());
+		result = prime * result + (catalog == null ? 0 : catalog.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
+		result = prime * result + (schema == null ? 0 : schema.hashCode());
 		return result;
 	}
 
@@ -820,11 +823,11 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	@Deprecated(since = "6.0")
 	public Iterator<String> getCheckConstraintsIterator() {
-		return checkConstraints.iterator();
+		return getCheckConstraints().iterator();
 	}
 
 	public List<String> getCheckConstraints() {
-		return checkConstraints;
+		return unmodifiableList( checkConstraints );
 	}
 
 	@Override
@@ -900,7 +903,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
 				initCommands.add( producer.apply( context ) );
 			}
-			return Collections.unmodifiableList( initCommands );
+			return unmodifiableList( initCommands );
 		}
 	}
 }

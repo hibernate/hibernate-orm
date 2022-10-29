@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.envers.boot.EnversMappingException;
@@ -120,18 +119,10 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 			SimpleIdMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		final Iterator<Property> properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
-			final Property virtualProperty;
-			if ( virtualComponent != null ) {
-				virtualProperty = virtualComponent.getProperty( property.getName() );
-			}
-			else {
-				virtualProperty = null;
-			}
-
+		for ( Property property : component.getProperties() ) {
+			final Property virtualProperty = virtualComponent != null
+					? virtualComponent.getProperty( property.getName() )
+					: null;
 			if ( !addIdProperty( attributeContainer, key, mapper, property, virtualProperty, audited ) ) {
 				// If the entity is audited, and a non-supported id component is used, throw exception.
 				if ( audited ) {
@@ -162,12 +153,11 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 	}
 
 	private void generateSecondPass(String entityName, Component component) {
-		Iterator<Property> properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-			if ( property.getValue() instanceof ToOne ) {
+		for ( Property property : component.getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof ToOne ) {
 				final PropertyAuditingData propertyData = getIdPersistentPropertyAuditingData( property );
-				final String referencedEntityName = ( (ToOne) property.getValue() ).getReferencedEntityName();
+				final String referencedEntityName = ( (ToOne) value).getReferencedEntityName();
 
 				final String prefix = getMetadataBuildingContext().getConfiguration()
 						.getOriginalIdPropertyName() + "." + propertyData.getName();

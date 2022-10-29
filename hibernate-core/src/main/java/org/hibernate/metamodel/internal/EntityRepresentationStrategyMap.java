@@ -51,20 +51,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 		this.proxyFactory = createProxyFactory( bootType );
 		this.instantiator = new EntityInstantiatorDynamicMap( bootType );
 
-		//noinspection unchecked
-		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		int i = 0;
-		while ( itr.hasNext() ) {
+		for ( Property property : bootType.getPropertyClosure() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
-			final Property property = itr.next();
-			final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-					null,
-					property.getName(),
-					true );
+			final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE
+					.buildPropertyAccess( null, property.getName(), true );
 
-			propertyAccessMap.put( property.getName(), propertyAccess );
-
-			i++;
+			propertyAccessMap.put(property.getName(), propertyAccess);
 		}
 
 		createProxyFactory( bootType );

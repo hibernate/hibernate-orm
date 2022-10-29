@@ -47,10 +47,12 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+
 /**
- * Responsible for processing the {@link ResultSetMapping}
- * defined by a {@link org.hibernate.query.sql.spi.NativeSelectQueryDefinition} and
- * pre-process it for consumption in {@link SQLQueryParser}.
+ * Responsible for processing the {@link ResultSetMapping} defined by a
+ * {@link org.hibernate.query.sql.spi.NativeSelectQueryDefinition} and
+ * preprocessing it for consumption by {@link SQLQueryParser}.
  *
  * @author Gavin King
  * @author Max Andersen
@@ -100,11 +102,6 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			// todo (6.0): access property results map somehow which was on NativeSQLQueryNonScalarReturn before
 			return Collections.emptyMap();
 		}
-	}
-
-	private boolean hasPropertyResultMap(String alias) {
-		Map<String, String[]> propertyMaps = internalGetPropertyResultsMap( alias );
-		return propertyMaps != null && ! propertyMaps.isEmpty();
 	}
 
 	public SQLQueryParser.ParserContext process() {
@@ -617,9 +614,9 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	public String[] collectQuerySpaces() {
-		final HashSet<String> spaces = new HashSet<String>();
+		final HashSet<String> spaces = new HashSet<>();
 		collectQuerySpaces( spaces );
-		return spaces.toArray( new String[ spaces.size() ] );
+		return spaces.toArray( EMPTY_STRING_ARRAY );
 	}
 
 	public void collectQuerySpaces(Collection<String> spaces) {

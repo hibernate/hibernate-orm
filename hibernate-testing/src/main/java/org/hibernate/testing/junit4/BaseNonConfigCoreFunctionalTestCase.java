@@ -9,7 +9,6 @@ package org.hibernate.testing.junit4;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -342,9 +341,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 			boolean hasLob = false;
 
-			final Iterator props = entityBinding.getPropertyClosureIterator();
-			while ( props.hasNext() ) {
-				final Property prop = (Property) props.next();
+			for ( Property prop : entityBinding.getPropertyClosure() ) {
 				if ( prop.getValue().isSimpleValue() ) {
 					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;

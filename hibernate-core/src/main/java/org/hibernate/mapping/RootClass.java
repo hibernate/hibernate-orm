@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -55,8 +55,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
 
-	public RootClass(MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+	public RootClass(MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 	}
 
 	@Override
@@ -279,7 +279,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		super.validate( mapping );
 		if ( !getIdentifier().isValid( mapping ) ) {
 			throw new MappingException(

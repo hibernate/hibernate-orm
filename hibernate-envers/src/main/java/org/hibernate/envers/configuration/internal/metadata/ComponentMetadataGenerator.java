@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.envers.boot.model.AttributeContainer;
@@ -50,13 +49,6 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			EntityMappingData mappingData,
 			boolean firstPass) {
 		final Component propComponent = (Component) value;
-		final Class<? extends EmbeddableInstantiator> instantiatorClass;
-		if ( propComponent.getCustomInstantiator() != null ) {
-			instantiatorClass = propComponent.getCustomInstantiator();
-		}
-		else {
-			instantiatorClass = null;
-		}
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
 			instantiator = getMetadataBuildingContext().getBootstrapContext()
@@ -94,10 +86,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 
 		// Adding all properties of the component
 		propComponent.sortProperties();
-		final Iterator<Property> properties = propComponent.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
+		for ( Property property : propComponent.getProperties() ) {
 			final PropertyAuditingData componentPropertyAuditingData =
 					componentAuditingData.getPropertyAuditingData( property.getName() );
 

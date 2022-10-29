@@ -15,7 +15,6 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -46,9 +45,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void basicTests() {
 		final PersistentClass entityBinding = metadata().getEntityBinding( TheEntity.class.getName() );
-		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
-		while ( propertyBindingIterator.hasNext() ) {
-			final Property propertyBinding = (Property) propertyBindingIterator.next();
+		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			assertFalse(
 					"Found property bound as Serializable : " + propertyBinding.getName(),
 					propertyBinding.getType() instanceof SerializableType
@@ -65,7 +62,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
+		theEntity = s.get( TheEntity.class, 1 );
 		dump( entityBinding, theEntity );
 		assertNotNull( theEntity );
 		s.delete( theEntity );
@@ -74,17 +71,14 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private void dump(PersistentClass entityBinding, TheEntity theEntity) {
-		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
-		while ( propertyBindingIterator.hasNext() ) {
-			final Property propertyBinding = (Property) propertyBindingIterator.next();
+		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
-
 			System.out.println(
 					String.format(
 							"%s (%s) -> %s",
 							propertyBinding.getName(),
 							javaType.getJavaTypeClass().getSimpleName(),
-							javaType.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
+							javaType.toString(propertyBinding.getGetter(TheEntity.class).get(theEntity))
 					)
 			);
 		}

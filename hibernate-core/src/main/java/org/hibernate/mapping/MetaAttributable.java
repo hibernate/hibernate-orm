@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 
+import java.util.Map;
+
 /**
  * Common interface for things that can handle meta attributes.
  * 
@@ -14,9 +16,9 @@ package org.hibernate.mapping;
  */
 public interface MetaAttributable {
 
-	java.util.Map getMetaAttributes();
+	Map<String, MetaAttribute> getMetaAttributes();
 
-	void setMetaAttributes(java.util.Map metas);
+	void setMetaAttributes(Map<String, MetaAttribute> metas);
 		
 	MetaAttribute getMetaAttribute(String name);
 

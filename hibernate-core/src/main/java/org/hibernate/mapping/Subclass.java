@@ -7,11 +7,9 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -20,7 +18,6 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -28,12 +25,13 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class Subclass extends PersistentClass {
+
 	private PersistentClass superclass;
 	private Class<? extends EntityPersister> classPersisterClass;
 	private final int subclassId;
 
-	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+	public Subclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 		this.superclass = superclass;
 		this.subclassId = superclass.nextSubclassId();
 	}
@@ -115,8 +113,8 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public void addMappedsuperclassProperty(Property p) {
-		super.addMappedsuperclassProperty( p );
+	public void addMappedSuperclassProperty(Property p) {
+		super.addMappedSuperclassProperty( p );
 		getSuperclass().addSubclassProperty(p);
 	}
 
@@ -273,7 +271,7 @@ public class Subclass extends PersistentClass {
 		return new JoinedList<>( getSuperclass().getJoinClosure(), super.getJoinClosure() );
 	}
 
-	@Deprecated(since = "6.0")
+	@Deprecated(since = "6.0") @SuppressWarnings("deprecation")
 	public Iterator<Join> getJoinClosureIterator() {
 		return new JoinedIterator<>(
 			getSuperclass().getJoinClosureIterator(),
@@ -331,34 +329,6 @@ public class Subclass extends PersistentClass {
 	public boolean hasSubselectLoadableCollections() {
 		return super.hasSubselectLoadableCollections() ||
 			getSuperclass().hasSubselectLoadableCollections();
-	}
-
-	@Override
-	public String getTuplizerImplClassName(RepresentationMode mode) {
-		String impl = super.getTuplizerImplClassName( mode );
-		if ( impl == null ) {
-			impl = getSuperclass().getTuplizerImplClassName( mode );
-		}
-		return impl;
-	}
-
-	@Override
-	public Map getTuplizerMap() {
-		Map specificTuplizerDefs = super.getTuplizerMap();
-		Map superclassTuplizerDefs = getSuperclass().getTuplizerMap();
-		if ( specificTuplizerDefs == null && superclassTuplizerDefs == null ) {
-			return null;
-		}
-		else {
-			Map combined = new HashMap();
-			if ( superclassTuplizerDefs != null ) {
-				combined.putAll( superclassTuplizerDefs );
-			}
-			if ( specificTuplizerDefs != null ) {
-				combined.putAll( specificTuplizerDefs );
-			}
-			return java.util.Collections.unmodifiableMap( combined );
-		}
 	}
 
 	@Override

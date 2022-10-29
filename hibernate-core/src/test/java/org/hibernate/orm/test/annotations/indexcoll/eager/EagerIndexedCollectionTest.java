@@ -43,10 +43,10 @@ public class EagerIndexedCollectionTest extends BaseNonConfigCoreFunctionalTestC
 
 	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
 		final Collection collection = metadata().getCollectionBinding( collectionOwner + "." + propertyName );
-        final Iterator columnIterator = collection.getCollectionTable().getColumns().iterator();
+        final Iterator<Column> columnIterator = collection.getCollectionTable().getColumns().iterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
+			Column column = columnIterator.next();
 			if ( (propertyName + suffix).equals( column.getName() ) ) hasDefault = true;
 		}
 		return hasDefault;

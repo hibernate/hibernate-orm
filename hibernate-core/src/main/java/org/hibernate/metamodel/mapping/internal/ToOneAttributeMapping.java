@@ -238,12 +238,15 @@ public class ToOneAttributeMapping
 					// Simple one-to-one mapped by cases
 					if ( bidirectionalAttributeName == null ) {
 						for ( Property property : entityBinding.getPropertyClosure() ) {
-							if (property.getValue() instanceof OneToOne
-									&& name.equals(((OneToOne) property.getValue()).getMappedByProperty())
-									&& ((OneToOne) property.getValue()).getReferencedEntityName().equals(
-									declaringType.getJavaType().getJavaType().getTypeName())) {
-								bidirectionalAttributeName = property.getName();
-								break;
+							final Value value = property.getValue();
+							if ( value instanceof OneToOne ) {
+								final OneToOne oneToOne = (OneToOne) value;
+								if ( name.equals( oneToOne.getMappedByProperty() )
+										&& oneToOne.getReferencedEntityName()
+										.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+									bidirectionalAttributeName = property.getName();
+									break;
+								}
 							}
 						}
 					}
@@ -251,12 +254,14 @@ public class ToOneAttributeMapping
 				else {
 					for ( Property property : entityBinding.getPropertyClosure() ) {
 						final Value value = property.getValue();
-						if (value instanceof Collection
-								&& name.equals(((Collection) value).getMappedByProperty())
-								&& ((Collection) value).getElement().getType().getName()
-								.equals(declaringType.getJavaType().getJavaType().getTypeName())) {
-							bidirectionalAttributeName = property.getName();
-							break;
+						if ( value instanceof Collection ) {
+							final Collection collection = (Collection) value;
+							if ( name.equals(collection.getMappedByProperty() )
+									&& collection.getElement().getType().getName()
+									.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+								bidirectionalAttributeName = property.getName();
+								break;
+							}
 						}
 					}
 				}

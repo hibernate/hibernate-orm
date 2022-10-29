@@ -127,26 +127,25 @@ public class ForeignKey extends Constraint {
 	}
 
 	private void alignColumns(Table referencedTable) {
-		final int referencedPkColumnSpan = referencedTable.getPrimaryKey().getColumnSpan();
-		if ( referencedPkColumnSpan != getColumnSpan() ) {
+		final int columnSpan = getColumnSpan();
+		final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
+		if ( primaryKey.getColumnSpan() != columnSpan ) {
 			StringBuilder sb = new StringBuilder();
 			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
 					.append( getTable().getName() )
 					.append( " [" );
-			appendColumns( sb, getColumnIterator() );
+			appendColumns( sb, getColumns().iterator() );
 			sb.append( "])" )
 					.append( ") must have same number of columns as the referenced primary key (" )
 					.append( referencedTable.getName() )
 					.append( " [" );
-			appendColumns( sb, referencedTable.getPrimaryKey().getColumnIterator() );
+			appendColumns( sb, primaryKey.getColumns().iterator() );
 			sb.append( "])" );
 			throw new MappingException( sb.toString() );
 		}
 
-		Iterator<Column> fkCols = getColumnIterator();
-		Iterator<Column> pkCols = referencedTable.getPrimaryKey().getColumnIterator();
-		while ( pkCols.hasNext() ) {
-			fkCols.next().setLength( pkCols.next().getLength() );
+		for (int i = 0; i<columnSpan; i++ ) {
+			getColumn(i).setLength( primaryKey.getColumn(i).getLength() );
 		}
 
 	}

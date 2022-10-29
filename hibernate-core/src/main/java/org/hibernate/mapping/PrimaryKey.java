@@ -5,7 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
-import java.util.Iterator;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -60,12 +59,15 @@ public class PrimaryKey extends Constraint {
 
 	public String sqlConstraintString(Dialect dialect) {
 		StringBuilder buf = new StringBuilder("primary key (");
-		Iterator<Column> iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( iter.next().getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
+		boolean first = true;
+		for ( Column column : getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
 				buf.append(", ");
 			}
+			buf.append( column.getQuotedName( dialect ) );
 		}
 		return buf.append(')').toString();
 	}
@@ -73,15 +75,17 @@ public class PrimaryKey extends Constraint {
 	@Override
 	public String sqlConstraintString(SqlStringGenerationContext context, String constraintName, String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
-		StringBuilder buf = new StringBuilder(
-			dialect.getAddPrimaryKeyConstraintString(constraintName)
-		).append('(');
-		Iterator iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			buf.append( ( (Column) iter.next() ).getQuotedName(dialect) );
-			if ( iter.hasNext() ) {
+		StringBuilder buf = new StringBuilder();
+		buf.append( dialect.getAddPrimaryKeyConstraintString( constraintName ) ).append('(');
+		boolean first = true;
+		for ( Column column : getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
 				buf.append(", ");
 			}
+			buf.append( column.getQuotedName( dialect ) );
 		}
 		return buf.append(')').toString();
 	}

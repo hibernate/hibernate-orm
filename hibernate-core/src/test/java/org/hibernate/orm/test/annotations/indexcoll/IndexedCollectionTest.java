@@ -88,7 +88,7 @@ public class IndexedCollectionTest {
 
 	private boolean isDefaultColumnPresent(SessionFactoryScope scope, String collectionOwner, String propertyName, String suffix) {
 		final Collection collection = scope.getMetadataImplementor().getCollectionBinding( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+        final Iterator columnIterator = collection.getCollectionTable().getColumns().iterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
 			Column column = (Column) columnIterator.next();

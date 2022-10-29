@@ -6,7 +6,6 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
@@ -60,10 +59,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( " (" );
 
 		boolean first = true;
-		final Iterator<Column> columnItr = index.getColumnIterator();
 		final Map<Column, String> columnOrderMap = index.getColumnOrderMap();
-		while ( columnItr.hasNext() ) {
-			final Column column = columnItr.next();
+		for ( Column column : index.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
@@ -87,13 +84,9 @@ public class StandardIndexExporter implements Exporter<Index> {
 
 		final String tableName = context.format( index.getTable().getQualifiedTableName() );
 
-		final String indexNameForCreation;
-		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = StringHelper.qualify( tableName, index.getName() );
-		}
-		else {
-			indexNameForCreation = index.getName();
-		}
+		final String indexNameForCreation = dialect.qualifyIndexName()
+				? StringHelper.qualify( tableName, index.getName() )
+				: index.getName();
 
 		return new String[] { "drop index " + indexNameForCreation };
 	}

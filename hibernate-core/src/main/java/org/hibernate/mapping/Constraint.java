@@ -22,7 +22,8 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * A constraint on a relational database table.
@@ -177,7 +178,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	@Override
 	public String sqlDropString(SqlStringGenerationContext context,
 			String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
+		final Dialect dialect = context.getDialect();
 		if ( isGenerated( dialect ) ) {
 			final String tableName = getTable().getQualifiedName( context );
 			return String.format(
@@ -195,13 +196,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	@Override
 	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
 			String defaultSchema) {
-		Dialect dialect = context.getDialect();
+		final Dialect dialect = context.getDialect();
 		if ( isGenerated( dialect ) ) {
 			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
 			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
 			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( context, getName(), defaultCatalog, defaultSchema );
-			if ( !StringHelper.isEmpty( constraintString ) ) {
+			if ( !isEmpty( constraintString ) ) {
 				final String tableName = getTable().getQualifiedName( context );
 				return dialect.getAlterTableString( tableName ) + " " + constraintString;
 			}

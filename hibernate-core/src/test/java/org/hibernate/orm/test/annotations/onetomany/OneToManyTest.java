@@ -530,7 +530,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Model.class.getName() );
 		Table table = pc.getRootTable();
-		Iterator iter = table.getColumnIterator();
+        Iterator iter = table.getColumns().iterator();
 		boolean joinColumnFound = false;
 		while(iter.hasNext()) {
 			Column column = (Column) iter.next();

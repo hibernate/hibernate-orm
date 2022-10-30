@@ -1034,7 +1034,15 @@ public class EntityBinder {
 				LOG.invalidPrimaryKeyJoinColumnAnnotation( clazzToProcess.getName() );
 			}
 		}
-		return AnnotatedJoinColumns.fromColumns( inheritanceJoinedColumns, null, null, context );
+		if ( inheritanceJoinedColumns == null ) {
+			return null;
+		}
+		else {
+			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+			joinColumns.setBuildingContext( context );
+			joinColumns.setColumns( inheritanceJoinedColumns );
+			return joinColumns;
+		}
 	}
 
 	private static PersistentClass getSuperEntity(
@@ -1773,7 +1781,11 @@ public class EntityBinder {
 				propertyHolder,
 				context
 		);
-		return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, context );
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( context );
+		joinColumns.setPropertyHolder( propertyHolder );
+		joinColumns.setColumns( annotatedJoinColumns );
+		return joinColumns;
 	}
 
 	private AnnotatedJoinColumns createJoinColumns(
@@ -1798,7 +1810,11 @@ public class EntityBinder {
 						context
 				);
 			}
-			return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, context );
+			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+			joinColumns.setBuildingContext( context );
+			joinColumns.setPropertyHolder( propertyHolder );
+			joinColumns.setColumns( annotatedJoinColumns );
+			return joinColumns;
 		}
 	}
 
@@ -1822,7 +1838,7 @@ public class EntityBinder {
 			key.setForeignKeyName( matchingTable.foreignKey().name() );
 		}
 		else {
-			SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
+			final SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
 			if ( jpaSecondaryTable != null ) {
 				final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
 				if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
@@ -1839,11 +1855,11 @@ public class EntityBinder {
 
 	private SecondaryTable findMatchingSecondaryTable(Join join) {
 		final String nameToMatch = join.getTable().getQuotedName();
-		SecondaryTable secondaryTable = annotatedClass.getAnnotation( SecondaryTable.class );
+		final SecondaryTable secondaryTable = annotatedClass.getAnnotation( SecondaryTable.class );
 		if ( secondaryTable != null && nameToMatch.equals( secondaryTable.name() ) ) {
 			return secondaryTable;
 		}
-		SecondaryTables secondaryTables = annotatedClass.getAnnotation( SecondaryTables.class );
+		final SecondaryTables secondaryTables = annotatedClass.getAnnotation( SecondaryTables.class );
 		if ( secondaryTables != null ) {
 			for ( SecondaryTable secondaryTablesEntry : secondaryTables.value() ) {
 				if ( secondaryTablesEntry != null && nameToMatch.equals( secondaryTablesEntry.name() ) ) {
@@ -1856,7 +1872,7 @@ public class EntityBinder {
 
 	private org.hibernate.annotations.Table findMatchingComplementaryTableAnnotation(Join join) {
 		final String tableName = join.getTable().getQuotedName();
-		org.hibernate.annotations.Table table = annotatedClass.getAnnotation( org.hibernate.annotations.Table.class );
+		final org.hibernate.annotations.Table table = annotatedClass.getAnnotation( org.hibernate.annotations.Table.class );
 		if ( table != null && tableName.equals( table.appliesTo() ) ) {
 			return table;
 		}
@@ -1875,7 +1891,7 @@ public class EntityBinder {
 
 	private SecondaryRow findMatchingComplementarySecondaryRowAnnotation(Join join) {
 		final String tableName = join.getTable().getQuotedName();
-		SecondaryRow row = annotatedClass.getAnnotation( SecondaryRow.class );
+		final SecondaryRow row = annotatedClass.getAnnotation( SecondaryRow.class );
 		if ( row != null && ( row.table().isEmpty() || tableName.equals( row.table() ) ) ) {
 			return row;
 		}
@@ -1907,7 +1923,7 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			boolean noDelayInPkColumnCreation) {
 		// A non-null propertyHolder means than we process the Pk creation without delay
-		Join join = new Join();
+		final Join join = new Join();
 		join.setPersistentClass( persistentClass );
 
 		final String schema;
@@ -1979,8 +1995,8 @@ public class EntityBinder {
 		//Has to do the work later because it needs persistentClass id!
 		LOG.debugf( "Adding secondary table to entity %s -> %s",
 				persistentClass.getEntityName(), join.getTable().getName() );
-		SecondaryRow matchingRow = findMatchingComplementarySecondaryRowAnnotation( join );
-		org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
+		final SecondaryRow matchingRow = findMatchingComplementarySecondaryRowAnnotation( join );
+		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( join );
 		if ( matchingRow != null ) {
 			join.setInverse( !matchingRow.owned() );
 			join.setOptional( matchingRow.optional() );
@@ -2042,7 +2058,7 @@ public class EntityBinder {
 	}
 
 	public static String getCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
+		final org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
 		return accessType == null ? null : accessType.getExternalName();
 	}
 
@@ -2100,9 +2116,10 @@ public class EntityBinder {
 	}
 
 	public void processComplementaryTableDefinitions(Tables tables) {
-		if ( tables == null ) return;
-		for (org.hibernate.annotations.Table table : tables.value()) {
-			processComplementaryTableDefinitions( table );
+		if ( tables != null ) {
+			for ( org.hibernate.annotations.Table table : tables.value() ) {
+				processComplementaryTableDefinitions( table );
+			}
 		}
 	}
 
@@ -2128,7 +2145,7 @@ public class EntityBinder {
 
 	public AccessType getExplicitAccessType(XAnnotatedElement element) {
 		AccessType accessType = null;
-		Access access = element.getAnnotation( Access.class );
+		final Access access = element.getAnnotation( Access.class );
 		if ( access != null ) {
 			accessType = AccessType.getAccessStrategy( access.value() );
 		}
@@ -2160,14 +2177,14 @@ public class EntityBinder {
 	}
 
 	private static void bindFilters(XAnnotatedElement annotatedElement, EntityBinder entityBinder, MetadataBuildingContext context) {
-		Filters filtersAnn = getOverridableAnnotation( annotatedElement, Filters.class, context );
+		final Filters filtersAnn = getOverridableAnnotation( annotatedElement, Filters.class, context );
 		if ( filtersAnn != null ) {
 			for ( Filter filter : filtersAnn.value() ) {
 				entityBinder.addFilter(filter);
 			}
 		}
 
-		Filter filterAnn = annotatedElement.getAnnotation( Filter.class );
+		final Filter filterAnn = annotatedElement.getAnnotation( Filter.class );
 		if ( filterAnn != null ) {
 			entityBinder.addFilter(filterAnn);
 		}

@@ -538,18 +538,17 @@ public class TableBinder {
 			SimpleValue value,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
-		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
-
 		final PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
 			//overridden destination
 			associatedClass = destinationEntity;
 		}
 		else {
-			final PropertyHolder holder = firstColumn.getPropertyHolder();
+			final PropertyHolder holder = joinColumns.getPropertyHolder();
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
+		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
 		if ( joinColumns.hasMappedBy() ) {
 			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
@@ -672,7 +671,7 @@ public class TableBinder {
 			referencedPropertyName = ( (ToOne) value).getReferencedPropertyName();
 		}
 		else if ( value instanceof DependantValue ) {
-			final String propertyName = joinColumns.getColumns()[0].getPropertyName();
+			final String propertyName = joinColumns.getPropertyName();
 			if ( propertyName != null ) {
 				Collection collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
 				referencedPropertyName = collection.getReferencedPropertyName();
@@ -716,8 +715,8 @@ public class TableBinder {
 			SimpleValue value,
 			PersistentClass associatedClass,
 			String mappedByProperty) {
+		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
 		for ( Column column: mappedByColumns( associatedClass, mappedByProperty ) ) {
-			final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 			firstColumn.linkValueUsingAColumnCopy( column, value);
 		}
@@ -745,16 +744,17 @@ public class TableBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue simpleValue) {
 		final List<Column> valueColumns = value.getColumns();
-		for ( int i = 0; i < joinColumns.getColumns().length; i++ ) {
-			final AnnotatedJoinColumn joinCol = joinColumns.getColumns()[i];
+		final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
+		for (int i = 0; i < columns.length; i++ ) {
+			final AnnotatedJoinColumn joinColumn = columns[i];
 			final Column synthCol = valueColumns.get(i);
-			if ( joinCol.isNameDeferred() ) {
+			if ( joinColumn.isNameDeferred() ) {
 				//this has to be the default value
-				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, simpleValue );
+				joinColumn.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, simpleValue );
 			}
 			else {
-				joinCol.linkWithValue( simpleValue );
-				joinCol.overrideFromReferencedColumnIfNecessary( synthCol );
+				joinColumn.linkWithValue( simpleValue );
+				joinColumn.overrideFromReferencedColumnIfNecessary( synthCol );
 			}
 		}
 	}

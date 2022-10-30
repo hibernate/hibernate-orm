@@ -152,6 +152,7 @@ import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
+import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntity;
@@ -1513,7 +1514,12 @@ public final class AnnotationBinder {
 			);
 			referencedEntityName = mapsIdProperty.getClassOrElementName();
 			propertyName = mapsIdProperty.getPropertyName();
-			actualColumns = AnnotatedJoinColumns.fromColumns( (AnnotatedJoinColumn[]) columns, null, propertyHolder, context );
+			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+			joinColumns.setBuildingContext( context );
+			joinColumns.setPropertyHolder( propertyHolder );
+			joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns );
+			actualColumns = joinColumns;
 		}
 		else {
 			referencedEntityName = null;

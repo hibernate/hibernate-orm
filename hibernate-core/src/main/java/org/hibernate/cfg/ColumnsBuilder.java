@@ -34,6 +34,7 @@ import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
+import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -202,6 +203,8 @@ class ColumnsBuilder {
 	private AnnotatedJoinColumns buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		// process @JoinColumns before @Columns to handle collection of entities properly
 
+		final String propertyName = inferredData.getPropertyName();
+
 		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations(property, inferredData);
 		if ( joinColumnAnnotations != null ) {
 			return AnnotatedJoinColumn.buildJoinColumns(
@@ -210,7 +213,7 @@ class ColumnsBuilder {
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					propertyName,
 					buildingContext
 			);
 		}
@@ -222,22 +225,27 @@ class ColumnsBuilder {
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					propertyName,
 					buildingContext
 			);
 		}
 
 		if ( property.isAnnotationPresent( JoinFormula.class) ) {
 			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
-			final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
-			annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinFormula(
+			final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[1];
+			columns[0] = AnnotatedJoinColumn.buildJoinFormula(
 					joinFormula,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					propertyName,
 					buildingContext
 			);
-			return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, buildingContext );
+			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+			joinColumns.setBuildingContext( buildingContext );
+			joinColumns.setPropertyHolder( propertyHolder );
+			joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			joinColumns.setColumns( columns );
+			return joinColumns;
 		}
 
 		return null;

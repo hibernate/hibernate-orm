@@ -94,9 +94,6 @@ public class MapBinder extends CollectionBinder {
 			public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass( persistentClasses );
-				final String propertyName = inverseJoinColumns != null
-						? inverseJoinColumns.getColumns()[0].getPropertyName()
-						: null;
 				bindKeyFromAssociationTable(
 						getElementType(),
 						persistentClasses,
@@ -106,7 +103,7 @@ public class MapBinder extends CollectionBinder {
 						buildingContext,
 						mapKeyColumns,
 						mapKeyManyToManyColumns,
-						propertyName
+						inverseJoinColumns != null ? inverseJoinColumns.getPropertyName() : null
 				);
 				makeOneToManyMapKeyColumnNullableIfNotInProperty( property );
 			}

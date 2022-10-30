@@ -17,7 +17,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
@@ -35,8 +34,11 @@ import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
-import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.internal.util.StringHelper.*;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isQuoted;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.unquote;
 
 /**
  * An element of a join condition, logically representing a
@@ -81,24 +83,31 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext context) {
-		final AnnotatedJoinColumn[] joinColumns = new AnnotatedJoinColumn[joinColumnOrFormulas.length];
+		final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[joinColumnOrFormulas.length];
 		for ( int i = 0; i < joinColumnOrFormulas.length; i++ ) {
 			final JoinColumnOrFormula columnOrFormula = joinColumnOrFormulas[i];
 			final JoinFormula formula = columnOrFormula.formula();
 			final JoinColumn column = columnOrFormula.column();
-			joinColumns[i] = formula.value() != null && !formula.value().isEmpty()
+			columns[i] = formula.value() != null && !formula.value().isEmpty()
 					? buildJoinFormula( formula, joins, propertyHolder, propertyName, context )
-					: buildJoinColumn( mappedBy, joins, propertyHolder, propertyName, context, column );
+					: buildJoinColumn( column, mappedBy, joins, propertyHolder, propertyName, context );
 		}
-		return AnnotatedJoinColumns.fromColumns( joinColumns, mappedBy, propertyHolder, context );
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( context );
+		joinColumns.setPropertyHolder( propertyHolder );
+		joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		joinColumns.setColumns( columns );
+		joinColumns.setMappedBy( mappedBy );
+		return joinColumns;
 	}
 
 	private static AnnotatedJoinColumn buildJoinColumn(
+			JoinColumn joinColumn,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
-			String propertyName, MetadataBuildingContext buildingContext,
-			JoinColumn joinColumn) {
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 		final String path = path( propertyHolder, propertyName );
 		final JoinColumn[] overriddes = propertyHolder.getOverriddenJoinColumn( path );
 		if ( overriddes != null ) {
@@ -170,18 +179,23 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final JoinColumn[] overriddes = propertyHolder.getOverriddenJoinColumn( path( propertyHolder, propertyName ) );
 		final JoinColumn[] actualColumns = overriddes == null ? joinColumns : overriddes;
 		if ( actualColumns == null || actualColumns.length == 0 ) {
-			return AnnotatedJoinColumns.fromColumns( new AnnotatedJoinColumn[] {
-					buildJoinColumn(
-							null,
-							comment,
-							mappedBy,
-							joins,
-							propertyHolder,
-							propertyName,
-							defaultColumnSuffix,
-							context
-					)
-			}, mappedBy, propertyHolder, context );
+			final AnnotatedJoinColumn joinColumn = buildJoinColumn(
+					null,
+					comment,
+					mappedBy,
+					joins,
+					propertyHolder,
+					propertyName,
+					defaultColumnSuffix,
+					context
+			);
+			final AnnotatedJoinColumns annotatedJoinColumns = new AnnotatedJoinColumns();
+			annotatedJoinColumns.setBuildingContext( context );
+			annotatedJoinColumns.setPropertyHolder( propertyHolder );
+			annotatedJoinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			annotatedJoinColumns.setColumns( new AnnotatedJoinColumn[] { joinColumn } );
+			annotatedJoinColumns.setMappedBy( mappedBy );
+			return annotatedJoinColumns;
 		}
 		else {
 			final AnnotatedJoinColumn[] result = new AnnotatedJoinColumn[actualColumns.length];
@@ -197,7 +211,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						context
 				);
 			}
-			return AnnotatedJoinColumns.fromColumns( result, mappedBy, propertyHolder, context );
+			final AnnotatedJoinColumns annotatedJoinColumns = new AnnotatedJoinColumns();
+			annotatedJoinColumns.setBuildingContext( context );
+			annotatedJoinColumns.setPropertyHolder( propertyHolder );
+			annotatedJoinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			annotatedJoinColumns.setColumns( result );
+			annotatedJoinColumns.setMappedBy( mappedBy );
+			return annotatedJoinColumns;
 		}
 	}
 
@@ -385,23 +405,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		return column;
 	}
 
-	/**
-	 * Override persistent class on oneToMany Cases for late settings
-	 * Must only be used on second level pass binding
-	 */
-	public void setPersistentClass(
-			PersistentClass persistentClass,
-			Map<String, Join> joins,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		// TODO shouldn't we deduce the class name from the persistentClass?
-		propertyHolder = buildPropertyHolder(
-				persistentClass,
-				joins,
-				getBuildingContext(),
-				inheritanceStatePerClass
-		);
-	}
-
 	public static void checkIfJoinColumn(Object columns, PropertyHolder holder, PropertyData property) {
 		if ( !( columns instanceof AnnotatedJoinColumn[] ) ) {
 			throw new AnnotationException(
@@ -510,11 +513,12 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			AnnotatedJoinColumns joinColumns,
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
-		if ( joinColumns.getColumns().length == 0 ) {
+		final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
+		if ( columns.length == 0 ) {
 			return NO_REFERENCE; //shortcut
 		}
 
-		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+		final AnnotatedJoinColumn firstColumn = columns[0];
 		final Object columnOwner = findReferencedColumnOwner( referencedEntity, firstColumn, context );
 		if ( columnOwner == null ) {
 			try {
@@ -532,7 +536,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final Table table = getTable( columnOwner );
 		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
 		boolean explicitColumnReference = false;
-		for ( AnnotatedJoinColumn column : joinColumns.getColumns() ) {
+		for ( AnnotatedJoinColumn column : columns ) {
 			if ( !column.isReferenceImplicit() ) {
 				explicitColumnReference = true;
 				if ( !keyColumns.contains( column( context, table, column.getReferencedColumn() ) ) ) {
@@ -543,7 +547,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		if ( explicitColumnReference ) {
 			// if we got to here, all the columns belong to the PK
-			return keyColumns.size() == joinColumns.getColumns().length
+			return keyColumns.size() == columns.length
 					// we have all the PK columns
 					? PK_REFERENCE
 					// we have a subset of the PK columns
@@ -614,7 +618,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			column.setJoins( secondaryTables );
 			column.setBuildingContext( context );
 			column.bind();
-			return AnnotatedJoinColumns.fromColumns( new AnnotatedJoinColumn[] { column }, mappedBy, propertyHolder, context );
+			final AnnotatedJoinColumns annotatedJoinColumns = new AnnotatedJoinColumns();
+			annotatedJoinColumns.setBuildingContext( context );
+			annotatedJoinColumns.setPropertyHolder( propertyHolder );
+			annotatedJoinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			annotatedJoinColumns.setColumns( new AnnotatedJoinColumn[] { column } );
+			annotatedJoinColumns.setMappedBy( mappedBy );
+			return annotatedJoinColumns;
 		}
 		else {
 			final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[joinColumns.length];
@@ -633,13 +643,19 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				column.bind();
 				columns[index] = column;
 			}
-			return AnnotatedJoinColumns.fromColumns( columns, mappedBy, propertyHolder, context );
+			final AnnotatedJoinColumns annotatedJoinColumns = new AnnotatedJoinColumns();
+			annotatedJoinColumns.setBuildingContext( context );
+			annotatedJoinColumns.setPropertyHolder( propertyHolder );
+			annotatedJoinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			annotatedJoinColumns.setColumns( columns );
+			annotatedJoinColumns.setMappedBy( mappedBy );
+			return annotatedJoinColumns;
 		}
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder string = new StringBuilder();
+		final StringBuilder string = new StringBuilder();
 		string.append( getClass().getSimpleName() ).append( "(" );
 		if ( isNotEmpty( getLogicalColumnName() ) ) {
 			string.append( "column='" ).append( getLogicalColumnName() ).append( "'," );

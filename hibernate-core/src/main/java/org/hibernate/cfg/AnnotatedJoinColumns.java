@@ -1,6 +1,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -12,15 +13,19 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 
 import java.util.Locale;
+import java.util.Map;
 
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
+import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 
 /**
@@ -32,8 +37,10 @@ import static org.hibernate.internal.util.StringHelper.isQuoted;
  * @author Gavin King
  */
 public class AnnotatedJoinColumns {
+
     private AnnotatedJoinColumn[] columns;
     private PropertyHolder propertyHolder;
+    private String propertyName; // this is really a .-separated property path
     private MetadataBuildingContext buildingContext;
 
     //TODO: do we really need to hang so many strings off this class?
@@ -44,15 +51,15 @@ public class AnnotatedJoinColumns {
     private boolean elementCollection;
     private String manyToManyOwnerSideEntityName;
 
-    AnnotatedJoinColumns() {
-        mappedBy = "";
+    public AnnotatedJoinColumns() {
+        mappedBy = null;
     }
 
     public AnnotatedJoinColumn[] getColumns() {
         return columns;
     }
 
-    void setColumns(AnnotatedJoinColumn[] columns) {
+    public void setColumns(AnnotatedJoinColumn[] columns) {
         this.columns = columns;
         if ( columns != null ) {
             for ( AnnotatedJoinColumn column : columns ) {
@@ -95,21 +102,32 @@ public class AnnotatedJoinColumns {
         return propertyHolder;
     }
 
-    public MetadataBuildingContext getBuildingContext() {
-        return buildingContext;
+    public void setPropertyHolder(PropertyHolder propertyHolder) {
+        this.propertyHolder = propertyHolder;
     }
 
-    public static AnnotatedJoinColumns fromColumns(
-            AnnotatedJoinColumn[] columns,
-            String mappedBy,
-            PropertyHolder propertyHolder,
-            MetadataBuildingContext context) {
-        final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-        joinColumns.buildingContext = context;
-        joinColumns.propertyHolder = propertyHolder;
-        joinColumns.setColumns( columns );
-        joinColumns.mappedBy = mappedBy;
-        return joinColumns;
+    /**
+     * Override persistent class on oneToMany Cases for late settings
+     * Must only be used on second level pass binding
+     */
+    public void setPersistentClass(
+            PersistentClass persistentClass,
+            Map<String, Join> joins,
+            Map<XClass, InheritanceState> inheritanceStatePerClass) {
+        // TODO shouldn't we deduce the class name from the persistentClass?
+        propertyHolder = buildPropertyHolder(
+                persistentClass,
+                joins,
+                buildingContext,
+                inheritanceStatePerClass
+        );
+        for ( AnnotatedJoinColumn column : columns ) {
+            column.setPropertyHolder( propertyHolder );
+        }
+    }
+
+    public void setBuildingContext(MetadataBuildingContext buildingContext) {
+        this.buildingContext = buildingContext;
     }
 
     public boolean isElementCollection() {
@@ -135,8 +153,6 @@ public class AnnotatedJoinColumns {
     }
 
     String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
-        final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-        final Database database = collector.getDatabase();
         final MetadataBuildingOptions options = buildingContext.getBuildingOptions();
         final ImplicitNamingStrategy implicitNamingStrategy = options.getImplicitNamingStrategy();
         final PhysicalNamingStrategy physicalNamingStrategy = options.getPhysicalNamingStrategy();
@@ -145,6 +161,9 @@ public class AnnotatedJoinColumns {
         boolean ownerSide = getPropertyName() != null;
         boolean isRefColumnQuoted = isQuoted( logicalReferencedColumn );
 
+        final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+        final Database database = collector.getDatabase();
+
         Identifier columnIdentifier;
         if ( mappedBySide ) {
             // NOTE : While it is completely misleading here to allow for the combination
@@ -152,104 +171,7 @@ public class AnnotatedJoinColumns {
             // 		class relies on this behavior for handling the inverse side of
             // 		many-to-many mappings
             columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
-                    new ImplicitJoinColumnNameSource() {
-                        final AttributePath attributePath = AttributePath.parse( getMappedByPropertyName() );
-                        final ImplicitJoinColumnNameSource.Nature implicitNamingNature = getImplicitNature();
-
-                        private final EntityNaming entityNaming = new EntityNaming() {
-                            @Override
-                            public String getClassName() {
-                                return referencedEntity.getClassName();
-                            }
-
-                            @Override
-                            public String getEntityName() {
-                                return referencedEntity.getEntityName();
-                            }
-
-                            @Override
-                            public String getJpaEntityName() {
-                                return referencedEntity.getJpaEntityName();
-                            }
-                        };
-
-                        private final Identifier referencedTableName = database.toIdentifier( getMappedByTableName() );
-
-                        @Override
-                        public Nature getNature() {
-                            return implicitNamingNature;
-                        }
-
-                        @Override
-                        public EntityNaming getEntityNaming() {
-                            return entityNaming;
-                        }
-
-                        @Override
-                        public AttributePath getAttributePath() {
-                            return attributePath;
-                        }
-
-                        @Override
-                        public Identifier getReferencedTableName() {
-                            return referencedTableName;
-                        }
-
-                        @Override
-                        public Identifier getReferencedColumnName() {
-                            if ( logicalReferencedColumn != null ) {
-                                return database.toIdentifier( logicalReferencedColumn );
-                            }
-
-                            if ( getMappedByEntityName() == null || getMappedByPropertyName() == null ) {
-                                return null;
-                            }
-
-                            final Property mappedByProperty = collector.getEntityBinding( getMappedByEntityName() )
-                                    .getProperty( getMappedByPropertyName() );
-                            final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
-                            if ( value.getSelectables().isEmpty() ) {
-                                throw new AnnotationException(
-                                        String.format(
-                                                Locale.ENGLISH,
-                                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with no columns",
-                                                propertyHolder.getPath(),
-                                                getMappedByPropertyName(),
-                                                getMappedByEntityName()
-                                        )
-                                );
-                            }
-                            final Selectable selectable = value.getSelectables().get(0);
-                            if ( !(selectable instanceof Column) ) {
-                                throw new AnnotationException(
-                                        String.format(
-                                                Locale.ENGLISH,
-                                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' which maps to a formula",
-                                                propertyHolder.getPath(),
-                                                getMappedByPropertyName(),
-                                                propertyHolder.getPath()
-                                        )
-                                );
-                            }
-                            if ( value.getSelectables().size()>1 ) {
-                                throw new AnnotationException(
-                                        String.format(
-                                                Locale.ENGLISH,
-                                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with multiple columns",
-                                                propertyHolder.getPath(),
-                                                getMappedByPropertyName(),
-                                                propertyHolder.getPath()
-                                        )
-                                );
-                            }
-                            return database.toIdentifier( ( (Column) selectable ).getQuotedName() );
-                        }
-
-                        @Override
-                        public MetadataBuildingContext getBuildingContext() {
-                            return buildingContext;
-                        }
-                    }
+                    new UnownedImplicitJoinColumnNameSource( referencedEntity, logicalReferencedColumn )
             );
 
             //one element was quoted so we quote
@@ -261,60 +183,7 @@ public class AnnotatedJoinColumns {
             final String logicalTableName = collector.getLogicalTableName( referencedEntity.getTable() );
 
             columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
-                    new ImplicitJoinColumnNameSource() {
-                        final ImplicitJoinColumnNameSource.Nature implicitNamingNature = getImplicitNature();
-
-                        private final EntityNaming entityNaming = new EntityNaming() {
-                            @Override
-                            public String getClassName() {
-                                return referencedEntity.getClassName();
-                            }
-
-                            @Override
-                            public String getEntityName() {
-                                return referencedEntity.getEntityName();
-                            }
-
-                            @Override
-                            public String getJpaEntityName() {
-                                return referencedEntity.getJpaEntityName();
-                            }
-                        };
-
-                        private final AttributePath attributePath = AttributePath.parse( getPropertyName() );
-                        private final Identifier referencedTableName = database.toIdentifier( logicalTableName );
-                        private final Identifier referencedColumnName = database.toIdentifier( logicalReferencedColumn );
-
-                        @Override
-                        public Nature getNature() {
-                            return implicitNamingNature;
-                        }
-
-                        @Override
-                        public EntityNaming getEntityNaming() {
-                            return entityNaming;
-                        }
-
-                        @Override
-                        public AttributePath getAttributePath() {
-                            return attributePath;
-                        }
-
-                        @Override
-                        public Identifier getReferencedTableName() {
-                            return referencedTableName;
-                        }
-
-                        @Override
-                        public Identifier getReferencedColumnName() {
-                            return referencedColumnName;
-                        }
-
-                        @Override
-                        public MetadataBuildingContext getBuildingContext() {
-                            return buildingContext;
-                        }
-                    }
+                    new OwnedImplicitJoinColumnNameSource( referencedEntity, logicalTableName, logicalReferencedColumn )
             );
 
             // HHH-11826 magic. See Ejb3Column and the HHH-6005 comments
@@ -360,13 +229,20 @@ public class AnnotatedJoinColumns {
             }
         }
 
-        return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, database.getJdbcEnvironment() )
-                .render( database.getJdbcEnvironment().getDialect() );
+        final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+        return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, jdbcEnvironment )
+                .render( jdbcEnvironment.getDialect() );
     }
 
-    private String getPropertyName() {
-        //TODO: very lame, we should know this!
-        return columns[0].getPropertyName();
+    /**
+     * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
+     */
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
     /**
@@ -383,6 +259,191 @@ public class AnnotatedJoinColumns {
         }
         else {
             return ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
+        }
+    }
+
+    private class UnownedImplicitJoinColumnNameSource implements ImplicitJoinColumnNameSource {
+        final AttributePath attributePath;
+        final Nature implicitNamingNature;
+
+        private final EntityNaming entityNaming;
+
+        private final Identifier referencedTableName;
+        private final PersistentClass referencedEntity;
+        private final String logicalReferencedColumn;
+
+        final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+        final Database database = collector.getDatabase();
+
+        public UnownedImplicitJoinColumnNameSource(PersistentClass referencedEntity, String logicalReferencedColumn) {
+            this.referencedEntity = referencedEntity;
+            this.logicalReferencedColumn = logicalReferencedColumn;
+            attributePath = AttributePath.parse(getMappedByPropertyName());
+            implicitNamingNature = getImplicitNature();
+            entityNaming = new EntityNaming() {
+                @Override
+                public String getClassName() {
+                    return referencedEntity.getClassName();
+                }
+
+                @Override
+                public String getEntityName() {
+                    return referencedEntity.getEntityName();
+                }
+
+                @Override
+                public String getJpaEntityName() {
+                    return referencedEntity.getJpaEntityName();
+                }
+            };
+            referencedTableName = database.toIdentifier(getMappedByTableName());
+        }
+
+        @Override
+        public Nature getNature() {
+            return implicitNamingNature;
+        }
+
+        @Override
+        public EntityNaming getEntityNaming() {
+            return entityNaming;
+        }
+
+        @Override
+        public AttributePath getAttributePath() {
+            return attributePath;
+        }
+
+        @Override
+        public Identifier getReferencedTableName() {
+            return referencedTableName;
+        }
+
+        @Override
+        public Identifier getReferencedColumnName() {
+            if ( logicalReferencedColumn != null ) {
+                return database.toIdentifier(logicalReferencedColumn);
+            }
+
+            if ( getMappedByEntityName() == null || getMappedByPropertyName() == null ) {
+                return null;
+            }
+
+            final Property mappedByProperty = collector.getEntityBinding( getMappedByEntityName() )
+                    .getProperty( getMappedByPropertyName() );
+            final SimpleValue value = (SimpleValue) mappedByProperty.getValue();
+            if ( value.getSelectables().isEmpty() ) {
+                throw new AnnotationException(
+                        String.format(
+                                Locale.ENGLISH,
+                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with no columns",
+                                propertyHolder.getPath(),
+                                getMappedByPropertyName(),
+                                getMappedByEntityName()
+                        )
+                );
+            }
+            final Selectable selectable = value.getSelectables().get(0);
+            if ( !(selectable instanceof Column) ) {
+                throw new AnnotationException(
+                        String.format(
+                                Locale.ENGLISH,
+                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' which maps to a formula",
+                                propertyHolder.getPath(),
+                                getMappedByPropertyName(),
+                                propertyHolder.getPath()
+                        )
+                );
+            }
+            if ( value.getSelectables().size()>1 ) {
+                throw new AnnotationException(
+                        String.format(
+                                Locale.ENGLISH,
+                                "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with multiple columns",
+                                propertyHolder.getPath(),
+                                getMappedByPropertyName(),
+                                propertyHolder.getPath()
+                        )
+                );
+            }
+            return database.toIdentifier( ( (Column) selectable ).getQuotedName() );
+        }
+
+        @Override
+        public MetadataBuildingContext getBuildingContext() {
+            return buildingContext;
+        }
+    }
+
+    private class OwnedImplicitJoinColumnNameSource implements ImplicitJoinColumnNameSource {
+        final Nature implicitNamingNature;
+
+        private final EntityNaming entityNaming;
+
+        private final AttributePath attributePath;
+        private final Identifier referencedTableName;
+        private final Identifier referencedColumnName;
+        private final PersistentClass referencedEntity;
+        private final String logicalTableName;
+        private final String logicalReferencedColumn;
+
+        final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+        final Database database = collector.getDatabase();
+
+        public OwnedImplicitJoinColumnNameSource(PersistentClass referencedEntity, String logicalTableName, String logicalReferencedColumn) {
+            this.referencedEntity = referencedEntity;
+            this.logicalTableName = logicalTableName;
+            this.logicalReferencedColumn = logicalReferencedColumn;
+            implicitNamingNature = getImplicitNature();
+            entityNaming = new EntityNaming() {
+                @Override
+                public String getClassName() {
+                    return referencedEntity.getClassName();
+                }
+
+                @Override
+                public String getEntityName() {
+                    return referencedEntity.getEntityName();
+                }
+
+                @Override
+                public String getJpaEntityName() {
+                    return referencedEntity.getJpaEntityName();
+                }
+            };
+            attributePath = AttributePath.parse(getPropertyName());
+            referencedTableName = database.toIdentifier(logicalTableName);
+            referencedColumnName = database.toIdentifier(logicalReferencedColumn);
+        }
+
+        @Override
+        public Nature getNature() {
+            return implicitNamingNature;
+        }
+
+        @Override
+        public EntityNaming getEntityNaming() {
+            return entityNaming;
+        }
+
+        @Override
+        public AttributePath getAttributePath() {
+            return attributePath;
+        }
+
+        @Override
+        public Identifier getReferencedTableName() {
+            return referencedTableName;
+        }
+
+        @Override
+        public Identifier getReferencedColumnName() {
+            return referencedColumnName;
+        }
+
+        @Override
+        public MetadataBuildingContext getBuildingContext() {
+            return buildingContext;
         }
     }
 }

@@ -886,7 +886,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeParameters = parameterMap;
 	}
 
-	public void setTypeParameters(Map<String, String> parameters) {
+	public void setTypeParameters(Map<String, ? extends Object> parameters) {
 		if ( parameters != null ) {
 			Properties properties = new Properties();
 			properties.putAll( parameters );

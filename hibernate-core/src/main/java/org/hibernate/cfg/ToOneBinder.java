@@ -69,7 +69,7 @@ public class ToOneBinder {
 			boolean inSecondPass,
 			MetadataBuildingContext context,
 			XProperty property,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			PropertyBinder propertyBinder,
 			boolean forcePersist) {
 		final ManyToOne manyToOne = property.getAnnotation( ManyToOne.class );
@@ -91,7 +91,7 @@ public class ToOneBinder {
 		final JoinTable joinTable = propertyHolder.getJoinTable( property );
 		if ( joinTable != null ) {
 			final Join join = propertyHolder.addJoin( joinTable, false );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
@@ -128,7 +128,7 @@ public class ToOneBinder {
 
 	private static void bindManyToOne(
 			String cascadeStrategy,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns joinColumns,
 			boolean optional,
 			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
@@ -142,7 +142,7 @@ public class ToOneBinder {
 			MetadataBuildingContext context) {
 		// All FK columns should be in the same table
 		final org.hibernate.mapping.ManyToOne value =
-				new org.hibernate.mapping.ManyToOne( context, columns[0].getTable() );
+				new org.hibernate.mapping.ManyToOne( context, joinColumns.getColumns()[0].getTable() );
 		if ( unique ) {
 			// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
 			value.markAsLogicalOneToOne();
@@ -155,20 +155,20 @@ public class ToOneBinder {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
-			for ( AnnotatedJoinColumn column : columns ) {
+			for ( AnnotatedJoinColumn column : joinColumns.getColumns() ) {
 				column.setNullable( false );
 			}
 		}
 
 		if ( property.isAnnotationPresent( MapsId.class ) ) {
 			//read only
-			for ( AnnotatedJoinColumn column : columns ) {
+			for ( AnnotatedJoinColumn column : joinColumns.getColumns() ) {
 				column.setInsertable( false );
 				column.setUpdatable( false );
 			}
 		}
 
-		boolean hasSpecjManyToOne = handleSpecjSyntax( columns, inferredData, context, property );
+		boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
@@ -179,7 +179,7 @@ public class ToOneBinder {
 
 		final FkSecondPass secondPass = new ToOneFkSecondPass(
 				value,
-				columns,
+				joinColumns,
 				!optional && unique, //cannot have nullable and unique on certain DBs like Derby
 				propertyHolder.getPersistentClass(),
 				fullPath,
@@ -194,7 +194,7 @@ public class ToOneBinder {
 
 		processManyToOneProperty(
 				cascadeStrategy,
-				columns,
+				joinColumns,
 				optional,
 				propertyHolder,
 				inferredData,
@@ -208,7 +208,7 @@ public class ToOneBinder {
 	}
 
 	private static boolean handleSpecjSyntax(
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			PropertyData inferredData,
 			MetadataBuildingContext context,
 			XProperty property) {
@@ -228,7 +228,7 @@ public class ToOneBinder {
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
 					hasSpecjManyToOne = true;
-					for ( AnnotatedJoinColumn column : columns) {
+					for ( AnnotatedJoinColumn column : columns.getColumns() ) {
 						column.setInsertable( false );
 						column.setUpdatable( false );
 					}
@@ -240,7 +240,7 @@ public class ToOneBinder {
 
 	private static void processManyToOneProperty(
 			String cascadeStrategy,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			boolean optional,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -250,7 +250,7 @@ public class ToOneBinder {
 			boolean hasSpecjManyToOne,
 			String propertyName) {
 
-		checkPropertyConsistency( columns, qualify( propertyHolder.getEntityName(), propertyName ) );
+		checkPropertyConsistency( columns.getColumns(), qualify( propertyHolder.getEntityName(), propertyName ) );
 
 		//PropertyBinder binder = new PropertyBinder();
 		propertyBinder.setName( propertyName );
@@ -265,10 +265,11 @@ public class ToOneBinder {
 			propertyBinder.setUpdatable( false );
 		}
 		else {
-			propertyBinder.setInsertable( columns[0].isInsertable() );
-			propertyBinder.setUpdatable( columns[0].isUpdatable() );
+			final AnnotatedJoinColumn firstColumn = columns.getColumns()[0];
+			propertyBinder.setInsertable( firstColumn.isInsertable() );
+			propertyBinder.setUpdatable( firstColumn.isUpdatable() );
 		}
-		propertyBinder.setColumns( columns );
+		propertyBinder.setColumns( columns.getColumns() );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );
 		propertyBinder.setProperty( property );
@@ -361,7 +362,7 @@ public class ToOneBinder {
 			boolean inSecondPass,
 			MetadataBuildingContext context,
 			XProperty property,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			PropertyBinder propertyBinder,
 			boolean forcePersist) {
 		final OneToOne oneToOne = property.getAnnotation( OneToOne.class );
@@ -392,7 +393,7 @@ public class ToOneBinder {
 			if ( notFoundAction != null ) {
 				join.disableForeignKeyCreation();
 			}
-			for ( AnnotatedJoinColumn joinColumn : joinColumns) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
@@ -417,7 +418,7 @@ public class ToOneBinder {
 
 	private static void bindOneToOne(
 			String cascadeStrategy,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			boolean optional,
 			FetchMode fetchMode,
 			NotFoundAction notFoundAction,
@@ -478,7 +479,7 @@ public class ToOneBinder {
 		}
 	}
 
-	private static boolean isMapToPK(AnnotatedJoinColumn[] joinColumns, PropertyHolder propertyHolder, boolean trueOneToOne) {
+	private static boolean isMapToPK(AnnotatedJoinColumns joinColumns, PropertyHolder propertyHolder, boolean trueOneToOne) {
 		if ( trueOneToOne ) {
 			return true;
 		}
@@ -491,15 +492,16 @@ public class ToOneBinder {
 				return false;
 			}
 			else {
-				List<String> idColumnNames = new ArrayList<>();
-				if ( identifier.getColumnSpan() != joinColumns.length ) {
+				final List<String> idColumnNames = new ArrayList<>();
+				final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
+				if ( identifier.getColumnSpan() != columns.length ) {
 					return false;
 				}
 				else {
 					for ( org.hibernate.mapping.Column currentColumn: identifier.getColumns() ) {
 						idColumnNames.add( currentColumn.getName() );
 					}
-					for ( AnnotatedJoinColumn col: joinColumns) {
+					for ( AnnotatedJoinColumn col: columns ) {
 						if ( !idColumnNames.contains( col.getMappingColumn().getName() ) ) {
 							return false;
 						}

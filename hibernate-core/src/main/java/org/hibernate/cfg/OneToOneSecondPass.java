@@ -53,7 +53,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private final boolean cascadeOnDelete;
 	private final boolean optional;
 	private final String cascadeStrategy;
-	private final AnnotatedJoinColumn[] joinColumns;
+	private final AnnotatedJoinColumns joinColumns;
 
 	//that sucks, we should read that from the property mainly
 	public OneToOneSecondPass(
@@ -67,7 +67,7 @@ public class OneToOneSecondPass implements SecondPass {
 			boolean cascadeOnDelete,
 			boolean optional,
 			String cascadeStrategy,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			MetadataBuildingContext buildingContext) {
 		this.ownerEntity = ownerEntity;
 		this.ownerProperty = ownerProperty;

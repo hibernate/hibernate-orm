@@ -44,7 +44,17 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
- * A {@link jakarta.persistence.Column} annotation
+ * A mapping to a column, logically representing a
+ * {@link jakarta.persistence.Column} annotation, but not
+ * every instance corresponds to an explicit annotation in
+ * the Java code.
+ * <p>
+ * This class holds a representation that is intermediate
+ * between the annotation of the Java source code, and the
+ * mapping model object {@link Column}. It's used only by
+ * the {@link AnnotationBinder} while parsing annotations,
+ * and does not survive into later stages of the startup
+ * process.
  *
  * @author Emmanuel Bernard
  */
@@ -66,7 +76,7 @@ public class AnnotatedColumn {
 	private Integer precision;
 	private Integer scale;
 	private String logicalColumnName;
-	private String propertyName;
+	private String propertyName;  // this is really a .-separated property path
 	private boolean unique;
 	private boolean nullable = true;
 	private String formulaString;
@@ -184,6 +194,9 @@ public class AnnotatedColumn {
 		this.propertyName = propertyName;
 	}
 
+	/**
+	 * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
+	 */
 	public String getPropertyName() {
 		return propertyName;
 	}
@@ -328,7 +341,7 @@ public class AnnotatedColumn {
 
 	private String processColumnName(String columnName, boolean applyNamingStrategy) {
 		if ( applyNamingStrategy ) {
-			Database database = context.getMetadataCollector().getDatabase();
+			final Database database = context.getMetadataCollector().getDatabase();
 			return context.getBuildingOptions().getPhysicalNamingStrategy()
 					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
 					.render( database.getDialect() );

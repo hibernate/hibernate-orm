@@ -130,7 +130,7 @@ class ColumnsBuilder {
 						|| property.isAnnotationPresent( ElementCollection.class )
 				) ) {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
+			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
 					comment,
 					oneToMany != null ? oneToMany.mappedBy() : "",
@@ -176,7 +176,7 @@ class ColumnsBuilder {
 								+ " has a '@JoinTable' annotation with no explicit 'name'"
 				);
 			}
-			return AnnotatedJoinColumn.buildJoinColumns(
+			return AnnotatedJoinColumns.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
 					comment,
 					null,
@@ -188,7 +188,7 @@ class ColumnsBuilder {
 		}
 		else {
 			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
-			return AnnotatedJoinColumn.buildJoinColumns(
+			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
 					comment,
 					oneToOneAnn != null ? oneToOneAnn.mappedBy() : null,
@@ -205,9 +205,9 @@ class ColumnsBuilder {
 
 		final String propertyName = inferredData.getPropertyName();
 
-		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations(property, inferredData);
+		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations( property, inferredData );
 		if ( joinColumnAnnotations != null ) {
-			return AnnotatedJoinColumn.buildJoinColumns(
+			return AnnotatedJoinColumns.buildJoinColumns(
 					joinColumnAnnotations,
 					property.getAnnotation( Comment.class ),
 					null,
@@ -220,7 +220,7 @@ class ColumnsBuilder {
 
 		final JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = joinColumnOrFormulaAnnotations( property, inferredData );
 		if ( joinColumnOrFormulaAnnotations != null ) {
-			return AnnotatedJoinColumn.buildJoinColumnsOrFormulas(
+			return AnnotatedJoinColumns.buildJoinColumnsOrFormulas(
 					joinColumnOrFormulaAnnotations,
 					null,
 					entityBinder.getSecondaryTables(),
@@ -232,23 +232,27 @@ class ColumnsBuilder {
 
 		if ( property.isAnnotationPresent( JoinFormula.class) ) {
 			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
-			final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[1];
-			columns[0] = AnnotatedJoinColumn.buildJoinFormula(
-					joinFormula,
-					entityBinder.getSecondaryTables(),
-					propertyHolder,
-					propertyName,
-					buildingContext
-			);
-			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-			joinColumns.setBuildingContext( buildingContext );
-			joinColumns.setPropertyHolder( propertyHolder );
-			joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-			joinColumns.setColumns( columns );
-			return joinColumns;
+			return buildJoinColumnsWithFormula( propertyName, joinFormula );
 		}
 
 		return null;
+	}
+
+	private AnnotatedJoinColumns buildJoinColumnsWithFormula(String propertyName, JoinFormula joinFormula) {
+		final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[1];
+		columns[0] = AnnotatedJoinColumn.buildJoinFormula(
+				joinFormula,
+				entityBinder.getSecondaryTables(),
+				propertyHolder,
+				propertyName,
+				buildingContext
+		);
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( buildingContext );
+		joinColumns.setPropertyHolder( propertyHolder );
+		joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName) );
+		joinColumns.setColumns( columns );
+		return joinColumns;
 	}
 
 	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(XProperty property, PropertyData inferredData) {

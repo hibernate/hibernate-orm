@@ -44,7 +44,17 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
- * A {@link jakarta.persistence.Column} annotation
+ * A mapping to a column, logically representing a
+ * {@link jakarta.persistence.Column} annotation, but not
+ * every instance corresponds to an explicit annotation in
+ * the Java code.
+ * <p>
+ * This class holds a representation that is intermediate
+ * between the annotation of the Java source code, and the
+ * mapping model object {@link Column}. It's used only by
+ * the {@link AnnotationBinder} while parsing annotations,
+ * and does not survive into later stages of the startup
+ * process.
  *
  * @author Emmanuel Bernard
  */

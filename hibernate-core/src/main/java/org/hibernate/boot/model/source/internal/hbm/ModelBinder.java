@@ -2824,9 +2824,8 @@ public class ModelBinder {
 		}
 
 		String typeName = typeSource.getName();
-		Map<String,String> typeParameters = new HashMap<>();
-
 		final TypeDefinition typeDefinition = sourceDocument.getMetadataCollector().getTypeDefinition( typeName );
+		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeDefinition != null ) {
 			// the explicit name referred to a type-def
 			typeName = typeDefinition.getTypeImplementorClass().getName();
@@ -3302,13 +3301,10 @@ public class ModelBinder {
 			final String propRef = keySource.getReferencedPropertyName();
 			getCollectionBinding().setReferencedPropertyName( propRef );
 
-			final KeyValue keyVal;
-			if ( propRef == null ) {
-				keyVal = getCollectionBinding().getOwner().getIdentifier();
-			}
-			else {
-				keyVal = (KeyValue) getCollectionBinding().getOwner().getRecursiveProperty( propRef ).getValue();
-			}
+			final PersistentClass owner = getCollectionBinding().getOwner();
+			final KeyValue keyVal = propRef == null
+					? owner.getIdentifier()
+					: (KeyValue) owner.getRecursiveProperty( propRef ).getValue();
 			final DependantValue key = new DependantValue(
 					mappingDocument,
 					getCollectionBinding().getCollectionTable(),

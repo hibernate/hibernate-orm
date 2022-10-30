@@ -51,10 +51,12 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedJoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
@@ -1122,11 +1124,15 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	public void linkWithValue() {
-		if ( columns[0].isNameDeferred() && !buildingContext.getMetadataCollector().isInSecondPass() && referencedEntityName != null ) {
-			buildingContext.getMetadataCollector().addSecondPass(
-					new PkDrivenByDefaultMapsIdSecondPass(
-							referencedEntityName, (AnnotatedJoinColumn[]) columns, basicValue
-					)
+		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+		if ( !collector.isInSecondPass() && columns[0].isNameDeferred() && referencedEntityName != null ) {
+			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+			joinColumns.setBuildingContext( buildingContext );
+			joinColumns.setPropertyHolder( columns[0].getPropertyHolder() );
+			joinColumns.setPropertyName( columns[0].getPropertyName() );
+			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns );
+			collector.addSecondPass(
+					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, joinColumns, basicValue )
 			);
 		}
 		else {
@@ -1139,13 +1145,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting `BasicValueBinder#fillSimpleValue` for %s", propertyName );
 
-		final String explicitBasicTypeName;
-		if ( this.explicitBasicTypeName != null ) {
-			explicitBasicTypeName = this.explicitBasicTypeName;
-		}
-		else {
-			explicitBasicTypeName = this.timeStampVersionType;
-		}
+		final String explicitBasicTypeName = this.explicitBasicTypeName != null
+				? this.explicitBasicTypeName
+				: this.timeStampVersionType;
 		basicValue.setExplicitTypeName( explicitBasicTypeName );
 		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
 
@@ -1188,10 +1190,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		if ( ( explicitCustomType != null && DynamicParameterizedType.class.isAssignableFrom( explicitCustomType ) )
-				|| ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) ) {
-			final Map<String, Object> parameters = createDynamicParameterizedTypeParameters();
-			basicValue.setTypeParameters( (Map) parameters );
+		if ( explicitCustomType != null && DynamicParameterizedType.class.isAssignableFrom( explicitCustomType )
+				|| typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+			basicValue.setTypeParameters( createDynamicParameterizedTypeParameters() );
 		}
 
 		if ( converterDescriptor != null ) {

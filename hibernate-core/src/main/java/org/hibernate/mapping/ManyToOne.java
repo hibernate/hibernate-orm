@@ -75,10 +75,10 @@ public class ManyToOne extends ToOne {
 	}
 
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
-		if (referencedPropertyName!=null) {
+		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key
 			sortProperties();
-			PersistentClass pc = persistentClasses.get(getReferencedEntityName() );
+			PersistentClass pc = persistentClasses.get( getReferencedEntityName() );
 			
 			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
 			

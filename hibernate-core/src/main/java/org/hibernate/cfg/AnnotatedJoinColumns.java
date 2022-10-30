@@ -45,7 +45,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  *
  * @author Gavin King
  */
-public class AnnotatedJoinColumns {
+public class AnnotatedJoinColumns extends AnnotatedColumns {
 
     private AnnotatedJoinColumn[] columns;
     private PropertyHolder propertyHolder;
@@ -59,8 +59,6 @@ public class AnnotatedJoinColumns {
     private String mappedByEntityName;
     private boolean elementCollection;
     private String manyToManyOwnerSideEntityName;
-
-    public AnnotatedJoinColumns() {}
 
     public static AnnotatedJoinColumns buildJoinColumnsOrFormulas(
             JoinColumnOrFormula[] joinColumnOrFormulas,
@@ -204,7 +202,13 @@ public class AnnotatedJoinColumns {
         return columns;
     }
 
+    @Override
+    public void setColumns(AnnotatedColumn[] columns) {
+        throw new UnsupportedOperationException( "wrong sort of columns" );
+    }
+
     public void setColumns(AnnotatedJoinColumn[] columns) {
+        super.setColumns( columns );
         this.columns = columns;
         if ( columns != null ) {
             for ( AnnotatedJoinColumn column : columns ) {

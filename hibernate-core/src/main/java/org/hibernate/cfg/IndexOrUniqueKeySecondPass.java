@@ -59,16 +59,15 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( columns != null ) {
-			for ( String column1 : columns ) {
-				addConstraintToColumn( column1 );
+			for ( String columnName : columns ) {
+				addConstraintToColumn( columnName );
 			}
 		}
 		if ( column != null ) {
-			this.table = column.getTable();
+			table = column.getTable();
 
 			final PropertyHolder propertyHolder = column.getPropertyHolder();
-
-			String entityName = ( propertyHolder.isComponent() ) ?
+			final String entityName = ( propertyHolder.isComponent() ) ?
 					propertyHolder.getPersistentClass().getEntityName() :
 					propertyHolder.getEntityName();
 
@@ -77,8 +76,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 
 			if ( property.getValue() instanceof Component ) {
 				final Component component = (Component) property.getValue();
-
-				List<Column> columns = new ArrayList<>();
+				final List<Column> columns = new ArrayList<>();
 				for ( Selectable selectable: component.getSelectables() ) {
 					if ( selectable instanceof Column ) {
 						columns.add( (Column) selectable );
@@ -97,9 +95,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 
 	private void addConstraintToColumn(final String columnName ) {
 		Column column = table.getColumn(
-				new Column(
-						buildingContext.getMetadataCollector().getPhysicalColumnName( table, columnName )
-				)
+				new Column( buildingContext.getMetadataCollector().getPhysicalColumnName( table, columnName ) )
 		);
 		if ( column == null ) {
 			throw new AnnotationException(
@@ -117,13 +113,13 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 
 	private void addConstraintToColumns(List<Column> columns) {
 		if ( unique ) {
-			UniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
+			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
 			for ( Column column : columns ) {
 				uniqueKey.addColumn( column );
 			}
 		}
 		else {
-			Index index = table.getOrCreateIndex( indexName );
+			final Index index = table.getOrCreateIndex( indexName );
 			for ( Column column : columns ) {
 				index.addColumn( column );
 			}

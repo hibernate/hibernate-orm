@@ -12,8 +12,9 @@ import java.util.function.Supplier;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedColumns;
+import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
@@ -87,7 +88,9 @@ public class ListBinder extends CollectionBinder {
 		}
 		indexColumn.setPropertyHolder( valueHolder );
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
-		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
+		final AnnotatedColumns result = new AnnotatedColumns();
+		result.setColumns( new AnnotatedColumn[] { indexColumn } );
+		valueBinder.setColumns(result);
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, getElementType(), null, null );
 //			valueBinder.setExplicitType( "integer" );
@@ -95,7 +98,13 @@ public class ListBinder extends CollectionBinder {
 		indexColumn.linkWithValue( indexValue );
 		listValueMapping.setIndex( indexValue );
 		listValueMapping.setBaseIndex( indexColumn.getBase() );
-		if ( listValueMapping.isOneToMany() && !listValueMapping.getKey().isNullable() && !listValueMapping.isInverse() ) {
+		createBackref( listValueMapping );
+	}
+
+	private void createBackref(List listValueMapping) {
+		if ( listValueMapping.isOneToMany()
+				&& !listValueMapping.getKey().isNullable()
+				&& !listValueMapping.isInverse() ) {
 			final String entityName = ( (OneToMany) listValueMapping.getElement() ).getReferencedEntityName();
 			final PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
 			final IndexBackref backref = new IndexBackref();

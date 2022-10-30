@@ -251,12 +251,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
 		final String embeddedPath = StringHelper.qualifyConditionally( embeddedAttributeName, path );
-		AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
+		final AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
 		if ( fromParent != null ) {
 			return fromParent;
 		}
 
-		AttributeConversionInfo fromEmbedded = attributeConversionInfoMap.get( embeddedPath );
+		final AttributeConversionInfo fromEmbedded = attributeConversionInfoMap.get( embeddedPath );
 		if ( fromEmbedded != null ) {
 			return fromEmbedded;
 		}
@@ -268,13 +268,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getComponentClassName();
 	}
 
-	public void addProperty(Property prop, AnnotatedColumn[] columns, XClass declaringClass) {
+	public void addProperty(Property property, AnnotatedColumns columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
-		if (columns != null) {
-			Table table = columns[0].getTable();
+		if ( columns != null ) {
+			final Table table = columns.getTable();
 			if ( !table.equals( component.getTable() ) ) {
 				if ( component.getPropertySpan() == 0 ) {
 					component.setTable( table );
@@ -288,12 +288,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-		addProperty( prop, declaringClass );
+		addProperty( property, declaringClass );
 	}
 
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		return parent.addJoin( joinTableAnn, noDelayInPkColumnCreation );
-
 	}
 
 	public String getClassName() {

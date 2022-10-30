@@ -42,6 +42,7 @@ import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A mapping to a column, logically representing a
@@ -67,8 +68,9 @@ public class AnnotatedColumn {
 	private Column mappingColumn;
 	private boolean insertable = true;
 	private boolean updatable = true;
-	private String explicitTableName;
+	private String explicitTableName; // the JPA @Column annotation lets you specify a table name
 	protected Map<String, Join> joins;
+	@Deprecated // use AnnotatedColumns.propertyHolder
 	protected PropertyHolder propertyHolder;
 	private boolean isImplicit;
 	public String sqlType;
@@ -81,7 +83,6 @@ public class AnnotatedColumn {
 	private boolean nullable = true;
 	private String formulaString;
 	private Formula formula;
-	private Table table;
 	private String readExpression;
 	private String writeExpression;
 
@@ -91,8 +92,10 @@ public class AnnotatedColumn {
 	private String comment;
 	private String checkConstraint;
 
-	public void setTable(Table table) {
-		this.table = table;
+	private AnnotatedColumns parent;
+
+	void setParent(AnnotatedColumns parent) {
+		this.parent = parent;
 	}
 
 	public String getLogicalColumnName() {
@@ -123,23 +126,16 @@ public class AnnotatedColumn {
 		return isNotEmpty( formulaString );
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public String getFormulaString() {
 		return formulaString;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public String getExplicitTableName() {
 		return explicitTableName;
 	}
 
 	public void setExplicitTableName(String explicitTableName) {
-		if ( "``".equals( explicitTableName ) ) {
-			this.explicitTableName = "";
-		}
-		else {
-			this.explicitTableName = explicitTableName;
-		}
+		this.explicitTableName = "``".equals( explicitTableName ) ? "" : explicitTableName;
 	}
 
 	public void setFormula(String formula) {
@@ -371,8 +367,8 @@ public class AnnotatedColumn {
 							public boolean isCollectionElement() {
 								// if the propertyHolder is a collection, assume the
 								// @Column refers to the element column
-								return !propertyHolder.isComponent()
-									&& !propertyHolder.isEntity();
+								return !getPropertyHolder().isComponent()
+									&& !getPropertyHolder().isEntity();
 							}
 
 							@Override
@@ -426,9 +422,10 @@ public class AnnotatedColumn {
 	}
 
 	public PropertyHolder getPropertyHolder() {
-		return propertyHolder;
+		return propertyHolder; //TODO: change this to delegate to the parent
 	}
 
+	@Deprecated // use AnnotatedColumns.setPropertyHolder() instead
 	public void setPropertyHolder(PropertyHolder propertyHolder) {
 		this.propertyHolder = propertyHolder;
 	}
@@ -437,12 +434,16 @@ public class AnnotatedColumn {
 		this.mappingColumn = mappingColumn;
 	}
 
+	//TODO: move this operation to AnnotatedColumns!!
 	public void linkWithValue(SimpleValue value) {
 		if ( formula != null ) {
 			value.addFormula( formula );
 		}
 		else {
-			table = value.getTable();
+			final Table table = value.getTable();
+			if ( parent != null ) {
+				parent.setTableInternal( table );
+			}
 			getMappingColumn().setValue( value );
 			value.addColumn( getMappingColumn(), insertable, updatable );
 			table.addColumn( getMappingColumn() );
@@ -494,31 +495,25 @@ public class AnnotatedColumn {
 	 * @throws AnnotationException missing secondary table
 	 */
 	public Table getTable() {
-		if ( table != null ) {
-			return table;
-		}
-		else if ( isSecondary() ) {
-			return getJoin().getTable();
-		}
-		else {
-			return propertyHolder.getTable();
-		}
+		return parent.getTable();
 	}
 
+	//TODO: move to AnnotatedColumns
 	public boolean isSecondary() {
 		if ( propertyHolder == null ) {
-			throw new AssertionFailure( "Should not call getTable() on column w/o persistent class defined" );
+			throw new AssertionFailure( "Should not call isSecondary() on column w/o persistent class defined" );
 		}
-
 		return isNotEmpty( explicitTableName )
-			&& !propertyHolder.getTable().getName().equals( explicitTableName );
+			&& !getPropertyHolder().getTable().getName().equals( explicitTableName );
 	}
 
+	//TODO: move to AnnotatedColumns
 	public Join getJoin() {
 		Join join = joins.get( explicitTableName );
 		if ( join == null ) {
 			// annotation binding seems to use logical and physical naming somewhat inconsistently...
-			final String physicalTableName = getBuildingContext().getMetadataCollector().getPhysicalTableName( explicitTableName );
+			final String physicalTableName = getBuildingContext().getMetadataCollector()
+					.getPhysicalTableName( explicitTableName );
 			if ( physicalTableName != null ) {
 				join = joins.get( physicalTableName );
 			}
@@ -526,7 +521,7 @@ public class AnnotatedColumn {
 
 		if ( join == null ) {
 			throw new AnnotationException(
-					"Secondary table '" + explicitTableName + "' for property '" + propertyHolder.getClassName()
+					"Secondary table '" + explicitTableName + "' for property '" + getPropertyHolder().getClassName()
 					+ "' is not declared (use '@SecondaryTable' to declare the secondary table)"
 			);
 		}
@@ -544,7 +539,7 @@ public class AnnotatedColumn {
 		mappingColumn.setNullable( false );
 	}
 
-	public static AnnotatedColumn[] buildFormulaFromAnnotation(
+	public static AnnotatedColumns buildFormulaFromAnnotation(
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
 			Nullability nullability,
@@ -564,7 +559,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnFromNoAnnotation(
+	public static AnnotatedColumns buildColumnFromNoAnnotation(
 			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -582,7 +577,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnFromAnnotation(
+	public static AnnotatedColumns buildColumnFromAnnotation(
 			jakarta.persistence.Column column,
 			Comment commentAnn,
 			Nullability nullability,
@@ -602,7 +597,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnsFromAnnotations(
+	public static AnnotatedColumns buildColumnsFromAnnotations(
 			jakarta.persistence.Column[] columns,
 			Comment commentAnn,
 			Nullability nullability,
@@ -623,7 +618,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnsFromAnnotations(
+	public static AnnotatedColumns buildColumnsFromAnnotations(
 			jakarta.persistence.Column[] columns,
 			Comment commentAnn,
 			Nullability nullability,
@@ -645,7 +640,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnOrFormulaFromAnnotation(
+	public static AnnotatedColumns buildColumnOrFormulaFromAnnotation(
 			jakarta.persistence.Column column,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
@@ -667,7 +662,7 @@ public class AnnotatedColumn {
 		);
 	}
 
-	public static AnnotatedColumn[] buildColumnsOrFormulaFromAnnotation(
+	public static AnnotatedColumns buildColumnsOrFormulaFromAnnotation(
 			jakarta.persistence.Column[] columns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment comment,
@@ -685,10 +680,13 @@ public class AnnotatedColumn {
 			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
-			return new AnnotatedColumn[] { formulaColumn };
+			final AnnotatedColumns result = new AnnotatedColumns();
+			result.setPropertyHolder( propertyHolder );
+			result.setColumns(new AnnotatedColumn[] {formulaColumn});
+			return result;
 		}
 		else {
-			jakarta.persistence.Column[]  actualCols = overrideColumns( columns, propertyHolder, inferredData);
+			final jakarta.persistence.Column[]  actualCols = overrideColumns( columns, propertyHolder, inferredData );
 			if ( actualCols == null ) {
 				return buildImplicitColumn(
 						inferredData,
@@ -719,7 +717,7 @@ public class AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData ) {
 		final jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
-				StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
+				qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
 		);
 		if ( overriddenCols != null ) {
 			//check for overridden first
@@ -739,7 +737,7 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private static AnnotatedColumn[] buildExplicitColumns(
+	private static AnnotatedColumns buildExplicitColumns(
 			Comment comment,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -775,7 +773,10 @@ public class AnnotatedColumn {
 					tableName
 			);
 		}
-		return columns;
+		final AnnotatedColumns result = new AnnotatedColumns();
+		result.setPropertyHolder(propertyHolder);
+		result.setColumns(columns);
+		return result;
 	}
 
 	private static AnnotatedColumn buildColumn(
@@ -884,8 +885,8 @@ public class AnnotatedColumn {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();
 			if ( property != null ) {
-				if ( propertyHolder.isComponent() ) {
-					processColumnTransformerExpressions( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
+				if ( getPropertyHolder().isComponent() ) {
+					processColumnTransformerExpressions( getPropertyHolder().getOverriddenColumnTransformer( logicalColumnName ) );
 				}
 				processColumnTransformerExpressions( property.getAnnotation( ColumnTransformer.class ) );
 				ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
@@ -909,7 +910,7 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private static AnnotatedColumn[] buildImplicitColumn(
+	private static AnnotatedColumns buildImplicitColumn(
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
@@ -917,8 +918,9 @@ public class AnnotatedColumn {
 			Comment comment,
 			Nullability nullability,
 			MetadataBuildingContext context) {
-		final AnnotatedColumn[] columns = new AnnotatedColumn[1];
-		columns[0] = bindImplicitColumn(
+		final AnnotatedColumns result = new AnnotatedColumns();
+		result.setPropertyHolder( propertyHolder );
+		final AnnotatedColumn column = bindImplicitColumn(
 				inferredData,
 				suffixForDefaultColumnName,
 				secondaryTables,
@@ -927,7 +929,8 @@ public class AnnotatedColumn {
 				nullability,
 				context
 		);
-		return columns;
+		result.setColumns( new AnnotatedColumn[] { column } );
+		return result;
 	}
 
 	private static AnnotatedColumn bindImplicitColumn(
@@ -968,9 +971,8 @@ public class AnnotatedColumn {
 	}
 
 	public static void checkPropertyConsistency(AnnotatedColumn[] columns, String propertyName) {
-		int nbrOfColumns = columns.length;
-		if ( nbrOfColumns > 1 ) {
-			for (int currentIndex = 1; currentIndex < nbrOfColumns; currentIndex++) {
+		if ( columns.length > 1 ) {
+			for (int currentIndex = 1; currentIndex < columns.length; currentIndex++) {
 				if ( !columns[currentIndex].isFormula() && !columns[currentIndex - 1].isFormula() ) {
 					if ( columns[currentIndex].isNullable() != columns[currentIndex - 1].isNullable() ) {
 						throw new AnnotationException(

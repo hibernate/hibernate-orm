@@ -23,6 +23,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
+import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
@@ -66,7 +67,7 @@ public class PropertyBinder {
 	private boolean lazy;
 	private String lazyGroup;
 	private AccessType accessType;
-	private AnnotatedColumn[] columns;
+	private AnnotatedColumns columns;
 	private PropertyHolder holder;
 	private Value value;
 	private boolean insertable = true;
@@ -128,9 +129,10 @@ public class PropertyBinder {
 		this.accessType = accessType;
 	}
 
-	public void setColumns(AnnotatedColumn[] columns) {
-		insertable = columns[0].isInsertable();
-		updatable = columns[0].isUpdatable();
+	public void setColumns(AnnotatedColumns columns) {
+		final AnnotatedColumn firstColumn = columns.getColumns()[0];
+		insertable = firstColumn.isInsertable();
+		updatable = firstColumn.isUpdatable();
 		//consistency is checked later when we know the property name
 		this.columns = columns;
 	}
@@ -233,7 +235,7 @@ public class PropertyBinder {
 
 	private Property bind(Property prop) {
 		if ( isId ) {
-			final RootClass rootClass = ( RootClass ) holder.getPersistentClass();
+			final RootClass rootClass = (RootClass) holder.getPersistentClass();
 			//if an xToMany, it has to be wrapped today.
 			//FIXME this poses a problem as the PK is the class instead of the associated class which is not really compliant with the spec
 			if ( isXToMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
@@ -257,7 +259,7 @@ public class PropertyBinder {
 			}
 			else {
 				rootClass.setIdentifier( (KeyValue) getValue() );
-				if (embedded) {
+				if ( embedded ) {
 					rootClass.setEmbeddedIdentifier( true );
 				}
 				else {
@@ -267,7 +269,7 @@ public class PropertyBinder {
 							inheritanceStatePerClass,
 							buildingContext
 					);
-					if (superclass != null) {
+					if ( superclass != null ) {
 						superclass.setDeclaredIdentifierProperty(prop);
 					}
 					else {
@@ -355,7 +357,7 @@ public class PropertyBinder {
 			prop.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
 		}
 		else if ( property != null && property.isAnnotationPresent(OptimisticLock.class) ) {
-			OptimisticLock lockAnn = property.getAnnotation(OptimisticLock.class);
+			final OptimisticLock lockAnn = property.getAnnotation(OptimisticLock.class);
 			validateOptimisticLock(lockAnn);
 			prop.setOptimisticLocked( !lockAnn.excluded() );
 		}

@@ -274,7 +274,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public void addColumn(Column incomingColumn, boolean isInsertable, boolean isUpdatable) {
 		super.addColumn( incomingColumn, isInsertable, isUpdatable );
-
 		checkSelectable( incomingColumn );
 	}
 

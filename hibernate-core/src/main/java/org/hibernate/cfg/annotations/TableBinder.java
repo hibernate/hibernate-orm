@@ -24,6 +24,7 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedJoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.ObjectNameSource;
@@ -533,11 +534,11 @@ public class TableBinder {
 	public static void bindForeignKey(
 			PersistentClass referencedEntity,
 			PersistentClass destinationEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
-		final AnnotatedJoinColumn firstColumn = joinColumns[0];
+		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
 
 		final PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
@@ -549,10 +550,10 @@ public class TableBinder {
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
-		if ( firstColumn.hasMappedBy() ) {
+		if ( joinColumns.hasMappedBy() ) {
 			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
-			bindUnownedAssociation( joinColumns, value, associatedClass, firstColumn.getMappedBy() );
+			bindUnownedAssociation( joinColumns, value, associatedClass, joinColumns.getMappedBy() );
 		}
 		else if ( firstColumn.isImplicit() ) {
 			// if columns are implicit, then create the columns based
@@ -570,7 +571,7 @@ public class TableBinder {
 
 	private static void bindExplicitColumns(
 			PersistentClass referencedEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			MetadataBuildingContext buildingContext,
 			PersistentClass associatedClass) {
@@ -588,16 +589,16 @@ public class TableBinder {
 
 	private static void bindImplicitPrimaryKeyReference(
 			PersistentClass referencedEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			PersistentClass associatedClass) {
 		//implicit case, we hope PK and FK columns are in the same order
-		if ( joinColumns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
+		if ( joinColumns.getColumns().length != referencedEntity.getIdentifier().getColumnSpan() ) {
 			// TODO: what about secondary tables?? associatedClass is null?
 			throw new AnnotationException(
 					"An association that targets entity '" + referencedEntity.getEntityName()
 							+ "' from entity '" + associatedClass.getEntityName()
-							+ "' has " + joinColumns.length + " '@JoinColumn's but the primary key has "
+							+ "' has " + joinColumns.getColumns().length + " '@JoinColumn's but the primary key has "
 							+ referencedEntity.getIdentifier().getColumnSpan() + " columns"
 			);
 		}
@@ -614,7 +615,7 @@ public class TableBinder {
 
 	private static void bindPrimaryKeyReference(
 			PersistentClass referencedEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			PersistentClass associatedClass,
 			MetadataBuildingContext buildingContext) {
@@ -631,7 +632,7 @@ public class TableBinder {
 			boolean match = false;
 			// for each PK column, find the associated FK column.
 			final String quotedName = column.getQuotedName( dialect );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
 				final String referencedColumn = buildingContext.getMetadataCollector()
 						.getPhysicalColumnName( referencedEntity.getTable(), joinColumn.getReferencedColumn() );
 				// in JPA 2 referencedColumnName is case-insensitive
@@ -664,14 +665,14 @@ public class TableBinder {
 
 	private static void bindNonPrimaryKeyReference(
 			PersistentClass referencedEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final String referencedPropertyName;
 		if ( value instanceof ToOne ) {
 			referencedPropertyName = ( (ToOne) value).getReferencedPropertyName();
 		}
 		else if ( value instanceof DependantValue ) {
-			final String propertyName = joinColumns[0].getPropertyName();
+			final String propertyName = joinColumns.getColumns()[0].getPropertyName();
 			if ( propertyName != null ) {
 				Collection collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
 				referencedPropertyName = collection.getReferencedPropertyName();
@@ -698,25 +699,27 @@ public class TableBinder {
 
 	private static void bindImplicitColumns(
 			PersistentClass referencedEntity,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final List<Column> idColumns = referencedEntity instanceof JoinedSubclass
 				? referencedEntity.getKey().getColumns()
 				: referencedEntity.getIdentifier().getColumns();
 		for ( Column column: idColumns ) {
-			joinColumns[0].linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
-			joinColumns[0].overrideFromReferencedColumnIfNecessary( column );
+			final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+			firstColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
+			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 		}
 	}
 
 	private static void bindUnownedAssociation(
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			PersistentClass associatedClass,
 			String mappedByProperty) {
 		for ( Column column: mappedByColumns( associatedClass, mappedByProperty ) ) {
-			joinColumns[0].overrideFromReferencedColumnIfNecessary( column );
-			joinColumns[0].linkValueUsingAColumnCopy( column, value);
+			final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+			firstColumn.overrideFromReferencedColumnIfNecessary( column );
+			firstColumn.linkValueUsingAColumnCopy( column, value);
 		}
 	}
 
@@ -739,11 +742,11 @@ public class TableBinder {
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
 			Value value,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			SimpleValue simpleValue) {
 		final List<Column> valueColumns = value.getColumns();
-		for ( int i = 0; i < joinColumns.length; i++ ) {
-			final AnnotatedJoinColumn joinCol = joinColumns[i];
+		for ( int i = 0; i < joinColumns.getColumns().length; i++ ) {
+			final AnnotatedJoinColumn joinCol = joinColumns.getColumns()[i];
 			final Column synthCol = valueColumns.get(i);
 			if ( joinCol.isNameDeferred() ) {
 				//this has to be the default value

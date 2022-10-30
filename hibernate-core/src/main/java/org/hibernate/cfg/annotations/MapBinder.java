@@ -22,6 +22,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
+import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
@@ -93,6 +94,9 @@ public class MapBinder extends CollectionBinder {
 			public void secondPass(Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
 				bindStarToManySecondPass( persistentClasses );
+				final String propertyName = inverseJoinColumns != null
+						? inverseJoinColumns.getColumns()[0].getPropertyName()
+						: null;
 				bindKeyFromAssociationTable(
 						getElementType(),
 						persistentClasses,
@@ -102,7 +106,7 @@ public class MapBinder extends CollectionBinder {
 						buildingContext,
 						mapKeyColumns,
 						mapKeyManyToManyColumns,
-						inverseJoinColumns != null ? inverseJoinColumns[0].getPropertyName() : null
+						propertyName
 				);
 				makeOneToManyMapKeyColumnNullableIfNotInProperty( property );
 			}
@@ -159,7 +163,7 @@ public class MapBinder extends CollectionBinder {
 			boolean isEmbedded,
 			MetadataBuildingContext buildingContext,
 			AnnotatedColumn[] mapKeyColumns,
-			AnnotatedJoinColumn[] mapKeyManyToManyColumns,
+			AnnotatedJoinColumns mapKeyManyToManyColumns,
 			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
@@ -340,7 +344,7 @@ public class MapBinder extends CollectionBinder {
 			//FIXME pass the Index Entity JoinColumns
 			if ( !collection.isOneToMany() ) {
 				//index column should not be null
-				for (AnnotatedJoinColumn col : mapKeyManyToManyColumns) {
+				for ( AnnotatedJoinColumn col : mapKeyManyToManyColumns.getColumns() ) {
 					col.forceNotNull();
 				}
 			}

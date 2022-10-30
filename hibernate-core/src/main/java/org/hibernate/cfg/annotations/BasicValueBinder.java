@@ -55,6 +55,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedJoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
@@ -1125,7 +1126,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( columns[0].isNameDeferred() && !buildingContext.getMetadataCollector().isInSecondPass() && referencedEntityName != null ) {
 			buildingContext.getMetadataCollector().addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass(
-							referencedEntityName, (AnnotatedJoinColumn[]) columns, basicValue
+							referencedEntityName,
+							AnnotatedJoinColumns.fromColumns( (AnnotatedJoinColumn[]) columns, null, null, buildingContext ),
+							basicValue
 					)
 			);
 		}

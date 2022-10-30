@@ -1118,7 +1118,7 @@ public final class AnnotationBinder {
 				context
 		).extractMetadata();
 		AnnotatedColumn[] columns = columnsBuilder.getColumns();
-		AnnotatedJoinColumn[] joinColumns = columnsBuilder.getJoinColumns();
+		AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
 
 		final PropertyBinder propertyBinder = new PropertyBinder();
 		propertyBinder.setName( inferredData.getPropertyName() );
@@ -1505,7 +1505,7 @@ public final class AnnotationBinder {
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		final String referencedEntityName;
 		final String propertyName;
-		final AnnotatedJoinColumn[] actualColumns;
+		final AnnotatedJoinColumns actualColumns;
 		if ( isOverridden ) {
 			// careful: not always a @MapsId property, sometimes it's from an @IdClass
 			PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
@@ -1513,7 +1513,7 @@ public final class AnnotationBinder {
 			);
 			referencedEntityName = mapsIdProperty.getClassOrElementName();
 			propertyName = mapsIdProperty.getPropertyName();
-			actualColumns = (AnnotatedJoinColumn[]) columns;
+			actualColumns = AnnotatedJoinColumns.fromColumns( (AnnotatedJoinColumn[]) columns, null, propertyHolder, context );
 		}
 		else {
 			referencedEntityName = null;
@@ -1553,7 +1553,7 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			XProperty property,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			boolean forcePersist) {
 
 		//check validity
@@ -1573,12 +1573,12 @@ public final class AnnotationBinder {
 		JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
 			Join join = propertyHolder.addJoin( assocTable, false );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
 		bindAny(
-				BinderHelper.getCascadeStrategy( null, hibernateCascade, false, forcePersist),
+				BinderHelper.getCascadeStrategy( null, hibernateCascade, false, forcePersist ),
 				//@Any has not cascade attribute
 				joinColumns,
 				onDeleteAnn != null && OnDeleteAction.CASCADE == onDeleteAnn.action(),
@@ -1595,20 +1595,20 @@ public final class AnnotationBinder {
 			boolean inSecondPass,
 			XProperty property,
 			AnnotatedColumn[] columns,
-			AnnotatedJoinColumn[] joinColumns) {
+			AnnotatedJoinColumns joinColumns) {
 		//process indexes after everything: in second pass, many to one has to be done before indexes
-		Index index = property.getAnnotation( Index.class );
+		final Index index = property.getAnnotation( Index.class );
 		if ( index != null ) {
 			if ( joinColumns != null ) {
 
-				for ( AnnotatedColumn column : joinColumns) {
+				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					column.addIndex( index, inSecondPass);
 				}
 			}
 			else {
 				if ( columns != null ) {
-					for ( AnnotatedColumn column : columns) {
-						column.addIndex( index, inSecondPass);
+					for ( AnnotatedColumn column : columns ) {
+						column.addIndex( index, inSecondPass );
 					}
 				}
 			}
@@ -1619,23 +1619,23 @@ public final class AnnotationBinder {
 			boolean inSecondPass,
 			XProperty property,
 			AnnotatedColumn[] columns,
-			AnnotatedJoinColumn[] joinColumns) {
+			AnnotatedJoinColumns joinColumns) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
 		// TODO: AFAIK, there really isn't a reason for these UKs to be created
-		// on the secondPass.  This whole area should go away...
-		NaturalId naturalIdAnn = property.getAnnotation( NaturalId.class );
+		// on the SecondPass. This whole area should go away...
+		final NaturalId naturalIdAnn = property.getAnnotation( NaturalId.class );
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
-				for ( AnnotatedColumn column : joinColumns) {
+				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
-					column.addUniqueKey( keyName, inSecondPass);
+					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
 				for ( AnnotatedColumn column : columns) {
 					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
-					column.addUniqueKey( keyName, inSecondPass);
+					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 		}
@@ -1854,7 +1854,7 @@ public final class AnnotationBinder {
 			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
-			AnnotatedJoinColumn[] columns) {
+			AnnotatedJoinColumns columns) {
 		final Component component;
 		if ( referencedEntityName != null ) {
 			component = createComponent(
@@ -2201,7 +2201,7 @@ public final class AnnotationBinder {
 
 	private static void bindAny(
 			String cascadeStrategy,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			boolean cascadeOnDelete,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -2241,14 +2241,15 @@ public final class AnnotationBinder {
 			binder.setUpdatable( false );
 		}
 		else {
-			binder.setInsertable( columns[0].isInsertable() );
-			binder.setUpdatable( columns[0].isUpdatable() );
+			final AnnotatedJoinColumn firstColumn = columns.getColumns()[0];
+			binder.setInsertable( firstColumn.isInsertable() );
+			binder.setUpdatable( firstColumn.isUpdatable() );
 		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
 		Property prop = binder.makeProperty();
 		//composite FK columns are in the same table so its OK
-		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
+		propertyHolder.addProperty( prop, columns.getColumns(), inferredData.getDeclaringClass() );
 	}
 
 	public static HashMap<String, IdentifierGeneratorDefinition> buildGenerators(

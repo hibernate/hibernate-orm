@@ -66,7 +66,7 @@ public class AnnotatedColumn {
 	private Integer precision;
 	private Integer scale;
 	private String logicalColumnName;
-	private String propertyName;
+	private String propertyName;  // this is really a .-separated property path
 	private boolean unique;
 	private boolean nullable = true;
 	private String formulaString;
@@ -184,6 +184,9 @@ public class AnnotatedColumn {
 		this.propertyName = propertyName;
 	}
 
+	/**
+	 * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
+	 */
 	public String getPropertyName() {
 		return propertyName;
 	}
@@ -328,7 +331,7 @@ public class AnnotatedColumn {
 
 	private String processColumnName(String columnName, boolean applyNamingStrategy) {
 		if ( applyNamingStrategy ) {
-			Database database = context.getMetadataCollector().getDatabase();
+			final Database database = context.getMetadataCollector().getDatabase();
 			return context.getBuildingOptions().getPhysicalNamingStrategy()
 					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
 					.render( database.getDialect() );

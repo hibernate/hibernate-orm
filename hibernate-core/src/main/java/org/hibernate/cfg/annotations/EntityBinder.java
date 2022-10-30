@@ -90,6 +90,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotatedDiscriminatorColumn;
+import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.AvailableSettings;
@@ -217,7 +218,7 @@ public class EntityBinder {
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context);
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 
-		final AnnotatedJoinColumn[] inheritanceJoinedColumns =
+		final AnnotatedJoinColumns inheritanceJoinedColumns =
 				makeInheritanceJoinColumns( clazzToProcess, context, inheritanceState, superEntity );
 		final AnnotatedDiscriminatorColumn discriminatorColumn =
 				handleDiscriminatorColumn( clazzToProcess, context, inheritanceState, entityBinder );
@@ -673,7 +674,7 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			PersistentClass persistentClass,
 			EntityBinder entityBinder,
-			AnnotatedJoinColumn[] inheritanceJoinedColumns,
+			AnnotatedJoinColumns inheritanceJoinedColumns,
 			AnnotatedDiscriminatorColumn discriminatorColumn,
 			PropertyHolder propertyHolder) {
 
@@ -984,7 +985,7 @@ public class EntityBinder {
 		}
 	}
 
-	private static AnnotatedJoinColumn[] makeInheritanceJoinColumns(
+	private static AnnotatedJoinColumns makeInheritanceJoinColumns(
 			XClass clazzToProcess,
 			MetadataBuildingContext context,
 			InheritanceState inheritanceState,
@@ -995,7 +996,7 @@ public class EntityBinder {
 				&& InheritanceType.JOINED == inheritanceState.getType();
 		if ( hasJoinedColumns ) {
 			//@Inheritance(JOINED) subclass need to link back to the super entity
-			PrimaryKeyJoinColumns jcsAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+			final PrimaryKeyJoinColumns jcsAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
 			boolean explicitInheritanceJoinedColumns = jcsAnn != null && jcsAnn.value().length != 0;
 			if ( explicitInheritanceJoinedColumns ) {
 				int nbrOfInhJoinedColumns = jcsAnn.value().length;
@@ -1014,7 +1015,7 @@ public class EntityBinder {
 				}
 			}
 			else {
-				PrimaryKeyJoinColumn jcAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+				final PrimaryKeyJoinColumn jcAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
 				inheritanceJoinedColumns = new AnnotatedJoinColumn[1];
 				inheritanceJoinedColumns[0] = buildJoinColumn(
 						jcAnn,
@@ -1033,7 +1034,7 @@ public class EntityBinder {
 				LOG.invalidPrimaryKeyJoinColumnAnnotation( clazzToProcess.getName() );
 			}
 		}
-		return inheritanceJoinedColumns;
+		return AnnotatedJoinColumns.fromColumns( inheritanceJoinedColumns, null, null, context );
 	}
 
 	private static PersistentClass getSuperEntity(
@@ -1746,24 +1747,23 @@ public class EntityBinder {
 	}
 
 	private void createPrimaryColumnsToSecondaryTable(Object column, PropertyHolder propertyHolder, Join join) {
-		final AnnotatedJoinColumn[] annotatedJoinColumns;
 		final PrimaryKeyJoinColumn[] pkColumnsAnn = column instanceof PrimaryKeyJoinColumn[]
 				? (PrimaryKeyJoinColumn[]) column
 				: null;
 		final JoinColumn[] joinColumnsAnn = column instanceof JoinColumn[]
 				? (JoinColumn[]) column
 				: null;
-		annotatedJoinColumns = pkColumnsAnn == null && joinColumnsAnn == null
+		final AnnotatedJoinColumns annotatedJoinColumns = pkColumnsAnn == null && joinColumnsAnn == null
 				? createDefaultJoinColumn( propertyHolder )
 				: createJoinColumns( propertyHolder, pkColumnsAnn, joinColumnsAnn );
 
-		for (AnnotatedJoinColumn joinColumn : annotatedJoinColumns) {
+		for ( AnnotatedJoinColumn joinColumn : annotatedJoinColumns.getColumns() ) {
 			joinColumn.forceNotNull();
 		}
 		bindJoinToPersistentClass( join, annotatedJoinColumns, context );
 	}
 
-	private AnnotatedJoinColumn[] createDefaultJoinColumn(PropertyHolder propertyHolder) {
+	private AnnotatedJoinColumns createDefaultJoinColumn(PropertyHolder propertyHolder) {
 		final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
 		annotatedJoinColumns[0] = buildJoinColumn(
 				null,
@@ -1773,10 +1773,10 @@ public class EntityBinder {
 				propertyHolder,
 				context
 		);
-		return annotatedJoinColumns;
+		return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, context );
 	}
 
-	private AnnotatedJoinColumn[] createJoinColumns(
+	private AnnotatedJoinColumns createJoinColumns(
 			PropertyHolder propertyHolder,
 			PrimaryKeyJoinColumn[] pkColumnsAnn,
 			JoinColumn[] joinColumnsAnn) {
@@ -1787,8 +1787,8 @@ public class EntityBinder {
 		else {
 			final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[joinColumnCount];
 			for (int colIndex = 0; colIndex < joinColumnCount; colIndex++) {
-				PrimaryKeyJoinColumn pkJoinAnn = pkColumnsAnn != null ? pkColumnsAnn[colIndex] : null;
-				JoinColumn joinAnn = joinColumnsAnn != null ? joinColumnsAnn[colIndex] : null;
+				final PrimaryKeyJoinColumn pkJoinAnn = pkColumnsAnn != null ? pkColumnsAnn[colIndex] : null;
+				final JoinColumn joinAnn = joinColumnsAnn != null ? joinColumnsAnn[colIndex] : null;
 				annotatedJoinColumns[colIndex] = buildJoinColumn(
 						pkJoinAnn,
 						joinAnn,
@@ -1798,11 +1798,11 @@ public class EntityBinder {
 						context
 				);
 			}
-			return annotatedJoinColumns;
+			return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, context );
 		}
 	}
 
-	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] joinColumns, MetadataBuildingContext context) {
+	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumns joinColumns, MetadataBuildingContext context) {
 		DependantValue key = new DependantValue( context, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setForeignKeyNameIfDefined( join );

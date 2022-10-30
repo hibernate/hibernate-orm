@@ -38,7 +38,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	public ToOneFkSecondPass(
 			ToOne value,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			boolean unique,
 			PersistentClass persistentClass,
 			String path,
@@ -113,7 +113,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			);
 			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
 			// HbmMetadataSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
-			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
+			if ( !manyToOne.isIgnoreNotFound() ) {
+				manyToOne.createPropertyRefConstraints( persistentClasses );
+			}
 		}
 		else if ( value instanceof OneToOne ) {
 			value.createForeignKey();

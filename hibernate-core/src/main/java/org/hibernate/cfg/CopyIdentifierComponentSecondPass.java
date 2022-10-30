@@ -39,12 +39,12 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private final String propertyName;
 	private final Component component;
 	private final MetadataBuildingContext buildingContext;
-	private final AnnotatedJoinColumn[] joinColumns;
+	private final AnnotatedJoinColumns joinColumns;
 
 	public CopyIdentifierComponentSecondPass(
 			Component comp,
 			String referencedEntityName, String propertyName,
-			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumns joinColumns,
 			MetadataBuildingContext buildingContext) {
 		super( comp, joinColumns );
 		this.component = comp;
@@ -91,8 +91,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( joinColumns.length );
-		for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
+		final AnnotatedJoinColumn[] cols = joinColumns.getColumns();
+		final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( cols.length );
+		for ( AnnotatedJoinColumn joinColumn : cols) {
 			if ( !joinColumn.isReferenceImplicit() ) {
 				//JPA 2 requires referencedColumnNames to be case-insensitive
 				columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase(Locale.ROOT), joinColumn );
@@ -101,8 +102,8 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		//try default column orientation
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
-			for ( int i = 0; i < joinColumns.length; i++ ) {
-				columnByReferencedName.put( String.valueOf( i ), joinColumns[i] );
+			for (int i = 0; i < cols.length; i++ ) {
+				columnByReferencedName.put( String.valueOf( i ), cols[i] );
 			}
 		}
 
@@ -184,8 +185,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 		value.copyTypeFrom( referencedValue );
 
-		if ( joinColumns[0].isNameDeferred() ) {
-			joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
+		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+		if ( firstColumn.isNameDeferred() ) {
+			firstColumn.copyReferencedStructureAndCreateDefaultJoinColumns(
 					referencedPersistentClass,
 					referencedValue,
 					value
@@ -200,17 +202,18 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				}
 				final Column column = (Column) selectable;
 				final AnnotatedJoinColumn joinColumn;
-				String logicalColumnName = null;
+				final String logicalColumnName;
 				if ( isExplicitReference ) {
 					logicalColumnName = column.getName();
 					//JPA 2 requires referencedColumnNames to be case-insensitive
 					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
 				}
 				else {
+					logicalColumnName = null;
 					joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
 					index.getAndIncrement();
 				}
-				if ( joinColumn == null && !joinColumns[0].isNameDeferred() ) {
+				if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
 					throw new AnnotationException(
 							"Property '" + propertyName
 									+ "' of entity '" + component.getOwner().getEntityName()
@@ -225,7 +228,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				final Database database = buildingContext.getMetadataCollector().getDatabase();
 				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
 				final Identifier explicitName = database.toIdentifier( columnName );
-				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
+				final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
 				value.addColumn( new Column( physicalName.render( database.getDialect() ) ) );
 				if ( joinColumn != null ) {
 					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );

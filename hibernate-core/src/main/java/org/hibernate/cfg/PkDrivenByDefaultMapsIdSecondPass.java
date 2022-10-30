@@ -18,10 +18,10 @@ import org.hibernate.mapping.SimpleValue;
  */
 public class PkDrivenByDefaultMapsIdSecondPass extends FkSecondPass {
 	private final String referencedEntityName;
-	private final AnnotatedJoinColumn[] columns;
+	private final AnnotatedJoinColumns columns;
 	private final SimpleValue value;
 
-	public PkDrivenByDefaultMapsIdSecondPass(String referencedEntityName, AnnotatedJoinColumn[] columns, SimpleValue value) {
+	public PkDrivenByDefaultMapsIdSecondPass(String referencedEntityName, AnnotatedJoinColumns columns, SimpleValue value) {
 		super( value, columns );
 		this.referencedEntityName = referencedEntityName;
 		this.columns = columns;

@@ -415,7 +415,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	private void checkColumnDuplication() throws MappingException {
-		HashSet<String> cols = new HashSet<>();
+		final HashSet<String> cols = new HashSet<>();
 		checkColumnDuplication( cols, getKey() );
 		if ( isIndexed() ) {
 			checkColumnDuplication(

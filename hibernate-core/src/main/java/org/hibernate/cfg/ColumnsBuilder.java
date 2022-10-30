@@ -26,7 +26,6 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
-import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
@@ -35,6 +34,7 @@ import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
@@ -52,7 +52,7 @@ class ColumnsBuilder {
 	private final EntityBinder entityBinder;
 	private final MetadataBuildingContext buildingContext;
 	private AnnotatedColumn[] columns;
-	private AnnotatedJoinColumn[] joinColumns;
+	private AnnotatedJoinColumns joinColumns;
 
 	public ColumnsBuilder(
 			PropertyHolder propertyHolder,
@@ -73,7 +73,7 @@ class ColumnsBuilder {
 		return columns;
 	}
 
-	public AnnotatedJoinColumn[] getJoinColumns() {
+	public AnnotatedJoinColumns getJoinColumns() {
 		return joinColumns;
 	}
 
@@ -122,7 +122,7 @@ class ColumnsBuilder {
 				( property.isAnnotationPresent( ManyToOne.class )
 						|| property.isAnnotationPresent( OneToOne.class ) )
 				) {
-			joinColumns = buildDefaultJoinColumnsForXToOne( property, inferredData );
+			joinColumns = buildDefaultJoinColumnsForToOne( property, inferredData );
 		}
 		else if ( joinColumns == null &&
 				( property.isAnnotationPresent( OneToMany.class )
@@ -164,12 +164,18 @@ class ColumnsBuilder {
 		return this;
 	}
 
-	private AnnotatedJoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
-		AnnotatedJoinColumn[] joinColumns;
-		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
-		Comment comment = property.getAnnotation(Comment.class);
+	private AnnotatedJoinColumns buildDefaultJoinColumnsForToOne(XProperty property, PropertyData inferredData) {
+		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
+		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
-			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
+			if ( isEmpty( joinTableAnn.name() ) ) {
+				//TODO: I don't see why this restriction makes sense (use the same defaulting rule as for many-valued)
+				throw new AnnotationException(
+						"Single-valued association " + getPath( propertyHolder, inferredData )
+								+ " has a '@JoinTable' annotation with no explicit 'name'"
+				);
+			}
+			return AnnotatedJoinColumn.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
 					comment,
 					null,
@@ -178,17 +184,10 @@ class ColumnsBuilder {
 					inferredData.getPropertyName(),
 					buildingContext
 			);
-			if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
-				//TODO: I don't see why this restriction makes sense (use the same defaulting rule as for many-valued)
-				throw new AnnotationException(
-						"Single-valued association " + getPath( propertyHolder, inferredData )
-								+ " has a '@JoinTable' annotation with no explicit 'name'"
-				);
-			}
 		}
 		else {
 			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
-			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
+			return AnnotatedJoinColumn.buildJoinColumns(
 					null,
 					comment,
 					oneToOneAnn != null ? oneToOneAnn.mappedBy() : null,
@@ -198,10 +197,9 @@ class ColumnsBuilder {
 					buildingContext
 			);
 		}
-		return joinColumns;
 	}
 
-	private AnnotatedJoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
+	private AnnotatedJoinColumns buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		// process @JoinColumns before @Columns to handle collection of entities properly
 
 		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations(property, inferredData);
@@ -239,7 +237,7 @@ class ColumnsBuilder {
 					inferredData.getPropertyName(),
 					buildingContext
 			);
-			return annotatedJoinColumns;
+			return AnnotatedJoinColumns.fromColumns( annotatedJoinColumns, null, propertyHolder, buildingContext );
 		}
 
 		return null;
@@ -292,10 +290,13 @@ class ColumnsBuilder {
 	}
 
 	/**
-	 * useful to override a column either by @MapsId or by @IdClass
+	 * Useful to override a column either by {@code @MapsId} or by {@code @IdClass}
 	 */
+	//TODO: should we introduce an AnnotatedColumns type and return that here?
 	private AnnotatedColumn[] buildExplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
-		final AnnotatedColumn[] columns = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
-		return columns == null ? buildDefaultJoinColumnsForXToOne( overridingProperty.getProperty(), overridingProperty ) : columns;
+		final AnnotatedJoinColumns columns = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
+		return columns == null
+				? buildDefaultJoinColumnsForToOne( overridingProperty.getProperty(), overridingProperty ).getColumns()
+				: columns.getColumns();
 	}
 }

@@ -55,6 +55,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
@@ -153,7 +154,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private TimeZoneStorageType timeZoneStorageType;
 
 	private Table table;
-	private AnnotatedColumn[] columns;
+	private AnnotatedColumns columns;
 
 	private BasicValue basicValue;
 
@@ -274,7 +275,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.table = table;
 	}
 
-	public void setColumns(AnnotatedColumn[] columns) {
+	public void setColumns(AnnotatedColumns columns) {
 		this.columns = columns;
 	}
 
@@ -1070,7 +1071,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void validate() {
-		AnnotatedColumn.checkPropertyConsistency( columns, propertyName );
+		AnnotatedColumn.checkPropertyConsistency( columns.getColumns(), propertyName );
 	}
 
 	public BasicValue make() {
@@ -1083,7 +1084,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		LOG.debugf( "building BasicValue for %s", propertyName );
 
 		if ( table == null ) {
-			table = columns[0].getTable();
+			table = columns.getTable();
 		}
 
 		basicValue = new BasicValue( buildingContext, table );
@@ -1125,18 +1126,19 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	public void linkWithValue() {
 		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-		if ( !collector.isInSecondPass() && columns[0].isNameDeferred() && referencedEntityName != null ) {
+		final AnnotatedColumn firstColumn = columns.getColumns()[0];
+		if ( !collector.isInSecondPass() && firstColumn.isNameDeferred() && referencedEntityName != null ) {
 			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 			joinColumns.setBuildingContext( buildingContext );
-			joinColumns.setPropertyHolder( columns[0].getPropertyHolder() );
-			joinColumns.setPropertyName( columns[0].getPropertyName() );
-			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns );
+			joinColumns.setPropertyHolder( firstColumn.getPropertyHolder() );
+			joinColumns.setPropertyName( firstColumn.getPropertyName() );
+			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns.getColumns() );
 			collector.addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, joinColumns, basicValue )
 			);
 		}
 		else {
-			for ( AnnotatedColumn column : columns ) {
+			for ( AnnotatedColumn column : columns.getColumns() ) {
 				column.linkWithValue( basicValue );
 			}
 		}

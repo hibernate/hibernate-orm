@@ -1118,7 +1118,7 @@ public final class AnnotationBinder {
 				entityBinder,
 				context
 		).extractMetadata();
-		AnnotatedColumn[] columns = columnsBuilder.getColumns();
+		AnnotatedColumns columns = columnsBuilder.getColumns();
 		AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
 
 		final PropertyBinder propertyBinder = new PropertyBinder();
@@ -1252,7 +1252,7 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			XProperty property,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			PropertyBinder propertyBinder) {
 		if (isIdentifierMapper) {
 			throw new AnnotationException(
@@ -1303,7 +1303,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static AnnotatedColumn[] bindBasic(
+	private static AnnotatedColumns bindBasic(
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			PropertyData inferredData,
@@ -1315,14 +1315,14 @@ public final class AnnotationBinder {
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			XProperty property,
 			ColumnsBuilder columnsBuilder,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			XClass returnedClass,
 			PropertyBinder propertyBinder) {
 
 		// overrides from @MapsId or @IdClass if needed
 		final boolean isComposite;
 		final boolean isOverridden;
-		final AnnotatedColumn[] actualColumns;
+		final AnnotatedColumns actualColumns;
 		if ( propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
 			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
@@ -1450,7 +1450,7 @@ public final class AnnotationBinder {
 			Nullability nullability,
 			MetadataBuildingContext context,
 			XProperty property,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			PropertyBinder propertyBinder,
 			boolean isOverridden) {
 		//provide the basic property mapping
@@ -1469,12 +1469,12 @@ public final class AnnotationBinder {
 		//implicit type will check basic types and Serializable classes
 		if ( propertyBinder.isId() || !optional && nullability != Nullability.FORCED_NULL ) {
 			//force columns to not null
-			for ( AnnotatedColumn col : columns ) {
-				if ( propertyBinder.isId() && col.isFormula() ) {
+			for ( AnnotatedColumn column : columns.getColumns() ) {
+				if ( propertyBinder.isId() && column.isFormula() ) {
 					throw new CannotForceNonNullableException( "Identifier property '"
 							+ getPath( propertyHolder, inferrredData ) + "' cannot map to a '@Formula'" );
 				}
-				col.forceNotNull();
+				column.forceNotNull();
 			}
 		}
 
@@ -1499,7 +1499,7 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			XProperty property,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			XClass returnedClass,
 			PropertyBinder propertyBinder,
 			boolean isOverridden,
@@ -1509,7 +1509,7 @@ public final class AnnotationBinder {
 		final AnnotatedJoinColumns actualColumns;
 		if ( isOverridden ) {
 			// careful: not always a @MapsId property, sometimes it's from an @IdClass
-			PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
+			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
 					propertyBinder.isId(), propertyHolder, property.getName(), context
 			);
 			referencedEntityName = mapsIdProperty.getClassOrElementName();
@@ -1518,7 +1518,7 @@ public final class AnnotationBinder {
 			joinColumns.setBuildingContext( context );
 			joinColumns.setPropertyHolder( propertyHolder );
 			joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns );
+			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns.getColumns() );
 			actualColumns = joinColumns;
 		}
 		else {
@@ -1574,9 +1574,9 @@ public final class AnnotationBinder {
 			);
 		}
 
-		Cascade hibernateCascade = property.getAnnotation( Cascade.class );
-		OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
-		JoinTable assocTable = propertyHolder.getJoinTable(property);
+		final Cascade hibernateCascade = property.getAnnotation( Cascade.class );
+		final OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
+		final JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
 			Join join = propertyHolder.addJoin( assocTable, false );
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
@@ -1600,7 +1600,7 @@ public final class AnnotationBinder {
 	private static void addIndexes(
 			boolean inSecondPass,
 			XProperty property,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			AnnotatedJoinColumns joinColumns) {
 		//process indexes after everything: in second pass, many to one has to be done before indexes
 		final Index index = property.getAnnotation( Index.class );
@@ -1613,7 +1613,7 @@ public final class AnnotationBinder {
 			}
 			else {
 				if ( columns != null ) {
-					for ( AnnotatedColumn column : columns ) {
+					for ( AnnotatedColumn column : columns.getColumns() ) {
 						column.addIndex( index, inSecondPass );
 					}
 				}
@@ -1624,7 +1624,7 @@ public final class AnnotationBinder {
 	private static void addNaturalIds(
 			boolean inSecondPass,
 			XProperty property,
-			AnnotatedColumn[] columns,
+			AnnotatedColumns columns,
 			AnnotatedJoinColumns joinColumns) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
@@ -1639,7 +1639,7 @@ public final class AnnotationBinder {
 				}
 			}
 			else {
-				for ( AnnotatedColumn column : columns) {
+				for ( AnnotatedColumn column : columns.getColumns() ) {
 					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
 					column.addUniqueKey( keyName, inSecondPass );
 				}
@@ -2254,8 +2254,8 @@ public final class AnnotationBinder {
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
 		Property prop = binder.makeProperty();
-		//composite FK columns are in the same table so its OK
-		propertyHolder.addProperty( prop, columns.getColumns(), inferredData.getDeclaringClass() );
+		//composite FK columns are in the same table, so it's OK
+		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}
 
 	public static HashMap<String, IdentifierGeneratorDefinition> buildGenerators(

@@ -142,7 +142,7 @@ public class ToOneBinder {
 			MetadataBuildingContext context) {
 		// All FK columns should be in the same table
 		final org.hibernate.mapping.ManyToOne value =
-				new org.hibernate.mapping.ManyToOne( context, joinColumns.getColumns()[0].getTable() );
+				new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
 		if ( unique ) {
 			// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
 			value.markAsLogicalOneToOne();
@@ -269,7 +269,7 @@ public class ToOneBinder {
 			propertyBinder.setInsertable( firstColumn.isInsertable() );
 			propertyBinder.setUpdatable( firstColumn.isUpdatable() );
 		}
-		propertyBinder.setColumns( columns.getColumns() );
+		propertyBinder.setColumns( columns );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );
 		propertyBinder.setProperty( property );

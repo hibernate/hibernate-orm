@@ -52,7 +52,7 @@ class ColumnsBuilder {
 	private final PropertyData inferredData;
 	private final EntityBinder entityBinder;
 	private final MetadataBuildingContext buildingContext;
-	private AnnotatedColumn[] columns;
+	private AnnotatedColumns columns;
 	private AnnotatedJoinColumns joinColumns;
 
 	public ColumnsBuilder(
@@ -70,7 +70,7 @@ class ColumnsBuilder {
 		this.buildingContext = buildingContext;
 	}
 
-	public AnnotatedColumn[] getColumns() {
+	public AnnotatedColumns getColumns() {
 		return columns;
 	}
 
@@ -158,8 +158,8 @@ class ColumnsBuilder {
 
 		if ( nullability == Nullability.FORCED_NOT_NULL ) {
 			//force columns to not null
-			for (AnnotatedColumn col : columns ) {
-				col.forceNotNull();
+			for ( AnnotatedColumn column : columns.getColumns() ) {
+				column.forceNotNull();
 			}
 		}
 		return this;
@@ -291,13 +291,9 @@ class ColumnsBuilder {
 		}
 	}
 
-	AnnotatedColumn[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
-				isId,
-				propertyHolder,
-				property.getName(),
-				buildingContext
-		);
+	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
+		final PropertyData overridingProperty =
+				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), buildingContext );
 		return overridingProperty != null ? buildExplicitOrDefaultJoinColumn( overridingProperty ) : columns;
 	}
 
@@ -305,10 +301,10 @@ class ColumnsBuilder {
 	 * Useful to override a column either by {@code @MapsId} or by {@code @IdClass}
 	 */
 	//TODO: should we introduce an AnnotatedColumns type and return that here?
-	private AnnotatedColumn[] buildExplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
+	private AnnotatedColumns buildExplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
 		final AnnotatedJoinColumns columns = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
 		return columns == null
-				? buildDefaultJoinColumnsForToOne( overridingProperty.getProperty(), overridingProperty ).getColumns()
-				: columns.getColumns();
+				? buildDefaultJoinColumnsForToOne( overridingProperty.getProperty(), overridingProperty )
+				: columns;
 	}
 }

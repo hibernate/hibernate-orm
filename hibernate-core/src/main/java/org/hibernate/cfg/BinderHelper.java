@@ -1049,17 +1049,18 @@ public class BinderHelper {
 			EntityBinder entityBinder,
 			boolean optional,
 			MetadataBuildingContext context) {
-		final XProperty xProperty = inferredData.getProperty();
-		final AnnotatedJoinColumn[] columns = keyColumns.getColumns();
+		final XProperty property = inferredData.getProperty();
 
-		final Any value = new Any( context, columns[0].getTable(), true );
+		final Any value = new Any( context, keyColumns.getTable(), true );
 		value.setLazy( lazy );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 
 		final BasicValueBinder discriminatorValueBinder =
 				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
-		final AnnotatedColumn[] discriminatorColumns = buildColumnOrFormulaFromAnnotation(
+		// TODO: if there can be only one discriminator column,
+		//       why are we making a whole array of them??
+		final AnnotatedColumns discriminatorColumns = buildColumnOrFormulaFromAnnotation(
 				discriminatorColumn,
 				discriminatorFormula,
 				null,
@@ -1069,17 +1070,20 @@ public class BinderHelper {
 				entityBinder.getSecondaryTables(),
 				context
 		);
-		assert discriminatorColumns.length == 1;
-		discriminatorColumns[0].setTable( value.getTable() );
+		assert discriminatorColumns.getColumns().length == 1;
+
+		discriminatorColumns.setTable( value.getTable() );
 		discriminatorValueBinder.setColumns( discriminatorColumns );
 
 		discriminatorValueBinder.setReturnedClassName( inferredData.getTypeName() );
-		discriminatorValueBinder.setType( xProperty, xProperty.getType(), null, null );
+		discriminatorValueBinder.setType( property, property.getType(), null, null );
 
 		final BasicValue discriminatorDescriptor = discriminatorValueBinder.make();
 		value.setDiscriminator( discriminatorDescriptor );
 		discriminatorValueBinder.fillSimpleValue();
-		discriminatorColumns[0].linkWithValue( discriminatorDescriptor );
+		// TODO: this is nasty
+		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns()[0];
+		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
 
 		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
 				.resolve()
@@ -1095,26 +1099,23 @@ public class BinderHelper {
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
-		BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		final AnnotatedJoinColumn[] columns = keyColumns.getColumns();
 		assert columns.length == 1;
-		columns[0].setTable( value.getTable() );
-		keyValueBinder.setColumns(columns);
-
+		keyColumns.setTable( value.getTable() );
+		keyValueBinder.setColumns( keyColumns );
 		if ( !optional ) {
-			for ( AnnotatedJoinColumn column : columns) {
+			for ( AnnotatedJoinColumn column : columns ) {
 				column.setNullable( false );
 			}
 		}
-		keyValueBinder.setType( xProperty, xProperty.getType(), null, null );
+		keyValueBinder.setType( property, property.getType(), null, null );
 		final BasicValue keyDescriptor = keyValueBinder.make();
 		value.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
-		AnnotatedColumn.checkPropertyConsistency(
-				columns,
-				propertyHolder.getEntityName() + "." + inferredData.getPropertyName()
-		);
+		final String path = qualify( propertyHolder.getEntityName(), inferredData.getPropertyName() );
+		AnnotatedColumn.checkPropertyConsistency( columns, path );
 		columns[0].linkWithValue( keyDescriptor );
-
 		return value;
 	}
 

@@ -12,12 +12,9 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedColumn;
-import org.hibernate.cfg.AnnotatedJoinColumn;
+import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
@@ -71,7 +68,7 @@ public class IdBagBinder extends BagBinder {
 				"id"
 		);
 
-		final AnnotatedColumn[] idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
+		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
 				new Column[] { collectionIdAnn.column() },
 				null,
 				Nullability.FORCED_NOT_NULL,
@@ -82,7 +79,7 @@ public class IdBagBinder extends BagBinder {
 		);
 
 		//we need to make sure all id columns must be not-null.
-		for ( AnnotatedColumn idColumn:idColumns ) {
+		for ( AnnotatedColumn idColumn : idColumns.getColumns() ) {
 			idColumn.setNullable( false );
 		}
 

@@ -549,6 +549,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	public void setParent(AnnotatedJoinColumns parent) {
+		super.setParent( parent );
 		this.parent = parent;
 	}
 }

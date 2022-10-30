@@ -3275,9 +3275,9 @@ public class ModelBinder {
 					&& !collectionBinding.isInverse()
 					&& !collectionBinding.getKey().isNullable() ) {
 				// for non-inverse one-to-many, with a not-null fk, add a backref!
-				String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
-				PersistentClass referenced = getReferencedEntityBinding( entityName );
-				Backref prop = new Backref();
+				final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
+				final PersistentClass referenced = getReferencedEntityBinding( entityName );
+				final Backref prop = new Backref();
 				prop.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
 				prop.setUpdateable( false );
 				prop.setSelectable( false );
@@ -3298,13 +3298,13 @@ public class ModelBinder {
 
 		protected void bindCollectionKey() {
 			final PluralAttributeKeySource keySource = getPluralAttributeSource().getKeySource();
-			final String propRef = keySource.getReferencedPropertyName();
-			getCollectionBinding().setReferencedPropertyName( propRef );
+			final String referencedPropertyName = keySource.getReferencedPropertyName();
+			getCollectionBinding().setReferencedPropertyName( referencedPropertyName );
 
 			final PersistentClass owner = getCollectionBinding().getOwner();
-			final KeyValue keyVal = propRef == null
+			final KeyValue keyVal = referencedPropertyName == null
 					? owner.getIdentifier()
-					: (KeyValue) owner.getRecursiveProperty( propRef ).getValue();
+					: (KeyValue) owner.getRecursiveProperty( referencedPropertyName ).getValue();
 			final DependantValue key = new DependantValue(
 					mappingDocument,
 					getCollectionBinding().getCollectionTable(),

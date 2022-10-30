@@ -789,7 +789,7 @@ public class EntityBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
+			final BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );

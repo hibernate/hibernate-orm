@@ -108,26 +108,6 @@ public class BinderHelper {
 	);
 
 	/**
-	 * create a property copy reusing the same value
-	 */
-	public static Property shallowCopy(Property property) {
-		Property clone = new SyntheticProperty();
-		clone.setCascade( property.getCascade() );
-		clone.setInsertable( property.isInsertable() );
-		clone.setLazy( property.isLazy() );
-		clone.setName( property.getName() );
-		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
-		clone.setOptimisticLocked( property.isOptimisticLocked() );
-		clone.setOptional( property.isOptional() );
-		clone.setPersistentClass( property.getPersistentClass() );
-		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
-		clone.setSelectable( property.isSelectable() );
-		clone.setUpdateable( property.isUpdateable() );
-		clone.setValue( property.getValue() );
-		return clone;
-	}
-
-	/**
 	 * Here we address a fundamental problem: the {@code @JoinColumn}
 	 * annotation specifies the referenced column in the target table
 	 * via {@code referencedColumnName}, but Hibernate needs to know
@@ -320,93 +300,113 @@ public class BinderHelper {
 			String propertyName,
 			boolean inverse,
 			PersistentClass associatedClass) {
-		String syntheticPropertyName =
-				"_" + associatedClass.getEntityName().replace('.', '_') +
-				"_" + propertyName.replace('.', '_');
-		if ( inverse ) {
-			// Use a different name for inverse synthetic properties to avoid duplicate properties for self-referencing models
-			syntheticPropertyName += "_inverse";
-		}
-		return syntheticPropertyName;
+		final String syntheticPropertyName =
+				( "_" + associatedClass.getEntityName() + "_" + propertyName )
+						.replace('.', '_');
+		// Use a different name for inverse synthetic properties to
+		// avoid duplicate properties for self-referencing models
+		return inverse ? syntheticPropertyName + "_inverse" : syntheticPropertyName;
 	}
 
 	private static String associationMessage(PersistentClass associatedEntity, AnnotatedJoinColumns joinColumns) {
-		StringBuilder message = new StringBuilder();
 		if ( associatedEntity != null ) {
-			message.append( "'" )
-					.append( associatedEntity.getEntityName() )
-					.append( "." )
-					.append( joinColumns.getPropertyName() )
-					.append( "'" );
+			return "'" + associatedEntity.getEntityName() + "." + joinColumns.getPropertyName() + "'";
+		}
+		else if ( joinColumns.getPropertyHolder() != null ) {
+			return "'" + joinColumns.getPropertyHolder().getEntityName() + "." + joinColumns.getPropertyName() + "'";
 		}
 		else {
-			if ( joinColumns.getPropertyHolder() != null ) {
-				message.append( "'" )
-						.append( joinColumns.getPropertyHolder().getEntityName() )
-						.append( "." )
-						.append( joinColumns.getPropertyName() )
-						.append( "'" );
-			}
+			return "";
 		}
-		return message.toString();
 	}
 
+	/**
+	 * Build the "synthetic" {@link Component} that holds all the
+	 * properties referenced by a foreign key mapping specified as
+	 * a list of {@link jakarta.persistence.JoinColumn} annotations
+	 * with explicit {@code referencedColumnName()}s.
+	 */
 	private static Property makeSyntheticComponentProperty(
 			PersistentClass ownerEntity,
 			Object persistentClassOrJoin,
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
-		Component embeddedComp = persistentClassOrJoin instanceof PersistentClass
+		final Component embeddedComponent = persistentClassOrJoin instanceof PersistentClass
 				? new Component( context, (PersistentClass) persistentClassOrJoin )
 				: new Component( context, (Join) persistentClassOrJoin );
-		embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
-		embeddedComp.setEmbedded( true );
-		Property property = makeComponent( ownerEntity, context, syntheticPropertyName, embeddedComp, properties );
-		property.setPropertyAccessorName( "embedded" );
-		ownerEntity.addProperty( property );
-		embeddedComp.createUniqueKey(); //make it unique
-		return property;
-	}
-
-	private static Property makeComponent(
-			PersistentClass ownerEntity,
-			MetadataBuildingContext context,
-			String name,
-			Component embeddedComp,
-			List<Property> properties) {
+		embeddedComponent.setComponentClassName( embeddedComponent.getOwner().getClassName() );
+		embeddedComponent.setEmbedded( true );
 		for ( Property property : properties ) {
-			Property clone = cloneProperty( ownerEntity, context, property );
-			embeddedComp.addProperty( clone );
+			embeddedComponent.addProperty( cloneProperty( ownerEntity, context, property ) );
 		}
-		embeddedComp.sortProperties();
-		Property synthProp = new SyntheticProperty();
-		synthProp.setName( name );
-		synthProp.setPersistentClass( ownerEntity );
-		synthProp.setUpdateable( false );
-		synthProp.setInsertable( false );
-		synthProp.setValue( embeddedComp );
-		return synthProp;
+		embeddedComponent.sortProperties();
+		final Property result = new SyntheticProperty();
+		result.setName(syntheticPropertyName);
+		result.setPersistentClass(ownerEntity);
+		result.setUpdateable( false );
+		result.setInsertable( false );
+		result.setValue(embeddedComponent);
+		result.setPropertyAccessorName( "embedded" );
+		ownerEntity.addProperty( result );
+		embeddedComponent.createUniqueKey(); //make it unique
+		return result;
 	}
 
+	/**
+	 * Create a (deep) copy of the {@link Property}, by also recursively
+	 * cloning any child {@link Component} instances, but reusing other
+	 * kinds of {@link Value} and other attributes.
+	 */
 	private static Property cloneProperty(PersistentClass ownerEntity, MetadataBuildingContext context, Property property) {
 		if ( property.isComposite() ) {
-			Component component = (Component) property.getValue();
-			Component copy = new Component( context, component );
+			final Component component = (Component) property.getValue();
+			final Component copy = new Component( context, component );
 			copy.setComponentClassName( component.getComponentClassName() );
 			copy.setEmbedded( component.isEmbedded() );
-			Property clone = makeComponent( ownerEntity, context, property.getName(), copy, component.getProperties() );
+			for ( Property property1 : component.getProperties()) {
+				copy.addProperty( cloneProperty(ownerEntity, context, property1) );
+			}
+			copy.sortProperties();
+			final Property result = new SyntheticProperty();
+			result.setName(property.getName());
+			result.setPersistentClass(ownerEntity);
+			result.setUpdateable( false );
+			result.setInsertable( false );
+			result.setValue(copy);
+			final Property clone = result;
 			clone.setPropertyAccessorName( property.getPropertyAccessorName() );
 			return clone;
 		}
 		else {
-			Property clone = shallowCopy( property );
+			final Property clone = shallowCopy( property );
 			clone.setInsertable( false );
 			clone.setUpdateable( false );
 			clone.setNaturalIdentifier( false );
 			clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
 			return clone;
 		}
+	}
+
+	/**
+	 * Create a copy of the {@link Property}, reusing the same {@link Value}
+	 * and other attributes.
+	 */
+	public static Property shallowCopy(Property property) {
+		Property clone = new SyntheticProperty();
+		clone.setCascade( property.getCascade() );
+		clone.setInsertable( property.isInsertable() );
+		clone.setLazy( property.isLazy() );
+		clone.setName( property.getName() );
+		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
+		clone.setOptimisticLocked( property.isOptimisticLocked() );
+		clone.setOptional( property.isOptional() );
+		clone.setPersistentClass( property.getPersistentClass() );
+		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
+		clone.setSelectable( property.isSelectable() );
+		clone.setUpdateable( property.isUpdateable() );
+		clone.setValue( property.getValue() );
+		return clone;
 	}
 
 	private static List<Property> findPropertiesByColumns(
@@ -741,66 +741,63 @@ public class BinderHelper {
 	}
 
 	/**
-	 * apply an id generator to a SimpleValue
+	 * Apply an id generation strategy and parameters to the
+	 * given {@link SimpleValue} which represents an identifier.
 	 */
 	public static void makeIdGenerator(
 			SimpleValue id,
-			XProperty idXProperty,
+			XProperty property,
 			String generatorType,
 			String generatorName,
 			MetadataBuildingContext buildingContext,
 			Map<String, IdentifierGeneratorDefinition> localGenerators) {
-		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, idXProperty, generatorType, generatorName );
+		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, property, generatorType, generatorName );
 
-		Table table = id.getTable();
+		final Table table = id.getTable();
 		table.setIdentifierValue( id );
 		//generator settings
 		id.setIdentifierGeneratorStrategy( generatorType );
 
-		final Map<String,Object> params = new HashMap<>();
+		final Map<String,Object> parameters = new HashMap<>();
 
 		//always settable
-		params.put( PersistentIdentifierGenerator.TABLE, table.getName() );
+		parameters.put( PersistentIdentifierGenerator.TABLE, table.getName() );
 
 		if ( id.getColumnSpan() == 1 ) {
-			params.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
+			parameters.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
 		}
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-		params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
-		params.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
+		parameters.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
+		parameters.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
 
 		if ( !isEmptyAnnotationValue( generatorName ) ) {
 			//we have a named generator
-			IdentifierGeneratorDefinition gen = getIdentifierGenerator(
+			final IdentifierGeneratorDefinition definition = getIdentifierGenerator(
 					generatorName,
-					idXProperty,
+					property,
 					localGenerators,
 					buildingContext
 			);
-			if ( gen == null ) {
+			if ( definition == null ) {
 				throw new AnnotationException( "No id generator was declared with the name '" + generatorName
 						+ "' specified by '@GeneratedValue'"
 						+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
 			}
 			//This is quite vague in the spec but a generator could override the generator choice
-			String identifierGeneratorStrategy = gen.getStrategy();
+			final String identifierGeneratorStrategy = definition.getStrategy();
 			//yuk! this is a hack not to override 'AUTO' even if generator is set
 			final boolean avoidOverriding = identifierGeneratorStrategy.equals( "identity" )
 					|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
 			}
-			//checkIfMatchingGenerator(gen, generatorType, generatorName);
-			for ( Map.Entry<String,String> elt : gen.getParameters().entrySet() ) {
-				if ( elt.getKey() != null ) {
-					params.put( elt.getKey(), elt.getValue() );
-				}
-			}
+			//checkIfMatchingGenerator(definition, generatorType, generatorName);
+			parameters.putAll( definition.getParameters() );
 		}
 		if ( "assigned".equals( generatorType ) ) {
 			id.setNullValue( "undefined" );
 		}
-		id.setIdentifierGeneratorParameters( params );
+		id.setIdentifierGeneratorParameters( parameters );
 	}
 
 	/**

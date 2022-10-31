@@ -7,12 +7,14 @@
 package org.hibernate.boot.model;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Identifier generator definition, should be immutable.
@@ -32,12 +34,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			final Map<String, String> parameters) {
 		this.name = name;
 		this.strategy = strategy;
-		if ( CollectionHelper.isEmpty( parameters ) ) {
-			this.parameters = Collections.emptyMap();
-		}
-		else {
-			this.parameters = Collections.unmodifiableMap( parameters );
-		}
+		this.parameters = CollectionHelper.isEmpty( parameters ) ? emptyMap() : unmodifiableMap( parameters );
 	}
 
 	public IdentifierGeneratorDefinition(
@@ -53,7 +50,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 	public IdentifierGeneratorDefinition(String name, String strategy) {
 		this.name = name;
 		this.strategy = strategy;
-		this.parameters = Collections.emptyMap();
+		this.parameters = emptyMap();
 	}
 
 	/**

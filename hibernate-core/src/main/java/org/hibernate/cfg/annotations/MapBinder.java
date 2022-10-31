@@ -100,8 +100,7 @@ public class MapBinder extends CollectionBinder {
 						property,
 						isEmbedded,
 						mapKeyColumns,
-						mapKeyManyToManyColumns,
-						inverseJoinColumns != null ? inverseJoinColumns.getPropertyName() : null
+						mapKeyManyToManyColumns
 				);
 				makeOneToManyMapKeyColumnNullableIfNotInProperty( property );
 			}
@@ -157,8 +156,7 @@ public class MapBinder extends CollectionBinder {
 			XProperty property,
 			boolean isEmbedded,
 			AnnotatedColumns mapKeyColumns,
-			AnnotatedJoinColumns mapKeyManyToManyColumns,
-			String targetPropertyName) {
+			AnnotatedJoinColumns mapKeyManyToManyColumns) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
 			handleExplicitMapKey( elementType, persistentClasses, mapKeyPropertyName );
@@ -205,7 +203,7 @@ public class MapBinder extends CollectionBinder {
 			//FIXME pass the Index Entity JoinColumns
 			if ( !collection.isOneToMany() ) {
 				//index column should not be null
-				for ( AnnotatedJoinColumn column : mapKeyManyToManyColumns.getColumns() ) {
+				for ( AnnotatedJoinColumn column : mapKeyManyToManyColumns.getJoinColumns() ) {
 					column.forceNotNull();
 				}
 			}
@@ -243,7 +241,7 @@ public class MapBinder extends CollectionBinder {
 			throw new AnnotationException( "Association '" + safeCollectionRole()
 					+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
 		}
-		final Property mapProperty = findPropertyByName( associatedClass, mapKeyPropertyName);
+		final Property mapProperty = findPropertyByName( associatedClass, mapKeyPropertyName );
 		if ( mapProperty == null ) {
 			throw new AnnotationException( "Map key property '" + mapKeyPropertyName
 					+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
@@ -274,7 +272,7 @@ public class MapBinder extends CollectionBinder {
 		// 'propertyHolder' is the PropertyHolder for the owner of the collection
 		// 'holder' is the CollectionPropertyHolder.
 		// 'property' is the collection XProperty
-		propertyHolder.startingProperty(property);
+		propertyHolder.startingProperty( property );
 		holder.prepare(property);
 		return holder;
 	}
@@ -301,9 +299,9 @@ public class MapBinder extends CollectionBinder {
 			String mapKeyType,
 			org.hibernate.mapping.Map map) {
 		final ManyToOne element;
-		element = new ManyToOne(context, map.getCollectionTable() );
+		element = new ManyToOne( context, map.getCollectionTable() );
 		map.setIndex( element );
-		element.setReferencedEntityName(mapKeyType);
+		element.setReferencedEntityName( mapKeyType );
 		//element.setFetchMode( fetchMode );
 		//element.setLazy( fetchMode != FetchMode.JOIN );
 		//make the second join non lazy
@@ -344,11 +342,8 @@ public class MapBinder extends CollectionBinder {
 			AnnotatedClassType classType,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
-		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType(
-				property,
-				keyClass,
-				buildingContext
-		);
+		final Class<? extends CompositeUserType<?>> compositeUserType =
+				resolveCompositeUserType( property, keyClass, buildingContext );
 
 		if ( AnnotatedClassType.EMBEDDABLE == classType || compositeUserType != null ) {
 			final EntityBinder entityBinder = new EntityBinder();
@@ -375,7 +370,7 @@ public class MapBinder extends CollectionBinder {
 		}
 		else {
 			final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
-			elementBinder.setReturnedClassName(mapKeyType);
+			elementBinder.setReturnedClassName( mapKeyType );
 			final AnnotatedColumns keyColumns = createElementColumnsIfNecessary(
 					collection,
 					mapKeyColumns,
@@ -390,10 +385,10 @@ public class MapBinder extends CollectionBinder {
 					property,
 					keyClass,
 					collection.getOwnerEntityName(),
-					holder.mapKeyAttributeConverterDescriptor(property, keyClass)
+					holder.mapKeyAttributeConverterDescriptor( property, keyClass )
 			);
 			elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
-			elementBinder.setAccessType(accessType);
+			elementBinder.setAccessType( accessType );
 			map.setIndex( elementBinder.make() );
 		}
 	}

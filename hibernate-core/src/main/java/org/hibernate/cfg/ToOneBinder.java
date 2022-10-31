@@ -91,7 +91,7 @@ public class ToOneBinder {
 		final JoinTable joinTable = propertyHolder.getJoinTable( property );
 		if ( joinTable != null ) {
 			final Join join = propertyHolder.addJoin( joinTable, false );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
@@ -155,14 +155,14 @@ public class ToOneBinder {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
-			for ( AnnotatedJoinColumn column : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
 				column.setNullable( false );
 			}
 		}
 
 		if ( property.isAnnotationPresent( MapsId.class ) ) {
 			//read only
-			for ( AnnotatedJoinColumn column : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
 				column.setInsertable( false );
 				column.setUpdatable( false );
 			}
@@ -228,7 +228,7 @@ public class ToOneBinder {
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
 					hasSpecjManyToOne = true;
-					for ( AnnotatedJoinColumn column : columns.getColumns() ) {
+					for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
 						column.setInsertable( false );
 						column.setUpdatable( false );
 					}
@@ -256,16 +256,16 @@ public class ToOneBinder {
 		propertyBinder.setName( propertyName );
 		propertyBinder.setValue( value );
 		//binder.setCascade(cascadeStrategy);
-		if (isIdentifierMapper) {
+		if ( isIdentifierMapper ) {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
 		}
-		else if (hasSpecjManyToOne) {
+		else if ( hasSpecjManyToOne ) {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
 		}
 		else {
-			final AnnotatedJoinColumn firstColumn = columns.getColumns()[0];
+			final AnnotatedJoinColumn firstColumn = columns.getJoinColumns().get(0);
 			propertyBinder.setInsertable( firstColumn.isInsertable() );
 			propertyBinder.setUpdatable( firstColumn.isUpdatable() );
 		}
@@ -393,7 +393,7 @@ public class ToOneBinder {
 			if ( notFoundAction != null ) {
 				join.disableForeignKeyCreation();
 			}
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
@@ -493,16 +493,16 @@ public class ToOneBinder {
 			}
 			else {
 				final List<String> idColumnNames = new ArrayList<>();
-				final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
-				if ( identifier.getColumnSpan() != columns.length ) {
+				final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+				if ( identifier.getColumnSpan() != columns.size() ) {
 					return false;
 				}
 				else {
 					for ( org.hibernate.mapping.Column currentColumn: identifier.getColumns() ) {
 						idColumnNames.add( currentColumn.getName() );
 					}
-					for ( AnnotatedJoinColumn col: columns ) {
-						if ( !idColumnNames.contains( col.getMappingColumn().getName() ) ) {
+					for ( AnnotatedJoinColumn column: columns ) {
+						if ( !idColumnNames.contains( column.getMappingColumn().getName() ) ) {
 							return false;
 						}
 					}

@@ -106,7 +106,7 @@ public class SqlExceptionHelper {
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		logExceptions( sqlException, message + " [" + sql + "]" );
-		return sqlExceptionConverter.convert( sqlException, message, sql );
+		return sqlExceptionConverter.convert( sqlException, message + " [" + sqlException.getMessage() + "]", sql );
 	}
 
 	/**

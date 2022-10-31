@@ -1510,16 +1510,23 @@ public final class AnnotationBinder {
 		if ( isOverridden ) {
 			// careful: not always a @MapsId property, sometimes it's from an @IdClass
 			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-					propertyBinder.isId(), propertyHolder, property.getName(), context
+					propertyBinder.isId(),
+					propertyHolder,
+					property.getName(),
+					context
 			);
 			referencedEntityName = mapsIdProperty.getClassOrElementName();
 			propertyName = mapsIdProperty.getPropertyName();
-			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-			joinColumns.setBuildingContext( context );
-			joinColumns.setPropertyHolder( propertyHolder );
-			joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns.getColumns() );
-			actualColumns = joinColumns;
+			final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
+			parent.setBuildingContext( context );
+			parent.setPropertyHolder( propertyHolder );
+			parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+			//TODO: resetting the parent here looks like a dangerous thing to do
+			//      should we be cloning them first (the legacy code did not)
+			for ( AnnotatedColumn column : columns.getColumns() ) {
+				column.setParent( parent );
+			}
+			actualColumns = parent;
 		}
 		else {
 			referencedEntityName = null;
@@ -1579,7 +1586,7 @@ public final class AnnotationBinder {
 		final JoinTable assocTable = propertyHolder.getJoinTable(property);
 		if ( assocTable != null ) {
 			Join join = propertyHolder.addJoin( assocTable, false );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
@@ -2247,7 +2254,7 @@ public final class AnnotationBinder {
 			binder.setUpdatable( false );
 		}
 		else {
-			final AnnotatedJoinColumn firstColumn = columns.getColumns()[0];
+			final AnnotatedJoinColumn firstColumn = columns.getJoinColumns().get(0);
 			binder.setInsertable( firstColumn.isInsertable() );
 			binder.setUpdatable( firstColumn.isUpdatable() );
 		}

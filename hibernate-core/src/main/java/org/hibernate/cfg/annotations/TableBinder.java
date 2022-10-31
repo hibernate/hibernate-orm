@@ -548,7 +548,7 @@ public class TableBinder {
 			associatedClass = holder == null ? null : holder.getPersistentClass();
 		}
 
-		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 		if ( joinColumns.hasMappedBy() ) {
 			// use the columns of the property referenced by mappedBy
 			// copy them and link the copy to the actual value
@@ -592,12 +592,12 @@ public class TableBinder {
 			SimpleValue value,
 			PersistentClass associatedClass) {
 		//implicit case, we hope PK and FK columns are in the same order
-		if ( joinColumns.getColumns().length != referencedEntity.getIdentifier().getColumnSpan() ) {
+		if ( joinColumns.getColumns().size() != referencedEntity.getIdentifier().getColumnSpan() ) {
 			// TODO: what about secondary tables?? associatedClass is null?
 			throw new AnnotationException(
 					"An association that targets entity '" + referencedEntity.getEntityName()
 							+ "' from entity '" + associatedClass.getEntityName()
-							+ "' has " + joinColumns.getColumns().length + " '@JoinColumn's but the primary key has "
+							+ "' has " + joinColumns.getColumns().size() + " '@JoinColumn's but the primary key has "
 							+ referencedEntity.getIdentifier().getColumnSpan() + " columns"
 			);
 		}
@@ -631,7 +631,7 @@ public class TableBinder {
 			boolean match = false;
 			// for each PK column, find the associated FK column.
 			final String quotedName = column.getQuotedName( dialect );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getColumns() ) {
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
 				final String referencedColumn = buildingContext.getMetadataCollector()
 						.getPhysicalColumnName( referencedEntity.getTable(), joinColumn.getReferencedColumn() );
 				// in JPA 2 referencedColumnName is case-insensitive
@@ -704,7 +704,7 @@ public class TableBinder {
 				? referencedEntity.getKey().getColumns()
 				: referencedEntity.getIdentifier().getColumns();
 		for ( Column column: idColumns ) {
-			final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 		}
@@ -715,7 +715,7 @@ public class TableBinder {
 			SimpleValue value,
 			PersistentClass associatedClass,
 			String mappedByProperty) {
-		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 		for ( Column column: mappedByColumns( associatedClass, mappedByProperty ) ) {
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 			firstColumn.linkValueUsingAColumnCopy( column, value);
@@ -744,9 +744,9 @@ public class TableBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue simpleValue) {
 		final List<Column> valueColumns = value.getColumns();
-		final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
-		for (int i = 0; i < columns.length; i++ ) {
-			final AnnotatedJoinColumn joinColumn = columns[i];
+		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+		for ( int i = 0; i < columns.size(); i++ ) {
+			final AnnotatedJoinColumn joinColumn = columns.get(i);
 			final Column synthCol = valueColumns.get(i);
 			if ( joinColumn.isNameDeferred() ) {
 				//this has to be the default value

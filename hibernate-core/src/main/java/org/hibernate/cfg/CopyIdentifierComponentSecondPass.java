@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -67,12 +68,12 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
+		final PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
 		if ( referencedPersistentClass == null ) {
 			// TODO: much better error message if this is something that can really happen!
 			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
 		}
-		KeyValue identifier = referencedPersistentClass.getIdentifier();
+		final KeyValue identifier = referencedPersistentClass.getIdentifier();
 		if ( !(identifier instanceof Component) ) {
 			// The entity with the @MapsId annotation has a composite
 			// id type, but the referenced entity has a basic-typed id.
@@ -87,13 +88,13 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			);
 		}
 
-		Component referencedComponent = (Component) identifier;
+		final Component referencedComponent = (Component) identifier;
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		final AnnotatedJoinColumn[] cols = joinColumns.getColumns();
-		final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( cols.length );
-		for ( AnnotatedJoinColumn joinColumn : cols) {
+		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+		final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
+		for ( AnnotatedJoinColumn joinColumn : columns ) {
 			if ( !joinColumn.isReferenceImplicit() ) {
 				//JPA 2 requires referencedColumnNames to be case-insensitive
 				columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase(Locale.ROOT), joinColumn );
@@ -102,8 +103,8 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		//try default column orientation
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
-			for (int i = 0; i < cols.length; i++ ) {
-				columnByReferencedName.put( String.valueOf( i ), cols[i] );
+			for (int i = 0; i < columns.size(); i++ ) {
+				columnByReferencedName.put( String.valueOf( i ), columns.get(i) );
 			}
 		}
 
@@ -185,7 +186,8 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 		value.copyTypeFrom( referencedValue );
 
-		final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+		//TODO: this bit is nasty, move up to AnnotatedJoinColumns
+		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 		if ( firstColumn.isNameDeferred() ) {
 			firstColumn.copyReferencedStructureAndCreateDefaultJoinColumns(
 					referencedPersistentClass,

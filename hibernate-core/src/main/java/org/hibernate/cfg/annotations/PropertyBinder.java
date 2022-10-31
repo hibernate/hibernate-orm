@@ -130,7 +130,7 @@ public class PropertyBinder {
 	}
 
 	public void setColumns(AnnotatedColumns columns) {
-		final AnnotatedColumn firstColumn = columns.getColumns()[0];
+		final AnnotatedColumn firstColumn = columns.getColumns().get(0);
 		insertable = firstColumn.isInsertable();
 		updatable = firstColumn.isUpdatable();
 		//consistency is checked later when we know the property name

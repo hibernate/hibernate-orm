@@ -12,8 +12,6 @@ import java.util.function.Supplier;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AnnotatedColumn;
-import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
@@ -86,13 +84,10 @@ public class ListBinder extends CollectionBinder {
 		if ( !listValueMapping.isOneToMany() ) {
 			indexColumn.forceNotNull();
 		}
-//		indexColumn.setPropertyHolder( valueHolder );
-		final AnnotatedColumns columns = new AnnotatedColumns();
-		columns.setColumns( new AnnotatedColumn[] { indexColumn } );
-		columns.setPropertyHolder( valueHolder );
+		indexColumn.getParent().setPropertyHolder( valueHolder );
 
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
-		valueBinder.setColumns( columns );
+		valueBinder.setColumns( indexColumn.getParent() );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, getElementType(), null, null );
 //			valueBinder.setExplicitType( "integer" );

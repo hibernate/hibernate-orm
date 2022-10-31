@@ -192,10 +192,24 @@ public final class ByteBuddyState {
 		return cache.findOrInsert(
 				referenceClass.getClassLoader(),
 				cacheKey,
-				() -> make( makeProxyFunction.apply( byteBuddy ) )
-						.load( referenceClass.getClassLoader(), resolveClassLoadingStrategy( referenceClass ) )
-						.getLoaded(),
-				cache );
+				() -> {
+					PrivilegedAction<Class<?>> delegateToPrivilegedAction = new PrivilegedAction<Class<?>>() {
+						@Override
+						public Class<?> run() {
+							return make( makeProxyFunction.apply( byteBuddy ) )
+									.load(
+											referenceClass.getClassLoader(),
+											resolveClassLoadingStrategy( referenceClass )
+									)
+									.getLoaded();
+						}
+					};
+					return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged(
+							delegateToPrivilegedAction ) :
+							delegateToPrivilegedAction.run();
+				},
+				cache
+		);
 	}
 
 	public Unloaded<?> make(Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {

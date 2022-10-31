@@ -38,3 +38,53 @@ Previously, since Hibernate 6.0, columns of type `number` with scale 0 on Oracle
 depending on the precision.
 
 Now, columns of type `number` with scale 0 are interpreted as `int` or `bigint` depending on the precision.
+
+=== Removal of support for legacy database versions
+
+This version introduces the concept of minimum supported database version for most of the database dialects that Hibernate supports. This implies that the legacy code for versions that are no longer supported by their vendors, has been removed from the hibernate-core module. It is, however, still available in the hibernate-community-dialects module.
+
+The minimum supported dialect versions are as follows:
+
+|===
+|Dialect |Minimum supported version
+
+|MySQL
+|5.7
+
+|SQL Server 2008
+|10.0
+
+|DB2
+|10.5
+
+|DB2i
+|7.1
+
+|DB2z
+|12.1
+
+|MariaDB
+|10.3
+
+|H2
+|1.4.197
+
+|Derby
+|10.14.2
+
+|Sybase
+|16.0
+
+|CockroachDB
+|21.1
+
+|PostgreSQL
+|10.0
+
+|Oracle
+|11.2
+
+|HSQLDB
+|2.6.1
+|===
+

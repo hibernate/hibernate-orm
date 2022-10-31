@@ -3,10 +3,10 @@ package org.hibernate.cfg;
 import jakarta.persistence.JoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -25,12 +25,14 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
@@ -238,27 +240,6 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
         return mappedByTableName;
     }
 
-    /**
-     * Override persistent class on oneToMany Cases for late settings
-     * Must only be used on second level pass binding
-     */
-    public void setPersistentClass(
-            PersistentClass persistentClass,
-            Map<String, Join> joins,
-            Map<XClass, InheritanceState> inheritanceStatePerClass) {
-        // TODO shouldn't we deduce the class name from the persistentClass?
-        final PropertyHolder propertyHolder = buildPropertyHolder(
-                persistentClass,
-                joins,
-                getBuildingContext(),
-                inheritanceStatePerClass
-        );
-        setPropertyHolder( propertyHolder );
-//        for ( AnnotatedJoinColumn column : columns ) {
-//            column.setPropertyHolder( propertyHolder );
-//        }
-    }
-
     public boolean isElementCollection() {
         return elementCollection;
     }
@@ -279,6 +260,74 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
         mappedByEntityName = entityName;
         mappedByTableName = logicalTableName;
         mappedByPropertyName = mappedByProperty;
+    }
+
+    /**
+     * Determine if the given {@link AnnotatedJoinColumns} represent a reference to
+     * the primary key of the given {@link PersistentClass}, or whether they reference
+     * some other combination of mapped columns.
+     */
+    public ForeignKeyType getReferencedColumnsType(
+            PersistentClass referencedEntity) {
+        if ( columns.isEmpty() ) {
+            return ForeignKeyType.IMPLICIT_PRIMARY_KEY_REFERENCE; //shortcut
+        }
+
+        final AnnotatedJoinColumn firstColumn = columns.get(0);
+        final Object columnOwner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
+        if ( columnOwner == null ) {
+            try {
+                throw new MappingException( "A '@JoinColumn' references a column named '"
+                        + firstColumn.getReferencedColumn() + "' but the target entity '"
+                        + referencedEntity.getEntityName() + "' has no property which maps to this column" );
+            }
+            catch (MappingException me) {
+                // we throw a recoverable exception here in case this
+                // is merely an ordering issue, so that the SecondPass
+                // will get reprocessed later
+                throw new RecoverableException( me.getMessage(), me );
+            }
+        }
+        final Table table = table( columnOwner );
+        final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
+        boolean explicitColumnReference = false;
+        for ( AnnotatedJoinColumn column : columns ) {
+            if ( !column.isReferenceImplicit() ) {
+                explicitColumnReference = true;
+                if ( !keyColumns.contains( column( getBuildingContext(), table, column.getReferencedColumn() ) ) ) {
+                    // we have a column which does not belong to the PK
+                    return ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+                }
+            }
+        }
+        if ( explicitColumnReference ) {
+            // if we got to here, all the columns belong to the PK
+            return keyColumns.size() == columns.size()
+                    // we have all the PK columns
+                    ? ForeignKeyType.EXPLICIT_PRIMARY_KEY_REFERENCE
+                    // we have a subset of the PK columns
+                    : ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
+        }
+        else {
+            // there were no nonempty referencedColumnNames
+            return ForeignKeyType.IMPLICIT_PRIMARY_KEY_REFERENCE;
+        }
+    }
+
+    private static Table table(Object persistentClassOrJoin) {
+        return persistentClassOrJoin instanceof PersistentClass
+                ? ( (PersistentClass) persistentClassOrJoin ).getTable()
+                : ( (Join) persistentClassOrJoin ).getTable();
+    }
+
+    private static Column column(MetadataBuildingContext context, Table table, String logicalReferencedColumnName) {
+        try {
+            return new Column( context.getMetadataCollector().getPhysicalColumnName( table, logicalReferencedColumnName ) );
+        }
+        catch (MappingException me) {
+            throw new MappingException( "No column with logical name '" + logicalReferencedColumnName
+                    + "' in table '" + table.getName() + "'" );
+        }
     }
 
     String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {

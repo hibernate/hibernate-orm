@@ -49,9 +49,6 @@ import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
-import static org.hibernate.cfg.AnnotatedJoinColumn.NO_REFERENCE;
-import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
@@ -574,15 +571,16 @@ public class TableBinder {
 			SimpleValue value,
 			MetadataBuildingContext buildingContext,
 			PersistentClass associatedClass) {
-		switch ( checkReferencedColumnsType( joinColumns, referencedEntity, buildingContext ) ) {
-			case NON_PK_REFERENCE:
+		switch ( joinColumns.getReferencedColumnsType( referencedEntity ) ) {
+			case NON_PRIMARY_KEY_REFERENCE:
 				bindNonPrimaryKeyReference( referencedEntity, joinColumns, value );
 				break;
-			case NO_REFERENCE:
+			case IMPLICIT_PRIMARY_KEY_REFERENCE:
 				bindImplicitPrimaryKeyReference( referencedEntity, joinColumns, value, associatedClass );
 				break;
-			default:
+			case EXPLICIT_PRIMARY_KEY_REFERENCE:
 				bindPrimaryKeyReference( referencedEntity, joinColumns, value, associatedClass, buildingContext );
+				break;
 		}
 	}
 
@@ -759,20 +757,20 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table hibTable, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext buildingContext) {
+	public static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
 		for ( org.hibernate.annotations.Index index : indexes ) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
-			buildingContext.getMetadataCollector().addSecondPass(
-					new IndexOrUniqueKeySecondPass( hibTable, index.name(), index.columnNames(), buildingContext )
+			context.getMetadataCollector().addSecondPass(
+					new IndexOrUniqueKeySecondPass( table, index.name(), index.columnNames(), context )
 			);
 		}
 	}
 
-	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
-		buildingContext.getMetadataCollector().addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
+	public static void addIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
+		context.getMetadataCollector().addJpaIndexHolders( table, buildJpaIndexHolder( indexes ) );
 	}
 
-	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes){
+	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes) {
 		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
 		for ( Index index : indexes ) {
 			holders.add( new JPAIndexHolder( index ) );

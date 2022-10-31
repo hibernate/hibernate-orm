@@ -9,6 +9,8 @@ package org.hibernate.orm.test.ops;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -33,6 +35,7 @@ import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -769,7 +772,10 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.clear();
 					jboss.setVers( 1 );
 					session.getTransaction().begin();
-					session.merge( jboss );
+					assertThrows(
+							OptimisticLockException.class,
+							() -> session.merge( jboss )
+					);
 				}
 		);
 

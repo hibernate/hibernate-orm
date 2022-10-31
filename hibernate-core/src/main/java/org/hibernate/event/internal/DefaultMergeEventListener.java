@@ -320,12 +320,25 @@ public class DefaultMergeEventListener
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.MERGE,
 				() -> source.get( entityName, clonedIdentifier )
-
 		);
+
 		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure
-			//      that this is a detached instance, rather than just assuming
-			//throw new StaleObjectStateException(entityName, id);
+			// a timestamped version would not enter here in a new creation
+			if ( persister.isVersioned() ) {
+				Object versionValue = persister.getValue( entity, persister.getVersionProperty() );
+				if ( versionValue != null ) {
+					boolean isPrimitiveVersion = persister.getVersionMapping()
+							.getVersionAttribute()
+							.getPropertyAccess()
+							.getGetter()
+							.getReturnTypeClass()
+							.isPrimitive();
+					// IF primitive AND defaultvalue == versionvalue 0 => DON'T throw
+					if ( !isPrimitiveVersion || !persister.getVersionJavaType().getDefaultValue().equals( versionValue ) ) {
+						throw new StaleObjectStateException( entityName, id );
+					}
+				}
+			}
 
 			// we got here because we assumed that an instance
 			// with an assigned id was detached, when it was

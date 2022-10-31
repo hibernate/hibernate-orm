@@ -983,8 +983,6 @@ public class PropertyBinder {
 			rootClass.setDeclaredVersion( property );
 		}
 
-		final SimpleValue simpleValue = (SimpleValue) property.getValue();
-		simpleValue.setNullValue( "undefined" );
 		rootClass.setOptimisticLockStyle( OptimisticLockStyle.VERSION );
 		if ( LOG.isTraceEnabled() ) {
 			final SimpleValue versionValue = (SimpleValue) rootClass.getVersion().getValue();

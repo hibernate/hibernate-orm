@@ -34,6 +34,8 @@ public class Misc3Test {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
+        @Basic
+        private String name;
     }
 
     @Entity

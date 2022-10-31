@@ -89,6 +89,8 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotatedDiscriminatorColumn;
 import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.AnnotationBinder;
@@ -788,7 +790,11 @@ public class EntityBinder {
 				throw new AssertionFailure( "discriminator column should have been built" );
 			}
 			discriminatorColumn.setJoins( secondaryTables );
-			discriminatorColumn.setPropertyHolder( propertyHolder );
+//			discriminatorColumn.setPropertyHolder( propertyHolder );
+			final AnnotatedColumns columns = new AnnotatedColumns();
+			columns.setColumns( new AnnotatedColumn[] { discriminatorColumn } );
+			columns.setPropertyHolder( propertyHolder );
+
 			final BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );

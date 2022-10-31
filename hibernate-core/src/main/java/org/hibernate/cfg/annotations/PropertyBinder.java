@@ -199,7 +199,7 @@ public class PropertyBinder {
 		basicValueBinder.setAccessType( accessType );
 
 
-		SimpleValue propertyValue = basicValueBinder.make();
+		final SimpleValue propertyValue = basicValueBinder.make();
 		setValue( propertyValue );
 		return makeProperty();
 	}

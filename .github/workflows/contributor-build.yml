@@ -69,8 +69,7 @@ jobs:
           java-version: '11'
       - name: Get year/month for cache key
         id: get-date
-        run: |
-          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
+        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
         shell: bash
       - name: Cache Maven local repository
         uses: actions/cache@v2

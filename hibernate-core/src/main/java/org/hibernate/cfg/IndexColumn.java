@@ -29,53 +29,48 @@ public class IndexColumn extends AnnotatedColumn {
 	}
 
 	public static IndexColumn fromAnnotations(
-			OrderColumn jpaAnnotation,
-			org.hibernate.annotations.IndexColumn hibAnnotation,
-			ListIndexBase indexBaseAnnotation,
+			OrderColumn orderColumn,
+			org.hibernate.annotations.IndexColumn indexColumn,
+			ListIndexBase listIndexBase,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		final IndexColumn column;
-		if ( jpaAnnotation != null ) {
-			column = buildColumnFromAnnotation(
-					jpaAnnotation,
-					propertyHolder,
-					inferredData,
-					secondaryTables,
-					context
-			);
+		if ( orderColumn != null ) {
+			column = buildColumnFromAnnotation( orderColumn, propertyHolder, inferredData, secondaryTables, context );
 		}
-		else if ( hibAnnotation != null ) {
-			column = buildColumnFromAnnotation(
-					hibAnnotation,
-					propertyHolder,
-					inferredData,
-					context
-			);
-			column.setBase( hibAnnotation.base() );
+		else if ( indexColumn != null ) {
+			column = buildColumnFromAnnotation( indexColumn, propertyHolder, inferredData, context );
+			column.setBase( indexColumn.base() );
 		}
 		else {
 			column = new IndexColumn();
 			column.setLogicalColumnName( inferredData.getPropertyName() + "_ORDER" ); //JPA default name
 			column.setImplicit( true );
-			column.setBuildingContext( context );
+//			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
-			createParent( propertyHolder, column );
+			createParent( propertyHolder, secondaryTables, column, context );
 			column.bind();
 		}
 
-		if ( indexBaseAnnotation != null ) {
-			column.setBase( indexBaseAnnotation.value() );
+		if ( listIndexBase != null ) {
+			column.setBase( listIndexBase.value() );
 		}
 
 		return column;
 	}
 
-	private static void createParent(PropertyHolder propertyHolder, IndexColumn column) {
-		final AnnotatedColumns columns = new AnnotatedColumns();
-		columns.setColumns( new AnnotatedColumn[] {column} );
-		columns.setPropertyHolder( propertyHolder );
+	private static void createParent(
+			PropertyHolder propertyHolder,
+			Map<String,Join> secondaryTables,
+			IndexColumn column,
+			MetadataBuildingContext context) {
+		final AnnotatedColumns parent = new AnnotatedColumns();
+		parent.setPropertyHolder( propertyHolder );
+		parent.setJoins( secondaryTables );
+		parent.setBuildingContext( context );
+		column.setParent( parent );
 	}
 
 	public int getBase() {
@@ -101,30 +96,29 @@ public class IndexColumn extends AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
 			final String sqlType = isEmptyAnnotationValue( orderColumn.columnDefinition() ) ? null : orderColumn.columnDefinition();
 			final String name = isEmptyAnnotationValue( orderColumn.name() ) ? inferredData.getPropertyName() + "_ORDER" : orderColumn.name();
-			//TODO move it to a getter based system and remove the constructor
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
 			column.setNullable( orderColumn.nullable() );
-			column.setJoins( secondaryTables );
+//			column.setJoins( secondaryTables );
 			column.setInsertable( orderColumn.insertable() );
 			column.setUpdatable( orderColumn.updatable() );
-			column.setBuildingContext( buildingContext );
+//			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
-			createParent( propertyHolder, column );
+			createParent( propertyHolder, secondaryTables, column, context );
 			column.bind();
 			return column;
 		}
 		else {
 			final IndexColumn column = new IndexColumn();
 			column.setImplicit( true );
-			column.setBuildingContext( buildingContext );
+//			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
-			createParent( propertyHolder, column );
+			createParent( propertyHolder, secondaryTables, column, context );
 			column.bind();
 			return column;
 		}
@@ -133,38 +127,38 @@ public class IndexColumn extends AnnotatedColumn {
 	/**
 	 * Legacy {@link IndexColumn @IndexColumn} processing.
 	 *
-	 * @param ann The IndexColumn annotation instance
+	 * @param indexColumn The IndexColumn annotation instance
 	 * @param propertyHolder Information about the property
 	 * @param inferredData Yeah, right.  Uh...
 	 *
 	 * @return The index column
 	 */
 	public static IndexColumn buildColumnFromAnnotation(
-			org.hibernate.annotations.IndexColumn ann,
+			org.hibernate.annotations.IndexColumn indexColumn,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			MetadataBuildingContext buildingContext) {
-		if ( ann != null ) {
-			final String sqlType = isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			final String name = isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() : ann.name();
+			MetadataBuildingContext context) {
+		if ( indexColumn != null ) {
+			final String sqlType = isEmptyAnnotationValue( indexColumn.columnDefinition() ) ? null : indexColumn.columnDefinition();
+			final String name = isEmptyAnnotationValue( indexColumn.name() ) ? inferredData.getPropertyName() : indexColumn.name();
 			//TODO move it to a getter based system and remove the constructor
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
-			column.setNullable( ann.nullable() );
-			column.setBase( ann.base() );
-			column.setBuildingContext( buildingContext );
+			column.setNullable( indexColumn.nullable() );
+			column.setBase( indexColumn.base() );
+//			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
-			createParent( propertyHolder, column );
+			createParent( propertyHolder, null, column, context );
 			column.bind();
 			return column;
 		}
 		else {
 			final IndexColumn column = new IndexColumn();
 			column.setImplicit( true );
-			column.setBuildingContext( buildingContext );
+//			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
-			createParent( propertyHolder, column );
+			createParent( propertyHolder, null, column, context );
 			column.bind();
 			return column;
 		}

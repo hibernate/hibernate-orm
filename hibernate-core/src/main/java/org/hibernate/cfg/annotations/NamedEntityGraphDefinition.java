@@ -8,8 +8,6 @@ package org.hibernate.cfg.annotations;
 
 import jakarta.persistence.NamedEntityGraph;
 
-import org.hibernate.internal.util.StringHelper;
-
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**

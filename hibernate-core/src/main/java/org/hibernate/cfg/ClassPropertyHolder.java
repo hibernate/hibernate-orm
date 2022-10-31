@@ -12,7 +12,6 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Converts;
 import jakarta.persistence.JoinTable;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -183,18 +182,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public void addProperty(Property prop, AnnotatedColumns columns, XClass declaringClass) {
-		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
+		//AnnotatedColumn.checkPropertyConsistency( ); //already called earlier
 		if ( columns != null ) {
-			final AnnotatedColumn firstColumn = columns.getColumns()[0];
-			if ( firstColumn.isSecondary() ) {
-				//TODO move the getJoin() code here?
-				for ( AnnotatedColumn column : columns.getColumns() ) {
-					if ( !column.isSecondary() || column.getJoin() != firstColumn.getJoin() ) {
-						//TODO: fix the error message
-						throw new AnnotationException("different columns mapped to different tables for a single property");
-					}
-				}
-				addPropertyToJoin( prop, declaringClass, firstColumn.getJoin() );
+			if ( columns.isSecondary() ) {
+				addPropertyToJoin( prop, declaringClass, columns.getJoin() );
 			}
 			else {
 				addProperty( prop, declaringClass );

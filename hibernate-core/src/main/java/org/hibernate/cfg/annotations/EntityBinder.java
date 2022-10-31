@@ -215,7 +215,7 @@ public class EntityBinder {
 		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 		final InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
 		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStatePerClass, context, inheritanceState );
-		detectedAttributeOverrideProblem(clazzToProcess, superEntity );
+		detectedAttributeOverrideProblem( clazzToProcess, superEntity );
 
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context);
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
@@ -789,11 +789,13 @@ public class EntityBinder {
 			if ( discriminatorColumn == null ) {
 				throw new AssertionFailure( "discriminator column should have been built" );
 			}
-			discriminatorColumn.setJoins( secondaryTables );
-//			discriminatorColumn.setPropertyHolder( propertyHolder );
 			final AnnotatedColumns columns = new AnnotatedColumns();
-			columns.setColumns( new AnnotatedColumn[] { discriminatorColumn } );
 			columns.setPropertyHolder( propertyHolder );
+			columns.setBuildingContext( context );
+			columns.setJoins( secondaryTables );
+//			discriminatorColumn.setJoins( secondaryTables );
+//			discriminatorColumn.setPropertyHolder( propertyHolder );
+			discriminatorColumn.setParent( columns );
 
 			final BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
@@ -817,16 +819,19 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			EntityBinder entityBinder) {
 
-		DiscriminatorColumn discAnn = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
-		DiscriminatorType discriminatorType = discAnn != null ? discAnn.discriminatorType() : DiscriminatorType.STRING;
+		final DiscriminatorColumn discriminatorColumn = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
+		final DiscriminatorType discriminatorType = discriminatorColumn != null
+				? discriminatorColumn.discriminatorType()
+				: DiscriminatorType.STRING;
 
-		DiscriminatorFormula discFormulaAnn = getOverridableAnnotation( clazzToProcess, DiscriminatorFormula.class, context );
+		final DiscriminatorFormula discriminatorFormula =
+				getOverridableAnnotation( clazzToProcess, DiscriminatorFormula.class, context );
 
 		final boolean isRoot = !inheritanceState.hasParents();
-		final AnnotatedDiscriminatorColumn discriminatorColumn = isRoot
-				? buildDiscriminatorColumn( discriminatorType, discAnn, discFormulaAnn, context )
+		final AnnotatedDiscriminatorColumn discriminator = isRoot
+				? buildDiscriminatorColumn( discriminatorType, discriminatorColumn, discriminatorFormula, context )
 				: null;
-		if ( discAnn != null && !isRoot ) {
+		if ( discriminatorColumn != null && !isRoot ) {
 			//TODO: shouldn't this be an error?!
 			LOG.invalidDiscriminatorAnnotation( clazzToProcess.getName() );
 		}
@@ -836,13 +841,13 @@ public class EntityBinder {
 				: null;
 		entityBinder.setDiscriminatorValue( discriminatorValue );
 
-		DiscriminatorOptions discriminatorOptions = clazzToProcess.getAnnotation( DiscriminatorOptions.class );
+		final DiscriminatorOptions discriminatorOptions = clazzToProcess.getAnnotation( DiscriminatorOptions.class );
 		if ( discriminatorOptions != null) {
 			entityBinder.setForceDiscriminator( discriminatorOptions.force() );
 			entityBinder.setInsertableDiscriminator( discriminatorOptions.insert() );
 		}
 
-		return discriminatorColumn;
+		return discriminator;
 	}
 
 	/**
@@ -997,58 +1002,62 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			PersistentClass superEntity) {
 
-		AnnotatedJoinColumn[] inheritanceJoinedColumns = null;
 		final boolean hasJoinedColumns = inheritanceState.hasParents()
 				&& InheritanceType.JOINED == inheritanceState.getType();
 		if ( hasJoinedColumns ) {
-			//@Inheritance(JOINED) subclass need to link back to the super entity
-			final PrimaryKeyJoinColumns jcsAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
-			boolean explicitInheritanceJoinedColumns = jcsAnn != null && jcsAnn.value().length != 0;
-			if ( explicitInheritanceJoinedColumns ) {
-				int nbrOfInhJoinedColumns = jcsAnn.value().length;
-				PrimaryKeyJoinColumn jcAnn;
-				inheritanceJoinedColumns = new AnnotatedJoinColumn[nbrOfInhJoinedColumns];
-				for ( int colIndex = 0; colIndex < nbrOfInhJoinedColumns; colIndex++ ) {
-					jcAnn = jcsAnn.value()[colIndex];
-					inheritanceJoinedColumns[colIndex] = buildJoinColumn(
-							jcAnn,
-							null,
-							superEntity.getIdentifier(),
-							null,
-							null,
-							context
-					);
-				}
-			}
-			else {
-				final PrimaryKeyJoinColumn jcAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
-				inheritanceJoinedColumns = new AnnotatedJoinColumn[1];
-				inheritanceJoinedColumns[0] = buildJoinColumn(
-						jcAnn,
-						null,
-						superEntity.getIdentifier(),
-						null,
-						null,
-						context
-				);
-			}
-			LOG.trace( "Subclass joined column(s) created" );
+			return subclassJoinColumns( clazzToProcess, superEntity, context );
 		}
 		else {
 			if ( clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumns.class )
 					|| clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
 				LOG.invalidPrimaryKeyJoinColumnAnnotation( clazzToProcess.getName() );
 			}
-		}
-		if ( inheritanceJoinedColumns == null ) {
 			return null;
 		}
-		else {
-			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-			joinColumns.setBuildingContext( context );
-			joinColumns.setColumns( inheritanceJoinedColumns );
-			return joinColumns;
+	}
+
+	private static AnnotatedJoinColumns subclassJoinColumns(
+			XClass clazzToProcess,
+			PersistentClass superEntity,
+			MetadataBuildingContext context) {
+		//@Inheritance(JOINED) subclass need to link back to the super entity
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( context );
+		final PrimaryKeyJoinColumns primaryKeyJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+		if ( primaryKeyJoinColumns != null ) {
+			final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
+			if ( columns.length > 0 ) {
+				for ( PrimaryKeyJoinColumn column : columns ) {
+					buildJoinColumn(
+							column,
+							null,
+							superEntity.getIdentifier(),
+							joinColumns,
+							context
+					);
+				}
+			}
+			else {
+				buildJoinColumn(
+						clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class ),
+						null,
+						superEntity.getIdentifier(),
+						joinColumns,
+						context
+				);
+			}
 		}
+		else {
+			buildJoinColumn(
+					clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class ),
+					null,
+					superEntity.getIdentifier(),
+					joinColumns,
+					context
+			);
+		}
+		LOG.trace( "Subclass joined column(s) created" );
+		return joinColumns;
 	}
 
 	private static PersistentClass getSuperEntity(
@@ -1741,7 +1750,7 @@ public class EntityBinder {
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		 // This operation has to be done after the id definition of the persistence class.
 		 // ie after the properties parsing
-		Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
+		final Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
 		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
 			if ( !secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
 				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entrySet.getValue() );
@@ -1771,56 +1780,52 @@ public class EntityBinder {
 				? createDefaultJoinColumn( propertyHolder )
 				: createJoinColumns( propertyHolder, pkColumnsAnn, joinColumnsAnn );
 
-		for ( AnnotatedJoinColumn joinColumn : annotatedJoinColumns.getColumns() ) {
+		for ( AnnotatedJoinColumn joinColumn : annotatedJoinColumns.getJoinColumns() ) {
 			joinColumn.forceNotNull();
 		}
 		bindJoinToPersistentClass( join, annotatedJoinColumns, context );
 	}
 
 	private AnnotatedJoinColumns createDefaultJoinColumn(PropertyHolder propertyHolder) {
-		final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
-		annotatedJoinColumns[0] = buildJoinColumn(
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( context );
+		joinColumns.setJoins( secondaryTables );
+		joinColumns.setPropertyHolder( propertyHolder );
+		buildJoinColumn(
 				null,
 				null,
 				persistentClass.getIdentifier(),
-				secondaryTables,
-				propertyHolder,
+				joinColumns,
 				context
 		);
-		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-		joinColumns.setBuildingContext( context );
-		joinColumns.setPropertyHolder( propertyHolder );
-		joinColumns.setColumns( annotatedJoinColumns );
 		return joinColumns;
 	}
 
 	private AnnotatedJoinColumns createJoinColumns(
 			PropertyHolder propertyHolder,
-			PrimaryKeyJoinColumn[] pkColumnsAnn,
-			JoinColumn[] joinColumnsAnn) {
-		final int joinColumnCount = pkColumnsAnn != null ? pkColumnsAnn.length : joinColumnsAnn.length;
+			PrimaryKeyJoinColumn[] primaryKeyJoinColumns,
+			JoinColumn[] joinColumns) {
+		final int joinColumnCount = primaryKeyJoinColumns != null ? primaryKeyJoinColumns.length : joinColumns.length;
 		if ( joinColumnCount == 0 ) {
 			return createDefaultJoinColumn( propertyHolder );
 		}
 		else {
-			final AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[joinColumnCount];
-			for (int colIndex = 0; colIndex < joinColumnCount; colIndex++) {
-				final PrimaryKeyJoinColumn pkJoinAnn = pkColumnsAnn != null ? pkColumnsAnn[colIndex] : null;
-				final JoinColumn joinAnn = joinColumnsAnn != null ? joinColumnsAnn[colIndex] : null;
-				annotatedJoinColumns[colIndex] = buildJoinColumn(
-						pkJoinAnn,
-						joinAnn,
+			final AnnotatedJoinColumns columns = new AnnotatedJoinColumns();
+			columns.setBuildingContext( context );
+			columns.setJoins( secondaryTables );
+			columns.setPropertyHolder( propertyHolder );
+			for ( int colIndex = 0; colIndex < joinColumnCount; colIndex++ ) {
+				final PrimaryKeyJoinColumn primaryKeyJoinColumn = primaryKeyJoinColumns != null ? primaryKeyJoinColumns[colIndex] : null;
+				final JoinColumn joinColumn = joinColumns != null ? joinColumns[colIndex] : null;
+				buildJoinColumn(
+						primaryKeyJoinColumn,
+						joinColumn,
 						persistentClass.getIdentifier(),
-						secondaryTables,
-						propertyHolder,
+						columns,
 						context
 				);
 			}
-			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-			joinColumns.setBuildingContext( context );
-			joinColumns.setPropertyHolder( propertyHolder );
-			joinColumns.setColumns( annotatedJoinColumns );
-			return joinColumns;
+			return columns;
 		}
 	}
 

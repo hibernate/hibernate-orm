@@ -172,18 +172,16 @@ public class BinderHelper {
 			// true when we do the reverse side of a @ManyToMany
 			boolean inverse,
 			MetadataBuildingContext context) {
-		final AnnotatedJoinColumn[] columns = joinColumns.getColumns();
-
 		// this work is not necessary for a primary key reference
 		if ( checkReferencedColumnsType( joinColumns, targetEntity, context ) == NON_PK_REFERENCE ) { // && !firstColumn.isImplicit()
 			// all the columns have to belong to the same table;
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findReferencedColumnOwner( targetEntity, columns[0], context );
+			final Object columnOwner = findReferencedColumnOwner( targetEntity, joinColumns.getJoinColumns().get(0), context );
 			checkColumnInSameTable( joinColumns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
-			final List<Property> properties = findPropertiesByColumns( columnOwner, columns, associatedEntity, context );
+			final List<Property> properties = findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
 			// create a Property along with the new synthetic
 			// Component if necessary (or reuse the existing
 			// Property that matches exactly)
@@ -224,19 +222,19 @@ public class BinderHelper {
 			// we should only get called for owning side of association
 			throw new AssertionFailure("no need to create synthetic properties for unowned collections");
 		}
-		for ( AnnotatedJoinColumn column: joinColumns.getColumns() ) {
+		for ( AnnotatedJoinColumn column: joinColumns.getJoinColumns() ) {
 			final Object owner = findReferencedColumnOwner( targetEntity, column, context );
 			if ( owner == null ) {
 				throw new AnnotationException( "A '@JoinColumn' for association "
-						+ associationMessage( associatedEntity, column )
+						+ associationMessage( associatedEntity, joinColumns )
 						+ " references a column named '" + column.getReferencedColumn()
 						+ "' which is not mapped by the target entity '"
 						+ targetEntity.getEntityName() + "'" );
 			}
 			if ( owner != columnOwner) {
-				final AnnotatedJoinColumn firstColumn = joinColumns.getColumns()[0];
+				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 				throw new AnnotationException( "The '@JoinColumn's for association "
-						+ associationMessage( associatedEntity, column )
+						+ associationMessage( associatedEntity, joinColumns )
 						+ " reference columns of different tables mapped by the target entity '"
 						+ targetEntity.getEntityName() + "' ('" + column.getReferencedColumn() +
 						"' belongs to a different table to '" + firstColumn.getReferencedColumn() + "'" );
@@ -334,21 +332,21 @@ public class BinderHelper {
 		return syntheticPropertyName;
 	}
 
-	private static String associationMessage(PersistentClass associatedEntity, AnnotatedJoinColumn firstColumn) {
+	private static String associationMessage(PersistentClass associatedEntity, AnnotatedJoinColumns joinColumns) {
 		StringBuilder message = new StringBuilder();
 		if ( associatedEntity != null ) {
 			message.append( "'" )
 					.append( associatedEntity.getEntityName() )
 					.append( "." )
-					.append( firstColumn.getPropertyName() )
+					.append( joinColumns.getPropertyName() )
 					.append( "'" );
 		}
 		else {
-			if ( firstColumn.getPropertyHolder() != null ) {
+			if ( joinColumns.getPropertyHolder() != null ) {
 				message.append( "'" )
-						.append( firstColumn.getPropertyHolder().getEntityName() )
+						.append( joinColumns.getPropertyHolder().getEntityName() )
 						.append( "." )
-						.append( firstColumn.getPropertyName() )
+						.append( joinColumns.getPropertyName() )
 						.append( "'" );
 			}
 		}
@@ -415,7 +413,7 @@ public class BinderHelper {
 
 	private static List<Property> findPropertiesByColumns(
 			Object columnOwner,
-			AnnotatedJoinColumn[] columns,
+			AnnotatedJoinColumns columns,
 			PersistentClass associatedEntity,
 			MetadataBuildingContext context) {
 
@@ -436,12 +434,12 @@ public class BinderHelper {
 
 		// Build the list of column names in the exact order they were
 		// specified by the @JoinColumn annotations.
-		final List<Column> orderedColumns = new ArrayList<>( columns.length );
+		final List<Column> orderedColumns = new ArrayList<>( columns.getJoinColumns().size() );
 		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		for ( AnnotatedJoinColumn joinColumn : columns ) {
+		for ( AnnotatedJoinColumn joinColumn : columns.getJoinColumns() ) {
 			if ( joinColumn.isReferenceImplicit() ) {
-				throw new AnnotationException("Association " + associationMessage( associatedEntity, joinColumn )
+				throw new AnnotationException("Association " + associationMessage( associatedEntity, columns )
 						+ " has a '@JoinColumn' which does not specify the 'referencedColumnName'"
 						+ " (when an association has multiple '@JoinColumn's, they must each specify their 'referencedColumnName')");
 			}
@@ -492,7 +490,7 @@ public class BinderHelper {
 			if ( properties.isEmpty() ) {
 				// no property found which maps to this column
 				throw new AnnotationException( "Referenced column '" + column.getName()
-						+ "' in '@JoinColumn' for " + associationMessage( associatedEntity, columns[0] )
+						+ "' in '@JoinColumn' for " + associationMessage( associatedEntity, columns )
 						+ " is not mapped by any property of the target entity" );
 			}
 			for ( Property property : properties ) {
@@ -503,7 +501,7 @@ public class BinderHelper {
 						throw new AnnotationException( "Referenced column '" + column.getName()
 								+ "' mapped by target property '" + property.getName()
 								+ "' occurs out of order in the list of '@JoinColumn's for association "
-								+ associationMessage( associatedEntity, columns[0] ) );
+								+ associationMessage( associatedEntity, columns ) );
 					}
 					lastPropertyColumnIndex++;
 					if ( lastPropertyColumnIndex == currentProperty.getColumnSpan() ) {
@@ -516,7 +514,7 @@ public class BinderHelper {
 					// we didn't use up all the columns of the previous property
 					throw new AnnotationException( "Target property '" + property.getName() + "' has "
 							+ property.getColumnSpan() + " columns which must be referenced by a '@JoinColumn' for "
-							+ associationMessage( associatedEntity, columns[0] )
+							+ associationMessage( associatedEntity, columns )
 							+ " (every column mapped by '" + property.getName()
 							+ "' must occur exactly once as a 'referencedColumnName', and in the correct order)" );
 				}
@@ -524,7 +522,7 @@ public class BinderHelper {
 					// we already used up all the columns of this property
 					throw new AnnotationException( "Target property '" + property.getName() + "' has only "
 							+ property.getColumnSpan() + " columns which may be referenced by a '@JoinColumn' for "
-							+ associationMessage( associatedEntity, columns[0] )
+							+ associationMessage( associatedEntity, columns )
 							+ " (each column mapped by '" + property.getName()
 							+ "' may only occur once as a 'referencedColumnName')" );
 
@@ -1070,7 +1068,7 @@ public class BinderHelper {
 				entityBinder.getSecondaryTables(),
 				context
 		);
-		assert discriminatorColumns.getColumns().length == 1;
+		assert discriminatorColumns.getColumns().size() == 1;
 
 		discriminatorColumns.setTable( value.getTable() );
 		discriminatorValueBinder.setColumns( discriminatorColumns );
@@ -1082,7 +1080,7 @@ public class BinderHelper {
 		value.setDiscriminator( discriminatorDescriptor );
 		discriminatorValueBinder.fillSimpleValue();
 		// TODO: this is nasty
-		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns()[0];
+		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
 		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
 
 		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
@@ -1100,8 +1098,8 @@ public class BinderHelper {
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
 		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
-		final AnnotatedJoinColumn[] columns = keyColumns.getColumns();
-		assert columns.length == 1;
+		final List<AnnotatedJoinColumn> columns = keyColumns.getJoinColumns();
+		assert columns.size() == 1;
 		keyColumns.setTable( value.getTable() );
 		keyValueBinder.setColumns( keyColumns );
 		if ( !optional ) {
@@ -1114,8 +1112,8 @@ public class BinderHelper {
 		value.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		final String path = qualify( propertyHolder.getEntityName(), inferredData.getPropertyName() );
-		AnnotatedColumn.checkPropertyConsistency( columns, path );
-		columns[0].linkWithValue( keyDescriptor );
+		AnnotatedColumn.checkPropertyConsistency( keyColumns.getColumns(), path );
+		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
 		return value;
 	}
 
@@ -1175,23 +1173,22 @@ public class BinderHelper {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final XClass persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
+		final XClass mappedClass = buildingContext.getBootstrapContext().getReflectionManager()
 					.toXClass( propertyHolder.getPersistentClass().getMappedClass() );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			PropertyData pd = metadataCollector.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
-			if ( pd == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-				pd = metadataCollector.getPropertyAnnotatedWithMapsId( persistentXClass, propertyName );
-			}
-			return pd;
+			final PropertyData propertyData = metadataCollector.getPropertyAnnotatedWithIdAndToOne( mappedClass, propertyName );
+			return propertyData == null && buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled()
+					? metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, propertyName )
+					: propertyData;
 		}
 		else {
-			return metadataCollector.getPropertyAnnotatedWithMapsId( persistentXClass, isId ? "" : propertyName);
+			return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
 		}
 	}
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<>();
+		final Map<String,String> ret = new HashMap<>();
 		for ( SqlFragmentAlias aliase : aliases ) {
 			if ( isNotEmpty( aliase.table() ) ) {
 				ret.put( aliase.alias(), aliase.table() );
@@ -1201,13 +1198,13 @@ public class BinderHelper {
 	}
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
-		Map<String,String> ret = new HashMap<>();
+		final Map<String,String> result = new HashMap<>();
 		for ( SqlFragmentAlias aliase : aliases ) {
 			if ( aliase.entity() != void.class ) {
-				ret.put( aliase.alias(), aliase.entity().getName() );
+				result.put( aliase.alias(), aliase.entity().getName() );
 			}
 		}
-		return ret;
+		return result;
 	}
 
 	public static boolean hasToOneAnnotation(XAnnotatedElement property) {
@@ -1219,13 +1216,13 @@ public class BinderHelper {
 			XAnnotatedElement element,
 			Class<T> annotationType,
 			MetadataBuildingContext context) {
-		Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
-		Iterator<Annotation> annotations =
+		final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+		final Iterator<Annotation> annotations =
 				Arrays.stream( element.getAnnotations() )
-						.flatMap(annotation -> {
+						.flatMap( annotation -> {
 							try {
-								Method value = annotation.annotationType().getDeclaredMethod("value");
-								Class<?> returnType = value.getReturnType();
+								final Method value = annotation.annotationType().getDeclaredMethod("value");
+								final Class<?> returnType = value.getReturnType();
 								if ( returnType.isArray()
 										&& returnType.getComponentType().isAnnotationPresent(Repeatable.class)
 										&& returnType.getComponentType().isAnnotationPresent(DialectOverride.OverridesAnnotation.class) ) {
@@ -1237,21 +1234,22 @@ public class BinderHelper {
 								throw new AssertionFailure("could not read @DialectOverride annotation", e);
 							}
 							return Stream.of(annotation);
-						}).iterator();
+						} ).iterator();
 		while ( annotations.hasNext() ) {
-			Annotation annotation = annotations.next();
-			Class<? extends Annotation> type = annotation.annotationType();
-			DialectOverride.OverridesAnnotation overridesAnnotation = type.getAnnotation(DialectOverride.OverridesAnnotation.class);
+			final Annotation annotation = annotations.next();
+			final Class<? extends Annotation> type = annotation.annotationType();
+			final DialectOverride.OverridesAnnotation overridesAnnotation =
+					type.getAnnotation(DialectOverride.OverridesAnnotation.class);
 			if ( overridesAnnotation != null
 					&& overridesAnnotation.value().equals(annotationType) ) {
 				try {
 					//noinspection unchecked
-					Class<? extends Dialect> overrideDialect = (Class<? extends Dialect>)
+					final Class<? extends Dialect> overrideDialect = (Class<? extends Dialect>)
 							type.getDeclaredMethod("dialect").invoke(annotation);
 					if ( overrideDialect.isAssignableFrom( dialect.getClass() ) ) {
-						DialectOverride.Version before = (DialectOverride.Version)
+						final DialectOverride.Version before = (DialectOverride.Version)
 								type.getDeclaredMethod("before").invoke(annotation);
-						DialectOverride.Version sameOrAfter = (DialectOverride.Version)
+						final DialectOverride.Version sameOrAfter = (DialectOverride.Version)
 								type.getDeclaredMethod("sameOrAfter").invoke(annotation);
 						if ( dialect.getVersion().isBefore( before.major(), before.minor() )
 							&& dialect.getVersion().isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
@@ -1306,8 +1304,8 @@ public class BinderHelper {
 			Cascade hibernateCascadeAnnotation,
 			boolean orphanRemoval,
 			boolean forcePersist) {
-		EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
-		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
+		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
+		final CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
 		if ( hibernateCascades != null && hibernateCascades.length > 0 ) {
 			cascadeTypes.addAll( Arrays.asList( hibernateCascades ) );
 		}
@@ -1322,7 +1320,7 @@ public class BinderHelper {
 	}
 
 	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
-		StringBuilder cascade = new StringBuilder();
+		final StringBuilder cascade = new StringBuilder();
 		for ( CascadeType cascadeType : cascadeTypes) {
 			switch ( cascadeType ) {
 				case ALL:

@@ -56,7 +56,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedColumns;
-import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.AnnotatedJoinColumns;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
@@ -103,8 +102,8 @@ import static org.hibernate.cfg.annotations.HCANNHelper.findAnnotation;
  */
 public class BasicValueBinder implements JdbcTypeIndicators {
 
-	// todo (6.0) : In light of how we want to build Types (specifically BasicTypes) moving forward this class should undergo major changes
-	//		see the comments in #setType
+	// todo (6.0) : In light of how we want to build Types (specifically BasicTypes) moving
+	//      forward this class should undergo major changes: see the comments in #setType
 	//		but as always the "design" of these classes make it unclear exactly how to change it properly.
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicValueBinder.class.getName() );
@@ -1126,13 +1125,17 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	public void linkWithValue() {
 		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-		final AnnotatedColumn firstColumn = columns.getColumns()[0];
+		final AnnotatedColumn firstColumn = columns.getColumns().get(0);
 		if ( !collector.isInSecondPass() && firstColumn.isNameDeferred() && referencedEntityName != null ) {
 			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 			joinColumns.setBuildingContext( buildingContext );
-			joinColumns.setPropertyHolder( firstColumn.getPropertyHolder() );
+			joinColumns.setPropertyHolder( columns.getPropertyHolder() );
 			joinColumns.setPropertyName( firstColumn.getPropertyName() );
-			joinColumns.setColumns( (AnnotatedJoinColumn[]) columns.getColumns() );
+			//TODO: resetting the parent here looks like a dangerous thing to do
+			//      should we be cloning them first (the legacy code did not)
+			for ( AnnotatedColumn column : columns.getColumns() ) {
+				column.setParent( joinColumns );
+			}
 			collector.addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, joinColumns, basicValue )
 			);

@@ -239,19 +239,12 @@ class ColumnsBuilder {
 	}
 
 	private AnnotatedJoinColumns buildJoinColumnsWithFormula(String propertyName, JoinFormula joinFormula) {
-		final AnnotatedJoinColumn[] columns = new AnnotatedJoinColumn[1];
-		columns[0] = AnnotatedJoinColumn.buildJoinFormula(
-				joinFormula,
-				entityBinder.getSecondaryTables(),
-				propertyHolder,
-				propertyName,
-				buildingContext
-		);
 		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( buildingContext );
+		joinColumns.setJoins( entityBinder.getSecondaryTables() );
 		joinColumns.setPropertyHolder( propertyHolder );
-		joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName) );
-		joinColumns.setColumns( columns );
+		joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns, propertyHolder, propertyName );
 		return joinColumns;
 	}
 
@@ -260,13 +253,13 @@ class ColumnsBuilder {
 			return new JoinColumnOrFormula[] { property.getAnnotation( JoinColumnOrFormula.class ) };
 		}
 		else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
-			JoinColumnsOrFormulas joinColumnsOrFormulasAnnotations = property.getAnnotation( JoinColumnsOrFormulas.class );
-			final JoinColumnOrFormula[] joinColumnOrFormulaAnnotations = joinColumnsOrFormulasAnnotations.value();
-			if ( joinColumnOrFormulaAnnotations.length == 0 ) {
+			final JoinColumnsOrFormulas joinColumnsOrFormulas = property.getAnnotation( JoinColumnsOrFormulas.class );
+			final JoinColumnOrFormula[] joinColumnOrFormula = joinColumnsOrFormulas.value();
+			if ( joinColumnOrFormula.length == 0 ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
 						+ "' has an empty '@JoinColumnsOrFormulas' annotation" );
 			}
-			return joinColumnOrFormulaAnnotations;
+			return joinColumnOrFormula;
 		}
 		else {
 			return null;
@@ -278,33 +271,34 @@ class ColumnsBuilder {
 			return new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
 		}
 		else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
-			final JoinColumns joinColumnAnnotation = property.getAnnotation( JoinColumns.class );
-			final JoinColumn[] joinColumnAnnotations = joinColumnAnnotation.value();
-			if ( joinColumnAnnotations.length == 0 ) {
+			final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
+			final JoinColumn[] joinColumn = joinColumns.value();
+			if ( joinColumn.length == 0 ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData)
 						+ "' has an empty '@JoinColumns' annotation" );
 			}
-			return joinColumnAnnotations;
+			return joinColumn;
 		}
 		else {
 			return null;
 		}
 	}
 
-	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		final PropertyData overridingProperty =
-				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), buildingContext );
-		return overridingProperty != null ? buildExplicitOrDefaultJoinColumn( overridingProperty ) : columns;
-	}
-
 	/**
 	 * Useful to override a column either by {@code @MapsId} or by {@code @IdClass}
 	 */
-	//TODO: should we introduce an AnnotatedColumns type and return that here?
-	private AnnotatedColumns buildExplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
-		final AnnotatedJoinColumns columns = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
-		return columns == null
-				? buildDefaultJoinColumnsForToOne( overridingProperty.getProperty(), overridingProperty )
-				: columns;
+	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
+		final PropertyData override =
+				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), buildingContext );
+		if ( override != null ) {
+			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getProperty(), override );
+			return joinColumns == null
+					? buildDefaultJoinColumnsForToOne( override.getProperty(), override )
+					: joinColumns;
+		}
+		else {
+			return columns;
+		}
 	}
+
 }

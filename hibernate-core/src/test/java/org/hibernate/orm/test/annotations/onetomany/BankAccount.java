@@ -26,7 +26,7 @@ public class BankAccount {
 	@GeneratedValue
 	private long id;
 
-	@OneToMany(mappedBy = "account", cascade = { CascadeType.ALL })
+	@OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
 	@OrderColumn(name = "transactions_index")
 	private List<Transaction> transactions;
 

@@ -251,9 +251,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				return true;
 			}
 			else {
-				if ( SelfDirtinessTracker.class.isInstance( event.getEntity() ) ) {
-					( (SelfDirtinessTracker) event.getEntity() ).$$_hibernate_clearDirtyAttributes();
-				}
+				ManagedTypeHelper.processIfSelfDirtinessTracker( event.getEntity(), SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 				event.getSession()
 						.getFactory()
 						.getCustomEntityDirtinessStrategy()

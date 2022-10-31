@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -107,8 +108,8 @@ public class WrapVisitor extends ProxyVisitor {
 				return null;
 			}
 			else {
-				if ( entity instanceof PersistentAttributeInterceptable ) {
-					if ( ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor ) {
+				if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+					if ( ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
 					}
 				}

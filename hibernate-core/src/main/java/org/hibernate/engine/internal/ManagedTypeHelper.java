@@ -65,6 +65,14 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
+	 * @param entity
+	 * @return true if and only if the entity implements {@see ManagedEntity}
+	 */
+	public static boolean isManagedEntity(Object entity) {
+		return entity instanceof EnhancedEntity || entity instanceof ManagedEntity;
+	}
+
+	/**
 	 * @param type
 	 * @return true if and only if the type is assignable to a {@see PersistentAttributeInterceptable} type.
 	 */
@@ -176,4 +184,5 @@ public final class ManagedTypeHelper {
 			return (SelfDirtinessTracker) entity;
 		}
 	}
+
 }

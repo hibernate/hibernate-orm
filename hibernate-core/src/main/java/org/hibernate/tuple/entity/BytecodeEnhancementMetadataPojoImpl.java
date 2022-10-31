@@ -149,9 +149,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 				.instantiate( identifier, session );
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
+
 		// add the entity (proxy) instance to the PC
 		persistenceContext.addEnhancedProxy( entityKey, entity );
 

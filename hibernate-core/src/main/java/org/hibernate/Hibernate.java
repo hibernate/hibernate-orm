@@ -10,18 +10,18 @@ import java.util.Iterator;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.collection.spi.LazyInitializable;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * <ul>
@@ -66,9 +66,8 @@ public final class Hibernate {
 		else if ( proxy instanceof LazyInitializable ) {
 			( (LazyInitializable) proxy ).forceInitialization();
 		}
-		else if ( proxy instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( proxy ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( proxy, null );
 			}
@@ -86,10 +85,8 @@ public final class Hibernate {
 		if ( proxy instanceof HibernateProxy ) {
 			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
 		}
-		else if ( ManagedTypeHelper.isPersistentAttributeInterceptable( proxy ) ) {
-			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
-					proxy );
-			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( proxy ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				return false;
 			}
@@ -204,8 +201,9 @@ public final class Hibernate {
 			entity = proxy;
 		}
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
 				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( propertyName );
 			}

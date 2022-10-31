@@ -12,6 +12,7 @@ import javax.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -70,8 +71,8 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		if ( entity instanceof HibernateProxy ) {
 			return ((HibernateProxy) entity).getHibernateLazyInitializer().getInternalIdentifier();
 		}
-		else if ( entity instanceof ManagedEntity ) {
-			EntityEntry entityEntry = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
+		else if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
+			EntityEntry entityEntry = ManagedTypeHelper.asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 			if ( entityEntry != null ) {
 				return entityEntry.getId();
 			}

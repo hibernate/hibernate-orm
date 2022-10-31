@@ -20,15 +20,16 @@ import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.AbstractLazyLoadInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Central delegate for handling calls from:<ul>
@@ -82,8 +83,8 @@ public final class PersistenceUtilHelper {
 			final boolean isInitialized = !( (HibernateProxy) reference ).getHibernateLazyInitializer().isUninitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
-		else if ( reference instanceof PersistentAttributeInterceptable ) {
-			boolean isInitialized = isInitialized( (PersistentAttributeInterceptable) reference );
+		else if ( isPersistentAttributeInterceptable( reference ) ) {
+			boolean isInitialized = isInitialized( asPersistentAttributeInterceptable( reference ) );
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( reference instanceof PersistentCollection ) {
@@ -130,9 +131,10 @@ public final class PersistenceUtilHelper {
 			sureFromUs = true;
 		}
 
+
 		// we are instrumenting but we can't assume we are the only ones
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( (PersistentAttributeInterceptable) entity );
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( asPersistentAttributeInterceptable( entity ) );
 			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
 			LoadState state;
 			if (isInitialized && interceptor != null) {

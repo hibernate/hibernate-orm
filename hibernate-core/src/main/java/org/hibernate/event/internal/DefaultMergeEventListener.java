@@ -405,17 +405,26 @@ public class DefaultMergeEventListener
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.MERGE,
 				() -> source.get( entityName, clonedIdentifier )
-
 		);
-		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure
-			//      that this is a detached instance, rather than just assuming
-			//throw new StaleObjectStateException(entityName, id);
 
+		if ( result == null ) {
+			LOG.trace( "Detached instance not found in database" );
 			// we got here because we assumed that an instance
-			// with an assigned id was detached, when it was
-			// really persistent
-			entityIsTransient( event, clonedIdentifier, copyCache );
+			// with an assigned id and no version was detached,
+			// when it was really transient (or deleted)
+			final Boolean knownTransient = persister.isTransient( entity, source );
+			if ( knownTransient == Boolean.FALSE ) {
+				// we know for sure it's detached (generated id
+				// or a version property), and so the instance
+				// must have been deleted by another transaction
+				throw new StaleObjectStateException( entityName, id );
+			}
+			else {
+				// we know for sure it's transient, or we just
+				// don't have information (assigned id and no
+				// version property) so keep assuming transient
+				entityIsTransient( event, clonedIdentifier, copyCache );
+			}
 		}
 		else {
 			// before cascade!

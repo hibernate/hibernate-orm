@@ -64,16 +64,13 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 			}
 		}
 		if ( column != null ) {
-			table = column.getTable();
-
-			final PropertyHolder propertyHolder = column.getPropertyHolder();
-			final String entityName = ( propertyHolder.isComponent() ) ?
-					propertyHolder.getPersistentClass().getEntityName() :
-					propertyHolder.getEntityName();
-
+			table = column.getParent().getTable();
+			final PropertyHolder propertyHolder = column.getParent().getPropertyHolder();
+			final String entityName = propertyHolder.isComponent()
+					? propertyHolder.getPersistentClass().getEntityName()
+					: propertyHolder.getEntityName();
 			final PersistentClass persistentClass = persistentClasses.get( entityName );
-			final Property property = persistentClass.getProperty( column.getPropertyName() );
-
+			final Property property = persistentClass.getProperty( column.getParent().getPropertyName() );
 			if ( property.getValue() instanceof Component ) {
 				final Component component = (Component) property.getValue();
 				final List<Column> columns = new ArrayList<>();

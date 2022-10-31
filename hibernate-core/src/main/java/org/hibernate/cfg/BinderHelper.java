@@ -1111,8 +1111,7 @@ public class BinderHelper {
 		final BasicValue keyDescriptor = keyValueBinder.make();
 		value.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
-		final String path = qualify( propertyHolder.getEntityName(), inferredData.getPropertyName() );
-		AnnotatedColumn.checkPropertyConsistency( keyColumns.getColumns(), path );
+		keyColumns.checkPropertyConsistency();
 		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
 		return value;
 	}

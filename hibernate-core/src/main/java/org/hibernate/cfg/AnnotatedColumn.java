@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -44,7 +43,6 @@ import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A mapping to a column, logically representing a
@@ -75,7 +73,6 @@ public class AnnotatedColumn {
 	private Integer precision;
 	private Integer scale;
 	private String logicalColumnName;
-	private String propertyName;  // this is really a .-separated property path
 	private boolean unique;
 	private boolean nullable = true;
 	private String formulaString;
@@ -180,17 +177,6 @@ public class AnnotatedColumn {
 		this.logicalColumnName = logicalColumnName;
 	}
 
-	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName;
-	}
-
-	/**
-	 * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
-	 */
-	public String getPropertyName() {
-		return propertyName;
-	}
-
 	public void setUnique(boolean unique) {
 		this.unique = unique;
 	}
@@ -243,7 +229,7 @@ public class AnnotatedColumn {
 		else {
 			initMappingColumn(
 					logicalColumnName,
-					propertyName,
+					getParent().getPropertyName(),
 					length,
 					precision,
 					scale,
@@ -361,8 +347,8 @@ public class AnnotatedColumn {
 							public boolean isCollectionElement() {
 								// if the propertyHolder is a collection, assume the
 								// @Column refers to the element column
-								return !getPropertyHolder().isComponent()
-									&& !getPropertyHolder().isEntity();
+								final PropertyHolder propertyHolder = getParent().getPropertyHolder();
+								return !propertyHolder.isComponent() && !propertyHolder.isEntity();
 							}
 
 							@Override
@@ -409,10 +395,6 @@ public class AnnotatedColumn {
 		}
 	}
 
-	public PropertyHolder getPropertyHolder() {
-		return getParent().getPropertyHolder();
-	}
-
 	protected void setMappingColumn(Column mappingColumn) {
 		this.mappingColumn = mappingColumn;
 	}
@@ -450,7 +432,7 @@ public class AnnotatedColumn {
 							new ImplicitBasicColumnNameSource() {
 								@Override
 								public AttributePath getAttributePath() {
-									return AttributePath.parse( propertyName );
+									return AttributePath.parse( getParent().getPropertyName() );
 								}
 
 								@Override
@@ -468,27 +450,6 @@ public class AnnotatedColumn {
 			logicalColumnName = implicitName.render( database.getDialect() );
 		}
 		getBuildingContext().getMetadataCollector().addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
-	}
-
-	/**
-	 * Find appropriate table of the column.
-	 * It can come from a secondary table or from the main table of the persistent class
-	 *
-	 * @return appropriate table
-	 * @throws AnnotationException missing secondary table
-	 */
-	public Table getTable() {
-		return getParent().getTable();
-	}
-
-	//TODO: move to AnnotatedColumns
-	public boolean isSecondary() {
-		return getParent().isSecondary();
-	}
-
-	//TODO: move to AnnotatedColumns
-	public Join getJoin() {
-		return getParent().getJoin();
 	}
 
 	public void forceNotNull() {
@@ -639,6 +600,7 @@ public class AnnotatedColumn {
 		if ( formulaAnn != null ) {
 			final AnnotatedColumns parent = new AnnotatedColumns();
 			parent.setPropertyHolder( propertyHolder );
+			parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 			parent.setBuildingContext( context );
 			parent.setJoins( secondaryTables ); //unnecessary
 			final AnnotatedColumn formulaColumn = new AnnotatedColumn();
@@ -681,15 +643,14 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column[] columns,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData ) {
-		final jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
-				qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
-		);
+		final String path = getPath( propertyHolder, inferredData );
+		final jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn( path );
 		if ( overriddenCols != null ) {
 			//check for overridden first
 			if ( columns != null && overriddenCols.length != columns.length ) {
 				//TODO: unfortunately, we never actually see this nice error message, since
 				//      PersistentClass.validate() gets called first and produces a worse message
-				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+				throw new AnnotationException( "Property '" + path
 						+ "' specifies " + columns.length
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
@@ -712,6 +673,7 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column[] actualCols) {
 		final AnnotatedColumns parent = new AnnotatedColumns();
 		parent.setPropertyHolder( propertyHolder );
+		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		parent.setJoins( secondaryTables );
 		parent.setBuildingContext( context );
 		for ( jakarta.persistence.Column column : actualCols ) {
@@ -760,7 +722,7 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column column,
 			String sqlType,
 			String tableName) {
-		final String columnName = getLogicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
+		final String columnName = logicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
 		final AnnotatedColumn annotatedColumn = new AnnotatedColumn();
 		annotatedColumn.setLogicalColumnName( columnName );
 		annotatedColumn.setImplicit( false );
@@ -769,7 +731,7 @@ public class AnnotatedColumn {
 		annotatedColumn.setPrecision( column.precision() );
 		annotatedColumn.setScale( column.scale() );
 //		annotatedColumn.setPropertyHolder( propertyHolder );
-		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
+//		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		annotatedColumn.setNullable( column.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
 		if ( comment != null ) {
 			annotatedColumn.setComment( comment.value() );
@@ -789,7 +751,7 @@ public class AnnotatedColumn {
 		return annotatedColumn;
 	}
 
-	private static String getLogicalColumnName(
+	private static String logicalColumnName(
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Database database,
@@ -896,6 +858,7 @@ public class AnnotatedColumn {
 			MetadataBuildingContext context) {
 		final AnnotatedColumns columns = new AnnotatedColumns();
 		columns.setPropertyHolder( propertyHolder );
+		columns.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		columns.setBuildingContext( context );
 		columns.setJoins( secondaryTables );
 		columns.setPropertyHolder( propertyHolder );
@@ -911,7 +874,7 @@ public class AnnotatedColumn {
 		}
 		final String propertyName = inferredData.getPropertyName();
 //		column.setPropertyHolder( propertyHolder );
-		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		column.setJoins( secondaryTables );
 //		column.setBuildingContext( context );
 		// property name + suffix is an "explicit" column name
@@ -927,37 +890,6 @@ public class AnnotatedColumn {
 		column.extractDataFromPropertyData( propertyHolder, inferredData );
 		column.bind();
 		return columns;
-	}
-
-	public static void checkPropertyConsistency(List<AnnotatedColumn> columns, String propertyName) {
-		if ( columns.size() > 1 ) {
-			for ( int currentIndex = 1; currentIndex < columns.size(); currentIndex++ ) {
-				final AnnotatedColumn current = columns.get( currentIndex );
-				final AnnotatedColumn previous = columns.get( currentIndex - 1 );
-				if ( !current.isFormula() && !previous.isFormula() ) {
-					if ( current.isNullable() != previous.isNullable() ) {
-						throw new AnnotationException(
-								"Column mappings for property '" + propertyName + "' mix nullable with 'not null'"
-						);
-					}
-					if ( current.isInsertable() != previous.isInsertable() ) {
-						throw new AnnotationException(
-								"Column mappings for property '" + propertyName + "' mix insertable with 'insertable=false'"
-						);
-					}
-					if ( current.isUpdatable() != previous.isUpdatable() ) {
-						throw new AnnotationException(
-								"Column mappings for property '" + propertyName + "' mix updatable with 'updatable=false'"
-						);
-					}
-					if ( !current.getExplicitTableName().equals( previous.getExplicitTableName() ) ) {
-						throw new AnnotationException(
-								"Column mappings for property '" + propertyName + "' mix distinct secondary tables"
-						);
-					}
-				}
-			}
-		}
 	}
 
 	public void addIndex(Index index, boolean inSecondPass) {

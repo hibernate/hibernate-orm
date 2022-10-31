@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.JoinColumn;
@@ -34,7 +35,6 @@ import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
-import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -202,7 +202,6 @@ class ColumnsBuilder {
 
 	private AnnotatedJoinColumns buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		// process @JoinColumns before @Columns to handle collection of entities properly
-
 		final String propertyName = inferredData.getPropertyName();
 
 		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations( property, inferredData );
@@ -232,20 +231,16 @@ class ColumnsBuilder {
 
 		if ( property.isAnnotationPresent( JoinFormula.class) ) {
 			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
-			return buildJoinColumnsWithFormula( propertyName, joinFormula );
+			return AnnotatedJoinColumns.buildJoinColumnsWithFormula(
+					propertyName,
+					joinFormula,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					buildingContext
+			);
 		}
 
 		return null;
-	}
-
-	private AnnotatedJoinColumns buildJoinColumnsWithFormula(String propertyName, JoinFormula joinFormula) {
-		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-		joinColumns.setBuildingContext( buildingContext );
-		joinColumns.setJoins( entityBinder.getSecondaryTables() );
-		joinColumns.setPropertyHolder( propertyHolder );
-		joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-		AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns, propertyHolder, propertyName );
-		return joinColumns;
 	}
 
 	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(XProperty property, PropertyData inferredData) {

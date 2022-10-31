@@ -1069,16 +1069,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.explicitBasicTypeName = explicitType;
 	}
 
-	private void validate() {
-		AnnotatedColumn.checkPropertyConsistency( columns.getColumns(), propertyName );
-	}
-
 	public BasicValue make() {
 		if ( basicValue != null ) {
 			return basicValue;
 		}
 
-		validate();
+		columns.checkPropertyConsistency();
 
 		LOG.debugf( "building BasicValue for %s", propertyName );
 
@@ -1130,7 +1126,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 			joinColumns.setBuildingContext( buildingContext );
 			joinColumns.setPropertyHolder( columns.getPropertyHolder() );
-			joinColumns.setPropertyName( firstColumn.getPropertyName() );
+			joinColumns.setPropertyName( columns.getPropertyName() );
 			//TODO: resetting the parent here looks like a dangerous thing to do
 			//      should we be cloning them first (the legacy code did not)
 			for ( AnnotatedColumn column : columns.getColumns() ) {

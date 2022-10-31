@@ -78,13 +78,28 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             final JoinFormula formula = columnOrFormula.formula();
             final JoinColumn column = columnOrFormula.column();
             if ( !isEmptyOrNullAnnotationValue( formula.value() ) ) {
-                AnnotatedJoinColumn.buildJoinFormula( formula, parent, propertyHolder, propertyName );
+                AnnotatedJoinColumn.buildJoinFormula( formula, parent );
             }
             else {
                 AnnotatedJoinColumn.buildJoinColumn( column, mappedBy, parent, propertyHolder, propertyName );
             }
         }
         return parent;
+    }
+
+    static AnnotatedJoinColumns buildJoinColumnsWithFormula(
+            String propertyName,
+            JoinFormula joinFormula,
+            Map<String, Join> secondaryTables,
+            PropertyHolder propertyHolder,
+            MetadataBuildingContext context) {
+        final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+        joinColumns.setBuildingContext( context );
+        joinColumns.setJoins( secondaryTables );
+        joinColumns.setPropertyHolder( propertyHolder );
+        joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+        AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns );
+        return joinColumns;
     }
 
     public static AnnotatedJoinColumns buildJoinColumns(

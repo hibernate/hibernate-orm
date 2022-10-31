@@ -60,7 +60,8 @@ public class IndexColumn extends AnnotatedColumn {
 			column.setLogicalColumnName( inferredData.getPropertyName() + "_ORDER" ); //JPA default name
 			column.setImplicit( true );
 			column.setBuildingContext( context );
-			column.setPropertyHolder( propertyHolder );
+//			column.setPropertyHolder( propertyHolder );
+			createParent( propertyHolder, column );
 			column.bind();
 		}
 
@@ -69,6 +70,12 @@ public class IndexColumn extends AnnotatedColumn {
 		}
 
 		return column;
+	}
+
+	private static void createParent(PropertyHolder propertyHolder, IndexColumn column) {
+		final AnnotatedColumns columns = new AnnotatedColumns();
+		columns.setColumns( new AnnotatedColumn[] {column} );
+		columns.setPropertyHolder( propertyHolder );
 	}
 
 	public int getBase() {
@@ -82,7 +89,7 @@ public class IndexColumn extends AnnotatedColumn {
 	/**
 	 * JPA 2 {@link OrderColumn @OrderColumn} processing.
 	 *
-	 * @param ann The OrderColumn annotation instance
+	 * @param orderColumn The OrderColumn annotation instance
 	 * @param propertyHolder Information about the property
 	 * @param inferredData Yeah, right.  Uh...
 	 * @param secondaryTables Any secondary tables available.
@@ -90,24 +97,25 @@ public class IndexColumn extends AnnotatedColumn {
 	 * @return The index column
 	 */
 	public static IndexColumn buildColumnFromAnnotation(
-			OrderColumn ann,
+			OrderColumn orderColumn,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext buildingContext) {
-		if ( ann != null ) {
-			final String sqlType = isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			final String name = isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
+		if ( orderColumn != null ) {
+			final String sqlType = isEmptyAnnotationValue( orderColumn.columnDefinition() ) ? null : orderColumn.columnDefinition();
+			final String name = isEmptyAnnotationValue( orderColumn.name() ) ? inferredData.getPropertyName() + "_ORDER" : orderColumn.name();
 			//TODO move it to a getter based system and remove the constructor
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
-			column.setNullable( ann.nullable() );
+			column.setNullable( orderColumn.nullable() );
 			column.setJoins( secondaryTables );
-			column.setInsertable( ann.insertable() );
-			column.setUpdatable( ann.updatable() );
+			column.setInsertable( orderColumn.insertable() );
+			column.setUpdatable( orderColumn.updatable() );
 			column.setBuildingContext( buildingContext );
-			column.setPropertyHolder( propertyHolder );
+//			column.setPropertyHolder( propertyHolder );
+			createParent( propertyHolder, column );
 			column.bind();
 			return column;
 		}
@@ -115,7 +123,8 @@ public class IndexColumn extends AnnotatedColumn {
 			final IndexColumn column = new IndexColumn();
 			column.setImplicit( true );
 			column.setBuildingContext( buildingContext );
-			column.setPropertyHolder( propertyHolder );
+//			column.setPropertyHolder( propertyHolder );
+			createParent( propertyHolder, column );
 			column.bind();
 			return column;
 		}
@@ -145,7 +154,8 @@ public class IndexColumn extends AnnotatedColumn {
 			column.setNullable( ann.nullable() );
 			column.setBase( ann.base() );
 			column.setBuildingContext( buildingContext );
-			column.setPropertyHolder( propertyHolder );
+//			column.setPropertyHolder( propertyHolder );
+			createParent( propertyHolder, column );
 			column.bind();
 			return column;
 		}
@@ -153,7 +163,8 @@ public class IndexColumn extends AnnotatedColumn {
 			final IndexColumn column = new IndexColumn();
 			column.setImplicit( true );
 			column.setBuildingContext( buildingContext );
-			column.setPropertyHolder( propertyHolder );
+//			column.setPropertyHolder( propertyHolder );
+			createParent( propertyHolder, column );
 			column.bind();
 			return column;
 		}

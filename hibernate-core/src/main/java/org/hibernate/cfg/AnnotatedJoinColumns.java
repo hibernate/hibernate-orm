@@ -48,7 +48,6 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public class AnnotatedJoinColumns extends AnnotatedColumns {
 
     private AnnotatedJoinColumn[] columns;
-    private PropertyHolder propertyHolder;
     private String propertyName; // this is really a .-separated property path
     private MetadataBuildingContext buildingContext;
 
@@ -247,14 +246,6 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
         return mappedByTableName;
     }
 
-    public PropertyHolder getPropertyHolder() {
-        return propertyHolder;
-    }
-
-    public void setPropertyHolder(PropertyHolder propertyHolder) {
-        this.propertyHolder = propertyHolder;
-    }
-
     /**
      * Override persistent class on oneToMany Cases for late settings
      * Must only be used on second level pass binding
@@ -264,15 +255,16 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             Map<String, Join> joins,
             Map<XClass, InheritanceState> inheritanceStatePerClass) {
         // TODO shouldn't we deduce the class name from the persistentClass?
-        propertyHolder = buildPropertyHolder(
+        final PropertyHolder propertyHolder = buildPropertyHolder(
                 persistentClass,
                 joins,
                 buildingContext,
                 inheritanceStatePerClass
         );
-        for ( AnnotatedJoinColumn column : columns ) {
-            column.setPropertyHolder( propertyHolder );
-        }
+        setPropertyHolder( propertyHolder );
+//        for ( AnnotatedJoinColumn column : columns ) {
+//            column.setPropertyHolder( propertyHolder );
+//        }
     }
 
     public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -479,7 +471,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                         String.format(
                                 Locale.ENGLISH,
                                 "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with no columns",
-                                propertyHolder.getPath(),
+                                getPropertyHolder().getPath(),
                                 getMappedByPropertyName(),
                                 getMappedByEntityName()
                         )
@@ -491,9 +483,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                         String.format(
                                 Locale.ENGLISH,
                                 "Association '%s' is 'mappedBy' a property '%s' of entity '%s' which maps to a formula",
-                                propertyHolder.getPath(),
+                                getPropertyHolder().getPath(),
                                 getMappedByPropertyName(),
-                                propertyHolder.getPath()
+                                getPropertyHolder().getPath()
                         )
                 );
             }
@@ -502,9 +494,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                         String.format(
                                 Locale.ENGLISH,
                                 "Association '%s' is 'mappedBy' a property '%s' of entity '%s' with multiple columns",
-                                propertyHolder.getPath(),
+                                getPropertyHolder().getPath(),
                                 getMappedByPropertyName(),
-                                propertyHolder.getPath()
+                                getPropertyHolder().getPath()
                         )
                 );
             }

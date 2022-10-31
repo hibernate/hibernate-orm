@@ -86,11 +86,13 @@ public class ListBinder extends CollectionBinder {
 		if ( !listValueMapping.isOneToMany() ) {
 			indexColumn.forceNotNull();
 		}
-		indexColumn.setPropertyHolder( valueHolder );
+//		indexColumn.setPropertyHolder( valueHolder );
+		final AnnotatedColumns columns = new AnnotatedColumns();
+		columns.setColumns( new AnnotatedColumn[] { indexColumn } );
+		columns.setPropertyHolder( valueHolder );
+
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
-		final AnnotatedColumns result = new AnnotatedColumns();
-		result.setColumns( new AnnotatedColumn[] { indexColumn } );
-		valueBinder.setColumns(result);
+		valueBinder.setColumns( columns );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, getElementType(), null, null );
 //			valueBinder.setExplicitType( "integer" );

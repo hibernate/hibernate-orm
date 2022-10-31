@@ -72,8 +72,6 @@ public class AnnotatedColumn {
 	private boolean updatable = true;
 	private String explicitTableName; // the JPA @Column annotation lets you specify a table name
 	protected Map<String, Join> joins;
-	@Deprecated // use AnnotatedColumns.propertyHolder
-	protected PropertyHolder propertyHolder;
 	private boolean isImplicit;
 	public String sqlType;
 	private Long length;
@@ -358,7 +356,7 @@ public class AnnotatedColumn {
 		Identifier implicitName = normalizer.normalizeIdentifierQuoting(
 				implicitNamingStrategy.determineBasicColumnName(
 						new ImplicitBasicColumnNameSource() {
-							final AttributePath attributePath = AttributePath.parse(propertyName);
+							final AttributePath attributePath = AttributePath.parse( propertyName );
 
 							@Override
 							public AttributePath getAttributePath() {
@@ -424,12 +422,7 @@ public class AnnotatedColumn {
 	}
 
 	public PropertyHolder getPropertyHolder() {
-		return propertyHolder; //TODO: change this to delegate to the parent
-	}
-
-	@Deprecated // use AnnotatedColumns.setPropertyHolder() instead
-	public void setPropertyHolder(PropertyHolder propertyHolder) {
-		this.propertyHolder = propertyHolder;
+		return parent.getPropertyHolder();
 	}
 
 	protected void setMappingColumn(Column mappingColumn) {
@@ -502,7 +495,7 @@ public class AnnotatedColumn {
 
 	//TODO: move to AnnotatedColumns
 	public boolean isSecondary() {
-		if ( propertyHolder == null ) {
+		if ( getPropertyHolder() == null ) {
 			throw new AssertionFailure( "Should not call isSecondary() on column w/o persistent class defined" );
 		}
 		return isNotEmpty( explicitTableName )
@@ -680,11 +673,11 @@ public class AnnotatedColumn {
 			formulaColumn.setFormula( formulaAnn.value() );
 			formulaColumn.setImplicit( false );
 			formulaColumn.setBuildingContext( context );
-			formulaColumn.setPropertyHolder( propertyHolder );
-			formulaColumn.bind();
+//			formulaColumn.setPropertyHolder( propertyHolder );
 			final AnnotatedColumns result = new AnnotatedColumns();
 			result.setPropertyHolder( propertyHolder );
 			result.setColumns( new AnnotatedColumn[] {formulaColumn} );
+			formulaColumn.bind();
 			return result;
 		}
 		else {
@@ -774,8 +767,8 @@ public class AnnotatedColumn {
 			);
 		}
 		final AnnotatedColumns result = new AnnotatedColumns();
-		result.setPropertyHolder(propertyHolder);
-		result.setColumns(columns);
+		result.setPropertyHolder( propertyHolder );
+		result.setColumns( columns );
 		return result;
 	}
 
@@ -809,7 +802,7 @@ public class AnnotatedColumn {
 		column.setLength( (long) col.length() );
 		column.setPrecision( col.precision() );
 		column.setScale( col.scale() );
-		column.setPropertyHolder( propertyHolder );
+//		column.setPropertyHolder( propertyHolder );
 		column.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		column.setNullable( col.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
 		if ( comment != null ) {
@@ -824,7 +817,10 @@ public class AnnotatedColumn {
 		column.applyColumnDefault( inferredData, length );
 		column.applyGeneratedAs( inferredData, length );
 		column.applyCheckConstraint( inferredData, length );
-		column.extractDataFromPropertyData( inferredData );
+		column.extractDataFromPropertyData( propertyHolder, inferredData );
+		AnnotatedColumns temp = new AnnotatedColumns();
+		temp.setPropertyHolder( propertyHolder );
+		temp.setColumns( new AnnotatedColumn[] { column } );
 		column.bind();
 		return column;
 	}
@@ -895,12 +891,12 @@ public class AnnotatedColumn {
 	}
 
 	//must only be called after all setters are defined and before binding
-	private void extractDataFromPropertyData(PropertyData inferredData) {
+	private void extractDataFromPropertyData(PropertyHolder propertyHolder, PropertyData inferredData) {
 		if ( inferredData != null ) {
-			XProperty property = inferredData.getProperty();
+			final XProperty property = inferredData.getProperty();
 			if ( property != null ) {
-				if ( getPropertyHolder().isComponent() ) {
-					processColumnTransformerExpressions( getPropertyHolder().getOverriddenColumnTransformer( logicalColumnName ) );
+				if ( propertyHolder.isComponent() ) {
+					processColumnTransformerExpressions( propertyHolder.getOverriddenColumnTransformer( logicalColumnName ) );
 				}
 				processColumnTransformerExpressions( property.getAnnotation( ColumnTransformer.class ) );
 				final ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
@@ -966,7 +962,7 @@ public class AnnotatedColumn {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();
-		column.setPropertyHolder( propertyHolder );
+//		column.setPropertyHolder( propertyHolder );
 		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		column.setJoins( secondaryTables );
 		column.setBuildingContext( context );
@@ -979,7 +975,10 @@ public class AnnotatedColumn {
 		column.applyColumnDefault( inferredData, 1 );
 		column.applyGeneratedAs( inferredData, 1 );
 		column.applyCheckConstraint( inferredData, 1 );
-		column.extractDataFromPropertyData( inferredData );
+		column.extractDataFromPropertyData( propertyHolder, inferredData );
+		AnnotatedColumns temp = new AnnotatedColumns();
+		temp.setPropertyHolder( propertyHolder );
+		temp.setColumns( new AnnotatedColumn[] { column } );
 		column.bind();
 		return column;
 	}
@@ -1020,7 +1019,8 @@ public class AnnotatedColumn {
 	}
 
 	void addIndex(String indexName, boolean inSecondPass) {
-		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( indexName, this, context, false );
+		final IndexOrUniqueKeySecondPass secondPass =
+				new IndexOrUniqueKeySecondPass( indexName, this, context, false );
 		if ( inSecondPass ) {
 			secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 		}
@@ -1030,7 +1030,8 @@ public class AnnotatedColumn {
 	}
 
 	void addUniqueKey(String uniqueKeyName, boolean inSecondPass) {
-		IndexOrUniqueKeySecondPass secondPass = new IndexOrUniqueKeySecondPass( uniqueKeyName, this, context, true );
+		final IndexOrUniqueKeySecondPass secondPass =
+				new IndexOrUniqueKeySecondPass( uniqueKeyName, this, context, true );
 		if ( inSecondPass ) {
 			secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 		}

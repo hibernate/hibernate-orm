@@ -79,7 +79,8 @@ public final class PropertyHolderBuilder {
 	}
 
 	/**
-	 * must only be used on second level phases (<join> has to be settled already)
+	 * May only be called during the second pass phase.
+	 * (The join must have already been set.)
 	 */
 	public static PropertyHolder buildPropertyHolder(
 			PersistentClass persistentClass,

@@ -167,6 +167,7 @@ import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
+import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromExternalName;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -1538,8 +1539,13 @@ public abstract class CollectionBinder {
 		oneToMany.setAssociatedClass( associatedClass );
 
 		final Map<String, Join> joins = buildingContext.getMetadataCollector().getJoins( referencedEntityName );
-		foreignJoinColumns.setPersistentClass( associatedClass, joins, inheritanceStatePerClass );
-		foreignJoinColumns.setJoins( joins );
+		foreignJoinColumns.setPropertyHolder( buildPropertyHolder(
+				associatedClass,
+				joins,
+				foreignJoinColumns.getBuildingContext(),
+				inheritanceStatePerClass
+		) );
+		foreignJoinColumns.setJoins( joins);
 		collection.setCollectionTable( foreignJoinColumns.getTable() );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );

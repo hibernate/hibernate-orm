@@ -6,13 +6,11 @@
  */
 package org.hibernate.cfg;
 
-import java.util.List;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.model.naming.Identifier;
@@ -21,14 +19,10 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
@@ -374,80 +368,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 					.toIdentifier( collectionColName, isLogicalColumnQuoted )
 					.render();
 			collector.addColumnNameBinding( value.getTable(), logicalCollectionColumnName, getMappingColumn() );
-		}
-	}
-
-	//keep it JDK 1.4 compliant
-	//implicit way
-	public static final int NO_REFERENCE = 0;
-	//reference to the pk in an explicit order
-	public static final int PK_REFERENCE = 1;
-	//reference to non pk columns
-	public static final int NON_PK_REFERENCE = 2;
-
-	public static int checkReferencedColumnsType(
-			AnnotatedJoinColumns joinColumns,
-			PersistentClass referencedEntity,
-			MetadataBuildingContext context) {
-		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
-		if ( columns.size() == 0 ) {
-			return NO_REFERENCE; //shortcut
-		}
-
-		final AnnotatedJoinColumn firstColumn = columns.get(0);
-		final Object columnOwner = findReferencedColumnOwner( referencedEntity, firstColumn, context );
-		if ( columnOwner == null ) {
-			try {
-				throw new MappingException( "A '@JoinColumn' references a column named '"
-						+ firstColumn.getReferencedColumn() + "' but the target entity '"
-						+ referencedEntity.getEntityName() + "' has no property which maps to this column" );
-			}
-			catch (MappingException me) {
-				// we throw a recoverable exception here in case this
-				// is merely an ordering issue, so that the SecondPass
-				// will get reprocessed later
-				throw new RecoverableException( me.getMessage(), me );
-			}
-		}
-		final Table table = getTable( columnOwner );
-		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
-		boolean explicitColumnReference = false;
-		for ( AnnotatedJoinColumn column : columns ) {
-			if ( !column.isReferenceImplicit() ) {
-				explicitColumnReference = true;
-				if ( !keyColumns.contains( column( context, table, column.getReferencedColumn() ) ) ) {
-					// we have a column which does not belong to the PK
-					return NON_PK_REFERENCE;
-				}
-			}
-		}
-		if ( explicitColumnReference ) {
-			// if we got to here, all the columns belong to the PK
-			return keyColumns.size() == columns.size()
-					// we have all the PK columns
-					? PK_REFERENCE
-					// we have a subset of the PK columns
-					: NON_PK_REFERENCE;
-		}
-		else {
-			// there were no nonempty referencedColumnNames
-			return NO_REFERENCE;
-		}
-	}
-
-	private static Table getTable(Object persistentClassOrJoin) {
-		return persistentClassOrJoin instanceof PersistentClass
-				? ( (PersistentClass) persistentClassOrJoin ).getTable()
-				: ( (Join) persistentClassOrJoin ).getTable();
-	}
-
-	private static Column column(MetadataBuildingContext context, Table table, String logicalReferencedColumnName) {
-		try {
-			return new Column( context.getMetadataCollector().getPhysicalColumnName( table, logicalReferencedColumnName ) );
-		}
-		catch (MappingException me) {
-			throw new MappingException( "No column with logical name '" + logicalReferencedColumnName
-					+ "' in table '" + table.getName() + "'" );
 		}
 	}
 

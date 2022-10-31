@@ -81,8 +81,6 @@ import jakarta.persistence.UniqueConstraint;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
-import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
-import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
@@ -173,7 +171,7 @@ public class BinderHelper {
 			boolean inverse,
 			MetadataBuildingContext context) {
 		// this work is not necessary for a primary key reference
-		if ( checkReferencedColumnsType( joinColumns, targetEntity, context ) == NON_PK_REFERENCE ) { // && !firstColumn.isImplicit()
+		if ( joinColumns.getReferencedColumnsType( targetEntity ) == ForeignKeyType.NON_PRIMARY_KEY_REFERENCE ) { // && !firstColumn.isImplicit()
 			// all the columns have to belong to the same table;
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of

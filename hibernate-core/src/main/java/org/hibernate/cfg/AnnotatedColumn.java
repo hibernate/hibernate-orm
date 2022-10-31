@@ -406,9 +406,7 @@ public class AnnotatedColumn {
 		}
 		else {
 			final Table table = value.getTable();
-			if ( getParent() != null ) {
-				getParent().setTableInternal( table );
-			}
+			getParent().setTableInternal( table );
 			getMappingColumn().setValue( value );
 			value.addColumn( getMappingColumn(), insertable, updatable );
 			table.addColumn( getMappingColumn() );

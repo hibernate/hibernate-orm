@@ -192,6 +192,19 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
+	/**
+	 * Determine whether this path is part of the given path's parent
+	 */
+	public boolean isParentOrEqual(NavigablePath navigablePath) {
+		while ( navigablePath != null ) {
+			if ( this.equals( navigablePath ) ) {
+				return true;
+			}
+			navigablePath = navigablePath.getParent();
+		}
+		return false;
+	}
+
 	public boolean pathsMatch(NavigablePath p) {
 		return this == p || p != null && localName.equals( p.localName )
 				&& ( parent == null ? p.parent == null && Objects.equals( alias, p.alias ) : parent.pathsMatch( p.parent ) );

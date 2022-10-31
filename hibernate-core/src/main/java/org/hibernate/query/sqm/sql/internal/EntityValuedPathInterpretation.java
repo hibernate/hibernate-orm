@@ -193,10 +193,17 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 							.findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}
 				else {
-					if ( isCorrelated( tableGroup, sqlAstCreationState ) ) {
+					if ( isCorrelated( tableGroup, sqlAstCreationState )
+							|| !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
 						// Access to the parent table group is forbidden for correlated table groups. For more details,
 						// see: `ToOneAttributeMapping.createRootTableGroupJoin`
 						// Due to that, we forcefully use the model part to which this association points to i.e. the target
+
+						// Also force the use of the FK target key if the navigable path for this entity valued path is
+						// not equal to or a child of the table group navigable path.
+						// This can happen when using an implicit join path e.g. `where root.association.id is null`,
+						// yet also an explicit join was made which is compatible e.g. `join fetch root.association`.
+						// Since we have an explicit join in this case anyway, it's fine to us the FK target key.
 						resultModelPart = associationMapping.getForeignKeyDescriptor()
 								.getPart( associationMapping.getSideNature().inverse() );
 					}

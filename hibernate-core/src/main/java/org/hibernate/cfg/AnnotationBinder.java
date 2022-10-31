@@ -1640,14 +1640,14 @@ public final class AnnotationBinder {
 		final NaturalId naturalIdAnn = property.getAnnotation( NaturalId.class );
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
+				String keyName = "UK_" + Constraint.hashedName( joinColumns.getTable().getName() + "_NaturalID" );
 				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
-					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
+				String keyName = "UK_" + Constraint.hashedName( columns.getTable().getName() + "_NaturalID" );
 				for ( AnnotatedColumn column : columns.getColumns() ) {
-					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}

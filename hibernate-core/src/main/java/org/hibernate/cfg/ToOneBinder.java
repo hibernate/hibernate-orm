@@ -45,7 +45,6 @@ import org.hibernate.mapping.ToOne;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hibernate.cfg.AnnotatedColumn.checkPropertyConsistency;
 import static org.hibernate.cfg.AnnotationBinder.matchIgnoreNotFoundWithFetchType;
 import static org.hibernate.cfg.BinderHelper.getCascadeStrategy;
 import static org.hibernate.cfg.BinderHelper.getFetchMode;
@@ -196,7 +195,6 @@ public class ToOneBinder {
 				cascadeStrategy,
 				joinColumns,
 				optional,
-				propertyHolder,
 				inferredData,
 				isIdentifierMapper,
 				propertyBinder,
@@ -242,7 +240,6 @@ public class ToOneBinder {
 			String cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			boolean optional,
-			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			boolean isIdentifierMapper,
 			PropertyBinder propertyBinder,
@@ -250,7 +247,7 @@ public class ToOneBinder {
 			boolean hasSpecjManyToOne,
 			String propertyName) {
 
-		checkPropertyConsistency( columns.getColumns(), qualify( propertyHolder.getEntityName(), propertyName ) );
+		columns.checkPropertyConsistency();
 
 		//PropertyBinder binder = new PropertyBinder();
 		propertyBinder.setName( propertyName );

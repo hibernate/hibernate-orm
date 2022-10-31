@@ -154,7 +154,6 @@ import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.cfg.AnnotatedColumn.buildFormulaFromAnnotation;
-import static org.hibernate.cfg.AnnotatedColumn.checkPropertyConsistency;
 import static org.hibernate.cfg.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.cfg.AnnotatedJoinColumns.buildJoinTableJoinColumns;
 import static org.hibernate.cfg.AnnotationBinder.fillComponent;
@@ -417,11 +416,9 @@ public abstract class CollectionBinder {
 		final String mappedBy;
 		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
 		if ( oneToManyAnn != null ) {
-			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
-				if ( column.isSecondary() ) {
-					//TODO: fix the error message
-					throw new NotYetImplementedException( "Collections having FK in secondary table" );
-				}
+			if ( joinColumns.isSecondary() ) {
+				//TODO: fix the error message
+				throw new NotYetImplementedException( "Collections having FK in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = oneToManyAnn.mappedBy();
@@ -433,11 +430,9 @@ public abstract class CollectionBinder {
 			collectionBinder.setOneToMany( true );
 		}
 		else if ( elementCollectionAnn != null ) {
-			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
-				if ( column.isSecondary() ) {
-					//TODO: fix the error message
-					throw new NotYetImplementedException( "Collections having FK in secondary table" );
-				}
+			if ( joinColumns.isSecondary() ) {
+				//TODO: fix the error message
+				throw new NotYetImplementedException( "Collections having FK in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = "";
@@ -1852,8 +1847,8 @@ public abstract class CollectionBinder {
 
 		final DependantValue key = new DependantValue( buildingContext, collection.getCollectionTable(), keyValue );
 		key.setTypeName( null );
+		joinColumns.checkPropertyConsistency();
 		final List<AnnotatedColumn> columns = joinColumns.getColumns();
-		checkPropertyConsistency( columns, collection.getOwnerEntityName() );
 		key.setNullable( columns.isEmpty() || columns.get(0).isNullable() );
 		key.setUpdateable( columns.isEmpty() || columns.get(0).isUpdatable() );
 		key.setCascadeDeleteEnabled( cascadeDeleteEnabled );

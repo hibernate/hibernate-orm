@@ -95,15 +95,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	public static AnnotatedJoinColumn buildJoinFormula(
 			JoinFormula joinFormula,
-			AnnotatedJoinColumns parent,
-			PropertyHolder propertyHolder,
-			String propertyName) {
+			AnnotatedJoinColumns parent) {
 		final AnnotatedJoinColumn formulaColumn = new AnnotatedJoinColumn();
 		formulaColumn.setFormula( joinFormula.value() );
 		formulaColumn.setReferencedColumn( joinFormula.referencedColumnName() );
 //		formulaColumn.setContext( buildingContext );
 //		formulaColumn.setPropertyHolder( propertyHolder );
-		formulaColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		formulaColumn.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		formulaColumn.setJoins( joins );
 		formulaColumn.setParent( parent );
 		formulaColumn.bind();
@@ -125,10 +123,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 								+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'"
 				);
 			}
-			return explicitJoinColumn( joinColumn, comment, parent, propertyHolder, propertyName, defaultColumnSuffix );
+			return explicitJoinColumn( joinColumn, comment, parent, propertyName, defaultColumnSuffix );
 		}
 		else {
-			return implicitJoinColumn( parent, propertyHolder, propertyName, defaultColumnSuffix );
+			return implicitJoinColumn( parent, propertyName, defaultColumnSuffix );
 		}
 	}
 
@@ -136,7 +134,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			JoinColumn joinColumn,
 			Comment comment,
 			AnnotatedJoinColumns parent,
-			PropertyHolder propertyHolder,
 			String propertyName,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
@@ -147,7 +144,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( isEmpty( column.getLogicalColumnName() ) && isNotEmpty( defaultColumnSuffix ) ) {
 			column.setLogicalColumnName( propertyName + defaultColumnSuffix );
 		}
-		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		column.setImplicit( false );
 		column.setParent( parent );
 		column.applyJoinAnnotation( joinColumn, null );
@@ -157,14 +154,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	private static AnnotatedJoinColumn implicitJoinColumn(
 			AnnotatedJoinColumns parent,
-			PropertyHolder propertyHolder,
 			String propertyName,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 //		column.setContext( context );
 //		column.setJoins( joins );
 //		column.setPropertyHolder( propertyHolder );
-		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		// property name + suffix is an "explicit" column name
 		if ( isNotEmpty( defaultColumnSuffix ) ) {
 			column.setLogicalColumnName( propertyName + defaultColumnSuffix );
@@ -370,7 +366,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			final String unquotedRefColumn = unquote( referencedColumn );
 			final String collectionColName = isNotEmpty( unquotedLogColName )
 					? unquotedLogColName
-					: getPropertyName() + '_' + unquotedRefColumn;
+					: getParent().getPropertyName() + '_' + unquotedRefColumn;
 			final InFlightMetadataCollector collector = getBuildingContext().getMetadataCollector();
 			final String logicalCollectionColumnName = collector.getDatabase()
 					.getJdbcEnvironment()
@@ -490,7 +486,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		column.setImplicit( true );
 		column.setNullable( false ); //I break the spec, but it's for good
 //		column.setPropertyHolder( propertyHolder );
-		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		column.setJoins( secondaryTables );
 //		column.setContext( context );
 		column.setParent( parent );
@@ -506,7 +502,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setImplicit( true );
 //		column.setPropertyHolder( propertyHolder );
-		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		column.setJoins( secondaryTables );
 //		column.setContext( context );
 		column.setNullable( false ); //I break the spec, but it's for good

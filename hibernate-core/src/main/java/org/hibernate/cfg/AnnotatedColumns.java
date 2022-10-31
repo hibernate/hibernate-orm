@@ -1,7 +1,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Table;
@@ -32,6 +31,7 @@ public class AnnotatedColumns {
     private final List<AnnotatedColumn> columns = new ArrayList<>();
     private Table table;
     private PropertyHolder propertyHolder;
+    private String propertyName;  // this is really a .-separated property path
     private Map<String, Join> joins = Collections.emptyMap();
     private MetadataBuildingContext buildingContext;
 
@@ -45,6 +45,17 @@ public class AnnotatedColumns {
 
     public void setPropertyHolder(PropertyHolder propertyHolder) {
         this.propertyHolder = propertyHolder;
+    }
+
+    /**
+     * A property path relative to the {@link #getPropertyHolder() PropertyHolder}.
+     */
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
     public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -62,6 +73,7 @@ public class AnnotatedColumns {
     public Join getJoin() {
         final AnnotatedColumn firstColumn = columns.get(0);
         final String explicitTableName = firstColumn.getExplicitTableName();
+        //note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
         Join join = joins.get( explicitTableName );
         if ( join == null ) {
             // annotation binding seems to use logical and physical naming somewhat inconsistently...
@@ -77,19 +89,27 @@ public class AnnotatedColumns {
                             + "' is not declared (use '@SecondaryTable' to declare the secondary table)"
             );
         }
-        return join;
+        else {
+            return join;
+        }
     }
 
     public boolean isSecondary() {
-        if ( getPropertyHolder() == null ) {
-            throw new AssertionFailure( "Should not call isSecondary() on column w/o persistent class defined" );
-        }
         final AnnotatedColumn firstColumn = columns.get(0);
         final String explicitTableName = firstColumn.getExplicitTableName();
+        //note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
         return isNotEmpty( explicitTableName )
                 && !getPropertyHolder().getTable().getName().equals( explicitTableName );
     }
 
+    /**
+     * Find the table to which these columns belong, taking into account secondary tables.
+     *
+     * @return the {@link Table} given in the code by {@link jakarta.persistence.Column#table()}
+     *         and held here by {@code explicitTableName}.
+     * @throws AnnotationException if the table named by {@code explicitTableName} is not found
+     *                             among the secondary tables in {@code joins}.
+     */
     public Table getTable() {
         if ( table != null ) {
             return table;
@@ -98,8 +118,7 @@ public class AnnotatedColumns {
             // all the columns have to be mapped to the same table
             // even though at the annotation level it looks like
             // they could each specify a different table
-            final AnnotatedColumn firstColumn = columns.get(0);
-            return firstColumn.isSecondary() ? getJoin().getTable() : getPropertyHolder().getTable();
+            return isSecondary() ? getJoin().getTable() : getPropertyHolder().getTable();
         }
     }
 
@@ -114,5 +133,36 @@ public class AnnotatedColumns {
 
     public void addColumn(AnnotatedColumn child) {
         columns.add( child );
+    }
+
+    public void checkPropertyConsistency() {
+        if ( columns.size() > 1 ) {
+            for ( int currentIndex = 1; currentIndex < columns.size(); currentIndex++ ) {
+                final AnnotatedColumn current = columns.get( currentIndex );
+                final AnnotatedColumn previous = columns.get( currentIndex - 1 );
+                if ( !current.isFormula() && !previous.isFormula() ) {
+                    if ( current.isNullable() != previous.isNullable() ) {
+                        throw new AnnotationException(
+                                "Column mappings for property '" + propertyName + "' mix nullable with 'not null'"
+                        );
+                    }
+                    if ( current.isInsertable() != previous.isInsertable() ) {
+                        throw new AnnotationException(
+                                "Column mappings for property '" + propertyName + "' mix insertable with 'insertable=false'"
+                        );
+                    }
+                    if ( current.isUpdatable() != previous.isUpdatable() ) {
+                        throw new AnnotationException(
+                                "Column mappings for property '" + propertyName + "' mix updatable with 'updatable=false'"
+                        );
+                    }
+                    if ( !current.getExplicitTableName().equals( previous.getExplicitTableName() ) ) {
+                        throw new AnnotationException(
+                                "Column mappings for property '" + propertyName + "' mix distinct secondary tables"
+                        );
+                    }
+                }
+            }
+        }
     }
 }

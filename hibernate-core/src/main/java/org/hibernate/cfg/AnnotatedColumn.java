@@ -40,8 +40,10 @@ import org.jboss.logging.Logger;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -682,12 +684,12 @@ public class AnnotatedColumn {
 			formulaColumn.bind();
 			final AnnotatedColumns result = new AnnotatedColumns();
 			result.setPropertyHolder( propertyHolder );
-			result.setColumns(new AnnotatedColumn[] {formulaColumn});
+			result.setColumns( new AnnotatedColumn[] {formulaColumn} );
 			return result;
 		}
 		else {
-			final jakarta.persistence.Column[]  actualCols = overrideColumns( columns, propertyHolder, inferredData );
-			if ( actualCols == null ) {
+			final jakarta.persistence.Column[]  actualColumns = overrideColumns( columns, propertyHolder, inferredData );
+			if ( actualColumns == null ) {
 				return buildImplicitColumn(
 						inferredData,
 						suffixForDefaultColumnName,
@@ -706,7 +708,7 @@ public class AnnotatedColumn {
 						suffixForDefaultColumnName,
 						secondaryTables,
 						context,
-						actualCols
+						actualColumns
 				);
 			}
 		}
@@ -747,13 +749,11 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column[] actualCols) {
 		final int length = actualCols.length;
 		final AnnotatedColumn[] columns = new AnnotatedColumn[length];
-		for (int index = 0; index < length; index++) {
+		for ( int index = 0; index < length; index++ ) {
 			final jakarta.persistence.Column column = actualCols[index];
 			final Database database = context.getMetadataCollector().getDatabase();
-			final String sqlType = column.columnDefinition().isEmpty() ? null
-					: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
-			final String tableName = isEmpty( column.table() ) ? ""
-					: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
+			final String sqlType = getSqlType( context, column );
+			final String tableName = getTableName( column, database );
 //						final Identifier logicalName = database.getJdbcEnvironment()
 //								.getIdentifierHelper()
 //								.toIdentifier( column.table() );
@@ -777,6 +777,16 @@ public class AnnotatedColumn {
 		result.setPropertyHolder(propertyHolder);
 		result.setColumns(columns);
 		return result;
+	}
+
+	private static String getTableName(jakarta.persistence.Column column, Database database) {
+		return isEmptyAnnotationValue( column.table() ) ? ""
+				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
+	}
+
+	private static String getSqlType(MetadataBuildingContext context, jakarta.persistence.Column column) {
+		return isEmptyAnnotationValue( column.columnDefinition() ) ? null
+				: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
 	}
 
 	private static AnnotatedColumn buildColumn(
@@ -824,18 +834,22 @@ public class AnnotatedColumn {
 			String suffixForDefaultColumnName,
 			Database database,
 			jakarta.persistence.Column column) {
-		final String columnName = column.name() != null && column.name().isEmpty() ? null
-				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
+		final String columnName = getColumnName( database, column );
 		// NOTE : this is the logical column name, not the physical!
 		return isEmpty( columnName ) && isNotEmpty( suffixForDefaultColumnName )
 				? inferredData.getPropertyName() + suffixForDefaultColumnName
 				: columnName;
 	}
 
+	private static String getColumnName(Database database, jakarta.persistence.Column column) {
+		return isEmptyAnnotationValue( column.name() ) ? null
+				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
+	}
+
 	private void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			ColumnDefault columnDefault = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
+			final ColumnDefault columnDefault = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
 			if ( columnDefault != null ) {
 				if ( length!=1 ) {
 					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
@@ -851,7 +865,7 @@ public class AnnotatedColumn {
 	private void applyGeneratedAs(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			GeneratedColumn generatedColumn = getOverridableAnnotation( xProperty, GeneratedColumn.class, context );
+			final GeneratedColumn generatedColumn = getOverridableAnnotation( xProperty, GeneratedColumn.class, context );
 			if ( generatedColumn != null ) {
 				if (length!=1) {
 					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
@@ -867,7 +881,7 @@ public class AnnotatedColumn {
 	private void applyCheckConstraint(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			Check check = getOverridableAnnotation( xProperty, Check.class, context );
+			final Check check = getOverridableAnnotation( xProperty, Check.class, context );
 			if ( check != null ) {
 				if (length!=1) {
 					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");
@@ -889,8 +903,8 @@ public class AnnotatedColumn {
 					processColumnTransformerExpressions( getPropertyHolder().getOverriddenColumnTransformer( logicalColumnName ) );
 				}
 				processColumnTransformerExpressions( property.getAnnotation( ColumnTransformer.class ) );
-				ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
-				if (annotations != null) {
+				final ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
+				if ( annotations != null ) {
 					for ( ColumnTransformer annotation : annotations.value() ) {
 						processColumnTransformerExpressions( annotation );
 					}
@@ -904,8 +918,8 @@ public class AnnotatedColumn {
 			if ( isEmpty( annotation.forColumn() )
 					// "" is the default value for annotations
 					|| annotation.forColumn().equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
-				readExpression = StringHelper.nullIfEmpty( annotation.read() );
-				writeExpression = StringHelper.nullIfEmpty( annotation.write() );
+				readExpression = nullIfEmpty( annotation.read() );
+				writeExpression = nullIfEmpty( annotation.write() );
 			}
 		}
 	}

@@ -1372,7 +1372,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityPersister persister = metamodel.getEntityDescriptor( entity );
 		final CollectionPersister cp = metamodel.getCollectionDescriptor( entity + '.' + property );
 
-	    // try cache lookup first
+		//Extracted as we're logging within two hot loops
+		final boolean debugEnabled = LOG.isDebugEnabled();
+
+		// try cache lookup first
 		final Object parent = getParentsByChild( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );
@@ -1385,10 +1388,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild != null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
-						LOG.debugf(
-								"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
-								( index != null ? "contains" : "does not contain" )
-						);
+						if ( debugEnabled ) {
+							LOG.debugf(
+									"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
+									( index != null ? "contains" : "does not contain" )
+							);
+						}
 					}
 				}
 				if ( index != null ) {
@@ -1413,10 +1418,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					final Object unMergedChild = mergeMap.get( childEntity );
 					if ( unMergedInstance != null && unMergedChild!=null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
-						LOG.debugf(
-								"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
-								(index != null ? "contains" : "does not contain" )
-						);
+						if ( debugEnabled ) {
+							LOG.debugf(
+									"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
+									(index != null ? "contains" : "does not contain" )
+							);
+						}
 					}
 				}
 

@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
@@ -324,6 +325,18 @@ public class EntityEntryContext {
 			dirty = false;
 		}
 		return reentrantSafeEntries;
+	}
+
+	/**
+	 * Not reentrant like #reentrantSafeEntityEntries but most likely
+	 * the more efficient choice, when reentrant safety isn't required.
+	 */
+	public void processEachEntity(final Consumer<Object> entityProcessor) {
+		ManagedEntity managedEntity = head;
+		while ( managedEntity != null ) {
+			entityProcessor.accept( managedEntity.$$_hibernate_getEntityInstance() );
+			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
+		}
 	}
 
 	/**

@@ -2293,6 +2293,22 @@ public class SessionImpl
 	}
 
 	@Override
+	public void remove(String entityName, Object entity) {
+		checkOpen();
+
+		try {
+			delete( entityName, entity );
+		}
+		catch (MappingException e) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			//including HibernateException
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		return find( entityClass, primaryKey, null, null );
 	}

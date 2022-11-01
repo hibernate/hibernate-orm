@@ -318,6 +318,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public void remove(String entityName, Object object) {
+		this.lazySession.get().remove( entityName, object );
+	}
+
+	@Override
 	public LockMode getCurrentLockMode(Object object) {
 		return this.lazySession.get().getCurrentLockMode( object );
 	}

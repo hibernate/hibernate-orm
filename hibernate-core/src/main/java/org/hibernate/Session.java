@@ -352,7 +352,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p/>
 	 * Convenient form of {@link #load(String, Object, LockOptions)}.
 	 *
-	 * @param entityName a persistent class
+	 * @param entityName the entity name
 	 * @param id a valid identifier of an existing persistent instance of the class
 	 * @param lockMode the lock level
 	 *
@@ -369,7 +369,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 *
-	 * @param entityName a persistent class
+	 * @param entityName the entity name
 	 * @param id a valid identifier of an existing persistent instance of the class
 	 * @param lockOptions contains the lock level
 	 *
@@ -412,7 +412,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * (use {@code get()} instead). Use this only to retrieve an instance that you assume
 	 * exists, where non-existence would be an actual error.
 	 *
-	 * @param entityName a persistent class
+	 * @param entityName the entity name
 	 * @param id a valid identifier of an existing persistent instance of the class
 	 *
 	 * @return the persistent instance or proxy
@@ -641,7 +641,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param entityName the entity name for the instance to be removed.
 	 * @param object the instance to be removed
 	 *
-	 * @deprecated use {@link #remove(Object)}
+	 * @deprecated use {@link #remove(String, Object)}
 	 */
 	@Deprecated(since = "6.0")
 	void delete(String entityName, Object object);
@@ -739,7 +739,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 *
-	 * @param entityName a persistent class
+	 * @param entityName the name of the entity
 	 * @param object a persistent or detached instance
 	 *
 	 * @deprecated use {@link #refresh(Object)}
@@ -773,7 +773,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance from the underlying database,
 	 * obtaining the given {@link LockMode}.
 	 *
-	 * @param entityName a persistent class
+	 * @param entityName the name of the entity
 	 * @param object a persistent or detached instance
 	 * @param lockOptions contains the lock mode to use
 	 *
@@ -791,6 +791,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override
 	void remove(Object object);
+
+	/**
+	 * Mark a persistence instance associated with this session for removal from
+	 * the underlying database. Ths operation cascades to associated instances if
+	 * the association is mapped {@link jakarta.persistence.CascadeType#REMOVE}.
+	 *
+	 * @param entityName the name of the entity
+	 * @param object the managed persistent instance to remove
+	 */
+	void remove(String entityName, Object object);
 
 	/**
 	 * Determine the current {@link LockMode} of the given managed instance associated

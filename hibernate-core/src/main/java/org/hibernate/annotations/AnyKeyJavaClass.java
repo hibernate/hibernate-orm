@@ -17,7 +17,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the Java Class to use for the foreign-key handling related to an ANY mapping.
+ * Specifies the Java class to use for the foreign key handling
+ * related to an {@link Any} mapping.
  *
  * The specified class is resolved to a {@link BasicJavaType}
  * via the {@link JavaTypeRegistry}

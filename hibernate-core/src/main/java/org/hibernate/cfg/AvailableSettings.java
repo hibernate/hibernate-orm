@@ -748,9 +748,7 @@ public interface AvailableSettings {
 	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
 	 * class to use. The following shortcut names are defined for this setting:
 	 * <ul>
-	 *     <li>{@code "default"} is an abbreviation for
-	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
-	 *     <li>{@code "jpa"} is an abbreviation for
+	 *     <li>{@code "default"} and {@code "jpa"} are an abbreviations for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
 	 *     <li>{@code "legacy-jpa"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}
@@ -759,9 +757,9 @@ public interface AvailableSettings {
 	 *     <li>{@code "component-path"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}
 	 * </ul>
-	 * The default is defined by the {@code ImplicitNamingStrategy} registered under the
-	 * {@code "default"} key. If that happens to be empty, the fallback is to use
-	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}.
+	 * By default, the {@code ImplicitNamingStrategy} registered under the key
+	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl} is used.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy
 	 *
@@ -771,6 +769,9 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} to use.
+	 * <p>
+	 * By default, {@link org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl}
+	 * is used, in which case physical names are taken to be identical to logical names.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy
 	 *
@@ -779,13 +780,13 @@ public interface AvailableSettings {
 	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
 
 	/**
-	 * An implicit naming-strategy for database structures (tables, sequences) related
-	 * to identifier-generators
-	 *
+	 * An implicit naming strategy for database structures (tables, sequences) related
+	 * to identifier generators.
+	 * <p>
 	 * Resolution uses the {@link org.hibernate.boot.registry.selector.spi.StrategySelector}
 	 * service and accepts any of the forms discussed on
-	 * {@link StrategySelector#resolveDefaultableStrategy}.
-	 *
+	 * {@link StrategySelector#resolveDefaultableStrategy(Class, Object, java.util.concurrent.Callable)}.
+	 * <p>
 	 * The recognized short names being:<ul>
 	 *     <li>{@value org.hibernate.id.enhanced.SingleNamingStrategy#STRATEGY_NAME}</li>
 	 *     <li>{@value org.hibernate.id.enhanced.LegacyNamingStrategy#STRATEGY_NAME}</li>

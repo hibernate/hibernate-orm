@@ -14,9 +14,15 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Declares a many-valued association targeting one of several entity types,
- * depending on a local discriminator column. This is the collection-valued
- * form of {@link Any}.
+ * Maps a to-many cardinality association taking values over several
+ * entity types which are <em>not</em> related by the usual entity
+ * inheritance, using a discriminator value stored in an
+ * {@linkplain jakarta.persistence.JoinTable association table}.
+ * <p>
+ * This is just the many-valued form of {@link Any}, and the
+ * mapping options are similar, except that the
+ * {@link jakarta.persistence.JoinTable @JoinTable} annotation is
+ * used to specify the association table.
  *
  * @see Any
  *

@@ -20,6 +20,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Identifies a field of an entity that holds a tenant id
  * in discriminator-based multitenancy.
  *
+ * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+ *
  * @author Gavin King
  */
 @ValueGenerationType(generatedBy = TenantIdGeneration.class)

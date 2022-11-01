@@ -229,10 +229,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			} );
 		}
 
-		for ( Entry<Object, EntityEntry> objectEntityEntryEntry : entityEntryContext.reentrantSafeEntityEntries() ) {//TODO make this a forEach process within the container
-			//type-cache-pollution agent: always check for EnhancedEntity type first.
-			ManagedTypeHelper.processIfPersistentAttributeInterceptable( objectEntityEntryEntry.getKey(), StatefulPersistenceContext::unsetSession, null );
-		}
+		entityEntryContext.processEachEntity( StatefulPersistenceContext::processEntityOnClear );
 
 		final SharedSessionContractImplementor session = getSession();
 		if ( collectionEntries != null ) {
@@ -260,6 +257,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			loadContexts.cleanup();
 		}
 		naturalIdResolutions = null;
+	}
+
+	private static void processEntityOnClear(final Object entity) {
+		//type-cache-pollution agent: always check for EnhancedEntity type first.
+		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, StatefulPersistenceContext::unsetSession, null );
 	}
 
 	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable, Object ignoredParam) {

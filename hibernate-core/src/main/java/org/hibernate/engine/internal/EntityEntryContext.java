@@ -339,23 +339,22 @@ public class EntityEntryContext {
 		}
 	}
 
+	private void processEachManagedEntity(final Consumer<ManagedEntity> action) {
+		ManagedEntity node = head;
+		while ( node != null ) {
+			final ManagedEntity next = node.$$_hibernate_getNextManagedEntity();
+			action.accept( node );
+			node = next;
+		}
+	}
+
 	/**
 	 * Clear this context of all managed entities
 	 */
 	public void clear() {
 		dirty = true;
 
-		ManagedEntity node = head;
-		while ( node != null ) {
-			final ManagedEntity nextNode = node.$$_hibernate_getNextManagedEntity();
-
-			node.$$_hibernate_setEntityEntry( null );
-
-			node.$$_hibernate_setPreviousManagedEntity( null );
-			node.$$_hibernate_setNextManagedEntity( null );
-
-			node = nextNode;
-		}
+		processEachManagedEntity( EntityEntryContext::clearManagedEntity );
 
 		if ( immutableManagedEntityXref != null ) {
 			immutableManagedEntityXref.clear();
@@ -372,20 +371,21 @@ public class EntityEntryContext {
 		reentrantSafeEntries = null;
 	}
 
+	private static void clearManagedEntity(final ManagedEntity node) {
+		node.$$_hibernate_setEntityEntry( null );
+		node.$$_hibernate_setPreviousManagedEntity( null );
+		node.$$_hibernate_setNextManagedEntity( null );
+	}
+
 	/**
 	 * Down-grade locks to NONE for all entities in this context
 	 */
 	public void downgradeLocks() {
-		if ( head == null ) {
-			return;
-		}
+		processEachManagedEntity( EntityEntryContext::downgradeLockOnManagedEntity );
+	}
 
-		ManagedEntity node = head;
-		while ( node != null ) {
-			node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
-
-			node = node.$$_hibernate_getNextManagedEntity();
-		}
+	private static void downgradeLockOnManagedEntity(final ManagedEntity node) {
+		node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
 	}
 
 	/**

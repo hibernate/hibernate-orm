@@ -11,6 +11,8 @@ package org.hibernate.context.spi;
  * for resolving the current tenant identifier for use with {@link CurrentSessionContext}
  * and {@link org.hibernate.SessionFactory#getCurrentSession()}.
  *
+ * @see org.hibernate.annotations.TenantId
+ *
  * @author Steve Ebersole
  */
 public interface CurrentTenantIdentifierResolver {

@@ -14,7 +14,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link JdbcTypeCode} used to describe the foreign-key part of an ANY mapping.
+ * Form of {@link JdbcTypeCode} used to describe the foreign key
+ * part of an {@link Any} mapping.
  *
  * @see Any
  * @see AnyKeyJdbcType

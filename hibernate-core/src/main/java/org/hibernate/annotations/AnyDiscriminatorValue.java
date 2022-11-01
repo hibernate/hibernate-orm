@@ -15,8 +15,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the mapping for a single any-valued discriminator value
- * to the corresponding entity
+ * Specifies the mapping of a single {@linkplain Any any}-valued
+ * discriminator value to its corresponding entity type.
  *
  * @see Any
  * @see AnyDiscriminator

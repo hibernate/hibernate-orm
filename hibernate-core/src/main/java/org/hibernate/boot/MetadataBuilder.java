@@ -66,12 +66,12 @@ public interface MetadataBuilder {
 	MetadataBuilder applyImplicitSchemaName(String implicitSchemaName);
 
 	/**
-	 * Specify the ImplicitNamingStrategy to use in building the Metadata.
+	 * Specify the {@link ImplicitNamingStrategy}.
 	 * <p/>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
-	 * @param namingStrategy The ImplicitNamingStrategy to apply
+	 * @param namingStrategy The {@link ImplicitNamingStrategy}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -80,12 +80,12 @@ public interface MetadataBuilder {
 	MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy);
 
 	/**
-	 * Specify the PhysicalNamingStrategy to use in building the Metadata.
+	 * Specify the {@link PhysicalNamingStrategy}.
 	 * <p/>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
-	 * @param namingStrategy The PhysicalNamingStrategy to apply
+	 * @param namingStrategy The {@link PhysicalNamingStrategy}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -94,8 +94,7 @@ public interface MetadataBuilder {
 	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
 
 	/**
-	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or
-	 * not to cache.
+	 * Specify the second-level cache mode.
 	 * <p/>
 	 * Its default is defined by the {@code javax.persistence.sharedCache.mode} setting if using
 	 * property-based configuration.

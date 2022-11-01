@@ -14,7 +14,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Grouping of AnyDiscriminatorValue
+ * List of {@link AnyDiscriminatorValue}s.
  *
  * @since 6.0
  */

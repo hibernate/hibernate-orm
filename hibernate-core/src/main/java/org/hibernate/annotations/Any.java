@@ -9,7 +9,6 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -17,29 +16,46 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Maps a discriminated to-one style association pointing to one of several entity types
- * depending on a local discriminator, as opposed to discriminated inheritance where the
- * discriminator is kept as part of the entity hierarchy (see {@link jakarta.persistence.Inheritance}
- * and {@link jakarta.persistence.InheritanceType#SINGLE_TABLE} for details about discriminated
- * inheritance mappings).
- * <p/>
- * For example, if you consider an {@code Order} entity containing {@code Payment} information
- * where {@code Payment} might be of type {@code CashPayment} or {@code CreditCardPayment},
- * the {@code @Any} approach would be to keep that discriminator and matching value on the
- * {@code Order} itself instead as part of the {@code Payment} class. Thought of another way,
- * the "foreign key" is really made up of the value and discriminator.  Note however that this
- * composite foreign-key is a conceptual and cannot be physical.
+ * Maps a to-one cardinality association taking values over several entity types which
+ * are <em>not</em> related by the usual entity inheritance, using a discriminator
+ * value stored on the <em>referring</em> side of the relationship.
+ * <p>
+ * This is quite different to
+ * {@linkplain jakarta.persistence.InheritanceType#SINGLE_TABLE discriminated inheritance}
+ * where the discriminator is stored along with the referenced entity hierarchy.
+ * <p>
+ * For example, consider an {@code Order} entity containing {@code Payment} information,
+ * where a {@code Payment} might be a {@code CashPayment} or a {@code CreditCardPayment}.
+ * An {@code @Any} mapping would store the discriminator value identifying the concrete
+ * type of {@code Payment} along with the state of the associated {@code Order}, instead
+ * of storing it with the {@code Payment} entity itself.
+ * <p>
+ * In this example, {@code Payment} would <em>not</em> be declared as an entity type, and
+ * would not be annotated {@link jakarta.persistence.Entity @Entity}. It might even be an
+ * interface, or at most just a {@linkplain jakarta.persistence.MappedSuperclass mapped
+ * superclass}, of {@code CashPayment} and {@code CreditCardPayment}. So in terms of the
+ * object/relational mappings, {@code CashPayment} and {@code CreditCardPayment} would
+ * <em>not</em> be considered to participate in the same entity inheritance hierarchy.
+ * <p>
+ * It's reasonable to think of the "foreign key" in an {@code Any} mapping is really a
+ * composite value made up of the foreign key and discriminator taken together. Note,
+ * however, that this composite foreign key is only conceptual and cannot be declared
+ * as a physical constraint on the relational database table.
  * <ul>
- *     <li>Use {@link Column} or {@link Formula} to define the "column" to which the
- *         discriminator is mapped.
- *     <li>Use {@link jakarta.persistence.JoinColumn} to describe the key column
- *     <li>Use {@link AnyDiscriminator}, {@link JdbcType} or {@link JdbcTypeCode} to
- *         describe the mapping for the discriminator
- *     <li>Use {@link AnyKeyJavaType}, {@link AnyKeyJavaClass}, {@link AnyKeyJdbcType}
- *         or {@link AnyKeyJdbcTypeCode} to describe the mapping for the key
- *     <li>Use {@link AnyDiscriminatorValues} to specify how discriminator values map
- *         to entity types
+ *     <li>{@link AnyDiscriminator}, {@link JdbcType}, or {@link JdbcTypeCode} specifies
+ *         the type of the discriminator.
+ *     <li>{@link AnyDiscriminatorValues} specifies how discriminator values map to entity
+ *         types.
+ *     <li>{@link jakarta.persistence.Column} or {@link Formula} specifies the column or
+ *         formula in which the discriminator value is stored.
+ *     <li>{@link AnyKeyJavaType}, {@link AnyKeyJavaClass}, {@link AnyKeyJdbcType}, or
+ *         or {@link AnyKeyJdbcTypeCode} specifies the type of the foreign key.
+ *     <li>{@link jakarta.persistence.JoinColumn} specifies the foreign key column.
  * </ul>
+ * Of course, {@code Any} mappings are disfavored, except in extremely special cases,
+ * since it's much more difficult to enforce referential integrity at the database
+ * level.
+ *
  * @see ManyToAny
  */
 @Target({METHOD, FIELD})

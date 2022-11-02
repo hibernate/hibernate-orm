@@ -83,13 +83,11 @@ public class InheritanceState {
 		return hasParents() && InheritanceType.TABLE_PER_CLASS.equals( getType() );
 	}
 
-	public static InheritanceState getInheritanceStateOfSuperEntity(
-			XClass clazz, Map<XClass, InheritanceState> states
-	) {
+	public static InheritanceState getInheritanceStateOfSuperEntity(XClass clazz, Map<XClass, InheritanceState> states) {
 		XClass superclass = clazz;
 		do {
 			superclass = superclass.getSuperclass();
-			InheritanceState currentState = states.get( superclass );
+			final InheritanceState currentState = states.get( superclass );
 			if ( currentState != null && !currentState.isEmbeddableSuperclass() ) {
 				return currentState;
 			}
@@ -151,18 +149,19 @@ public class InheritanceState {
 		isEmbeddableSuperclass = embeddableSuperclass;
 	}
 
-	public void postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
+	public ElementsToProcess postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
 		//make sure we run elements to process
 		getElementsToProcess();
 		addMappedSuperClassInMetadata( persistenceClass );
 		entityBinder.setPropertyAccessType( accessType );
+		return elementsToProcess;
 	}
 
 	public XClass getClassWithIdClass(boolean evenIfSubclass) {
 		if ( !evenIfSubclass && hasParents() ) {
 			return null;
 		}
-		if ( clazz.isAnnotationPresent( IdClass.class ) ) {
+		else if ( clazz.isAnnotationPresent( IdClass.class ) ) {
 			return clazz;
 		}
 		else {
@@ -200,7 +199,7 @@ public class InheritanceState {
      * guessing from @Id or @EmbeddedId presence if not specified.
      * Change EntityBinder by side effect
      */
-	public ElementsToProcess getElementsToProcess() {
+	private ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
 			InheritanceState inheritanceState = inheritanceStatePerClass.get( clazz );
 			assert !inheritanceState.isEmbeddableSuperclass();
@@ -274,7 +273,6 @@ public class InheritanceState {
 	}
 
 	private void getMappedSuperclassesTillNextEntityOrdered() {
-
 		//ordered to allow proper messages on properties subclassing
 		XClass currentClassInHierarchy = clazz;
 		InheritanceState superclassState;
@@ -297,14 +295,13 @@ public class InheritanceState {
 	private void addMappedSuperClassInMetadata(PersistentClass persistentClass) {
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
-		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
-		final InheritanceState superEntityState =
-				InheritanceState.getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
-		PersistentClass superEntity =
+		final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
+		final PersistentClass superEntity =
 				superEntityState != null ?
 						buildingContext.getMetadataCollector().getEntityBinding( superEntityState.getClazz().getName() ) :
 						null;
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
+		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
 			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
 			final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager()

@@ -168,8 +168,10 @@ public final class CallbackDefinitionResolverLegacyImpl {
 		return callbackDefinitions;
 	}
 
-	public static List<CallbackDefinition> resolveEmbeddableCallbacks(ReflectionManager reflectionManager,
-			Class<?> entityClass, Property embeddableProperty,
+	public static List<CallbackDefinition> resolveEmbeddableCallbacks(
+			ReflectionManager reflectionManager,
+			Class<?> entityClass,
+			Property embeddableProperty,
 			CallbackType callbackType) {
 		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
 		final XClass embeddableXClass = reflectionManager.toXClass( embeddableClass );

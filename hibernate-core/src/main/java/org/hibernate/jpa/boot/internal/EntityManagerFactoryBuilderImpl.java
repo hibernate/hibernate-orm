@@ -305,9 +305,29 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// push back class transformation to the environment; for the time being this only has any effect in EE
 			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 
-			final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
-			final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			final boolean dirtyTrackingEnabled;
+			Object propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+			if ( propertyValue != null ) {
+				dirtyTrackingEnabled = Boolean.parseBoolean( propertyValue.toString() );
+			}
+			else {
+				dirtyTrackingEnabled = true;
+			}
+			final boolean lazyInitializationEnabled;
+			propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			if ( propertyValue != null ) {
+				lazyInitializationEnabled = Boolean.parseBoolean( propertyValue.toString() );
+			}
+			else {
+				lazyInitializationEnabled = true;
+			}
 			final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+			if ( !lazyInitializationEnabled ) {
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION, "true" );
+			}
+			if ( !dirtyTrackingEnabled ) {
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING, "true" );
+			}
 
 			if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
 				EnhancementContext enhancementContext = getEnhancementContext(

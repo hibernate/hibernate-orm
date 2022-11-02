@@ -88,3 +88,9 @@ The minimum supported dialect versions are as follows:
 |2.6.1
 |===
 
+=== Change enhancement defaults and deprecation
+
+The `enableLazyInitialization` and `enableDirtyTracking` enhancement tooling options in the ANT task, Maven Plugin and Gradle Plugin,
+as well as the respective `hibernate.enhancer.enableLazyInitialization` and `hibernate.enhancer.enableDirtyTracking` configuration settings,
+switched their default values to `true` and the settings are now deprecated for removal without replacement.
+See link:https://hibernate.atlassian.net/browse/HHH-15641[HHH-15641] for details.

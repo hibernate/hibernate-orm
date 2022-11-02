@@ -107,7 +107,6 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 
 	@Override
 	public void addTransformer(ClassTransformer transformer) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

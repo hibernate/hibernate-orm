@@ -75,7 +75,9 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
 	 *         indicates it should not.  In-lined is more easily serializable and probably more performant.
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	boolean doDirtyCheckingInline(UnloadedClass classDescriptor);
 
 	/**
@@ -94,7 +96,9 @@ public interface EnhancementContext {
 	 * @param classDescriptor The class to check
 	 *
 	 * @return true/false
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor);
 
 	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite

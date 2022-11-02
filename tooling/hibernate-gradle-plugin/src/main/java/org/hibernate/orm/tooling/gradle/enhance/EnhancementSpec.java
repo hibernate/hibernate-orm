@@ -34,8 +34,8 @@ public class EnhancementSpec {
 	public EnhancementSpec(HibernateOrmSpec ormDsl, Project project) {
 		final SourceSetContainer sourceSets = project.getExtensions().getByType( SourceSetContainer.class );
 
-		enableLazyInitialization = makeProperty( project );
-		enableDirtyTracking = makeProperty( project );
+		enableLazyInitialization = makeProperty( project ).convention( true );
+		enableDirtyTracking = makeProperty( project ).convention( true );
 		enableAssociationManagement = makeProperty( project );
 		enableExtendedEnhancement = makeProperty( project );
 	}
@@ -47,43 +47,53 @@ public class EnhancementSpec {
 				|| enableExtendedEnhancement.get();
 	}
 
+	@Deprecated(forRemoval = true)
 	public Property<Boolean> getEnableLazyInitialization() {
 		return enableLazyInitialization;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setEnableLazyInitialization(boolean enable) {
 		enableLazyInitialization.set( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void enableLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void lazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
 
+	@Deprecated(forRemoval = true)
 	public Property<Boolean> getEnableDirtyTracking() {
 		return enableDirtyTracking;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setEnableDirtyTracking(boolean enable) {
 		enableDirtyTracking.set( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void enableDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void dirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}

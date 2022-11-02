@@ -35,7 +35,6 @@ import java.util.Map;
 import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
-import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.qualify;
 

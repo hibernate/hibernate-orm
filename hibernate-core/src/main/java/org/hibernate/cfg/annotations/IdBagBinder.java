@@ -34,6 +34,9 @@ import jakarta.persistence.Column;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 
 /**
+ * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentIdentifierBag id bags}
+ * whose mapping model type is {@link org.hibernate.mapping.IdentifierBag}.
+ *
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
@@ -54,7 +57,8 @@ public class IdBagBinder extends BagBinder {
 
 		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
 		if ( collectionIdAnn == null ) {
-			throw new MappingException( "idbag mapping missing @CollectionId" );
+			//TODO shouldn't this be an assertion?
+			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
 
 		final PropertyData propertyData = new WrappedInferredData(

@@ -40,7 +40,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	protected Object array;
 
 	//just to help out during the load (ugly, i know)
-	private transient Class elementClass;
+	private transient Class<?> elementClass;
 
 	/**
 	 * Constructs a PersistentCollection instance for holding an array.

@@ -839,13 +839,7 @@ public final class StringHelper {
 		final boolean isFirstExpressionNonEmpty = StringHelper.isNotEmpty( firstExpression );
 		final boolean isSecondExpressionNonEmpty = StringHelper.isNotEmpty( secondExpression );
 		if ( isFirstExpressionNonEmpty && isSecondExpressionNonEmpty ) {
-			final StringBuilder buffer = new StringBuilder();
-			buffer.append( "( " )
-					.append( firstExpression )
-					.append( " ) and ( ")
-					.append( secondExpression )
-					.append( " )" );
-			return buffer.toString();
+			return "( " + firstExpression + " ) and ( " + secondExpression + " )";
 		}
 		else if ( isFirstExpressionNonEmpty ) {
 			return firstExpression;

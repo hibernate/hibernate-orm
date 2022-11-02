@@ -473,18 +473,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			return converterResolution;
 		}
 
-		final JdbcType jdbcType;
-		if ( explicitJdbcTypeAccess != null ) {
-			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
-		}
-		else {
-			jdbcType = null;
-		}
+		final JdbcType jdbcType = explicitJdbcTypeAccess != null
+				? explicitJdbcTypeAccess.apply( typeConfiguration )
+				: null;
 
-		if ( jtd == null ) {
-			if ( jdbcType != null ) {
-				jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			}
+		if ( jtd == null && jdbcType != null ) {
+			jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
 		}
 
 		if ( jtd == null ) {

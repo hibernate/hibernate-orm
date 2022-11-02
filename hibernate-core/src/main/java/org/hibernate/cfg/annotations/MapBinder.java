@@ -28,7 +28,6 @@ import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.jdbc.Size;
@@ -59,14 +58,15 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 
-import static org.hibernate.cfg.BinderHelper.PRIMITIVE_NAMES;
 import static org.hibernate.cfg.BinderHelper.findPropertyByName;
+import static org.hibernate.cfg.BinderHelper.isPrimitive;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * Implementation to bind a Map
+ * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentMap maps},
+ * whose mapping model type is {@link org.hibernate.mapping.Map}.
  *
  * @author Emmanuel Bernard
  */
@@ -157,69 +157,79 @@ public class MapBinder extends CollectionBinder {
 			boolean isEmbedded,
 			AnnotatedColumns mapKeyColumns,
 			AnnotatedJoinColumns mapKeyManyToManyColumns) {
+		org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
-			handleExplicitMapKey( elementType, persistentClasses, mapKeyPropertyName );
+			handleMapKeyProperty( elementType, persistentClasses, mapKeyPropertyName, map );
 		}
 		else {
 			//this is a true Map mapping
-			final String mapKeyType = getKeyType( property );
-			final PersistentClass collectionEntity = persistentClasses.get( mapKeyType );
-			final boolean isIndexOfEntities = collectionEntity != null;
-			final ManyToOne element;
-			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
-			if ( isIndexOfEntities ) {
-				element = handleCollectionKeyedByEntities( buildingContext, mapKeyType, map );
-			}
-			else {
-				element = null;
-				final XClass keyClass;
-				final AnnotatedClassType classType;
-				if ( PRIMITIVE_NAMES.contains( mapKeyType ) ) {
-					classType = AnnotatedClassType.NONE;
-					keyClass = null;
-				}
-				else {
-					final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
-					final Class<Object> mapKeyClass = bootstrapContext.getClassLoaderAccess().classForName( mapKeyType );
-					keyClass = bootstrapContext.getReflectionManager().toXClass( mapKeyClass );
-					// force in case of attribute override naming the key
-					classType = isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property )
-							? AnnotatedClassType.EMBEDDABLE
-							: buildingContext.getMetadataCollector().getClassType( keyClass );
-				}
+			handleMapKey( persistentClasses, property, isEmbedded, mapKeyColumns, mapKeyManyToManyColumns, map );
+		}
+	}
 
-				handleIndex(
-						property,
-						mapKeyColumns,
-						mapKeyType,
-						map,
-						keyClass,
-						classType,
-						buildCollectionPropertyHolder( property, map, keyClass ),
-						getAccessType( map )
-				);
+	private void handleMapKey(
+			Map<String, PersistentClass> persistentClasses,
+			XProperty property,
+			boolean isEmbedded,
+			AnnotatedColumns mapKeyColumns,
+			AnnotatedJoinColumns mapKeyManyToManyColumns,
+			org.hibernate.mapping.Map map) {
+		final String mapKeyType = getKeyType( property );
+		final PersistentClass collectionEntity = persistentClasses.get( mapKeyType );
+		final boolean isKeyedByEntities = collectionEntity != null;
+		if ( isKeyedByEntities ) {
+			final ManyToOne element = handleCollectionKeyedByEntities( buildingContext, mapKeyType, map );
+			handleForeignKey( property, element );
+			// a map key column has no unique constraint, so pass 'unique=false' here
+			bindManyToManyInverseForeignKey( collectionEntity, mapKeyManyToManyColumns, element, false );
+		}
+		else {
+			final XClass keyClass = mapKeyClass( mapKeyType );
+			handleMapKey(
+					property,
+					mapKeyColumns,
+					mapKeyType,
+					map,
+					keyClass,
+					annotatedMapKeyType( property, isEmbedded, mapKeyType, keyClass ),
+					buildCollectionPropertyHolder( property, map, keyClass ),
+					accessType( property, map.getOwner() )
+			);
+		}
+		//FIXME pass the Index Entity JoinColumns
+		if ( !collection.isOneToMany() ) {
+			//index column should not be null
+			for ( AnnotatedJoinColumn column : mapKeyManyToManyColumns.getJoinColumns() ) {
+				column.forceNotNull();
 			}
-			//FIXME pass the Index Entity JoinColumns
-			if ( !collection.isOneToMany() ) {
-				//index column should not be null
-				for ( AnnotatedJoinColumn column : mapKeyManyToManyColumns.getJoinColumns() ) {
-					column.forceNotNull();
-				}
-			}
+		}
+	}
 
-			if ( element != null ) {
-				handleForeignKey( property, element );
-			}
+	private AnnotatedClassType annotatedMapKeyType(
+			XProperty property,
+			boolean isEmbedded,
+			String mapKeyType,
+			XClass keyClass) {
+		if ( isPrimitive( mapKeyType ) ) {
+			return AnnotatedClassType.NONE;
+		}
+		else {
+			// force in case of attribute override naming the key
+			return isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property )
+					? AnnotatedClassType.EMBEDDABLE
+					: buildingContext.getMetadataCollector().getClassType( keyClass );
+		}
+	}
 
-			if ( isIndexOfEntities ) {
-				bindManyToManyInverseForeignKey(
-						collectionEntity,
-						mapKeyManyToManyColumns,
-						element,
-						false //a map key column has no unique constraint
-				);
-			}
+	private XClass mapKeyClass(String mapKeyType) {
+		if ( isPrimitive( mapKeyType ) ) {
+			return null;
+		}
+		else {
+			final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
+			final Class<Object> mapKeyClass = bootstrapContext.getClassLoaderAccess().classForName( mapKeyType );
+			return bootstrapContext.getReflectionManager().toXClass( mapKeyClass );
 		}
 	}
 
@@ -232,10 +242,11 @@ public class MapBinder extends CollectionBinder {
 		return void.class.equals( target ) ? property.getMapKey().getName() : target.getName();
 	}
 
-	private void handleExplicitMapKey(
+	private void handleMapKeyProperty(
 			XClass elementType,
 			Map<String, PersistentClass> persistentClasses,
-			String mapKeyPropertyName) {
+			String mapKeyPropertyName,
+			org.hibernate.mapping.Map map) {
 		final PersistentClass associatedClass = persistentClasses.get( elementType.getName() );
 		if ( associatedClass == null ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole()
@@ -246,15 +257,14 @@ public class MapBinder extends CollectionBinder {
 			throw new AnnotationException( "Map key property '" + mapKeyPropertyName
 					+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
 		}
-		final org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
 		// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
-		final InheritanceState inheritanceState = inheritanceStatePerClass.get(elementType);
+		final InheritanceState inheritanceState = inheritanceStatePerClass.get( elementType );
 		final PersistentClass targetEntity = InheritanceType.JOINED == inheritanceState.getType()
 				? mapProperty.getPersistentClass()
 				: associatedClass;
 		final Value indexValue = createFormulatedValue( mapProperty.getValue(), map, associatedClass, targetEntity );
 		map.setIndex( indexValue );
-		map.setMapKeyPropertyName(mapKeyPropertyName);
+		map.setMapKeyPropertyName( mapKeyPropertyName );
 	}
 
 	private CollectionPropertyHolder buildCollectionPropertyHolder(
@@ -298,8 +308,7 @@ public class MapBinder extends CollectionBinder {
 			MetadataBuildingContext context,
 			String mapKeyType,
 			org.hibernate.mapping.Map map) {
-		final ManyToOne element;
-		element = new ManyToOne( context, map.getCollectionTable() );
+		final ManyToOne element = new ManyToOne( context, map.getCollectionTable() );
 		map.setIndex( element );
 		element.setReferencedEntityName( mapKeyType );
 		//element.setFetchMode( fetchMode );
@@ -311,29 +320,7 @@ public class MapBinder extends CollectionBinder {
 		return element;
 	}
 
-	private static AccessType getAccessType(org.hibernate.mapping.Map map) {
-		final PersistentClass owner = map.getOwner();
-		final AccessType accessType;
-		// FIXME support @Access for collection of elements
-		// String accessType = access != null ? access.value() : null;
-		if ( owner.getIdentifierProperty() != null ) {
-			accessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" )
-					? AccessType.PROPERTY
-					: AccessType.FIELD;
-		}
-		else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-			Property prop = owner.getIdentifierMapper().getProperties().get(0);
-			accessType = prop.getPropertyAccessorName().equals( "property" )
-					? AccessType.PROPERTY
-					: AccessType.FIELD;
-		}
-		else {
-			throw new AssertionFailure( "Unable to guess collection property accessor name" );
-		}
-		return accessType;
-	}
-
-	private void handleIndex(
+	private void handleMapKey(
 			XProperty property,
 			AnnotatedColumns mapKeyColumns,
 			String mapKeyType,
@@ -344,53 +331,72 @@ public class MapBinder extends CollectionBinder {
 			AccessType accessType) {
 		final Class<? extends CompositeUserType<?>> compositeUserType =
 				resolveCompositeUserType( property, keyClass, buildingContext );
-
 		if ( AnnotatedClassType.EMBEDDABLE == classType || compositeUserType != null ) {
-			final EntityBinder entityBinder = new EntityBinder();
-			final PropertyData inferredData = isHibernateExtensionMapping()
-					? new PropertyPreloadedData( AccessType.PROPERTY, "index", keyClass)
-					// "key" is the JPA 2 prefix for map keys
-					: new PropertyPreloadedData( AccessType.PROPERTY, "key", keyClass);
-			//TODO be smart with isNullable
-			final Component component = AnnotationBinder.fillComponent(
-					holder,
-					inferredData,
-					accessType,
-					true,
-					entityBinder,
-					false,
-					false,
-					true,
-					null,
-					compositeUserType,
-					buildingContext,
-					inheritanceStatePerClass
-			);
-			map.setIndex( component );
+			handleCompositeMapKey( map, keyClass, holder, accessType, compositeUserType );
 		}
 		else {
-			final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
-			elementBinder.setReturnedClassName( mapKeyType );
-			final AnnotatedColumns keyColumns = createElementColumnsIfNecessary(
-					collection,
-					mapKeyColumns,
-					Collection.DEFAULT_KEY_COLUMN_NAME,
-					Size.DEFAULT_LENGTH, //TODO: is this really necessary??!!
-					buildingContext
-			);
-			elementBinder.setColumns( keyColumns );
-			//do not call setType as it extracts the type from @Type
-			//the algorithm generally does not apply for map key anyway
-			elementBinder.setType(
-					property,
-					keyClass,
-					collection.getOwnerEntityName(),
-					holder.mapKeyAttributeConverterDescriptor( property, keyClass )
-			);
-			elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
-			elementBinder.setAccessType( accessType );
-			map.setIndex( elementBinder.make() );
+			handleMapKey( property, mapKeyColumns, mapKeyType, map, keyClass, holder, accessType );
 		}
+	}
+
+	private void handleMapKey(
+			XProperty property,
+			AnnotatedColumns mapKeyColumns,
+			String mapKeyType,
+			org.hibernate.mapping.Map map, XClass keyClass,
+			CollectionPropertyHolder holder,
+			AccessType accessType) {
+		final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+		elementBinder.setReturnedClassName(mapKeyType);
+		final AnnotatedColumns keyColumns = createElementColumnsIfNecessary(
+				collection,
+				mapKeyColumns,
+				Collection.DEFAULT_KEY_COLUMN_NAME,
+				Size.DEFAULT_LENGTH, //TODO: is this really necessary??!!
+				buildingContext
+		);
+		elementBinder.setColumns( keyColumns );
+		//do not call setType as it extracts the type from @Type
+		//the algorithm generally does not apply for map key anyway
+		elementBinder.setType(
+				property,
+				keyClass,
+				collection.getOwnerEntityName(),
+				holder.mapKeyAttributeConverterDescriptor( property, keyClass )
+		);
+		elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
+		elementBinder.setAccessType( accessType );
+		map.setIndex( elementBinder.make() );
+	}
+
+	private void handleCompositeMapKey(
+			org.hibernate.mapping.Map map,
+			XClass keyClass,
+			CollectionPropertyHolder holder,
+			AccessType accessType,
+			Class<? extends CompositeUserType<?>> compositeUserType) {
+		map.setIndex( AnnotationBinder.fillComponent(
+				holder,
+				propertyPreloadedData( keyClass ),
+				accessType,
+				//TODO be smart with isNullable
+				true,
+				new EntityBinder(),
+				false,
+				false,
+				true,
+				null,
+				compositeUserType,
+				buildingContext,
+				inheritanceStatePerClass
+		) );
+	}
+
+	private PropertyPreloadedData propertyPreloadedData(XClass keyClass) {
+		return isHibernateExtensionMapping()
+				? new PropertyPreloadedData(AccessType.PROPERTY, "index", keyClass)
+				// "key" is the JPA 2 prefix for map keys
+				: new PropertyPreloadedData(AccessType.PROPERTY, "key", keyClass);
 	}
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
@@ -416,23 +422,22 @@ public class MapBinder extends CollectionBinder {
 
 	private jakarta.persistence.ForeignKey getMapKeyForeignKey(XProperty property) {
 		final MapKeyJoinColumns mapKeyJoinColumns = property.getAnnotation( MapKeyJoinColumns.class );
+		final MapKeyJoinColumn mapKeyJoinColumn = property.getAnnotation( MapKeyJoinColumn.class );
 		if ( mapKeyJoinColumns != null ) {
 			return mapKeyJoinColumns.foreignKey();
 		}
-		else {
-			final MapKeyJoinColumn mapKeyJoinColumn = property.getAnnotation( MapKeyJoinColumn.class );
-			if ( mapKeyJoinColumn != null ) {
-				return mapKeyJoinColumn.foreignKey();
-			}
+		else if ( mapKeyJoinColumn != null ) {
+			return mapKeyJoinColumn.foreignKey();
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private boolean mappingDefinedAttributeOverrideOnMapKey(XProperty property) {
 		if ( property.isAnnotationPresent( AttributeOverride.class ) ) {
 			return namedMapKey( property.getAnnotation( AttributeOverride.class ) );
 		}
-
 		if ( property.isAnnotationPresent( AttributeOverrides.class ) ) {
 			final AttributeOverrides annotations = property.getAnnotation( AttributeOverrides.class );
 			for ( AttributeOverride attributeOverride : annotations.value() ) {
@@ -441,7 +446,6 @@ public class MapBinder extends CollectionBinder {
 				}
 			}
 		}
-
 		return false;
 	}
 
@@ -454,94 +458,94 @@ public class MapBinder extends CollectionBinder {
 			Collection collection,
 			PersistentClass associatedClass,
 			PersistentClass targetPropertyPersistentClass) {
-		final Table mapKeyTable;
-		// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
-		if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
-			mapKeyTable = targetPropertyPersistentClass.getTable();
-		}
-		else {
-			mapKeyTable = associatedClass.getTable();
-		}
-
 		if ( value instanceof Component ) {
-			Component component = (Component) value;
-			Component indexComponent = new Component( getBuildingContext(), collection );
-			indexComponent.setComponentClassName( component.getComponentClassName() );
-			for ( Property current : component.getProperties() ) {
-				Property newProperty = new Property();
-				newProperty.setCascade( current.getCascade() );
-				newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
-				newProperty.setInsertable( false );
-				newProperty.setUpdateable( false );
-				newProperty.setMetaAttributes( current.getMetaAttributes() );
-				newProperty.setName( current.getName() );
-				newProperty.setNaturalIdentifier( false );
-				//newProperty.setOptimisticLocked( false );
-				newProperty.setOptional( false );
-				newProperty.setPersistentClass( current.getPersistentClass() );
-				newProperty.setPropertyAccessorName( current.getPropertyAccessorName() );
-				newProperty.setSelectable( current.isSelectable() );
-				newProperty.setValue(
-						createFormulatedValue( current.getValue(), collection, associatedClass, associatedClass )
-				);
-				indexComponent.addProperty( newProperty );
-			}
-			return indexComponent;
-		}
-		else if ( value instanceof BasicValue ) {
-			final BasicValue sourceValue = (BasicValue) value;
-			final DependantBasicValue dependantBasicValue = new DependantBasicValue(
-					getBuildingContext(),
-					mapKeyTable,
-					sourceValue,
-					false,
-					false
-			);
-
-			final Selectable sourceValueColumn = sourceValue.getColumn();
-			if ( sourceValueColumn instanceof Column ) {
-				dependantBasicValue.addColumn( ( (Column) sourceValueColumn ).clone() );
-			}
-			else if ( sourceValueColumn instanceof Formula ) {
-				dependantBasicValue.addFormula( new Formula( ( (Formula) sourceValueColumn ).getFormula() ) );
-			}
-			else {
-				throw new AssertionFailure( "Unknown element column type : " + sourceValueColumn.getClass() );
-			}
-
-			return dependantBasicValue;
-		}
-		else if ( value instanceof SimpleValue ) {
-			SimpleValue sourceValue = (SimpleValue) value;
-			SimpleValue targetValue;
-			if ( value instanceof ManyToOne ) {
-				final ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
-				final ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable );
-				targetManyToOne.setFetchMode( FetchMode.DEFAULT );
-				targetManyToOne.setLazy( true );
-				//targetValue.setIgnoreNotFound( ); does not make sense for a map key
-				targetManyToOne.setReferencedEntityName( sourceManyToOne.getReferencedEntityName() );
-				targetValue = targetManyToOne;
-			}
-			else {
-				targetValue = new BasicValue( getBuildingContext(), mapKeyTable );
-				targetValue.copyTypeFrom( sourceValue );
-			}
-			for ( Selectable current : sourceValue.getSelectables() ) {
-				if ( current instanceof Column ) {
-					targetValue.addColumn( ( (Column) current ).clone() );
-				}
-				else if ( current instanceof Formula ) {
-					targetValue.addFormula( new Formula( ( (Formula) current ).getFormula() ) );
-				}
-				else {
-					throw new AssertionFailure( "Unknown element in column iterator: " + current.getClass() );
-				}
-			}
-			return targetValue;
+			return createIndexComponent( collection, associatedClass, (Component) value );
 		}
 		else {
-			throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
+			// HHH-11005 - only if we are @OneToMany and location of map key property is
+			// at a different level, need to add a select
+			final Table mapKeyTable = !associatedClass.equals( targetPropertyPersistentClass )
+					? targetPropertyPersistentClass.getTable()
+					: associatedClass.getTable();
+			if ( value instanceof BasicValue ) {
+				return createDependantBasicValue( mapKeyTable, (BasicValue) value );
+			}
+			else if ( value instanceof SimpleValue ) {
+				return createTargetValue( mapKeyTable, (SimpleValue) value );
+			}
+			else {
+				throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
+			}
 		}
+	}
+
+	private SimpleValue createTargetValue(Table mapKeyTable, SimpleValue sourceValue) {
+		final SimpleValue targetValue;
+		if ( sourceValue instanceof ManyToOne ) {
+			final ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
+			final ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable);
+			targetManyToOne.setFetchMode( FetchMode.DEFAULT );
+			targetManyToOne.setLazy( true );
+			//targetValue.setIgnoreNotFound( ); does not make sense for a map key
+			targetManyToOne.setReferencedEntityName( sourceManyToOne.getReferencedEntityName() );
+			targetValue = targetManyToOne;
+		}
+		else {
+			targetValue = new BasicValue( getBuildingContext(), mapKeyTable);
+			targetValue.copyTypeFrom( sourceValue );
+		}
+		for ( Selectable selectable : sourceValue.getSelectables() ) {
+			addSelectable( targetValue, selectable );
+		}
+		return targetValue;
+	}
+
+	private DependantBasicValue createDependantBasicValue(Table mapKeyTable, BasicValue sourceValue) {
+		final DependantBasicValue dependantBasicValue = new DependantBasicValue(
+				getBuildingContext(),
+				mapKeyTable,
+				sourceValue,
+				false,
+				false
+		);
+		addSelectable( dependantBasicValue, sourceValue.getColumn() );
+		return dependantBasicValue;
+	}
+
+	private static void addSelectable(SimpleValue targetValue, Selectable selectable) {
+		if ( selectable instanceof Column ) {
+			targetValue.addColumn( ( (Column) selectable).clone() );
+		}
+		else if ( selectable instanceof Formula ) {
+			targetValue.addFormula( new Formula( ( (Formula) selectable).getFormula() ) );
+		}
+		else {
+			throw new AssertionFailure( "Unknown element in column iterator: " + selectable.getClass() );
+		}
+	}
+
+	private Component createIndexComponent(Collection collection, PersistentClass associatedClass, Component component) {
+		final Component indexComponent = new Component( getBuildingContext(), collection);
+		indexComponent.setComponentClassName( component.getComponentClassName() );
+		for ( Property property : component.getProperties() ) {
+			final Property newProperty = new Property();
+			newProperty.setCascade( property.getCascade() );
+			newProperty.setValueGenerationStrategy( property.getValueGenerationStrategy() );
+			newProperty.setInsertable( false );
+			newProperty.setUpdateable( false );
+			newProperty.setMetaAttributes( property.getMetaAttributes() );
+			newProperty.setName( property.getName() );
+			newProperty.setNaturalIdentifier( false );
+			//newProperty.setOptimisticLocked( false );
+			newProperty.setOptional( false );
+			newProperty.setPersistentClass( property.getPersistentClass() );
+			newProperty.setPropertyAccessorName( property.getPropertyAccessorName() );
+			newProperty.setSelectable( property.isSelectable() );
+			newProperty.setValue(
+					createFormulatedValue( property.getValue(), collection, associatedClass, associatedClass)
+			);
+			indexComponent.addProperty( newProperty );
+		}
+		return indexComponent;
 	}
 }

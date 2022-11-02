@@ -1982,12 +1982,10 @@ public final class AnnotationBinder {
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		/*
-		 * inSecondPass can only be used to apply right away the second pass of a composite-element
-		 * Because it's a value type, there is no bidirectional association, hence second pass
-		 * ordering does not matter
-		 */
-		Component comp = createComponent(
+		// inSecondPass can only be used to apply right away the second pass of a composite-element
+		// Because it's a value type, there is no bidirectional association, hence second pass
+		// ordering does not matter
+		final Component component = createComponent(
 				propertyHolder,
 				inferredData,
 				isComponentEmbedded,
@@ -1996,16 +1994,15 @@ public final class AnnotationBinder {
 				buildingContext
 		);
 
-		String subpath = getPath( propertyHolder, inferredData );
+		final String subpath = getPath( propertyHolder, inferredData );
 		LOG.tracev( "Binding component with path: {0}", subpath );
-		PropertyHolder subHolder = buildPropertyHolder(
-				comp,
+		final PropertyHolder subHolder = buildPropertyHolder(
+				component,
 				subpath,
 				inferredData,
 				propertyHolder,
 				buildingContext
 		);
-
 
 		// propertyHolder here is the owner of the component property.  Tell it we are about to start the component...
 
@@ -2026,7 +2023,7 @@ public final class AnnotationBinder {
 					.getService( ManagedBeanRegistry.class )
 					.getBean( compositeUserTypeClass )
 					.getBeanInstance();
-			comp.setTypeName( compositeUserTypeClass.getName() );
+			component.setTypeName( compositeUserTypeClass.getName() );
 			returnedClassOrElement = buildingContext.getBootstrapContext().getReflectionManager().toXClass( compositeUserType.embeddable() );
 		}
 
@@ -2124,7 +2121,7 @@ public final class AnnotationBinder {
 				if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
 					buildGenerators( property, buildingContext );
 					SecondPass secondPass = new IdGeneratorResolverSecondPass(
-							(SimpleValue) comp.getProperty( property.getName() ).getValue(),
+							(SimpleValue) component.getProperty( property.getName() ).getValue(),
 							property,
 							generatorType,
 							generator,
@@ -2141,7 +2138,7 @@ public final class AnnotationBinder {
 					Map<String, IdentifierGeneratorDefinition> localGenerators =
 							new HashMap<>( buildGenerators( property, buildingContext ) );
 					makeIdGenerator(
-							(SimpleValue) comp.getProperty( property.getName() ).getValue(),
+							(SimpleValue) component.getProperty( property.getName() ).getValue(),
 							property,
 							generatorType,
 							generator,
@@ -2153,11 +2150,11 @@ public final class AnnotationBinder {
 		}
 
 		if ( compositeUserType != null ) {
-			comp.sortProperties();
-			final List<String> sortedPropertyNames = new ArrayList<>( comp.getPropertySpan() );
-			final List<Type> sortedPropertyTypes = new ArrayList<>( comp.getPropertySpan() );
+			component.sortProperties();
+			final List<String> sortedPropertyNames = new ArrayList<>( component.getPropertySpan() );
+			final List<Type> sortedPropertyTypes = new ArrayList<>( component.getPropertySpan() );
 			final PropertyAccessStrategy strategy = new PropertyAccessStrategyCompositeUserTypeImpl( compositeUserType, sortedPropertyNames, sortedPropertyTypes );
-			for ( Property property : comp.getProperties() ) {
+			for ( Property property : component.getProperties() ) {
 				sortedPropertyNames.add( property.getName() );
 				sortedPropertyTypes.add(
 						PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
@@ -2169,7 +2166,7 @@ public final class AnnotationBinder {
 				property.setPropertyAccessStrategy( strategy );
 			}
 		}
-		return comp;
+		return component;
 	}
 
 	public static Component createComponent(

@@ -107,6 +107,10 @@ public class BinderHelper {
 			boolean.class.getName()
 	);
 
+	public static boolean isPrimitive(String elementTypeName) {
+		return PRIMITIVE_NAMES.contains( elementTypeName );
+	}
+
 	/**
 	 * Here we address a fundamental problem: the {@code @JoinColumn}
 	 * annotation specifies the referenced column in the target table

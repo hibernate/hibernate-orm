@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -31,14 +32,13 @@ import org.jboss.logging.Logger;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * Bind a list to the underlying Hibernate configuration
+ * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentList lists},
+ * whose mapping model type is {@link org.hibernate.mapping.List}.
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard
  */
 public class ListBinder extends CollectionBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
-
 	public ListBinder(
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
 			MetadataBuildingContext buildingContext) {
@@ -53,7 +53,7 @@ public class ListBinder extends CollectionBinder {
 	@Override
 	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
-			LOG.orderByAnnotationIndexedCollection();
+			throw new AnnotationException( "A collection of type 'List' is annotated '@OrderBy'" );
 		}
 	}
 

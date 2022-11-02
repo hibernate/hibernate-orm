@@ -16,7 +16,8 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * Bind a set.
+ * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentSet sets},
+ * whose mapping model type is {@link org.hibernate.mapping.Set}.
  *
  * @author Matthew Inger
  */

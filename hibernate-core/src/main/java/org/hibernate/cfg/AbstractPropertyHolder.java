@@ -26,6 +26,7 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
@@ -47,8 +48,6 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.jboss.logging.Logger;
 
 /**
- * No idea.
- *
  * @author Emmanuel Bernard
  */
 public abstract class AbstractPropertyHolder implements PropertyHolder {

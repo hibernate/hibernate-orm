@@ -16,6 +16,9 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
+ * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentArrayHolder primitive arrays},
+ * whose mapping model type is {@link org.hibernate.mapping.PrimitiveArray}.
+ *
  * @author Emmanuel Bernard
  */
 public class PrimitiveArrayBinder extends ArrayBinder {

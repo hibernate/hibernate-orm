@@ -89,7 +89,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
-import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotatedDiscriminatorColumn;
 import org.hibernate.cfg.AnnotatedJoinColumns;
@@ -1307,29 +1306,33 @@ public class EntityBinder {
 
 	private void bindhandleFilters() {
 		for ( Filter filter : filters ) {
-			final String filterName = filter.name();
 			String condition = filter.condition();
 			if ( isEmptyAnnotationValue( condition ) ) {
-				final FilterDefinition definition = context.getMetadataCollector().getFilterDefinition( filterName );
-				if ( definition == null ) {
-					throw new AnnotationException( "Entity '" + name
-							+ "' has a '@Filter' for an undefined filter named '" + filterName + "'" );
-				}
-				condition = definition.getDefaultFilterCondition();
-				if ( isEmpty( condition ) ) {
-					throw new AnnotationException( "Entity '" + name +
-							"' has a '@Filter' with no 'condition' and no default condition was given by the '@FilterDef' named '"
-							+ filterName + "'" );
-				}
+				condition = getDefaultFilterCondition(filter.name());
 			}
 			persistentClass.addFilter(
-					filterName,
+					filter.name(),
 					condition,
 					filter.deduceAliasInjectionPoints(),
 					toAliasTableMap( filter.aliases() ),
 					toAliasEntityMap( filter.aliases() )
 			);
 		}
+	}
+
+	private String getDefaultFilterCondition(String filterName) {
+		final FilterDefinition definition = context.getMetadataCollector().getFilterDefinition(filterName);
+		if ( definition == null ) {
+			throw new AnnotationException( "Entity '" + name
+					+ "' has a '@Filter' for an undefined filter named '" + filterName + "'" );
+		}
+		final String condition = definition.getDefaultFilterCondition();
+		if ( isEmpty( condition ) ) {
+			throw new AnnotationException( "Entity '" + name +
+					"' has a '@Filter' with no 'condition' and no default condition was given by the '@FilterDef' named '"
+					+ filterName + "'" );
+		}
+		return condition;
 	}
 
 	private void bindSynchronize() {

@@ -448,8 +448,7 @@ public final class AnnotationBinder {
 			return null;
 		}
 
-		IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-
+		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		if ( generatorAnn instanceof TableGenerator ) {
 			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretTableGenerator(
 					(TableGenerator) generatorAnn,
@@ -469,11 +468,10 @@ public final class AnnotationBinder {
 			}
 		}
 		else if ( generatorAnn instanceof GenericGenerator ) {
-			GenericGenerator genGen = ( GenericGenerator ) generatorAnn;
+			final GenericGenerator genGen = ( GenericGenerator ) generatorAnn;
 			definitionBuilder.setName( genGen.name() );
 			definitionBuilder.setStrategy( genGen.strategy() );
-			Parameter[] params = genGen.parameters();
-			for ( Parameter parameter : params ) {
+			for ( Parameter parameter : genGen.parameters() ) {
 				definitionBuilder.addParam( parameter.name(), parameter.value() );
 			}
 			if ( LOG.isTraceEnabled() ) {
@@ -483,7 +481,6 @@ public final class AnnotationBinder {
 		else {
 			throw new AssertionFailure( "Unknown Generator annotation: " + generatorAnn );
 		}
-
 		return definitionBuilder.build();
 	}
 
@@ -514,7 +511,7 @@ public final class AnnotationBinder {
 		}
 
 		// try to find class level generators
-		HashMap<String, IdentifierGeneratorDefinition> classGenerators = AnnotationBinder.buildGenerators( clazzToProcess, context );
+		final HashMap<String, IdentifierGeneratorDefinition> classGenerators = AnnotationBinder.buildGenerators( clazzToProcess, context );
 		handleTypeDescriptorRegistrations( clazzToProcess, context );
 		bindEmbeddableInstantiatorRegistrations( clazzToProcess, context );
 		bindCompositeUserTypeRegistrations( clazzToProcess, context );
@@ -2347,7 +2344,7 @@ public final class AnnotationBinder {
 				//the classes are ordered thus preventing an NPE
 				//FIXME if an entity has subclasses annotated @MappedSuperclass wo sub @Entity this is wrong
 				superclassState.setHasSiblings( true );
-				InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
+				final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
 				state.setHasParents( superEntityState != null );
 				logMixedInheritance( clazz, superclassState, state );
 				if ( superclassState.getType() != null ) {

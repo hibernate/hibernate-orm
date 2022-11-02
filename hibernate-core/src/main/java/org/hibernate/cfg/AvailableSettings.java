@@ -2906,12 +2906,18 @@ public interface AvailableSettings {
 
 	/**
 	 * Enable dirty tracking feature in runtime bytecode enhancement
+	 *
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	String ENHANCER_ENABLE_DIRTY_TRACKING = "hibernate.enhancer.enableDirtyTracking";
 
 	/**
 	 * Enable lazy loading feature in runtime bytecode enhancement
+	 *
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	String ENHANCER_ENABLE_LAZY_INITIALIZATION = "hibernate.enhancer.enableLazyInitialization";
 
 	/**

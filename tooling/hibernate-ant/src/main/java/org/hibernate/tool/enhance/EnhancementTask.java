@@ -56,8 +56,8 @@ public class EnhancementTask extends Task {
 	private String dir;
 
 	private boolean failOnError = true;
-	private boolean enableLazyInitialization = false;
-	private boolean enableDirtyTracking = false;
+	private boolean enableLazyInitialization = true;
+	private boolean enableDirtyTracking = true;
 	private boolean enableAssociationManagement = false;
 	private boolean enableExtendedEnhancement = false;
 	private List<File> sourceSet = new ArrayList<>();
@@ -96,6 +96,12 @@ public class EnhancementTask extends Task {
 
 	@Override
 	public void execute() throws BuildException {
+		if ( !enableLazyInitialization ) {
+			log( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning", Project.MSG_WARN );
+		}
+		if ( !enableDirtyTracking ) {
+			log( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning", Project.MSG_WARN );
+		}
 		if ( !shouldApply() ) {
 			log( "Skipping Hibernate bytecode enhancement task execution since no feature is enabled", Project.MSG_WARN );
 			return;

@@ -39,6 +39,13 @@ public class EnhancementHelper {
 		final Directory classesDirectory = classesDirectoryProperty.get();
 		final File classesDir = classesDirectory.getAsFile();
 
+		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+		if ( !enhancementDsl.getEnableLazyInitialization().get() ) {
+			project.getLogger().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
+		if ( !enhancementDsl.getEnableDirtyTracking().get() ) {
+			project.getLogger().warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
 		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
 
 		walk( classesDir, classesDir, enhancer, project );

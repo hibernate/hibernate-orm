@@ -450,11 +450,11 @@ Note that the default serialization format of collections can differ depending o
 [[configurations-bytecode-enhancement]]
 === Bytecode Enhancement Properties
 
-`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
-Enable dirty tracking feature in runtime bytecode enhancement.
+`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` (default value) or `false`)::
+Enable dirty tracking feature in runtime bytecode enhancement. This setting is deprecated for removal without a replacement.
 
-`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` or `false` (default value))::
-Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
+`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` (default value) or `false`)::
+Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily. This setting is deprecated for removal without a replacement.
 
 `*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
 Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.

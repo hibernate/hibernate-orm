@@ -38,7 +38,7 @@ import org.hibernate.sql.Alias;
 import org.hibernate.type.Type;
 
 /**
- * The mapping for an entity.
+ * A mapping model object that represents an {@linkplain jakarta.persistence.Entity entity class}.
  *
  * @author Gavin King
  */

@@ -19,7 +19,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
- * A formula is a derived column value
+ * A mapping model object representing a SQL {@linkplain org.hibernate.annotations.Formula formula}
+ * which is used as a "derived" {@link Column} in an entity mapping.
+ *
  * @author Gavin King
  */
 public class Formula implements Selectable, Serializable {

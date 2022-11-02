@@ -16,7 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A foreign key constraint.
+ * A mapping model object representing a {@linkplain jakarta.persistence.ForeignKey foreign key} constraint.
  *
  * @author Gavin King
  */

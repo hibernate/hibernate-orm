@@ -15,7 +15,8 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A collection with a synthetic "identifier" column
+ * A mapping model object representing a collection with a synthetic "identifier" column,
+ * that is, a surrogate key.
  */
 public abstract class IdentifierCollection extends Collection {
 

@@ -11,14 +11,13 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.Type;
 
 /**
- * A value which is "typed" by reference to some other
- * value (for example, a foreign key is typed by the
- * referenced primary key).
+ * A mapping model object representing a {@linkplain Value value} which is "typed" by reference
+ * to some other value (for example, a foreign key is typed by the referenced primary key).
  *
  * @author Gavin King
  */
 public class DependantValue extends SimpleValue implements Resolvable, SortableValue {
-	private KeyValue wrappedValue;
+	private final KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
 	private boolean sorted;

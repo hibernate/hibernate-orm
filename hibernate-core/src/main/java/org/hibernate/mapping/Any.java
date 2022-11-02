@@ -19,7 +19,8 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
 
 /**
- * Boot-time descriptor of a polymorphic association to one-of-several tables.
+ * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
+ * to one of several tables.
  *
  * @author Gavin King
  */

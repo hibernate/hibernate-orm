@@ -19,8 +19,10 @@ import org.hibernate.type.SortedSetType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A set with no nullable element columns. It will have a primary key
- * consisting of all table columns (ie. key columns + element columns).
+ * A mapping model object representing a collection of type {@link java.util.List}.
+ * A set has no nullable element columns (unless it is a one-to-many association).
+ * It has a primary key consisting of all columns (i.e. key columns + element columns).
+ *
  * @author Gavin King
  */
 public class Set extends Collection {

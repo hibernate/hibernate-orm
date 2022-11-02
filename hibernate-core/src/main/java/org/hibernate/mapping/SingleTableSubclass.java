@@ -16,6 +16,10 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
+ * A mapping model object that represents a subclass in a
+ * {@linkplain jakarta.persistence.InheritanceType#SINGLE_TABLE single table}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class SingleTableSubclass extends Subclass {

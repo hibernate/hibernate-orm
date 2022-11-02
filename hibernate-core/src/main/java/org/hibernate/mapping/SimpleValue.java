@@ -66,7 +66,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
- * Any value that maps to columns.
+ * A mapping model object that represents any value that maps to columns.
+ *
  * @author Gavin King
  */
 public abstract class SimpleValue implements KeyValue {

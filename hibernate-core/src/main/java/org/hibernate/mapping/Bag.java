@@ -15,7 +15,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A bag permits duplicates, so it has no primary key
+ * A mapping model object representing a collection of type {@link java.util.Collection} which may
+ * contain duplicates. Since a bag permits duplicates, it has no primary key
  * 
  * @author Gavin King
  */

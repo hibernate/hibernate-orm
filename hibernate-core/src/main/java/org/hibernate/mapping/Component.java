@@ -38,7 +38,10 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
 
 /**
- * The mapping for an embeddable class.
+ * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
+ * <p>
+ * Note that the name of this class is historical and unfortunate. An embeddable class holds a "component"
+ * of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
  *
  * @author Gavin King
  * @author Steve Ebersole

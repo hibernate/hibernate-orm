@@ -16,7 +16,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A many-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.ManyToOne many-to-one association}.
+ *
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {

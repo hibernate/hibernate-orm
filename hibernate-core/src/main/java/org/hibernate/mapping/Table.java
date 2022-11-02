@@ -38,7 +38,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * A relational database table.
+ * A mapping model object representing a relational database {@linkplain jakarta.persistence.Table table}.
  *
  * @author Gavin King
  */

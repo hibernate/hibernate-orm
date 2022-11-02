@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.Mapping;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
- * A constraint on a relational database table.
+ * A mapping model object representing a constraint on a relational database table.
  *
  * @author Gavin King
  * @author Brett Meyer

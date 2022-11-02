@@ -12,9 +12,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 
 /**
- * Represents an identifying key of a table: the value for primary key
- * of an entity, or a foreign key of a collection or join table or
- * joined subclass table.
+ * A mapping model {@link Value} which may be treated as an identifying key of a
+ * relational database table. A {@code KeyValue} might represent the primary key
+ * of an entity or the foreign key of a collection, join table, secondary table,
+ * or joined subclass table.
+ *
  * @author Gavin King
  */
 public interface KeyValue extends Value {

@@ -22,7 +22,8 @@ import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * The root class of an inheritance hierarchy
+ * A mapping model object that represents the root class in an entity class
+ * {@linkplain jakarta.persistence.Inheritance inheritance} hierarchy.
  *
  * @author Gavin King
  */

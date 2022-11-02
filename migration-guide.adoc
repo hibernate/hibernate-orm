@@ -38,3 +38,11 @@ Previously, since Hibernate 6.0, columns of type `number` with scale 0 on Oracle
 depending on the precision.
 
 Now, columns of type `number` with scale 0 are interpreted as `int` or `bigint` depending on the precision.
+
+=== Merge versioned entity when row is deleted
+Previously, merging a detached entity with an assigned version resulted in a SQL insert whenever there was no matching row in the database (for example, if the object had been deleted in another transaction). This behavior was unexpected and violated the rules of optimistic locking.
+
+An OptimisticLockException is now thrown in this situation if the version of the detached entity has any value other than its Java default value:
+
+* For object types, null is the default value.
+* For primitive types, zero is the default value.

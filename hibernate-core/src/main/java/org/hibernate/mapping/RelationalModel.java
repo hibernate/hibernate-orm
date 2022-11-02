@@ -10,7 +10,8 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.Mapping;
 
 /**
- * A relational object which may be created using DDL
+ * A mapping model object representing a relational object which may be created using DDL.
+ *
  * @author Gavin King
  *
  * @deprecated not needed anymore.

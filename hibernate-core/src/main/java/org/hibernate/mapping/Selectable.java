@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Models the commonality between a column and a formula (computed value).
+ * Models the commonality between a {@link Column} and a {@link Formula} (computed value).
  */
 public interface Selectable {
 	/**

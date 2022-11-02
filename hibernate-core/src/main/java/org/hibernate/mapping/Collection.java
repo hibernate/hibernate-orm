@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * Mapping for a collection. Subclasses specialize to particular collection styles.
+ * A mapping model object representing a collection. Subclasses specialize to particular kinds of collection.
  *
  * @author Gavin King
  */

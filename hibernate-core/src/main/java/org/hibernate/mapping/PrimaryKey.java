@@ -13,7 +13,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
- * A primary key constraint.
+ * A mapping model object representing a primary key constraint.
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -15,6 +15,12 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
 
 /**
+ * A mapping model object representing some sort of auxiliary table, for
+ * example, an {@linkplain jakarta.persistence.JoinTable association table},
+ * a {@linkplain jakarta.persistence.SecondaryTable secondary table}, or a
+ * table belonging to a {@linkplain jakarta.persistence.InheritanceType#JOINED
+ * joined subclass}.
+ *
  * @author Gavin King
  */
 public class Join implements AttributeContainer, Serializable {

@@ -35,7 +35,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
- * A column of a relational database {@link Table table}.
+ * A mapping model object representing a {@linkplain jakarta.persistence.Column column}
+ * of a relational database {@linkplain Table table}.
  *
  * @author Gavin King
  */

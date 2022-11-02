@@ -11,19 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Represents a @MappedSuperclass.
- * A @MappedSuperclass can be a superclass of an @Entity (root or not)
- *
- * This class primary goal is to give a representation to @MappedSuperclass
- * in the metamodel in order to reflect them in the JPA 2 metamodel.
- *
- * Do not use outside this use case.
- *
- * 
- * A proper redesign will be evaluated in Hibernate 4
- *
- * Implementation details:
- * properties are copies of their closest sub-persistentClass versions
+ * A mapping model object representing a {@linkplain jakarta.persistence.MappedSuperclass mapped superclass}
+ * of an entity class. A mapped superclass is not itself an entity, but it may declare persistent
+ * attributes which are inherited by entity subclasses.
  *
  * @author Emmanuel Bernard
  */

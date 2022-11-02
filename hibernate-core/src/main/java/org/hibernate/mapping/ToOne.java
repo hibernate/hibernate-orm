@@ -16,7 +16,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import java.util.Objects;
 
 /**
- * A simple-point association (ie. a reference to another entity).
+ * A mapping model object representing an association where the target side has cardinality one.
+ *
  * @author Gavin King
  */
 public abstract class ToOne extends SimpleValue implements Fetchable, SortableValue {

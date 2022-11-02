@@ -15,8 +15,7 @@ import org.hibernate.type.IdentifierBagType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * An {@code IdentifierBag} has a primary key consisting of
- * just the identifier column
+ * A bag with a generated (surrogate) key. Its primary key is just the identifier column.
  */
 public class IdentifierBag extends IdentifierCollection {
 

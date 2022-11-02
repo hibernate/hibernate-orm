@@ -26,7 +26,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * A relational table index
+ * A mapping model object representing an {@linkplain jakarta.persistence.Index index} on a relational database table.
  *
  * @author Gavin King
  */

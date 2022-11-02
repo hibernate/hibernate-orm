@@ -21,7 +21,9 @@ import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * A subclass in a table-per-class-hierarchy mapping
+ * A mapping model object that represents a subclass in an entity class
+ * {@linkplain jakarta.persistence.Inheritance inheritance} hierarchy.
+ *
  * @author Gavin King
  */
 public class Subclass extends PersistentClass {

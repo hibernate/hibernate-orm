@@ -20,7 +20,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A mapping for a one-to-many association
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToMany many-to-one association}.
  *
  * @author Gavin King
  */

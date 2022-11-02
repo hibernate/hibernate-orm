@@ -11,7 +11,10 @@ import java.util.List;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
- * A subclass in a table-per-concrete-class mapping
+ * A mapping model object that represents a subclass in a "union" or
+ * {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS "table per concrete class"}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class UnionSubclass extends Subclass implements TableOwner {

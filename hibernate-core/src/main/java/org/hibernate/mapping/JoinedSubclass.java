@@ -13,7 +13,10 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
- * A subclass in a table-per-subclass mapping
+ * A mapping model object that represents a subclass in a "joined" or
+ * {@linkplain jakarta.persistence.InheritanceType#JOINED "table per subclass"}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class JoinedSubclass extends Subclass implements TableOwner {

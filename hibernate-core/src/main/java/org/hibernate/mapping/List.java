@@ -16,6 +16,7 @@ import org.hibernate.type.ListType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
+ * A mapping model object representing a collection of type {@link java.util.List}.
  * A list mapping has a primary key consisting of the key columns + index column.
  *
  * @author Gavin King

@@ -18,8 +18,8 @@ import org.hibernate.type.SortedMapType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A map has a primary key consisting of
- * the key columns + index columns.
+ * A mapping model object representing a collection of type {@link java.util.Map}.
+ * A map has a primary key consisting of the key columns + index columns.
  */
 public class Map extends IndexedCollection {
 

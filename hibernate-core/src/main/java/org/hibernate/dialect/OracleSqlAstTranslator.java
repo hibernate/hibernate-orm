@@ -147,6 +147,19 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
 	}
 
+	@Override
+	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
+		// On Oracle 11 where there is no lateral support,
+		// make sure we don't use intersect if the query has an offset/fetch clause
+		return !queryPart.hasOffsetOrFetchClause();
+	}
+
+	@Override
+	protected boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if (getQueryPartForRowNumbering() == queryPart) {
@@ -200,22 +213,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 					querySpec,
 					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
 					() -> {
-						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-						final boolean needsWrapper;
-						if ( currentQueryPart instanceof QueryGroup ) {
-							// visitQuerySpec will add the select wrapper
-							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
-						}
-						else {
-							needsWrapper = true;
-						}
-						if ( needsWrapper ) {
-							appendSql( "select * from (" );
-						}
-						super.visitQuerySpec( querySpec );
-						if ( needsWrapper ) {
-							appendSql( ')' );
-						}
+						appendSql( "select * from " );
+						emulateFetchOffsetWithWindowFunctionsVisitQueryPart( querySpec );
 						appendSql( " where rownum<=" );
 						final Stack<Clause> clauseStack = getClauseStack();
 						clauseStack.push( Clause.WHERE );
@@ -486,23 +485,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-			return;
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
 	}
 
 }

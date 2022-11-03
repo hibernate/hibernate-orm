@@ -14,6 +14,7 @@ import java.sql.Types;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
@@ -21,6 +22,8 @@ import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
+import org.hibernate.dialect.function.DB2PositionFunction;
+import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
@@ -152,6 +155,11 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return getDB2Version().isBefore( 11 ) ? Types.SMALLINT : Types.BOOLEAN;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
@@ -214,6 +222,11 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	protected boolean supportsPredicateAsExpression() {
+		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return getDB2Version().isSameOrAfter( 11, 1 );
 	}
@@ -240,18 +253,14 @@ public class DB2LegacyDialect extends Dialect {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setArgumentCountBetween( 2, 4 )
-				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
-				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length[, units]])" )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length])" )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substring" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
-				.setArgumentCountBetween( 2, 4 )
-				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
-				.setArgumentListSignature( "(STRING string{ INTEGER from|,} start[{ INTEGER for|,} length[, units]])" )
-				.register();
+		queryEngine.getSqmFunctionRegistry().register(
+				"substring",
+				new DB2SubstringFunction( queryEngine.getTypeConfiguration() )
+		);
 		functionFactory.translate();
 		functionFactory.bitand();
 		functionFactory.bitor();
@@ -269,18 +278,38 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.octetLength();
 		functionFactory.ascii();
 		functionFactory.char_chr();
-		functionFactory.position();
 		functionFactory.trunc();
 		functionFactory.truncate();
 		functionFactory.insert();
-		functionFactory.overlayCharacterLength_overlay();
-		functionFactory.median();
 		functionFactory.stddev();
-		functionFactory.stddevPopSamp();
-		functionFactory.varPopSamp();
 		functionFactory.regrLinearRegressionAggregates();
 		functionFactory.variance();
-		functionFactory.varianceSamp();
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.position();
+			functionFactory.overlayLength_overlay( false );
+			functionFactory.median();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.stddevPopSamp();
+			functionFactory.varPopSamp();
+			functionFactory.varianceSamp();
+		}
+		else {
+			// Before version 11, the position function required the use of the code units
+			queryEngine.getSqmFunctionRegistry().register(
+					"position",
+					new DB2PositionFunction( queryEngine.getTypeConfiguration() )
+			);
+			// Before version 11, the overlay function required the use of the code units
+			functionFactory.overlayLength_overlay( true );
+			// ordered set aggregate functions are only available as of version 11, and we can't reasonably emulate them
+			// so no percent_rank, cume_dist, median, mode, percentile_cont or percentile_disc
+			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "stddev_pop", "stddev" );
+			functionFactory.stddevSamp_sumCount();
+			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
+			functionFactory.varSamp_sumCount();
+		}
+
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
 		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
 		functionFactory.dateTrunc();
@@ -335,10 +364,6 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.windowFunctions();
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
 			functionFactory.listagg( null );
-			if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-			}
 		}
 	}
 
@@ -362,50 +387,53 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( getDB2Version().isBefore( 11 ) ) {
+			return DB2Dialect.timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
+		}
 		StringBuilder pattern = new StringBuilder();
 		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		switch (unit) {
+		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append("(seconds_between(");
+				pattern.append( "(seconds_between(" );
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
 			case QUARTER:
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
-				pattern.append("trunc(months_between(");
+				pattern.append( "trunc(months_between(" );
 				break;
 			default:
-				pattern.append("?1s_between(");
+				pattern.append( "?1s_between(" );
 		}
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
-		}
-		else {
-			pattern.append("?3");
-		}
-		pattern.append(",");
-		if (castFrom) {
-			pattern.append("cast(?2 as timestamp)");
+		if ( castTo ) {
+			pattern.append( "cast(?3 as timestamp)" );
 		}
 		else {
-			pattern.append("?2");
+			pattern.append( "?3" );
 		}
-		pattern.append(")");
-		switch (unit) {
+		pattern.append( "," );
+		if ( castFrom ) {
+			pattern.append( "cast(?2 as timestamp)" );
+		}
+		else {
+			pattern.append( "?2" );
+		}
+		pattern.append( ")" );
+		switch ( unit ) {
 			case NATIVE:
-				pattern.append("+(microsecond(?3)-microsecond(?2))/1e6)");
+				pattern.append( "+(microsecond(?3)-microsecond(?2))/1e6)" );
 				break;
 			case NANOSECOND:
-				pattern.append("*1e9+(microsecond(?3)-microsecond(?2))*1e3)");
+				pattern.append( "*1e9+(microsecond(?3)-microsecond(?2))*1e3)" );
 				break;
 			case MONTH:
-				pattern.append(")");
+				pattern.append( ")" );
 				break;
 			case QUARTER:
-				pattern.append("/3)");
+				pattern.append( "/3)" );
 				break;
 		}
 		return pattern.toString();
@@ -692,7 +720,13 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
-		appender.appendSql( "BX'" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			appender.appendSql( "BX'" );
+		}
+		else {
+			// This should be fine on DB2 prior to 10
+			appender.appendSql( "X'" );
+		}
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
@@ -811,13 +845,18 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		if ( unit == TemporalUnit.WEEK ) {
-			// Not sure why, but `extract(week from '2019-05-27')` wrongly returns 21 and week_iso behaves correct
-			return "week_iso(?2)";
+		switch ( unit ) {
+			case WEEK:
+				// Not sure why, but `extract(week from '2019-05-27')` wrongly returns 21 and week_iso behaves correct
+				return "week_iso(?2)";
+			case DAY_OF_YEAR:
+				return "dayofyear(?2)";
+			case DAY_OF_WEEK:
+				return "dayofweek(?2)";
+			case QUARTER:
+				return "quarter(?2)";
 		}
-		else {
-			return super.extractPattern( unit );
-		}
+		return super.extractPattern( unit );
 	}
 
 	@Override

@@ -254,6 +254,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.radians();
 		functionFactory.degrees();
 		functionFactory.log10();
+		functionFactory.mod_operator();
 		functionFactory.rand();
 		functionFactory.truncate();
 		functionFactory.soundex();

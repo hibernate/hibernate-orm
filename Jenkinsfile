@@ -26,14 +26,24 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
+		// TODO: this block is just temporary for testing, but should ultimately be removed because this is tested nightly
+		new BuildEnvironment( dbName: 'h2_1_4' ),
+		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
+		new BuildEnvironment( dbName: 'derby_10_14' ),
+		new BuildEnvironment( dbName: 'mysql_5_7' ),
+		new BuildEnvironment( dbName: 'mariadb_10_3' ),
+		new BuildEnvironment( dbName: 'postgresql_10' ),
+		new BuildEnvironment( dbName: 'edb_10' ),
+		new BuildEnvironment( dbName: 'oracle_11_2' ),
+		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
+		new BuildEnvironment( dbName: 'mssql_2017' ),
+
 //		new BuildEnvironment( dbName: 'h2' ),
 //		new BuildEnvironment( dbName: 'hsqldb' ),
 //		new BuildEnvironment( dbName: 'derby' ),
 //		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mysql8' ),
 //		new BuildEnvironment( dbName: 'mariadb' ),
 //		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'postgresql_14' ),
 //		new BuildEnvironment( dbName: 'edb' ),
 //		new BuildEnvironment( dbName: 'oracle' ),
 //		new BuildEnvironment( dbName: 'db2' ),
@@ -126,55 +136,84 @@ stage('Build') {
 					try {
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "cockroachdb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v21.1.21').pull()
-									}
-									sh "./docker_db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
+								case "h2_1_4":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.h2=1.4.197 -Pgradle.libs.versions.h2gis=1.5.0"
+									break;
+								case "hsqldb_2_6":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.hsqldb=2.6.1"
+									break;
+								case "derby_10_14":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.derby=10.14.2.0"
 									break;
 								case "mysql":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:5.7').pull()
+										docker.image('mysql:8.0.31').pull()
 									}
 									sh "./docker_db.sh mysql"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mysql8":
+								case "mysql_5_7":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.21').pull()
+										docker.image('mysql:5.7.40').pull()
 									}
-									sh "./docker_db.sh mysql_8_0"
+									sh "./docker_db.sh mysql_5_7"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.7.5').pull()
+										docker.image('mariadb:10.9.3').pull()
 									}
 									sh "./docker_db.sh mariadb"
+									state[buildEnv.tag]['containerName'] = "mariadb"
+									break;
+								case "mariadb_10_3":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('mariadb:10.3.36').pull()
+									}
+									sh "./docker_db.sh mariadb_10_3"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:9.5-2.5').pull()
+										docker.image('postgis/postgis:14-3.3').pull()
 									}
 									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "postgresql_14":
+								case "postgresql_10":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:14-3.3').pull()
+										docker.image('postgis/postgis:10-2.5').pull()
 									}
-									sh "./docker_db.sh postgresql_14"
+									sh "./docker_db.sh postgresql_10"
 									state[buildEnv.tag]['containerName'] = "postgres"
+									break;
+								case "edb":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:14.5-3.2-postgis').pull()
+									sh "./docker_db.sh edb"
+									state[buildEnv.tag]['containerName'] = "edb"
+									break;
+								case "edb_10":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
+									sh "./docker_db.sh edb_10"
+									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "oracle":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:18.4.0-full').pull()
+										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
 									}
-									sh "./docker_db.sh oracle_18"
+									sh "./docker_db.sh oracle"
+									state[buildEnv.tag]['containerName'] = "oracle"
+									break;
+								case "oracle_11_2":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
+									}
+									sh "./docker_db.sh oracle_11"
 									state[buildEnv.tag]['containerName'] = "oracle"
 									break;
 								case "db2":
@@ -184,9 +223,21 @@ stage('Build') {
 									sh "./docker_db.sh db2"
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
+								case "db2_10_5":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									}
+									sh "./docker_db.sh db2_10_5"
+									state[buildEnv.tag]['containerName'] = "db2"
+									break;
 								case "mssql":
 									docker.image('mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf').pull()
 									sh "./docker_db.sh mssql"
+									state[buildEnv.tag]['containerName'] = "mssql"
+									break;
+								case "mssql_2017":
+									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
+									sh "./docker_db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "sybase":
@@ -196,10 +247,19 @@ stage('Build') {
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
-								case "edb":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
-									sh "./docker_db.sh edb"
-									state[buildEnv.tag]['containerName'] = "edb"
+								case "cockroachdb":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('cockroachdb/cockroach:v22.1.10').pull()
+									}
+									sh "./docker_db.sh cockroachdb"
+									state[buildEnv.tag]['containerName'] = "cockroach"
+									break;
+								case "cockroachdb_21_2":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('cockroachdb/cockroach:v21.2.16').pull()
+									}
+									sh "./docker_db.sh cockroachdb_21_2"
+									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}
@@ -208,7 +268,7 @@ stage('Build') {
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								try {
 									if (buildEnv.dbLockableResource == null) {
-										timeout( [time: buildEnv.longRunning ? 240 : 120, unit: 'MINUTES'] ) {
+										timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
 											sh cmd
 										}
 									}
@@ -217,7 +277,7 @@ stage('Build') {
 											if ( buildEnv.dbLockResourceAsHost ) {
 												cmd += " -DdbHost=${LOCKED_RESOURCE}"
 											}
-											timeout( [time: buildEnv.longRunning ? 240 : 120, unit: 'MINUTES'] ) {
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
 												sh cmd
 											}
 										}

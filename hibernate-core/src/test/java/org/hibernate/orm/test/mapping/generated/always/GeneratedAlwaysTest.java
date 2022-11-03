@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertEquals;
  */
 @DomainModel(annotatedClasses = GeneratedAlwaysTest.OrderLine.class)
 @SessionFactory
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 1) // 'generated always' was added in 2.0
 @SkipForDialect(dialectClass = HSQLDialect.class)
 @SkipForDialect(dialectClass = DerbyDialect.class)
 @SkipForDialect(dialectClass = SybaseASEDialect.class)

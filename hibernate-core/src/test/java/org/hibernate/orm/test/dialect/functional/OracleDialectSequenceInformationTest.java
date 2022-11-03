@@ -17,6 +17,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
+
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -70,33 +72,40 @@ public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunct
 	}
 
 	private SequenceInformation fetchSequenceInformation(String sequenceName) throws SQLException {
-		try ( Connection connection = sessionFactory().getJdbcServices()
-				.getBootstrapJdbcConnectionAccess()
-				.obtainConnection() ) {
-			JdbcEnvironment jdbcEnvironment = sessionFactory().getJdbcServices().getJdbcEnvironment();
-			SequenceInformationExtractorOracleDatabaseImpl sequenceExtractor = SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
-			Iterable<SequenceInformation> sequenceInformations = sequenceExtractor.extractMetadata(
-					new ExtractionContext.EmptyExtractionContext() {
+		return TransactionUtil.doWithJDBC(
+				sessionFactory().getServiceRegistry(),
+				connection -> {
+					JdbcEnvironment jdbcEnvironment = sessionFactory().getJdbcServices().getJdbcEnvironment();
+					SequenceInformationExtractorOracleDatabaseImpl sequenceExtractor = SequenceInformationExtractorOracleDatabaseImpl.INSTANCE;
+					Iterable<SequenceInformation> sequenceInformations = sequenceExtractor.extractMetadata(
+							new ExtractionContext.EmptyExtractionContext() {
 
-						@Override
-						public Connection getJdbcConnection() {
-							return connection;
-						}
+								@Override
+								public Connection getJdbcConnection() {
+									return connection;
+								}
 
-						@Override
-						public JdbcEnvironment getJdbcEnvironment() {
-							return jdbcEnvironment;
-						}
-					} );
+								@Override
+								public JdbcEnvironment getJdbcEnvironment() {
+									return jdbcEnvironment;
+								}
+							} );
 
-			// lets skip system sequences
-			Optional<SequenceInformation> foundSequence = StreamSupport.stream( sequenceInformations.spliterator(), false )
-					.filter( sequence -> sequenceName.equals( sequence.getSequenceName().getSequenceName().getText().toUpperCase() ) )
-					.findFirst();
+					// lets skip system sequences
+					Optional<SequenceInformation> foundSequence = StreamSupport.stream(
+									sequenceInformations.spliterator(),
+									false
+							)
+							.filter( sequence -> sequenceName.equals( sequence.getSequenceName()
+																			  .getSequenceName()
+																			  .getText()
+																			  .toUpperCase() ) )
+							.findFirst();
 
-			assertTrue( sequenceName + " not found", foundSequence.isPresent() );
+					assertTrue( sequenceName + " not found", foundSequence.isPresent() );
 
-			return foundSequence.get();
-		}
+					return foundSequence.get();
+				}
+		);
 	}
 }

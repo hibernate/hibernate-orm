@@ -160,15 +160,35 @@ dependencyResolutionManagement {
             alias( "weld" ).to( "org.jboss.weld.se", "weld-se-shaded" ).version( "4.0.1.SP1" )
         }
         dbLibs {
-            version( "h2", "2.1.210" )
+            String h2Version = settings.ext.find( "gradle.libs.versions.h2" )
+            if ( h2Version == null ) {
+                h2Version = "2.1.214"
+            }
+            String h2gisVersion = settings.ext.find( "gradle.libs.versions.h2gis" )
+            if ( h2gisVersion == null ) {
+                h2gisVersion = "2.1.0"
+            }
+            String hsqldbVersion = settings.ext.find( "gradle.libs.versions.hsqldb" )
+            if ( hsqldbVersion == null ) {
+                hsqldbVersion = "2.7.1"
+            }
+            String derbyVersion = settings.ext.find( "gradle.libs.versions.derby" )
+            if ( derbyVersion == null ) {
+                // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
+                derbyVersion = "10.15.2.0"
+            }
+            version( "h2", h2Version )
+            version( "h2gis", h2gisVersion )
+            version( "hsqldb", hsqldbVersion )
+            version( "derby", derbyVersion )
             version( "pgsql", "42.5.0" )
             version( "mysql", "8.0.27" )
             version( "oracle", "21.3.0.0" )
 
             alias( "h2" ).to( "com.h2database", "h2" ).versionRef( "h2" )
-            alias( "h2gis" ).to( "org.orbisgis", "h2gis" ).version( "2.0.0" )
-            alias( "hsqldb" ).to( "org.hsqldb", "hsqldb" ).version( "2.6.1" )
-            alias( "derby" ).to( "org.apache.derby", "derby" ).version( "10.14.2.0" )
+            alias( "h2gis" ).to( "org.orbisgis", "h2gis" ).versionRef( "h2gis" )
+            alias( "hsqldb" ).to( "org.hsqldb", "hsqldb" ).versionRef( "hsqldb" )
+            alias( "derby" ).to( "org.apache.derby", "derby" ).versionRef( "derby" )
             alias( "postgresql" ).to( "org.postgresql", "postgresql" ).versionRef( "pgsql" )
             alias( "cockroachdb" ).to( "org.postgresql", "postgresql" ).version( "42.2.8" )
             alias( "mysql" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )

@@ -55,6 +55,8 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -82,6 +84,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
 @TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212" })
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DefaultCatalogAndSchemaTest {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";

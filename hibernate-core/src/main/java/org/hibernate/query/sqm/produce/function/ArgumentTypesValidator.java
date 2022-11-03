@@ -187,7 +187,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case BOOLEAN:
 				// ugh, need to be careful here, need to accept all the
 				// JDBC type codes that a Dialect might use for BOOLEAN
-				if ( code != BOOLEAN && code != BIT && code != TINYINT ) {
+				if ( code != BOOLEAN && code != BIT && code != TINYINT && code != SMALLINT ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;

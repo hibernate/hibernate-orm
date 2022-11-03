@@ -14,7 +14,7 @@ package org.hibernate.dialect;
 public class SQLServer2016Dialect extends SQLServerDialect {
 
 	public SQLServer2016Dialect() {
-		super( DatabaseVersion.make( 16 ) );
+		super( DatabaseVersion.make( 13 ) );
 	}
 
 	@Override

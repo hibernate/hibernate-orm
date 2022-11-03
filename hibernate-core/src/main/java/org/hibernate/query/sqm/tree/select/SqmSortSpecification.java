@@ -26,17 +26,20 @@ public class SqmSortSpecification implements JpaOrder {
 			SqmExpression sortExpression,
 			SortOrder sortOrder,
 			NullPrecedence nullPrecedence) {
+		assert sortExpression != null;
+		assert sortOrder != null;
+		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, SortOrder.ASCENDING, null );
+		this( sortExpression, SortOrder.ASCENDING, NullPrecedence.NONE );
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
-		this( sortExpression, sortOrder, null );
+		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
 	public SqmSortSpecification copy(SqmCopyContext context) {

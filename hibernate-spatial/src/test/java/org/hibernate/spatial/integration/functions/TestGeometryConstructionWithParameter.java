@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.spatial.CommonSpatialFunction;
@@ -22,12 +23,14 @@ import org.hibernate.spatial.testing.domain.GeomEntity;
 
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
 
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 
 	final private Map<CommonSpatialFunction, String> templates = new HashMap<>();

@@ -8,6 +8,9 @@ package org.hibernate.orm.test.pagination;
 
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.OracleDialect;
+
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -18,6 +21,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +73,7 @@ public class SubqueryPaginationTest {
     }
 
     @Test
+    @SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Generates nested correlated subquery which is not supported in that version")
     public void testLimitInSubquery(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {
@@ -83,6 +88,8 @@ public class SubqueryPaginationTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
+    @SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Generates nested correlated subquery which is not supported in that version")
+    @SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "Generates nested correlated subquery which is not supported in that version")
     public void testLimitAndOffsetInSubquery(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {

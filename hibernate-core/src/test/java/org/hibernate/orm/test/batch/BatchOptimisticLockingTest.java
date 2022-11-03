@@ -17,19 +17,24 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.OracleDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(value = CockroachDialect.class, comment = "See https://hibernate.atlassian.net/browse/HHH-15668")
 public class BatchOptimisticLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
@@ -99,6 +104,11 @@ public class BatchOptimisticLockingTest extends
 				assertEquals(
 						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
 						expected.getMessage()
+				);
+			}
+			else if ( getDialect() instanceof OracleDialect && getDialect().getVersion().isBefore( 12 ) ) {
+				assertTrue(
+						expected.getCause() instanceof StaleObjectStateException
 				);
 			}
 			else {

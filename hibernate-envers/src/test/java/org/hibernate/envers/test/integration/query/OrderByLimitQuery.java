@@ -20,7 +20,6 @@ import org.junit.Test;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings("unchecked")
 public class OrderByLimitQuery extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 	private Integer id2;

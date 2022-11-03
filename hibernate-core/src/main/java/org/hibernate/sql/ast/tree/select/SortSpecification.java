@@ -25,6 +25,9 @@ public class SortSpecification implements SqlAstNode {
 	}
 
 	public SortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		assert sortExpression != null;
+		assert sortOrder != null;
+		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;

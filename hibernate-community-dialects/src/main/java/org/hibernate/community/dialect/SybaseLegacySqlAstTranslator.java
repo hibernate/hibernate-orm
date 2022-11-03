@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -146,6 +147,15 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		arithmeticExpression.getLeftHandOperand().accept( this );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

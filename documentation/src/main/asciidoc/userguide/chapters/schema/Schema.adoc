@@ -22,7 +22,7 @@ Considering the following Domain Model:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SchemaGenerationTest.java[tags=schema-generation-domain-model-example]
+include::{sourcedir}/BaseSchemaGeneratorTest.java[tags=schema-generation-domain-model-example]
 ----
 ====
 

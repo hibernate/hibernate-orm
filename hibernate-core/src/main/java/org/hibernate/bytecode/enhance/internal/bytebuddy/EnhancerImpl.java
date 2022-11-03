@@ -87,6 +87,8 @@ public class EnhancerImpl implements Enhancer {
 		};
 	}
 
+	private static final AnnotationDescription TRANSIENT_ANNOTATION = AnnotationDescription.Builder.ofType( Transient.class ).build();
+
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
 
@@ -218,7 +220,7 @@ public class EnhancerImpl implements Enhancer {
 				if ( collectionFields.isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -239,9 +241,9 @@ public class EnhancerImpl implements Enhancer {
 					//TODO es.enableInterfaceExtendedSelfDirtinessTracker ? Careful with consequences..
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, CollectionTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -347,7 +349,7 @@ public class EnhancerImpl implements Enhancer {
 								FieldPersistence.TRANSIENT,
 								Visibility.PRIVATE
 						)
-								.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+								.annotateField( TRANSIENT_ANNOTATION )
 						.defineMethod(
 								EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
 								void.class,
@@ -424,7 +426,7 @@ public class EnhancerImpl implements Enhancer {
 			String setterName) {
 		return builder
 				.defineField( fieldName, type, Visibility.PRIVATE, FieldPersistence.TRANSIENT )
-						.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+						.annotateField( TRANSIENT_ANNOTATION )
 				.defineMethod( getterName, type, Visibility.PUBLIC )
 						.intercept( FieldAccessor.ofField( fieldName ) )
 				.defineMethod( setterName, void.class, Visibility.PUBLIC )

@@ -92,7 +92,7 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
-			if ( ManagedTypeHelper.isManaged( entity ) ) {
+			if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
 				final ManagedEntity managed = ManagedTypeHelper.asManagedEntity( entity );
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
@@ -152,7 +152,7 @@ public class EntityEntryContext {
 	}
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
-		if ( ManagedTypeHelper.isManaged( entity ) ) {
+		if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
 			final ManagedEntity managedEntity = ManagedTypeHelper.asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated

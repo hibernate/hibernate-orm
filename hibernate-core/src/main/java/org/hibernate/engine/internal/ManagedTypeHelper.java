@@ -58,14 +58,6 @@ public final class ManagedTypeHelper {
 
 	/**
 	 * @param entity
-	 * @return true if and only if the entity implements {@see Managed}
-	 */
-	public static boolean isManaged(final Object entity) {
-		return entity instanceof EnhancedEntity || entity instanceof Managed;
-	}
-
-	/**
-	 * @param entity
 	 * @return true if and only if the entity implements {@see ManagedEntity}
 	 */
 	public static boolean isManagedEntity(final Object entity) {

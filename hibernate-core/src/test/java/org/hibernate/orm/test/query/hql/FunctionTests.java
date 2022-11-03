@@ -42,6 +42,7 @@ import org.hamcrest.Matchers;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -1437,7 +1438,7 @@ public class FunctionTests {
 							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123").getResultList().get(0),
-							is("Hello, 08:10:08 PM")
+							isOneOf( "Hello, 08:10:08 PM", "Hello, 08:10:08 pm" )
 					);
 				}
 		);

@@ -32,7 +32,7 @@ public class Misc3Test {
     @Table(name = "A")
     public static final class A {
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @GeneratedValue
         private Long id;
         @Basic
         private String name;
@@ -42,7 +42,7 @@ public class Misc3Test {
     @Table(name = "B", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
     public static final class B {
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @GeneratedValue
         private Long id;
 
         @Basic
@@ -56,7 +56,7 @@ public class Misc3Test {
     @Table(name = "C", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
     public static final class C {
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @GeneratedValue
         private Long id;
 
         @Basic

@@ -51,7 +51,7 @@ public class BooleanMappingTests {
 			assertThat(
 					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					// the implicit mapping will depend on the Dialect
-					isOneOf(Types.BOOLEAN, Types.BIT, Types.TINYINT)
+					isOneOf( Types.BOOLEAN, Types.BIT, Types.TINYINT, Types.SMALLINT )
 			);
 		}
 

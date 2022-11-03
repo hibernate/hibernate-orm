@@ -1598,7 +1598,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				nextIndex++;
 			}
 			else {
-				sortOrder = null;
+				sortOrder = SortOrder.ASCENDING;
 			}
 			parseTree = ctx.getChild( nextIndex );
 			if ( parseTree instanceof HqlParser.NullsPrecedenceContext ) {
@@ -1614,12 +1614,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 			else {
-				nullPrecedence = null;
+				nullPrecedence = NullPrecedence.NONE;
 			}
 		}
 		else {
-			sortOrder = null;
-			nullPrecedence = null;
+			sortOrder = SortOrder.ASCENDING;
+			nullPrecedence = NullPrecedence.NONE;
 		}
 
 		return new SqmSortSpecification( sortExpression, sortOrder, nullPrecedence );

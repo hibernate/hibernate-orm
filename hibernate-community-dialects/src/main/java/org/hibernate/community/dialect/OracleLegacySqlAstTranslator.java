@@ -200,22 +200,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					querySpec,
 					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
 					() -> {
-						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-						final boolean needsWrapper;
-						if ( currentQueryPart instanceof QueryGroup ) {
-							// visitQuerySpec will add the select wrapper
-							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
-						}
-						else {
-							needsWrapper = true;
-						}
-						if ( needsWrapper ) {
-							appendSql( "select * from (" );
-						}
-						super.visitQuerySpec( querySpec );
-						if ( needsWrapper ) {
-							appendSql( ')' );
-						}
+						appendSql( "select * from " );
+						emulateFetchOffsetWithWindowFunctionsVisitQueryPart( querySpec );
 						appendSql( " where rownum<=" );
 						final Stack<Clause> clauseStack = getClauseStack();
 						clauseStack.push( Clause.WHERE );
@@ -497,23 +483,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-			return;
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
 	}
 
 }

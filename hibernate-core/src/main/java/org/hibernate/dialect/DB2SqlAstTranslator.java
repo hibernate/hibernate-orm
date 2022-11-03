@@ -29,11 +29,14 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
@@ -43,6 +46,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	// We have to track whether we are in a later query for applying lateral during window emulation
+	private boolean inLateral;
 
 	public DB2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -114,7 +120,12 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
-		expression.accept( this );
+		if ( expression instanceof Predicate && getDB2Version().isBefore( 11 ) ) {
+			super.renderExpressionAsClauseItem( expression );
+		}
+		else {
+			expression.accept( this );
+		}
 	}
 
 	@Override
@@ -202,13 +213,18 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in DB2
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDB2Version().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
-		);
+		if ( getQueryPartForRowNumbering() == queryPart ) {
+			return false;
+		}
+		// Percent fetches or ties fetches aren't supported in DB2
+		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
+			return true;
+		}
+		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
+		return getDB2Version().isBefore( 11, 1 )
+				&& queryPart.getFetchClauseExpression() != null
+				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
 	}
 
 	protected boolean supportsOffsetClause() {
@@ -216,10 +232,41 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		final boolean oldLateral = inLateral;
+		inLateral = tableReference.isLateral();
+		super.visitQueryPartTableReference( tableReference );
+		inLateral = oldLateral;
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		if ( getQueryPartForRowNumbering() == statement.getQueryPart() && inLateral ) {
+			appendSql( "lateral " );
+		}
+		super.visitSelectStatement( statement );
+	}
+
+	@Override
+	protected void emulateFetchOffsetWithWindowFunctionsVisitQueryPart(QueryPart queryPart) {
+		if ( inLateral ) {
+			appendSql( "lateral " );
+			final boolean oldLateral = inLateral;
+			inLateral = false;
+			super.emulateFetchOffsetWithWindowFunctionsVisitQueryPart( queryPart );
+			inLateral = oldLateral;
+		}
+		else {
+			super.emulateFetchOffsetWithWindowFunctionsVisitQueryPart( queryPart );
+		}
+	}
+
+	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, emulateFetchClause );
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
 		}
 		else {
 			super.visitQueryGroup( queryGroup );
@@ -229,8 +276,9 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, emulateFetchClause );
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
+			emulateFetchOffsetWithWindowFunctions( querySpec, true );
 		}
 		else {
 			super.visitQuerySpec( querySpec );
@@ -249,6 +297,26 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			else if ( queryPart.getFetchClauseExpression() != null ) {
 				renderFetch( queryPart.getFetchClauseExpression(), null, queryPart.getFetchClauseType() );
 			}
+		}
+	}
+
+	@Override
+	protected void renderOffsetExpression(Expression offsetExpression) {
+		if ( supportsParameterOffsetFetchExpression() ) {
+			super.renderOffsetExpression( offsetExpression );
+		}
+		else {
+			renderExpressionAsLiteral( offsetExpression, getJdbcParameterBindings() );
+		}
+	}
+
+	@Override
+	protected void renderFetchExpression(Expression fetchExpression) {
+		if ( supportsParameterOffsetFetchExpression() ) {
+			super.renderFetchExpression( fetchExpression );
+		}
+		else {
+			renderExpressionAsLiteral( fetchExpression, getJdbcParameterBindings() );
 		}
 	}
 
@@ -373,6 +441,10 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	public DatabaseVersion getDB2Version() {
 		return this.getDialect().getVersion();
+	}
+
+	protected boolean supportsParameterOffsetFetchExpression() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 
 }

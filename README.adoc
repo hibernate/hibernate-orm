@@ -161,24 +161,16 @@ The following table illustrates a list of commands for various databases that ca
 |-
 |`./gradlew test -Pdb=derby`
 
-|MySQL 5.7
+|MySQL
 |`./docker_db.sh mysql`
-|`./gradlew test -Pdb=mysql_ci`
-
-|MySQL 8.0
-|`./docker_db.sh mysql_8_0`
 |`./gradlew test -Pdb=mysql_ci`
 
 |MariaDB
 |`./docker_db.sh mariadb`
 |`./gradlew test -Pdb=mariadb_ci`
 
-|PostgreSQL 10
+|PostgreSQL
 |`./docker_db.sh postgresql`
-|`./gradlew test -Pdb=pgsql_ci`
-
-|PostgreSQL 14
-|`./docker_db.sh postgresql_14`
 |`./gradlew test -Pdb=pgsql_ci`
 
 |EnterpriseDB
@@ -188,22 +180,6 @@ The following table illustrates a list of commands for various databases that ca
 |Oracle XE
 |`./docker_db.sh oracle`
 |`./gradlew test -Pdb=oracle_ci`
-
-|Oracle 11g
-|`./docker_db.sh oracle_11`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 18
-|`./docker_db.sh oracle_18`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 21
-|`./docker_db.sh oracle_21`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle EE
-|`./docker_db.sh oracle_ee`
-|`./gradlew test -Pdb=oracle_docker`
 
 |DB2
 |`./docker_db.sh db2`

@@ -26,9 +26,13 @@ import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DialectFilterExtension;
+import org.hibernate.testing.orm.junit.SkipForDialectGroup;
+import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -264,6 +268,48 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 
+		for ( org.hibernate.testing.orm.junit.SkipForDialect effectiveSkipForDialect : Helper.collectAnnotations(
+				org.hibernate.testing.orm.junit.SkipForDialect.class, SkipForDialectGroup.class, frameworkMethod, getTestClass()
+		) ) {
+			final boolean versionsMatch;
+			final int matchingMajorVersion = effectiveSkipForDialect.majorVersion();
+
+			if ( matchingMajorVersion >= 0 ) {
+				versionsMatch = DialectFilterExtension.versionsMatch(
+						matchingMajorVersion,
+						effectiveSkipForDialect.minorVersion(),
+						effectiveSkipForDialect.microVersion(),
+						dialect,
+						effectiveSkipForDialect.matchSubTypes()
+				);
+
+				if ( versionsMatch ) {
+					if ( effectiveSkipForDialect.matchSubTypes() ) {
+						if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
+							return buildIgnore( effectiveSkipForDialect );
+						}
+					}
+					else {
+						if ( effectiveSkipForDialect.dialectClass().equals( dialect.getClass() ) ) {
+							return buildIgnore( effectiveSkipForDialect );
+						}
+					}
+				}
+			}
+			else {
+				if ( effectiveSkipForDialect.matchSubTypes() ) {
+					if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
+						return buildIgnore( effectiveSkipForDialect );
+					}
+				}
+				else {
+					if ( effectiveSkipForDialect.dialectClass().equals( dialect.getClass() ) ) {
+						return buildIgnore( effectiveSkipForDialect );
+					}
+				}
+			}
+		}
+
 
 		// @RequiresDialects & @RequiresDialect
 		final List<RequiresDialect> requiresDialects = Helper.collectAnnotations(
@@ -326,6 +372,10 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private Ignore buildIgnore(SkipForDialect skip) {
 		return buildIgnore( "@SkipForDialect match", skip.comment(), skip.jiraKey() );
+	}
+
+	private Ignore buildIgnore(org.hibernate.testing.orm.junit.SkipForDialect skip) {
+		return buildIgnore( "@SkipForDialect match", skip.reason(), null );
 	}
 
 	private Ignore buildIgnore(String reason, String comment, String jiraKey) {

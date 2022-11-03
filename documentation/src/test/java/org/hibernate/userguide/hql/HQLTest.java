@@ -47,7 +47,7 @@ import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Before;
@@ -1534,8 +1534,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(DerbyDialect.class)
-	@SkipForDialect(SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	public void test_hql_aggregate_functions_within_group_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]
@@ -1552,7 +1552,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-concat-function-example[]
@@ -1716,7 +1716,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/26710")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/26710")
 	public void test_hql_sqrt_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-sqrt-function-example[]
@@ -1731,8 +1731,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(SQLServerDialect.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_current_date_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-date-function-example[]
@@ -1869,7 +1869,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void test_hql_str_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-str-function-example[]
@@ -2006,7 +2006,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-all-example[]
@@ -3234,6 +3234,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			DialectChecks.SupportsSubqueryInOnClause.class,
 			DialectChecks.SupportsOrderByInCorrelatedSubquery.class
 	})
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "The lateral emulation for Oracle 11 would be very complex because nested correlation is unsupported")
 	public void test_hql_derived_join_example() {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {

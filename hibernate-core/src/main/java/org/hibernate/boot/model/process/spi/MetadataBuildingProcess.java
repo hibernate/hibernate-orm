@@ -379,11 +379,15 @@ public class MetadataBuildingProcess {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		final TypeContributions typeContributions = () -> typeConfiguration;
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
+		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );
+		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
+		final JdbcType dialectIntervalDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -391,10 +395,14 @@ public class MetadataBuildingProcess {
 		}
 
 		// add fallback type descriptors
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		final int preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
-			jdbcTypeRegistry.addDescriptor( SqlTypes.UUID, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForUuid ) );
+			if ( jdbcTypeRegistry.findDescriptor( SqlTypes.UUID ) == dialectUuidDescriptor ) {
+				jdbcTypeRegistry.addDescriptor(
+						SqlTypes.UUID,
+						jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForUuid )
+				);
+			}
 		}
 		else {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
@@ -404,7 +412,12 @@ public class MetadataBuildingProcess {
 
 		final int preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
-			jdbcTypeRegistry.addDescriptor( SqlTypes.ARRAY, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray ) );
+			if ( jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY ) == dialectArrayDescriptor ) {
+				jdbcTypeRegistry.addDescriptor(
+						SqlTypes.ARRAY,
+						jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray )
+				);
+			}
 		}
 		else if ( jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY ) == null ) {
 			// Fallback to VARBINARY
@@ -413,7 +426,12 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
 		final int preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( bootstrapContext.getServiceRegistry() );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
-			jdbcTypeRegistry.addDescriptor( SqlTypes.INTERVAL_SECOND, jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForDuration ) );
+			if ( jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND ) == dialectIntervalDescriptor ) {
+				jdbcTypeRegistry.addDescriptor(
+						SqlTypes.INTERVAL_SECOND,
+						jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForDuration )
+				);
+			}
 		}
 		else {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.NUMERIC );

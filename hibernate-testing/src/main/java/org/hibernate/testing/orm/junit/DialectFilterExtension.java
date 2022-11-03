@@ -111,7 +111,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 		return buffer.toString();
 	}
 
-	private boolean versionsMatch(
+	public static boolean versionsMatch(
 			int matchingMajorVersion,
 			int matchingMinorVersion,
 			int matchingMicroVersion,

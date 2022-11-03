@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -309,6 +310,31 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 		}
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			functionFactory.leastGreatest();
+		}
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			switch ( specification ) {
+				case BOTH:
+					return character == ' '
+							? "trim(?1)"
+							: "trim('" + character + "' from ?1)";
+				case LEADING:
+					return character == ' '
+							? "ltrim(?1)"
+							: "ltrim(?1,'" + character + "')";
+				case TRAILING:
+					return character == ' '
+							? "rtrim(?1)"
+							: "rtrim(?1,'" + character + "')";
+			}
+			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
+		}
+		return super.trimPattern( specification, character );
 	}
 
 	@Override
@@ -395,6 +421,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsValuesList() {
 		return getVersion().isSameOrAfter( 10 );
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -902,7 +933,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 13 ) ) {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );

@@ -508,7 +508,8 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.trunc();
 		functionFactory.log();
-		if ( getVersion().isSameOrAfter(12) ) {
+		functionFactory.mod_operator();
+		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.log10();
 			functionFactory.tanh();
 			functionFactory.sinh();

@@ -396,7 +396,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
-					|| dialect instanceof DB2Dialect
+					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
 					|| dialect instanceof OracleDialect
 					|| dialect instanceof SpannerDialect
 					|| dialect instanceof SQLServerDialect;
@@ -409,7 +409,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
-					|| dialect instanceof DB2Dialect
+					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
 					|| dialect instanceof OracleDialect
 					|| dialect instanceof SpannerDialect
 					|| dialect instanceof SQLServerDialect;
@@ -451,7 +451,8 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
-					|| dialect instanceof DerbyDialect )
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) )
 				|| dialect instanceof MariaDBDialect;
 		}
 	}

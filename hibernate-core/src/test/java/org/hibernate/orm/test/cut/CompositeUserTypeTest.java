@@ -226,7 +226,7 @@ public class CompositeUserTypeTest {
 					final Transaction t2 = new Transaction();
 					t2.setDescription( "bar" );
 					t2.setValue( new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "USD" ) ) );
-					t1.setTimestamp( new CompositeDateTime( 2014, 8, 22, 14, 23, 0 ) );
+					t2.setTimestamp( new CompositeDateTime( 2014, 8, 22, 14, 23, 0 ) );
 					session.persist( t2 );
 
 					final Transaction t3 = new Transaction();

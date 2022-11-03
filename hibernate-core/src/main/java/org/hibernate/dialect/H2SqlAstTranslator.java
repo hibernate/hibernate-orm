@@ -231,6 +231,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	}
 
 	@Override
+	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
+		// Seems that before, this was buggy
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
+	}
+
+	@Override
 	protected boolean supportsNullPrecedence() {
 		// Support for nulls clause in listagg was added in 2.0
 		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );

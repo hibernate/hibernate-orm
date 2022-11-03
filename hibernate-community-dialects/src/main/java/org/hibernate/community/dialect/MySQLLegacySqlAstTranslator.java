@@ -171,6 +171,16 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
+	protected boolean supportsSimpleQueryGrouping() {
+		return getDialect().getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	protected boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
+	@Override
 	protected String getFromDual() {
 		return " from dual";
 	}

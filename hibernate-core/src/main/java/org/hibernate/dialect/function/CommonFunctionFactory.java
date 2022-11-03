@@ -435,9 +435,33 @@ public class CommonFunctionFactory {
 	 */
 	public void varianceSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance_samp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	private static final String VAR_SAMP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1)-1,0)";
+
+	/**
+	 * DB2 before 11
+	 */
+	public void varSamp_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_samp", VAR_SAMP_SUM_COUNT_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	/**
+	 * DB2 before 11
+	 */
+	public void stddevSamp_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "stddev_samp", "sqrt(" + VAR_SAMP_SUM_COUNT_PATTERN + ")" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -933,11 +957,11 @@ public class CommonFunctionFactory {
 	 * for databases that have to emulate the boolean
 	 * aggregation functions using sum() and case.
 	 */
-	public void everyAny_sumCase() {
+	public void everyAny_sumCase(boolean supportsPredicateAsExpression) {
 		functionRegistry.register( "every",
-				new EveryAnyEmulation( typeConfiguration, true ) );
+				new EveryAnyEmulation( typeConfiguration, true, supportsPredicateAsExpression ) );
 		functionRegistry.register( "any",
-				new EveryAnyEmulation( typeConfiguration, false ) );
+				new EveryAnyEmulation( typeConfiguration, false, supportsPredicateAsExpression ) );
 	}
 
 	/**
@@ -1691,14 +1715,13 @@ public class CommonFunctionFactory {
 	/**
 	 * For DB2 which has a broken implementation of overlay()
 	 */
-	public void overlayCharacterLength_overlay() {
+	public void overlayLength_overlay(boolean withCodeUnits) {
+		final String codeUnits = withCodeUnits ? " using codeunits32" : "";
 		functionRegistry.registerTernaryQuaternaryPattern(
 						"overlay",
 						stringType,
-						//use character_length() here instead of length()
-						//because DB2 doesn't like "length(?)"
-						"overlay(?1 placing ?2 from ?3 for character_length(?2))",
-						"overlay(?1 placing ?2 from ?3 for ?4)",
+						"overlay(?1 placing ?2 from ?3 for character_length(?2" + (withCodeUnits ? ",codeunits32" : "") + ")" + codeUnits + ")",
+						"overlay(?1 placing ?2 from ?3 for ?4" + codeUnits + ")",
 						STRING, STRING, INTEGER, INTEGER,
 						typeConfiguration
 				)

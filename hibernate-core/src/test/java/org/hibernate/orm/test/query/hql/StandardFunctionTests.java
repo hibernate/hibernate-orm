@@ -14,6 +14,7 @@ import java.time.LocalTime;
 
 import org.hibernate.dialect.CockroachDialect;
 
+import org.hamcrest.Matchers;
 import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @author Steve Ebersole
@@ -924,7 +926,7 @@ public class StandardFunctionTests {
 											"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
 									.getResultList()
 									.get( 0 ),
-							is( "Hello, 08:10:08 PM" )
+							isOneOf( "Hello, 08:10:08 PM", "Hello, 08:10:08 pm" )
 					);
 				}
 		);

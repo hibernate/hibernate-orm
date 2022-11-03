@@ -852,7 +852,7 @@ public abstract class Dialect implements ConversionContext {
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
 
-		functionFactory.everyAny_sumCase();
+		functionFactory.everyAny_sumCase( supportsPredicateAsExpression() );
 
 		//math functions supported on almost every database
 
@@ -3897,6 +3897,14 @@ public abstract class Dialect implements ConversionContext {
 	 * @return true if there is a {@code BIT} or {@code BOOLEAN} type
 	 */
 	public boolean supportsBitType() {
+		return true;
+	}
+
+	/**
+	 * Whether a predicate like `a > 0` can appear in an expression context e.g. a select item list.
+	 */
+	protected boolean supportsPredicateAsExpression() {
+		// Most databases seem to allow that
 		return true;
 	}
 

@@ -18,7 +18,7 @@ public class OrderingSpecification implements Node {
 	private final OrderingExpression orderingExpression;
 
 	private String collation;
-	private SortOrder sortOrder;
+	private SortOrder sortOrder = SortOrder.ASCENDING;
 	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
 	private String orderByValue;
 

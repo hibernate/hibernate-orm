@@ -121,7 +121,7 @@ public class MySQLDropConstraintThrowsExceptionTest {
 					.filter(
 							sql -> sql.toLowerCase().contains( "alter " )
 					).map( String::trim ).collect( Collectors.toList() );
-			if ( metadata.getDatabase().getDialect() instanceof MariaDBDialect ) {
+			if ( metadata.getDatabase().getDialect().supportsIfExistsAfterAlterTable() ) {
 				assertTrue( alterStatements.get( 0 ).matches( "alter table if exists CUSTOMER\\s+drop index .*?" ) );
 				assertTrue( alterStatements.get( 1 )
 									.matches( "alter table if exists CUSTOMER\\s+add constraint .*? unique \\(CUSTOMER_ID\\)" ) );

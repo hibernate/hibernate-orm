@@ -32,6 +32,11 @@ import net.bytebuddy.jar.asm.Type;
 
 final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 
+	private static final String HELPER_TYPE_NAME = Type.getInternalName( InlineDirtyCheckerEqualsHelper.class );
+	private static final Type PE_INTERCEPTABLE_TYPE = Type.getType( PersistentAttributeInterceptable.class );
+	private static final Type OBJECT_TYPE = Type.getType( Object.class );
+	private static final Type STRING_TYPE = Type.getType( String.class );
+
 	private final Implementation delegate;
 
 	private final TypeDescription managedCtClass;
@@ -135,16 +140,17 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		int branchCode;
 		if ( applyLazyCheck ) {
 			if ( persistentField.getType().isPrimitive() ) {
+				final Type fieldType = Type.getType( persistentField.getDescriptor() );
 				methodVisitor.visitMethodInsn(
 						Opcodes.INVOKESTATIC,
-						Type.getInternalName( InlineDirtyCheckerEqualsHelper.class ),
+						HELPER_TYPE_NAME,
 						"areEquals",
 						Type.getMethodDescriptor(
-								Type.getType( boolean.class ),
-								Type.getType( PersistentAttributeInterceptable.class ),
-								Type.getType( String.class ),
-								Type.getType( persistentField.getDescriptor() ),
-								Type.getType( persistentField.getDescriptor() )
+								Type.BOOLEAN_TYPE,
+								PE_INTERCEPTABLE_TYPE,
+								STRING_TYPE,
+								fieldType,
+								fieldType
 						),
 						false
 				);
@@ -152,14 +158,14 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			else {
 				methodVisitor.visitMethodInsn(
 						Opcodes.INVOKESTATIC,
-						Type.getInternalName( InlineDirtyCheckerEqualsHelper.class ),
+						HELPER_TYPE_NAME,
 						"areEquals",
 						Type.getMethodDescriptor(
-								Type.getType( boolean.class ),
-								Type.getType( PersistentAttributeInterceptable.class ),
-								Type.getType( String.class ),
-								Type.getType( Object.class ),
-								Type.getType( Object.class )
+								Type.BOOLEAN_TYPE,
+								PE_INTERCEPTABLE_TYPE,
+								STRING_TYPE,
+								OBJECT_TYPE,
+								OBJECT_TYPE
 						),
 						false
 				);
@@ -188,9 +194,9 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 						Type.getInternalName( Objects.class ),
 						"deepEquals",
 						Type.getMethodDescriptor(
-								Type.getType( boolean.class ),
-								Type.getType( Object.class ),
-								Type.getType( Object.class )
+								Type.BOOLEAN_TYPE,
+								OBJECT_TYPE,
+								OBJECT_TYPE
 						),
 						false
 				);
@@ -206,7 +212,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				Opcodes.INVOKEVIRTUAL,
 				managedCtClass.getInternalName(),
 				EnhancerConstants.TRACKER_CHANGER_NAME,
-				Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( String.class ) ),
+				Type.getMethodDescriptor( Type.VOID_TYPE, STRING_TYPE ),
 				false
 		);
 		// }

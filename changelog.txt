@@ -3,6 +3,28 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.13.Final (November 03, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32112
+
+** Bug
+    * [HHH-15634] - Lazy basic property does not get updated on change
+    * [HHH-15561] - Function "IDENTITY" not found when inserting audited revision using Hibernate Envers
+    * [HHH-15554] - Merge of an Entity with an immutable composite user type throws Exception 
+
+** Improvement
+    * [HHH-15649] - Additional performance fixes relating to Klass's _secondary_super_cache interaction with entity enhancement
+    * [HHH-15639] - Upgrade to ByteBuddy 1.12.18
+    * [HHH-15637] - Upgrade to Byteman 4.0.20
+    * [HHH-15616] - Mitigate performance impact of entity enhancement on Klass's _secondary_super_cache
+    * [HHH-15585] - Add support for DB2 aliases for schema validation
+    * [HHH-15575] - Make getter org.hibernate.criterion.SimpleExpression#getOp() public
+
+** Task
+    * [HHH-15594] - Remove Oracle RDS and all test matrix uses
+
+
 Changes in 5.6.12.Final (September 27, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

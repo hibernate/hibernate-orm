@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isManaged;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 
 /**
@@ -95,7 +94,7 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
-			if ( isManaged( entity ) ) {
+			if ( isManagedEntity( entity ) ) {
 				final ManagedEntity managed = asManagedEntity( entity );
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
@@ -155,7 +154,7 @@ public class EntityEntryContext {
 	}
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
-		if ( isManaged( entity ) ) {
+		if ( isManagedEntity( entity ) ) {
 			final ManagedEntity managedEntity = asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated

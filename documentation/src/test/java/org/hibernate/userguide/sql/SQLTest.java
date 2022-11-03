@@ -18,6 +18,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.Account;
@@ -373,19 +374,20 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_sql_hibernate_entity_associations_query_many_to_one_join_result_transformer_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
-			//tag::sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example[]
+			//tag::sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example[]
 			List<Phone> phones = session.createNativeQuery(
-				"SELECT {ph.*}, {pr.*} " +
-				"FROM Phone ph " +
-				"JOIN Person pr ON ph.person_id = pr.id")
-			.addEntity("ph", Phone.class)
-			.addJoin("pr", "ph.person")
-			.list();
+							"SELECT {ph.*}, {pr.*} " +
+									"FROM Phone ph " +
+									"JOIN Person pr ON ph.person_id = pr.id")
+					.addEntity("ph", Phone.class)
+					.addJoin("pr", "ph.person")
+					.setTupleTransformer( (TupleTransformer<Phone>) (tuple, aliases) -> (Phone) tuple[0] )
+					.list();
 
 			for (Phone person : phones) {
 				person.getPerson();
 			}
-			//end::sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example[]
+			//end::sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example[]
 			assertEquals(3, phones.size());
 		});
 	}

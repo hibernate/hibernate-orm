@@ -279,7 +279,7 @@ public class CMTTest {
 
 	@Test
 	@RequiresDialectFeature(
-			feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
+			feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true,
 			comment = "write locks block readers"
 	)
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading a row that is exclusively locked by a different TX")

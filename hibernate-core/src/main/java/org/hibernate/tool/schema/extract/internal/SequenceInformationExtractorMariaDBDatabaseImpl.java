@@ -28,7 +28,7 @@ public class SequenceInformationExtractorMariaDBDatabaseImpl extends SequenceInf
 
 	// SQL to get metadata from individual sequence
 	private static final String SQL_SEQUENCE_QUERY =
-			"SELECT '%1$s' as sequence_name, minimum_value, maximum_value, start_value, increment, cache_size FROM %1$s ";
+			"SELECT '%1$s' as sequence_name, minimum_value, maximum_value, start_value, increment, cache_size FROM `%1$s` ";
 
 	private static final String UNION_ALL =
 			"UNION ALL ";

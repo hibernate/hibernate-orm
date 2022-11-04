@@ -206,7 +206,7 @@ public class EntityBinder {
 	public static void bindEntityClass(
 			XClass clazzToProcess,
 			Map<XClass, InheritanceState> inheritanceStates,
-			HashMap<String, IdentifierGeneratorDefinition> generators,
+			Map<String, IdentifierGeneratorDefinition> generators,
 			MetadataBuildingContext context) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
@@ -252,7 +252,7 @@ public class EntityBinder {
 	private void handleIdentifier(
 			PropertyHolder propertyHolder,
 			Map<XClass, InheritanceState> inheritanceStates,
-			HashMap<String, IdentifierGeneratorDefinition> generators,
+			Map<String, IdentifierGeneratorDefinition> generators,
 			InheritanceState inheritanceState) {
 		final ElementsToProcess elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
@@ -858,7 +858,7 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context,
 			PropertyHolder propertyHolder,
-			HashMap<String, IdentifierGeneratorDefinition> generators,
+			Map<String, IdentifierGeneratorDefinition> generators,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
 			Map<XClass, InheritanceState> inheritanceStates) {

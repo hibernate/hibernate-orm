@@ -20,6 +20,7 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
@@ -70,6 +71,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
+	@Deprecated(since="6.2") @Remove
 	public Table() {
 		this( "orm" );
 	}
@@ -123,10 +125,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public String getQualifiedName(SqlStringGenerationContext context) {
-		if ( subselect != null ) {
-			return "( " + subselect + " )";
-		}
-		return context.format( new QualifiedTableName( catalog, schema, name ) );
+		return subselect != null
+				? "( " + subselect + " )"
+				: context.format( new QualifiedTableName( catalog, schema, name ) );
 	}
 
 	/**
@@ -135,7 +136,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
-		StringBuilder qualifiedName = new StringBuilder();
+		final StringBuilder qualifiedName = new StringBuilder();
 		if ( catalog != null ) {
 			qualifiedName.append( catalog ).append( '.' );
 		}
@@ -232,8 +233,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		if ( column == null ) {
 			return null;
 		}
-		final Column myColumn = columns.get( column.getCanonicalName() );
-		return column.equals( myColumn ) ? myColumn : null;
+		else {
+			final Column existing = columns.get( column.getCanonicalName() );
+			return column.equals( existing ) ? existing : null;
+		}
 	}
 
 	public Column getColumn(Identifier name) {
@@ -255,8 +258,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		final Column old = getColumn( column );
 		if ( old == null ) {
 			if ( primaryKey != null ) {
-				for ( Column c : primaryKey.getColumns() ) {
-					if ( c.getCanonicalName().equals( column.getCanonicalName() ) ) {
+				for ( Column pkColumn : primaryKey.getColumns() ) {
+					if ( pkColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
 						column.setNullable( false );
 						if ( log.isDebugEnabled() ) {
 							log.debugf(
@@ -356,7 +359,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 					// condition 1 : check against other unique keys
 					for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
-						// make sure its not the same unique key
+						// make sure it's not the same unique key
 						if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
 							continue;
 						}
@@ -387,7 +390,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return false;
 		}
 		return primaryKey.getColumns().containsAll( uniqueKey.getColumns() )
-				&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
+			&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
 	}
 
 	@Override
@@ -406,16 +409,17 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public boolean equals(Table table) {
-		if (null == table) {
+		if ( null == table ) {
 			return false;
 		}
-		if (this == table) {
+		else if ( this == table ) {
 			return true;
 		}
-
-		return Identifier.areEqual( name, table.name )
+		else {
+			return Identifier.areEqual( name, table.name )
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
+		}
 	}
 
 	public Iterator<String> sqlAlterStrings(
@@ -425,11 +429,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
 		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName( catalog, schema, name ) );
 
-		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
+		final StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
-		List<String> results = new ArrayList<>();
+		final List<String> results = new ArrayList<>();
 
 		for ( Column column : getColumns() ) {
 			final ColumnInformation columnInfo = tableInfo.getColumn(
@@ -438,11 +442,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 			if ( columnInfo == null ) {
 				// the column doesn't exist at all.
-				StringBuilder alter = new StringBuilder( root.toString() )
+				final StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) );
 
-				String columnType = column.getSqlType(
+				final String columnType = column.getSqlType(
 						metadata.getDatabase().getTypeConfiguration(),
 						dialect,
 						metadata
@@ -451,12 +455,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 					alter.append( ' ' ).append(columnType);
 				}
 
-				String defaultValue = column.getDefaultValue();
+				final String defaultValue = column.getDefaultValue();
 				if ( defaultValue != null ) {
 					alter.append( " default " ).append( defaultValue );
 				}
 
-				String generatedAs = column.getGeneratedAs();
+				final String generatedAs = column.getGeneratedAs();
 				if ( generatedAs != null) {
 					alter.append( dialect.generatedAs( generatedAs ) );
 				}
@@ -476,12 +480,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
 				}
 
-				String checkConstraint = column.checkConstraint();
+				final String checkConstraint = column.checkConstraint();
 				if ( checkConstraint !=null && dialect.supportsColumnCheck() ) {
 					alter.append( checkConstraint );
 				}
 
-				String columnComment = column.getComment();
+				final String columnComment = column.getComment();
 				if ( columnComment != null ) {
 					alter.append( dialect.getColumnComment( columnComment ) );
 				}
@@ -513,16 +517,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public Index getOrCreateIndex(String indexName) {
-
 		Index index =  indexes.get( indexName );
-
 		if ( index == null ) {
 			index = new Index();
 			index.setName( indexName );
 			index.setTable( this );
 			indexes.put( indexName, index );
 		}
-
 		return index;
 	}
 
@@ -550,11 +551,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
-		UniqueKey uk = getOrCreateUniqueKey( keyName );
+		UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
 		for (Column keyColumn : keyColumns) {
-			uk.addColumn( keyColumn );
+			uniqueKey.addColumn( keyColumn );
 		}
-		return uk;
+		return uniqueKey;
 	}
 
 	public UniqueKey getUniqueKey(String keyName) {
@@ -562,15 +563,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
-		UniqueKey uk = uniqueKeys.get( keyName );
-
-		if ( uk == null ) {
-			uk = new UniqueKey();
-			uk.setName( keyName );
-			uk.setTable( this );
-			uniqueKeys.put( keyName, uk );
+		UniqueKey uniqueKey = uniqueKeys.get( keyName );
+		if ( uniqueKey == null ) {
+			uniqueKey = new UniqueKey();
+			uniqueKey.setName( keyName );
+			uniqueKey.setTable( this );
+			uniqueKeys.put( keyName, uniqueKey );
 		}
-		return uk;
+		return uniqueKey;
 	}
 
 	public void createForeignKeys() {
@@ -588,31 +588,31 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			List<Column> referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
-		ForeignKey fk = foreignKeys.get( key );
-		if ( fk == null ) {
-			fk = new ForeignKey();
-			fk.setTable( this );
-			fk.setReferencedEntityName( referencedEntityName );
-			fk.setKeyDefinition( keyDefinition );
+		ForeignKey foreignKey = foreignKeys.get( key );
+		if ( foreignKey == null ) {
+			foreignKey = new ForeignKey();
+			foreignKey.setTable( this );
+			foreignKey.setReferencedEntityName( referencedEntityName );
+			foreignKey.setKeyDefinition( keyDefinition );
 			for (Column keyColumn : keyColumns) {
-				fk.addColumn( keyColumn );
+				foreignKey.addColumn( keyColumn );
 			}
 			if ( referencedColumns != null ) {
-				fk.addReferencedColumns( referencedColumns );
+				foreignKey.addReferencedColumns( referencedColumns );
 			}
 
 			// NOTE : if the name is null, we will generate an implicit name during second pass processing
 			// after we know the referenced table name (which might not be resolved yet).
-			fk.setName( keyName );
+			foreignKey.setName( keyName );
 
-			foreignKeys.put( key, fk );
+			foreignKeys.put( key, foreignKey );
 		}
 
 		if ( keyName != null ) {
-			fk.setName( keyName );
+			foreignKey.setName( keyName );
 		}
 
-		return fk;
+		return foreignKey;
 	}
 
 
@@ -651,7 +651,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public String toString() {
-		StringBuilder buf = new StringBuilder().append( getClass().getSimpleName() )
+		final StringBuilder buf = new StringBuilder()
+				.append( getClass().getSimpleName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
 			buf.append( getCatalog() ).append( "." );
@@ -718,11 +719,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	@Override
 	public String getExportIdentifier() {
-		return Table.qualify(
-				render( catalog ),
-				render( schema ),
-				name.render()
-		);
+		return Table.qualify( render( catalog ), render( schema ), name.render() );
 	}
 
 	private String render(Identifier identifier) {
@@ -739,12 +736,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			Objects.requireNonNull( referencedClassName );
 			this.referencedClassName = referencedClassName;
 			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
-			if ( referencedColumns != null ) {
-				this.referencedColumns = referencedColumns.toArray( EMPTY_COLUMN_ARRAY );
-			}
-			else {
-				this.referencedColumns = EMPTY_COLUMN_ARRAY;
-			}
+			this.referencedColumns = referencedColumns != null
+					? referencedColumns.toArray(EMPTY_COLUMN_ARRAY)
+					: EMPTY_COLUMN_ARRAY;
 		}
 
 		public int hashCode() {
@@ -753,7 +747,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk != null && Arrays.equals( fkk.columns, columns ) && Arrays.equals( fkk.referencedColumns, referencedColumns );
+			return fkk != null
+				&& Arrays.equals( fkk.columns, columns )
+				&& Arrays.equals( fkk.referencedColumns, referencedColumns );
 		}
 
 		@Override
@@ -785,7 +781,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return Collections.emptyList();
 		}
 		else {
-			List<InitCommand> initCommands = new ArrayList<>();
+			final List<InitCommand> initCommands = new ArrayList<>();
 			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
 				initCommands.add( producer.apply( context ) );
 			}

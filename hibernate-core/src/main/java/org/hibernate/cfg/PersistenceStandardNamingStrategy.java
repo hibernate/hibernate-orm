@@ -15,6 +15,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class PersistenceStandardNamingStrategy implements NamingStrategy, Serializable {
 	public static final NamingStrategy INSTANCE = new PersistenceStandardNamingStrategy();
 

@@ -55,7 +55,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	@Override
+	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -89,7 +89,7 @@ public class ForeignKey extends Constraint {
 						referencedColumnNames,
 						isReferenceToPrimaryKey()
 				);
-		
+
 		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
 				? result + " on delete cascade"
 				: result;
@@ -164,23 +164,6 @@ public class ForeignKey extends Constraint {
 
 	public void setKeyDefinition(String keyDefinition) {
 		this.keyDefinition = keyDefinition;
-	}
-	
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context,
-			String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		String tableName = getTable().getQualifiedName( context );
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append( dialect.getDropForeignKeyString() );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( dialect.quote( getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
 	}
 
 	public boolean isCascadeDeleteEnabled() {

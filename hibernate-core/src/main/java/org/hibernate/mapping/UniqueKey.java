@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -22,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 public class UniqueKey extends Constraint {
 	private final Map<Column, String> columnOrderMap = new HashMap<>();
 
-	@Override
+	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -31,27 +30,6 @@ public class UniqueKey extends Constraint {
 //		return dialect.getUniqueDelegate().uniqueConstraintSql( this );
 		// Not used.
 		return "";
-	}
-
-	@Override
-	public String sqlCreateString(
-			Mapping p,
-			SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		return null;
-//		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
-//				this, defaultCatalog, defaultSchema
-//		);
-	}
-
-	@Override
-	public String sqlDropString(
-			SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		return null;
-//		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
-//				this, defaultCatalog, defaultSchema
-//		);
 	}
 
 	public void addColumn(Column column, String order) {

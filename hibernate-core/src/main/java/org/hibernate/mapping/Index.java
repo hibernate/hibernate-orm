@@ -30,61 +30,16 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  *
  * @author Gavin King
  */
-public class Index implements RelationalModel, Exportable, Serializable {
+public class Index implements Exportable, Serializable {
 	private Identifier name;
 	private Table table;
 	private final java.util.List<Column> columns = new ArrayList<>();
 	private final java.util.Map<Column, String> columnOrderMap = new HashMap<>(  );
 
-	@Override
-	public String sqlCreateString(Mapping mapping, SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema)
-			throws HibernateException {
-		Dialect dialect = context.getDialect();
-		return buildSqlCreateIndexString(
-				context,
-				getQuotedName( dialect ),
-				getTable(),
-				columns,
-				columnOrderMap,
-				false,
-				defaultCatalog,
-				defaultSchema
-		);
-	}
-
-	public static String buildSqlDropIndexString(
-			SqlStringGenerationContext context,
-			Table table,
-			String name,
-			String defaultCatalog,
-			String defaultSchema) {
-		return buildSqlDropIndexString( name, table.getQualifiedName( context ) );
-	}
-
 	public static String buildSqlDropIndexString(
 			String name,
 			String tableName) {
 		return "drop index " + qualify( tableName, name );
-	}
-
-	public static String buildSqlCreateIndexString(
-			SqlStringGenerationContext context,
-			String name,
-			Table table,
-			java.util.List<Column> columns,
-			java.util.Map<Column, String> columnOrderMap,
-			boolean unique,
-			String defaultCatalog,
-			String defaultSchema) {
-		return buildSqlCreateIndexString(
-				context.getDialect(),
-				name,
-				table.getQualifiedName( context ),
-				columns,
-				columnOrderMap,
-				unique
-		);
 	}
 
 	public static String buildSqlCreateIndexString(
@@ -126,38 +81,14 @@ public class Index implements RelationalModel, Exportable, Serializable {
 			java.util.Map<Column, String> columnOrderMap,
 			boolean unique,
 			Metadata metadata) {
-		final String tableName = context.format( table.getQualifiedTableName() );
-
 		return buildSqlCreateIndexString(
 				context.getDialect(),
 				name,
-				tableName,
+				context.format( table.getQualifiedTableName() ),
 				columns,
 				columnOrderMap,
 				unique
 		);
-	}
-
-
-	// Used only in Table for sqlCreateString (but commented out at the moment)
-	public String sqlConstraintString(Dialect dialect) {
-		StringBuilder buf = new StringBuilder( " index (" );
-		boolean first = true;
-		for ( Column column : getColumns() ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				buf.append(", ");
-			}
-			buf.append( column.getQuotedName( dialect ) );
-		}
-		return buf.append( ')' ).toString();
-	}
-
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
-		return "drop index " + qualify( table.getQualifiedName( context ), getQuotedName( context.getDialect() ) );
 	}
 
 	public Table getTable() {

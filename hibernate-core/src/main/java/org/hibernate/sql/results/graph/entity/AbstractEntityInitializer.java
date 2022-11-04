@@ -590,6 +590,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			if ( instance != null ) {
 				// EARLY EXIT!!!
+				// because the second level cache has reference cache entries, the entity is initialized
+				isInitialized = true;
 				return instance;
 			}
 		}

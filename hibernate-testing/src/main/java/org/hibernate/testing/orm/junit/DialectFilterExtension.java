@@ -192,18 +192,21 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		for ( RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
 			try {
-				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
-						.newInstance();
-				if ( !dialectFeatureCheck.apply( dialect ) ) {
+				final Class<? extends DialectFeatureCheck> featureClass = effectiveRequiresDialectFeature.feature();
+				final DialectFeatureCheck featureCheck = featureClass.getConstructor().newInstance();
+				boolean testResult = featureCheck.apply( dialect );
+				if ( effectiveRequiresDialectFeature.reverse() ) {
+					testResult = !testResult;
+				}
+				if ( !testResult ) {
 					return ConditionEvaluationResult.disabled(
 							String.format(
 									Locale.ROOT,
 									"Failed @RequiresDialectFeature [%s]",
-									effectiveRequiresDialectFeature.feature()
-							) );
+									featureClass ) );
 				}
 			}
-			catch (InstantiationException | IllegalAccessException e) {
+			catch (ReflectiveOperationException e) {
 				throw new RuntimeException( "Unable to instantiate DialectFeatureCheck class", e );
 			}
 		}

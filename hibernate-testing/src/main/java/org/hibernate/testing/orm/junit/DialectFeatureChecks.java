@@ -162,12 +162,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class DoesReadCommittedNotCauseWritersToBlockReadersCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return ! dialect.doesReadCommittedCauseWritersToBlockReaders();
-		}
-	}
-
 	public static class DoesRepeatableReadCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.doesRepeatableReadCauseReadersToBlockWriters();
@@ -217,9 +211,9 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class DoesNotSupportFollowOnLocking implements DialectFeatureCheck {
+	public static class SupportFollowOnLocking implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !dialect.useFollowOnLocking( null, null );
+			return dialect.useFollowOnLocking( null, null );
 		}
 	}
 
@@ -238,12 +232,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportNullPrecedence implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNullPrecedence();
-		}
-	}
-
-	public static class DoesNotSupportNullPrecedence implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return !dialect.supportsNullPrecedence();
 		}
 	}
 
@@ -367,12 +355,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportNoWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoWait();
-		}
-	}
-
-	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
 		}
 	}
 

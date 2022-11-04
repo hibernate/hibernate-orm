@@ -278,7 +278,7 @@ public class CMTTest {
 
 	@Test
 	@RequiresDialectFeature(
-			feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class,
+			feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true,
 			comment = "write locks block readers"
 	)
 	public void testConcurrentCachedDirtyQueries(SessionFactoryScope scope) throws Exception {

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(
-		feature = DialectFeatureChecks.DoesRepeatableReadNotCauseReadersToBlockWritersCheck.class,
+		feature = DialectFeatureChecks.DoesRepeatableReadCauseReadersToBlockWritersCheck.class, reverse = true,
 		comment = "potential deadlock"
 )
 @DomainModel(

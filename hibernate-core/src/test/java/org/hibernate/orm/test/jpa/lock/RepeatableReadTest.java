@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true)
 public class RepeatableReadTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();

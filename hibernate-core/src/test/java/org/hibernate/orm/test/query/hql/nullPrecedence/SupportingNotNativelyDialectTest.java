@@ -16,6 +16,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
  */
 @DomainModel( annotatedClasses = ExampleEntity.class )
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.DoesNotSupportNullPrecedence.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportNullPrecedence.class, reverse = true )
 public class SupportingNotNativelyDialectTest extends AbstractNullPrecedenceTest {
 }

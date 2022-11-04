@@ -14,16 +14,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
-
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * A mapping model object representing a constraint on a relational database table.
@@ -31,7 +27,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements RelationalModel, Exportable, Serializable {
+public abstract class Constraint implements Exportable, Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
@@ -175,45 +171,11 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context,
-			String defaultCatalog, String defaultSchema) {
-		final Dialect dialect = context.getDialect();
-		if ( isGenerated( dialect ) ) {
-			final String tableName = getTable().getQualifiedName( context );
-			return String.format(
-					Locale.ROOT,
-					"%s evictData constraint %s",
-					dialect.getAlterTableString( tableName ),
-					dialect.quote( getName() )
-			);
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
-	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		final Dialect dialect = context.getDialect();
-		if ( isGenerated( dialect ) ) {
-			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
-			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
-			// empty string.  Prevent blank "alter table" statements.
-			String constraintString = sqlConstraintString( context, getName(), defaultCatalog, defaultSchema );
-			if ( !isEmpty( constraintString ) ) {
-				final String tableName = getTable().getQualifiedName( context );
-				return dialect.getAlterTableString( tableName ) + " " + constraintString;
-			}
-		}
-		return null;
-	}
-
 	public List<Column> getColumns() {
 		return columns;
 	}
 
+	@Deprecated(since="6.2")
 	public abstract String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,

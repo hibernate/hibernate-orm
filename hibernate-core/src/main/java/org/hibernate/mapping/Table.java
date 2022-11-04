@@ -28,7 +28,6 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -42,7 +41,7 @@ import static java.util.Collections.unmodifiableMap;
  *
  * @author Gavin King
  */
-public class Table implements RelationalModel, Serializable, ContributableDatabaseObject {
+public class Table implements Serializable, ContributableDatabaseObject {
 	private static final Logger log = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
@@ -503,118 +502,6 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
-	}
-
-	@Override
-	public String sqlCreateString(
-			Mapping p,
-			SqlStringGenerationContext context,
-			String defaultCatalog,
-			String defaultSchema) {
-		throw new UnsupportedOperationException();
-	}
-//		Dialect dialect = context.getDialect();
-//		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
-//				.append( ' ' )
-//				.append( getQualifiedName( context ) )
-//				.append( " (" );
-//
-//		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
-//
-//		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
-//		String pkname = null;
-//		if ( hasPrimaryKey() && identityColumn ) {
-//			pkname = getPrimaryKey().getColumnIterator().next().getQuotedName( dialect );
-//		}
-//
-//		Iterator<Column> iter = getColumnIterator();
-//		while ( iter.hasNext() ) {
-//			Column col = (Column) iter.next();
-//
-//			buf.append( col.getQuotedName( dialect ) )
-//					.append( ' ' );
-//
-//			if ( identityColumn && col.getQuotedName( dialect ).equals( pkname ) ) {
-//				// to support dialects that have their own identity data type
-//				if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-//					buf.append( col.getSqlType( dialect, p ) );
-//				}
-//				buf.append( ' ' )
-//						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( p ) ) );
-//			}
-//			else {
-//				final String columnType = col.getSqlType( dialect, p );
-//				buf.append( columnType );
-//
-//				String defaultValue = col.getDefaultValue();
-//				if ( defaultValue != null ) {
-//					buf.append( " default " ).append( defaultValue );
-//				}
-//
-//				String generatedAs = col.getGeneratedAs();
-//				if ( generatedAs != null) {
-//					buf.append( dialect.generatedAs( generatedAs ) );
-//				}
-//
-//				if ( col.isNullable() ) {
-//					buf.append( dialect.getNullColumnString( columnType ) );
-//				}
-//				else {
-//					buf.append( " not null" );
-//				}
-//
-//			}
-//
-//			if ( col.isUnique() ) {
-//				String keyName = Constraint.generateName( "UK_", this, col );
-//				UniqueKey uk = getOrCreateUniqueKey( keyName );
-//				uk.addColumn( col );
-//				buf.append( dialect.getUniqueDelegate()
-//						.getColumnDefinitionUniquenessFragment( col, context ) );
-//			}
-//
-//			String checkConstraint = col.checkConstraint();
-//			if ( checkConstraint!=null && dialect.supportsColumnCheck() ) {
-//				buf.append( checkConstraint );
-//			}
-//
-//			String columnComment = col.getComment();
-//			if ( columnComment != null ) {
-//				buf.append( dialect.getColumnComment( columnComment ) );
-//			}
-//
-//			if ( iter.hasNext() ) {
-//				buf.append( ", " );
-//			}
-//
-//		}
-//		if ( hasPrimaryKey() ) {
-//			buf.append( ", " )
-//					.append( getPrimaryKey().sqlConstraintString( dialect ) );
-//		}
-//
-//		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this, context ) );
-//
-//		if ( dialect.supportsTableCheck() ) {
-//			for ( String checkConstraint : checkConstraints ) {
-//				buf.append( ", check (" )
-//						.append( checkConstraint )
-//						.append( ')' );
-//			}
-//		}
-//
-//		buf.append( ')' );
-//
-//		if ( comment != null ) {
-//			buf.append( dialect.getTableComment( comment ) );
-//		}
-//
-//		return buf.append( dialect.getTableTypeString() ).toString();
-
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		return dialect.getDropTableString( getQualifiedName( context ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {

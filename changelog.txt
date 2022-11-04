@@ -3,6 +3,15 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.14.Final (November 04, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32120
+
+** Improvement
+    * [HHH-15662] - ClasscastException caused by check for Managed rather than ManagedEntity
+
+
 Changes in 5.6.13.Final (November 03, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

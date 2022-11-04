@@ -53,4 +53,13 @@ public @interface Generated {
 	 * </ul>
 	 */
 	GenerationTime value();
+
+	/**
+	 * Determines if the column mapped by the annotated property is included in SQL
+	 * {@code INSERT} and {@code UPDATE} statements. By default, it is excluded.
+	 *
+	 * @return {@code true} if the mapped column should be included in SQL
+	 *         {@code INSERT} and {@code UPDATE} statements.
+	 */
+	boolean writable() default false;
 }

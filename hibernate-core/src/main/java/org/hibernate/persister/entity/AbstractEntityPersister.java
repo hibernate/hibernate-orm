@@ -2937,7 +2937,7 @@ public abstract class AbstractEntityPersister
 					else {
 						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
 						if ( valueGeneration.getGenerationTiming().includesUpdate()
-								&& valueGeneration.getValueGenerator() == null
+								&& valueGeneration.generatedByDatabase()
 								&& valueGeneration.referenceColumnInSql() ) {
 							update.addColumns(
 									getPropertyColumnNames( index ),
@@ -3059,7 +3059,7 @@ public abstract class AbstractEntityPersister
 					else {
 						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
 						if ( valueGeneration.getGenerationTiming().includesInsert()
-								&& valueGeneration.getValueGenerator() == null
+								&& valueGeneration.generatedByDatabase()
 								&& valueGeneration.referenceColumnInSql() ) {
 							insert.addColumns(
 									getPropertyColumnNames( index ),

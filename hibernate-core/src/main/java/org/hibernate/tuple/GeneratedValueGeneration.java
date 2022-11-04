@@ -17,6 +17,7 @@ import org.hibernate.annotations.Generated;
 public class GeneratedValueGeneration implements AnnotationValueGeneration<Generated> {
 
 	private GenerationTiming timing;
+	private boolean writable;
 
 	public GeneratedValueGeneration() {
 	}
@@ -27,7 +28,8 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 
 	@Override
 	public void initialize(Generated annotation, Class<?> propertyType) {
-		this.timing = annotation.value().getEquivalent();
+		timing = annotation.value().getEquivalent();
+		writable = annotation.writable();
 	}
 
 	@Override
@@ -43,8 +45,7 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 
 	@Override
 	public boolean referenceColumnInSql() {
-		// historically these columns are not referenced in the SQL
-		return false;
+		return writable;
 	}
 
 	@Override

@@ -390,7 +390,7 @@ public class PropertyBinder {
 			return NoValueGeneration.INSTANCE;
 		}
 
-		if ( valueGeneration.getValueGenerator() == null ) {
+		if ( !valueGeneration.writeColumn() ) {
 			// if we have an in-db generator, mark it as not insertable nor updatable
 			insertable = false;
 			updatable = false;

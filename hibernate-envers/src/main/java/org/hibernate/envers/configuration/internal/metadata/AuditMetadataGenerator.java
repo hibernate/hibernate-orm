@@ -123,8 +123,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			final ValueGeneration generation = property.getValueGenerationStrategy();
 			if ( generation instanceof GeneratedValueGeneration ) {
 				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
-				if ( GenerationTiming.INSERT == valueGeneration.getGenerationTiming()
-					|| GenerationTiming.ALWAYS == valueGeneration.getGenerationTiming() ) {
+				if ( valueGeneration.getGenerationTiming().includesInsert() ) {
 					return true;
 				}
 			}

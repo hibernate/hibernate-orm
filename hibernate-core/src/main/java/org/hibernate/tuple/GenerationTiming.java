@@ -54,6 +54,25 @@ public enum GenerationTiming {
 		}
 	},
 	/**
+	 * Value generation that occurs when a row is updated in the database.
+	 */
+	UPDATE {
+		@Override
+		public boolean includesInsert() {
+			return false;
+		}
+
+		@Override
+		public boolean includesUpdate() {
+			return true;
+		}
+
+		@Override
+		public boolean includes(GenerationTiming timing) {
+			return timing.includesUpdate();
+		}
+	},
+	/**
 	 * Value generation that occurs when a row is inserted or updated in the database.
 	 */
 	ALWAYS {
@@ -87,6 +106,9 @@ public enum GenerationTiming {
 	public static GenerationTiming parseFromName(String name) {
 		if ( "insert".equalsIgnoreCase( name ) ) {
 			return INSERT;
+		}
+		else if ( "update".equalsIgnoreCase( name ) ) {
+			return UPDATE;
 		}
 		else if ( "always".equalsIgnoreCase( name ) ) {
 			return ALWAYS;

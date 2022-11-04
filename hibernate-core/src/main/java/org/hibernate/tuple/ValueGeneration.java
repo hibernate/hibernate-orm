@@ -6,6 +6,8 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.dialect.Dialect;
+
 import java.io.Serializable;
 
 /**
@@ -33,6 +35,7 @@ public interface ValueGeneration extends Serializable {
 	 * Specifies that the property value is generated:
 	 * <ul>
 	 * <li>{@linkplain GenerationTiming#INSERT when the entity is inserted},
+	 * <li>{@linkplain GenerationTiming#UPDATE when the entity is updated},
 	 * <li>{@linkplain GenerationTiming#ALWAYS whenever the entity is inserted or updated}, or
 	 * <li>{@linkplain GenerationTiming#NEVER never}.
 	 * </ul>
@@ -85,6 +88,27 @@ public interface ValueGeneration extends Serializable {
 	 * @return The column value to be used in the generated SQL statement.
 	 */
 	String getDatabaseGeneratedReferencedColumnValue();
+
+	/**
+	 * A SQL expression indicating how to calculate the generated value when the property value
+	 * is {@linkplain #generatedByDatabase() generated in the database} and the mapped column is
+	 * {@linkplain #referenceColumnInSql() included in the SQL statement}. The SQL expression
+	 * might be:
+	 * <ul>
+	 * <li>a function call like {@code current_timestamp} or {@code nextval('mysequence')}, or
+	 * <li>a syntactic marker like {@code default}.
+	 * </ul>
+	 * When the property value is generated in Java, this method is not called, and its value is
+	 * implicitly the string {@code "?"}, that is, a JDBC parameter to which the generated value
+	 * is bound.
+	 *
+	 * @param dialect The {@linkplain Dialect SQL dialect}, allowing generation of an expression
+	 *                in dialect-specific SQL.
+	 * @return The column value to be used in the generated SQL statement.
+	 */
+	default String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
+		return getDatabaseGeneratedReferencedColumnValue();
+	}
 
 	/**
 	 * Determines if the property value is generated in Java, or by the database.

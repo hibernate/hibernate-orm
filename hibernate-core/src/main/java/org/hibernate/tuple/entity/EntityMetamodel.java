@@ -23,6 +23,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -307,24 +308,33 @@ public class EntityMetamodel implements Serializable {
 					final ValueGenerator<?> generator = pair.getInMemoryStrategy().getValueGenerator();
 					if ( generator != null ) {
 						// we have some level of generation indicated
-						if ( timing == GenerationTiming.INSERT ) {
-							foundPreInsertGeneratedValues = true;
-						}
-						else if ( timing == GenerationTiming.ALWAYS ) {
-							foundPreInsertGeneratedValues = true;
-							foundPreUpdateGeneratedValues = true;
+						switch ( timing ) {
+							case INSERT:
+								foundPreInsertGeneratedValues = true;
+								break;
+							case UPDATE:
+								foundPreUpdateGeneratedValues = true;
+								break;
+							case ALWAYS:
+								foundPreInsertGeneratedValues = true;
+								foundPreUpdateGeneratedValues = true;
+								break;
 						}
 					}
 				}
 			}
 			if (  pair.getInDatabaseStrategy() != null ) {
-				final GenerationTiming timing =  pair.getInDatabaseStrategy().getGenerationTiming();
-				if ( timing == GenerationTiming.INSERT ) {
-					foundPostInsertGeneratedValues = true;
-				}
-				else if ( timing == GenerationTiming.ALWAYS ) {
-					foundPostInsertGeneratedValues = true;
-					foundPostUpdateGeneratedValues = true;
+				switch ( pair.getInDatabaseStrategy().getGenerationTiming() ) {
+					case INSERT:
+						foundPostInsertGeneratedValues = true;
+						break;
+					case UPDATE:
+						foundPostUpdateGeneratedValues = true;
+						break;
+					case ALWAYS:
+						foundPostInsertGeneratedValues = true;
+						foundPostUpdateGeneratedValues = true;
+						break;
 				}
 			}
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -487,20 +497,21 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public static InDatabaseValueGenerationStrategyImpl create(
-			SessionFactoryImplementor sessionFactoryImplementor,
+			SessionFactoryImplementor factory,
 			Property mappingProperty,
 			ValueGeneration valueGeneration) {
-		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan( sessionFactoryImplementor );
+		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan( factory );
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 		if ( numberOfMappedColumns == 1 ) {
 			return new InDatabaseValueGenerationStrategyImpl(
 					valueGeneration.getGenerationTiming(),
 					valueGeneration.referenceColumnInSql(),
-					new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
+					new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) }
 
 			);
 		}
 		else {
-			if ( valueGeneration.getDatabaseGeneratedReferencedColumnValue() != null ) {
+			if ( valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) != null ) {
 				LOG.debugf(
 						"Value generator specified column value in reference to multi-column attribute [%s -> %s]; ignoring",
 						mappingProperty.getPersistentClass(),
@@ -625,7 +636,7 @@ public class EntityMetamodel implements Serializable {
 				}
 
 				// the base-line values for the aggregated InDatabaseValueGenerationStrategy we will build here.
-				GenerationTiming timing = GenerationTiming.INSERT;
+				GenerationTiming timing = GenerationTiming.NEVER;
 				boolean referenceColumns = false;
 				String[] columnValues = new String[ composite.getColumnSpan() ];
 
@@ -635,11 +646,28 @@ public class EntityMetamodel implements Serializable {
 				for ( Property property : composite.getProperties() ) {
 					propertyIndex++;
 					final InDatabaseValueGenerationStrategy subStrategy = inDatabaseStrategies.get( propertyIndex );
-
-					if ( subStrategy.getGenerationTiming() == GenerationTiming.ALWAYS ) {
-						// override the base-line to the more often "ALWAYS"...
-						timing = GenerationTiming.ALWAYS;
-
+					switch ( subStrategy.getGenerationTiming() ) {
+						case INSERT:
+							switch ( timing ) {
+								case UPDATE:
+									timing = GenerationTiming.ALWAYS;
+									break;
+								case NEVER:
+									timing = GenerationTiming.INSERT;
+									break;
+							}
+							break;
+						case UPDATE:
+							switch ( timing ) {
+								case INSERT:
+									timing = GenerationTiming.ALWAYS;
+									break;
+								case NEVER:
+									timing = GenerationTiming.UPDATE;
+							}
+							break;
+						case ALWAYS:
+							timing = GenerationTiming.ALWAYS;
 					}
 					if ( subStrategy.referenceColumnsInSql() ) {
 						// override base-line value

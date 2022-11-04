@@ -2938,10 +2938,11 @@ public abstract class AbstractEntityPersister
 						if ( valueGeneration.getGenerationTiming().includesUpdate()
 								&& valueGeneration.generatedByDatabase()
 								&& valueGeneration.referenceColumnInSql() ) {
+							final Dialect dialect = getFactory().getJdbcServices().getDialect();
 							update.addColumns(
 									getPropertyColumnNames( index ),
 									SINGLE_TRUE,
-									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
+									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) }
 							);
 							hasColumns = true;
 						}
@@ -3060,10 +3061,11 @@ public abstract class AbstractEntityPersister
 						if ( valueGeneration.getGenerationTiming().includesInsert()
 								&& valueGeneration.generatedByDatabase()
 								&& valueGeneration.referenceColumnInSql() ) {
+							final Dialect dialect = getFactory().getJdbcServices().getDialect();
 							insert.addColumns(
 									getPropertyColumnNames( index ),
 									SINGLE_TRUE,
-									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
+									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) }
 							);
 						}
 					}
@@ -5766,7 +5768,7 @@ public abstract class AbstractEntityPersister
 						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.INSERT );
 					}
 					if ( hasUpdateGeneratedProperties() ) {
-						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.ALWAYS );
+						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.UPDATE );
 					}
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );

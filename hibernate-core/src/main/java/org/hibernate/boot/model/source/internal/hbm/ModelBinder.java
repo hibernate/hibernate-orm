@@ -998,11 +998,17 @@ public class ModelBinder {
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure...
 		if ( prop.getValueGenerationStrategy() != null ) {
-			if ( prop.getValueGenerationStrategy().getGenerationTiming() == GenerationTiming.INSERT ) {
-				throw new MappingException(
-						"'generated' attribute cannot be 'insert' for version/timestamp property",
-						sourceDocument.getOrigin()
-				);
+			switch ( prop.getValueGenerationStrategy().getGenerationTiming() ) {
+				case INSERT:
+					throw new MappingException(
+							"'generated' attribute cannot be 'insert' for version/timestamp property",
+							sourceDocument.getOrigin()
+					);
+				case UPDATE:
+					throw new MappingException(
+							"'generated' attribute cannot be 'update' for version/timestamp property",
+							sourceDocument.getOrigin()
+					);
 			}
 		}
 
@@ -2531,13 +2537,13 @@ public class ModelBinder {
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
 			final GenerationTiming generationTiming = singularAttributeSource.getGenerationTiming();
-			if ( generationTiming == GenerationTiming.ALWAYS || generationTiming == GenerationTiming.INSERT ) {
+			if ( generationTiming != null && generationTiming != GenerationTiming.NEVER ) {
 				// we had generation specified...
 				//   	HBM only supports "database generated values"
 				property.setValueGenerationStrategy( new GeneratedValueGeneration( generationTiming ) );
 
 				// generated properties can *never* be insertable...
-				if ( property.isInsertable() ) {
+				if ( property.isInsertable() && generationTiming.includesInsert() ) {
 					log.debugf(
 							"Property [%s] specified %s generation, setting insertable to false : %s",
 							propertySource.getName(),
@@ -2548,7 +2554,7 @@ public class ModelBinder {
 				}
 
 				// properties generated on update can never be updatable...
-				if ( property.isUpdateable() && generationTiming == GenerationTiming.ALWAYS ) {
+				if ( property.isUpdateable() && generationTiming.includesUpdate() ) {
 					log.debugf(
 							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
 							propertySource.getName(),

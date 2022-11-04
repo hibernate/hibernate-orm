@@ -66,7 +66,8 @@ public class GeneratedValuesProcessor {
 				.getEntityMetamodel()
 				.getInDatabaseValueGenerationStrategies();
 		entityDescriptor.visitAttributeMappings( mapping -> {
-			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy = inDatabaseValueGenerationStrategies[mapping.getStateArrayPosition()];
+			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy =
+					inDatabaseValueGenerationStrategies[ mapping.getStateArrayPosition() ];
 			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
 				return;
 			}

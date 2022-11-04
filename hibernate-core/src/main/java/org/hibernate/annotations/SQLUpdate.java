@@ -32,11 +32,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * and has no corresponding JDBC parameter in the custom SQL, it must be mapped
  * using {@link jakarta.persistence.Column#updatable() updatable=false}.
  * <p>
- * A custom SQL update statement might transform the column values as they
- * are written. In this case, the state of the entity held in memory loses
- * synchronization with the database after the update is executed unless
+ * A custom SQL update statement might assign a value to a mapped column as it
+ * is written. In this case, the corresponding property of the entity remains
+ * unassigned after the update is executed unless
+ * {@link Generated @Generated(ALWAYS)} is specified, forcing Hibernate to
+ * reread the state of the entity after each update.
+ * <p>
+ * Similarly, a custom update statement might transform a mapped column value
+ * as it is written. In this case, the state of the entity held in memory
+ * loses synchronization with the database after the update is executed unless
  * {@link Generated @Generated(value=ALWAYS, writable=true)} is specified,
- * forcing Hibernate to reread the state of the entity after each update.
+ * again forcing Hibernate to reread the state of the entity after each update.
  *
  * @author Laszlo Benke
  */

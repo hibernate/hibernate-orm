@@ -88,18 +88,12 @@ public class DenormalizedTable extends Table {
 
 	@Override @Deprecated
 	public Iterator<Column> getColumnIterator() {
-		return new JoinedIterator<>(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
-		);
+		return new JoinedIterator<>( includedTable.getColumnIterator(), super.getColumnIterator() );
 	}
 
 	@Override
 	public Collection<Column> getColumns() {
-		return new JoinedList<>(
-				new ArrayList<>( includedTable.getColumns() ),
-				new ArrayList<>( super.getColumns() )
-		);
+		return new JoinedList<>( new ArrayList<>( includedTable.getColumns() ), new ArrayList<>( super.getColumns() ) );
 	}
 
 	@Override
@@ -112,7 +106,7 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		if ( !includedTable.isPhysicalTable() ) {
 			for ( UniqueKey uniqueKey : includedTable.getUniqueKeys().values() ) {
@@ -122,7 +116,7 @@ public class DenormalizedTable extends Table {
 		return getUniqueKeys().values().iterator();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<Index> getIndexIterator() {
 		final List<Index> indexes = new ArrayList<>();
 		for ( Index parentIndex : includedTable.getIndexes().values() ) {
@@ -132,10 +126,7 @@ public class DenormalizedTable extends Table {
 			index.addColumns( parentIndex.getColumns() );
 			indexes.add( index );
 		}
-		return new JoinedIterator<>(
-				indexes.iterator(),
-				super.getIndexIterator()
-		);
+		return new JoinedIterator<>( indexes.iterator(), super.getIndexIterator() );
 	}
 
 	public Table getIncludedTable() {

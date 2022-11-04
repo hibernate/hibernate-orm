@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -52,17 +53,15 @@ public abstract class Constraint implements Exportable, Serializable {
 	public static String generateName(String prefix, Table table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
-
+		final StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		final Column[] alphabeticalColumns = columns.clone();
+		Arrays.sort( alphabeticalColumns, Comparator.comparing( Column::getName ) );
 		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
+			final String columnName = column == null ? "" : column.getName();
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );
@@ -74,17 +73,14 @@ public abstract class Constraint implements Exportable, Serializable {
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		//N.B. legacy APIs are involved: can't trust that the columns List is actually
-		//containing Column instances - the generic type isn't consistently enforced.
-		ArrayList<Column> defensive = new ArrayList<>( columns.size() );
-		for ( Object o : columns ) {
-			if ( o instanceof Column ) {
-				defensive.add( (Column) o );
-			}
-			// else: others might be Formula instances.
-			// They don't need to be part of the name generation.
-		}
-		return generateName( prefix, table, defensive.toArray( new Column[0] ) );
+		// N.B. legacy APIs are involved: can't trust that the columns List is actually
+		// containing Column instances - the generic type isn't consistently enforced.
+		// So some elements might be Formula instances, but they don't need to be part
+		// of the name generation.
+		final Column[] defensive = columns.stream()
+				.filter( (Object thing) -> thing instanceof Column )
+				.toArray( Column[]::new );
+		return generateName( prefix, table, defensive);
 	}
 
 	/**
@@ -93,17 +89,16 @@ public abstract class Constraint implements Exportable, Serializable {
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
 	 *
-	 * @param s
-	 *            The name to be hashed.
+	 * @param name The name to be hashed.
 	 * @return String The hashed name.
 	 */
-	public static String hashedName(String s) {
+	public static String hashedName(String name) {
 		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
+			final MessageDigest md = MessageDigest.getInstance( "MD5" );
 			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
+			md.update( name.getBytes() );
+			final byte[] digest = md.digest();
+			final BigInteger bigInt = new BigInteger( 1, digest );
 			// By converting to base 35 (full alphanumeric), we guarantee
 			// that the length of the name will always be smaller than the 30
 			// character identifier restriction enforced by a few dialects.
@@ -111,14 +106,6 @@ public abstract class Constraint implements Exportable, Serializable {
 		}
 		catch ( NoSuchAlgorithmException e ) {
 			throw new HibernateException( "Unable to generate a hashed Constraint name", e );
-		}
-	}
-
-	private static class ColumnComparator implements Comparator<Column> {
-		public static ColumnComparator INSTANCE = new ColumnComparator();
-
-		public int compare(Column col1, Column col2) {
-			return col1.getName().compareTo( col2.getName() );
 		}
 	}
 
@@ -151,7 +138,7 @@ public abstract class Constraint implements Exportable, Serializable {
 	}
 
 	public Column getColumn(int i) {
-		return  columns.get( i );
+		return columns.get( i );
 	}
 
 	@Deprecated(since = "6.0")
@@ -175,7 +162,10 @@ public abstract class Constraint implements Exportable, Serializable {
 		return columns;
 	}
 
-	@Deprecated(since="6.2")
+	/**
+	 * @deprecated this method is no longer called
+	 */
+	@Deprecated(since="6.2") @Remove
 	public abstract String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,

@@ -449,7 +449,7 @@ public class EntityMetamodel implements Serializable {
 		final ValueGeneration valueGeneration = mappingProperty.getValueGenerationStrategy();
 		if ( valueGeneration != null && valueGeneration.getGenerationTiming() != GenerationTiming.NEVER ) {
 			// the property is generated in full. build the generation strategy pair.
-			if ( valueGeneration.getValueGenerator() != null ) {
+			if ( !valueGeneration.generatedByDatabase() ) {
 				// in-memory generation
 				return new GenerationStrategyPair(
 						FullInMemoryValueGenerationStrategy.create( valueGeneration )

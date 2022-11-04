@@ -39,7 +39,7 @@ public interface GeneratedValueResolver {
 		//		value generation which we'll circle back to as we convert write operations to
 		//		use the "runtime mapping" (`org.hibernate.metamodel.mapping`) model
 
-		if ( valueGeneration.getValueGenerator() == null ) {
+		if ( valueGeneration.generatedByDatabase() ) {
 			// in-db generation (column-default, function, etc)
 			return new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition );
 		}

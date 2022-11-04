@@ -14,7 +14,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A mapping model object representing a unique key constraint on a relational database table.
+ * A mapping model object representing a {@linkplain jakarta.persistence.UniqueConstraint unique key}
+ * constraint on a relational database table.
  *
  * @author Brett Meyer
  */

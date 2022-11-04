@@ -449,7 +449,7 @@ public abstract class QueryBinder {
 
 		for (SqlResultSetMapping rs : ann.value()) {
 			//no need to handle inSecondPass
-			context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( rs, context, true ) );
+			context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( rs, context, true ) );
 		}
 	}
 
@@ -458,7 +458,7 @@ public abstract class QueryBinder {
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		//no need to handle inSecondPass
-		context.getMetadataCollector().addSecondPass( new ResultsetMappingSecondPass( ann, context, isDefault ) );
+		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( ann, context, isDefault ) );
 	}
 
 	public static String parseJdbcCall(

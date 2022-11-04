@@ -18,14 +18,14 @@ import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 /**
  * @author Emmanuel Bernard
  */
-public class ResultsetMappingSecondPass implements QuerySecondPass {
+public class ResultSetMappingSecondPass implements QuerySecondPass {
 //	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
 
 	private final SqlResultSetMapping ann;
 	private final MetadataBuildingContext context;
 	private final boolean isDefault;
 
-	public ResultsetMappingSecondPass(SqlResultSetMapping ann, MetadataBuildingContext context, boolean isDefault) {
+	public ResultSetMappingSecondPass(SqlResultSetMapping ann, MetadataBuildingContext context, boolean isDefault) {
 		this.ann = ann;
 		this.context = context;
 		this.isDefault = isDefault;

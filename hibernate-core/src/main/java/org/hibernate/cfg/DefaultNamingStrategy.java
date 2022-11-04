@@ -17,6 +17,7 @@ import org.hibernate.internal.util.StringHelper;
  * @see ImprovedNamingStrategy a better alternative
  * @author Gavin King
  */
+@Deprecated
 public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 
 	/**

@@ -13,6 +13,7 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamingStrategy {
 	public static final NamingStrategy INSTANCE = new DefaultComponentSafeNamingStrategy();
 

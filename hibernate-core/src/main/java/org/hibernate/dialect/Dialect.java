@@ -2142,8 +2142,8 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Should the value returned by {@link #getCurrentTimestampSelectString}
-	 * be treated as callable.  Typically this indicates that JDBC escape
-	 * syntax is being used...
+	 * be treated as callable. Typically, this indicates that JDBC escape
+	 * syntax is being used.
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 * is callable; false otherwise.
@@ -2160,6 +2160,13 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getCurrentTimestampSelectString() {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
+	}
+
+	/**
+	 * Does this database have an ANSI-SQL {@code current_timestamp} function?
+	 */
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return true;
 	}
 
 

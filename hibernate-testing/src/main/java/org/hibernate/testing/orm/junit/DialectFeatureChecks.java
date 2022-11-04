@@ -366,7 +366,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class UsesStandardCurrentTimestampFunction implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.currentTimestamp().startsWith( "current_timestamp" );
+			return dialect.supportsStandardCurrentTimestampFunction();
 		}
 	}
 

@@ -434,14 +434,19 @@ public class PropertyBinder {
 		final Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
 		final AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration( annotation, generationType, property );
 
-		if ( annotation.annotationType() == Generated.class
-				&& property.isAnnotationPresent(Version.class)
-				&& valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
+		if ( annotation.annotationType() == Generated.class && property.isAnnotationPresent(Version.class) ) {
+			switch ( valueGeneration.getGenerationTiming() ) {
+				case INSERT:
+					throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+							+ "' is annotated '@Generated(INSERT)' and '@Version' (use '@Generated(ALWAYS)' instead)"
 
-			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-					+ "' is annotated '@Generated(INSERT)' and '@Version' (use '@Generated(ALWAYS)' instead)"
+					);
+				case UPDATE:
+					throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+							+ "' is annotated '@Generated(UPDATE)' and '@Version' (use '@Generated(ALWAYS)' instead)"
 
-			);
+					);
+			}
 		}
 
 		return valueGeneration;

@@ -26,6 +26,10 @@ public enum GenerationTime {
 	 */
 	INSERT( GenerationTiming.INSERT ),
 	/**
+	 * Indicates the value is generated on update.
+	 */
+	UPDATE( GenerationTiming.UPDATE ),
+	/**
 	 * Indicates the value is generated on insert and on update.
 	 */
 	ALWAYS( GenerationTiming.ALWAYS );

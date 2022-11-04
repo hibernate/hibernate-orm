@@ -325,6 +325,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return false;
+	}
+
+	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		if ( dbMetaData == null ) {

@@ -8,6 +8,8 @@ package org.hibernate.tuple;
 
 import org.hibernate.annotations.Generated;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * A {@link AnnotationValueGeneration} which marks a property as generated in the database.
  *
@@ -18,6 +20,7 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 
 	private GenerationTiming timing;
 	private boolean writable;
+	private String sql;
 
 	public GeneratedValueGeneration() {
 	}
@@ -29,7 +32,8 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 	@Override
 	public void initialize(Generated annotation, Class<?> propertyType) {
 		timing = annotation.value().getEquivalent();
-		writable = annotation.writable();
+		sql = isEmpty( annotation.sql() ) ? null : annotation.sql();
+		writable = annotation.writable() || sql != null;
 	}
 
 	@Override
@@ -50,7 +54,7 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 
 	@Override
 	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
+		return sql;
 	}
 }
 

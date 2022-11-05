@@ -13,8 +13,8 @@ package org.hibernate;
  * interface is called, any necessary interaction with the database happens
  * immediately and synchronously.
  * <p>
- * Viewed in opposition to to {@link Session}, the {@code StatelessSession}
- * is a whole competing programming model, one preferred by some developers
+ * Viewed in opposition to {@link Session}, the {@code StatelessSession} is
+ * a whole competing programming model, one preferred by some developers
  * for its simplicity and somewhat lower level of abstraction. But the two
  * kinds of session are not enemies, and may comfortably coexist in a single
  * program.

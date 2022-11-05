@@ -46,6 +46,12 @@ import jakarta.persistence.EntityManagerFactory;
  * fixed as soon as the {@code SessionFactory} is created. Of course, any
  * {@code SessionFactory} is threadsafe.
  * <p>
+ * An exception to this rule is the {@link Cache second-level cache}. Each
+ * {@code SessionFactory} has its own isolated second-level cache, shared
+ * between the sessions it creates, and it {@link #getCache() exposes the cache}
+ * to clients as a stateful object with entries that may be queried and managed
+ * directly.
+ * <p>
  * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
  * method {@link EntityManagerFactory#unwrap(Class)} may be used to obtain the

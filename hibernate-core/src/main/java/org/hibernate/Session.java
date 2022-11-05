@@ -25,16 +25,19 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * with a logical transaction.
  * <p>
  * The lifecycle of a {@code Session} is bounded by the beginning and end of the logical
- * transaction. (But a long logical transaction might span several database transactions.)
+ * transaction. But a long logical transaction might span several database transactions.
  * <p>
  * The primary purpose of the {@code Session} is to offer create, read, and delete
  * operations for instances of mapped entity classes. An instance may be in one of three
- * states with respect to a given session:
+ * states with respect to a given open session:
  * <ul>
- * <li><em>transient:</em> never persistent, not associated with any {@code Session},
- * <li><em>persistent:</em> associated with a unique {@code Session}, or
- * <li><em>detached:</em> previously persistent, not associated with any {@code Session}
+ * <li><em>transient:</em> never persistent, and not associated with the {@code Session},
+ * <li><em>persistent:</em> currently associated with the {@code Session}, or
+ * <li><em>detached:</em> previously persistent, but not currently associated with the
+ *     {@code Session}.
  * </ul>
+ * At any given time, an instance may be associated with at most one open session.
+ * <p>
  * Any instance returned by {@link #get(Class, Object)} or by a query is persistent.
  * <p>
  * A transient instance may be made persistent by calling {@link #persist(Object)}.

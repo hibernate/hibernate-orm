@@ -12,11 +12,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify the fetching strategy used for the annotated association.
+ * Specifies the default fetching strategy for the annotated association.
+ * <p>
+ * The default fetching strategy for the association may be overridden
+ * in a given {@linkplain FetchProfile fetch profile}.
  *
  * @author Emmanuel Bernard
  *
  * @see FetchMode
+ * @see FetchProfile
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

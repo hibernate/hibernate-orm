@@ -28,7 +28,6 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -101,7 +100,9 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Check if the proxy or persistent collection is initialized.
+	 * Determines if the given proxy or persistent collection is initialized.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object)}.
 	 *
 	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
 	 * @return true if the argument is already initialized, or is not a proxy or collection
@@ -206,8 +207,11 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Check if the property is initialized. If the named property does not exist or
-	 * is not persistent, this method always returns {@code true}.
+	 * Determines if the property with the given name of the given entity instance is
+	 * initialized. If the named property does not exist or is not persistent, this
+	 * method always returns {@code true}.
+	 * <p>
+	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object, String)}.
 	 *
 	 * @param proxy The potential proxy
 	 * @param propertyName the name of a persistent attribute of the object

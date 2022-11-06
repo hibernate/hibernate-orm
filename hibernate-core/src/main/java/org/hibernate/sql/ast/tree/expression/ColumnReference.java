@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -205,8 +204,8 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
-		return (MappingModelExpressible) jdbcMapping;
+	public JdbcMapping getExpressionType() {
+		return jdbcMapping;
 	}
 
 	@Override

@@ -89,7 +89,6 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -128,6 +127,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
+
+import static java.util.Collections.unmodifiableSet;
 
 
 /**
@@ -970,7 +971,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Set<String> getDefinedFilterNames() {
-		return filters.keySet();
+		return unmodifiableSet( filters.keySet() );
+	}
+
+	@Override
+	public Set<String> getDefinedFetchProfileNames() {
+		return unmodifiableSet( fetchProfiles.keySet() );
 	}
 
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {

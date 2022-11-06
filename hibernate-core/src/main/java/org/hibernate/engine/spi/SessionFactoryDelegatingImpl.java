@@ -36,8 +36,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -167,6 +165,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return delegate.containsFetchProfileDefinition( name );
+	}
+
+	@Override
+	public Set<String> getDefinedFetchProfileNames() {
+		return delegate.getDefinedFetchProfileNames();
 	}
 
 	@Override

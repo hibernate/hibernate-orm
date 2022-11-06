@@ -1148,41 +1148,44 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
 	/**
-	 * Is a particular fetch profile enabled on this session?
+	 * Is the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name enabled in this session?
 	 *
-	 * @param name the name of the profile to be checked.
+	 * @param name the name of the profile
 	 * @return True if fetch profile is enabled; false if not.
 	 *
 	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
+	 *                                 match any known fetch profile names
 	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
 
 	/**
-	 * Enable a particular fetch profile on this session. If the requested
-	 * profile is already enabled, the call has no effect.
+	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile is
+	 * already enabled, the call has no effect.
 	 *
 	 * @param name the name of the fetch profile to be enabled
 	 *
 	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
+	 *                                 match any known fetch profile names
 	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	void enableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Disable a particular fetch profile on this session. If the requested
-	 * profile is already enabled, the call has no effect.
+	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile is
+	 * not currently enabled, the call has no effect.
 	 *
 	 * @param name the name of the fetch profile to be disabled
 	 *
 	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
+	 *                                 match any known fetch profile names
 	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
+	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	void disableFetchProfile(String name) throws UnknownProfileException;
 

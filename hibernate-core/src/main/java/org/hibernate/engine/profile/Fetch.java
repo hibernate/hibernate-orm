@@ -7,7 +7,7 @@
 package org.hibernate.engine.profile;
 
 /**
- * Models an individual fetch within a profile.
+ * Models an individual fetch override within a profile.
  *
  * @author Steve Ebersole
  */

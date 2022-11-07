@@ -742,6 +742,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
+	 * <p>
+	 * This operation requests {@link LockMode#READ}. To obtain a stronger lock,
+	 * call {@link #refresh(Object, LockMode)}.
 	 *
 	 * @param object a persistent or detached instance
 	 */
@@ -844,9 +847,24 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance.
 	 * <p>
 	 * This operation is very similar to {@link #find(Class, Object)}.
+	 * <p>
+	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
+	 * to be retrieved from the cache without the cost of database access. However, if it is
+	 * necessary to read the state from the database, the object will be returned with the
+	 * lock mode {@link LockMode#READ}.
+	 * <p>
+	 * To bypass the second-level cache, and ensure that the state is read from the database,
+	 * either:
+	 * <ul>
+	 * <li>call {@link #get(Class, Object, LockMode)} with the explicit lock mode
+	 *     {@link LockMode#READ}, or
+	 * <li>{@linkplain #setCacheMode(CacheMode) set the cache mode} to {@link CacheMode#IGNORE}
+	 *     before calling this method.
+	 * </ul>
 	 *
 	 * @param entityType the entity type
 	 * @param id an identifier
@@ -858,8 +876,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.
-	 * Obtain the specified lock mode if the instance exists.
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 * <p>
 	 * Convenient form of {@link #get(Class, Object, LockOptions)}.
 	 * <p>
@@ -878,8 +896,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.
-	 * Obtain the specified lock mode if the instance exists.
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param entityType the entity type
 	 * @param id an identifier
@@ -892,7 +910,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance.
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -903,9 +922,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 * <p/>
 	 * Convenient form of {@link #get(String, Object, LockOptions)}
 	 *
@@ -922,8 +941,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.
-	 * Obtain the specified lock mode if the instance exists.
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -1235,7 +1254,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 		/**
 		 * A timeout value indicating that the database should not
 		 * wait at all to acquire a pessimistic lock which is not
-		 * immediately available.
+		 * immediately available. This has the same effect as
+		 * {@link LockMode#UPGRADE_NOWAIT}.
 		 */
 		int PESSIMISTIC_NO_WAIT = LockOptions.NO_WAIT;
 

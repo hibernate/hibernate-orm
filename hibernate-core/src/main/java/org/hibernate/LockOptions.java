@@ -66,7 +66,8 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Indicates that the database should not wait at all to acquire
-	 * a pessimistic lock which is not immediately available.
+	 * a pessimistic lock which is not immediately available. This
+	 * has the same effect as {@link LockMode#UPGRADE_NOWAIT}.
 	 *
 	 * @see #getTimeOut
 	 */
@@ -85,7 +86,10 @@ public class LockOptions implements Serializable {
 	 * Indicates that rows which are already locked should be skipped.
 	 *
 	 * @see #getTimeOut()
+	 *
+	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */
+	@Deprecated
 	public static final int SKIP_LOCKED = -2;
 
 	private LockMode lockMode = LockMode.NONE;

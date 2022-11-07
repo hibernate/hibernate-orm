@@ -12,87 +12,136 @@ import jakarta.persistence.LockModeType;
 
 /**
  * Instances represent a lock mode for a row of a relational
- * database table. It is not intended that users spend much
- * time worrying about locking since Hibernate usually
- * obtains exactly the right lock level automatically.
- * Some "advanced" users may wish to explicitly specify lock
- * levels.
+ * database table. It is not intended that users spend much time
+ * worrying about locking since Hibernate usually obtains exactly
+ * the right lock level automatically. Some "advanced" users may
+ * wish to explicitly specify lock levels.
+ * <p>
+ * This enumeration of lock modes competes with the JPA-defined
+ * {@link LockModeType}, but offers additional options, including
+ * {@link #UPGRADE_NOWAIT} and {@link #UPGRADE_SKIPLOCKED}.
  *
  * @author Gavin King
  *
  * @see Session#lock(Object, LockMode)
+ * @see LockModeType
+ * @see LockOptions
  */
 public enum LockMode {
 	/**
-	 * No lock required. If an object is requested with this
-	 * lock mode, a {@link #READ} lock will be obtained if it
-	 * is necessary to actually read the state from the database,
+	 * No lock required. If an object is requested with this lock
+	 * mode, a {@link #READ} lock will be obtained if it turns out
+	 * to be necessary to actually read the state from the database,
 	 * rather than pull it from a cache.
 	 * <p>
-	 * This is the "default" lock mode.
+	 * This is the "default" lock mode, the mode requested by calling
+	 * {@link Session#get(Class, Object)} without passing an explicit
+	 * mode. It permits the state of an object to be retrieved from
+	 * the cache without the cost of database access.
+	 *
+	 * @see LockModeType#NONE
 	 */
 	NONE( 0, "none" ),
 
 	/**
-	 * A shared lock. Objects in this lock mode were read from
-	 * the database in the current transaction, rather than being
-	 * pulled from a cache.
+	 * A shared lock. Objects in this lock mode were read from the
+	 * database in the current transaction, rather than being pulled
+	 * from a cache.
+	 * <p>
+	 * Note that this lock mode is the same as the JPA-defined modes
+	 * {@link LockModeType#READ} and {@link LockModeType#OPTIMISTIC}.
+	 *
+	 * @see LockModeType#OPTIMISTIC
 	 */
 	READ( 5, "read" ),
 
 	/**
-	 * Optimistically assume that transaction will not experience
-	 * contention for an entity. The version will be verified near
-	 * the transaction end.
+	 * A shared optimistic lock. Assumes that the current transaction
+	 * will not experience contention for the state of an entity. The
+	 * version will be checked near the end of the transaction, to
+	 * verify that this was indeed the case.
+	 * <p>
+	 * Note that, despite the similar names this lock mode is not the
+	 * same as the JPA-defined mode {@link LockModeType#OPTIMISTIC}.
 	 */
 	OPTIMISTIC( 6, "optimistic" ),
 
 	/**
-	 * Optimistically assume that transaction will not experience
-	 * contention for an entity. The version will be verified and
-	 * incremented near the transaction end.
+	 * A kind of exclusive optimistic lock. Assumes that the current
+	 * transaction will not experience contention for the state of an
+	 * entity. The version will be checked and incremented near the
+	 * end of the transaction, to verify that this was indeed the
+	 * case, and to signal to concurrent optimistic readers that their
+	 * optimistic locks have failed.
+	 *
+	 * @see LockModeType#OPTIMISTIC_FORCE_INCREMENT
 	 */
 	OPTIMISTIC_FORCE_INCREMENT( 7, "optimistic_force_increment" ),
 
 	/**
-	 * A {@code WRITE} lock is obtained when an object is updated
-	 * or inserted.
+	 * An exclusive write lock. Objects in this lock mode were updated
+	 * or inserted in the database in the current transaction.
 	 * <p>
-	 * This lock mode is for internal use only and is not a valid
-	 * argument to {@code load()} or {@code lock()}. These method
-	 * throw an exception if {@code WRITE} given as an argument.
+	 * This lock mode is for internal use only and is not a legal
+	 * argument to {@link Session#get(Class, Object, LockMode)},
+	 * {@link Session#refresh(Object, LockMode)}, or
+	 * {@link Session#lock(Object, LockMode)}. These methods throw
+	 * an exception if {@code WRITE} is given as an argument.
+	 * <p>
+	 * Note that, despite the similar names, this lock mode is not
+	 * the same as the JPA-defined mode {@link LockModeType#WRITE}.
 	 */
 	@Internal
 	WRITE( 10, "write" ),
 
 	/**
-	 * Attempt to obtain an upgrade lock, using an Oracle-style
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
 	 * {@code select for update nowait}. The semantics of this
-	 * lock mode, once obtained, are the same as
-	 * {@link #PESSIMISTIC_WRITE}.
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
+	 * available, an exception occurs.
 	 */
 	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
 
 	/**
-	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * {@code select for update skip locked}. The semantics of
-	 * this lock mode, once obtained, are the same as
-	 * {@link #PESSIMISTIC_WRITE}.
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update skip locked}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
+	 * immediately available, no exception occurs, but the locked
+	 * row is not returned from the database.
 	 */
 	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
 
 	/**
-	 * Implemented as {@link #PESSIMISTIC_WRITE}.
+	 * A pessimistic shared lock, which prevents concurrent
+	 * transactions from writing the locked object. Obtained via
+	 * a {@code select for share} statement in dialects where this
+	 * syntax is supported, and via {@code select for update} in
+	 * other dialects.
+	 * <p>
+	 * On databases which do not support {@code for share}, this
+	 * lock mode is equivalent to {@link #PESSIMISTIC_WRITE}.
+	 *
+	 * @see LockModeType#PESSIMISTIC_READ
 	 */
 	PESSIMISTIC_READ( 12, "pessimistic_read" ),
 
 	/**
-	 * Transaction will obtain a database lock immediately.
+	 * A pessimistic upgrade lock, which prevents concurrent
+	 * transactions from reading or writing the locked object.
+	 * Obtained via a {@code select for update} statement.
+	 *
+	 * @see LockModeType#PESSIMISTIC_WRITE
 	 */
 	PESSIMISTIC_WRITE( 13, "pessimistic_write" ),
 
 	/**
-	 * Transaction will immediately increment the entity version.
+	 * A pessimistic write lock which immediately increments
+	 * the version of the locked object. Obtained by immediate
+	 * execution of an {@code update} statement.
+	 *
+	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */
 	PESSIMISTIC_FORCE_INCREMENT( 17, "pessimistic_force_increment" );
 

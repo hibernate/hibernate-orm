@@ -691,9 +691,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		/*
-		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
-		 */
+		// parent's implementation for (aliases, lockOptions) ignores aliases
 		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
 			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {

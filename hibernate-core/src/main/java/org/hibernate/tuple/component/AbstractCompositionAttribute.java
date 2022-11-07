@@ -19,8 +19,7 @@ import org.hibernate.type.CompositeType;
  * @author Steve Ebersole
  */
 public abstract class AbstractCompositionAttribute
-		extends AbstractNonIdentifierAttribute
-		implements AttributeSource {
+		extends AbstractNonIdentifierAttribute {
 
 	private final int columnStartPosition;
 

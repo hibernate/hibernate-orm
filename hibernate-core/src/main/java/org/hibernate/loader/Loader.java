@@ -255,7 +255,7 @@ public abstract class Loader {
 			SessionFactoryImplementor sessionFactory,
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
 
-		Dialect dialect = sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = sessionFactory.getFastSessionServices().dialect;
 
 		sql = applyLocks( sql, parameters, dialect, afterLoadActions );
 

@@ -163,10 +163,12 @@ public final class FastSessionServices {
 	final int defaultJdbcBatchSize;
 
 	//Private fields:
-	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
+
+	//Public fields:
+	public final Dialect dialect;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );

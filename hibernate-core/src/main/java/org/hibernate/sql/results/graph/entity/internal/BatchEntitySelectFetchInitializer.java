@@ -21,14 +21,12 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -148,14 +146,21 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		}
 
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+		List<Object> objects = getObjects();
+		parentAccess.registerResolutionListener(
+				o -> objects.add( o )
+		);
+
+		isInitialized = true;
+	}
+
+	private List<Object> getObjects() {
 		List<Object> objects = toBatchLoad.get( entityKey );
 		if ( objects == null ) {
 			objects = new ArrayList<>();
 			toBatchLoad.put( entityKey, objects );
 		}
-		objects.add( parentAccess.getInitializedInstance() );
-
-		isInitialized = true;
+		return objects;
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
@@ -196,6 +201,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 	}
 
 	@Override
+	public EntityPersister findFirstEntityPersister() {
+		return getEntityDescriptor();
+	}
+
+	@Override
 	public Object getParentKey() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
@@ -222,8 +232,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	@Override
 	public void endLoading(ExecutionContext context) {
-		final int propertyIndex = ( (UniqueKeyLoadable) ( (AbstractEntityInitializer) parentAccess ).getEntityDescriptor() )
-				.getPropertyIndex( referencedModelPart.getPartName() );
 		toBatchLoad.forEach(
 				(entityKey, parentInstances) -> {
 					final Object instance = context.getSession().internalLoad(
@@ -232,19 +240,14 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 							true,
 							referencedModelPart.isInternalLoadNullable()
 					);
+
 					for ( Object parentInstance : parentInstances ) {
-						( (AbstractEntityPersister) referencedModelPart.getDeclaringType() ).setPropertyValue(
-								parentInstance,
-								referencedModelPart.getPartName(),
-								instance
-						);
-						final EntityEntry entry = context.getSession()
-								.getPersistenceContext()
-								.getEntry( parentInstance );
+						referencedModelPart.getPropertyAccess().getSetter().set(parentInstance, instance);
+						final EntityEntry entry = context.getSession().getPersistenceContext().getEntry( parentInstance );
 						if ( entry != null ) {
 							final Object[] loadedState = entry.getLoadedState();
 							if ( loadedState != null ) {
-								loadedState[propertyIndex] = instance;
+								loadedState[0] = instance;
 							}
 						}
 					}

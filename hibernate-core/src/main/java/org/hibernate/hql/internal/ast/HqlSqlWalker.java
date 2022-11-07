@@ -1516,7 +1516,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public Dialect getDialect() {
-		return sessionFactoryHelper.getFactory().getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		return sessionFactoryHelper.getFactory().getFastSessionServices().dialect;
 	}
 
 	public static void panic() {

@@ -341,26 +341,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			currentSessionContext = buildCurrentSessionContext();
 
-			//checking for named queries
-			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-				final Map<String, HibernateException> errors = checkNamedQueries();
-				if ( !errors.isEmpty() ) {
-					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-					String separator = System.lineSeparator();
-
-					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-						LOG.namedQueryError( entry.getKey(), entry.getValue() );
-
-						failingQueries
-							.append( separator)
-							.append( entry.getKey() )
-							.append( " failed because of: " )
-							.append( entry.getValue() );
-					}
-					throw new HibernateException( failingQueries.toString() );
-				}
-			}
-
 			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
 			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
@@ -398,6 +378,26 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
 			this.fastSessionServices = new FastSessionServices( this );
+
+			//checking for named queries - requires fastSessionServices to have been initialized.
+			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+				final Map<String, HibernateException> errors = checkNamedQueries();
+				if ( !errors.isEmpty() ) {
+					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+					String separator = System.lineSeparator();
+
+					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+						LOG.namedQueryError( entry.getKey(), entry.getValue() );
+
+						failingQueries
+								.append( separator)
+								.append( entry.getKey() )
+								.append( " failed because of: " )
+								.append( entry.getValue() );
+					}
+					throw new HibernateException( failingQueries.toString() );
+				}
+			}
 
 			this.observer.sessionFactoryCreated( this );
 

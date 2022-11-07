@@ -138,6 +138,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	@Override
+	public EntityInitializer findFirstEntityInitializer() {
+		return findFirstEntityDescriptorAccess().findFirstEntityInitializer();
+	}
+
+	@Override
 	public void resolveKey(RowProcessingState processingState) {
 		// nothing to do
 	}

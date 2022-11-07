@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph;
 import java.util.function.Consumer;
 
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * Provides access to information about the owner/parent of a fetch
@@ -22,6 +23,13 @@ public interface FetchParentAccess extends Initializer {
 	 */
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
+	default EntityInitializer findFirstEntityInitializer(){
+		if ( this instanceof EntityInitializer ) {
+			return (EntityInitializer) this;
+		}
+		return (EntityInitializer) findFirstEntityDescriptorAccess();
+	}
+
 	Object getParentKey();
 
 	NavigablePath getNavigablePath();
@@ -32,4 +40,8 @@ public interface FetchParentAccess extends Initializer {
 	 * @apiNote If already resolved, the callback is triggered immediately
 	 */
 	void registerResolutionListener(Consumer<Object> resolvedParentConsumer);
+
+	default boolean isEmbeddable(){
+		return false;
+	}
 }

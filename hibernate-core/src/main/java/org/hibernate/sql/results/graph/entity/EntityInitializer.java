@@ -29,6 +29,11 @@ public interface EntityInitializer extends FetchParentAccess {
 		return this;
 	}
 
+	@Override
+	default EntityInitializer findFirstEntityInitializer() {
+		return this;
+	}
+
 	/**
 	 * Get the entity instance for the currently processing "row".
 	 *

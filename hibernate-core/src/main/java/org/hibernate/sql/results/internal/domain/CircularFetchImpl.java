@@ -35,6 +35,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchByUniqueKeyInitializer;
@@ -48,7 +49,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	private final DomainResult<?> keyResult;
-	private final EntityValuedModelPart referencedModelPart;
+	private final ToOneAttributeMapping referencedModelPart;
 	private final EntityMappingType entityMappingType;
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
@@ -59,7 +60,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	private final NavigablePath referencedNavigablePath;
 
 	public CircularFetchImpl(
-			EntityValuedModelPart referencedModelPart,
+			ToOneAttributeMapping referencedModelPart,
 			EntityMappingType entityMappingType,
 			FetchTiming timing,
 			NavigablePath navigablePath,
@@ -127,9 +128,18 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 						}
 						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
 						if ( entityPersister.isBatchLoadable() ) {
+							if ( parentAccess.isEmbeddable() ) {
+								return new BatchEntityInsideEmbeddableSelectFetchInitializer(
+										parentAccess,
+										referencedModelPart,
+										getNavigablePath(),
+										entityPersister,
+										keyResult.createResultAssembler( parentAccess, creationState )
+								);
+							}
 							return new BatchEntitySelectFetchInitializer(
 									parentAccess,
-									(ToOneAttributeMapping) referencedModelPart,
+									referencedModelPart,
 									getReferencedPath(),
 									entityPersister,
 									keyAssembler

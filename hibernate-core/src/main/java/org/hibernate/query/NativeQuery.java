@@ -39,9 +39,9 @@ import org.hibernate.type.BasicTypeReference;
  *     </li>
  *     <li>
  *         Tables used via {@link #addSynchronizedQuerySpace}, {@link #addSynchronizedEntityName} and
- *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
- *         auto-flush checking as well as cached query results if the results of the query are being
- *         cached.
+ *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows
+ *         Hibernate to know how to properly deal with auto-flush checking as well as cached query
+ *         results if the results of the query are being cached.
  *     </li>
  * </ul>
  *
@@ -51,7 +51,8 @@ import org.hibernate.type.BasicTypeReference;
  *         of its metadata
  *     </li>
  *     <li>
- *         A pre-defined (defined in metadata and named) mapping can be associated via {@link org.hibernate.Session#createNativeQuery(String, String)}
+ *         A pre-defined (defined in metadata and named) mapping can be associated via
+ *         {@link org.hibernate.Session#createNativeQuery(String, String)}
  *     </li>
  *     <li>
  *         Defined locally per the various {@link #addEntity}, {@link #addRoot}, {@link #addJoin},

@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -327,11 +328,6 @@ public class ProcedureCallImpl<R>
 	@Override
 	public MutableQueryOptions getQueryOptions() {
 		return queryOptions;
-	}
-
-	@Override
-	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		throw new IllegalStateException( "Cannot set LockMode on a procedure-call" );
 	}
 
 	@Override
@@ -1086,13 +1082,23 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		throw new UnsupportedOperationException( "setLockMode does not apply to procedure calls" );
+	}
+
+	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new IllegalStateException("jakarta.persistence.Query.setLockMode not valid on jakarta.persistence.StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "setLockMode does not apply to procedure calls" );
 	}
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new IllegalStateException( "jakarta.persistence.Query.getHibernateFlushMode not valid on jakarta.persistence.StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "getLockMode does not apply to procedure calls" );
+	}
+
+	@Override
+	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
+		throw new UnsupportedOperationException( "setLockOptions does not apply to procedure calls" );
 	}
 
 	@Override

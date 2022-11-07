@@ -472,24 +472,22 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
+		throw new UnsupportedOperationException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		super.setLockOptions( lockOptions );
-		return this;
+		throw new UnsupportedOperationException( "Illegal attempt to set lock options for a native query" );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
-		return this;
+		throw new UnsupportedOperationException( "Illegal attempt to set lock mode for a native query" );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
-		throw new IllegalStateException( "Illegal attempt to set lock mode on a native-query" );
+		throw new UnsupportedOperationException( "Illegal attempt to set lock mode for a native query" );
 	}
 
 	@Override
@@ -599,10 +597,8 @@ public class NativeQueryImpl<R>
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 		if ( cacheKey != null ) {
-			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
-					cacheKey,
-					() -> createQueryPlan( resultSetMapping )
-			);
+			return getSession().getFactory().getQueryEngine().getInterpretationCache()
+					.resolveSelectQueryPlan( cacheKey, () -> createQueryPlan( resultSetMapping ) );
 		}
 		else {
 			return createQueryPlan( resultSetMapping );

@@ -317,22 +317,22 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Obtains the {@link LockOptions} in effect for this query.
 	 *
-	 * @return The LockOptions
+	 * @return The {@link LockOptions} currently in effect
 	 *
 	 * @see LockOptions
 	 */
+	@Override
 	LockOptions getLockOptions();
 
 	/**
-	 * Set the lock options for the query.
-	 * <p>
-	 * Only the following options are taken into consideration:
-	 * <ol>
-	 * <li>{@link LockOptions#getLockMode()}</li>
-	 * <li>{@link LockOptions#getScope()}</li>
-	 * <li>{@link LockOptions#getTimeOut()}</li>
-	 * </ol>
-	 * For alias-specific locking, use {@link #setLockMode(String, LockMode)}.
+	 * Apply the given {@linkplain LockOptions lock options} to this
+	 * query. Alias-specific lock modes in the given lock options are
+	 * merged with any alias-specific lock mode which have already been
+	 * {@linkplain #setAliasSpecificLockMode(String, LockMode) set}. If
+	 * a lock mode has already been specified for an alias that is among
+	 * the aliases in the given lock options, the lock mode specified in
+	 * the given lock options overrides the lock mode that was already
+	 * set.
 	 *
 	 * @param lockOptions The lock options to apply to the query.
 	 *
@@ -353,13 +353,14 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * driver and database. For maximum portability, the given lock
 	 * mode should be {@link LockMode#PESSIMISTIC_WRITE}.
 	 *
-	 * @param alias a query alias, or {@code "this"} for a collection filter
+	 * @param alias a query alias, or {@code this} for a collection filter
 	 * @param lockMode The lock mode to apply.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getLockOptions()
 	 */
+	@Override
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
 	/**

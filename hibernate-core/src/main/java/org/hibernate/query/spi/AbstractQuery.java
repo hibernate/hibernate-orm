@@ -247,16 +247,12 @@ public abstract class AbstractQuery<R>
 	@Override
 	public LockModeType getLockMode() {
 		getSession().checkOpen( false );
-
 		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
 	}
 
 	@Override
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
-		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
-		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
-		getQueryOptions().getLockOptions().setFollowOnLocking( lockOptions.getFollowOnLocking() );
+		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
 	}
 

@@ -21,6 +21,7 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -324,25 +325,33 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	/**
-	 * The LockOptions currently in effect for the query
+	 * The {@link LockOptions} currently in effect for the query
 	 */
 	LockOptions getLockOptions();
 
 	/**
-	 * Specify the root LockModeType for the query
+	 * Specify the root {@link LockModeType} for the query
 	 *
 	 * @see #setHibernateLockMode
 	 */
 	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
-	 * Specify the root LockMode for the query
+	 * Specify the root {@link LockMode} for the query
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
-	 * Specify a LockMode to apply to a specific alias defined in the query
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
+	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
+
+	/**
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
+	 *
+	 * @deprecated use {@link #setLockMode(String, LockMode)}
+	 */
+	@Deprecated(since = "6.2") @Remove
 	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
 
 	/**

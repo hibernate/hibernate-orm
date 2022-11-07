@@ -456,7 +456,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	/**
-	 * Specify the root LockMode for the query
+	 * Specify the root {@link LockMode} for the query
 	 */
 	@Override
 	public SqmSelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
@@ -465,10 +465,21 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	/**
-	 * Specify a LockMode to apply to a specific alias defined in the query
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
+	 *
+	 * @deprecated use {{@link #setLockMode(String, LockMode)}}
+	 */
+	@Override @Deprecated
+	public SqmSelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
+		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		return this;
+	}
+
+	/**
+	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
 	@Override
-	public SqmSelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
+	public SqmSelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}

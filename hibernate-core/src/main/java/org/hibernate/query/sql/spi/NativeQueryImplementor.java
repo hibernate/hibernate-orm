@@ -43,14 +43,10 @@ import jakarta.persistence.metamodel.SingularAttribute;
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
 
 	@Override
-	default LockOptions getLockOptions() {
-		return null;
-	}
+	LockOptions getLockOptions();
 
 	@Override
-	default LockModeType getLockMode() {
-		return null;
-	}
+	LockModeType getLockMode();
 
 	/**
 	 * Best guess whether this is a select query.  {@code null}

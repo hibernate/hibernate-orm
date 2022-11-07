@@ -585,7 +585,10 @@ public abstract class AbstractSelectionQuery<R>
 
 	/**
 	 * Specify a LockMode to apply to a specific alias defined in the query
+	 *
+	 * @deprecated use {{@link #setLockMode(String, LockMode)}}
 	 */
+	@Override @Deprecated
 	public SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;

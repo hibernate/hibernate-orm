@@ -432,8 +432,18 @@ public class LockOptions implements Serializable {
 		return copy;
 	}
 
+	/**
+	 * Copy the given lock options into this instance,
+	 * merging the alias-specific lock modes.
+	 */
 	public void overlay(LockOptions lockOptions) {
-		copy( lockOptions, this );
+		setLockMode( lockOptions.getLockMode() );
+		setScope( lockOptions.getScope() );
+		setTimeOut( lockOptions.getTimeOut() );
+		if ( lockOptions.aliasSpecificLockModes != null ) {
+			lockOptions.aliasSpecificLockModes.forEach(this::setAliasSpecificLockMode);
+		}
+		setFollowOnLocking( lockOptions.getFollowOnLocking() );
 	}
 
 	/**

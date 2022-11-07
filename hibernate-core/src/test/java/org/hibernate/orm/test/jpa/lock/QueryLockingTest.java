@@ -120,7 +120,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 			query.setLockMode( LockModeType.READ );
 			fail( "Should have failed" );
 		}
-		catch (IllegalStateException expected) {
+		catch (UnsupportedOperationException expected) {
 		}
 
 		// however, we should be able to set it using hints

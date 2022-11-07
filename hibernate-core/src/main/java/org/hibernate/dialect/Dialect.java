@@ -1874,10 +1874,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the {@code FOR UPDATE OF column_list} fragment appropriate for this
-	 * dialect given the aliases of the columns to be write locked.
+	 * Get the {@code FOR UPDATE OF} or {@code FOR SHARE OF} fragment appropriate
+	 * for this dialect given the aliases of the columns to be locked.
 	 *
-	 * @param aliases The columns to be write locked.
+	 * @param aliases The columns to be locked.
 	 * @param lockOptions the lock options to apply
 	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */

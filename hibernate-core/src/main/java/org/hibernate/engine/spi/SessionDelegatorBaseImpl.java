@@ -882,6 +882,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		delegate.lock( entityName, object, lockOptions );
+	}
+
+	@Override
+	public void lock(Object object, LockOptions lockOptions) {
+		delegate.lock( object, lockOptions );
+	}
+
+	@Override @Deprecated
 	public LockRequest buildLockRequest(LockOptions lockOptions) {
 		return delegate.buildLockRequest( lockOptions );
 	}

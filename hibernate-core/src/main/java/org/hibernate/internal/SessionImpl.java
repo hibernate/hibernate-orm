@@ -675,11 +675,21 @@ public class SessionImpl
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public void lock(Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( object, lockOptions, this ) );
+	}
+
+	@Override
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( entityName, object, lockOptions, this ) );
+	}
+
+	@Override
 	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( entityName, object, lockMode, this ) );
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockRequest buildLockRequest(LockOptions lockOptions) {
 		return new LockRequestImpl( lockOptions );
 	}
@@ -2109,6 +2119,7 @@ public class SessionImpl
 		}
 	}
 
+	@Deprecated
 	private class LockRequestImpl implements LockRequest {
 		private final LockOptions lockOptions;
 

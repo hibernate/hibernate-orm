@@ -651,68 +651,82 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void delete(String entityName, Object object);
 
 	/**
-	 * Obtain the specified lock level on the given managed instance association with
-	 * this session. This may be used to:
+	 * Obtain the specified lock level on the given managed instance associated
+	 * with this session. This may be used to:
 	 * <ul>
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link org.hibernate.annotations.CascadeType#LOCK}.
-	 * <p>
-	 * Convenient form of {@link LockRequest#lock(Object)} via
-	 * {@link #buildLockRequest(LockOptions)}
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
-	 *
-	 * @see #buildLockRequest(LockOptions)
-	 * @see LockRequest#lock(Object)
 	 */
 	void lock(Object object, LockMode lockMode);
 
 	/**
-	 * Obtain the specified lock level on the given managed instance association with
-	 * this session. This may be used to:
+	 * Obtain a lock on the given managed instance associated with this session,
+	 * using the given {@link LockOptions lock options}.
+	 * <p>
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
+	 *
+	 * @param object a persistent or transient instance
+	 * @param lockOptions the lock options
+	 */
+	void lock(Object object, LockOptions lockOptions);
+
+	/**
+	 * Obtain the specified lock level on the given managed instance associated
+	 * with this session. This may be used to:
 	 * <ul>
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link org.hibernate.annotations.CascadeType#LOCK}.
-	 * <p>
-	 * Convenient form of {@link LockRequest#lock(String, Object)} via
-	 * {@link #buildLockRequest(LockOptions)}
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
 	 * @param entityName the name of the entity
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
-	 *
-	 * @see #buildLockRequest(LockOptions)
-	 * @see LockRequest#lock(String, Object)
 	 */
 	void lock(String entityName, Object object, LockMode lockMode);
+
+	/**
+	 * Obtain a lock on the given managed instance associated with this session,
+	 * using the given {@link LockOptions lock options}.
+	 * <p>
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
+	 *
+	 * @param entityName the name of the entity
+	 * @param lockOptions the lock options
+	 */
+	void lock(String entityName, Object object, LockOptions lockOptions);
 
 	/**
 	 * Build a new {@link LockRequest lock request} that specifies:
 	 * <ul>
 	 * <li>the {@link LockMode} to use,
-	 * <li>the pessimistic lock timeout, and
-	 * <li>the {@linkplain LockRequest#setScope(boolean) scope} of the lock.
+	 * <li>the {@linkplain LockRequest#setTimeOut(int) pessimistic lock timeout},
+	 *     and
+	 * <li>the {@linkplain LockRequest#setLockScope(PessimisticLockScope) scope}
+	 *     that is, whether the lock extends to rows of owned collections.
 	 * </ul>
-	 * Timeout and scope are ignored if the specified {@code LockMode} represents a
-	 * form of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
+	 * Timeout and scope are ignored if the specified {@code LockMode} represents
+	 * a flavor of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
 	 * <p>
 	 * Call {@link LockRequest#lock(Object)} to actually obtain the requested lock
 	 * on a managed entity instance.
-	 * <p>
-	 * Example usage:
-	 * {@code session.buildLockRequest().setLockMode(LockMode.PESSIMISTIC_WRITE).setTimeOut(60000).lock(entity);}
 	 *
 	 * @param lockOptions contains the lock level
 	 *
 	 * @return a {@link LockRequest} that can be used to lock any given object.
+	 *
+	 * @deprecated use {@link #lock(Object, LockOptions)}
 	 */
+	@Deprecated(since = "6.2")
 	LockRequest buildLockRequest(LockOptions lockOptions);
 
 	/**
@@ -720,8 +734,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
-	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
+	 *     or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
+	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -736,8 +752,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
-	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
+	 *     or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
+	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -1206,19 +1224,26 @@ public interface Session extends SharedSessionContract, EntityManager {
 	SharedSessionBuilder sessionWithOptions();
 
 	/**
-	 * Contains locking details (LockMode, Timeout and Scope).
+	 * A set of {@linkplain LockOptions locking options} attached
+	 * to the session.
+	 *
+	 * @deprecated simply construct a {@link LockOptions} and pass
+	 *             it to {@link #lock(Object, LockOptions)}.
 	 */
+	@Deprecated(since = "6.2")
 	interface LockRequest {
 		/**
-		 * Constant usable as a timeout value indicating that no wait semantics should
-		 * be used in attempting to acquire locks.
+		 * A timeout value indicating that the database should not
+		 * wait at all to acquire a pessimistic lock which is not
+		 * immediately available.
 		 */
-		int PESSIMISTIC_NO_WAIT = 0;
+		int PESSIMISTIC_NO_WAIT = LockOptions.NO_WAIT;
+
 		/**
-		 * Constant usable as a timeout value indicating that attempting to acquire
-		 * locks should be allowed to wait forever, that is, that there's no timeout.
+		 * A timeout value indicating that attempting to acquire
+		 * that there is no timeout for the lock acquisition.
 		 */
-		int PESSIMISTIC_WAIT_FOREVER = -1;
+		int PESSIMISTIC_WAIT_FOREVER = LockOptions.WAIT_FOREVER;
 
 		/**
 		 * Get the lock mode.

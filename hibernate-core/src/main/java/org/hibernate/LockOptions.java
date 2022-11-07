@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -23,7 +22,7 @@ import static java.util.Collections.emptyList;
 /**
  * Contains a set of options describing how a row of a database table
  * mapped by an entity should be locked. For
- * {@link Session#buildLockRequest(LockOptions)},
+ * {@link Session#lock(Object, LockOptions)},
  * {@link Session#get(Class, Object, LockOptions)}, or
  * {@link Session#refresh(Object, LockOptions)}, the relevant options
  * are:
@@ -33,6 +32,10 @@ import static java.util.Collections.emptyList;
  * <li>the {@link #getLockScope() lock scope}, that is, whether the
  *     lock extends to rows of owned collections.
  * </ul>
+ * Timeout and lock scope are ignored if the specified {@code LockMode}
+ * represents a flavor of {@linkplain LockMode#OPTIMISTIC optimistic}
+ * locking.
+ * <p>
  * In HQL and criteria queries, lock modes can be defined in an even
  * more granular fashion, with the option to specify a lock mode that
  * {@linkplain #setAliasSpecificLockMode(String, LockMode) applies
@@ -42,13 +45,13 @@ import static java.util.Collections.emptyList;
  */
 public class LockOptions implements Serializable {
 	/**
-	 * Represents {@link LockMode#NONE}, where timeout and scope are
+	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
 	 */
 	public static final LockOptions NONE = new LockOptions(LockMode.NONE);
 
 	/**
-	 * Represents {@link LockMode#READ}, where timeout and scope are
+	 * Represents {@link LockMode#READ}, to which timeout and scope are
 	 * not applicable.
 	 */
 	public static final LockOptions READ = new LockOptions(LockMode.READ);
@@ -70,7 +73,9 @@ public class LockOptions implements Serializable {
 	public static final int NO_WAIT = 0;
 
 	/**
-	 * Indicates that there is no timeout for the lock acquisition.
+	 * Indicates that there is no timeout for the lock acquisition,
+	 * that is, that the database should in principle wait forever
+	 * to obtain the lock.
 	 *
 	 * @see #getTimeOut
 	 */
@@ -92,19 +97,43 @@ public class LockOptions implements Serializable {
 	private Boolean followOnLocking;
 
 	/**
-	 * Constructs an instance with all default options.
+	 * Construct an instance with mode {@link LockMode#NONE} and
+	 * timeout {@link #WAIT_FOREVER}.
 	 */
 	public LockOptions() {
 	}
 
 	/**
-	 * Constructs an instance with the given {@linkplain LockMode
-	 * lock mode}.
+	 * Construct an instance with the given {@linkplain LockMode mode}
+	 * and {@link #WAIT_FOREVER}.
 	 *
 	 * @param lockMode The lock mode to use
 	 */
 	public LockOptions(LockMode lockMode) {
 		this.lockMode = lockMode;
+	}
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode}
+	 * and timeout.
+	 *
+	 * @param lockMode The lock mode to use
+	 */
+	public LockOptions(LockMode lockMode, int timeout) {
+		this.lockMode = lockMode;
+		this.timeout = timeout;
+	}
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode},
+	 * timeout, and {@link PessimisticLockScope scope}.
+	 *
+	 * @param lockMode The lock mode to use
+	 */
+	public LockOptions(LockMode lockMode, int timeout, PessimisticLockScope scope) {
+		this.lockMode = lockMode;
+		this.timeout = timeout;
+		this.scope = scope == PessimisticLockScope.EXTENDED;
 	}
 
 	/**

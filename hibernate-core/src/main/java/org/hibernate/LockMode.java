@@ -24,14 +24,15 @@ import jakarta.persistence.LockModeType;
  */
 public enum LockMode {
 	/**
-	 * No lock required. If an object is requested with this lock
-	 * mode, a {@link #READ} lock will be obtained if it is
-	 * necessary to actually read the state from the database,
+	 * No lock required. If an object is requested with this
+	 * lock mode, a {@link #READ} lock will be obtained if it
+	 * is necessary to actually read the state from the database,
 	 * rather than pull it from a cache.
 	 * <p>
 	 * This is the "default" lock mode.
 	 */
 	NONE( 0, "none" ),
+
 	/**
 	 * A shared lock. Objects in this lock mode were read from
 	 * the database in the current transaction, rather than being
@@ -40,31 +41,34 @@ public enum LockMode {
 	READ( 5, "read" ),
 
 	/**
-	 * Optimistically assume that transaction will not experience contention for
-	 * entities.  The entity version will be verified near the transaction end.
+	 * Optimistically assume that transaction will not experience
+	 * contention for an entity. The version will be verified near
+	 * the transaction end.
 	 */
 	OPTIMISTIC( 6, "optimistic" ),
 
 	/**
-	 * Optimistically assume that transaction will not experience contention for
-	 * entities.  The entity version will be verified and incremented near the transaction end.
+	 * Optimistically assume that transaction will not experience
+	 * contention for an entity. The version will be verified and
+	 * incremented near the transaction end.
 	 */
 	OPTIMISTIC_FORCE_INCREMENT( 7, "optimistic_force_increment" ),
 
 	/**
-	 * A {@code WRITE} lock is obtained when an object is updated or inserted.
-	 *
-	 * This lock mode is for internal use only and is not a valid mode for
-	 * {@code load()} or {@code lock()}, both of which throw exceptions if
-	 * {@code WRITE} is specified.
+	 * A {@code WRITE} lock is obtained when an object is updated
+	 * or inserted.
+	 * <p>
+	 * This lock mode is for internal use only and is not a valid
+	 * argument to {@code load()} or {@code lock()}. These method
+	 * throw an exception if {@code WRITE} given as an argument.
 	 */
 	@Internal
 	WRITE( 10, "write" ),
 
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * {@code select for update nowait}. The semantics of
-	 * this lock mode, once obtained, are the same as
+	 * {@code select for update nowait}. The semantics of this
+	 * lock mode, once obtained, are the same as
 	 * {@link #PESSIMISTIC_WRITE}.
 	 */
 	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
@@ -78,7 +82,7 @@ public enum LockMode {
 	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
 
 	/**
-	 * Implemented as PESSIMISTIC_WRITE.
+	 * Implemented as {@link #PESSIMISTIC_WRITE}.
 	 */
 	PESSIMISTIC_READ( 12, "pessimistic_read" ),
 

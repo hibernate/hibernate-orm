@@ -14,9 +14,10 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * An optimistic locking strategy that verifies that the version hasn't changed (prior to transaction commit).
+ * An optimistic locking strategy that simply verifies that the
+ * version has not changed, just before committing the transaction.
  * <p/>
- * This strategy is valid for LockMode.OPTIMISTIC
+ * This strategy is valid for {@link LockMode#OPTIMISTIC}.
  *
  * @author Scott Marlow
  * @since 3.5

@@ -14,9 +14,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * A pessimistic locking strategy that increments the version immediately (obtaining an exclusive write lock).
- * <p/>
- * This strategy is valid for LockMode.PESSIMISTIC_FORCE_INCREMENT
+ * A pessimistic locking strategy where a lock is obtained by incrementing
+ * the version immediately, obtaining an exclusive write lock by side effect.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
  *
  * @author Scott Marlow
  * @since 3.5

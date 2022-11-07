@@ -23,14 +23,15 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * A pessimistic locking strategy where the locks are obtained through select statements.
- * <p/>
- * For non-read locks, this is achieved through the Dialect's specific
- * SELECT ... FOR UPDATE syntax.
- *
- * This strategy is valid for LockMode.PESSIMISTIC_WRITE
- *
- * This class is a clone of SelectLockingStrategy.
+ * A pessimistic locking strategy where a lock is obtained via a
+ * select statement.
+ * <p>
+ * For non-read locks, this is achieved through the dialect's native
+ * {@code SELECT ... FOR UPDATE} syntax.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_WRITE}.
+ * <p>
+ * This class is a clone of {@link SelectLockingStrategy}.
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)

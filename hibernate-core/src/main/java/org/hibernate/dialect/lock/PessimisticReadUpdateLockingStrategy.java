@@ -25,11 +25,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * A pessimistic locking strategy where the locks are obtained through update statements.
- * <p/>
- * This strategy is valid for LockMode.PESSIMISTIC_READ
- *
- * This class is a clone of UpdateLockingStrategy.
+ * A pessimistic locking strategy where a lock is obtained via
+ * an update statement.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_READ}.
+ * <p>
+ * This class is a clone of {@link UpdateLockingStrategy}.
  *
  * @author Steve Ebersole
  * @author Scott Marlow

@@ -3258,7 +3258,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the UniqueDelegate supported by this dialect
+	 * Get the {@link UniqueDelegate} supported by this dialect
 	 *
 	 * @return The UniqueDelegate
 	 */

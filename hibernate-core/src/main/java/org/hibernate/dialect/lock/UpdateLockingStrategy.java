@@ -27,8 +27,8 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- * A locking strategy where the locks are obtained through update statements.
- * <p/>
+ * A locking strategy where a lock is obtained via an update statement.
+ * <p>
  * This strategy is not valid for read style locks.
  *
  * @author Steve Ebersole

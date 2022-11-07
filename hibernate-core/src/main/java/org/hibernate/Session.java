@@ -8,6 +8,7 @@ package org.hibernate;
 
 import java.util.List;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
@@ -1209,13 +1210,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	interface LockRequest {
 		/**
-		 * Constant usable as a time out value that indicates no wait semantics should
+		 * Constant usable as a timeout value indicating that no wait semantics should
 		 * be used in attempting to acquire locks.
 		 */
 		int PESSIMISTIC_NO_WAIT = 0;
 		/**
-		 * Constant usable as a time out value that indicates that attempting to acquire
-		 * locks should be allowed to wait forever (apply no timeout).
+		 * Constant usable as a timeout value indicating that attempting to acquire
+		 * locks should be allowed to wait forever, that is, that there's no timeout.
 		 */
 		int PESSIMISTIC_WAIT_FOREVER = -1;
 
@@ -1243,9 +1244,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 		int getTimeOut();
 
 		/**
-		 * Specify the pessimistic lock timeout. The default pessimistic lock behavior
-		 * is to wait forever for the lock. Lock timeout support is not available in
-		 * all {@link org.hibernate.dialect.Dialect SQL dialects}.
+		 * Specify the pessimistic lock timeout. The default pessimistic lock
+		 * behavior is to wait forever for the lock. Lock timeout support is
+		 * not available in every {@link org.hibernate.dialect.Dialect dialect}
+		 * of SQL.
 		 *
 		 * @param timeout is time in milliseconds to wait for lock.
 		 *                -1 means wait forever and 0 means no wait.
@@ -1255,23 +1257,42 @@ public interface Session extends SharedSessionContract, EntityManager {
 		LockRequest setTimeOut(int timeout);
 
 		/**
-		 * Check if locking is cascaded to owned collections and associated entities.
+		 * Check if locking extends to owned collections and associated entities.
 		 *
 		 * @return true if locking will be extended to owned collections and associated entities
+		 *
+		 * @deprecated use {@link #getLockScope()}
 		 */
+		@Deprecated(since = "6.2")
 		boolean getScope();
 
 		/**
-		 * Specify whether the {@link LockMode} should be cascaded to owned collections
+		 * Check if locking extends to owned collections and associated entities.
+		 *
+		 * @return true if locking will be extended to owned collections and associated entities
+		 */
+		default PessimisticLockScope getLockScope() {
+			return getScope() ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
+		}
+
+		/**
+		 * Specify whether the {@link LockMode} should extend to owned collections
 		 * and associated entities. An association must be mapped with
-		 * {@link org.hibernate.annotations.CascadeType#LOCK} for this setting to have
-		 * any effect.
+		 * {@link org.hibernate.annotations.CascadeType#LOCK} for this setting to
+		 * have any effect.
 		 *
 		 * @param scope {@code true} to cascade locks; {@code false} to not.
 		 *
 		 * @return {@code this}, for method chaining
+		 *
+		 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
 		 */
+		@Deprecated(since = "6.2")
 		LockRequest setScope(boolean scope);
+
+		default LockRequest setLockScope(PessimisticLockScope scope) {
+			return setScope( scope == PessimisticLockScope.EXTENDED );
+		}
 
 		/**
 		 * Perform the requested locking.

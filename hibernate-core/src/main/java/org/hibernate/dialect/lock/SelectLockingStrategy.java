@@ -23,10 +23,10 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * A locking strategy where the locks are obtained through select statements.
+ * A locking strategy where a lock is obtained via a select statement.
  * <p/>
- * For non-read locks, this is achieved through the Dialect's specific
- * SELECT ... FOR UPDATE syntax.
+ * For non-read locks, this is achieved through the dialect's native
+ * {@code SELECT ... FOR UPDATE} syntax.
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)

@@ -421,9 +421,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(
 				executionContext,
-				// If follow on locking is used, we must omit the lock options here,
+				// If follow-on locking is used, we must omit the lock options here,
 				// because these lock options are only for Initializers.
-				// If we wouldn't omit this, the follow on lock requests would be no-ops,
+				// If we wouldn't omit this, the follow-on lock requests would be no-ops,
 				// because the EntityEntrys would already have the desired lock mode
 				deferredResultSetAccess.usesFollowOnLocking()
 						? LockOptions.NONE

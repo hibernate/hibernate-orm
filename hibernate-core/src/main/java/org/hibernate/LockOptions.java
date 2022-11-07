@@ -48,13 +48,13 @@ public class LockOptions implements Serializable {
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
 	 */
-	public static final LockOptions NONE = new LockOptions(LockMode.NONE);
+	public static final LockOptions NONE = new ImmutableLockOptions(LockMode.NONE);
 
 	/**
 	 * Represents {@link LockMode#READ}, to which timeout and scope are
 	 * not applicable.
 	 */
-	public static final LockOptions READ = new LockOptions(LockMode.READ);
+	public static final LockOptions READ = new ImmutableLockOptions(LockMode.READ);
 
 	/**
 	 * Represents {@link LockMode#PESSIMISTIC_WRITE} with
@@ -62,7 +62,7 @@ public class LockOptions implements Serializable {
 	 * {@linkplain PessimisticLockScope#NORMAL no extension of the
 	 * lock to owned collections}.
 	 */
-	public static final LockOptions UPGRADE = new LockOptions(LockMode.PESSIMISTIC_WRITE);
+	public static final LockOptions UPGRADE = new ImmutableLockOptions(LockMode.PESSIMISTIC_WRITE);
 
 	/**
 	 * Indicates that the database should not wait at all to acquire
@@ -477,5 +477,41 @@ public class LockOptions implements Serializable {
 	@Override
 	public int hashCode() {
 		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, scope );
+	}
+
+	private static class ImmutableLockOptions extends LockOptions {
+		private ImmutableLockOptions(LockMode lockMode) {
+			super(lockMode);
+		}
+
+		@Override
+		public LockOptions setLockMode(LockMode lockMode) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public LockOptions setLockScope(PessimisticLockScope scope) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public LockOptions setFollowOnLocking(Boolean followOnLocking) {
+			return super.setFollowOnLocking(followOnLocking);
+		}
+
+		@Override
+		public LockOptions setTimeOut(int timeout) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public LockOptions setScope(boolean scope) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

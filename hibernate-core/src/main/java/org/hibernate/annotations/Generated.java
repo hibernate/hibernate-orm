@@ -61,6 +61,8 @@ public @interface Generated {
 	 * <ul>
 	 * <li>If {@link GenerationTime#INSERT}, the generated value will be
 	 *     selected after each SQL {@code insert} statement is executed.
+	 * <li>If {@link GenerationTime#UPDATE}, the generated value will be
+	 *     selected after each SQL {@code update} statement is executed.
 	 * <li>If {@link GenerationTime#ALWAYS}, the generated value will be
 	 *     selected after each SQL {@code insert} or {@code update}
 	 *     statement is executed.
@@ -80,6 +82,9 @@ public @interface Generated {
 	 * is included in SQL {@code insert} and {@code update} statements. This
 	 * is useful if the generated value is obtained by transforming the
 	 * assigned property value as it is being written.
+	 * <p>
+	 * Often used in combination with {@link SQLInsert}, {@link SQLUpdate},
+	 * or {@link ColumnTransformer#write()}.
 	 *
 	 * @return {@code true} if the current value should be included in SQL
 	 *         {@code insert} and {@code update} statements.

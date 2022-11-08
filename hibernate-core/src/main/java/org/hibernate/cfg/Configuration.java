@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -81,6 +82,7 @@ import jakarta.persistence.SharedCacheMode;
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
  * {@link #registerTypeContributor type contributors},
+ * {@link #addEntityNameResolver entity name resolvers},
  * {@link #addSqlFunction SQL function descriptors}, and
  * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
  * setting {@link #setImplicitNamingStrategy naming strategies} and a
@@ -126,6 +128,7 @@ public class Configuration {
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
@@ -739,6 +742,10 @@ public class Configuration {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
 
+		if ( entityNameResolvers != null ) {
+			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
+		}
+
 		if ( getSessionFactoryObserver() != null ) {
 			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
 		}
@@ -847,6 +854,16 @@ public class Configuration {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
 		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
+	}
+
+	/**
+	 * Add an {@link EntityNameResolver} to this configuration.
+	 */
+	public void addEntityNameResolver(EntityNameResolver entityNameResolver) {
+		if ( entityNameResolvers == null ) {
+			entityNameResolvers = new ArrayList<>();
+		}
+		entityNameResolvers.add( entityNameResolver );
 	}
 
 	/**

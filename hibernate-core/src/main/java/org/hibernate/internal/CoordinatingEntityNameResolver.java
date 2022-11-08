@@ -34,12 +34,15 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
-				break;
+				return entityName;
 			}
 		}
 
-		if ( entityName != null ) {
-			return entityName;
+		for ( EntityNameResolver resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
+			entityName = resolver.resolveEntityName( entity );
+			if ( entityName != null ) {
+				return entityName;
+			}
 		}
 
 		// the old-time stand-by...

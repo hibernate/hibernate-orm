@@ -15,27 +15,28 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
- * A <tt>UserType</tt> that may be dereferenced in a query.
+ * A {@link UserType} that may be dereferenced in a query.
+ * <p>
  * This interface allows a custom type to define "properties".
  * These need not necessarily correspond to physical JavaBeans
- * style properties.<br>
- * <br>
- * A <tt>CompositeUserType</tt> may be used in almost every way
- * that a component may be used. It may even contain many-to-one
- * associations.<br>
- * <br>
+ * style properties.
+ * <p>
+ * A {@code CompositeUserType} may be used in almost every way
+ * that an {@linkplain jakarta.persistence.Embeddable embeddable}
+ * type may be used. It may even contain many-to-one associations.
+ * <p>
  * Implementors must be immutable and must declare a public
- * default constructor.<br>
- * <br>
- * Unlike <tt>UserType</tt>, cacheability does not depend upon
- * serializability. Instead, <tt>assemble()</tt> and
- * <tt>disassemble</tt> provide conversion to/from a cacheable
- * representation.
- * <br>
- * Properties are ordered by the order of their names
- * i.e. they are alphabetically ordered, such that
- * <code>properties[i].name &lt; properties[i + 1].name</code>
- * for all <code>i &gt;= 0</code>.
+ * default constructor.
+ * <p>
+ * Unlike {@code UserType}, cacheability does not depend upon
+ * serializability. Instead, {@link #assemble(Serializable, Object)}
+ * and {@link #disassemble(Object)} provide conversion to and
+ * from a cacheable representation.
+ * <p>
+ * Properties are ordered by name, that is, they are sprted
+ * alphabetically such that
+ * {@code properties[i].name < properties[i+1].name}
+ * for all {@code i >= 0}.
  */
 @Incubating
 public interface CompositeUserType<J> extends EmbeddableInstantiator {

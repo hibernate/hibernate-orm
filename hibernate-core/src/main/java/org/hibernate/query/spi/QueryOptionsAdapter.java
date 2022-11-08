@@ -37,7 +37,7 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return new LockOptions();
+		return LockOptions.NONE;
 	}
 
 	@Override

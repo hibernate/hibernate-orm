@@ -991,29 +991,7 @@ public class SessionImpl
 
 	@Override
 	public void load(Object object, Object id) throws HibernateException {
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		if ( event == null ) {
-			event = new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() );
-		}
-		else {
-			event.setEntityClassName( null );
-			event.setEntityId( id );
-			event.setInstanceToLoad( object );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
-		}
-
-		fireLoad( event, LoadEventListener.RELOAD );
-
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
+		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
 	@Override @Deprecated
@@ -1054,13 +1032,7 @@ public class SessionImpl
 		event = recycleEventInstance( event, id, entityName );
 		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
 		Object result = event.getResult();
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
+		finishWithEventInstance( event );
 		if ( result instanceof HibernateProxy ) {
 			return ( (HibernateProxy) result ).getHibernateLazyInitializer().getImplementation();
 		}
@@ -1073,6 +1045,7 @@ public class SessionImpl
 			Object id,
 			boolean eager,
 			boolean nullable) {
+		final LoadType type = internalLoadType( eager, nullable );
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
@@ -1084,44 +1057,33 @@ public class SessionImpl
 				effectiveEntityGraph.clear();
 			}
 		}
-
 		try {
-			final LoadType type;
-			if ( nullable ) {
-				type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
-			}
-			else {
-				type = eager
-						? LoadEventListener.INTERNAL_LOAD_EAGER
-						: LoadEventListener.INTERNAL_LOAD_LAZY;
-			}
-
 			LoadEvent event = loadEvent;
 			loadEvent = null;
-
 			event = recycleEventInstance( event, id, entityName );
-
 			fireLoadNoChecks( event, type );
-
 			Object result = event.getResult();
-
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
-
-			if ( loadEvent == null ) {
-				event.setEntityClassName( null );
-				event.setEntityId( null );
-				event.setInstanceToLoad( null );
-				event.setResult( null );
-				loadEvent = event;
-			}
+			finishWithEventInstance( event );
 			return result;
 		}
 		finally {
 			if ( clearedEffectiveGraph ) {
 				effectiveEntityGraph.applyGraph( graph, semantic );
 			}
+		}
+	}
+
+	private static LoadType internalLoadType(boolean eager, boolean nullable) {
+		if ( nullable ) {
+			return LoadEventListener.INTERNAL_LOAD_NULLABLE;
+		}
+		else {
+			return eager
+					? LoadEventListener.INTERNAL_LOAD_EAGER
+					: LoadEventListener.INTERNAL_LOAD_LAZY;
 		}
 	}
 
@@ -1136,10 +1098,17 @@ public class SessionImpl
 			event.setEntityClassName( entityName );
 			event.setEntityId( id );
 			event.setInstanceToLoad( null );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
 			return event;
+		}
+	}
+
+	private void finishWithEventInstance(LoadEvent event) {
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
+			loadEvent = event;
 		}
 	}
 
@@ -2123,9 +2092,9 @@ public class SessionImpl
 	private class LockRequestImpl implements LockRequest {
 		private final LockOptions lockOptions;
 
-		private LockRequestImpl(LockOptions lo) {
-			lockOptions = new LockOptions();
-			LockOptions.copy( lo, lockOptions );
+		private LockRequestImpl(LockOptions lockOptions) {
+			this.lockOptions = new LockOptions();
+			LockOptions.copy( lockOptions, this.lockOptions );
 		}
 
 		@Override

@@ -208,4 +208,37 @@ public enum LockMode {
 
 		throw new IllegalArgumentException( "Unable to interpret LockMode reference from incoming external form : " + externalForm );
 	}
+
+	/**
+	 * @return an instance of {@link LockOptions} with this lock mode, and
+	 *         all other settings defaulted.
+	 */
+	public LockOptions toLockOptions() {
+		// we have to do this in a big switch to
+		// avoid circularities in the constructor
+		switch (this) {
+			case NONE:
+				return LockOptions.NONE;
+			case READ:
+				return LockOptions.READ;
+			case OPTIMISTIC:
+				return LockOptions.OPTIMISTIC;
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return LockOptions.OPTIMISTIC_FORCE_INCREMENT;
+			case UPGRADE_NOWAIT:
+				return LockOptions.UPGRADE_NOWAIT;
+			case UPGRADE_SKIPLOCKED:
+				return LockOptions.UPGRADE_SKIPLOCKED;
+			case PESSIMISTIC_READ:
+				return LockOptions.PESSIMISTIC_READ;
+			case PESSIMISTIC_WRITE:
+				return LockOptions.PESSIMISTIC_WRITE;
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return LockOptions.PESSIMISTIC_FORCE_INCREMENT;
+			case WRITE:
+				throw new UnsupportedOperationException("WRITE is not a valid LockMode as an argument");
+			default:
+				throw new IllegalStateException( "Unexpected value: " + this );
+		}
+	}
 }

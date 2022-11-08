@@ -43,12 +43,11 @@ import org.hibernate.usertype.UserVersionType;
  * handle the case of the wrapped type implementing them so we can pass them
  * along.
  *
- * todo (6.0) : ^^ this introduces a problem in code that relies on `instance of` checks
- * 		against any of these interfaces when the wrapped type does not
- *
  * @author Gavin King
  * @author Steve Ebersole
  */
+// todo (6.0) : ^^ this introduces a problem in code that relies on `instanceof` checks
+// 		           against any of these interfaces when the wrapped type does not
 public class CustomType<J>
 		extends AbstractType
 		implements ConvertedBasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {

@@ -33,7 +33,7 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	public Class returnedClass() {
+	public Class<ImmutableMonetoryAmount> returnedClass() {
 		return ImmutableMonetoryAmount.class;
 	}
 

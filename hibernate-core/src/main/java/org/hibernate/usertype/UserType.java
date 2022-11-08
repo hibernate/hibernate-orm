@@ -21,33 +21,37 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * This interface should be implemented by user-defined "types".
- * A "type" class is <em>not</em> the actual property type - it
- * is a class that knows how to serialize instances of another
- * class to and from JDBC.
+ * This interface should be implemented by user-defined custom types.
+ * A custom type is <em>not</em> an actual persistent attribute type,
+ * rather it is a class responsible for serializing instances of some
+ * other class to and from JDBC. This other class should have "value"
+ * semantics, since its identity is lost as part of this serialization
+ * process.
  * <p>
- * This interface
+ * Every implementor of {@code UserType} must be immutable and must
+ * declare a public default constructor.
+ * <p>
+ * This interface:
  * <ul>
- * <li>abstracts user code from future changes to the {@code Type}
- * interface,</li>
- * <li>simplifies the implementation of custom types and</li>
- * <li>hides certain "internal" interfaces from user code.</li>
+ * <li>abstracts user code away from changes to the interface
+ * {@link org.hibernate.type.Type},
+ * <li>simplifies the implementation of custom types, and
+ * <li>hides certain SPI interfaces from user code.
  * </ul>
+ * The class {@link org.hibernate.type.CustomType} automatically adapts
+ * between {@code UserType} and {@link org.hibernate.type.Type}.
  * <p>
- * Implementors must be immutable and must declare a public
- * default constructor.
+ * In principle, a custom type could implement {@code Type} directly,
+ * or extend one of the abstract classes in {@link org.hibernate.type}.
+ * But this approach risks breakage resulting from future incompatible
+ * changes to classes or interfaces in that package, and is therefore
+ * discouraged.
  * <p>
- * The actual class mapped by a {@code UserType} may be just
- * about anything.
- * <p>
- * {@code CompositeUserType} provides an extended version of
- * this interface that is useful for more complex cases.
- * <p>
- * Alternatively, custom types could implement {@code Type}
- * directly or extend one of the abstract classes in
- * {@link org.hibernate.type}. This approach risks future
- * incompatible changes to classes or interfaces in that
- * package.
+ * A custom type implemented as a {@code UserType} is treated as a
+ * non-composite value, and does not have persistent attributes which
+ * may be used in queries. If a custom type does have attributes, and
+ * can be thought of as something more like an embeddable object, it
+ * might be better to implement {@link CompositeUserType}.
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.CustomType

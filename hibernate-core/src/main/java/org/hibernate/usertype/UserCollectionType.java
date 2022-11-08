@@ -16,7 +16,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * A custom type for mapping user-written classes that implement {@code PersistentCollection}
+ * A custom type for mapping user-written classes which implement {@link PersistentCollection}.
  *
  * @see PersistentCollection
  *

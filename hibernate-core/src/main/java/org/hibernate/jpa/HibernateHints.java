@@ -12,7 +12,7 @@ import org.hibernate.query.Query;
 /**
  * List of Hibernate-specific (extension) hints available to query,
  * load and lock scenarios.
- *
+ * <p>
  * Some hints are only effective in certain scenarios, which is noted on
  * each constant's documentation
  *
@@ -96,36 +96,39 @@ public interface HibernateHints {
 
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by
-	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)}.
+	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking}.
+	 * <p>
 	 * A value of {@code true} enables follow-on-locking, whereas a value of
 	 * {@code false} disables it. If the value is {@code null}, the
 	 * {@code Dialect}'s default strategy is used.
+	 *
+	 * @see org.hibernate.LockOptions#setFollowOnLocking(Boolean)
 	 *
 	 * @since 5.2
 	 */
 	String HINT_FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
 
 	/**
-	 * Hint for specifying the lock-mode to apply to the results from a
-	 * native-query.
-	 *
-	 * While Hibernate supports applying lock-mode to a native-query, the specification
-	 * requires that {@link jakarta.persistence.Query#setLockMode} throw an
-	 * {@link IllegalStateException} if called for a native query.
-	 *
+	 * Hint for specifying the lock mode to apply to the results of a
+	 * native query.
+	 * <p>
+	 * While Hibernate supports applying lock-mode to a native-query, the
+	 * JPA specification requires that {@link jakarta.persistence.Query#setLockMode}
+	 * throw an {@link IllegalStateException} if called for a native query.
+	 * <p>
 	 * Accepts a {@link jakarta.persistence.LockModeType} or a {@link org.hibernate.LockMode}
 	 */
 	String HINT_NATIVE_LOCK_MODE = "org.hibernate.lockMode";
 
 	/**
-	 * Hint for specifying query spaces to be applied to a NativeQuery.
-	 *
+	 * Hint for specifying query spaces to be applied to a native query.
+	 * <p>
 	 * Passed value can be any of:<ul>
 	 *     <li>List of the spaces</li>
 	 *     <li>array of the spaces</li>
 	 *     <li>String as "whitespace"-separated list of the spaces</li>
 	 * </ul>
-	 *
+	 * <p>
 	 * Note that the passed space need not match any real spaces/tables in
 	 * the underlying query.  This can be used to completely circumvent
 	 * the auto-flush checks as well as any cache invalidation that might

@@ -103,8 +103,7 @@ public class HQLQueryPlan implements Serializable {
 		final Set<Serializable> combinedQuerySpaces = new HashSet<>();
 
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
-		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
-
+		final QueryTranslatorFactory queryTranslatorFactory = factory.getFastSessionServices().queryTranslatorFactory;
 
 		for ( int i=0; i<length; i++ ) {
 			if ( collectionRole == null ) {

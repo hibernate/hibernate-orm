@@ -309,8 +309,8 @@ public abstract class AbstractQuery<R>
 		}
 
 		if ( getLockOptions().getScope() ) {
-			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getScope() );
-			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}
 
 		if ( getLockOptions().hasAliasSpecificLockModes() ) {

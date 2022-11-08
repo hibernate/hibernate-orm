@@ -304,7 +304,7 @@ public class MatchingIdSelectionHelper {
 				,
 				executionContext.getSession()
 		);
-		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions().makeCopy();
 		final LockMode lockMode = lockOptions.getLockMode();
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setLockMode( LockMode.WRITE );

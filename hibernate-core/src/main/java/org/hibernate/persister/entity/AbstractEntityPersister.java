@@ -4356,7 +4356,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
-		return load( id, optionalObject, new LockOptions().setLockMode( lockMode ), session );
+		return load( id, optionalObject, lockMode.toLockOptions(), session );
 	}
 
 	/**

@@ -55,13 +55,49 @@ public class LockOptions implements Serializable {
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
 	 */
-	public static final LockOptions NONE = new LockOptions(true, LockMode.NONE);
+	public static final LockOptions NONE = new LockOptions( true, LockMode.NONE );
 
 	/**
 	 * Represents {@link LockMode#READ}, to which timeout and scope are
 	 * not applicable.
 	 */
-	public static final LockOptions READ = new LockOptions(true, LockMode.READ);
+	public static final LockOptions READ = new LockOptions( true, LockMode.READ );
+
+	/**
+	 * Represents {@link LockMode#OPTIMISTIC}.
+	 */
+	static final LockOptions OPTIMISTIC = new LockOptions( true, LockMode.OPTIMISTIC );
+
+	/**
+	 * Represents {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}, to which
+	 * timeout and scope are not applicable.
+	 */
+	static final LockOptions OPTIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.OPTIMISTIC_FORCE_INCREMENT );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_READ}.
+	 */
+	static final LockOptions PESSIMISTIC_READ = new LockOptions( true, LockMode.PESSIMISTIC_READ );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_WRITE}.
+	 */
+	static final LockOptions PESSIMISTIC_WRITE = new LockOptions( true, LockMode.PESSIMISTIC_WRITE );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
+	 */
+	static final LockOptions PESSIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+
+	/**
+	 * Represents {@link LockMode#UPGRADE_NOWAIT}.
+	 */
+	static final LockOptions UPGRADE_NOWAIT = new LockOptions( true, LockMode.UPGRADE_NOWAIT );
+
+	/**
+	 * Represents {@link LockMode#UPGRADE_SKIPLOCKED}.
+	 */
+	static final LockOptions UPGRADE_SKIPLOCKED = new LockOptions( true, LockMode.UPGRADE_SKIPLOCKED );
 
 	/**
 	 * Represents {@link LockMode#PESSIMISTIC_WRITE} with
@@ -69,7 +105,7 @@ public class LockOptions implements Serializable {
 	 * {@linkplain PessimisticLockScope#NORMAL no extension of the
 	 * lock to owned collections}.
 	 */
-	public static final LockOptions UPGRADE = new LockOptions(true, LockMode.PESSIMISTIC_WRITE);
+	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
 
 	/**
 	 * Indicates that the database should not wait at all to acquire

@@ -92,18 +92,7 @@ public class CascadingActions {
 				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to lock: {0}", entityName );
-			LockMode lockMode = LockMode.NONE;
-			LockOptions lr = new LockOptions();
-			if ( lockOptions != null ) {
-				lr.setTimeOut( lockOptions.getTimeOut() );
-				lr.setScope( lockOptions.getScope() );
-				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
-				if ( lockOptions.getScope() ) {
-					lockMode = lockOptions.getLockMode();
-				}
-			}
-			lr.setLockMode( lockMode );
-			session.buildLockRequest( lr ).lock( entityName, child );
+			session.lock( entityName, child, lockOptions );
 		}
 
 		@Override

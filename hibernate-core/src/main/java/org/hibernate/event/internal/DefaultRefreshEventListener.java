@@ -189,7 +189,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
 				// the requested lock-mode is less restrictive than the current one
 				//		- pass along the current lock-mode (after accounting for WRITE)
-				lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
+				lockOptionsToUse = event.getLockOptions().makeCopy();
 				if ( currentLockMode == LockMode.WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {

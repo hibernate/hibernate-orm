@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Used to define the style of optimistic locking to be applied to an entity.
- * In an inheritance hierarchy, this annotation may only be applies to the
+ * In an inheritance hierarchy, this annotation may only be applied to the
  * root entity.
  *
  * @author Steve Ebersole

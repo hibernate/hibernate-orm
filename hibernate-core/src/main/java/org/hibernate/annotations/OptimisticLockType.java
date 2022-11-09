@@ -25,13 +25,15 @@ public enum OptimisticLockType {
 	 */
 	VERSION,
 	/**
-	 * Perform optimistic locking based on *dirty* fields as part of an expanded WHERE clause restriction for the
-	 * UPDATE/DELETE SQL statement.
+	 * Perform optimistic locking based on <em>dirty</em> fields as
+	 * part of an expanded {@code WHERE} clause restriction for the
+	 * SQL {@code UPDATE} or {@code DELETE} statement.
 	 */
 	DIRTY,
 	/**
-	 * Perform optimistic locking based on *all* fields as part of an expanded WHERE clause restriction for the
-	 * UPDATE/DELETE SQL statement.
+	 * Perform optimistic locking based on <em>all</em> fields as
+	 * part of an expanded {@code WHERE} clause restriction for the
+	 * SQL {@code UPDATE} or {@code DELETE} statement.
 	 */
 	ALL
 }

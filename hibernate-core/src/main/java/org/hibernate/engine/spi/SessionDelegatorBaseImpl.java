@@ -822,11 +822,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void remove(String entityName, Object object) {
-		delegate.remove( entityName, object );
-	}
-
-	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		return delegate.find( entityClass, primaryKey );
 	}

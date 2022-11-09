@@ -652,7 +652,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param entityName the entity name for the instance to be removed.
 	 * @param object the instance to be removed
 	 *
-	 * @deprecated use {@link #remove(String, Object)}
+	 * @deprecated use {@link #remove(Object)}
 	 */
 	@Deprecated(since = "6.0")
 	void delete(String entityName, Object object);
@@ -823,16 +823,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override
 	void remove(Object object);
-
-	/**
-	 * Mark a persistence instance associated with this session for removal from
-	 * the underlying database. Ths operation cascades to associated instances if
-	 * the association is mapped {@link jakarta.persistence.CascadeType#REMOVE}.
-	 *
-	 * @param entityName the name of the entity
-	 * @param object the managed persistent instance to remove
-	 */
-	void remove(String entityName, Object object);
 
 	/**
 	 * Determine the current {@link LockMode} of the given managed instance associated

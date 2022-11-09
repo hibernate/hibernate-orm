@@ -10,25 +10,30 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.query.NativeQuery;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import org.hibernate.CacheMode;
+import org.hibernate.Remove;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link jakarta.persistence.NamedNativeQuery} with Hibernate features.
+ * Declares a named query written in native SQL.
+ * <p>
+ * Extends {@link jakarta.persistence.NamedNativeQuery} with additional settings.
  *
  * @author Emmanuel Bernard
  *
- * @see NativeQuery
+ * @see org.hibernate.query.NativeQuery
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(NamedNativeQueries.class)
 public @interface NamedNativeQuery {
 	/**
-	 * The registration name.
+	 * The name of this query.
 	 *
 	 * @see org.hibernate.SessionFactory#addNamedQuery
 	 * @see org.hibernate.Session#createNamedQuery
@@ -36,72 +41,115 @@ public @interface NamedNativeQuery {
 	String name();
 
 	/**
-	 * The SQL query string.
+	 * The text of the SQL query.
 	 */
 	String query();
 
 	/**
-	 * The result Class.  Should not be used in conjunction with {@link #resultSetMapping()}
+	 * The resulting {@code Class}.
+	 * Should not be used in conjunction with {@link #resultSetMapping()}
 	 */
 	Class<?> resultClass() default void.class;
 
 	/**
-	 * The name of a SQLResultSetMapping to use.  Should not be used in conjunction with {@link #resultClass()}.
+	 * The name of a {@link jakarta.persistence.SqlResultSetMapping}.
+	 * Should not be used in conjunction with {@link #resultClass()}.
 	 */
 	String resultSetMapping() default "";
 
 	/**
 	 * The flush mode for the query.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
 	 */
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**
-	 * Whether the query (results) is cacheable or not.  Default is {@code false}, that is not cacheable.
+	 * Whether the query results are cacheable.
+	 * Default is {@code false}, that is, not cacheable.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheable(boolean)
 	 */
 	boolean cacheable() default false;
 
 	/**
-	 * If the query results are cacheable, name the query cache region to use.
+	 * If the query results are cacheable, the name of the query cache region.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setCacheRegion(String)
 	 */
 	String cacheRegion() default "";
 
 	/**
-	 * The number of rows fetched by the JDBC Driver per trip.
+	 * The number of rows fetched by the JDBC driver per trip.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setFetchSize(int)
 	 */
 	int fetchSize() default -1;
 
 	/**
-	 * The query timeout (in seconds).  Default is no timeout.
+	 * The query timeout in seconds.
+	 * Default is no timeout.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setTimeout(int)
 	 */
 	int timeout() default -1;
 
 	/**
-	 * A comment added to the SQL query.  Useful when engaging with DBA.
+	 * A comment added to the SQL query.
+	 * Useful when engaging with DBA.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setComment(String)
 	 */
 	String comment() default "";
 
 	/**
-	 * The cache mode used for this query.  This refers to entities/collections returned from the query.
+	 * The cache storage mode for objects returned by this query.
+	 *
+	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
 	 */
+	CacheStoreMode cacheStoreMode() default CacheStoreMode.USE;
+
+	/**
+	 * The cache retrieval mode for objects returned by  this query.
+	 *
+	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
+	 */
+	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
+
+	/**
+	 * The cache interaction mode for this query.
+	 *
+	 * @deprecated use {@link #cacheStoreMode()} and
+	 *            {@link #cacheRetrieveMode()} since
+	 *            {@link CacheModeType} is deprecated
+	 */
+	@Deprecated(since = "6.2") @Remove
+	//TODO: actually, we won't remove it, we'll change its
+	//      type to CacheMode and then un-deprecate it
 	CacheModeType cacheMode() default CacheModeType.NORMAL;
 
 	/**
-	 * Whether the results should be read-only.  Default is {@code false}.
+	 * Whether the query results should be marked read-only.
+	 * Default is {@code false}.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setReadOnly(boolean)
 	 */
 	boolean readOnly() default false;
 
 	/**
-	 * The query spaces to apply for the query.
+	 * The query spaces involved in this query.
 	 *
 	 * @see org.hibernate.query.SynchronizeableQuery
 	 */
 	String[] querySpaces() default {};
 
 	/**
-	 * Does the SQL ({@link #query()}) represent a call to a procedure/function?
+	 * Is the {@linkplain #query() SQL query} a call to a stored procedure
+	 * or function?
 	 *
-	 * @deprecated Calling database procedures and functions through {@link NativeQuery} is
-	 * no longer supported; use {@link jakarta.persistence.NamedStoredProcedureQuery} instead
+	 * @deprecated Calling database procedures and functions through
+	 *             {@link org.hibernate.query.NativeQuery} is no longer supported;
+	 *             use {@link jakarta.persistence.NamedStoredProcedureQuery} instead.
 	 */
 	@Deprecated( since = "6.0" )
 	boolean callable() default false;

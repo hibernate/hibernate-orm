@@ -193,32 +193,34 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
 	/**
-	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
-	 * read-only/modifiable setting was not initialized, then the default
-	 * read-only/modifiable setting for the persistence context is returned instead.
+	 * Should entities and proxies loaded by this Query be put in read-only
+	 * mode? If the read-only/modifiable setting was not initialized, then
+	 * the default read-only/modifiable setting for the persistence context i
+	 * s returned instead.
 	 *
 	 * @see #setReadOnly(boolean)
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session beforeQuery the
+	 * query was executed.
 	 *
-	 * @return {@code true} if the entities and proxies loaded by the query will be put
-	 * in read-only mode; {@code false} otherwise (they will be modifiable)
+	 * @return {@code true} if the entities and proxies loaded by the query
+	 *         will be put in read-only mode; {@code false} otherwise
+	 *         (they will be modifiable)
 	 */
 	boolean isReadOnly();
 
 	/**
-	 * Set the read-only/modifiable mode for entities and proxies
-	 * loaded by this Query. This setting overrides the default setting
-	 * for the persistence context.
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.engine.spi.PersistenceContext#setDefaultReadOnly(boolean)
-	 * @see Session#setDefaultReadOnly(boolean)
-	 *
+	 * Set the read-only/modifiable mode for entities and proxies loaded
+	 *  by this {@code Query}. This setting overrides the default setting
+	 * for the persistence context,
+	 * {@link org.hibernate.Session#isDefaultReadOnly()}.
+	 * <p>
+	 * To set the default read-only/modifiable setting used for entities
+	 * and proxies that are loaded into the session, use
+	 * {@link Session#setDefaultReadOnly(boolean)}.
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
@@ -228,13 +230,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * proxy has, regardless of the session's current setting.
 	 * <p>
 	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 * returned by the query that existed in the session beforeQuery the
+	 * query was executed.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @param readOnly {@code true} indicates that entities and proxies loaded by the query
-	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
-	 * loaded by the query will be put in modifiable mode
+	 * @param readOnly {@code true} indicates that entities and proxies
+	 *                 loaded by the query are to be put in read-only mode;
+	 *                 {@code false} indicates that entities and proxies
+	 *                 loaded by the query will be put in modifiable mode
 	 */
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
@@ -244,28 +248,29 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	int getMaxResults();
 
 	/**
-	 * Set the max number of rows requested for the query results.  Applied
+	 * Set the max number of rows requested for the query results. Applied
 	 * to the SQL query
 	 */
 	SelectionQuery<R> setMaxResults(int maxResult);
 
 	/**
-	 * The first row position to return from the query results.  Applied
+	 * The first row position to return from the query results. Applied
 	 * to the SQL query
 	 */
 	int getFirstResult();
 
 	/**
-	 * Set the first row position to return from the query results.  Applied
+	 * Set the first row position to return from the query results. Applied
 	 * to the SQL query
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 
 	/**
-	 * Obtain the CacheMode in effect for this query.  By default, the query
-	 * inherits the CacheMode of the Session from which is originates.
+	 * Obtain the {@link CacheMode} in effect for this query. By default,
+	 * the query inherits the {@link CacheMode} of the session from which
+	 * it originates.
 	 * <p/>
-	 * NOTE: The CacheMode here describes reading-from/writing-to the
+	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to the
 	 * entity/collection caches as we process query results.  For caching of
 	 * the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
@@ -279,26 +284,27 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	CacheMode getCacheMode();
 
 	/**
-	 * Set the current CacheMode in effect for this query.
+	 * Set the current {@link CacheMode} in effect for this query.
 	 *
-	 * @implNote Setting to {@code null} ultimately indicates to use the CacheMode of the Session
+	 * @implNote Setting it to {@code null} ultimately indicates to use the
+	 *           {@code CacheMode} of the session.
 	 *
 	 * @see #getCacheMode()
-	 * @see Session#setCacheMode
+	 * @see Session#setCacheMode(CacheMode)
 	 */
 	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Should the results of the query be stored in the second level cache?
 	 * <p/>
-	 * This is different than second level caching of any returned entities and collections, which
-	 * is controlled by {@link #getCacheMode()}.
+	 * This is different to second level caching of any returned entities and
+	 * collections, which is controlled by {@link #getCacheMode()}.
 	 * <p/>
-	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
-	 * query caching still has to be enabled on the {@link SessionFactory} for this to happen.  Usually that is
-	 * controlled by the {@code hibernate.cache.use_query_cache} configuration setting.
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
+	 * NOTE: the query being "eligible" for caching does not necessarily mean
+	 * its results will be cached. Second-level query caching still has to be
+	 * enabled on the {@link SessionFactory} for this to happen. Usually that
+	 * is controlled by the configuration setting
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.
 	 */
 	boolean isCacheable();
 
@@ -310,15 +316,17 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
-	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
-	 * cached, see the discussion on {@link #isCacheable()} for more information).  {@code null} indicates that the
-	 * default region should be used.
+	 * Obtain the name of the second level query cache region in which query
+	 * results will be stored (if they are cached, see the discussion on
+	 * {@link #isCacheable()} for more information). {@code null} indicates
+	 * that the default region should be used.
 	 */
 	String getCacheRegion();
 
 	/**
 	 * Set the name of the cache region where query results should be cached
-	 * (assuming {@link #isCacheable}).  {@code null} indicates to use the default region.
+	 * (assuming {@link #isCacheable}). {@code null} indicates to use the
+	 * default region.
 	 *
 	 * @see #getCacheRegion()
 	 */

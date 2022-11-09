@@ -7,14 +7,21 @@
 package org.hibernate.annotations;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Remove;
 
 /**
- * Enumeration for the different interaction modes between the session and
- * the Level 2 Cache.
+ * Enumerates the different interaction modes between the session
+ * and the second-level Cache. This enumeration is isomorphic to
+ * {@link CacheMode} and exists only for historical reasons.
  *
  * @author Emmanuel Bernard
  * @author Carlos Gonzalez-Cadenas
+ *
+ * @deprecated use {@link CacheMode} or
+ *             {@link jakarta.persistence.CacheStoreMode} and
+ *             {@link jakarta.persistence.CacheRetrieveMode}.
  */
+@Deprecated(since = "6.2") @Remove
 public enum CacheModeType {
 	/**
 	 * Corresponds to {@link CacheMode#GET}.
@@ -53,7 +60,7 @@ public enum CacheModeType {
 
 	private final CacheMode cacheMode;
 
-	private CacheModeType(CacheMode cacheMode) {
+	CacheModeType(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 	}
 

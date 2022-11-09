@@ -89,7 +89,7 @@ public enum CacheMode {
 	 * @throws MappingException Indicates the external form was not recognized as a valid enum value.
 	 */
 	public static CacheMode interpretExternalSetting(String setting) {
-		if (setting == null) {
+		if ( setting == null ) {
 			return null;
 		}
 
@@ -115,22 +115,28 @@ public enum CacheMode {
 		}
 
 		switch ( storeMode ) {
+			case USE: {
+				switch ( retrieveMode ) {
+					case USE:
+						return NORMAL;
+					case BYPASS:
+						return PUT;
+				}
+			}
 			case BYPASS: {
-				return retrieveMode == CacheRetrieveMode.USE
-						? GET
-						: IGNORE;
+				switch ( retrieveMode ) {
+					case USE:
+						return GET;
+					case BYPASS:
+						return IGNORE;
+				}
 			}
 			case REFRESH: {
-				// technically should combo `CacheStoreMode#REFRESH` and `CacheRetrieveMode#USE` be illegal?
+				// technically should combo CacheStoreMode#REFRESH and CacheRetrieveMode#USE be illegal?
 				return REFRESH;
 			}
-			case USE: {
-				return retrieveMode == CacheRetrieveMode.USE
-						? NORMAL
-						: PUT;
-			}
 			default: {
-				throw new UnsupportedOperationException( "Unrecognized CacheStoreMode : " + storeMode );
+				throw new AssertionFailure( "Unrecognized CacheStoreMode: " + storeMode );
 			}
 		}
 	}

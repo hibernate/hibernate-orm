@@ -472,22 +472,34 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new UnsupportedOperationException( "Illegal attempt to get lock mode on a native-query" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		throw new UnsupportedOperationException( "Illegal attempt to set lock options for a native query" );
+		super.setLockOptions( lockOptions );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+		super.setHibernateLockMode( lockMode );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		throw new UnsupportedOperationException( "Illegal attempt to set lock mode for a native query" );
+		// throw IllegalStateException here for consistency with JPA
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a native query" );
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
-		throw new UnsupportedOperationException( "Illegal attempt to set lock mode for a native query" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a native query" );
 	}
 
 	@Override

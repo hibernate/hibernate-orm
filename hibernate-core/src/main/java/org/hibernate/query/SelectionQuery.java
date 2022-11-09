@@ -337,6 +337,11 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
+	 * Get the root {@link LockMode} for the query
+	 */
+	LockMode getHibernateLockMode();
+
+	/**
 	 * Specify the root {@link LockMode} for the query
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);

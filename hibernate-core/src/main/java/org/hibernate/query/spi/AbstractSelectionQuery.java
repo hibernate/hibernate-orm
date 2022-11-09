@@ -570,14 +570,24 @@ public abstract class AbstractSelectionQuery<R>
 	 *
 	 * @see #setHibernateLockMode
 	 */
+	@Override
 	public SelectionQuery<R> setLockMode(LockModeType lockMode) {
 		setHibernateLockMode( LockModeTypeHelper.getLockMode( lockMode ) );
 		return this;
 	}
 
 	/**
+	 * Get the root LockMode for the query
+	 */
+	@Override
+	public LockMode getHibernateLockMode() {
+		return getLockOptions().getLockMode();
+	}
+
+	/**
 	 * Specify the root LockMode for the query
 	 */
+	@Override
 	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
 		return this;

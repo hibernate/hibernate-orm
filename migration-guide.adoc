@@ -94,3 +94,6 @@ The `enableLazyInitialization` and `enableDirtyTracking` enhancement tooling opt
 as well as the respective `hibernate.enhancer.enableLazyInitialization` and `hibernate.enhancer.enableDirtyTracking` configuration settings,
 switched their default values to `true` and the settings are now deprecated for removal without replacement.
 See link:https://hibernate.atlassian.net/browse/HHH-15641[HHH-15641] for details.
+
+The global property `hibernate.bytecode.use_reflection_optimizer` switched the default value to `true`
+and the setting is now deprecated for removal without replacement. See link:https://hibernate.atlassian.net/browse/HHH-15631[HHH-15631] for details.

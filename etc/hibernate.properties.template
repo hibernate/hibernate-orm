@@ -322,9 +322,9 @@ hibernate.default_batch_fetch_size 8
 #hibernate.use_identifier_rollback true
 
 
-## enable bytecode reflection optimizer (disabled by default)
+## disable bytecode reflection optimizer (enabled by default)
 
-#hibernate.bytecode.use_reflection_optimizer true
+#hibernate.bytecode.use_reflection_optimizer false
 
 
 

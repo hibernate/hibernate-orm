@@ -60,10 +60,30 @@ package org.hibernate;
  * semantics associated with the underlying caches. In particular, eviction via
  * the methods of this interface causes an immediate "hard" removal outside any
  * current transaction and/or locking scheme.
+ * <p>
+ * The {@link org.hibernate.annotations.Cache} annotation also specifies a
+ * {@link org.hibernate.annotations.CacheConcurrencyStrategy}, a policy governing
+ * access to the second-level cache by concurrent transactions. Either:
+ * <ul>
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_ONLY
+ *     read-only access} for immutable data,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#NONSTRICT_READ_WRITE
+ *     read/write access with no locking}, when concurrent updates are
+ *     extremely improbable,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_WRITE
+ *     read/write access using soft locks} when concurrent updates are possible
+ *     but not common, or
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#TRANSACTIONAL
+ *     transactional access} when concurrent updates are frequent.
+ * </ul>
+ * It's important to always explicitly specify an appropriate policy, taking into
+ * account the expected patterns of data access, most importantly, the frequency
+ * of updates.
  *
  * @author Steve Ebersole
  *
  * @see org.hibernate.annotations.Cache
+ * @see org.hibernate.annotations.CacheConcurrencyStrategy
  */
 public interface Cache extends jakarta.persistence.Cache {
 	/**

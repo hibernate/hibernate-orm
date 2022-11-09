@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 import org.hibernate.cache.spi.access.AccessType;
 
 /**
- * Identifies strategies for managing concurrent access to the
+ * Identifies policies for managing concurrent access to the shared
  * second-level cache.
  * <p>
  * A second-level cache is shared between all concurrent active
@@ -17,8 +17,8 @@ import org.hibernate.cache.spi.access.AccessType;
  * state between transactions, while bypassing the database's
  * locking or multi-version concurrency control. This tends to
  * undermine the ACID properties of transaction processing, which
- * are only guaranteed when all sharing of data is mediated by
- * the database.
+ * are only guaranteed when all sharing of data is mediated by the
+ * database.
  * <p>
  * Of course, as a general rule, the only sort of data that really
  * belongs in a second-level cache is data that is both:
@@ -26,16 +26,20 @@ import org.hibernate.cache.spi.access.AccessType;
  * <li>read extremely frequently, and
  * <li>written infrequently.
  * </ul>
- * When an entity is marked {@linkplain Cache cacheable}, it must
- * indicate how concurrent access to its second-level cache is
- * managed, by selecting a {@code CacheConcurrencyStrategy}
- * appropriate to the expected patterns of data access.
+ * When an entity or collection is marked {@linkplain Cache cacheable},
+ * it must indicate the policy which governs concurrent access to its
+ * second-level cache, by selecting a {@code CacheConcurrencyStrategy}
+ * appropriate to the expected patterns of data access. The most
+ * important consideration is the frequency of updates which mutate
+ * the state of the cached entity or collection.
  * <p>
- * For example, if the entity is immutable, {@link #READ_ONLY}
- * is the most appropriate strategy, and the entity should be
- * annotated {@code @Cache(usage=READ_ONLY)}.
+ * For example, if an entity is immutable, {@link #READ_ONLY} is the
+ * most appropriate policy, and the entity should be annotated
+ * {@code @Cache(usage=READ_ONLY)}.
  *
  * @author Emmanuel Bernard
+ *
+ * @see AccessType The corresponding SPI.
  */
 public enum CacheConcurrencyStrategy {
 	/**
@@ -47,6 +51,8 @@ public enum CacheConcurrencyStrategy {
 	NONE( null ),
 
 	/**
+	 * Read-only access to the shared second-level cache.
+	 * <p>
 	 * Indicates that the cached object is immutable, and is
 	 * never updated. If an entity with this cache concurrency
 	 * is updated, an exception is thrown. This is the simplest,
@@ -58,6 +64,9 @@ public enum CacheConcurrencyStrategy {
 	READ_ONLY( AccessType.READ_ONLY ),
 
 	/**
+	 * Read/write access to the shared second-level cache with no
+	 * locking.
+	 * <p>
 	 * Indicates that the cached object is sometimes updated, but
 	 * that it is <em>extremely</em> unlikely that two transactions
 	 * will attempt to update the same item of data at the same
@@ -77,6 +86,9 @@ public enum CacheConcurrencyStrategy {
 	NONSTRICT_READ_WRITE( AccessType.NONSTRICT_READ_WRITE ),
 
 	/**
+	 * Read/write access to the shared second-level cache using
+	 * soft locks.
+	 * <p>
 	 * Indicates a non-vanishing likelihood that two concurrent
 	 * transactions attempt to update the same item of data
 	 * simultaneously. This strategy uses "soft" locks to prevent
@@ -104,6 +116,8 @@ public enum CacheConcurrencyStrategy {
 	READ_WRITE( AccessType.READ_WRITE ),
 
 	/**
+	 * Transactional access to the shared second-level cache.
+	 * <p>
 	 * Indicates that concurrent writes are common, and the only
 	 * way to maintain synchronization between the second-level
 	 * cache and the database is via the use of a fully

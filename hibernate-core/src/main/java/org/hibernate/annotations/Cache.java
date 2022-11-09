@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <ul>
  * <li>a {@linkplain #region named cache region} in which to store
  *     the state of instances of the entity or collection, and
- * <li>an appropriate {@linkplain #usage cache concurrency strategy},
+ * <li>an appropriate {@linkplain #usage cache concurrency policy},
  *     given the expected data access patterns affecting the entity
  *     or collection.
  * </ul>
@@ -42,8 +42,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Cache {
 	/**
-	 * The appropriate concurrency strategy for the annotated root
-	 * entity or collection.
+	 * The appropriate {@linkplain CacheConcurrencyStrategy concurrency
+	 * policy} for the annotated root entity or collection.
 	 */
 	CacheConcurrencyStrategy usage();
 

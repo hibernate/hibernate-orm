@@ -109,7 +109,7 @@ public interface MutationQuery extends CommonQueryContract {
 	MutationQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	MutationQuery setParameterList(String name, Collection values);
+	MutationQuery setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -127,7 +127,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	MutationQuery setParameterList(int position, Collection values);
+	MutationQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);

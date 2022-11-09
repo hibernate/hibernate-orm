@@ -33,7 +33,7 @@ import org.hibernate.type.BasicTypeReference;
 
 /**
  * Represents a native (SQL) query.
- *
+ * <p>
  * Allows the user to define certain aspects about its execution, such as:<ul>
  *     <li>
  *         result-set value mapping (see below)
@@ -109,7 +109,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result using the specified result type.
-	 *
+	 * <p>
 	 * Hibernate will implicitly determine an appropriate conversion, if
 	 * it can.  Otherwise an exception will be thrown
 	 *
@@ -205,7 +205,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Defines a result based on a specified attribute. Differs from adding a scalar in that
 	 * any conversions or other semantics defined on the attribute are automatically applied
 	 * to the mapping.
-	 *
+	 * <p>
 	 * This form accepts the JPA Attribute mapping describing the attribute
 	 *
 	 * @return {@code this}, for method chaining
@@ -355,7 +355,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Simple unification interface for all returns from the various `#addXYZ` methods .
 	 * Allows control over the "shape" of that particular part of the fetch graph.
-	 *
+	 * <p>
 	 * Some GraphNodes can be query results, while others simply describe a part
 	 * of one of the results.
 	 */

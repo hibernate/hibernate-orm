@@ -565,6 +565,11 @@ public abstract class AbstractSelectionQuery<R>
 		return getQueryOptions().getLockOptions();
 	}
 
+	@Override
+	public LockModeType getLockMode() {
+		return LockModeTypeHelper.getLockModeType( getHibernateLockMode() );
+	}
+
 	/**
 	 * Specify the root LockModeType for the query
 	 *

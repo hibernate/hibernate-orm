@@ -294,15 +294,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			PersistentClass bootType,
 			BytecodeProvider bytecodeProvider,
 			SessionFactoryImplementor sessionFactory) {
-		final Class<?> javaTypeToReflect;
-		if ( proxyFactory != null ) {
-			assert proxyJtd != null;
-			javaTypeToReflect = proxyJtd.getJavaTypeClass();
-		}
-		else {
-			javaTypeToReflect = mappedJtd.getJavaTypeClass();
-		}
-
 		final List<String> getterNames = new ArrayList<>();
 		final List<String> setterNames = new ArrayList<>();
 		final List<Class<?>> getterTypes = new ArrayList<>();
@@ -330,7 +321,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 
 		return bytecodeProvider.getReflectionOptimizer(
-				javaTypeToReflect,
+				mappedJtd.getJavaTypeClass(),
 				getterNames.toArray( EMPTY_STRING_ARRAY ),
 				setterNames.toArray( EMPTY_STRING_ARRAY ),
 				getterTypes.toArray( EMPTY_CLASS_ARRAY )

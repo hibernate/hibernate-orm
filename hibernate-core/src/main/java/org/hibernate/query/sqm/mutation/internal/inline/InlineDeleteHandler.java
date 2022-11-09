@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -90,43 +91,40 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 		// delete from the tables
 		final MutableInteger valueIndexCounter = new MutableInteger();
-		entityDescriptor.visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
-
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-							// this collection has a separate collection table, meaning it is one of:
-							//		1) element-collection
-							//		2) many-to-many
-							//		3) one-to many using a dedicated join-table
-							//
-							// in all of these cases, we should clean up the matching rows in the
-							// collection table
-							final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
-							final int valueIndex;
-							if ( fkTargetPart instanceof EntityIdentifierMapping ) {
-								valueIndex = 0;
-							}
-							else {
-								if ( valueIndexCounter.get() == 0 ) {
-									valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
-								}
-								valueIndex = valueIndexCounter.get();
-								valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
-							}
-
-							executeDelete(
-									pluralAttribute.getSeparateCollectionTable(),
-									entityDescriptor,
-									() -> fkTargetPart::forEachSelectable,
-									idsAndFks,
-									valueIndex,
-									fkTargetPart,
-									jdbcParameterBindings,
-									executionContext
-							);
+		SqmMutationStrategyHelper.visitCollectionTables(
+				entityDescriptor,
+				pluralAttribute -> {
+					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+						// this collection has a separate collection table, meaning it is one of:
+						//		1) element-collection
+						//		2) many-to-many
+						//		3) one-to many using a dedicated join-table
+						//
+						// in all of these cases, we should clean up the matching rows in the
+						// collection table
+						final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+						final int valueIndex;
+						if ( fkTargetPart instanceof EntityIdentifierMapping ) {
+							valueIndex = 0;
 						}
+						else {
+							if ( valueIndexCounter.get() == 0 ) {
+								valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
+							}
+							valueIndex = valueIndexCounter.get();
+							valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
+						}
+
+						executeDelete(
+								pluralAttribute.getSeparateCollectionTable(),
+								entityDescriptor,
+								() -> fkTargetPart::forEachSelectable,
+								idsAndFks,
+								valueIndex,
+								fkTargetPart,
+								jdbcParameterBindings,
+								executionContext
+						);
 					}
 				}
 		);

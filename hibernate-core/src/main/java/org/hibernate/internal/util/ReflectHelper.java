@@ -662,6 +662,60 @@ public final class ReflectHelper {
 		return setter; // might be null
 	}
 
+	public static Method setterMethodOrNullBySetterName(final Class containerClass, final  String setterName, final Class propertyType) {
+		Class checkClass = containerClass;
+		Method setter = null;
+
+		// check containerClass, and then its super types (if any)
+		while ( setter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
+			}
+
+			setter = setterOrNullBySetterName( checkClass, setterName, propertyType );
+
+			// if no setter found yet, check all implemented interfaces
+			if ( setter == null ) {
+				setter = setterOrNullBySetterName( checkClass.getInterfaces(), setterName, propertyType );
+			}
+			else {
+				ensureAccessibility( setter );
+			}
+
+			checkClass = checkClass.getSuperclass();
+		}
+		return setter; // might be null
+	}
+
+	private static Method setterOrNullBySetterName(Class[] interfaces, String setterName, Class propertyType) {
+		Method setter = null;
+		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
+			final Class anInterface = interfaces[i];
+			setter = setterOrNullBySetterName( anInterface, setterName, propertyType );
+			if ( setter == null ) {
+				// if no setter found yet, check all implemented interfaces of interface
+				setter = setterOrNullBySetterName( anInterface.getInterfaces(), setterName, propertyType );
+			}
+		}
+		return setter;
+	}
+
+	private static Method setterOrNullBySetterName(Class theClass, String setterName, Class propertyType) {
+		Method potentialSetter = null;
+
+		for ( Method method : theClass.getDeclaredMethods() ) {
+			final String methodName = method.getName();
+			if ( method.getParameterCount() == 1 && methodName.equals( setterName ) ) {
+				potentialSetter = method;
+				if ( propertyType == null || method.getParameterTypes()[0].equals( propertyType ) ) {
+					break;
+				}
+			}
+		}
+
+		return potentialSetter;
+	}
+
 	public static Method findSetterMethod(final Class containerClass, final String propertyName, final Class propertyType) {
 		final Method setter = setterMethodOrNull( containerClass, propertyName, propertyType );
 		if ( setter == null ) {

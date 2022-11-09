@@ -1436,6 +1436,9 @@ public class EntityBinder {
 	}
 
 	private static boolean isCacheLazy(Cache effectiveCache, XClass annotatedClass) {
+		if ( !effectiveCache.includeLazy() ) {
+			return false;
+		}
 		switch ( effectiveCache.include().toLowerCase( Locale.ROOT ) ) {
 			case "all":
 				return true;
@@ -1488,6 +1491,11 @@ public class EntityBinder {
 
 		public String region() {
 			return region;
+		}
+
+		@Override
+		public boolean includeLazy() {
+			return true;
 		}
 
 		public String include() {

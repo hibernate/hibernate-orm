@@ -41,6 +41,8 @@ import java.lang.annotation.RetentionPolicy;
  * projects using Hibernate don't even bother enabling the bytecode enhancer.
  *
  * @author Steve Ebersole
+ *
+ * @see Cache#includeLazy()
  */
 @java.lang.annotation.Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

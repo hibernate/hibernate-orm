@@ -131,7 +131,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "FileBlob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileBlob {
 
 		private int id;
@@ -161,7 +161,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "FileClob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileClob {
 
 		private int id;
@@ -191,7 +191,7 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "FileNClob")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
 	public static class FileNClob {
 
 		private int id;

@@ -18,10 +18,14 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.NamingStrategy;
+import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
@@ -39,12 +43,17 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BytecodeProviderImpl.class );
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
-	private static final ElementMatcher.Junction newInstanceMethodName = ElementMatchers.named( "newInstance" );
-	private static final ElementMatcher.Junction getPropertyValuesMethodName = ElementMatchers.named( "getPropertyValues" );
-	private static final ElementMatcher.Junction setPropertyValuesMethodName = ElementMatchers.named( "setPropertyValues" );
-	private static final ElementMatcher.Junction getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
+	private static final ElementMatcher.Junction<NamedElement> newInstanceMethodName = ElementMatchers.named(
+			"newInstance" );
+	private static final ElementMatcher.Junction<NamedElement> getPropertyValuesMethodName = ElementMatchers.named(
+			"getPropertyValues" );
+	private static final ElementMatcher.Junction<NamedElement> setPropertyValuesMethodName = ElementMatchers.named(
+			"setPropertyValues" );
+	private static final ElementMatcher.Junction<NamedElement> getPropertyNamesMethodName = ElementMatchers.named(
+			"getPropertyNames" );
 
 	private final ByteBuddyState byteBuddyState;
 
@@ -78,18 +87,27 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final String[] getterNames,
 			final String[] setterNames,
 			final Class[] types) {
-		final Class fastClass;
+		final Class<?> fastClass;
 		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
 			// we only provide a fast class instantiator if the class can be instantiated
 			final Constructor<?> constructor = findConstructor( clazz );
 
-			fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
-					.with( new NamingStrategy.SuffixingRandom( INSTANTIATOR_PROXY_NAMING_SUFFIX,
-							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
-					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-					.method( newInstanceMethodName )
-							.intercept( MethodCall.construct( constructor ) )
-			);
+			if ( constructor == null || Modifier.isPrivate( constructor.getModifiers() ) ) {
+				// In the current implementation of the ReflectionOptimizer contract, we can't call private constructors
+				// To support that, we have to inject a static factory method into the class during enhancement
+				fastClass = null;
+			}
+			else {
+				fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+						.with( new NamingStrategy.SuffixingRandom(
+								INSTANTIATOR_PROXY_NAMING_SUFFIX,
+								new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
+						) )
+						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
+						.method( newInstanceMethodName )
+						.intercept( MethodCall.construct( constructor ) )
+				);
+			}
 		}
 		else {
 			fastClass = null;
@@ -97,18 +115,26 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 		final Method[] getters = new Method[getterNames.length];
 		final Method[] setters = new Method[setterNames.length];
-		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
+		try {
+			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
+		}
+		catch (PrivateAccessorException ex) {
+			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex );
+			return null;
+		}
 
-		final Class bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
-				.with( new NamingStrategy.SuffixingRandom( OPTIMIZER_PROXY_NAMING_SUFFIX,
-						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() ) ) )
+		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+				.with( new NamingStrategy.SuffixingRandom(
+						OPTIMIZER_PROXY_NAMING_SUFFIX,
+						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
+				) )
 				.subclass( ReflectionOptimizer.AccessOptimizer.class )
 				.method( getPropertyValuesMethodName )
-						.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
+				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
 				.method( setPropertyValuesMethodName )
-						.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
+				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
 				.method( getPropertyNamesMethodName )
-						.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
+				.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
 		);
 
 		try {
@@ -128,11 +154,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class GetPropertyValues implements ByteCodeAppender {
 
-		private final Class clazz;
+		private final Class<?> clazz;
 
 		private final Method[] getters;
 
-		public GetPropertyValues(Class clazz, Method[] getters) {
+		public GetPropertyValues(Class<?> clazz, Method[] getters) {
 			this.clazz = clazz;
 			this.getters = getters;
 		}
@@ -151,11 +177,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
 				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
 				methodVisitor.visitMethodInsn(
-						Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( clazz ),
+						getter.getDeclaringClass().isInterface() ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
+						Type.getInternalName( getter.getDeclaringClass() ),
 						getter.getName(),
 						Type.getMethodDescriptor( getter ),
-						false
+						getter.getDeclaringClass().isInterface()
 				);
 				if ( getter.getReturnType().isPrimitive() ) {
 					PrimitiveBoxingDelegate.forPrimitive( new TypeDescription.ForLoadedType( getter.getReturnType() ) )
@@ -175,11 +201,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class SetPropertyValues implements ByteCodeAppender {
 
-		private final Class clazz;
+		private final Class<?> clazz;
 
 		private final Method[] setters;
 
-		public SetPropertyValues(Class clazz, Method[] setters) {
+		public SetPropertyValues(Class<?> clazz, Method[] setters) {
 			this.clazz = clazz;
 			this.setters = setters;
 		}
@@ -206,15 +232,30 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							.apply( methodVisitor, implementationContext );
 				}
 				else {
-					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( setter.getParameterTypes()[0] ) );
+					methodVisitor.visitTypeInsn(
+							Opcodes.CHECKCAST,
+							Type.getInternalName( setter.getParameterTypes()[0] )
+					);
 				}
 				methodVisitor.visitMethodInsn(
-						Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( clazz ),
+						setter.getDeclaringClass().isInterface() ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
+						Type.getInternalName( setter.getDeclaringClass() ),
 						setter.getName(),
 						Type.getMethodDescriptor( setter ),
-						false
+						setter.getDeclaringClass().isInterface()
 				);
+				if ( setter.getReturnType() != void.class ) {
+					// Setters could return something which we have to ignore
+					switch ( setter.getReturnType().getTypeName() ) {
+						case "long":
+						case "double":
+							methodVisitor.visitInsn( Opcodes.POP2 );
+							break;
+						default:
+							methodVisitor.visitInsn( Opcodes.POP );
+							break;
+					}
+				}
 			}
 			methodVisitor.visitInsn( Opcodes.RETURN );
 			return new Size( 4, instrumentedMethod.getStackSize() );
@@ -222,58 +263,84 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	private static void findAccessors(
-			Class clazz,
+			Class<?> clazz,
 			String[] getterNames,
 			String[] setterNames,
-			Class[] types,
+			Class<?>[] types,
 			Method[] getters,
 			Method[] setters) {
 		final int length = types.length;
 		if ( setterNames.length != length || getterNames.length != length ) {
-			throw new BulkAccessorException( "bad number of accessors" );
+			throw new HibernateException( "bad number of accessors" );
 		}
 
-		final Class[] getParam = new Class[0];
-		final Class[] setParam = new Class[1];
+		final Class<?>[] getParam = new Class[0];
+		final Class<?>[] setParam = new Class[1];
 		for ( int i = 0; i < length; i++ ) {
 			if ( getterNames[i] != null ) {
-				final Method getter = findAccessor( clazz, getterNames[i], getParam, i );
+				final Method getter = findAccessor( clazz, getterNames[i], getParam );
 				if ( getter.getReturnType() != types[i] ) {
-					throw new BulkAccessorException( "wrong return type: " + getterNames[i], i );
+					throw new HibernateException( "wrong return type: " + getterNames[i] );
 				}
 
 				getters[i] = getter;
 			}
 
 			if ( setterNames[i] != null ) {
-				setParam[0] = types[i];
-				setters[i] = findAccessor( clazz, setterNames[i], setParam, i );
+				setters[i] = ReflectHelper.setterMethodOrNullBySetterName( clazz, setterNames[i], types[i] );
+				if ( setters[i] == null ) {
+					throw new HibernateException(
+							String.format(
+									"cannot find an accessor [%s] on type [%s]",
+									setterNames[i],
+									clazz.getName()
+							)
+					);
+				}
+				else if ( Modifier.isPrivate( setters[i].getModifiers() ) ) {
+					throw new PrivateAccessorException( "private accessor [" + setterNames[i] + "]" );
+				}
 			}
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static Method findAccessor(Class clazz, String name, Class[] params, int index)
-			throws BulkAccessorException {
+	private static Method findAccessor(Class<?> containerClazz, String name, Class<?>[] params)
+			throws PrivateAccessorException {
+		Class<?> clazz = containerClazz;
 		try {
-			final Method method = clazz.getDeclaredMethod( name, params );
-			if ( Modifier.isPrivate( method.getModifiers() ) ) {
-				throw new BulkAccessorException( "private property", index );
-			}
-
-			return method;
+			return clazz.getMethod( name, params );
 		}
 		catch (NoSuchMethodException e) {
-			throw new BulkAccessorException( "cannot find an accessor", index );
+			// Ignore if we didn't find a public method
 		}
+		do {
+			try {
+				final Method method = clazz.getDeclaredMethod( name, params );
+				if ( Modifier.isPrivate( method.getModifiers() ) ) {
+					throw new PrivateAccessorException( "private accessor [" + name + "]" );
+				}
+
+				return method;
+			}
+			catch (NoSuchMethodException e) {
+				clazz = clazz.getSuperclass();
+			}
+		} while ( clazz != null );
+		throw new HibernateException(
+				String.format(
+						"cannot find an accessor [%s] on type [%s]",
+						name,
+						containerClazz.getName()
+				)
+		);
 	}
 
-	private static Constructor<?> findConstructor(Class clazz) {
+	private static Constructor<?> findConstructor(Class<?> clazz) {
 		try {
 			return clazz.getDeclaredConstructor();
 		}
 		catch (NoSuchMethodException e) {
-			throw new HibernateException( e );
+			return null;
 		}
 	}
 

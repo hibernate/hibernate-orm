@@ -14,10 +14,12 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -70,76 +72,77 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 						false
 				)
 		);
-		getEntityDescriptor().visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
-
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-							// Ensure that the FK target columns are available
-							final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
-									.getTargetPart() instanceof EntityIdentifierMapping );
-							if ( useFkTarget ) {
-								final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-								pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
-										mutatingTableGroup.getNavigablePath(),
-										mutatingTableGroup,
-										sqmConverter,
-										(selection, jdbcMapping) -> {
-											idSelectStatement.getDomainResultDescriptors().add(
-													new BasicResult<>(
-															selection.getValuesArrayPosition(),
-															null,
-															jdbcMapping
-													)
-											);
-										}
-								);
-							}
-
-							// this collection has a separate collection table, meaning it is one of:
-							//		1) element-collection
-							//		2) many-to-many
-							//		3) one-to many using a dedicated join-table
-							//
-							// in all of these cases, we should clean up the matching rows in the
-							// collection table
-							final String tableExpression = pluralAttribute.getSeparateCollectionTable();
-							final CteTable dmlResultCte = new CteTable(
-									getCteTableName( pluralAttribute ),
-									idSelectCte.getCteTable().getCteColumns()
+		SqmMutationStrategyHelper.visitCollectionTables(
+				(EntityMappingType) updatingTableGroup.getModelPart(),
+				pluralAttribute -> {
+					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+						// Ensure that the FK target columns are available
+						final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
+								.getTargetPart() instanceof EntityIdentifierMapping );
+						if ( useFkTarget ) {
+							final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+							pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
+									mutatingTableGroup.getNavigablePath(),
+									mutatingTableGroup,
+									sqmConverter,
+									(selection, jdbcMapping) -> {
+										idSelectStatement.getDomainResultDescriptors().add(
+												new BasicResult<>(
+														selection.getValuesArrayPosition(),
+														null,
+														jdbcMapping
+												)
+										);
+									}
 							);
-							final NamedTableReference dmlTableReference = new NamedTableReference(
-									tableExpression,
-									DeleteStatement.DEFAULT_ALIAS,
-									true,
-									factory
-							);
-							final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
-							pluralAttribute.getKeyDescriptor().visitKeySelectables(
-									(index, selectable) -> columnReferences.add(
-											new ColumnReference(
-													dmlTableReference,
-													selectable,
-													factory
-											)
-									)
-							);
-							final MutationStatement dmlStatement = new DeleteStatement(
-									dmlTableReference,
-									createIdSubQueryPredicate(
-											columnReferences,
-											idSelectCte,
-											useFkTarget ? pluralAttribute.getKeyDescriptor().getTargetPart() : null,
-											factory
-									),
-									columnReferences
-							);
-							statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
 						}
+
+						// this collection has a separate collection table, meaning it is one of:
+						//		1) element-collection
+						//		2) many-to-many
+						//		3) one-to many using a dedicated join-table
+						//
+						// in all of these cases, we should clean up the matching rows in the
+						// collection table
+						final String tableExpression = pluralAttribute.getSeparateCollectionTable();
+						final CteTable dmlResultCte = new CteTable(
+								getCteTableName( pluralAttribute ),
+								idSelectCte.getCteTable().getCteColumns()
+
+						);
+						final NamedTableReference dmlTableReference = new NamedTableReference(
+								tableExpression,
+								DeleteStatement.DEFAULT_ALIAS,
+								true,
+								factory
+						);
+						final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable()
+																								.getCteColumns()
+																								.size() );
+						pluralAttribute.getKeyDescriptor().visitKeySelectables(
+								(index, selectable) -> columnReferences.add(
+										new ColumnReference(
+												dmlTableReference,
+												selectable,
+												factory
+										)
+								)
+						);
+						final MutationStatement dmlStatement = new DeleteStatement(
+								dmlTableReference,
+								createIdSubQueryPredicate(
+										columnReferences,
+										idSelectCte,
+										useFkTarget ? pluralAttribute.getKeyDescriptor().getTargetPart() : null,
+										factory
+								),
+								columnReferences
+						);
+						statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
 					}
 				}
 		);
+
 		sqmConverter.getProcessingStateStack().pop();
 
 		getEntityDescriptor().visitConstraintOrderedTables(

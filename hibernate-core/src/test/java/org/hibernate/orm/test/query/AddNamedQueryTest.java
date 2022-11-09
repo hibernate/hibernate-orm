@@ -171,6 +171,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					// jpa timeout is in milliseconds, whereas Hibernate's is in seconds
 					assertEquals( (Integer) 3, hibernateQuery.getTimeout() );
 
@@ -188,6 +189,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 10000 );
@@ -202,6 +204,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 
 					query.setFirstResult( 51 );
@@ -216,6 +219,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
+					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 				}
 		);

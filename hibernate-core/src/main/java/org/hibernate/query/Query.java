@@ -353,8 +353,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * driver and database. For maximum portability, the given lock
 	 * mode should be {@link LockMode#PESSIMISTIC_WRITE}.
 	 *
-	 * @param alias a query alias, or {@code this} for a collection filter
-	 * @param lockMode The lock mode to apply.
+	 * @param alias A query alias
+	 * @param lockMode The lock mode to apply
 	 *
 	 * @return {@code this}, for method chaining
 	 *

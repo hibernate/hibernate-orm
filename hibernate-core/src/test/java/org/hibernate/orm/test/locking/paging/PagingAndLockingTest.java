@@ -106,7 +106,21 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 					qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
 					qry.setFirstResult( 2 );
 					qry.setMaxResults( 2 );
-					@SuppressWarnings("unchecked") List results = qry.list();
+					List results = qry.list();
+					assertEquals( 2, results.size() );
+					for ( Object door : results ) {
+						assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );
+					}
+				}
+		);
+		inTransaction(
+				session -> {
+					NativeQuery qry = session.createNativeQuery( "select * from door" );
+					qry.addRoot( "door", Door.class );
+					qry.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE );
+					qry.setFirstResult( 2 );
+					qry.setMaxResults( 2 );
+					List results = qry.list();
 					assertEquals( 2, results.size() );
 					for ( Object door : results ) {
 						assertEquals( LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode( door ) );

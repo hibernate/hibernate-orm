@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -537,9 +538,33 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockOptions getLockOptions();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
 	@Override
 	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
+	/**
+	 * Not applicable to native SQL queries.
+	 *
+	 * @throws IllegalStateException for consistency with JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
@@ -558,8 +583,51 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
 
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #getHibernateLockMode()} to obtain the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
+	@Override
+	LockModeType getLockMode();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockMode getHibernateLockMode();
+
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #setHibernateLockMode(LockMode)} or the hint named
+	 * {@value org.hibernate.jpa.HibernateHints#HINT_NATIVE_LOCK_MODE}
+	 * to set the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(LockModeType lockMode);
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
 
 	@Override
 	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);

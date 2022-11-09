@@ -65,7 +65,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Returns scrollable access to the query results.
-	 *
+	 * <p>
 	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
 	 *
 	 * @apiNote The exact behavior of this method depends somewhat
@@ -170,7 +170,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
 	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
 	 * driver to indicate how many rows to fetch from the database when more rows are needed.
-	 *
+	 * <p>
 	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
 	 * query execution and ResultSet processing depending on the driver.
 	 *
@@ -222,11 +222,11 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the session's current setting.
-	 *
+	 * <p>
 	 * The read-only/modifiable setting has no impact on entities/proxies
 	 * returned by the query that existed in the session beforeQuery the query was executed.
 	 *
@@ -330,6 +330,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	LockOptions getLockOptions();
 
 	/**
+	 * Get the root {@link LockModeType} for the query
+	 *
+	 * @see #getHibernateLockMode()
+	 */
+	LockModeType getLockMode();
+
+	/**
 	 * Specify the root {@link LockModeType} for the query
 	 *
 	 * @see #setHibernateLockMode
@@ -338,11 +345,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Get the root {@link LockMode} for the query
+	 *
+	 * @see #getLockMode()
 	 */
 	LockMode getHibernateLockMode();
 
 	/**
 	 * Specify the root {@link LockMode} for the query
+	 *
+	 * @see #setLockMode(LockModeType)
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
@@ -419,7 +430,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery<R> setParameterList(String name, Collection values);
+	SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);

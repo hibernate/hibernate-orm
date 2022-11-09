@@ -803,9 +803,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter}, inferring the {@link BindableType}.
-	 *
-	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *

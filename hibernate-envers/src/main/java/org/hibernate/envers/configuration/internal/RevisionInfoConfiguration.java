@@ -203,6 +203,9 @@ public class RevisionInfoConfiguration {
 			identifier.setParameter( "table_name", DEFAULT_REVISION_SEQUENCE_TABLE_NAME );
 			identifier.setParameter( "initial_value", "1" );
 			identifier.setParameter( "increment_size", "1" );
+			if ( configuration.isRevisionSequenceNoCache() ) {
+				identifier.setParameter( "nocache", "true" );
+			}
 		}
 
 		identifier.addColumn( createColumn( DEFAULT_REVISION_FIELD_NAME, null ) );

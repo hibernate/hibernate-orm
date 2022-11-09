@@ -91,6 +91,7 @@ public class Configuration {
 	private final boolean revisionEndTimestampEnabled;
 	private final boolean revisionEndTimestampNumeric;
 	private final boolean revisionEndTimestampUseLegacyPlacement;
+	private final boolean revisionSequenceNoCache;
 
 	private final Map<String, String> customAuditTableNames = new HashMap<>();
 
@@ -175,6 +176,10 @@ public class Configuration {
 				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME,
 				DEFAULT_SETORDINAL_FIELD
 		);
+		revisionSequenceNoCache = configProps.getBoolean(
+				EnversSettings.REVISION_SEQUENCE_NOCACHE,
+				false
+		);
 
 		revisionPropertyBasePath = originalIdPropertyName + "." + revisionFieldName + ".";
 		revisionNumberPath = revisionPropertyBasePath + "id";
@@ -243,6 +248,10 @@ public class Configuration {
 
 	public boolean isRevisionEndTimestampUseLegacyPlacement() {
 		return revisionEndTimestampUseLegacyPlacement;
+	}
+
+	public boolean isRevisionSequenceNoCache() {
+		return revisionSequenceNoCache;
 	}
 
 	public String getDefaultCatalogName() {

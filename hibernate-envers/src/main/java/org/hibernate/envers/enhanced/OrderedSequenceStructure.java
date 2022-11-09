@@ -22,9 +22,8 @@ import org.hibernate.id.enhanced.SequenceStructure;
  */
 public class OrderedSequenceStructure extends SequenceStructure {
 
-	private static final String ORDER = " ORDER";
-
 	private final AuxiliaryDatabaseObject sequenceObject;
+	private final String suffix;
 
 	public OrderedSequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
@@ -32,8 +31,24 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			int initialValue,
 			int incrementSize,
 			Class<?> numberType) {
+		this( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, false, numberType );
+	}
+
+	public OrderedSequenceStructure(
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName qualifiedSequenceName,
+			int initialValue,
+			int incrementSize,
+			boolean noCache,
+			Class<?> numberType) {
 		super( jdbcEnvironment, "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
+		if ( jdbcEnvironment.getDialect() instanceof OracleDialect ) {
+			this.suffix = ( noCache ? " NOCACHE" : "" ) + " ORDER";
+		}
+		else {
+			this.suffix = null;
+		}
 	}
 
 	@Override
@@ -69,10 +84,9 @@ public class OrderedSequenceStructure extends SequenceStructure {
 					getSourceIncrementSize()
 			);
 
-			//noinspection deprecation
-			if ( dialect instanceof OracleDialect ) {
+			if ( suffix != null ) {
 				for ( int i = 0; i < createStrings.length; ++i ) {
-					createStrings[i] = createStrings[i] + ORDER;
+					createStrings[i] = createStrings[i] + suffix;
 				}
 			}
 

@@ -697,20 +697,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param entityName the name of the entity
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
-	 */
-	void lock(String entityName, Object object, LockMode lockMode);
-
-	/**
-	 * Obtain a lock on the given managed instance associated with this session,
-	 * using the given {@link LockOptions lock options}.
-	 * <p>
-	 * This operation cascades to associated instances if the association is
-	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param entityName the name of the entity
-	 * @param lockOptions the lock options
+	 * @deprecated use {@link #lock(Object, LockMode)}
 	 */
-	void lock(String entityName, Object object, LockOptions lockOptions);
+	@Deprecated(since = "6.2")
+	void lock(String entityName, Object object, LockMode lockMode);
 
 	/**
 	 * Build a new {@link LockRequest lock request} that specifies:
@@ -1341,7 +1332,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 		 *
 		 * @param entityName the name of the entity to lock
 		 * @param object the instance of the entity to lock
+		 *
+		 * @deprecated use {@link #lock(Object)}
 		 */
+		@Deprecated(since = "6.2")
 		void lock(String entityName, Object object);
 
 		/**

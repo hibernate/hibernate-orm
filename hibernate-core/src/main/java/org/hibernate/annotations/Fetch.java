@@ -14,8 +14,16 @@ import java.lang.annotation.Target;
 /**
  * Specifies the default fetching strategy for the annotated association.
  * <p>
- * The default fetching strategy for the association may be overridden
- * in a given {@linkplain FetchProfile fetch profile}.
+ * When this annotation is <em>not</em> explicitly specified, then:
+ * <ul>
+ * <li>{@linkplain FetchMode#SELECT select fetching} is used for
+ *     {@linkplain jakarta.persistence.FetchType#LAZY lazy} fetching,
+ *     and
+ * <li>{@linkplain FetchMode#JOIN join fetching} is used for
+ *     {@linkplain jakarta.persistence.FetchType#EAGER eager} fetching.
+ * </ul>
+ * The default fetching strategy specified by this annotation may be
+ * overridden in a given {@linkplain FetchProfile fetch profile}.
  *
  * @author Emmanuel Bernard
  *

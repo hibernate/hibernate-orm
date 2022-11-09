@@ -110,6 +110,13 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * Every {@code Session} is a JPA {@link EntityManager}. Furthermore, when Hibernate is
  * acting as the JPA persistence provider, the method {@link EntityManager#unwrap(Class)}
  * may be used to obtain the underlying {@code Session}.
+ * <p>
+ * Hibernate, unlike JPA, allows a persistence unit where an entity class is mapped multiple
+ * times, with different entity names, usually to different tables. In this case, the session
+ * needs a way to identify the entity name of a given instance of the entity class. Therefore,
+ * some operations of this interface, including operations inherited from {@code EntityManager},
+ * are overloaded with a form that accepts an explicit entity name along with the instance. An
+ * alternative solution to this problem is to provide an {@link EntityNameResolver}.
  *
  * @see SessionFactory
  *

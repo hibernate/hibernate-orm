@@ -19,10 +19,10 @@ package org.hibernate;
  *     in a destructured format, as a tuple of persistent attribute values.
  * </ul>
  * By nature, a second-level cache tends to undermine the ACID properties of
- * transaction processing in a relation database. A second-level cache is often by
- * far the easiest way to improve the performance of a system, but only at the cost
- * of making it much more difficult to reason about concurrency. And so the cache
- * is a potential source of bugs which are difficult to isolate and reproduce.
+ * transaction processing in a relational database. A second-level cache is often
+ * by far the easiest way to improve the performance of a system, but only at the
+ * cost of making it much more difficult to reason about concurrency. And so the
+ * cache is a potential source of bugs which are difficult to isolate and reproduce.
  * <p>
  * Therefore, only entities and collection roles explicitly annotated
  * {@link jakarta.persistence.Cacheable} or {@link org.hibernate.annotations.Cache}

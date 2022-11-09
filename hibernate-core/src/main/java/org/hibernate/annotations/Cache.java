@@ -14,7 +14,23 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add caching strategy to a root entity or a collection.
+ * Marks a root entity or collection for second-level caching, and
+ * specifies:
+ * <ul>
+ * <li>a {@linkplain #region named cache region} in which to store
+ *     the state of instances of the entity or collection, and
+ * <li>an appropriate {@linkplain #usage cache concurrency strategy},
+ *     given the expected data access patterns affecting the entity
+ *     or collection.
+ * </ul>
+ * This annotation should always be used in preference to the less
+ * useful JPA-defined annotation {@link jakarta.persistence.Cacheable},
+ * since JPA provides no means to specify anything about the semantics
+ * of the cache. Alternatively, it's legal, but redundant, for the two
+ * annotations to be used together.
+ * <p>
+ * Note that entity subclasses of a root entity with a second-level
+ * cache inherit the cache belonging to the root entity.
  *
  * @see jakarta.persistence.Cacheable
  *
@@ -24,7 +40,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Cache {
 	/**
-	 * The concurrency strategy chosen.
+	 * The appropriate concurrency strategy for the annotated root
+	 * entity or collection.
 	 */
 	CacheConcurrencyStrategy usage();
 
@@ -34,8 +51,12 @@ public @interface Cache {
 	String region() default "";
 
 	/**
-	 * How lazy properties are included in the second level cache. Default value is "all"; other allowable
-	 * value: "non-lazy"
+	 * Specifies which properties are included in the second-level
+	 * cache, either:
+	 * <ul>
+	 * <li>{@code "all"} properties, the default, or
+	 * <li>only {@code "non-lazy"} properties.
+	 * </ul>
 	 */
 	String include() default "all";
 }

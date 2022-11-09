@@ -32,6 +32,16 @@ public class OrderedSequenceGenerator extends SequenceStyleGenerator {
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
+		final Object noCacheValue = params.get( "nocache" );
+		final boolean noCache = Boolean.TRUE.equals( noCacheValue )
+				|| noCacheValue instanceof String && Boolean.parseBoolean( noCacheValue.toString() );
+		return new OrderedSequenceStructure(
+				jdbcEnvironment,
+				sequenceName,
+				initialValue,
+				incrementSize,
+				noCache,
+				type.getReturnedClass()
+		);
 	}
 }

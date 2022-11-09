@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.configuration;
 
+import org.hibernate.Internal;
+
 /**
  * Configuration property names.
  *
@@ -183,4 +185,11 @@ public interface EnversSettings {
 	 * that the exception is thrown.
 	 */
 	String GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG = "org.hibernate.envers.global_relation_not_found_legacy_flag";
+
+	/**
+	 * Whether to apply a nocache configuration for the revision sequence.
+	 * This is mostly interesting for testing.
+	 */
+	@Internal
+	String REVISION_SEQUENCE_NOCACHE = "org.hibernate.envers.revision_sequence_nocache";
 }

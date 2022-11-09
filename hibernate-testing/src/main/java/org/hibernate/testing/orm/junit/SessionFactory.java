@@ -51,7 +51,7 @@ public @interface SessionFactory {
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
 	/**
-	 * Short hand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
+	 * Shorthand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
 	 *
 	 * @see SQLStatementInspector
 	 */

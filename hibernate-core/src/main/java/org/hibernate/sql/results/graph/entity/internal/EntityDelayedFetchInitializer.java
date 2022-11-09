@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
@@ -82,7 +81,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			return;
 		}
 
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, referencedModelPart ) ) {
 			return;
 		}
 
@@ -172,21 +171,6 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 			notifyResolutionListeners( entityInstance );
 		}
-	}
-
-	protected boolean isAttributeAssignableToConcreteDescriptor() {
-		if ( parentAccess instanceof EntityInitializer ) {
-			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
-			if ( concreteDescriptor.isPolymorphic() ) {
-				final AbstractEntityPersister declaringType = (AbstractEntityPersister) referencedModelPart.getDeclaringType();
-				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
 	}
 
 	@Override

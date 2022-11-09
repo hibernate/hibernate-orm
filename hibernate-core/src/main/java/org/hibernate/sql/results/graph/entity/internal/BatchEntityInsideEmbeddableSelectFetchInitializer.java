@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,14 +24,28 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private static final String CONCRETE_NAME = BatchEntityInsideEmbeddableSelectFetchInitializer.class.getSimpleName();
-
 	/*
 	 Object[0] will contain the parent EntityKey and Object[1] the parent embeddable instance,
 	 */
-	private Map<EntityKey, List<Object[]>> toBatchLoad = new HashMap<>();
+	private final Map<EntityKey, List<Object[]>> toBatchLoad = new HashMap<>();
+
+	/**
+	 * Marker value for batch properties, needed by the EmbeddableInitializer to instantiate the
+	 * embeddable instance in case all the other properties are null.
+	 */
+	public static final Serializable BATCH_PROPERTY = new Serializable() {
+		@Override
+		public String toString() {
+			return "<batch>";
+		}
+
+		public Object readResolve() {
+			return BATCH_PROPERTY;
+		}
+	};
 
 	public BatchEntityInsideEmbeddableSelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -42,8 +57,12 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 	}
 
 	@Override
-	protected String getConcreteName() {
-		return CONCRETE_NAME;
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( entityKey == null ) {
+			return;
+		}
+
+		entityInstance = BATCH_PROPERTY;
 	}
 
 	@Override

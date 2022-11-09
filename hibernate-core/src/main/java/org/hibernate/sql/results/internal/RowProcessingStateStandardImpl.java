@@ -16,7 +16,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -64,7 +63,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	private static boolean hasCollectionInitializers(Initializer[] initializers) {
 		for ( int i = 0; i < initializers.length; i++ ) {
-			if ( initializers[i] instanceof CollectionInitializer ) {
+			if ( initializers[i].isCollectionInitializer() ) {
 				return true;
 			}
 		}

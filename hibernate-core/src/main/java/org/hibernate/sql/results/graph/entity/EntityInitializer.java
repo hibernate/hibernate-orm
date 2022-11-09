@@ -49,4 +49,9 @@ public interface EntityInitializer extends FetchParentAccess {
 	}
 
 	EntityKey getEntityKey();
+
+	@Override
+	default boolean isEntityInitializer() {
+		return true;
+	}
 }

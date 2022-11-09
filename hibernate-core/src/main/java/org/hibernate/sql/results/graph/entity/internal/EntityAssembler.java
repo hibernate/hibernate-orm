@@ -18,7 +18,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class EntityAssembler implements DomainResultAssembler {
 	private final JavaType javaType;
 	private final EntityInitializer initializer;
-	private EntityInitializer replacedInitializer;
 
 	public EntityAssembler(
 			JavaType javaType,

@@ -237,7 +237,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				if ( circularPath.getParent() != null ) {
 					NavigablePath path = circularPath.getParent();
 					Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-					while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
+					while ( !parentInitializer.isEntityInitializer() && path.getParent() != null ) {
 						path = path.getParent();
 						parentInitializer = rowProcessingState.resolveInitializer( path );
 					}
@@ -245,7 +245,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				}
 				else {
 					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
-					assert parentInitializer instanceof CollectionInitializer;
+					assert parentInitializer.isCollectionInitializer();
 					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
 					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
@@ -317,10 +317,10 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
 			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
-			if ( initializer instanceof EntityInitializer ) {
+			if ( initializer.isEntityInitializer() ) {
 				return (EntityInitializer) initializer;
 			}
-			if ( initializer instanceof CollectionInitializer ) {
+			if ( initializer.isCollectionInitializer() ) {
 				return null;
 			}
 			final ModelPart initializedPart = initializer.getInitializedPart();
@@ -331,12 +331,12 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 			NavigablePath path = circularPath.getParent();
 			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-			while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
+			while ( !parentInitializer.isEntityInitializer() && path.getParent() != null ) {
 				path = path.getParent();
 				parentInitializer = rowProcessingState.resolveInitializer( path );
 			}
 
-			if ( !( parentInitializer instanceof EntityInitializer ) ) {
+			if ( !parentInitializer.isEntityInitializer() ) {
 				return null;
 			}
 

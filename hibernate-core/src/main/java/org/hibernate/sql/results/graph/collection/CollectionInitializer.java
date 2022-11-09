@@ -41,5 +41,10 @@ public interface CollectionInitializer extends Initializer {
 		// by default - nothing to do
 	}
 
+	@Override
+	default boolean isCollectionInitializer() {
+		return true;
+	}
+
 	CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
 }

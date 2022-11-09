@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,6 +40,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
  * @author Steve Ebersole
@@ -268,7 +268,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
-			rowState[i] = contributorValue;
+			if ( contributorValue == BATCH_PROPERTY ) {
+				rowState[i] = null;
+			}
+			else {
+				rowState[i] = contributorValue;
+			}
 			if ( contributorValue != null ) {
 				stateAllNull = false;
 			}
@@ -323,9 +328,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return NULL_MARKER;
 		}
 
-		final Supplier<Object[]> valuesAccess = stateAllNull == TRUE
-				? null
-				: () -> rowState;
 		final Object instance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
 		stateInjected = true;
 
@@ -419,11 +421,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final Initializer parentInitializer = processingState.resolveInitializer( parentPath );
 
-		if ( parentInitializer instanceof CollectionInitializer ) {
+		if ( parentInitializer.isCollectionInitializer() ) {
 			return ( (CollectionInitializer) parentInitializer ).getCollectionInstance().getOwner();
 		}
 
-		if ( parentInitializer instanceof EntityInitializer ) {
+		if ( parentInitializer.isEntityInitializer() ) {
 			return ( (EntityInitializer) parentInitializer ).getEntityInstance();
 		}
 

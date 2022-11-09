@@ -70,7 +70,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 						);
 					}
 					if ( entityPersister.isBatchLoadable() && !creationState.isScrollResult() ) {
-						if ( parentAccess.isEmbeddable() ) {
+						if ( parentAccess.isEmbeddableInitializer() ) {
 							return new BatchEntityInsideEmbeddableSelectFetchInitializer(
 									parentAccess,
 									fetchedAttribute,

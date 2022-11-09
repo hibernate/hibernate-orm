@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -128,7 +127,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 						}
 						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
 						if ( entityPersister.isBatchLoadable() ) {
-							if ( parentAccess.isEmbeddable() ) {
+							if ( parentAccess.isEmbeddableInitializer() ) {
 								return new BatchEntityInsideEmbeddableSelectFetchInitializer(
 										parentAccess,
 										referencedModelPart,

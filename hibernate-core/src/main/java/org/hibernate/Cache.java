@@ -62,6 +62,8 @@ package org.hibernate;
  * current transaction and/or locking scheme.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.annotations.Cache
  */
 public interface Cache extends jakarta.persistence.Cache {
 	/**

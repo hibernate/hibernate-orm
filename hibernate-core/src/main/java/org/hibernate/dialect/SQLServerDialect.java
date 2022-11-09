@@ -86,7 +86,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
-	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+
+	// the allowed limit is much higher than 2100 as specified in HHH-14397 &
+	// https://learn.microsoft.com/en-US/sql/relational-databases/errors-events/mssqlserver-8632-database-engine-error
+	private static final int PARAM_LIST_SIZE_LIMIT = 32767;
 
 	private final StandardSequenceExporter exporter;
 

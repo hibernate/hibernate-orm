@@ -376,13 +376,13 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example[]
 			List<Phone> phones = session.createNativeQuery(
-							"SELECT {ph.*}, {pr.*} " +
-									"FROM Phone ph " +
-									"JOIN Person pr ON ph.person_id = pr.id")
-					.addEntity("ph", Phone.class)
-					.addJoin("pr", "ph.person")
-					.setTupleTransformer( (TupleTransformer<Phone>) (tuple, aliases) -> (Phone) tuple[0] )
-					.list();
+		"SELECT {ph.*}, {pr.*} " +
+				"FROM Phone ph " +
+				"JOIN Person pr ON ph.person_id = pr.id")
+			.addEntity("ph", Phone.class)
+			.addJoin("pr", "ph.person")
+			.setTupleTransformer( (TupleTransformer<Phone>) (tuple, aliases) -> (Phone) tuple[0] )
+			.list();
 
 			for (Phone person : phones) {
 				person.getPerson();

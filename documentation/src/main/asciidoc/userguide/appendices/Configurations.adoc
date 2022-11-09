@@ -485,9 +485,6 @@ Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which
 `*hibernate.discriminator.force_in_select*` (e.g. `true` or `false` (default value))::
 For entities which do not explicitly say, should we force discriminators into SQL selects?
 
-`*hibernate.query.factory_class*` (e.g. `org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory`)::
-Chooses the HQL parser implementation.
-
 `*hibernate.query.jpaql_strict_compliance*` (e.g. `true` or `false` (default value))::
 Map from tokens in Hibernate queries to SQL tokens, such as function or literal names.
 +

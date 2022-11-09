@@ -1,11 +1,3 @@
-######################
-### Query Language ###
-######################
-
-## Query translator factory class
-
-hibernate.query.factory_class @QUERY_TRANSLATOR_FACTORY@
-
 #################
 ### Platforms ###
 #################

@@ -6,10 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
@@ -76,6 +74,8 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	void forceFlush(EntityEntry e) throws HibernateException;
+
+	void lock(String entityName, Object child, LockOptions lockOptions);
 
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe

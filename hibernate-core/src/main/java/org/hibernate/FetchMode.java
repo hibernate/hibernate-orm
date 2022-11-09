@@ -18,6 +18,7 @@ package org.hibernate;
  *
  * @author Gavin King
  */
+@Internal
 public enum FetchMode  {
 
 	/**

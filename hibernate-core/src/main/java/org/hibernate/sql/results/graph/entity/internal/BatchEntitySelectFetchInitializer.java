@@ -24,8 +24,6 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private static final String CONCRETE_NAME = BatchEntitySelectFetchInitializer.class.getSimpleName();
-
 	private final Map<EntityKey, List<Object>> toBatchLoad = new HashMap<>();
 
 	public BatchEntitySelectFetchInitializer(
@@ -35,11 +33,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
-	}
-
-	@Override
-	protected String getConcreteName() {
-		return CONCRETE_NAME;
 	}
 
 	@Override

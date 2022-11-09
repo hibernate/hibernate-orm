@@ -24,7 +24,7 @@ public interface FetchParentAccess extends Initializer {
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
 	default EntityInitializer findFirstEntityInitializer(){
-		if ( this instanceof EntityInitializer ) {
+		if ( this.isEntityInitializer() ) {
 			return (EntityInitializer) this;
 		}
 		return (EntityInitializer) findFirstEntityDescriptorAccess();
@@ -40,8 +40,4 @@ public interface FetchParentAccess extends Initializer {
 	 * @apiNote If already resolved, the callback is triggered immediately
 	 */
 	void registerResolutionListener(Consumer<Object> resolvedParentConsumer);
-
-	default boolean isEmbeddable(){
-		return false;
-	}
 }

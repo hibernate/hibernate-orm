@@ -18,7 +18,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.spi.NavigablePath;
@@ -224,18 +223,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
-		if ( parentAccess instanceof EntityInitializer ) {
-			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
-			if ( concreteDescriptor.isPolymorphic() ) {
-				final AbstractEntityPersister declaringType = (AbstractEntityPersister) toOneMapping.getDeclaringType();
-				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
+		return isAttributeAssignableToConcreteDescriptor( parentAccess, toOneMapping );
 	}
 
 	@Override

@@ -53,7 +53,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	private static <R> EntityInitializer extractResultInitializer(RowReader<R> rowReader) {
 		Initializer initializer = rowReader.getInitializers().get( rowReader.getInitializers().size() - 1 );
-		if ( initializer instanceof EntityInitializer ) {
+		if ( initializer.isEntityInitializer() ) {
 			return (EntityInitializer) initializer;
 		}
 		return null;

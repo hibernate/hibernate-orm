@@ -97,3 +97,12 @@ See link:https://hibernate.atlassian.net/browse/HHH-15641[HHH-15641] for details
 
 The global property `hibernate.bytecode.use_reflection_optimizer` switched the default value to `true`
 and the setting is now deprecated for removal without replacement. See link:https://hibernate.atlassian.net/browse/HHH-15631[HHH-15631] for details.
+
+=== OffsetTime mapping changes
+
+`OffsetTime` now by default maps to `Types.TIME_WITH_TIMEZONE`, whereas before it mapped to `Types.TIME`.
+This was unintuitive and the resulting offset translations happened based on the JVM time zone.
+
+The migration to the DDL type `time with time zone` requires a migration expression like `cast(old as time with time zone)`.
+
+To get back the old behavior, the desired attributes have to be annotated with `@JdbcTypeCode(Types.TIME)`.

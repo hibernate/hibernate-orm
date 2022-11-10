@@ -593,6 +593,7 @@ public class SqlTypes {
 	public static boolean isTemporalType(int typeCode) {
 		return typeCode == DATE
 			|| typeCode == TIME
+			|| typeCode == TIME_WITH_TIMEZONE
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
 			|| typeCode == TIMESTAMP_UTC;
@@ -615,6 +616,7 @@ public class SqlTypes {
 	 */
 	public static boolean hasTimePart(int typeCode) {
 		return typeCode == TIME
+			|| typeCode == TIME_WITH_TIMEZONE
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
 			|| typeCode == TIMESTAMP_UTC;

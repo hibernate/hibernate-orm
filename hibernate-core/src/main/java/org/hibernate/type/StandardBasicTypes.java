@@ -413,13 +413,12 @@ public final class StandardBasicTypes {
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME TIME}.
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME = new BasicTypeReference<>(
 			"OffsetTime",
 			OffsetTime.class,
-			// todo (6.0): why not TIME_WITH_TIMEZONE ?
-			SqlTypes.TIME
+			SqlTypes.TIME_WITH_TIMEZONE
 	);
 
 	/**

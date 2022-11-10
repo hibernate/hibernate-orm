@@ -50,7 +50,7 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME_WITH_TIMEZONE );
 	}
 
 	@Override

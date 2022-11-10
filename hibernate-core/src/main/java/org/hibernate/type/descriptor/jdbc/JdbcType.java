@@ -227,6 +227,7 @@ public interface JdbcType extends Serializable {
 			case Types.TIME:
 			case Types.TIMESTAMP:
 			case Types.TIMESTAMP_WITH_TIMEZONE:
+			case Types.TIME_WITH_TIMEZONE:
 				return true;
 		}
 		return false;
@@ -276,6 +277,7 @@ public interface JdbcType extends Serializable {
 			case Types.DATE:
 				return CastType.DATE;
 			case Types.TIME:
+			case Types.TIME_WITH_TIMEZONE:
 				return CastType.TIME;
 			case Types.TIMESTAMP:
 				return CastType.TIMESTAMP;

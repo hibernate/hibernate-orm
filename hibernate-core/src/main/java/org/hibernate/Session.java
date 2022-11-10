@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.util.List;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.Query;
@@ -202,6 +204,24 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return the current cache mode
 	 */
 	CacheMode getCacheMode();
+
+	/**
+	 * Enable or disable writes to the second-level cache.
+	 *
+	 * @param cacheStoreMode a JPA-defined {@link CacheStoreMode}
+	 *
+	 * @see #setCacheMode(CacheMode)
+	 */
+	void setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	/**
+	 * Enable or disable reads from the second-level cache.
+	 *
+	 * @param cacheRetrieveMode a JPA-defined {@link CacheRetrieveMode}
+	 *
+	 * @see #setCacheMode(CacheMode)
+	 */
+	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * Get the session factory which created this session.

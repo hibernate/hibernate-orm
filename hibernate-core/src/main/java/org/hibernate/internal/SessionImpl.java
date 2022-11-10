@@ -152,6 +152,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
 import org.hibernate.type.descriptor.WrapperOptions;
 
+import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -1836,6 +1837,16 @@ public class SessionImpl
 	}
 
 	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
+	}
+
+	@Override
 	public void afterScrollOperation() {
 		// nothing to do in a stateful session
 	}
@@ -2119,18 +2130,18 @@ public class SessionImpl
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public boolean getScope() {
 			return lockOptions.getScope();
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public LockRequest setScope(boolean scope) {
 			lockOptions.setScope( scope );
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public void lock(String entityName, Object object) throws HibernateException {
 			fireLock( entityName, object, lockOptions );
 		}

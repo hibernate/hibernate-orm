@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -97,6 +99,16 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void setCacheMode(CacheMode cacheMode) {
 		this.lazySession.get().setCacheMode( cacheMode );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		this.lazySession.get().setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		this.lazySession.get().setCacheStoreMode( cacheStoreMode );
 	}
 
 	@Override
@@ -275,7 +287,7 @@ public class SessionLazyDelegator implements Session {
 		this.lazySession.get().lock( object, lockMode );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void lock(String entityName, Object object, LockMode lockMode) {
 		this.lazySession.get().lock( entityName, object, lockMode );
 	}

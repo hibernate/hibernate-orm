@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -203,6 +205,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void setCacheMode(CacheMode cm) {
 		delegate.setCacheMode( cm );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		delegate.setCacheStoreMode( cacheStoreMode );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		delegate.setCacheRetrieveMode( cacheRetrieveMode );
 	}
 
 	@Override

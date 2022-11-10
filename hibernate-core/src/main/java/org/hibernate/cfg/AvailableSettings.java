@@ -1312,14 +1312,21 @@ public interface AvailableSettings {
 
 	/**
 	 * Optimize interaction with the second-level cache to minimize writes, at the cost
-	 * of an additional read before each write.
+	 * of an additional read before each write. This setting is useful if writes to the
+	 * cache are much more expensive than reads from the cache, for example, if the cache
+	 * is a distributed cache.
+	 * <p>
+	 * It's not usually necessary to set this explicitly because, by default, it's set
+	 * to a {@linkplain org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
+	 * sensible value} by the second-level cache implementation.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 
 	/**
-	 * Enables the use of structured second-level cache entries.
+	 * Enables the use of structured second-level cache entries. This makes the cache
+	 * entries human-readable, but carries a performance cost.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
@@ -1339,7 +1346,8 @@ public interface AvailableSettings {
 	 * Enable direct storage of entity references into the second level cache when
 	 * applicable. This is appropriate only for immutable entities.
 	 * <p>
-	 * By default, entities are always stored in a "disassembled" form.
+	 * By default, entities are always stored in a "disassembled" form, that is, as
+	 * a tuple of attribute values.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDirectReferenceCaching(boolean)
 	 */

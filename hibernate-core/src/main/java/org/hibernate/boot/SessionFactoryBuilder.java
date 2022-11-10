@@ -507,9 +507,9 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled);
 
 	/**
-	 * When using bi-directional many-to-one associations and caching the one-to-many side
+	 * When using bidirectional many-to-one associations and caching the one-to-many side
 	 * it is expected that both sides of the association are managed (actually that is true of
-	 * all bi-directional associations).  However, in this case, if the user forgets to manage the
+	 * all bidirectional associations).  However, in this case, if the user forgets to manage the
 	 * one-to-many side stale data can be left in the second-level cache.
 	 * <p/>
 	 * Warning: enabling this will have a performance impact.  Hence why it is disabled by default

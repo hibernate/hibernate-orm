@@ -687,6 +687,16 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
 	public SelectionQuery<R> setCacheMode(CacheMode cacheMode) {
 		getQueryOptions().setCacheMode( cacheMode );
 		return this;

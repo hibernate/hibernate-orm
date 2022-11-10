@@ -206,6 +206,20 @@ public interface Session extends SharedSessionContract, EntityManager {
 	CacheMode getCacheMode();
 
 	/**
+	 * The JPA-defined {@link CacheStoreMode}.
+	 *
+	 * @see #getCacheMode()
+	 */
+	CacheStoreMode getCacheStoreMode();
+
+	/**
+	 * The JPA-defined {@link CacheRetrieveMode}.
+	 *
+	 * @see #getCacheMode()
+	 */
+	CacheRetrieveMode getCacheRetrieveMode();
+
+	/**
 	 * Enable or disable writes to the second-level cache.
 	 *
 	 * @param cacheStoreMode a JPA-defined {@link CacheStoreMode}

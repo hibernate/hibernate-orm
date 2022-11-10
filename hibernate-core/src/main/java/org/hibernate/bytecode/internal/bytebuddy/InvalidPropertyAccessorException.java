@@ -6,9 +6,11 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-public class PrivateAccessorException extends InvalidPropertyAccessorException {
+import org.hibernate.HibernateException;
 
-	public PrivateAccessorException(String message) {
+public class InvalidPropertyAccessorException extends HibernateException {
+
+	public InvalidPropertyAccessorException(String message) {
 		super( message );
 	}
 }

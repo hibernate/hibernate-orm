@@ -42,7 +42,7 @@ public class SetterFieldImpl implements Setter {
 		return propertyName;
 	}
 
-	protected Field getField() {
+	public Field getField() {
 		return field;
 	}
 

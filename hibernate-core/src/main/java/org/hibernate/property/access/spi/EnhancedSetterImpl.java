@@ -49,7 +49,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 		super.set( target, value );
 
 		// This sets the component relation for dirty tracking purposes
-		if ( ( enhancementState & COMPOSITE_OWNER ) != 0 && ( ( enhancementState & COMPOSITE_TRACKER_MASK ) != 0 || value instanceof CompositeTracker ) ) {
+		if ( ( enhancementState & COMPOSITE_OWNER ) != 0 && ( ( enhancementState & COMPOSITE_TRACKER_MASK ) != 0 && value != null || value instanceof CompositeTracker ) ) {
 			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
 		}
 

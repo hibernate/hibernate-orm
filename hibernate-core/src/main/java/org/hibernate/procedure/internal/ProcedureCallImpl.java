@@ -1083,17 +1083,22 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		throw new UnsupportedOperationException( "setLockMode does not apply to procedure calls" );
+		// throw IllegalStateException here for consistency with JPA
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new UnsupportedOperationException( "setLockMode does not apply to procedure calls" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
 	}
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new UnsupportedOperationException( "getLockMode does not apply to procedure calls" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
 	@Override

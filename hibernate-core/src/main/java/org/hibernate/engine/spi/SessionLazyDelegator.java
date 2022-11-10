@@ -112,6 +112,16 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return this.lazySession.get().getCacheStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return this.lazySession.get().getCacheRetrieveMode();
+	}
+
+	@Override
 	public CacheMode getCacheMode() {
 		return this.lazySession.get().getCacheMode();
 	}

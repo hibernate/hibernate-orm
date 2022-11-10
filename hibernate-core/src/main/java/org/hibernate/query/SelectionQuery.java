@@ -286,6 +286,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	CacheMode getCacheMode();
 
 	/**
+	 * @see #getCacheMode()
+	 */
+	CacheStoreMode getCacheStoreMode();
+
+	/**
+	 * @see #getCacheMode()
+	 */
+	CacheRetrieveMode getCacheRetrieveMode();
+
+	/**
 	 * Set the current {@link CacheMode} in effect for this query.
 	 *
 	 * @implNote Setting it to {@code null} ultimately indicates to use the

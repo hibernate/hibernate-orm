@@ -1837,6 +1837,16 @@ public class SessionImpl
 	}
 
 	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
 	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}

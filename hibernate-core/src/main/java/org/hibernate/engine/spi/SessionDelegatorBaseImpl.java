@@ -203,6 +203,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return delegate.getCacheRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return delegate.getCacheStoreMode();
+	}
+
+	@Override
 	public void setCacheMode(CacheMode cm) {
 		delegate.setCacheMode( cm );
 	}

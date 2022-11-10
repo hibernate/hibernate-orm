@@ -53,7 +53,7 @@ public class SqlFunction
 				argument.accept( walker );
 				index = paramIndex + 1;
 			}
-
+			sqlAppender.append( sqlFragment, index, sqlFragment.length() );
 		}
 		else {
 			sqlAppender.appendSql( sqlFragment );

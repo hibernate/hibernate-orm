@@ -42,6 +42,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.OpenedClassReader;
 
@@ -50,7 +51,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
-	private static final ModifierContributor.ForField REMOVE_FINAL_MODIFIER = new ModifierContributor.ForField() {
+	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
 		@Override
 		public int getMask() {
 			return EMPTY_MASK; // Do not add any modifier
@@ -58,7 +59,23 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		@Override
 		public int getRange() {
-			return Opcodes.ACC_FINAL; // Remove the "final" modifier
+			return Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE; // Remove the "final" and "private" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
+	private static final ModifierContributor.ForMethod REMOVE_PRIVATE_MODIFIER = new ModifierContributor.ForMethod() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_PRIVATE; // Remove the "private" modifier
 		}
 
 		@Override
@@ -211,6 +228,14 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		builder = es.applySuperInterfaceOptimisations(builder);
 		boolean compositeOwner = false;
 
+		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer
+		builder = builder.visit(
+				new ModifierAdjustment().withConstructorModifiers(
+						ElementMatchers.isDefaultConstructor(),
+						REMOVE_PRIVATE_MODIFIER
+				)
+		);
+
 		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
 		// Remove the final modifier from all enhanced fields, because:
 		// 1. We sometimes need to write to final fields when they are lazy.
@@ -220,8 +245,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		for ( AnnotatedFieldDescription f : enhancedFields ) {
 			enhancedFieldsAsDefined.add( f.asDefined() );
 		}
-		builder = builder.visit( new ModifierAdjustment().withFieldModifiers( anyOf( enhancedFieldsAsDefined ),
-				REMOVE_FINAL_MODIFIER ) );
+		// Replace the private modifier with package-private for all enhanced fields,
+		// because our AccessOptimizer needs to get/set fields and can't use field reader/writer,
+		// as reader/writer methods have different semantics
+		builder = builder.visit(
+				new ModifierAdjustment().withFieldModifiers(
+						anyOf( enhancedFieldsAsDefined ),
+						REMOVE_PRIVATE_FINAL_MODIFIER
+				)
+		);
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(

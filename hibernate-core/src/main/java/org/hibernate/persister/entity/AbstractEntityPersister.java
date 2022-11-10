@@ -2025,17 +2025,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
-		if ( fetchable instanceof AttributeMapping ) {
-			if ( fetchParent instanceof EmbeddableResultGraphNode
-					&& ( (EmbeddableResultGraphNode) fetchParent).getReferencedMappingContainer() == getIdentifierMapping() ) {
-				return true;
-			}
-			else {
-				final int propertyNumber = ( (AttributeMapping) fetchable).getStateArrayPosition();
+		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
+			return true;
+		}
+		else if ( fetchable instanceof AttributeMapping ) {
+			final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
 //				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
 //				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
-				return propertySelectable[propertyNumber];
-			}
+			return propertySelectable[propertyNumber];
 		}
 		else {
 			return true;

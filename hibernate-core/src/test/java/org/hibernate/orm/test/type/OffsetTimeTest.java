@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
@@ -19,6 +20,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -173,11 +175,11 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 	protected OffsetTime getExpectedPropertyValueAfterHibernateRead() {
 		// For some reason, the offset is not stored, so the restored values use the offset from the default JVM timezone.
 		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
-			return getOriginalPropertyValue().withOffsetSameLocal( OffsetDateTime.now().getOffset() );
+			return getOriginalPropertyValue().withOffsetSameInstant( OffsetDateTime.now().getOffset() );
 		}
 		else {
 			// When storing time as java.sql.Time, we only get second precision (not nanosecond)
-			return getOriginalPropertyValue().withNano( 0 ).withOffsetSameLocal( OffsetDateTime.now().getOffset() );
+			return getOriginalPropertyValue().withNano( 0 ).withOffsetSameInstant( OffsetDateTime.now().getOffset() );
 		}
 	}
 
@@ -189,29 +191,28 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex)
 			throws SQLException {
+		OffsetTime offsetTime = OffsetTime.of( hour, minute, second, 0, ZoneOffset.of(offset) )
+				.withOffsetSameInstant( OffsetDateTime.now().getOffset() );
 		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
 			statement.setTimestamp(
 					parameterIndex,
-					new Timestamp(
-							yearWhenPersistedWithoutHibernate - 1900,
-							monthWhenPersistedWithoutHibernate - 1,
-							dayWhenPersistedWithoutHibernate,
-							hour, minute, second, nanosecond
-					)
+					Timestamp.valueOf( offsetTime.atDate( LocalDate.EPOCH ).toLocalDateTime() )
 			);
 		}
 		else {
-			statement.setTime( parameterIndex, new Time( hour, minute, second ) );
+			statement.setTime( parameterIndex, Time.valueOf( offsetTime.toLocalTime() ) );
 		}
 	}
 
 	@Override
 	protected Object getExpectedJdbcValueAfterHibernateWrite() {
+		OffsetTime offsetTime = OffsetTime.of( hour, minute, second, 0, ZoneOffset.of(offset) )
+				.withOffsetSameInstant( OffsetDateTime.now().getOffset() );
 		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
-			return new Timestamp( 1970 - 1900, 0, 1, hour, minute, second, nanosecond );
+			return Timestamp.valueOf( offsetTime.atDate( LocalDate.EPOCH ).toLocalDateTime() );
 		}
 		else {
-			return new Time( hour, minute, second );
+			return Time.valueOf( offsetTime.toLocalTime() );
 		}
 	}
 

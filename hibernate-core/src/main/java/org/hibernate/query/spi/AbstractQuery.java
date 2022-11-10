@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -205,6 +208,19 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+
+	@Override
 	public boolean isCacheable() {
 		return super.isCacheable();
 	}
@@ -258,7 +274,7 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 

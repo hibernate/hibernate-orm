@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -270,14 +272,14 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
 	 * <p/>
-	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to the
-	 * entity/collection caches as we process query results.  For caching of
-	 * the actual query results, see {@link #isCacheable()} and
+	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to
+	 * the entity/collection caches as we process query results. For caching
+	 * of the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
 	 * <p/>
-	 * In order for this setting to have any affect, second-level caching would
-	 * have to be enabled and the entities/collections in question configured
-	 * for caching.
+	 * In order for this setting to have any affect, second-level caching
+	 * would have to be enabled and the entities/collections in question
+	 * configured for caching.
 	 *
 	 * @see Session#getCacheMode()
 	 */
@@ -293,6 +295,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @see Session#setCacheMode(CacheMode)
 	 */
 	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
+
+	/**
+	 * @see #setCacheMode(CacheMode)
+	 */
+	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	/**
+	 * @see #setCacheMode(CacheMode)
+	 */
+	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * Should the results of the query be stored in the second level cache?
@@ -379,7 +391,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * Specifies whether follow-on locking should be applied?
+	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
 

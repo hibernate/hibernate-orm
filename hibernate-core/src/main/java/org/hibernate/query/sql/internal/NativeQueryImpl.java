@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -1108,6 +1110,18 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 

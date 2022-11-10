@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.Map;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -522,6 +524,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	@Override
 	NativeQuery<T> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	NativeQuery<T> setCacheable(boolean cacheable);

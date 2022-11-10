@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -24,15 +27,12 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
@@ -429,19 +429,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		return FlushModeTypeHelper.getFlushModeType( getQueryOptions().getFlushMode() );
-	}
-
-	@Override
 	public SqmSelectionQuery<R> setFlushMode(FlushModeType flushMode) {
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushMode ) );
+		super.setFlushMode( flushMode );
 		return this;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
 	}
 
 	/**
@@ -451,7 +441,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	 */
 	@Override
 	public SqmSelectionQuery<R> setLockMode(LockModeType lockMode) {
-		setHibernateLockMode( LockModeTypeHelper.getLockMode( lockMode ) );
+		super.setLockMode( lockMode );
 		return this;
 	}
 
@@ -460,7 +450,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	 */
 	@Override
 	public SqmSelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
-		getLockOptions().setLockMode( lockMode );
+		super.setHibernateLockMode( lockMode );
 		return this;
 	}
 
@@ -471,7 +461,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	 */
 	@Override @Deprecated
 	public SqmSelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -480,7 +470,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	 */
 	@Override
 	public SqmSelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
-		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -494,58 +484,44 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	@Override
-	public Integer getFetchSize() {
-		return getQueryOptions().getFetchSize();
-	}
-
-	@Override
 	public SqmSelectionQuery<R> setFetchSize(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
+		super.setFetchSize( fetchSize );
 		return this;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getSession().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setReadOnly(boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
+		super.setReadOnly( readOnly );
 		return this;
-	}
-	@Override
-	public CacheMode getCacheMode() {
-		return getQueryOptions().getCacheMode();
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setCacheMode(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
+		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public boolean isCacheable() {
-		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
+	public SqmSelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
 	}
 
 	@Override
 	public SqmSelectionQuery<R> setCacheable(boolean cacheable) {
-		getQueryOptions().setResultCachingEnabled( cacheable );
+		super.setCacheable( cacheable );
 		return this;
 	}
 
 	@Override
-	public String getCacheRegion() {
-		return getQueryOptions().getResultCacheRegionName();
-	}
-
-	@Override
 	public SqmSelectionQuery<R> setCacheRegion(String regionName) {
-		getQueryOptions().setResultCacheRegionName( regionName );
+		super.setCacheRegion( regionName );
 		return this;
 	}
 

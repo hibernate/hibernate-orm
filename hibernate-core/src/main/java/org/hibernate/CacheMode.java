@@ -31,32 +31,46 @@ import jakarta.persistence.CacheStoreMode;
  * @see CacheRetrieveMode
  */
 public enum CacheMode {
+
 	/**
 	 * The session may read items from the cache, and add items to the cache
 	 * as it reads them from the database.
 	 */
 	NORMAL( CacheStoreMode.USE, CacheRetrieveMode.USE ),
+
 	/**
 	 * The session will never interact with the cache, except to invalidate
 	 * cached items when updates occur.
 	 */
 	IGNORE( CacheStoreMode.BYPASS, CacheRetrieveMode.BYPASS ),
+
 	/**
 	 * The session may read items from the cache, but will not add items,
 	 * except to invalidate items when updates occur.
 	 */
 	GET( CacheStoreMode.BYPASS, CacheRetrieveMode.USE ),
+
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database. In this mode, the
 	 * value of the configuration setting
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_MINIMAL_PUTS}
 	 * determines whether an item is written to the cache when the cache
-	 * already contains an entry with the same key.
+	 * already contains an entry with the same key. Minimal puts should be:
+	 * <ul>
+	 * <li>disabled for a cache where writes and reads carry a similar cost,
+	 *     as is usually the case for a local in-memory cache, and
+	 * <li>enabled for a cache where writes are much more expensive than
+	 *     reads, which is usually the case for a distributed cache.
+	 * </ul>
+	 * It's not usually necessary to specify this setting explicitly because,
+	 * by default, it's set to a sensible value by the second-level cache
+	 * implementation.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	PUT( CacheStoreMode.USE, CacheRetrieveMode.BYPASS ),
+
 	/**
 	 * As with to {@link #PUT}, the session will never read items from the
 	 * cache, but will add items to the cache as it reads them from the
@@ -65,7 +79,7 @@ public enum CacheMode {
 	 * bypassed, in order to <em>force</em> a refresh of a cached item,
 	 * even when an entry with the same key already exists in the cache.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );
 

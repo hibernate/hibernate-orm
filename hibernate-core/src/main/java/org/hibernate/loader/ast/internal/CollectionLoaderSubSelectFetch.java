@@ -86,29 +86,32 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		final PersistentCollection<?> collection = persistenceContext.getCollection( collectionKey );
 		attributeMapping.getCollectionDescriptor().getCollectionType().getKeyOfOwner( collection.getOwner(), session );
 
-		final EntityEntry ownerEntry = persistenceContext.getEntry( collection.getOwner() );
 		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
-		final EntityKey triggerKeyOwnerKey = ownerEntry.getEntityKey();
-		final SubselectFetch registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
+		final EntityEntry ownerEntry = persistenceContext.getEntry( collection.getOwner() );
 		List<PersistentCollection<?>> subSelectFetchedCollections = null;
-		if ( registeredFetch != null ) {
-			subSelectFetchedCollections = CollectionHelper.arrayList( registeredFetch.getResultingEntityKeys().size() );
+		if ( ownerEntry != null ) {
+			final EntityKey triggerKeyOwnerKey = ownerEntry.getEntityKey();
+			final SubselectFetch registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
+			if ( registeredFetch != null ) {
+				subSelectFetchedCollections = CollectionHelper.arrayList(
+						registeredFetch.getResultingEntityKeys().size() );
 
-			// there was one, so we want to make sure to prepare the corresponding collection
-			// reference for reading
-			final Iterator<EntityKey> itr = registeredFetch.getResultingEntityKeys().iterator();
-			while ( itr.hasNext() ) {
-				final EntityKey key = itr.next();
+				// there was one, so we want to make sure to prepare the corresponding collection
+				// reference for reading
+				final Iterator<EntityKey> itr = registeredFetch.getResultingEntityKeys().iterator();
+				while ( itr.hasNext() ) {
+					final EntityKey key = itr.next();
 
-				final PersistentCollection<?> containedCollection = persistenceContext.getCollection(
-						new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() )
-				);
+					final PersistentCollection<?> containedCollection = persistenceContext.getCollection(
+							new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() )
+					);
 
-				if ( containedCollection != collection ) {
-					containedCollection.beginRead();
-					containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
+					if ( containedCollection != collection ) {
+						containedCollection.beginRead();
+						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
 
-					subSelectFetchedCollections.add( containedCollection );
+						subSelectFetchedCollections.add( containedCollection );
+					}
 				}
 			}
 		}

@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -19,6 +18,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -47,7 +49,6 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -85,7 +86,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -912,7 +912,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		// No verifySelect call, because in Hibernate we support locking in subqueries
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -1213,6 +1213,18 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 

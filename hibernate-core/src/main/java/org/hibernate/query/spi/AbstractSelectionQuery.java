@@ -19,6 +19,9 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -69,6 +72,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -581,6 +585,12 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
+	@Override
+	public SelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
+		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		return this;
+	}
+
 	/**
 	 * Get the root LockMode for the query
 	 */
@@ -680,6 +690,16 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setCacheMode(CacheMode cacheMode) {
 		getQueryOptions().setCacheMode( cacheMode );
 		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		return setCacheMode( fromJpaModes( cacheRetrieveMode, getQueryOptions().getCacheMode().getJpaStoreMode() ) );
+	}
+
+	@Override
+	public SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		return setCacheMode( fromJpaModes( getQueryOptions().getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override

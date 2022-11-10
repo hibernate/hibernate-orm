@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -851,6 +853,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	Query<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	Query<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	Query<R> setTimeout(int timeout);

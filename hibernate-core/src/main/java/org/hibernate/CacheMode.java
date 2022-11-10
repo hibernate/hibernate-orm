@@ -11,20 +11,34 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 /**
- * Controls how the session interacts with the second-level cache and query cache.
+ * Controls how the session interacts with the {@link Cache second-level cache}
+ * or {@linkplain org.hibernate.query.SelectionQuery#isCacheable() query cache}.
+ * An instance of {@code CacheMode} may be viewed as packaging a JPA-defined
+ * {@link CacheStoreMode} with a {@link CacheRetrieveMode}. For example,
+ * {@link CacheMode#PUT} represents the combination {@code (BYPASS, USE)}.
+ * <p>
+ * However, this enumeration recognizes only five such combinations. In Hibernate,
+ * {@link CacheStoreMode#REFRESH} always implies {@link CacheRetrieveMode#BYPASS},
+ * so there's no {@code CacheMode} representing the combination
+ * {@code (REFRESH, USE)}.
  *
  * @author Gavin King
  * @author Strong Liu
+ *
  * @see Session#setCacheMode(CacheMode)
+ * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
+ * @see CacheStoreMode
+ * @see CacheRetrieveMode
  */
 public enum CacheMode {
 	/**
-	 * The session may read items from the cache, and add items to the cache.
+	 * The session may read items from the cache, and add items to the cache
+	 * as it reads them from the database.
 	 */
 	NORMAL( CacheStoreMode.USE, CacheRetrieveMode.USE ),
 	/**
 	 * The session will never interact with the cache, except to invalidate
-	 * cache items when updates occur.
+	 * cached items when updates occur.
 	 */
 	IGNORE( CacheStoreMode.BYPASS, CacheRetrieveMode.BYPASS ),
 	/**
@@ -34,14 +48,24 @@ public enum CacheMode {
 	GET( CacheStoreMode.BYPASS, CacheRetrieveMode.USE ),
 	/**
 	 * The session will never read items from the cache, but will add items
-	 * to the cache as it reads them from the database.
+	 * to the cache as it reads them from the database. In this mode, the
+	 * value of the configuration setting
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_MINIMAL_PUTS}
+	 * determines whether an item is written to the cache when the cache
+	 * already contains an entry with the same key.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
 	PUT( CacheStoreMode.USE, CacheRetrieveMode.BYPASS ),
 	/**
-	 * The session will never read items from the cache, but will add items
-	 * to the cache as it reads them from the database.  In this mode, the
-	 * effect of {@code hibernate.cache.use_minimal_puts} is bypassed, in
-	 * order to <em>force</em> a cache refresh.
+	 * As with to {@link #PUT}, the session will never read items from the
+	 * cache, but will add items to the cache as it reads them from the
+	 * database. But in this mode, the effect of the configuration setting
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_MINIMAL_PUTS} is
+	 * bypassed, in order to <em>force</em> a refresh of a cached item,
+	 * even when an entry with the same key already exists in the cache.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
 	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );
 
@@ -53,10 +77,16 @@ public enum CacheMode {
 		this.retrieveMode = retrieveMode;
 	}
 
+	/**
+	 * @return the JPA-defined {@link CacheStoreMode} implied by this cache mode
+	 */
 	public CacheStoreMode getJpaStoreMode() {
 		return storeMode;
 	}
 
+	/**
+	 * @return the JPA-defined {@link CacheRetrieveMode} implied by this cache mode
+	 */
 	public CacheRetrieveMode getJpaRetrieveMode() {
 		return retrieveMode;
 	}
@@ -80,10 +110,9 @@ public enum CacheMode {
 	}
 
 	/**
-	 * Used to interpret externalized forms of this enum.
+	 * Interpret externalized form as an instance of this enumeration.
 	 *
 	 * @param setting The externalized form.
-	 *
 	 * @return The matching enum value.
 	 *
 	 * @throws MappingException Indicates the external form was not recognized as a valid enum value.
@@ -101,6 +130,9 @@ public enum CacheMode {
 		}
 	}
 
+	/**
+	 * Interpret the given JPA modes as an instance of this enumeration.
+	 */
 	public static CacheMode fromJpaModes(CacheRetrieveMode retrieveMode, CacheStoreMode storeMode) {
 		if ( retrieveMode == null && storeMode == null ) {
 			return null;

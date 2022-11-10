@@ -461,7 +461,7 @@ public interface SessionFactoryBuilder {
 	 * major adverse performance impact.  For these caches, it is best to enable this "minimal puts"
 	 * feature.
 	 * <p/>
-	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So its is
+	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So it's
 	 * very rare that users need to set this, generally speaking.
 	 *
 	 * @param enabled {@code true} indicates Hibernate should first check whether data exists and only
@@ -480,7 +480,7 @@ public interface SessionFactoryBuilder {
 	 * that format is impossible to "read" if browsing the cache.  The use of "structured" cache
 	 * entries allows the cached data to be read.
 	 *
-	 * @param enabled {@code true} indicates that structured cache entries (human readable) should be used;
+	 * @param enabled {@code true} indicates that structured (human-readable) cache entries should be used;
 	 * {@code false} indicates that the native entry structure should be used.
 	 *
 	 * @return {@code this}, for method chaining

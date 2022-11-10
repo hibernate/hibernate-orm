@@ -1309,7 +1309,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Optimize interaction with the second-level cache to minimize writes, at the cost
-	 * of more frequent database reads.
+	 * of an additional read before each write.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */

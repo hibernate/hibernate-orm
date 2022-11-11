@@ -362,7 +362,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<LocalDateTime> LOCAL_DATE_TIME = new BasicTypeReference<>(
 			"LocalDateTime",
 			LocalDateTime.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.LOCAL_DATE_TIME
 	);
 
 	/**
@@ -380,7 +380,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<LocalTime> LOCAL_TIME = new BasicTypeReference<>(
 			"LocalTime",
 			LocalTime.class,
-			SqlTypes.TIME
+			SqlTypes.LOCAL_TIME
 	);
 
 	/**
@@ -390,7 +390,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeReference<>(
 			"OffsetDateTime",
 			OffsetDateTime.class,
-			SqlTypes.TIMESTAMP_WITH_TIMEZONE
+			SqlTypes.OFFSET_DATE_TIME
 	);
 
 	/**
@@ -400,7 +400,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithTimezone",
 			OffsetDateTime.class,
-			SqlTypes.TIMESTAMP_WITH_TIMEZONE
+			SqlTypes.OFFSET_DATE_TIME
 	);
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
@@ -409,7 +409,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithoutTimezone",
 			OffsetDateTime.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.LOCAL_DATE_TIME
 	);
 
 	/**
@@ -419,7 +419,7 @@ public final class StandardBasicTypes {
 			"OffsetTime",
 			OffsetTime.class,
 			// todo (6.0): why not TIME_WITH_TIMEZONE ?
-			SqlTypes.TIME
+			SqlTypes.LOCAL_TIME
 	);
 
 	/**
@@ -429,7 +429,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeReference<>(
 			"ZonedDateTime",
 			ZonedDateTime.class,
-			SqlTypes.TIMESTAMP_WITH_TIMEZONE
+			SqlTypes.ZONED_DATE_TIME
 	);
 
 	/**
@@ -439,7 +439,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithTimezone",
 			ZonedDateTime.class,
-			SqlTypes.TIMESTAMP_WITH_TIMEZONE
+			SqlTypes.ZONED_DATE_TIME
 	);
 
 	/**
@@ -449,7 +449,7 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithoutTimezone",
 			ZonedDateTime.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.LOCAL_DATE_TIME
 	);
 
 	/**

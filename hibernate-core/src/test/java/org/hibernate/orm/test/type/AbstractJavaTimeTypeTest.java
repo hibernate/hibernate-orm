@@ -25,7 +25,6 @@ import java.util.function.Predicate;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
@@ -125,9 +124,10 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+				T expected = getExpectedPropertyValueAfterHibernateRead();
 				assertEquals(
 						"Writing then reading a value should return the original value",
-						getExpectedPropertyValueAfterHibernateRead(), read
+						expected, read
 				);
 			} );
 		} );
@@ -152,10 +152,10 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 						try (ResultSet resultSet = statement.getResultSet()) {
 							resultSet.next();
 							Object nativeRead = getActualJdbcValue( resultSet, 1 );
+							Object expected = getExpectedJdbcValueAfterHibernateWrite();
 							assertEquals(
 									"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-									getExpectedJdbcValueAfterHibernateWrite(),
-									nativeRead
+									expected, nativeRead
 							);
 						}
 					}
@@ -184,9 +184,10 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+				T expected = getExpectedPropertyValueAfterHibernateRead();
 				assertEquals(
 						"Values written without Hibernate ORM should be read correctly by Hibernate ORM",
-						getExpectedPropertyValueAfterHibernateRead(), read
+						expected, read
 				);
 			} );
 		} );

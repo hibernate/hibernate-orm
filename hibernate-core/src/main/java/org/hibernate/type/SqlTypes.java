@@ -166,6 +166,11 @@ public class SqlTypes {
 	 */
 	public final static int TIME = Types.TIME;
 
+	public final static int LOCAL_TIME = 5001;
+	public final static int LOCAL_DATE_TIME = 5002;
+	public final static int OFFSET_DATE_TIME = 5003;
+	public final static int ZONED_DATE_TIME = 5004;
+
 	/**
 	 * <P>The constant in the Java programming language, sometimes referred
 	 * to as a type code, that identifies the generic SQL type
@@ -611,7 +616,11 @@ public class SqlTypes {
 			|| typeCode == TIME
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
-			|| typeCode == TIMESTAMP_UTC;
+			|| typeCode == TIMESTAMP_UTC
+			|| typeCode == LOCAL_TIME
+			|| typeCode == LOCAL_DATE_TIME
+			|| typeCode == OFFSET_DATE_TIME
+			|| typeCode == ZONED_DATE_TIME;
 	}
 
 	/**
@@ -629,7 +638,10 @@ public class SqlTypes {
 		return typeCode == DATE
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
-			|| typeCode == TIMESTAMP_UTC;
+			|| typeCode == TIMESTAMP_UTC
+			|| typeCode == LOCAL_DATE_TIME
+			|| typeCode == OFFSET_DATE_TIME
+			|| typeCode == ZONED_DATE_TIME;
 	}
 
 	/**
@@ -640,6 +652,10 @@ public class SqlTypes {
 		return typeCode == TIME
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
-			|| typeCode == TIMESTAMP_UTC;
+			|| typeCode == TIMESTAMP_UTC
+			|| typeCode == LOCAL_TIME
+			|| typeCode == LOCAL_DATE_TIME
+			|| typeCode == OFFSET_DATE_TIME
+			|| typeCode == ZONED_DATE_TIME;
 	}
 }

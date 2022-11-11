@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa.compliance;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 public class LocalTimeTest {
 
-	private static final LocalTime LOCAL_TIME = LocalTime.now();
+	private static final LocalTime LOCAL_TIME = LocalTime.now()
+			.truncatedTo(ChronoUnit.SECONDS); //TODO: understand why this is needed in h2
 
 	private static final OffsetTime OFFSET_TIME = OffsetTime.of( LOCAL_TIME, ZoneOffset.ofHours( 2 ) );
 

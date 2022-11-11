@@ -21,6 +21,10 @@ import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
@@ -63,6 +67,11 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( TimestampJdbcType.INSTANCE );
 		target.addDescriptor( TimestampWithTimeZoneJdbcType.INSTANCE );
 		target.addDescriptor( TimeJdbcType.INSTANCE );
+
+		target.addDescriptor( SqlTypes.LOCAL_TIME, LocalTimeJdbcType.INSTANCE );
+		target.addDescriptor( SqlTypes.LOCAL_DATE_TIME, LocalDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( SqlTypes.OFFSET_DATE_TIME, OffsetDateTimeJdbcType.INSTANCE );
+		target.addDescriptor( SqlTypes.ZONED_DATE_TIME, ZonedDateTimeJdbcType.INSTANCE );
 
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );

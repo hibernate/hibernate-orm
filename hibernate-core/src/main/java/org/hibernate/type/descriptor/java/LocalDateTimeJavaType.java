@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -20,6 +19,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -48,7 +48,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.LOCAL_DATE_TIME );
 	}
 
 	@Override
@@ -149,7 +149,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Date) {
-			final Timestamp ts = (Timestamp) value;
+			final Date ts = (Date) value;
 			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}

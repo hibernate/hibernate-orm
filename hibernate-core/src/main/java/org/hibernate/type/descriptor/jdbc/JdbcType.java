@@ -185,10 +185,14 @@ public interface JdbcType extends Serializable {
 			case Types.DATE:
 				return CastType.DATE;
 			case Types.TIME:
+			case SqlTypes.LOCAL_TIME:
 				return CastType.TIME;
 			case Types.TIMESTAMP:
+			case SqlTypes.LOCAL_DATE_TIME:
 				return CastType.TIMESTAMP;
 			case Types.TIMESTAMP_WITH_TIMEZONE:
+			case SqlTypes.OFFSET_DATE_TIME:
+			case SqlTypes.ZONED_DATE_TIME:
 				return CastType.OFFSET_TIMESTAMP;
 			case Types.NULL:
 				return CastType.NULL;

@@ -1036,12 +1036,7 @@ public class PostgreSQLDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-					appender.appendSql( "timestamp with time zone '" );
-				}
-				else {
-					appender.appendSql( "timestamp '" );
-				}
+				appender.appendSql( "timestamp with time zone '" );
 				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;

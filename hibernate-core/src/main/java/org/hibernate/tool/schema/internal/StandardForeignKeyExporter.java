@@ -53,7 +53,6 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		for ( int i=0; i<columns.size() && i<targetColumns.size(); i++ ) {
 			columnNames[i] = columns.get(i).getQuotedName( dialect );
 			targetColumnNames[i] = targetColumns.get(i).getQuotedName( dialect );
-			i++;
 		}
 
 		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );

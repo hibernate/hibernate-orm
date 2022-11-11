@@ -174,42 +174,7 @@ import jakarta.persistence.TemporalType;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.INTEGER;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NUMERIC;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isNumericType;
-import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -3965,25 +3930,25 @@ public abstract class Dialect implements ConversionContext {
 			}
 
 			switch ( jdbcTypeCode ) {
-				case SqlTypes.BIT:
-				case SqlTypes.CHAR:
-				case SqlTypes.NCHAR:
-				case SqlTypes.VARCHAR:
-				case SqlTypes.NVARCHAR:
-				case SqlTypes.BINARY:
-				case SqlTypes.VARBINARY:
-				case SqlTypes.CLOB:
-				case SqlTypes.BLOB:
+				case BIT:
+				case CHAR:
+				case NCHAR:
+				case VARCHAR:
+				case NVARCHAR:
+				case BINARY:
+				case VARBINARY:
+				case CLOB:
+				case BLOB:
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
-				case SqlTypes.LONGVARCHAR:
-				case SqlTypes.LONGNVARCHAR:
-				case SqlTypes.LONGVARBINARY:
+				case LONGVARCHAR:
+				case LONGNVARCHAR:
+				case LONGVARBINARY:
 					size.setLength( javaType.getLongSqlLength() );
 					break;
-				case SqlTypes.FLOAT:
-				case SqlTypes.DOUBLE:
-				case SqlTypes.REAL:
+				case FLOAT:
+				case DOUBLE:
+				case REAL:
 					// this is almost always the thing we use:
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
@@ -3997,18 +3962,21 @@ public abstract class Dialect implements ConversionContext {
 						precision = (int) ceil( precision * LOG_BASE2OF10 );
 					}
 					break;
-				case SqlTypes.TIMESTAMP:
-				case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				case SqlTypes.TIMESTAMP_UTC:
+				case TIMESTAMP:
+				case TIMESTAMP_WITH_TIMEZONE:
+				case TIMESTAMP_UTC:
+				case LOCAL_DATE_TIME:
+				case ZONED_DATE_TIME:
+				case OFFSET_DATE_TIME:
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for timestamps");
 					}
 					break;
-				case SqlTypes.NUMERIC:
-				case SqlTypes.DECIMAL:
-				case SqlTypes.INTERVAL_SECOND:
+				case NUMERIC:
+				case DECIMAL:
+				case INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					break;
 			}

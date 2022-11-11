@@ -62,7 +62,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 				case NORMALIZE_UTC:
 					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
 				default:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.ZONED_DATE_TIME );
 			}
 		}
 

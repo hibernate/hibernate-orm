@@ -9,11 +9,12 @@ package org.hibernate.orm.test.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -145,20 +146,17 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
-		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+		statement.setObject( parameterIndex, getExpectedJdbcValueAfterHibernateWrite(), Types.TIMESTAMP );
 	}
 
 	@Override
-	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		return new Timestamp(
-				year - 1900, month - 1, day,
-				hour, minute, second, nanosecond
-		);
+	protected LocalDateTime getExpectedJdbcValueAfterHibernateWrite() {
+		return LocalDateTime.of( year, month, day, hour, minute, second, nanosecond );
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		return resultSet.getObject( columnIndex, LocalDateTime.class );
 	}
 
 	@Entity(name = ENTITY_NAME)

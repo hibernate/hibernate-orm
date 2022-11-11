@@ -65,7 +65,7 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTime
 			// that prevents our explicit JDBC timezones from being recognized
 			// See https://hibernate.atlassian.net/browse/HHH-13581
 			// See https://jira.mariadb.org/browse/CONJ-724
-			if ( MariaDBDialect.class.isInstance( getDialect() ) ) {
+			if ( getDialect() instanceof MariaDBDialect ) {
 				return Collections.emptySet();
 			}
 			return super.getHibernateJdbcTimeZonesToTest();

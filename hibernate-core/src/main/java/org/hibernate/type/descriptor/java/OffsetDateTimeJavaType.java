@@ -62,7 +62,7 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 				case NORMALIZE_UTC:
 					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
 				default:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.OFFSET_DATE_TIME );
 			}
 		}
 

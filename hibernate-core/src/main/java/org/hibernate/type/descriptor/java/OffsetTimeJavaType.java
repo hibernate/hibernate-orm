@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -23,6 +22,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -50,7 +50,7 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.LOCAL_TIME );
 	}
 
 	@Override

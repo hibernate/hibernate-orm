@@ -9,10 +9,10 @@ package org.hibernate.orm.test.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
@@ -68,7 +68,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 			// that prevents our explicit JDBC timezones from being recognized
 			// See https://hibernate.atlassian.net/browse/HHH-13581
 			// See https://jira.mariadb.org/browse/CONJ-724
-			if ( MariaDBDialect.class.isInstance( getDialect() ) ) {
+			if ( getDialect() instanceof MariaDBDialect ) {
 				return Collections.emptySet();
 			}
 			return super.getHibernateJdbcTimeZonesToTest();
@@ -191,17 +191,8 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex)
 			throws SQLException {
-		OffsetTime offsetTime = OffsetTime.of( hour, minute, second, 0, ZoneOffset.of(offset) )
-				.withOffsetSameInstant( OffsetDateTime.now().getOffset() );
-		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
-			statement.setTimestamp(
-					parameterIndex,
-					Timestamp.valueOf( offsetTime.atDate( LocalDate.EPOCH ).toLocalDateTime() )
-			);
-		}
-		else {
-			statement.setTime( parameterIndex, Time.valueOf( offsetTime.toLocalTime() ) );
-		}
+		Object local = getExpectedJdbcValueAfterHibernateWrite();
+		statement.setObject( parameterIndex, local, local instanceof LocalTime ? Types.TIME : Types.TIMESTAMP );
 	}
 
 	@Override
@@ -209,20 +200,20 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 		OffsetTime offsetTime = OffsetTime.of( hour, minute, second, 0, ZoneOffset.of(offset) )
 				.withOffsetSameInstant( OffsetDateTime.now().getOffset() );
 		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
-			return Timestamp.valueOf( offsetTime.atDate( LocalDate.EPOCH ).toLocalDateTime() );
+			return offsetTime.atDate( LocalDate.EPOCH ).toLocalDateTime();
 		}
 		else {
-			return Time.valueOf( offsetTime.toLocalTime() );
+			return offsetTime.toLocalTime();
 		}
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
 		if ( TimeAsTimestampRemappingH2Dialect.class.equals( getRemappingDialectClass() ) ) {
-			return resultSet.getTimestamp( columnIndex );
+			return resultSet.getObject( columnIndex, LocalDateTime.class );
 		}
 		else {
-			return resultSet.getTime( columnIndex );
+			return resultSet.getObject( columnIndex, LocalTime.class );
 		}
 	}
 

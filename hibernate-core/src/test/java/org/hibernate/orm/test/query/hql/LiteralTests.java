@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
@@ -207,12 +208,15 @@ public class LiteralTests {
 	public void testSelectDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery( "select datetime 1999-07-23 23:59" ).getSingleResult(),
-							is( instanceOf(LocalDateTime.class) ) );
-					assertThat( session.createQuery( "select date 1999-07-23" ).getSingleResult(),
-							is( instanceOf(LocalDate.class) ) );
-					assertThat( session.createQuery( "select time 23:59" ).getSingleResult(),
-							is( instanceOf(LocalTime.class) ) );
+					Object localDateTime = session.createQuery("select datetime 1999-07-23 23:59").getSingleResult();
+					assertThat( localDateTime, is( instanceOf(LocalDateTime.class) ) );
+					assertThat( localDateTime, equalTo(LocalDateTime.of(1999,7,23,23,59)) );
+					Object localDate = session.createQuery("select date 1999-07-23").getSingleResult();
+					assertThat( localDate, is( instanceOf(LocalDate.class) ) );
+					assertThat( localDate, equalTo(LocalDate.of(1999,7,23)) );
+					Object localTime = session.createQuery("select time 23:59").getSingleResult();
+					assertThat( localTime, is( instanceOf(LocalTime.class) ) );
+					assertThat( localTime, equalTo(LocalTime.of(23,59)) );
 
 					assertThat( session.createQuery( "select local datetime" ).getSingleResult(),
 							is( instanceOf(LocalDateTime.class) ) );

@@ -815,12 +815,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				//needed because the {ts ... } JDBC escape chokes on microseconds
 				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( "' as datetimeoffset)" );
 				}
 				else {
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
 					appender.appendSql( "' as datetime2)" );
 				}
 				break;

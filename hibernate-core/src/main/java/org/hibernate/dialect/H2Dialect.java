@@ -429,7 +429,7 @@ public class H2Dialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) && supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )  ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				}
@@ -440,9 +440,16 @@ public class H2Dialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -458,7 +465,7 @@ public class H2Dialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, date, jdbcTimeZone );
 				}
@@ -491,7 +498,7 @@ public class H2Dialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, calendar, jdbcTimeZone );
 				}
@@ -511,7 +518,7 @@ public class H2Dialect extends Dialect {
 		}
 	}
 
-	public boolean supportsTimeWithTimeZoneLiteral() {
+	public boolean supportsTimeLiteralOffset() {
 		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 

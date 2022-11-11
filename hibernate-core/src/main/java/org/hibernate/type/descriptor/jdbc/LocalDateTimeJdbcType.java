@@ -18,6 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDateTime;
@@ -72,13 +73,23 @@ public class LocalDateTimeJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final LocalDateTime dateTime = javaType.unwrap( value, LocalDateTime.class, options );
-				st.setObject( index, dateTime, Types.TIMESTAMP );
+				try {
+					st.setObject( index, dateTime, Types.TIMESTAMP );
+				}
+				catch (SQLDataException sde) {
+					st.setObject( index, dateTime );
+				}
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final LocalDateTime dateTime = javaType.unwrap( value, LocalDateTime.class, options );
-				st.setObject( name, dateTime, Types.TIMESTAMP );
+				try {
+					st.setObject( name, dateTime, Types.TIMESTAMP );
+				}
+				catch (SQLDataException sde) {
+					st.setObject( name, dateTime );
+				}
 			}
 		};
 	}

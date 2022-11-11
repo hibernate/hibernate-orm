@@ -72,13 +72,23 @@ public class ZonedDateTimeJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final ZonedDateTime dateTime = javaType.unwrap( value, ZonedDateTime.class, options );
-				st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				try {
+					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				}
+				catch (SQLException sqle) {
+					st.setObject( index, dateTime );
+				}
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final ZonedDateTime dateTime = javaType.unwrap( value, ZonedDateTime.class, options );
-				st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				try {
+					st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
+				}
+				catch (SQLException sqle) {
+					st.setObject( name, dateTime );
+				}
 			}
 		};
 	}

@@ -58,11 +58,11 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
 			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
 				case NORMALIZE:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP );
 				case NORMALIZE_UTC:
 					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
 				default:
-					return jdbcTypeRegistry.getDescriptor( SqlTypes.ZONED_DATE_TIME );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_WITH_TIMEZONE );
 			}
 		}
 

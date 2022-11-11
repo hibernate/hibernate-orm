@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -58,11 +59,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
 			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
 				case NORMALIZE:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP );
 				case NORMALIZE_UTC:
 					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
 				default:
-					return jdbcTypeRegistry.getDescriptor( SqlTypes.OFFSET_DATE_TIME );
+					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_WITH_TIMEZONE );
 			}
 		}
 
@@ -108,6 +109,10 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
 			return (X) offsetDateTime.toZonedDateTime();
+		}
+
+		if (LocalDateTime.class.isAssignableFrom( type ) ) {
+			return (X) offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime();
 		}
 
 		if ( Instant.class.isAssignableFrom( type ) ) {
@@ -171,6 +176,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		if (value instanceof ZonedDateTime) {
 			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
+		}
+
+		if (value instanceof LocalDateTime) {
+			LocalDateTime localDateTime = (LocalDateTime) value;
+			return OffsetDateTime.of( localDateTime, OffsetDateTime.now().getOffset() );
 		}
 
 		if (value instanceof Instant) {

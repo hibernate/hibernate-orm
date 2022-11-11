@@ -557,6 +557,22 @@ public class SqlTypes {
 	}
 
 	/**
+	 * Does the given JDBC type code represent some sort of
+	 * variable-length binary string or BLOB type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isBinaryType(int typeCode) {
+		switch ( typeCode ) {
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+			case Types.BLOB:
+				return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Does the given typecode represent one of the two SQL decimal types?
 	 * @param typeCode a JDBC type code from {@link Types}
 	 */
@@ -596,6 +612,13 @@ public class SqlTypes {
 			|| typeCode == TIMESTAMP
 			|| typeCode == TIMESTAMP_WITH_TIMEZONE
 			|| typeCode == TIMESTAMP_UTC;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL {@code interval} type?
+	 */
+	public static boolean isIntervalType(int typeCode) {
+		return typeCode == INTERVAL_SECOND;
 	}
 
 	/**

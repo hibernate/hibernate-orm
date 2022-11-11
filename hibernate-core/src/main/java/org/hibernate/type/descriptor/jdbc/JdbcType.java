@@ -120,128 +120,37 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInteger() {
-		return isInteger( getJdbcTypeCode() );
-	}
-
-	static boolean isInteger(int typeCode) {
-		switch ( typeCode ) {
-			case Types.BIT:
-			case Types.TINYINT:
-			case Types.SMALLINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-				return true;
-		}
-		return false;
+		int typeCode = getJdbcTypeCode();
+		return SqlTypes.isIntegral(typeCode)
+			|| typeCode == Types.BIT; //HIGHLY DUBIOUS!
 	}
 
 	default boolean isFloat() {
-		return isFloat( getJdbcTypeCode() );
-	}
-
-	static boolean isFloat(int typeCode) {
-		switch ( typeCode ) {
-			case Types.FLOAT:
-			case Types.REAL:
-			case Types.DOUBLE:
-				return true;
-		}
-		return false;
+		return SqlTypes.isFloatOrRealOrDouble( getJdbcTypeCode() );
 	}
 
 	default boolean isDecimal() {
-		return isDecimal( getJdbcTypeCode() );
-	}
-
-	static boolean isDecimal(int typeCode) {
-		switch ( typeCode ) {
-			case Types.DECIMAL:
-			case Types.NUMERIC:
-				return true;
-		}
-		return false;
+		return SqlTypes.isNumericOrDecimal( getJdbcTypeCode() );
 	}
 
 	default boolean isNumber() {
-		return isNumber( getJdbcTypeCode() );
-	}
-
-	static boolean isNumber(int typeCode) {
-		switch ( typeCode ) {
-			case Types.BIT:
-			case Types.TINYINT:
-			case Types.SMALLINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.FLOAT:
-			case Types.REAL:
-			case Types.DOUBLE:
-			case Types.DECIMAL:
-			case Types.NUMERIC:
-				return true;
-		}
-		return false;
+		return SqlTypes.isNumericType( getJdbcTypeCode() );
 	}
 
 	default boolean isBinary() {
-		return isBinary( getJdbcTypeCode() );
-	}
-
-	static boolean isBinary(int typeCode) {
-		switch ( typeCode ) {
-			case Types.BINARY:
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-			case Types.BLOB:
-				return true;
-		}
-		return false;
+		return SqlTypes.isBinaryType( getJdbcTypeCode() );
 	}
 
 	default boolean isString() {
-		return isString( getJdbcTypeCode() );
-	}
-
-	static boolean isString(int typeCode) {
-		switch ( typeCode ) {
-			case Types.CHAR:
-			case Types.NCHAR:
-			case Types.VARCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.LONGNVARCHAR:
-			case Types.CLOB:
-			case Types.NCLOB:
-				return true;
-		}
-		return false;
+		return SqlTypes.isCharacterOrClobType( getJdbcTypeCode() );
 	}
 
 	default boolean isTemporal() {
-		return isTemporal( getDefaultSqlTypeCode() );
-	}
-
-	static boolean isTemporal(int typeCode) {
-		switch ( typeCode ) {
-			case Types.DATE:
-			case Types.TIME:
-			case Types.TIMESTAMP:
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				return true;
-		}
-		return false;
+		return SqlTypes.isTemporalType( getDefaultSqlTypeCode() );
 	}
 
 	default boolean isInterval() {
-		return isInterval( getDefaultSqlTypeCode() );
-	}
-
-	static boolean isInterval(int typeCode) {
-		switch ( typeCode ) {
-			case SqlTypes.INTERVAL_SECOND:
-				return true;
-		}
-		return false;
+		return SqlTypes.isIntervalType( getDefaultSqlTypeCode() );
 	}
 
 	default CastType getCastType() {

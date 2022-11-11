@@ -58,6 +58,8 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
     protected static final String FRONT_END_TENANT = "front_end";
     protected static final String BACK_END_TENANT = "back_end";
+    public static final TimeZone FRONT_END_TZ = TimeZone.getTimeZone("UTC");
+    public static final TimeZone BACK_END_TZ = TimeZone.getTimeZone("CST");
 
     //tag::multitenacy-hibernate-timezone-configuration-context-example[]
     private Map<String, ConnectionProvider> connectionProviderMap = new HashMap<>();
@@ -73,8 +75,8 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
     private void init() {
         //tag::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
-        registerConnectionProvider(FRONT_END_TENANT, TimeZone.getTimeZone("UTC"));
-        registerConnectionProvider(BACK_END_TENANT, TimeZone.getTimeZone("CST"));
+        registerConnectionProvider(FRONT_END_TENANT, FRONT_END_TZ);
+        registerConnectionProvider(BACK_END_TENANT, BACK_END_TZ);
         //end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
 
         Map<String, Object> settings = new HashMap<>();
@@ -119,11 +121,13 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
     public void testBasicExpectedBehavior() {
 
         //tag::multitenacy-hibernate-applying-timezone-configuration-example[]
+        Timestamp createdOn = Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
+
         doInSession(FRONT_END_TENANT, session -> {
             Person person = new Person();
             person.setId(1L);
             person.setName("John Doe");
-            person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
+            person.setCreatedOn(createdOn);
 
             session.persist(person);
         }, true);
@@ -132,7 +136,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             Person person = new Person();
             person.setId(1L);
             person.setName("John Doe");
-            person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
+            person.setCreatedOn(createdOn);
 
             session.persist(person);
         }, true);
@@ -147,8 +151,8 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             .getSingleResult();
 
             assertEquals(
-                Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
-                personCreationTimestamp
+                LocalDateTime.of(2018, 11, 23, 12, 0, 0),
+                personCreationTimestamp.toLocalDateTime()
            );
         }, true);
 
@@ -161,10 +165,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             .setParameter("personId", 1L)
             .getSingleResult();
 
-            assertEquals(
-                Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
-                personCreationTimestamp
-           );
+            assertEquals( createdOn, personCreationTimestamp );
         }, true);
         //end::multitenacy-hibernate-applying-timezone-configuration-example[]
 
@@ -183,10 +184,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
                 personCreationTimestamp
            );
 
-            long timeZoneOffsetMillis =
-                    Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)).getTime() -
-                    personCreationTimestamp.getTime();
-
+            long timeZoneOffsetMillis = createdOn.getTime() - personCreationTimestamp.getTime();
             assertEquals(
                 TimeZone.getTimeZone(ZoneId.systemDefault()).getRawOffset(),
                 timeZoneOffsetMillis
@@ -326,7 +324,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         private String name;
 
         @Column(name = "created_on")
-        private LocalDateTime createdOn;
+        private Timestamp createdOn;
 
         public Long getId() {
             return id;
@@ -344,11 +342,11 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             this.name = name;
         }
 
-        public LocalDateTime getCreatedOn() {
+        public Timestamp getCreatedOn() {
             return createdOn;
         }
 
-        public void setCreatedOn(LocalDateTime createdOn) {
+        public void setCreatedOn(Timestamp createdOn) {
             this.createdOn = createdOn;
         }
     }

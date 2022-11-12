@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Describes the {@link ZoneId} Java type
+ * Describes the {@link ZoneId} Java type.
  */
 public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 	/**
@@ -28,7 +28,7 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
+		return indicators.getJdbcType( Types.VARCHAR );
 	}
 
 	@Override

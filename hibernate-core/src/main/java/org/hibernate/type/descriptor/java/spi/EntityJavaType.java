@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * EntityJavaType uses object identity for equals/hashCode as we ensure that internally.
+ * Uses object identity for {@code equals}/{@code hashCode} as we ensure that internally.
  *
  * @author Christian Beikov
  */

@@ -27,7 +27,7 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.INTEGER );
+		return context.getJdbcType( Types.INTEGER );
 	}
 
 	@Override

@@ -29,8 +29,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 /**
  * Descriptor for {@link Clob} handling.
  * <p/>
- * Note, {@link Clob}s really are mutable (their internal state can in fact be mutated).  We simply
- * treat them as immutable because we cannot properly check them for changes nor deep copy them.
+ * Note, strictly-speaking a {@link Clob} object is actually mutable (its internal state can in fact be mutated).
+ * But we treat them as immutable because we simply have no way to dirty check nor deep copy them.
  *
  * @author Steve Ebersole
  */
@@ -43,12 +43,9 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		if ( indicators.isNationalized() ) {
-			final JdbcTypeRegistry stdRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
-			return stdRegistry.getDescriptor( Types.NCLOB );
-		}
-
-		return super.getRecommendedJdbcType( indicators );
+		return indicators.isNationalized()
+				? indicators.getJdbcType( Types.NCLOB )
+				: super.getRecommendedJdbcType( indicators );
 	}
 
 	@Override
@@ -76,7 +73,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 	@Override
 	public Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
+		return session.getJdbcServices().getJdbcEnvironment().getDialect()
+				.getLobMergeStrategy().mergeClob( original, target, session );
 	}
 
 	@SuppressWarnings("unchecked")

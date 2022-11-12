@@ -66,7 +66,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		final int typeCode = indicators.isLob()
 				? Types.BLOB
 				: Types.VARBINARY;
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( typeCode );
+		return indicators.getJdbcType( typeCode );
 	}
 
 	public String toString(T value) {

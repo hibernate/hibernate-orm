@@ -14,6 +14,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
+ * Descriptor for {@link Map.Entry}.
+ *
  * @author Steve Ebersole
  */
 public class MapEntryJavaType extends AbstractClassJavaType<Map.Entry> {

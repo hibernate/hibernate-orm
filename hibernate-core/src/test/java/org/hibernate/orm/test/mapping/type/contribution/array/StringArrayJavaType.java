@@ -33,7 +33,7 @@ public class StringArrayJavaType implements BasicJavaType<String[]> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+		return context.getJdbcType( Types.ARRAY );
 	}
 
 	@Override

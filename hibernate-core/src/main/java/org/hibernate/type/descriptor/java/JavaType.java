@@ -24,13 +24,48 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for the Java side of a value mapping.
+ * Descriptor for the Java side of a value mapping. A {@code JavaType} is always
+ * coupled with a {@link JdbcType} to describe the typing aspects of an attribute
+ * mapping from Java to JDBC.
+ * <p>
+ * An instance of this interface represents a certain {@linkplain #getJavaType()
+ * Java class or interface} which may occur as the type of a persistent property
+ * or field of an entity class.
+ * <p>
+ * A {@code JavaType} decides how instances of the Java type are compared for
+ * {@linkplain #areEqual equality} and {@linkplain #getComparator order}, and
+ * it knows how to convert {@linkplain #unwrap to} and {@linkplain #wrap from}
+ * various different representations that might be requested by its partner
+ * {@link JdbcType}.
+ * <p>
+ * Every {@code JavaType} has a {@link MutabilityPlan} which defines how instances
+ * of the type are {@linkplain MutabilityPlan#deepCopy(Object) cloned}, and how
+ * they are {@linkplain MutabilityPlan#disassemble disassembled to} and
+ * {@linkplain MutabilityPlan#assemble assembled from} their representation in the
+ * {@linkplain org.hibernate.Cache second-level cache}.
+ * <p>
+ * Even though it's strictly only responsible for Java aspects of the mapping, a
+ * {@code JavaType} usually does come with a {@linkplain #getRecommendedJdbcType
+ * recommendation} for a friendly {@link JdbcType} it works particularly well
+ * with, along with a default {@linkplain #getDefaultSqlLength length},
+ * {@linkplain #getDefaultSqlPrecision precision}, and
+ * {@linkplain #getDefaultSqlScale scale} for mapped columns.
+ * <p>
+ * A Java type may be selected when mapping an entity attribute using the
+ * {@link org.hibernate.annotations.JavaType} annotation, though this is typically
+ * unnecessary.
+ * <p>
+ * Custom implementations should be registered with the
+ * {@link org.hibernate.type.descriptor.java.spi.JavaTypeRegistry} at startup.
+ * The built-in implementations are registered automatically.
+ *
+ * @see JdbcType
  *
  * @author Steve Ebersole
  */
 public interface JavaType<T> extends Serializable {
 	/**
-	 * Get the Java type (Type) described
+	 * Get the Java type (a {@link Type} object) described by this {@code JavaType}.
 	 *
 	 * @see #getJavaTypeClass
 	 */
@@ -40,7 +75,7 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Get the Java type (Class) described
+	 * Get the Java type (the {@link Class} object) described by this {@code JavaType}.
 	 *
 	 * @see #getJavaType
 	 */
@@ -50,23 +85,25 @@ public interface JavaType<T> extends Serializable {
 
 	/**
 	 * Is the given value an instance of the described type?
-	 *
-	 * Generally this comes down to {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#isInstance isInstance()},
-	 * though some descriptors (mainly the java.sql.Date, Time and Timestamp descriptors) might need different semantics
+	 * <p>
+	 * Usually just {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#isInstance isInstance(value)},
+	 * but some descriptors need specialized semantics, for example, the descriptors for
+	 * {@link JdbcDateJavaType java.sql.Date}, {@link JdbcTimeJavaType java.sql.Time}, and
+	 * {@link JdbcTimestampJavaType java.sql.Timestamp}.
 	 */
 	default boolean isInstance(Object value) {
 		return getJavaTypeClass().isInstance( value );
 	}
 
 	/**
-	 * Retrieve the mutability plan for this Java type.
+	 * Retrieve the {@linkplain MutabilityPlan mutability plan} for this Java type.
 	 */
 	default MutabilityPlan<T> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.instance();
 	}
 
 	default T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( !getMutabilityPlan().isMutable() || ( target != null && areEqual( original, target ) ) ) {
+		if ( !getMutabilityPlan().isMutable() || target != null && areEqual( original, target ) ) {
 			return original;
 		}
 		else {
@@ -84,8 +121,9 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
-	 * aspect comes from the JDBC spec (mostly).
+	 * Obtain the "recommended" {@link JdbcType SQL type descriptor}
+	 * for this Java type. Often, but not always, the source of this
+	 * recommendation is the JDBC specification.
 	 *
 	 * @param context Contextual information
 	 *
@@ -148,7 +186,7 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Extract a proper hash code for this value.
+	 * Extract a proper hash code for the given value.
 	 *
 	 * @param value The value for which to extract a hash code.
 	 *
@@ -174,7 +212,7 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Extract a loggable representation of the value.
+	 * Extract a loggable representation of the given value.
 	 *
 	 * @param value The value for which to extract a loggable representation.
 	 *
@@ -193,9 +231,9 @@ public interface JavaType<T> extends Serializable {
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.
 	 * <p/>
-	 * As an example, if this is a {@code JavaType<Integer>} and we are asked to unwrap
-	 * the {@code Integer value} as a {@code Long} we would return something like
-	 * <code>Long.valueOf( value.longValue() )</code>.
+	 * As an example, if this is a {@code JavaType<Integer>} and we are asked to
+	 * unwrap the {@code Integer value} as a {@code Long}, we would return something
+	 * like <code>Long.valueOf( value.longValue() )</code>.
 	 * <p/>
 	 * Intended use is during {@link java.sql.PreparedStatement} binding.
 	 *
@@ -222,8 +260,8 @@ public interface JavaType<T> extends Serializable {
 	<X> T wrap(X value, WrapperOptions options);
 
 	/**
-	 * Returns whether this java type is wider than the given type
-	 * i.e. if the given type can be widened to this java type.
+	 * Determines if this Java type is wider than the given Java type,
+	 * that is, if the given type can be safely widened to this type.
 	 */
 	default boolean isWider(JavaType<?> javaType) {
 		return false;
@@ -252,8 +290,8 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Creates the {@link JavaType} for the given {@link ParameterizedType} based on this {@link JavaType} registered
-	 * for the raw type.
+	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
+	 * based on this {@link JavaType} registered for the raw type.
 	 *
 	 * @deprecated Use {@link #createJavaType(ParameterizedType, TypeConfiguration)} instead
 	 */
@@ -263,8 +301,8 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Creates the {@link JavaType} for the given {@link ParameterizedType} based on this {@link JavaType} registered
-	 * for the raw type.
+	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
+	 * based on this {@link JavaType} registered for the raw type.
 	 *
 	 * @since 6.1
 	 */

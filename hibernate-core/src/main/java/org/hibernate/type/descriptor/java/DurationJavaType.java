@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * 28 decimal digits of precision. This quantity must be stored in
  * the database as a single integer with units of nanoseconds, unless
  * the ANSI SQL {@code interval} type is supported.
- *
+ * <p>
  * In practice, the 19 decimal digits of a SQL {@code bigint} are
  * capable of representing six centuries in nanoseconds and are
  * sufficient for many applications. However, by default, we map

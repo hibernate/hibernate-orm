@@ -14,12 +14,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.compare.ComparableComparator;
 
 /**
- * Abstract adapter for Java type descriptors.
+ * Abstract adapter for {@link JavaType Java type descriptors}.
  *
- * @apiNote This abstract descriptor implements BasicJavaType
- * because we currently only categorize "basic" JavaTypes,
- * as in the {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}
- * sense
+ * @apiNote This abstract descriptor implements {@link BasicJavaType}
+ * because we currently only categorize basic {@link JavaType}s, where
+ * "basic" is meant in the sense of the JPA specification, that is,
+ * {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}.
+ *
  *
  * @author Steve Ebersole
  */

@@ -39,7 +39,7 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.DATE );
+		return context.getJdbcType( Types.DATE );
 	}
 
 	@Override

@@ -15,8 +15,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaType
- * for a given Java type.
+ * {@link AbstractJavaType} adapter for cases where we do not know a proper
+ * {@link org.hibernate.type.descriptor.java.JavaType} for a given Java type.
  */
 public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	public UnknownBasicJavaType(Class<T> type) {

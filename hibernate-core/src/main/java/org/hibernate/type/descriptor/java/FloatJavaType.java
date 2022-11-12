@@ -31,7 +31,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.FLOAT );
+		return indicators.getJdbcType( SqlTypes.FLOAT );
 	}
 
 	@Override

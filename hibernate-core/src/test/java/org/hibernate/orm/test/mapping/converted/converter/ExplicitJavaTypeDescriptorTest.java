@@ -325,7 +325,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 		@Override
 		public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-			return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
+			return context.getJdbcType( Types.VARCHAR );
 		}
 
 		@Override

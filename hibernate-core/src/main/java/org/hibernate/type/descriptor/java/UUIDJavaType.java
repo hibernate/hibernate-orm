@@ -29,7 +29,7 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForUuid() );
+		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}
 
 	public String toString(UUID value) {

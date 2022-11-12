@@ -16,13 +16,15 @@ import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from {@link Class} -> {@link JavaType}
+ * A registry mapping {@link Class Java classes} to implementations
+ * of the {@link JavaType} interface.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero

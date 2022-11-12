@@ -98,7 +98,8 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 	@Override
 	public Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy()
+				.mergeBlob( original, target, session );
 	}
 
 	@Override

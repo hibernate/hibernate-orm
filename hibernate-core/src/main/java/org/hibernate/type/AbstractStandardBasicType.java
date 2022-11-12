@@ -32,7 +32,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Convenience base class for {@link BasicType} implementations
+ * Convenience base class for {@link BasicType} implementations.
+ * Packages a {@link JavaType} with a {@link JdbcType}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer

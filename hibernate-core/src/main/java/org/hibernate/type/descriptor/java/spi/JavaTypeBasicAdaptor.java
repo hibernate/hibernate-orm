@@ -13,8 +13,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaType
- * for a given Java type.
+ * {@link AbstractClassJavaType} for cases where we do not know a proper
+ * {@link org.hibernate.type.descriptor.java.JavaType} for a given Java type.
  *
  * @author Steve Ebersole
  */

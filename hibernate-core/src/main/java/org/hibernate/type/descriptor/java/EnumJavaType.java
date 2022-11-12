@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 /**
- * Describes a Java Enum type.
+ * Describes a Java {@code enum} type.
  *
  * @author Steve Ebersole
  */

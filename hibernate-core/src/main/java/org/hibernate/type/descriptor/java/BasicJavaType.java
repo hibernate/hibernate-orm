@@ -12,12 +12,14 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
- * JavaType specialization for basic values
+ * Specializes {@link JavaType} for "basic" values, in the sense of
+ * {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}.
  */
 public interface BasicJavaType<T> extends JavaType<T> {
 	/**
-	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
-	 * aspect comes from the JDBC spec (mostly).
+	 * Obtain the "recommended" {@link JdbcType SQL type descriptor}
+	 * for this Java type. Often, but not always, the source of this
+	 * recommendation is the JDBC specification.
 	 *
 	 * @param indicators Contextual information
 	 *
@@ -25,13 +27,11 @@ public interface BasicJavaType<T> extends JavaType<T> {
 	 */
 	default JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		final JdbcType descriptor = indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
-				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() )
-		);
-		if ( descriptor instanceof AdjustableJdbcType ) {
-			return ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this );
-		}
-		return descriptor;
+		int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() );
+		final JdbcType descriptor = indicators.getJdbcType( jdbcTypeCode );
+		return descriptor instanceof AdjustableJdbcType
+				? ((AdjustableJdbcType) descriptor).resolveIndicatedType( indicators, this )
+				: descriptor;
 	}
 
 	@Override

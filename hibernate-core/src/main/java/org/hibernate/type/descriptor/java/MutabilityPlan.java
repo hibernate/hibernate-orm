@@ -11,8 +11,13 @@ import java.io.Serializable;
 import org.hibernate.SharedSessionContract;
 
 /**
- * Describes the mutability aspects of a Java type.  The term mutability refers to the fact that generally speaking
- * the aspects described by this contract are defined by whether the Java type's internal state is mutable or not.
+ * Describes the mutability aspects of a given Java type.
+ * <p>
+ * The term "mutability" refers to the fact that, generally speaking, the
+ * aspects described by this contract are determined by whether the Java
+ * type's internal state is mutable or immutable. For example, for an
+ * immutable Java class, {@link #deepCopy(Object)} may simply return its
+ * argument.
  *
  * @author Steve Ebersole
  */
@@ -34,16 +39,22 @@ public interface MutabilityPlan<T> extends Serializable {
 	T deepCopy(T value);
 
 	/**
-	 * Return a disassembled representation of the value.  This is used to push values onto the
-	 * second level cache.  Compliment to {@link #assemble}
+	 * Return a disassembled representation of the value.
+	 *
+	 * Called before storing a value in the second-level cache.
+	 *
+	 * Complementary to {@link #assemble}.
 	 *
 	 * @see #assemble
 	 */
 	Serializable disassemble(T value, SharedSessionContract session);
 
 	/**
-	 * Assemble a previously {@linkplain #disassemble disassembled} value.  This is used when pulling values from the
-	 * second level cache.  Compliment to {@link #disassemble}
+	 * Assemble a previously {@linkplain #disassemble disassembled} value.
+	 *
+	 * Called after reading a value from the second level cache.
+	 *
+	 * Complementary to {@link #disassemble}.
 	 *
 	 * @see #disassemble
 	 */

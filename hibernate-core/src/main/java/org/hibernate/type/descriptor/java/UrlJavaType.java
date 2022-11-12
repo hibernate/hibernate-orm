@@ -29,7 +29,7 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR );
+		return context.getJdbcType( SqlTypes.VARCHAR );
 	}
 
 	public String toString(URL value) {

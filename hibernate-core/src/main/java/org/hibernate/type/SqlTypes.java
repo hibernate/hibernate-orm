@@ -41,6 +41,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code TINYINT}.
 	 *
 	 * @see Types#TINYINT
+	 * @see org.hibernate.type.descriptor.jdbc.TinyIntJdbcType
 	 */
 	public final static int TINYINT = Types.TINYINT;
 
@@ -48,6 +49,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code SMALLINT}.
 	 *
 	 * @see Types#SMALLINT
+	 * @see org.hibernate.type.descriptor.jdbc.SmallIntJdbcType
 	 */
 	public final static int SMALLINT = Types.SMALLINT;
 
@@ -55,6 +57,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code INTEGER}.
 	 *
 	 * @see Types#INTEGER
+	 * @see org.hibernate.type.descriptor.jdbc.IntegerJdbcType
 	 */
 	public final static int INTEGER = Types.INTEGER;
 
@@ -62,6 +65,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code BIGINT}.
 	 *
 	 * @see Types#BIGINT
+	 * @see org.hibernate.type.descriptor.jdbc.BigIntJdbcType
 	 */
 	public final static int BIGINT = Types.BIGINT;
 
@@ -69,6 +73,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code FLOAT}.
 	 *
 	 * @see Types#FLOAT
+	 * @see org.hibernate.type.descriptor.jdbc.FloatJdbcType
 	 */
 	public final static int FLOAT = Types.FLOAT;
 
@@ -76,14 +81,15 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code REAL}.
 	 *
 	 * @see Types#REAL
+	 * @see org.hibernate.type.descriptor.jdbc.RealJdbcType
 	 */
 	public final static int REAL = Types.REAL;
-
 
 	/**
 	 * A type code representing the generic SQL type {@code DOUBLE}.
 	 *
 	 * @see Types#DOUBLE
+	 * @see org.hibernate.type.descriptor.jdbc.DoubleJdbcType
 	 */
 	public final static int DOUBLE = Types.DOUBLE;
 
@@ -91,6 +97,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code NUMERIC}.
 	 *
 	 * @see Types#NUMERIC
+	 * @see org.hibernate.type.descriptor.jdbc.NumericJdbcType
 	 */
 	public final static int NUMERIC = Types.NUMERIC;
 
@@ -98,6 +105,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code DECIMAL}.
 	 *
 	 * @see Types#DECIMAL
+	 * @see org.hibernate.type.descriptor.jdbc.DecimalJdbcType
 	 */
 	public final static int DECIMAL = Types.DECIMAL;
 
@@ -105,6 +113,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code CHAR}.
 	 *
 	 * @see Types#CHAR
+	 * @see org.hibernate.type.descriptor.jdbc.CharJdbcType
 	 */
 	public final static int CHAR = Types.CHAR;
 
@@ -112,6 +121,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code VARCHAR}.
 	 *
 	 * @see Types#VARCHAR
+	 * @see org.hibernate.type.descriptor.jdbc.VarcharJdbcType
 	 */
 	public final static int VARCHAR = Types.VARCHAR;
 
@@ -124,6 +134,7 @@ public class SqlTypes {
 	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGVARCHAR
+	 * @see org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType
 	 */
 	public final static int LONGVARCHAR = Types.LONGVARCHAR;
 
@@ -140,6 +151,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code DATE}.
 	 *
 	 * @see Types#DATE
+	 * @see org.hibernate.type.descriptor.jdbc.DateJdbcType
 	 */
 	public final static int DATE = Types.DATE;
 
@@ -147,6 +159,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code TIME}.
 	 *
 	 * @see Types#TIME
+	 * @see org.hibernate.type.descriptor.jdbc.TimeJdbcType
 	 */
 	public final static int TIME = Types.TIME;
 
@@ -154,6 +167,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code TIMESTAMP}.
 	 *
 	 * @see Types#TIMESTAMP
+	 * @see org.hibernate.type.descriptor.jdbc.TimestampJdbcType
 	 */
 	public final static int TIMESTAMP = Types.TIMESTAMP;
 
@@ -161,6 +175,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code BINARY}.
 	 *
 	 * @see Types#BINARY
+	 * @see org.hibernate.type.descriptor.jdbc.BinaryJdbcType
 	 */
 	public final static int BINARY = Types.BINARY;
 
@@ -168,6 +183,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code VARBINARY}.
 	 *
 	 * @see Types#VARBINARY
+	 * @see org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType
 	 */
 	public final static int VARBINARY = Types.VARBINARY;
 
@@ -180,6 +196,7 @@ public class SqlTypes {
 	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGVARBINARY
+	 * @see org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType
 	 */
 	public final static int LONGVARBINARY = Types.LONGVARBINARY;
 
@@ -213,6 +230,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code JAVA_OBJECT}.
 	 *
 	 * @see Types#JAVA_OBJECT
+	 * @see org.hibernate.type.descriptor.jdbc.ObjectJdbcType
 	 */
 	public final static int JAVA_OBJECT = Types.JAVA_OBJECT;
 
@@ -234,13 +252,15 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code ARRAY}.
 	 *
 	 * @see Types#ARRAY
+	 * @see org.hibernate.type.descriptor.jdbc.ArrayJdbcType
 	 */
 	public final static int ARRAY = Types.ARRAY;
 
 	/**
 	 * A type code representing the generic SQL type {@code BLOB}.
 	 *
-	 * @see Types#ARRAY
+	 * @see Types#BLOB
+	 * @see org.hibernate.type.descriptor.jdbc.BlobJdbcType
 	 */
 	public final static int BLOB = Types.BLOB;
 
@@ -248,6 +268,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code CLOB}.
 	 *
 	 * @see Types#CLOB
+	 * @see org.hibernate.type.descriptor.jdbc.ClobJdbcType
 	 */
 	public final static int CLOB = Types.CLOB;
 
@@ -269,6 +290,8 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code BOOLEAN}.
 	 *
 	 * @see Types#BOOLEAN
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+	 * @see org.hibernate.type.descriptor.jdbc.BooleanJdbcType
 	 */
 	public final static int BOOLEAN = Types.BOOLEAN;
 
@@ -283,6 +306,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code NCHAR}.
 	 *
 	 * @see Types#NCHAR
+	 * @see org.hibernate.type.descriptor.jdbc.NCharJdbcType
 	 */
 	public static final int NCHAR = Types.NCHAR;
 
@@ -290,6 +314,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code NVARCHAR}.
 	 *
 	 * @see Types#NVARCHAR
+	 * @see org.hibernate.type.descriptor.jdbc.NVarcharJdbcType
 	 */
 	public static final int NVARCHAR = Types.NVARCHAR;
 
@@ -302,6 +327,7 @@ public class SqlTypes {
 	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGNVARCHAR
+	 * @see org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType
 	 */
 	public static final int LONGNVARCHAR = Types.LONGNVARCHAR;
 
@@ -318,6 +344,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code NCLOB}.
 	 *
 	 * @see Types#NCLOB
+	 * @see org.hibernate.type.descriptor.jdbc.NClobJdbcType
 	 */
 	public static final int NCLOB = Types.NCLOB;
 
@@ -325,6 +352,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code XML}.
 	 *
 	 * @see Types#SQLXML
+	 * @see org.hibernate.type.descriptor.jdbc.XmlJdbcType
 	 */
 	public static final int SQLXML = Types.SQLXML;
 
@@ -348,6 +376,7 @@ public class SqlTypes {
 	 * {@code TIMESTAMP WITH TIMEZONE}.
 	 *
 	 * @see Types#TIMESTAMP_WITH_TIMEZONE
+	 * @see org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType
 	 */
 	public static final int TIMESTAMP_WITH_TIMEZONE = Types.TIMESTAMP_WITH_TIMEZONE;
 
@@ -357,17 +386,22 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code UUID}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
+	 * @see org.hibernate.type.descriptor.jdbc.UUIDJdbcType
 	 */
 	public static final int UUID = 3000;
 
 	/**
 	 * A type code representing the generic SQL type {@code JSON}.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.JsonJdbcType
 	 */
 	public static final int JSON = 3001;
 
 	/**
 	 * A type code representing the generic SQL type {@code INET} for IPv4
 	 * or IPv6 addresses.
+	 *
+	 * @see org.hibernate.dialect.PostgreSQLInetJdbcType
 	 */
 	public static final int INET = 3002;
 
@@ -376,6 +410,11 @@ public class SqlTypes {
 	 * where the value is given in UTC, instead of in the system or
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
 	 * JDBC} timezone.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
+	 * @see org.hibernate.type.descriptor.jdbc.InstantJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType
 	 */
 	public static final int TIMESTAMP_UTC = 3003;
 
@@ -384,6 +423,10 @@ public class SqlTypes {
 	/**
 	 * A type code representing the generic SQL type {@code INTERVAL SECOND}
 	 * for a temporal duration given terms of seconds and fractional seconds.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
+	 * @see org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType
+	 * @see org.hibernate.dialect.H2DurationIntervalSecondJdbcType
 	 */
 	public static final int INTERVAL_SECOND = 3100;
 

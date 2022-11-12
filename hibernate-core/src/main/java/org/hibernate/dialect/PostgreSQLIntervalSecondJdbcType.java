@@ -100,7 +100,7 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		// The default scale is 9
 		if ( indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE || indicators.getColumnScale() > 6 ) {
-			return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.NUMERIC );
+			return indicators.getJdbcType( SqlTypes.NUMERIC );
 		}
 		return this;
 	}

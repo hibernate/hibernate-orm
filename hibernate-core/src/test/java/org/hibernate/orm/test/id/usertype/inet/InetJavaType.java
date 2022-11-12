@@ -33,7 +33,7 @@ public class InetJavaType extends AbstractClassJavaType<Inet> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.INET );
+		return indicators.getJdbcType( SqlTypes.INET );
 	}
 
 	@Override

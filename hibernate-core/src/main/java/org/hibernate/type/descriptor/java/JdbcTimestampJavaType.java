@@ -209,7 +209,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
 	@Override

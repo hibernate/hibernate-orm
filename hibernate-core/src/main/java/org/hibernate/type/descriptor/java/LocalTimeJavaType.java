@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the {@link LocalTime} type.
  *
  * @author Steve Ebersole
  */
@@ -50,7 +50,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getJdbcType( Types.TIME );
 	}
 
 	@Override

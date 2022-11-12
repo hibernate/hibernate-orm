@@ -24,6 +24,7 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
+ * Adaptor between {@link UserType} and {@link org.hibernate.type.descriptor.java.JavaType}.
  *
  * @author Steve Ebersole
  */
@@ -81,7 +82,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
+		return context.getJdbcType( userType.getSqlType() );
 	}
 
 	@Override

@@ -6,12 +6,10 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import java.sql.Types;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;

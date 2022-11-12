@@ -19,7 +19,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from JDBC type code (int) -> {@link JdbcType}
+ * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
+ * to implementations of the {@link JdbcType} interface.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero

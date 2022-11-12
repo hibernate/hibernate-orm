@@ -42,7 +42,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p/>
  * This code is generally as one of the values defined in {@link java.sql.Types}, but are not
  * limited to these.  The code is resolved against an internal registry of {@link JdbcType}
- * references.  See the user-guide for additional details.
+ * references.  See the user guide for additional details.
  * <p/>
  * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
  * of basic value mapping.
@@ -61,8 +61,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface JdbcTypeCode {
 	/**
 	 * The standard {@linkplain java.sql.Types JDBC Types} code or a custom code.
-	 * This ultimately decides which {@link JdbcType}
-	 * is used to "understand" the described SQL data type
+	 * This ultimately decides which {@link JdbcType} is used to "understand" the
+	 * described SQL data type.
 	 */
 	int value();
 }

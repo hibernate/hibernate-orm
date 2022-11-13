@@ -17,7 +17,14 @@ import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
  * A key that identifies a particular query with bound parameter values.
- * This is the object Hibernate uses as a key into its query cache.
+ * This object is used as a key into the {@linkplain QueryResultsCache
+ * query results cache}.
+ * <p>
+ * Note that the fields of this object must contain every explicit and
+ * implicit setting and parameter argument that affects the result list
+ * of the query, including things like the {@link #maxRows limit} and
+ * {@link #firstRow offset}, {@link #tenantIdentifier current tenant id},
+ * and {@link #enabledFilterNames enabled filters}.
  *
  * @author Gavin King
  * @author Steve Ebersole

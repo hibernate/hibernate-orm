@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *     Hibernate affects the corresponding table.
  * <li>A cached query result set is {@linkplain #isUpToDate checked for
  *     staleness} against the {@code TimestampsCache} when it is read
- *     from the {@link QueryResultsCache}.
+ *     from a {@link QueryResultsRegion} by a {@link QueryResultsCache}.
  * </ul>
  *
  * @author Steve Ebersole

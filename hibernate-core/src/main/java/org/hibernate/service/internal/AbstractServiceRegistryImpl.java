@@ -264,7 +264,8 @@ public abstract class AbstractServiceRegistryImpl
 			throw e;
 		}
 		catch ( Exception e ) {
-			throw new ServiceException( "Unable to create requested service [" + serviceBinding.getServiceRole().getName() + "]", e );
+			throw new ServiceException( "Unable to create requested service ["
+					+ serviceBinding.getServiceRole().getName() + "] due to: " + e.getMessage(), e );
 		}
 	}
 

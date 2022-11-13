@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A parameter object that helps in determine the {@link java.sql.Types SQL/JDBC type}
+ * A parameter object that helps determine the {@link java.sql.Types SQL/JDBC type}
  * recommended by the JDBC spec (explicitly or implicitly) for a given Java type.
  *
  * @see BasicJavaType#getRecommendedJdbcType
@@ -67,6 +67,9 @@ public interface JdbcTypeIndicators {
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForBoolean();
@@ -76,6 +79,8 @@ public interface JdbcTypeIndicators {
 	 * When mapping a duration type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForDuration() {
 		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForDuration();
@@ -85,6 +90,8 @@ public interface JdbcTypeIndicators {
 	 * When mapping an uuid type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForUuid() {
 		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForUuid();
@@ -94,6 +101,8 @@ public interface JdbcTypeIndicators {
 	 * When mapping an instant type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForInstant() {
 		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForInstant();
@@ -103,6 +112,8 @@ public interface JdbcTypeIndicators {
 	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
 	 *
 	 * @since 6.1
 	 */
@@ -137,6 +148,9 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * The default {@link TimeZoneStorageStrategy}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE
+	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
 	 */
 	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return getCurrentBaseSqlTypeIndicators().getDefaultTimeZoneStorageStrategy();

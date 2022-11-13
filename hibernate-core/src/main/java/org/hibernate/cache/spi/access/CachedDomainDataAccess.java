@@ -17,13 +17,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * Navigable of the user's domain model in a transactionally ACID manner.
  *
  * @apiNote Note that the following methods are not considered "transactional"
- * in this sense : {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
- * {@link #evict}, {@link #evictAll}.  The semantics of these methods come
- * from JPA's {@link Cache} contract.
+ * in this sense: {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
+ * {@link #evict}, {@link #evictAll}. The semantics of these methods come from
+ * JPA's {@link Cache} contract.
  *
- * @implSpec The "non transactional" methods noted in the `@apiNote` should
- * be implemented to ignore any locking.  In other words, if {@link #evict}
- * is called that item should be forcibly removed from the cache regardless of
+ * @implSpec The "non-transactional" methods noted in the {@code @apiNote}
+ * should be implemented to ignore any locking. That is, when {@link #evict}
+ * is called, the item should be forcibly removed from the cache regardless of
  * whether anything has locked it.
  *
  * @author Steve Ebersole

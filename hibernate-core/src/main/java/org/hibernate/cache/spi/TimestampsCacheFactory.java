@@ -18,7 +18,7 @@ package org.hibernate.cache.spi;
  */
 public interface TimestampsCacheFactory {
 	/**
-	 * Build the TimestampsCache
+	 * Build the {@link TimestampsCache}.
 	 */
 	TimestampsCache buildTimestampsCache(CacheImplementor cacheManager, TimestampsRegion timestampsRegion);
 }

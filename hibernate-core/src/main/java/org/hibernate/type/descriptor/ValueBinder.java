@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * Contract for binding values to a {@link PreparedStatement}.
+ * Contract for binding values to a JDBC {@link PreparedStatement}.
  *
  * @author Steve Ebersole
  */

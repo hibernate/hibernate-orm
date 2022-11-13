@@ -7,7 +7,7 @@
 package org.hibernate.cache.spi;
 
 /**
- * Optional Region contract defining support for extra statistic information
+ * Optional contract for a {@link Region} defining support for extra statistic information.
  *
  * @author Steve Ebersole
  */

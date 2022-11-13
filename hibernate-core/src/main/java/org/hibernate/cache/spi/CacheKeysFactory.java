@@ -12,6 +12,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * A factory for keys into the second-level cache.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface CacheKeysFactory {

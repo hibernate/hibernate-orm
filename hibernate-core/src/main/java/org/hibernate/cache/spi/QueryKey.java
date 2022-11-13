@@ -16,8 +16,8 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
- * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
- * as its key into its query cache.
+ * A key that identifies a particular query with bound parameter values.
+ * This is the object Hibernate uses as a key into its query cache.
  *
  * @author Gavin King
  * @author Steve Ebersole

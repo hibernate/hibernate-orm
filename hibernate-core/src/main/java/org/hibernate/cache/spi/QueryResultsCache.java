@@ -15,7 +15,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Defines the responsibility for managing query result data caching
- * in regards to a specific region.
+ * in a specific {@linkplain QueryResultsRegion query cache region}.
+ * There may be multiple instances of {@code QueryResultsCache},
+ * corresponding to second-level cache regions with distinct policies.
+ * <p>
+ * A {@code QueryResultsCache} must be used in conjunction with a
+ * {@link TimestampsCache} which tracks invalidation of the query
+ * spaces (tables) which affect the cached queries.
  * 
  * @author Gavin King
  * @author Steve Ebersole

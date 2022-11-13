@@ -6,6 +6,8 @@
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.Remove;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
@@ -13,7 +15,10 @@ import java.util.Set;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated This helper class is no longer used
  */
+@Deprecated(since="6.2") @Remove
 public class QuerySpacesHelper {
 	/**
 	 * Singleton access

@@ -14,6 +14,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -726,6 +727,9 @@ public final class ReflectHelper {
 		}
 		else if ( type instanceof ParameterizedType ) {
 			return (Class<T>) ( (ParameterizedType) type ).getRawType();
+		}
+		else if ( type instanceof TypeVariable ) {
+			return getClass( ( (TypeVariable) type ).getBounds()[0] );
 		}
 		else if ( type instanceof WildcardType ) {
 			return getClass( ( (WildcardType) type ).getUpperBounds()[0] );

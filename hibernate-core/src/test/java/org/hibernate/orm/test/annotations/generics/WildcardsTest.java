@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
@@ -68,6 +69,7 @@ public class WildcardsTest {
 		BigDecimal balance;
 
 		@Convert(converter = BalanceUsageConverter.class)
+		@Column(name = "account_usage")
 		Set<? extends Usage> usage;
 
 		public BankAccount() {

@@ -7,13 +7,13 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -106,14 +106,6 @@ public class RegistryHelper {
 	}
 
 	private <J> Class<J> determineJavaTypeClass(Type javaType) {
-		final Class<J> javaTypeClass;
-		if ( javaType instanceof Class<?> ) {
-			javaTypeClass = (Class<J>) javaType;
-		}
-		else {
-			final ParameterizedType parameterizedType = (ParameterizedType) javaType;
-			javaTypeClass = (Class<J>) parameterizedType.getRawType();
-		}
-		return javaTypeClass;
+		return ReflectHelper.getClass( javaType );
 	}
 }

@@ -917,4 +917,36 @@ We now publish additional documentation artifacts, such as:
 * 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
 * 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
 
+[[configs]]
+== Configuration property renames
+
+Some configuration properties that were deprecated for a long time were finally removed for consistency reasons:
+
+|===
+| Old property                                           | New property
+
+| `hibernate.ejb.metamodel.population`                   | `hibernate.jpa.metamodel.population`
+| `hibernate.ejb.cfgfile`                                | `hibernate.cfg_xml_file`
+| `hibernate.ejb.xml_files`                              | `hibernate.orm_xml_files`
+| `hibernate.hbmxml.files`                               | `hibernate.hbm_xml_files`
+| `hibernate.ejb.loaded.classes`                         | `hibernate.loaded_classes`
+| `hibernate.ejb.persistenceUnitName`                    | `hibernate.persistenceUnitName`
+| `hibernate.ejb.discard_pc_on_close`                    | `hibernate.discard_pc_on_close`
+| `hibernate.ejb.entitymanager_factory_name`             | `hibernate.session_factory_name`
+| `hibernate.ejb.session_factory_observer`               | `hibernate.session_factory_observer`
+| `hibernate.ejb.identifier_generator_strategy_provider` | `hibernate.identifier_generator_strategy_provider`
+|===
+
+There are also some property prefixes where the deprecated variant was finally removed:
+
+|===
+| Old prefix                      | New prefix
+
+| `hibernate.ejb.classcache`      | `hibernate.classcache`
+| `hibernate.ejb.collectioncache` | `hibernate.collectioncache`
+| `hibernate.ejb.event`           | `hibernate.event`
+|===
+
+We decided this is the right time since 6.0 is a major release.
+
 // todo (6.0) - surely there are more than this...

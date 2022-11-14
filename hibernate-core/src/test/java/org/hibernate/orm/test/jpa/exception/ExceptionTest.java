@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 @Jpa(
 		annotatedClasses = {
 				Music.class,

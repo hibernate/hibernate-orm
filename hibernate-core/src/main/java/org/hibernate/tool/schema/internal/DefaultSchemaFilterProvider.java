@@ -35,4 +35,9 @@ public class DefaultSchemaFilterProvider implements SchemaFilterProvider {
 	public SchemaFilter getValidateFilter() {
 		return DefaultSchemaFilter.INSTANCE;
 	}
+
+	@Override
+	public SchemaFilter getTruncatorFilter() {
+		return DefaultSchemaFilter.INSTANCE;
+	}
 }

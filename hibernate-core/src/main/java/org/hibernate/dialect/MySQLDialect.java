@@ -823,6 +823,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useCatalogAsSchema() {
+		return true;
+	}
+
+	@Override
 	public String[] getCreateSchemaCommand(String schemaName) {
 		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
 	}
@@ -1287,4 +1292,18 @@ public class MySQLDialect extends Dialect {
 		return getMySQLVersion().isSameOrAfter( 8 );
 	}
 
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set foreign_key_checks = 0";
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set foreign_key_checks = 1";
+	}
 }

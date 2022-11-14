@@ -206,6 +206,11 @@ public class TestExtraPhysicalTableTypes {
 		}
 
 		@Override
+		public Connection getIsolatedConnection(boolean autocommit) {
+			return null;
+		}
+
+		@Override
 		public void release() {
 
 		}

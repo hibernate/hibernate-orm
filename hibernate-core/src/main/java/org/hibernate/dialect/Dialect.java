@@ -141,8 +141,10 @@ import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporte
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableCleaner;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -2479,9 +2481,14 @@ public abstract class Dialect implements ConversionContext {
 	private final StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private final StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 	private final StandardTemporaryTableExporter temporaryTableExporter = new StandardTemporaryTableExporter( this );
+	private final StandardTableCleaner tableCleaner = new StandardTableCleaner( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
+	}
+
+	public Cleaner getTableCleaner() {
+		return tableCleaner;
 	}
 
 	public Exporter<Sequence> getSequenceExporter() {
@@ -2597,6 +2604,10 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean canCreateSchema() {
 		return true;
+	}
+
+	public boolean useCatalogAsSchema() {
+		return false;
 	}
 
 	/**
@@ -3916,15 +3927,124 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	/**
+	 * The {@code generated as} clause, or similar, for generated column
+	 * declarations in DDL statements.
+	 *
+	 * @param generatedAs a SQL expression used to generate the column value
+	 * @return The {@code generated as} clause containing the given expression
+	 */
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ") stored";
 	}
 
+	/**
+	 * Is an explicit column type required for {@code generated as} columns?
+	 *
+	 * @return {@code true} if an explicit type is required
+	 */
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return true;
 	}
 
-    /**
+	/**
+	 * Is there some way to disable foreign key constraint checking while
+	 * truncating tables? (If there's no way to do it, and if we can't
+	 * {@linkplain #canBatchTruncate() batch truncate}, we must drop and
+	 * recreate the constraints instead.)
+	 *
+	 * @return {@code true} if there is some way to do it
+	 *
+	 * @see #getDisableConstraintsStatement()
+	 * @see #getDisableConstraintStatement(String, String)
+	 */
+	public boolean canDisableConstraints() {
+		return false;
+	}
+
+	/**
+	 * A SQL statement that temporarily disables foreign key constraint
+	 * checking for all tables.
+	 */
+	public String getDisableConstraintsStatement() {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that re-enables foreign key constraint checking for
+	 * all tables.
+	 */
+	public String getEnableConstraintsStatement() {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that temporarily disables checking of the given
+	 * foreign key constraint.
+	 *
+	 * @param tableName the name of the table
+	 * @param name the name of the constraint
+	 */
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that re-enables checking of the given foreign key
+	 * constraint.
+	 *
+	 * @param tableName the name of the table
+	 * @param name the name of the constraint
+	 */
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	/**
+	 * Does the {@link #getTruncateTableStatement(String) truncate table}
+	 * statement accept multiple tables?
+	 *
+	 * @return {@code true} if it does
+	 */
+	public boolean canBatchTruncate() {
+		return false;
+	}
+
+	/**
+	 * A SQL statement or statements that truncate the given tables.
+	 *
+	 * @param tableNames the names of the tables
+	 */
+	public String[] getTruncateTableStatements(String[] tableNames) {
+		if ( canBatchTruncate() ) {
+			StringBuilder builder = new StringBuilder();
+			for ( String tableName : tableNames ) {
+				if ( builder.length() > 0 ) {
+					builder.append(", ");
+				}
+				builder.append( tableName );
+			}
+			return new String[] { getTruncateTableStatement( builder.toString() ) };
+		}
+		else {
+			String[] statements = new String[tableNames.length];
+			for ( int i = 0; i < tableNames.length; i++ ) {
+				statements[i] = getTruncateTableStatement( tableNames[i] );
+			}
+			return statements;
+		}
+	}
+
+	/**
+	 * A SQL statement that truncates the given table.
+	 *
+	 * @param tableName the name of the table
+	 */
+	public String getTruncateTableStatement(String tableName) {
+		return "truncate table " + tableName;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>

@@ -297,6 +297,18 @@ public class SchemaManagementToolCoordinator {
 				);
 				break;
 			}
+			case TRUNCATE: {
+				tool.getSchemaTruncator( executionOptions.getConfigurationValues() ).doTruncate(
+						metadata,
+						executionOptions,
+						contributableInclusionFilter,
+						buildDatabaseTargetDescriptor(
+								executionOptions.getConfigurationValues(),
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
+			}
 		}
 	}
 

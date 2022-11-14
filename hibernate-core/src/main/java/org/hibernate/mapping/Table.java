@@ -452,7 +452,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						metadata
 				);
 				if ( column.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-					alter.append( ' ' ).append(columnType);
+					alter.append( ' ' ).append( columnType );
 				}
 
 				final String defaultValue = column.getDefaultValue();

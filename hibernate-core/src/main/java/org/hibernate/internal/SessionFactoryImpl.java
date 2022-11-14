@@ -112,6 +112,8 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.relational.SchemaManager;
+import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -191,6 +193,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionBuilder temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
 	private final transient EntityNameResolver entityNameResolver;
+
+	private final transient SchemaManager schemaManager;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -411,6 +415,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			throw e;
 		}
+
+		this.schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 	}
 
 	private SessionBuilder createDefaultSessionOpenOptionsIfPossible() {
@@ -1586,6 +1592,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public WrapperOptions getWrapperOptions() {
 		return wrapperOptions;
+	}
+
+	@Override
+	public SchemaManager getSchemaManager() {
+		return schemaManager;
 	}
 
 	private enum Status {

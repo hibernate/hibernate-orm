@@ -36,23 +36,29 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 
 	@Override
 	public Connection getIsolatedConnection() {
+		return getIsolatedConnection(true);
+	}
+
+	@Override
+	public Connection getIsolatedConnection(boolean autocommit) {
 		if ( jdbcConnection == null ) {
 			try {
 				this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
 
 				try {
-					if ( !jdbcConnection.getAutoCommit() ) {
-						ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
-
+					if ( jdbcConnection.getAutoCommit() != autocommit ) {
 						try {
-							jdbcConnection.commit();
-							jdbcConnection.setAutoCommit( true );
+							if ( autocommit ) {
+								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
+								jdbcConnection.commit();
+							}
+							jdbcConnection.setAutoCommit( autocommit );
 							unsetAutoCommit = true;
 						}
 						catch (SQLException e) {
 							throw jdbcContext.getSqlExceptionHelper().convert(
 									e,
-									"Unable to set JDBC Connection into auto-commit mode in preparation for DDL execution"
+									"Unable to set JDBC Connection auto-commit mode in preparation for DDL execution"
 							);
 						}
 					}
@@ -82,12 +88,12 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 			try {
 				if ( unsetAutoCommit ) {
 					try {
-						jdbcConnection.setAutoCommit( false );
+						jdbcConnection.setAutoCommit( !jdbcConnection.getAutoCommit() );
 					}
 					catch (SQLException e) {
 						originalException = jdbcContext.getSqlExceptionHelper().convert(
 								e,
-								"Unable to set auto commit to false for JDBC Connection used for DDL execution" );
+								"Unable to unset auto-commit mode for JDBC Connection used for DDL execution" );
 					}
 					catch (Throwable t1) {
 						originalException = t1;

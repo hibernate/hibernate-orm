@@ -809,4 +809,24 @@ public class DB2Dialect extends Dialect {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " alter foreign key " + name + " not enforced";
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " alter foreign key " + name + " enforced";
+	}
+
+	@Override
+	public String getTruncateTableStatement(String tableName) {
+		return super.getTruncateTableStatement(tableName) + " immediate";
+	}
 }

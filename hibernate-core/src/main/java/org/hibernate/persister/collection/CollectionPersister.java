@@ -45,8 +45,8 @@ import org.hibernate.type.Type;
  * JDBC.
  * <p>
  * Concrete implementations of this interface handle
- * {@linkplain OneToManyPersister one-to-many},
- * {@linkplain BasicCollectionPersister many-to-many}, association
+ * {@linkplain OneToManyPersister one-to-many} and
+ * {@linkplain BasicCollectionPersister many-to-many} association
  * cardinalities, and to a certain extent abstract the details of those
  * mappings from collaborators.
  * <p>

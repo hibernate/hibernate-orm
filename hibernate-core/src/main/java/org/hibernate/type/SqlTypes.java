@@ -24,8 +24,13 @@ import java.sql.Types;
  * {@link org.hibernate.type.descriptor.java.JavaType#getRecommendedJdbcType},
  * or when the {@link org.hibernate.annotations.JdbcTypeCode @JdbcTypeCode}
  * annotation is used, for example.
+ * <p>
+ * A type code may also be used as a key to obtain a dialect-specific
+ * {@link org.hibernate.type.descriptor.sql.DdlType} for the purposes of
+ * generating DDL.
  *
  * @see org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry
+ * @see org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry
  *
  * @author Christian Beikov
  */

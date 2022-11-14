@@ -1798,7 +1798,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The database version version for the Cockroach Dialect could not be determined. The minimum supported version (%s) has been set instead.", id = 512)
 	void unableToDetermineCockroachDatabaseVersion(String minimumVersion);
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Unable to create the ReflectionOptimizer for [%s]",
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);

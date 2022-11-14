@@ -1287,4 +1287,19 @@ public class OracleDialect extends Dialect {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " disable constraint " + name;
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " enable constraint " + name;
+	}
 }

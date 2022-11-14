@@ -60,7 +60,13 @@ public enum Action {
 	/**
 	 * "update" (Hibernate only) - update (alter) the database schema
 	 */
-	UPDATE( null, "update" );
+	UPDATE( null, "update" ),
+	/**
+	 * Truncate the tables in the schema.
+	 *
+	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 */
+	TRUNCATE( null, null);
 
 	private final String externalJpaName;
 	private final String externalHbm2ddlName;
@@ -89,8 +95,8 @@ public enum Action {
 
 	/**
 	 * Used when processing JPA configuration to interpret the user config values.  Generally
-	 * this will be a value specified by {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION}
-	 * or {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION}
+	 * this will be a value specified by {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}
 	 *
 	 * @param value The encountered config value
 	 *

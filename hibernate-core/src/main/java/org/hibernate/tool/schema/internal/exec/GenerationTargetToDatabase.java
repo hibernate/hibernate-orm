@@ -28,14 +28,20 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	private final boolean releaseAfterUse;
 
 	private Statement jdbcStatement;
+	private boolean autocommit;
 
 	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator) {
 		this( ddlTransactionIsolator, true );
 	}
 
 	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator, boolean releaseAfterUse) {
+		this( ddlTransactionIsolator, releaseAfterUse, true );
+	}
+
+	public GenerationTargetToDatabase(DdlTransactionIsolator ddlTransactionIsolator, boolean releaseAfterUse, boolean autocommit) {
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
 		this.releaseAfterUse = releaseAfterUse;
+		this.autocommit = autocommit;
 	}
 
 	@Override
@@ -74,7 +80,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	private Statement jdbcStatement() {
 		if ( jdbcStatement == null ) {
 			try {
-				this.jdbcStatement = ddlTransactionIsolator.getIsolatedConnection().createStatement();
+				jdbcStatement = ddlTransactionIsolator.getIsolatedConnection( autocommit ).createStatement();
 			}
 			catch (SQLException e) {
 				throw ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().convert( e, "Unable to create JDBC Statement for DDL execution" );

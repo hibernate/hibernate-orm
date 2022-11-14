@@ -21,15 +21,28 @@ public interface DdlTransactionIsolator {
 	JdbcContext getJdbcContext();
 
 	/**
-	 * Returns a Connection that is usable within the bounds of the
+	 * Returns a {@link Connection} that is usable within the bounds of the
 	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
-	 * and {@link #release} calls.  Further, this Connection will be 
-	 * isolated (transactionally) from any transaction in effect prior 
-	 * to the call to {@code buildDdlTransactionIsolator}.
+	 * and {@link #release} calls, with autocommit mode enabled. Further,
+	 * this {@code Connection} will be isolated (transactionally) from any
+	 * transaction in effect prior to the call to
+	 * {@code buildDdlTransactionIsolator}.
 	 *
 	 * @return The Connection.
 	 */
 	Connection getIsolatedConnection();
+
+	/**
+	 * Returns a {@link Connection} that is usable within the bounds of the
+	 * {@link TransactionCoordinatorBuilder#buildDdlTransactionIsolator}
+	 * and {@link #release} calls, with the given autocommit mode. Further,
+	 * this {@code Connection} will be isolated (transactionally) from any
+	 * transaction in effect prior to the call to
+	 * {@code buildDdlTransactionIsolator}.
+	 *
+	 * @return The Connection.
+	 */
+	Connection getIsolatedConnection(boolean autocommit);
 
 	void release();
 }

@@ -32,6 +32,13 @@ public interface SchemaFilterProvider {
 	SchemaFilter getDropFilter();
 
 	/**
+	 * Get the filter to be applied to {@link SchemaTruncator} processing
+	 *
+	 * @return The {@link SchemaTruncator} filter
+	 */
+	SchemaFilter getTruncatorFilter();
+
+	/**
 	 * Get the filter to be applied to {@link SchemaMigrator} processing
 	 *
 	 * @return The {@link SchemaMigrator} filter

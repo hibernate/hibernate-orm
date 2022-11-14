@@ -797,4 +797,19 @@ public class H2Dialect extends Dialect {
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ")";
 	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set referential_integrity false";
+	}
 }

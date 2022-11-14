@@ -1456,8 +1456,8 @@ public interface AvailableSettings {
 	 * actions automatically as part of the {@link org.hibernate.SessionFactory}
 	 * lifecycle. Valid options are enumeratd by {@link org.hibernate.tool.schema.Action}.
 	 * <p/>
-	 * Interpreted in combination with {@link #HBM2DDL_DATABASE_ACTION} and
-	 * {@link #HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
+	 * Interpreted in combination with {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} and
+	 * {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
 	 * is {@link org.hibernate.tool.schema.Action#NONE "none"}.
 	 *
 	 * @see org.hibernate.tool.schema.Action
@@ -1465,7 +1465,7 @@ public interface AvailableSettings {
 	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * @deprecated Use {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION} instead
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
 	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";

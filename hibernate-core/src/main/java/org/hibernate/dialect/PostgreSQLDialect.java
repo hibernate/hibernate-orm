@@ -1276,4 +1276,35 @@ public class PostgreSQLDialect extends Dialect {
 				)
 		);
 	}
+
+	/**
+	 * @return {@code true}, but only because we can "batch" truncate
+	 */
+	@Override
+	public boolean canBatchTruncate() {
+		return true;
+	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+//	@Override
+//	public String getDisableConstraintsStatement() {
+//		return "set constraints all deferred";
+//	}
+//
+//	@Override
+//	public String getEnableConstraintsStatement() {
+//		return "set constraints all immediate";
+//	}
+//
+//	@Override
+//	public String getDisableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
+//	}
+//
+//	@Override
+//	public String getEnableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
+//	}
 }

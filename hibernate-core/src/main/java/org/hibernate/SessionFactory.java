@@ -17,6 +17,7 @@ import javax.naming.Referenceable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.relational.SchemaManager;
 import org.hibernate.stat.Statistics;
 
 import jakarta.persistence.EntityGraph;
@@ -71,6 +72,16 @@ import jakarta.persistence.EntityManagerFactory;
  * {@link jakarta.persistence.metamodel.Metamodel}. This object is sometimes
  * used in a sophisticated way by libraries or frameworks to implement generic
  * concerns involving entity classes.
+ * <p>
+ * The factory also {@linkplain #getSchemaManager() provides} a
+ * {@link SchemaManager} which allows, as a convenience for writing tests:
+ * <ul>
+ * <li>programmatic {@linkplain SchemaManager#exportMappedObjects(boolean)
+ *     schema export} and {@linkplain SchemaManager#dropMappedObjects(boolean)
+ *     schema removal}, and
+ * <li>an operation for {@linkplain SchemaManager#truncateMappedObjects()
+ *     cleaning up} data left behind by tests.
+ * </ul>
  * <p>
  * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
@@ -261,6 +272,13 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @return The statistics.
 	 */
 	Statistics getStatistics();
+
+	/**
+	 * A {@link SchemaManager} with the same default catalog and schema as
+	 * pooled connections belonging to this factory. Intended mostly as a
+	 * convenience for writing tests.
+	 */
+	SchemaManager getSchemaManager();
 
 	/**
 	 * Destroy this {@code SessionFactory} and release all its resources,

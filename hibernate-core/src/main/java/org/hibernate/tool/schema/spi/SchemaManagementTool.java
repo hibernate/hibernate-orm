@@ -23,6 +23,7 @@ public interface SchemaManagementTool extends Service {
 	SchemaDropper getSchemaDropper(Map<String,Object> options);
 	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
 	SchemaValidator getSchemaValidator(Map<String,Object> options);
+	SchemaTruncator getSchemaTruncator(Map<String,Object> options);
 
 	/**
 	 * This allows to set an alternative implementation for the Database

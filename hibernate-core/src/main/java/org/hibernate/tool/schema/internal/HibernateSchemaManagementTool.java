@@ -46,6 +46,7 @@ import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
+import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
@@ -89,6 +90,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	@Override
 	public SchemaDropper getSchemaDropper(Map<String,Object> options) {
 		return new SchemaDropperImpl( this, getSchemaFilterProvider( options ).getDropFilter() );
+	}
+
+	@Override
+	public SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
+		return new SchemaTruncatorImpl( this, getSchemaFilterProvider( options ).getTruncatorFilter() );
 	}
 
 	@Override
@@ -166,7 +172,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
 			targets[index] = customTarget == null
-					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true )
+					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true, needsAutoCommit )
 					: customTarget;
 			index++;
 		}

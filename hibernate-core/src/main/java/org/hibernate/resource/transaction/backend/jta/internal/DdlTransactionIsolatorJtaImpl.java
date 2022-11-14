@@ -30,7 +30,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 	private final JdbcContext jdbcContext;
 
 	private final Transaction suspendedTransaction;
-	private final Connection jdbcConnection;
+	private Connection jdbcConnection;
 
 	public DdlTransactionIsolatorJtaImpl(JdbcContext jdbcContext) {
 		this.jdbcContext = jdbcContext;
@@ -55,19 +55,6 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 			throw new HibernateException( "Unable to suspend current JTA transaction in preparation for DDL execution" );
 		}
 
-		try {
-			this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
-		}
-		catch (SQLException e) {
-			throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to open JDBC Connection for DDL execution" );
-		}
-
-		try {
-			jdbcConnection.setAutoCommit( true );
-		}
-		catch (SQLException e) {
-			throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
-		}
 	}
 
 	@Override
@@ -77,6 +64,28 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 	@Override
 	public Connection getIsolatedConnection() {
+		return getIsolatedConnection(true);
+	}
+
+	@Override
+	public Connection getIsolatedConnection(boolean autocommit) {
+		if ( jdbcConnection == null ) {
+			try {
+				jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
+			}
+			catch (SQLException e) {
+				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to open JDBC Connection for DDL execution" );
+			}
+
+			try {
+				if ( jdbcConnection.getAutoCommit() != autocommit ) {
+					jdbcConnection.setAutoCommit( autocommit );
+				}
+			}
+			catch (SQLException e) {
+				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
+			}
+		}
 		return jdbcConnection;
 	}
 

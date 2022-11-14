@@ -277,8 +277,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsWithTies implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsFetchClause( FetchClauseType.ROWS_WITH_TIES )
-					|| dialect.supportsWindowFunctions()
-					;
+					|| dialect.supportsWindowFunctions();
 		}
 	}
 
@@ -460,6 +459,20 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsRecursiveCtes implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsRecursiveCTE();
+		}
+	}
+
+	public static class SupportsTruncateTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof MySQLDialect
+				|| dialect instanceof H2Dialect
+				|| dialect instanceof SQLServerDialect
+				|| dialect instanceof PostgreSQLDialect
+				|| dialect instanceof DB2Dialect
+				|| dialect instanceof OracleDialect
+				|| dialect instanceof SybaseDialect
+				|| dialect instanceof DerbyDialect
+				|| dialect instanceof HSQLDialect;
 		}
 	}
 }

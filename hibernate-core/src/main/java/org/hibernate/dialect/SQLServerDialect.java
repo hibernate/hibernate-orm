@@ -68,7 +68,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 
 import jakarta.persistence.TemporalType;
 
@@ -951,4 +950,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return false;
 	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+//	@Override
+//	public String getDisableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " nocheck constraint " + name;
+//	}
+//
+//	@Override
+//	public String getEnableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " with check check constraint " + name;
+//	}
 }

@@ -24,27 +24,33 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private final Map<EntityKey, List<Object>> toBatchLoad = new HashMap<>();
+	private final Map<EntityKey, List<ParentInfo>> toBatchLoad = new HashMap<>();
 
 	public BatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler) {
+			DomainResultAssembler<?> identifierAssembler) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
 	}
 
 	@Override
-	protected void addParentInfo() {
-		final List<Object> parents = getBatchInfos();
+	protected void registerResolutionListener() {
+		final List<ParentInfo> parents = getParentInfos();
 		parentAccess.registerResolutionListener(
-				o -> parents.add( o )
+				o ->
+						parents.add(
+								new ParentInfo(
+										o,
+										getPropertyIndex( firstEntityInitializer, referencedModelPart.getPartName() )
+								)
+						)
 		);
 	}
 
-	private List<Object> getBatchInfos() {
-		List<Object> objects = toBatchLoad.get( entityKey );
+	private List<ParentInfo> getParentInfos() {
+		List<ParentInfo> objects = toBatchLoad.get( entityKey );
 		if ( objects == null ) {
 			objects = new ArrayList<>();
 			toBatchLoad.put( entityKey, objects );
@@ -52,21 +58,29 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 		return objects;
 	}
 
+	private static class ParentInfo {
+		private final Object parentInstance;
+		private final int propertyIndex;
+
+		public ParentInfo(Object parentInstance, int propertyIndex) {
+			this.parentInstance = parentInstance;
+			this.propertyIndex = propertyIndex;
+		}
+	}
+
 	@Override
 	public void endLoading(ExecutionContext context) {
-		final EntityInitializer entityInitializer = parentAccess.findFirstEntityInitializer();
-		final String propertyName = referencedModelPart.getPartName();
-		final int propertyIndex = getPropertyIndex( parentAccess, propertyName );
 		toBatchLoad.forEach(
 				(entityKey, parentInfos) -> {
 					final SharedSessionContractImplementor session = context.getSession();
 					final Object instance = loadInstance( entityKey, referencedModelPart, session );
-					for ( Object parentInstance : parentInfos ) {
+					for ( ParentInfo parentInfo : parentInfos ) {
+						final Object parentInstance = parentInfo.parentInstance;
 						setInstance(
-								entityInitializer,
+								firstEntityInitializer,
 								referencedModelPart,
-								propertyName,
-								propertyIndex,
+								referencedModelPart.getPartName(),
+								parentInfo.propertyIndex,
 								session,
 								instance,
 								parentInstance,

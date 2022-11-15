@@ -524,8 +524,13 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 		String charsetName = (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
 
+		boolean hasDefaultImportFileScriptBeenExecuted = false;
 		if ( importScriptSetting != null ) {
 			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
+			final URL defaultImportFileUrl = classLoaderService.locateResource( DEFAULT_IMPORT_FILE );
+			if ( defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl ) ) {
+				hasDefaultImportFileScriptBeenExecuted = true;
+			}
 			final List<String> commands = importScriptInput.extract(
 					reader -> commandExtractor.extractCommands( reader, dialect )
 			);
@@ -537,7 +542,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		final String importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
 				options.getConfigurationValues(),
-				DEFAULT_IMPORT_FILE
+				hasDefaultImportFileScriptBeenExecuted ? "" : DEFAULT_IMPORT_FILE
 		);
 
 		for ( String currentFile : importFiles.split( "," ) ) {

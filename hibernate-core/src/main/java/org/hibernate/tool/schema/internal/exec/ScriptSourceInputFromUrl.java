@@ -68,6 +68,11 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	}
 
 	@Override
+	public boolean containsScript(URL url) {
+		return url.equals( url );
+	}
+
+	@Override
 	public String toString() {
 		return "ScriptSourceInputFromUrl(" + url.toExternalForm() + ")";
 	}

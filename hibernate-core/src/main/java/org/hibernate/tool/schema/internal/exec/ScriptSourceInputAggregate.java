@@ -7,6 +7,7 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +61,16 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		}
 
 		return list;
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		for ( int i = 0; i < inputs.length; i++ ) {
+			if ( inputs[i].containsScript( url ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

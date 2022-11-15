@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
@@ -84,6 +85,11 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 		catch (IOException e) {
 			log.warn( "Unable to close file reader for generation script source" );
 		}
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		return file.getAbsolutePath().equals( url.getPath() );
 	}
 
 	@Override

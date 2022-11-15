@@ -7,6 +7,7 @@
 package org.hibernate.tool.schema.spi;
 
 import java.io.Reader;
+import java.net.URL;
 import java.util.List;
 import java.util.function.Function;
 
@@ -20,5 +21,10 @@ public interface ScriptSourceInput {
 	/**
 	 * Allows managed access to the input's Reader, returning a result
 	 */
-	List<String> extract(Function<Reader,List<String>> extractor);
+	List<String> extract(Function<Reader, List<String>> extractor);
+
+	default boolean containsScript(URL url) {
+		return false;
+	}
+
 }

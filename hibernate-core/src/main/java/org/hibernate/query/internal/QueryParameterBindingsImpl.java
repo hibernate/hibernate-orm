@@ -186,7 +186,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 							? javaType.extractHashCode( bindValue )
 							: 0;
 
-					hashCode = 31 * hashCode + valueHashCode;
+					hashCode = 37 * hashCode + valueHashCode;
 				}
 			}
 			else {
@@ -199,7 +199,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						? javaType.extractHashCode( bindValue )
 						: 0;
 
-				hashCode = 31 * hashCode + valueHashCode;
+				hashCode = 37 * hashCode + valueHashCode;
 			}
 		}
 

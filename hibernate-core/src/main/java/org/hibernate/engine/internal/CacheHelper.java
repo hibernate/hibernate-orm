@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -21,15 +19,15 @@ public final class CacheHelper {
 	private CacheHelper() {
 	}
 
-	public static Serializable fromSharedCache(
+	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,
 			CachedDomainDataAccess cacheAccess) {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		Serializable cachedValue = null;
+		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
 		try {
-			cachedValue = (Serializable) cacheAccess.get( session, cacheKey );
+			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
 			eventListenerManager.cacheGetEnd( cachedValue != null );

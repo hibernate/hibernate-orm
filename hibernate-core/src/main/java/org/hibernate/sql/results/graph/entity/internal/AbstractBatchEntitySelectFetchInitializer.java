@@ -27,8 +27,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	private final NavigablePath navigablePath;
 
 	protected final EntityPersister concreteDescriptor;
-	protected final DomainResultAssembler identifierAssembler;
+	protected final DomainResultAssembler<?> identifierAssembler;
 	protected final ToOneAttributeMapping referencedModelPart;
+	protected final EntityInitializer firstEntityInitializer;
 
 	protected Object entityInstance;
 	protected EntityKey entityKey;
@@ -38,12 +39,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler) {
+			DomainResultAssembler<?> identifierAssembler) {
 		this.parentAccess = parentAccess;
 		this.referencedModelPart = referencedModelPart;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
+		this.firstEntityInitializer = parentAccess.findFirstEntityInitializer();
 	}
 
 	public ModelPart getInitializedPart() {
@@ -62,9 +64,11 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 			return;
 		}
 		entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-		addParentInfo();
+
 		rowProcessingState.getSession().getPersistenceContext()
 				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+
+		registerResolutionListener();
 	}
 
 	@Override
@@ -75,7 +79,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	public void initializeInstance(RowProcessingState rowProcessingState) {
 	}
 
-	protected abstract void addParentInfo();
+	protected abstract void registerResolutionListener();
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
@@ -125,8 +129,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		);
 	}
 
-	protected static int getPropertyIndex(FetchParentAccess parentAccess, String propertyName) {
-		return parentAccess.findFirstEntityInitializer().getEntityDescriptor().getPropertyIndex( propertyName );
+	protected static int getPropertyIndex(EntityInitializer entityInitializer, String propertyName) {
+		return entityInitializer.getConcreteDescriptor().getPropertyIndex( propertyName );
 	}
 
 	@Override

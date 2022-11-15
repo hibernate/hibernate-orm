@@ -146,6 +146,41 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		this.fromClause = fromClause;
 	}
 
+	public boolean producesUniqueResults() {
+		if ( fromClause.getRoots().size() != 1 ) {
+			return false;
+		}
+		final SqmRoot<?> sqmRoot = fromClause.getRoots().get( 0 );
+		if ( selectClause != null ) {
+			final List<SqmSelection<?>> selections = selectClause.getSelections();
+			if ( selections.size() != 1 || selections.get( 0 ).getSelectableNode() != sqmRoot ) {
+				// If we select anything but the query root, let's be pessimistic about unique results
+				return false;
+			}
+		}
+		final List<SqmFrom<?, ?>> fromNodes = new ArrayList<>( sqmRoot.getSqmJoins().size() + 1 );
+		fromNodes.add( sqmRoot );
+		while ( !fromNodes.isEmpty() ) {
+			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
+			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+					if ( join.getAttribute().isCollection() ) {
+						// Collections joins always alter cardinality
+						return false;
+					}
+				}
+				else {
+					// For now, consider all non-attribute joins as cardinality altering
+					return false;
+				}
+				fromNodes.add( sqmJoin );
+			}
+			fromNodes.addAll( fromNode.getSqmTreats() );
+		}
+		return true;
+	}
+
 	public boolean containsCollectionFetches() {
 		final List<SqmFrom<?, ?>> fromNodes = new ArrayList<>( fromClause.getRoots() );
 		while ( !fromNodes.isEmpty() ) {
@@ -159,6 +194,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				}
 				fromNodes.add( sqmJoin );
 			}
+			fromNodes.addAll( fromNode.getSqmTreats() );
 		}
 		return false;
 	}

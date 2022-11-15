@@ -144,6 +144,20 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		}
 	}
 
+	public boolean producesUniqueResults() {
+		return producesUniqueResults( getQueryPart() );
+	}
+
+	private boolean producesUniqueResults(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> ) {
+			return ( (SqmQuerySpec<?>) queryPart ).producesUniqueResults();
+		}
+		else {
+			// For query groups we have to assume that duplicates are possible
+			return true;
+		}
+	}
+
 	public boolean containsCollectionFetches() {
 		return containsCollectionFetches( getQueryPart() );
 	}

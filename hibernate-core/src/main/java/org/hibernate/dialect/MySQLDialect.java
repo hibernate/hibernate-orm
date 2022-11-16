@@ -823,11 +823,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean useCatalogAsSchema() {
-		return true;
-	}
-
-	@Override
 	public String[] getCreateSchemaCommand(String schemaName) {
 		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
 	}

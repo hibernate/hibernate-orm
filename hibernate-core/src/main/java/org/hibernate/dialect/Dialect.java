@@ -2606,10 +2606,6 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
-	public boolean useCatalogAsSchema() {
-		return false;
-	}
-
 	/**
 	 * Get the SQL command used to create the named schema
 	 *

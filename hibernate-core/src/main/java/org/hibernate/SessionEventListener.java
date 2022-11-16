@@ -9,44 +9,55 @@ package org.hibernate;
 import java.io.Serializable;
 
 /**
- * NOTE : Consider this an incubating API, likely to change as wider usage indicates changes that need to be made
+ * Implemented by custom listeners that respond to low-level events
+ * involving interactions between the {@link Session} and the database
+ * or second-level cache.
+ * <p>
+ * A {@code SessionEventListener} class applying to all newly-created
+ * sessions may be registered using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER}.
+ * A new instance of the class will be created for each new session.
+ * <p>
+ * <em>This an incubating API, subject to change.</em>
  *
  * @see org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER
+ * @see SessionBuilder#eventListeners(SessionEventListener...)
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SessionEventListener extends Serializable {
-	void transactionCompletion(boolean successful);
+	default void transactionCompletion(boolean successful) {}
 
-	void jdbcConnectionAcquisitionStart();
-	void jdbcConnectionAcquisitionEnd();
+	default void jdbcConnectionAcquisitionStart() {}
+	default void jdbcConnectionAcquisitionEnd() {}
 
-	void jdbcConnectionReleaseStart();
-	void jdbcConnectionReleaseEnd();
+	default void jdbcConnectionReleaseStart() {}
+	default void jdbcConnectionReleaseEnd() {}
 
-	void jdbcPrepareStatementStart();
-	void jdbcPrepareStatementEnd();
+	default void jdbcPrepareStatementStart() {}
+	default void jdbcPrepareStatementEnd() {}
 
-	void jdbcExecuteStatementStart();
-	void jdbcExecuteStatementEnd();
+	default void jdbcExecuteStatementStart() {}
+	default void jdbcExecuteStatementEnd() {}
 
-	void jdbcExecuteBatchStart();
-	void jdbcExecuteBatchEnd();
+	default void jdbcExecuteBatchStart() {}
+	default void jdbcExecuteBatchEnd() {}
 
-	void cachePutStart();
-	void cachePutEnd();
+	default void cachePutStart() {}
+	default void cachePutEnd() {}
 
-	void cacheGetStart();
-	void cacheGetEnd(boolean hit);
+	default void cacheGetStart() {}
+	default void cacheGetEnd(boolean hit) {}
 
-	void flushStart();
-	void flushEnd(int numberOfEntities, int numberOfCollections);
+	default void flushStart() {}
+	default void flushEnd(int numberOfEntities, int numberOfCollections) {}
 
-	void partialFlushStart();
-	void partialFlushEnd(int numberOfEntities, int numberOfCollections);
+	default void partialFlushStart() {}
+	default void partialFlushEnd(int numberOfEntities, int numberOfCollections) {}
 
-	void dirtyCalculationStart();
-	void dirtyCalculationEnd(boolean dirty);
+	default void dirtyCalculationStart() {}
+	default void dirtyCalculationEnd(boolean dirty) {}
 
-	void end();
+	default void end() {}
 }

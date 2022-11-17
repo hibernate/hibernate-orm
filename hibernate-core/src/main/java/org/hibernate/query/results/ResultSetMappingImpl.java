@@ -175,7 +175,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			return;
 		}
 
-		Collections.addAll( affectedTableNames, (String[]) entityDescriptor.getQuerySpaces());
+		Collections.addAll( affectedTableNames, (String[]) entityDescriptor.getQuerySpaces() );
 	}
 
 	@Override

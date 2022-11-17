@@ -18,7 +18,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -47,14 +46,8 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
-		return getTableGroup().createSqlSelection(
-				jdbcPosition,
-				valuesArrayPosition,
-				javaType,
-				typeConfiguration
-		);
+		return getTableGroup().createSqlSelection( jdbcPosition, valuesArrayPosition, typeConfiguration );
 	}
 
 	@Override

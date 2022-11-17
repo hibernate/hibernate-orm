@@ -49,7 +49,7 @@ public class BasicArrayType<T>
 		//noinspection unchecked
 		final BasicValueConverter<T, Object> valueConverter = (BasicValueConverter<T, Object>) baseDescriptor.getValueConverter();
 		if ( valueConverter != null ) {
-			this.jdbcValueBinder = new ValueBinder<T[]>() {
+			this.jdbcValueBinder = new ValueBinder<>() {
 				@Override
 				public void bind(PreparedStatement st, T[] value, int index, WrapperOptions options)
 						throws SQLException {

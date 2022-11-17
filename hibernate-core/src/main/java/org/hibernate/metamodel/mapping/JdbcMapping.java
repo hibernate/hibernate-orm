@@ -81,6 +81,16 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return null;
 	}
 
+	//TODO: would it be better to just give JdbcMapping a
+	//      noop converter by default, instead of having
+	//      to deal with null here?
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	default Object convertToRelationalValue(Object value) {
+		BasicValueConverter valueConverter = getValueConverter();
+		return valueConverter == null ? value : valueConverter.toRelationalValue( value );
+	}
+
+
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;

@@ -609,8 +609,8 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
-		if ( cacheKey != null ) {
+		if ( isCacheableQuery() ) {
+			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 			return getSession().getFactory().getQueryEngine().getInterpretationCache()
 					.resolveSelectQueryPlan( cacheKey, () -> createQueryPlan( resultSetMapping ) );
 		}
@@ -790,10 +790,6 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingProducer resultSetMapping) {
-		if ( !isCacheable( this ) ) {
-			return null;
-		}
-
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
@@ -803,7 +799,7 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private static boolean isCacheable(NativeQueryImpl<?> query) {
+	private boolean isCacheableQuery() {
 		// todo (6.0): unless we move the limit rendering from DeferredResultSetAccess to NativeSelectQueryPlanImpl
 		//  we don't need to consider the limit here at all because that is applied on demand.
 		//  It certainly is better for performance to include the limit early, but then we might trash the cache
@@ -812,7 +808,7 @@ public class NativeQueryImpl<R>
 //		}
 
 		// For now, don't cache plans that have parameter lists
-		return !query.parameterBindings.hasAnyMultiValuedBindings();
+		return !parameterBindings.hasAnyMultiValuedBindings();
 	}
 
 	@Override
@@ -845,15 +841,10 @@ public class NativeQueryImpl<R>
 
 
 	protected NonSelectInterpretationsKey generateNonSelectInterpretationsKey() {
-		if ( !isCacheable( this ) ) {
-			return null;
-		}
-
-		// todo (6.0) - should this account for query-spaces in determining "cacheable"?
-		return new NonSelectInterpretationsKey(
-				getQueryString(),
-				getSynchronizedQuerySpaces()
-		);
+		// todo (6.0) - should this account for query spaces in determining "cacheable"?
+		return isCacheableQuery()
+				? new NonSelectInterpretationsKey( getQueryString(), getSynchronizedQuerySpaces() )
+				: null;
 	}
 
 	@Override
@@ -880,7 +871,8 @@ public class NativeQueryImpl<R>
 		return registerBuilder(
 				Builders.scalar(
 						columnAlias,
-						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().resolve( type )
+						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry()
+								.resolve( (BasicTypeReference<?>) type )
 				)
 		);
 	}
@@ -1475,7 +1467,7 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public <S> NativeQueryImplementor<S> setResultTransformer(ResultTransformer<S> transformer) {
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}

@@ -16,7 +16,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -51,7 +50,6 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return this;
 	}

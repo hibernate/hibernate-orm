@@ -310,9 +310,6 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( selectableMapping.getJdbcMapping().getValueConverter() != null ) {
-			return selectableMapping.getJdbcMapping().getValueConverter().toRelationalValue( value );
-		}
-		return value;
+		return selectableMapping.getJdbcMapping().convertToRelationalValue( value );
 	}
 }

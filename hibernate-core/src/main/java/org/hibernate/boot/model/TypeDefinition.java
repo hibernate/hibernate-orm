@@ -293,7 +293,6 @@ public class TypeDefinition implements Serializable {
 	public static BasicValue.Resolution<?> createLocalResolution(
 			String name,
 			Class<?> typeImplementorClass,
-			MutabilityPlan<?> explicitMutabilityPlan,
 			Map<?,?> localTypeParams,
 			MetadataBuildingContext buildingContext) {
 		return createResolution(

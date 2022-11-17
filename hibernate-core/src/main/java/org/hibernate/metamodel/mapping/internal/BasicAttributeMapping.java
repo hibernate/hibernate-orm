@@ -21,7 +21,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -39,7 +38,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -124,7 +122,7 @@ public class BasicAttributeMapping
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
-		AttributeMetadataAccess attributeMetadataAccess = null;
+		AttributeMetadataAccess attributeMetadataAccess;
 		if ( original instanceof SingleAttributeIdentifierMapping ) {
 			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
 			attributeName = mapping.getAttributeName();
@@ -135,6 +133,9 @@ public class BasicAttributeMapping
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
+		}
+		else {
+			attributeMetadataAccess = null;
 		}
 		return new BasicAttributeMapping(
 				attributeName,
@@ -334,11 +335,7 @@ public class BasicAttributeMapping
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( jdbcMapping.getValueConverter() != null ) {
-			//noinspection unchecked
-			return jdbcMapping.getValueConverter().toRelationalValue( value );
-		}
-		return value;
+		return jdbcMapping.convertToRelationalValue( value );
 	}
 
 	@Override

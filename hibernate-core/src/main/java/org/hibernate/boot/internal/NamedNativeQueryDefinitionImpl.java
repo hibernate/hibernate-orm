@@ -15,9 +15,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -27,8 +28,8 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 	private final String resultSetMappingName;
 	private final String resultSetMappingClassName;
 	private final Set<String> querySpaces;
-	private Integer firstResult;
-	private Integer maxResults;
+	private final Integer firstResult;
+	private final Integer maxResults;
 
 	public NamedNativeQueryDefinitionImpl(
 			String name,
@@ -85,15 +86,14 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 
 	@Override
 	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
-		final Class resultSetMappingClass = StringHelper.isNotEmpty( resultSetMappingClassName )
-				? factory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( resultSetMappingClassName )
-				: null;
-
 		return new NamedNativeQueryMementoImpl(
 				getRegistrationName(),
 				sqlString,
 				resultSetMappingName,
-				resultSetMappingClass,
+				isNotEmpty( resultSetMappingClassName )
+						? factory.getServiceRegistry().getService( ClassLoaderService.class )
+								.classForName( resultSetMappingClassName )
+						: null,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),

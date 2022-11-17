@@ -188,7 +188,7 @@ public abstract class AbstractServiceRegistryImpl
 		//Fast-path for ClassLoaderService as it's extremely hot during bootstrap
 		//(and after bootstrap service loading performance is less interesting as it's
 		//ideally being cached by long term consumers)
-		if ( ClassLoaderService.class.equals( serviceRole ) ) {
+		if ( ClassLoaderService.class == serviceRole ) {
 			if ( parent != null ) {
 				return parent.getService( serviceRole );
 			}

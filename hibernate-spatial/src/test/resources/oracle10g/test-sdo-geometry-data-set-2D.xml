@@ -21,6 +21,13 @@
     </Element>
 
     <Element>
+        <id>22</id>
+        <type>POINT</type>
+        <sdo>SDO_GEOMETRY(2001, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(5.0, 5.0))</sdo>
+        <wkt>SRID=4326;POINT(5 5)</wkt>
+    </Element>
+
+    <Element>
         <id>2</id>
         <type>POINT</type>
         <sdo>SDO_GEOMETRY(2001, 4326, SDO_POINT_TYPE(52.25, 2.53, NULL), NULL, NULL)</sdo>

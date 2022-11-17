@@ -20,7 +20,7 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
 /**
- * Descriptor for a named native query in the run-time environment
+ * Descriptor for a named native query in the runtime environment
  *
  * @author Steve Ebersole
  */

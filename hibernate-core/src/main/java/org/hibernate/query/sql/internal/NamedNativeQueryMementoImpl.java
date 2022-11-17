@@ -18,7 +18,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 /**
- * Keeps details of a named native-sql query
+ * Keeps details of a named native SQL query
  *
  * @author Max Andersen
  * @author Steve Ebersole

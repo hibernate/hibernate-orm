@@ -1692,13 +1692,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( generatedCteName != null ) {
 			return generatedCteName;
 		}
-		final String cteName;
-		if ( name != null ) {
-			cteName = generateCteName( name );
-		}
-		else {
-			cteName = generateCteName( "cte" + cteNameMapping.size() );
-		}
+		final String cteName = name != null
+				? generateCteName( name )
+				: generateCteName( "cte" + cteNameMapping.size() );
 		cteNameMapping.put( key, cteName );
 		return cteName;
 	}
@@ -4072,18 +4068,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EmbeddableValuedModelPart compositeFkPart = (EmbeddableValuedModelPart) fkKeyPart;
 			final List<JdbcMapping> jdbcMappings = compositeFkPart.getJdbcMappings();
 			final List<Expression> tupleElements = new ArrayList<>( jdbcMappings.size() );
-			compositeFkPart.forEachSelectable( (position, selectable) -> {
-				tupleElements.add(
-						getSqlExpressionResolver().resolveSqlExpression(
-								createColumnReferenceKey( tableReference, selectable.getSelectionExpression() ),
-								(sqlAstProcessingState) -> new ColumnReference(
-										tableReference,
-										selectable,
-										creationContext.getSessionFactory()
-								)
-						)
-				);
-			} );
+			compositeFkPart.forEachSelectable( (position, selectable) -> tupleElements.add(
+					getSqlExpressionResolver().resolveSqlExpression(
+							createColumnReferenceKey( tableReference, selectable.getSelectionExpression() ),
+							(sqlAstProcessingState) -> new ColumnReference(
+									tableReference,
+									selectable,
+									creationContext.getSessionFactory()
+							)
+					)
+			) );
 
 			return new SqlTuple( tupleElements, compositeFkPart );
 		}
@@ -4652,9 +4646,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( jdbcTypeCount == 1 ) {
 					return new SelfRenderingFunctionSqlAstExpression(
 							pathName,
-							(sqlAppender, sqlAstArguments, walker) -> {
-								sqlAstArguments.get( 0 ).accept( walker );
-							},
+							(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 							resultColumnReferences,
 							(ReturnableType<?>) resultColumnReferences.get( 0 ).getJdbcMapping(),
 							resultColumnReferences.get( 0 ).getJdbcMapping()
@@ -4676,9 +4668,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					.getSqlSelections();
 			return new SelfRenderingFunctionSqlAstExpression(
 					pathName,
-					(sqlAppender, sqlAstArguments, walker) -> {
-						sqlAstArguments.get( 0 ).accept( walker );
-					},
+					(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 					Collections.singletonList(
 							new ColumnReference(
 									identifierVariable,
@@ -5131,7 +5121,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final Collection<?> bindValues = domainParamBinding.getBindValues();
-			final List<Expression> expressions = new ArrayList<>( bindValues.size());
+			final List<Expression> expressions = new ArrayList<>( bindValues.size() );
 			boolean first = true;
 			for ( Object bindValue : bindValues ) {
 				final SqmParameter<?> sqmParamToConsume;
@@ -5366,7 +5356,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource ) {
-			return (MappingModelExpressible<?>) ((AnyDiscriminatorSqmPathSource)paramSqmType).getSqmPathType();
+			return (MappingModelExpressible<?>) ((AnyDiscriminatorSqmPathSource<?>) paramSqmType).getSqmPathType();
 		}
 
 		if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
@@ -5894,15 +5884,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						final SqlExpressionResolver resolver = getSqlAstCreationState().getSqlExpressionResolver();
 						final TableReference tableReference = tableGroup.getPrimaryTableReference();
 						valueMapping.forEachSelectable(
-								(selectionIndex, selection) -> {
-									resolver.resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													selection.getSelectionExpression()
-											),
-											processingState -> (Expression) (selectionIndex == 0 ? result : offset)
-									);
-								}
+								(selectionIndex, selection) -> resolver.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey(
+												tableReference,
+												selection.getSelectionExpression()
+										),
+										processingState -> (Expression) (selectionIndex == 0 ? result : offset)
+								)
 						);
 						return new EmbeddableValuedPathInterpretation<>(
 								new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping ),
@@ -6443,9 +6431,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
-		final BasicType domainType = expression.getDomainType();
+		final BasicType<?> domainType = expression.getDomainType();
 		return new QueryLiteral<>(
-				domainType.getValueConverter().toRelationalValue( expression.getEntityValue().getJavaType() ),
+				domainType.convertToRelationalValue( expression.getEntityValue().getJavaType() ),
 				domainType
 		);
 	}
@@ -6456,39 +6444,32 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return (Expression) sqmExpression.getDiscriminatorSource().accept( this );
 	}
 
-	@SuppressWarnings({"raw","unchecked"})
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
 		final BasicValuedMapping inferrableType = (BasicValuedMapping) resolveInferredType();
 		if ( inferrableType != null ) {
-			final BasicValueConverter<Enum<?>,?> valueConverter = (BasicValueConverter<Enum<?>, ?>) inferrableType.getJdbcMapping().getValueConverter();
-			final Object jdbcValue;
-			if ( valueConverter == null ) {
-				jdbcValue = sqmEnumLiteral.getEnumValue();
-			}
-			else {
-				jdbcValue = valueConverter.toRelationalValue( sqmEnumLiteral.getEnumValue() );
-			}
+			final Object jdbcValue = inferrableType.getJdbcMapping().convertToRelationalValue( sqmEnumLiteral.getEnumValue() );
 			return new QueryLiteral<>( jdbcValue, inferrableType );
 		}
+		else {
+			// This can only happen when selecting an enum literal, in which case we default to ordinal encoding
+			final EnumJavaType<?> enumJtd = sqmEnumLiteral.getExpressibleJavaType();
+			final TypeConfiguration typeConfiguration = getTypeConfiguration();
+			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
+			final JavaType<Number> relationalJtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
 
-		// This can only happen when selecting an enum literal, in which case we default to ordinal encoding
-		final EnumJavaType<?> enumJtd = sqmEnumLiteral.getExpressibleJavaType();
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
-		final JavaType<Number> relationalJtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
-
-		return new QueryLiteral<>(
-				sqmEnumLiteral.getEnumValue().ordinal(),
-				new CustomType<>(
-						new EnumType<>(
-								enumJtd.getJavaTypeClass(),
-								new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
-								typeConfiguration
-						),
-						typeConfiguration
-				)
-		);
+			return new QueryLiteral<>(
+					sqmEnumLiteral.getEnumValue().ordinal(),
+					new CustomType<>(
+							new EnumType<>(
+									enumJtd.getJavaTypeClass(),
+									new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
+									typeConfiguration
+							),
+							typeConfiguration
+					)
+			);
+		}
 	}
 
 	@Override

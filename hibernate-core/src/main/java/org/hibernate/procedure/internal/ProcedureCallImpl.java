@@ -95,6 +95,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
+import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -119,7 +120,6 @@ public class ProcedureCallImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private JdbcCall call;
 	private ProcedureOutputsImpl outputs;
 
 
@@ -584,7 +584,7 @@ public class ProcedureCallImpl<R>
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
-		this.call = callableStatementSupport.interpretCall( this );
+		JdbcCall call = callableStatementSupport.interpretCall(this);
 
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
@@ -606,7 +606,7 @@ public class ProcedureCallImpl<R>
 			}
 		}
 
-		LOG.debugf( "Preparing procedure call : %s", call );
+		LOG.debugf( "Preparing procedure call : %s", call);
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
 				.getStatementPreparer()
@@ -637,18 +637,12 @@ public class ProcedureCallImpl<R>
 						}
 					}
 					final JdbcMapping parameterType = (JdbcMapping) registration.getParameterType();
-					final Object bindValue;
-					if ( parameterType.getValueConverter() == null ) {
-						bindValue = binding.getBindValue();
-					}
-					else {
-						bindValue = parameterType.getValueConverter().toRelationalValue( binding.getBindValue() );
-					}
+					final Object bindValue = binding.getBindValue();
 					jdbcParameterBindings.addBinding(
 							(JdbcParameter) registration.getParameterBinder(),
 							new JdbcParameterBindingImpl(
 									parameterType,
-									bindValue
+									parameterType.convertToRelationalValue( bindValue )
 							)
 					);
 				}
@@ -810,18 +804,7 @@ public class ProcedureCallImpl<R>
 		final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
 
 		parameterMetadata.visitRegistrations(
-				queryParameter -> {
-					final ProcedureParameterImplementor<?> procedureParameter = (ProcedureParameterImplementor<?>) queryParameter;
-					mementos.add(
-							new NamedCallableQueryMementoImpl.ParameterMementoImpl(
-									procedureParameter.getPosition(),
-									procedureParameter.getName(),
-									procedureParameter.getMode(),
-									procedureParameter.getParameterType(),
-									procedureParameter.getHibernateType()
-							)
-					);
-				}
+				queryParameter -> mementos.add( fromRegistration( (ProcedureParameterImplementor<?>) queryParameter) )
 		);
 
 		return mementos;

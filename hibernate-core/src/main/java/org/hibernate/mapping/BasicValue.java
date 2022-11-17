@@ -351,8 +351,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( explicitTypeName != null ) {
 			return interpretExplicitlyNamedType(
 					explicitTypeName,
-					enumerationStyle,
-					implicitJavaTypeAccess,
 					explicitJavaTypeAccess,
 					explicitJdbcTypeAccess,
 					explicitMutabilityPlanAccess,
@@ -377,85 +375,54 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-		JavaType<?> jtd = null;
 
 		// determine JavaType if we can
 
-		final BasicJavaType explicitJtd;
-		if ( explicitJavaTypeAccess != null ) {
-			explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
-			if ( explicitJtd != null ) {
-				jtd = explicitJtd;
-			}
-		}
-		else {
-			explicitJtd = null;
-		}
+		final BasicJavaType explicitJavaType = explicitJavaTypeAccess == null ? null
+				: explicitJavaTypeAccess.apply( typeConfiguration );
 
-		if ( jtd == null ) {
-			if ( implicitJavaTypeAccess != null ) {
-				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( typeConfiguration );
-				if ( implicitJtd != null ) {
-					jtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( implicitJtd );
-				}
-			}
-		}
-
-		if ( jtd == null ) {
-			final JavaType<?> reflectedJtd = determineReflectedJavaType();
-			if ( reflectedJtd != null ) {
-				jtd = reflectedJtd;
-			}
-		}
+		final JavaType<?> javaType = determineJavaType( explicitJavaType );
 
 		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
+		final Selectable column = getColumn();
 		if ( attributeConverterDescriptor != null ) {
 			final ManagedBeanRegistry managedBeanRegistry = getBuildingContext().getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ManagedBeanRegistry.class );
 
-			final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
-				@Override
-				public ManagedBeanRegistry getManagedBeanRegistry() {
-					return managedBeanRegistry;
-				}
-
-				@Override
-				public TypeConfiguration getTypeConfiguration() {
-					return typeConfiguration;
-				}
-			};
-
-			final NamedConverterResolution<Object> converterResolution = NamedConverterResolution.from(
+			final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
 					attributeConverterDescriptor,
 					explicitJavaTypeAccess,
 					explicitJdbcTypeAccess,
 					explicitMutabilityPlanAccess,
 					this,
-					converterCreationContext,
+					new JpaAttributeConverterCreationContext() {
+						@Override
+						public ManagedBeanRegistry getManagedBeanRegistry() {
+							return managedBeanRegistry;
+						}
+						@Override
+						public TypeConfiguration getTypeConfiguration() {
+							return typeConfiguration;
+						}
+					},
 					getBuildingContext()
 			);
 
-			if ( jtd instanceof BasicPluralJavaType<?>
+			if ( javaType instanceof BasicPluralJavaType<?>
 					&& !attributeConverterDescriptor.getDomainValueResolvedType()
 					.getErasedType()
-					.isAssignableFrom( jtd.getJavaTypeClass() ) ) {
+					.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				// In this case, the converter applies to the element of a BasicPluralJavaType
-				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) jtd;
+				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) javaType;
 				final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
-				final ColumnTypeInformation columnTypeInformation;
-				if ( getColumn() instanceof ColumnTypeInformation ) {
-					columnTypeInformation = (ColumnTypeInformation) getColumn();
-				}
-				else {
-					columnTypeInformation = null;
-				}
-				final BasicType<?> registeredType = registeredElementType == null ? null : containerJtd.resolveType(
-						typeConfiguration,
-						getMetadata().getDatabase().getDialect(),
-						registeredElementType,
-						columnTypeInformation
-				);
+				final BasicType<?> registeredType = registeredElementType == null ? null
+						: containerJtd.resolveType(
+								typeConfiguration,
+								getMetadata().getDatabase().getDialect(),
+								registeredElementType,
+								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null
+						);
 				if ( registeredType != null ) {
 					typeConfiguration.getBasicTypeRegistry().register( registeredType );
 
@@ -477,40 +444,57 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				? explicitJdbcTypeAccess.apply( typeConfiguration )
 				: null;
 
-		if ( jtd == null && jdbcType != null ) {
-			jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-		}
-
-		if ( jtd == null ) {
+		final BasicJavaType<?> basicJavaType = javaType == null && jdbcType != null
+				? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration )
+				: (BasicJavaType<?>) javaType;
+		if ( basicJavaType == null ) {
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
-		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaType<?>) jtd );
-		if ( autoAppliedTypeDef != null && ( !jtd.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
+		final TypeDefinition autoAppliedTypeDef =
+				getBuildingContext().getTypeDefinitionRegistry().resolveAutoApplied( basicJavaType );
+		if ( autoAppliedTypeDef != null
+				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
-			return autoAppliedTypeDef.resolve(
-					typeParameters,
-					null,
-					getBuildingContext(),
-					this
+			return autoAppliedTypeDef.resolve( typeParameters, null, getBuildingContext(), this );
+		}
+		else {
+			return InferredBasicValueResolver.from(
+					explicitJavaType,
+					jdbcType,
+					resolvedJavaType,
+					this::determineReflectedJavaType,
+					this,
+					getTable(),
+					column,
+					ownerName,
+					propertyName,
+					getMetadata().getDatabase().getDialect(),
+					typeConfiguration
 			);
 		}
+	}
 
-		return InferredBasicValueResolver.from(
-				explicitJtd,
-				jdbcType,
-				resolvedJavaType,
-				this::determineReflectedJavaType,
-				this,
-				getTable(),
-				getColumn(),
-				ownerName,
-				propertyName,
-				getMetadata().getDatabase().getDialect(),
-				typeConfiguration
-		);
+	private JavaType<?> determineJavaType(JavaType<?> explicitJavaType) {
+		JavaType<?> javaType = explicitJavaType;
 
+		if ( javaType == null ) {
+			if ( implicitJavaTypeAccess != null ) {
+				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( typeConfiguration );
+				if ( implicitJtd != null ) {
+					javaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( implicitJtd );
+				}
+			}
+		}
+
+		if ( javaType == null ) {
+			final JavaType<?> reflectedJtd = determineReflectedJavaType();
+			if ( reflectedJtd != null ) {
+				javaType = reflectedJtd;
+			}
+		}
+
+		return javaType;
 	}
 
 	private JavaType<?> determineReflectedJavaType() {
@@ -548,8 +532,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private static Resolution<?> interpretExplicitlyNamedType(
 			String name,
-			EnumType enumerationStyle,
-			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
@@ -671,15 +653,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				);
 			}
 
-			return TypeDefinition.createLocalResolution(
-					name,
-					typeNamedClass,
-					explicitMutabilityPlanAccess != null
-							? explicitMutabilityPlanAccess.apply( typeConfiguration )
-							: null,
-					localTypeParams,
-					context
-			);
+			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, context );
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
@@ -838,7 +812,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			setTypeParameters( properties );
 
 			this.resolution = new UserTypeResolution(
-					new CustomType<>( (UserType<Object>) typeInstance, typeConfiguration ),
+					new CustomType<>( (UserType<?>) typeInstance, typeConfiguration ),
 					null,
 					properties
 			);

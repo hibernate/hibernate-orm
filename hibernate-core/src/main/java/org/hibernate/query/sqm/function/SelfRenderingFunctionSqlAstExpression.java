@@ -89,17 +89,12 @@ public class SelfRenderingFunctionSqlAstExpression
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this );
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final JdbcMapping jdbcMapping = getJdbcMapping();
@@ -119,7 +114,8 @@ public class SelfRenderingFunctionSqlAstExpression
 								this,
 								jdbcJavaType,
 								null,
-								creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
+								creationState.getSqlAstCreationState().getCreationContext()
+										.getMappingMetamodel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
 				resultVariable,

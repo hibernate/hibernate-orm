@@ -9,7 +9,6 @@ package org.hibernate.internal;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -40,11 +39,7 @@ public class FilterJdbcParameter {
 	}
 
 	public JdbcParameterBinding getBinding() {
-		final BasicValueConverter valueConverter = jdbcMapping.getValueConverter();
-		if ( valueConverter == null ) {
-			return new JdbcParameterBindingImpl( jdbcMapping, jdbcParameterValue );
-		}
-		return new JdbcParameterBindingImpl( jdbcMapping, valueConverter.toRelationalValue( jdbcParameterValue ) );
+		return new JdbcParameterBindingImpl( jdbcMapping, jdbcMapping.convertToRelationalValue( jdbcParameterValue ) );
 	}
 
 	@Override

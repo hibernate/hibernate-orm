@@ -39,7 +39,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			String name,
 			String sqlString,
 			String resultSetMappingName,
-			Class resultSetMappingClass,
+			Class<?> resultSetMappingClass,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,

@@ -25,7 +25,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -59,17 +58,12 @@ public abstract class AbstractJdbcParameter
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		// todo (6.0) : investigate "virtual" or "static" selections
 		//		- anything that is the same for each row always - parameter, literal, etc;
 		//			the idea would be to write the value directly into the JdbcValues array
 		//			and not generating a SQL selection in the query sent to DB
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this );
 	}
 
 	@Override

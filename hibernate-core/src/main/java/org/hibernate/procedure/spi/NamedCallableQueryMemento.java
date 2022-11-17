@@ -56,7 +56,7 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 
 	String[] getResultSetMappingNames();
 
-	Class[] getResultSetMappingClasses();
+	Class<?>[] getResultSetMappingClasses();
 
 	Set<String> getQuerySpaces();
 
@@ -88,6 +88,6 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento {
 	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, Class<?>... resultSetJavaTypes);
 
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
-		ProcedureParameterImplementor resolve(SharedSessionContractImplementor session);
+		ProcedureParameterImplementor<?> resolve(SharedSessionContractImplementor session);
 	}
 }

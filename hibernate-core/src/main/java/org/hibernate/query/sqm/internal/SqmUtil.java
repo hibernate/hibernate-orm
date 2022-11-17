@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -290,20 +289,17 @@ public class SqmUtil {
 				}
 				else {
 					final JdbcMapping jdbcMapping;
-					final BasicValueConverter valueConverter;
 					if ( domainParamBinding.getType() instanceof JdbcMapping ) {
 						jdbcMapping = (JdbcMapping) domainParamBinding.getType();
-						valueConverter = jdbcMapping.getValueConverter();
 					}
 					else if ( domainParamBinding.getBindType() instanceof BasicValuedModelPart ) {
 						jdbcMapping = ( (BasicValuedModelPart) domainParamBinding.getType() ).getJdbcMapping();
-						valueConverter = jdbcMapping.getValueConverter();
 					}
 					else {
 						jdbcMapping = null;
-						valueConverter = null;
 					}
 
+					final BasicValueConverter valueConverter = jdbcMapping == null ? null : jdbcMapping.getValueConverter();
 					if ( valueConverter != null ) {
 						final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
 

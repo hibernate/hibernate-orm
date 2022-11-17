@@ -51,7 +51,10 @@ public interface SchemaManager {
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities.
+	 * Truncate the database tables mapped by Hibernate entities, and
+	 * then re-import initial data from any configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
 	 */

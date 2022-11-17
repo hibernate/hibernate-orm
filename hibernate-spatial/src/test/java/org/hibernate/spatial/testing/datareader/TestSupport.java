@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.geolatte.geom.GeometryEquality;
+import org.geolatte.geom.GeometryPositionEquality;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
@@ -55,6 +58,10 @@ public abstract class TestSupport {
 
 	public List<CommonSpatialFunction> getExcludeFromTests() {
 		return new ArrayList<>();
+	}
+
+	public GeometryEquality getGeometryEquality() {
+		return new GeometryPositionEquality();
 	}
 
 	public enum TestDataPurpose {

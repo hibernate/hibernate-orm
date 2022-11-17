@@ -69,7 +69,7 @@ public class CommonFunctionTests extends SpatialTestBase {
 	public Stream<DynamicTest> testFunction() {
 
 		return
-				TestTemplates.all( templates, hqlOverrides, filterGeometry )
+				TestTemplates.all( templates, hqlOverrides, geometryEquality, filterGeometry )
 						.filter( f -> isSupported( f.function ) )
 						.filter( f -> !exludeFromTest.contains( f.function ) )
 						.flatMap( t -> Stream.of(
@@ -91,7 +91,7 @@ public class CommonFunctionTests extends SpatialTestBase {
 				) );
 	}
 
-	protected <T> String displayName(FunctionTestTemplate template, String fnName) {
+	protected String displayName(FunctionTestTemplate template, String fnName) {
 		return String.format(
 				Locale.ROOT,
 				"Test for function %s on entity %s",

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.geolatte.geom.GeometryEquality;
+
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.TestSupportFactories;
@@ -38,6 +40,8 @@ public class SpatialTestDataProvider {
 	private final TestData funcTestData;
 	protected TestData testData;
 	protected GeomCodec codec;
+
+	protected GeometryEquality geometryEquality;
 	protected List<CommonSpatialFunction> exludeFromTest;
 
 	public SpatialTestDataProvider() {
@@ -51,6 +55,7 @@ public class SpatialTestDataProvider {
 			exludeFromTest = support.getExcludeFromTests();
 			funcTestData = support.createTestData( SpatialFunctionsData );
 			filterGeometry = support.getFilterGeometry();
+			geometryEquality = support.getGeometryEquality();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException( e );

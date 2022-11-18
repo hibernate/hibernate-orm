@@ -23,6 +23,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -104,11 +105,10 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				}
 			}
 			if ( entityInstance == null ) {
-				if ( referencedModelPart.isOptional() && parentAccess != null && parentAccess.getInitializedPart()
-						.findContainingEntityMapping()
-						.getEntityPersister()
-						.getBytecodeEnhancementMetadata()
-						.isEnhancedForLazyLoading() ) {
+				if ( referencedModelPart.isOptional()
+						&& parentAccess != null
+						&& !parentAccess.isEmbeddableInitializer()
+						&& isEnhancedForLazyLoading( parentAccess ) ) {
 					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				else {
@@ -132,9 +132,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 						final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 						entityInstance = persistenceContext.getEntity( euk );
 						if ( entityInstance == null ) {
-							if ( ( (AbstractEntityInitializer) this.parentAccess.findFirstEntityDescriptorAccess() ).getEntityDescriptor()
-									.getBytecodeEnhancementMetadata()
-									.isEnhancedForLazyLoading() ) {
+							if ( parentAccess != null
+									&& !parentAccess.isEmbeddableInitializer()
+									&& isEnhancedForLazyLoading( parentAccess ) ) {
 								return;
 							}
 							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
@@ -171,6 +171,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 			notifyResolutionListeners( entityInstance );
 		}
+	}
+
+	private static boolean isEnhancedForLazyLoading(FetchParentAccess parentAccess) {
+		return parentAccess.findFirstEntityInitializer().getEntityDescriptor().getBytecodeEnhancementMetadata()
+				.isEnhancedForLazyLoading();
 	}
 
 	@Override

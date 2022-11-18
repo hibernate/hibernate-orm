@@ -11,5 +11,5 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-public interface ModelPartContainer extends ModelPart, Queryable {
+public interface ModelPartContainer extends Queryable {
 }

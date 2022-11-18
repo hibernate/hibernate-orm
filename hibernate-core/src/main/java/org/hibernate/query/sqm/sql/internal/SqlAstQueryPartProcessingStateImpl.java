@@ -124,6 +124,7 @@ public class SqlAstQueryPartProcessingStateImpl
 		final SqlSelection sqlSelection = expression.createSqlSelection(
 				valuesArrayPosition + 1,
 				valuesArrayPosition,
+				javaType,
 				typeConfiguration
 		);
 

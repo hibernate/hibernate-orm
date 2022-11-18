@@ -27,6 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Steve Ebersole
  *
  * @see GeneratedColumn
+ * @see DialectOverride.ColumnDefault
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )

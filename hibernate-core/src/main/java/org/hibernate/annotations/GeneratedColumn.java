@@ -16,13 +16,16 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that a column is defined using a DDL {@code generated always as} clause
- * or equivalent, and that Hibernate should fetch the generated value from the
- * database after each SQL {@code INSERT} or {@code UPDATE}.
- *
- * @author Gavin King
+ * Specifies that a column is defined using a DDL {@code generated always as}
+ * clause or equivalent, and that Hibernate should fetch the generated value
+ * from the database after each SQL {@code INSERT} or {@code UPDATE}.
  *
  * @see ColumnDefault
+ *
+ * @since 6.0
+ * @author Gavin King
+ *
+ * @see DialectOverride.GeneratedColumn
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )

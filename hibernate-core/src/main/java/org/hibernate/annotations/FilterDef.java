@@ -14,27 +14,77 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Filter definition.  Defines a name, default condition and parameter types (if any).
+ * Declares a filter, specifying its {@linkplain #name}, optionally,
+ * a {@linkplain #defaultCondition() default condition}, and its
+ * {@linkplain #parameters parameter names and types}, if it has
+ * parameters.
+ * <p>
+ * Every entity or collection which is affected by a named filter
+ * declared using this annotation must be explicitly annotated
+ * {@link Filter @Filter}, and the name of this filter definition
+ * must be {@linkplain Filter#name given}. The {@code @Filter}
+ * annotation may override the default condition specified by this
+ * annotation using {@link Filter#condition}.
+ * <p>
+ * For example, if a filter is declared as follows:
+ * <pre>
+ * {@code
+ * @FilterDef(name = "Current",
+ *            defaultCondition = "status<>'DELETED'")
+ * package org.hibernate.domain;
+ * }
+ * </pre>
+ * Then the filter may be applied to an entity type like this:
+ * <pre>
+ * {@code
+ * @Entity
+ * @Filter(name = "Current")
+ * class Record {
+ *     @Id @GeneratedValue Long id;
+ *     @Enumerated(STRING) Status status;
+ *     ...
+ * }
+ * }
+ * </pre>
+ * <p>
+ * At runtime, a filter may be enabled in a particular session by
+ * calling {@link org.hibernate.Session#enableFilter(String)},
+ * passing the name of the filter, and then setting its parameters.
+ * <pre>
+ * {@code session.enableFilter("Current");}
+ * </pre>
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard
+ *
+ * @see org.hibernate.Filter
+ * @see DialectOverride.FilterDefs
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(FilterDefs.class)
 public @interface FilterDef {
 	/**
-	 * The filter name.
+	 * The name of the declared filter.
 	 */
 	String name();
 
 	/**
-	 * The default filter condition.
+	 * The default filter condition, a SQL expression used for
+	 * filtering the rows returned by a query when the filter is
+	 * enabled. This default condition may be overridden by any
+	 * entity or collection to which the filter applies using
+	 * {@link Filter#condition}.
+	 * <p>
+	 * If every entity and collection to which the filter applies
+	 * explicitly specifies its own filter condition, then the
+	 * default condition is unnecessary, and so this member is
+	 * optional.
 	 */
 	String defaultCondition() default "";
 
 	/**
-	 * The filter parameter definitions.
+	 * The names and types of the parameters of the filter.
 	 */
 	ParamDef[] parameters() default {};
 }

@@ -27,6 +27,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * @see TimeZoneStorage
  * @see TimeZoneStorageType#COLUMN
  * @see TimeZoneStorageType#AUTO
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)

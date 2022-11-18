@@ -16,6 +16,8 @@ import org.hibernate.id.IdentifierGenerator;
 /**
  * Meta-annotation used to mark another annotation as providing configuration
  * for a custom {@link IdentifierGenerator}.
+ *
+ * @since 6.0
  */
 @Target( value = ElementType.ANNOTATION_TYPE )
 @Retention( RetentionPolicy.RUNTIME )

@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Details about a parameter defined in a FilterDef.
+ * Details about a parameter declared in a {@link FilterDef}.
  * <p/>
  * Mainly used to support cases where the proper {@link #type type}
  * cannot be deduced by Hibernate.

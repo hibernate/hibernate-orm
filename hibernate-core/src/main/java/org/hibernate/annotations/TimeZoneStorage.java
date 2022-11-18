@@ -39,6 +39,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * @author Steve Ebersole
  * @author Andrea Boriero
  * @see TimeZoneColumn
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)

@@ -15,6 +15,8 @@ import org.hibernate.dialect.Dialect;
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @since 6.0
  */
 @Incubating
 public enum TimeZoneStorageType {

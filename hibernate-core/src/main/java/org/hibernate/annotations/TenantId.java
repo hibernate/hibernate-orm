@@ -22,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
  *
+ * @since 6.0
  * @author Gavin King
  */
 @ValueGenerationType(generatedBy = TenantIdGeneration.class)

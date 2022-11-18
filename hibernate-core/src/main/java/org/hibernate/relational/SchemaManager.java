@@ -17,6 +17,7 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
  *
+ * @since 6.2
  * @author Gavin King
  */
 @Incubating

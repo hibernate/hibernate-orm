@@ -20,6 +20,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * The type of the identifier attribute may be {@link UUID} or {@link String}.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
 @IdGeneratorType( org.hibernate.id.uuid.UuidGenerator.class )
 @Retention(RetentionPolicy.RUNTIME)

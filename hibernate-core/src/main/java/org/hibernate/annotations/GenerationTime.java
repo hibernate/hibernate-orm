@@ -27,6 +27,8 @@ public enum GenerationTime {
 	INSERT( GenerationTiming.INSERT ),
 	/**
 	 * Indicates the value is generated on update.
+	 *
+	 * @since 6.2
 	 */
 	UPDATE( GenerationTiming.UPDATE ),
 	/**

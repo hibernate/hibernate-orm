@@ -18,6 +18,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * instead of a {@linkplain jakarta.persistence.JoinColumn column name}.
  *
  * @author Sharath Reddy
+ *
+ * @see DialectOverride.JoinFormula
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

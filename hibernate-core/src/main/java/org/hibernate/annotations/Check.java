@@ -22,6 +22,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  *
  * @author Emmanuel Bernard
+ *
+ * @see DialectOverride.Check
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)

@@ -13,7 +13,9 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Optional annotation to express Hibernate specific discriminator properties.
+ * Optional annotation used in conjunction with the JPA-defined
+ * {@link jakarta.persistence.DiscriminatorColumn} annotation to
+ * express Hibernate-specific discriminator properties.
  *
  * @author Hardy Ferentschik
  */
@@ -21,15 +23,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface DiscriminatorOptions {
 	/**
-	 * "Forces" Hibernate to specify the allowed discriminator values, even when retrieving all instances of
-	 * the root class.  {@code true} indicates that the discriminator value should be forced; Default is
-	 * {@code false}.
+	 * If enabled, allowed discriminator values are always explicitly
+	 * enumerated in {@code select} queries, even when retrieving all
+	 * instances of a root entity and its subtypes. This is useful if
+	 * there are discriminator column values which do <em>not</em>
+	 * map to any subtype of the root entity type.
+	 *
+	 * @return {@code true} if allowd discriminator values must always
+	 *         by explicitly enumerated
 	 */
 	boolean force() default false;
 
 	/**
-	 * Set this to {@code false} if your discriminator column is also part of a mapped composite identifier.
-	 * It tells Hibernate not to include the column in SQL INSERTs.  Default is {@code true}.
+	 * Should be {@code false} if a discriminator column is also part
+	 * of a mapped composite identifier, and should not be duplicated
+	 * in SQL {@code INSERT} statements.
 	 */
 	boolean insert() default true;
 }

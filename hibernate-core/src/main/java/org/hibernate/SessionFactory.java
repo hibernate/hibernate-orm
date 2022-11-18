@@ -277,6 +277,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * A {@link SchemaManager} with the same default catalog and schema as
 	 * pooled connections belonging to this factory. Intended mostly as a
 	 * convenience for writing tests.
+	 *
+	 * @since 6.2
 	 */
 	SchemaManager getSchemaManager();
 
@@ -356,6 +358,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The set of fetch profile names given by
 	 *         {@link org.hibernate.annotations.FetchProfile} annotations.
+	 *
+	 * @since 6.2
 	 */
 	Set<String> getDefinedFetchProfileNames();
 

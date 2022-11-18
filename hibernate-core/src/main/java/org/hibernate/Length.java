@@ -17,6 +17,7 @@ package org.hibernate;
  *
  * @see jakarta.persistence.Column#length()
  *
+ * @since 6.0
  * @author Gavin King
  */
 public final class Length {

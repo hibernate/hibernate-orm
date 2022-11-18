@@ -36,6 +36,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @see DialectOverride.OrderBy
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

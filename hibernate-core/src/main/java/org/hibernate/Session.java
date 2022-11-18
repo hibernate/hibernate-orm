@@ -209,6 +209,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * The JPA-defined {@link CacheStoreMode}.
 	 *
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheStoreMode getCacheStoreMode();
 
@@ -216,6 +218,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * The JPA-defined {@link CacheRetrieveMode}.
 	 *
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheRetrieveMode getCacheRetrieveMode();
 
@@ -225,6 +229,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param cacheStoreMode a JPA-defined {@link CacheStoreMode}
 	 *
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	void setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
@@ -234,6 +240,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param cacheRetrieveMode a JPA-defined {@link CacheRetrieveMode}
 	 *
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
@@ -715,6 +723,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param object a persistent or transient instance
 	 * @param lockOptions the lock options
+	 *
+	 * @since 6.2
 	 */
 	void lock(Object object, LockOptions lockOptions);
 
@@ -1024,6 +1034,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a detached persistent instance
 	 *
 	 * @return the persistent instance or proxy
+	 *
+	 * @since 6.0
 	 */
 	<T> T getReference(T object);
 	
@@ -1141,6 +1153,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param filterName the name of the filter to be enabled.
 	 *
 	 * @return the {@link Filter} instance representing the enabled filter.
+	 *
+	 * @see org.hibernate.annotations.FilterDef
 	 */
 	Filter enableFilter(String filterName);
 

@@ -179,6 +179,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param association a lazy-loaded association
 	 *
 	 * @see org.hibernate.Hibernate#initialize(Object)
+	 *
+	 * @since 6.0
 	 */
 	void fetch(Object association);
 }

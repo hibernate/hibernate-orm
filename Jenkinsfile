@@ -26,18 +26,6 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-		// TODO: this block is just temporary for testing, but should ultimately be removed because this is tested nightly
-		new BuildEnvironment( dbName: 'h2_1_4' ),
-		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'derby_10_14' ),
-		new BuildEnvironment( dbName: 'mysql_5_7' ),
-		new BuildEnvironment( dbName: 'mariadb_10_3' ),
-		new BuildEnvironment( dbName: 'postgresql_10' ),
-		new BuildEnvironment( dbName: 'edb_10' ),
-		new BuildEnvironment( dbName: 'oracle_11_2' ),
-		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
-		new BuildEnvironment( dbName: 'mssql_2017' ),
-
 //		new BuildEnvironment( dbName: 'h2' ),
 //		new BuildEnvironment( dbName: 'hsqldb' ),
 //		new BuildEnvironment( dbName: 'derby' ),

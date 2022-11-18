@@ -89,7 +89,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	// the allowed limit is much higher than 2100 as specified in HHH-14397 &
 	// https://learn.microsoft.com/en-US/sql/relational-databases/errors-events/mssqlserver-8632-database-engine-error
-	private static final int PARAM_LIST_SIZE_LIMIT = 32767;
+	// 65535 - 3 (the LHS of the IN predicate is a path that can be composed of 3 identifiers (catalog, table, column))
+	private static final int PARAM_LIST_SIZE_LIMIT = 65532;
 
 	private final StandardSequenceExporter exporter;
 

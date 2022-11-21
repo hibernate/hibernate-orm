@@ -16,9 +16,10 @@ import java.lang.annotation.Target;
  * {@link jakarta.persistence.OneToMany} or
  * {@link jakarta.persistence.ManyToMany} association,
  * or an {@link jakarta.persistence.ElementCollection}.
- * <p>
  * This is an alternative to specifying the JPA
- * {@link jakarta.persistence.FetchType}.
+ * {@link jakarta.persistence.FetchType}. This annotation
+ * is used to enable {@linkplain LazyCollectionOption#EXTRA
+ * extra-lazy collection fetching}.
  *
  * @author Emmanuel Bernard
  */

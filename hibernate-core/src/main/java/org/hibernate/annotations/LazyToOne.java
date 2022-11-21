@@ -49,6 +49,10 @@ import java.lang.annotation.Target;
  * {@code instanceof} and {@link Object#getClass()} work as
  * normal, since the concrete type of the entity instance is
  * known immediately. This is usually bad tradeoff.
+ * <p>
+ * <strong>Currently, Hibernate does not support
+ * {@code LazyToOne(NO_PROXY)} for polymorphic associations,
+ * and instead falls back to using a proxy!</strong>
  *
  * @author Emmanuel Bernard
  */

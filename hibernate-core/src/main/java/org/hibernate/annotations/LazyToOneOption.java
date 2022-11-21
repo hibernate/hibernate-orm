@@ -52,6 +52,10 @@ public enum LazyToOneOption {
 	 * </ul>
 	 * Bytecode enhancement is required. If the class is not
 	 * enhanced, this option is equivalent to {@link #PROXY}.
+	 * <p>
+	 * <strong>Currently, Hibernate does not support this setting
+	 * for polymorphic associations, and instead falls back to
+	 * {@link #PROXY}!</strong>
 	 */
 	NO_PROXY
 }

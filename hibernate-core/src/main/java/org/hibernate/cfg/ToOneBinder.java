@@ -148,7 +148,7 @@ public class ToOneBinder {
 		}
 		value.setReferencedEntityName( getReferenceEntityName( inferredData, targetEntity, context ) );
 		final XProperty property = inferredData.getProperty();
-		defineFetchingStrategy( value, property );
+		defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
 		value.setNotFoundAction( notFoundAction );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
@@ -295,7 +295,11 @@ public class ToOneBinder {
 		}
 	}
 
-	static void defineFetchingStrategy(ToOne toOne, XProperty property) {
+	static void defineFetchingStrategy(
+			ToOne toOne,
+			XProperty property,
+			PropertyData inferredData,
+			PropertyHolder propertyHolder) {
 		final FetchType fetchType = getJpaFetchType( property );
 
 		final LazyToOne lazy = property.getAnnotation( LazyToOne.class );
@@ -305,7 +309,12 @@ public class ToOneBinder {
 			toOne.setUnwrapProxy( true );
 		}
 		else if ( lazy != null ) {
-			toOne.setLazy( lazy.value() != LazyToOneOption.FALSE );
+			boolean lazyFalse = lazy.value() == LazyToOneOption.FALSE;
+			if ( fetchType == FetchType.LAZY && lazyFalse ) {
+				throw new AnnotationException("Association '" + getPath( propertyHolder, inferredData )
+						+ "' is marked 'fetch=LAZY' and '@LazyToOne(FALSE)'");
+			}
+			toOne.setLazy( !lazyFalse );
 			toOne.setUnwrapProxy( lazy.value() == LazyToOneOption.NO_PROXY );
 		}
 		else {

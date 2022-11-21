@@ -94,35 +94,35 @@ public class OneToOneSecondPass implements SecondPass {
 		value.setPropertyName( propertyName );
 		final String referencedEntityName = getReferenceEntityName( inferredData, targetEntity, buildingContext );
 		value.setReferencedEntityName( referencedEntityName );
-		XProperty prop = inferredData.getProperty();
-		ToOneBinder.defineFetchingStrategy( value, prop );
+		XProperty property = inferredData.getProperty();
+		ToOneBinder.defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
 		value.setConstrained( !optional );
 		value.setForeignKeyType( getForeignKeyDirection() );
-		bindForeignKeyNameAndDefinition( value, prop, prop.getAnnotation( ForeignKey.class ), buildingContext );
+		bindForeignKeyNameAndDefinition( value, property, property.getAnnotation( ForeignKey.class ), buildingContext );
 
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
-		binder.setProperty(prop);
+		binder.setProperty( property );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 
-		final LazyGroup lazyGroupAnnotation = prop.getAnnotation( LazyGroup.class );
+		final LazyGroup lazyGroupAnnotation = property.getAnnotation( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
 			binder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
-		final Property property = binder.makeProperty();
-		property.setOptional( optional );
+		final Property result = binder.makeProperty();
+		result.setOptional( optional );
 		if ( isEmptyAnnotationValue( mappedBy ) ) {
-			bindUnowned( persistentClasses, value, propertyName, property );
+			bindUnowned( persistentClasses, value, propertyName, result );
 		}
 		else {
-			bindOwned( persistentClasses, value, property );
+			bindOwned( persistentClasses, value, result );
 		}
 		value.sortProperties();
 	}

@@ -29,26 +29,30 @@ import java.lang.annotation.Target;
  *     of the association.
  * </ul>
  * By default, an unfetched lazy association is represented
- * by a <em>proxy object</em>. This approach comes with the
- * major advantage that the program may obtain the identifier
- * (foreign key) of the associated entity instance without
- * fetching it from the database. Since a proxy carries a
- * foreign key, it's even possible to set an association
- * using an unfetched proxy. On the other hand, for a
- * polymorphic association, the concrete type of the entity
- * instance represented by a proxy is unknown, and so
- * {@link org.hibernate.Hibernate#getClass(Object)} must
+ * by a <em>proxy object</em> which holds the identifier
+ * (foreign key) of the associated entity instance.
+ * It's possible to obtain the identifier from an unfetched
+ * proxy, without fetching the entity from the database, by
+ * calling the corresponding getter method. (It's even
+ * possible to set an association to reference an unfetched
+ * proxy.) Lazy fetching occurs when any other method of the
+ * proxy is called. Once fetched, the proxy delegates all
+ * method invocations to the fetched entity instance.
+ * For a polymorphic association, the concrete type of the
+ * entity instance represented by a proxy is unknown, and
+ * so {@link org.hibernate.Hibernate#getClass(Object)} must
  * be used to obtain the concrete type, fetching the entity
- * by side effect.
+ * by side effect. Similarly, typecasts must be performed
+ * using {@link org.hibernate.Hibernate#unproxy(Object, Class)}.
  * <p>
- * With {@code LazyToOne(NO_PROXY)}, lazy fetching occurs
- * when the field holding the reference to the associated
- * entity is accessed. With this approach, it's impossible
- * to obtain the identifier of the associated entity without
- * fetching the entity from the database. On the other hand,
- * {@code instanceof} and {@link Object#getClass()} work as
- * normal, since the concrete type of the entity instance is
- * known immediately. This is usually bad tradeoff.
+ * With {@code LazyToOne(NO_PROXY)}, an associated entity
+ * instance begins in an unloaded state, with only its
+ * identifier field set. Thus, it's possible to obtain the
+ * identifier if an unloaded entity, without triggering
+ * lazy loading. Typecasts, {@code instanceof}, and
+ * {@link Object#getClass()} work as normal. But this
+ * option is only available when bytecode enhancement is
+ * used.
  * <p>
  * <strong>Currently, Hibernate does not support
  * {@code LazyToOne(NO_PROXY)} for polymorphic associations,

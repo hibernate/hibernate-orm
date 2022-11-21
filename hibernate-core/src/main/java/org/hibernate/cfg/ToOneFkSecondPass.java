@@ -95,6 +95,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	public void doSecondPass(java.util.Map<String, PersistentClass> persistentClasses) throws MappingException {
 		if ( value instanceof ManyToOne ) {
+			//TODO: move this validation logic to a separate ManyToOnSecondPass
+			//      for consistency with how this is handled for OneToOnes
 			final ManyToOne manyToOne = (ManyToOne) value;
 			final PersistentClass targetEntity = persistentClasses.get( manyToOne.getReferencedEntityName() );
 			if ( targetEntity == null ) {

@@ -4,15 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.mapping.lazytoone.onetoone;
+package org.hibernate.orm.test.mapping.lazytoone;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -20,7 +18,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -31,6 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.math.BigDecimal;
+
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -39,22 +38,23 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Baseline test for uni-directional one-to-one, using an explicit @LazyToOne(NO_PROXY) and allowing enhanced proxies
+ * Baseline test for uni-directional to-one, using an explicit @LazyToOne(NO_PROXY)
+ *
+ * @author Steve Ebersole
  */
 @RunWith( BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
-public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class LanyProxylessManyToOneTests extends BaseNonConfigCoreFunctionalTestCase {
 	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
 		super.applyMetadataSources( sources );
 		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( SupplementalInfo.class );
+		sources.addAnnotatedClass( Order.class );
 	}
 
 	@Override
@@ -63,15 +63,15 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
 	}
 
-	@Test public void testLazyOneToOne() {
+	@Test public void testLazyManyToOne() {
 		inTransaction(
 				(session) -> {
-					final SupplementalInfo supplementalInfo = session.byId(SupplementalInfo.class).getReference(1);
-					assertThat( Hibernate.isPropertyInitialized( supplementalInfo, "customer"), is(false) );
-					assertThat( supplementalInfo.customer, nullValue() );
-					Customer customer = supplementalInfo.getCustomer();
-					assertThat( Hibernate.isPropertyInitialized( supplementalInfo, "customer"), is(true) );
-					assertThat( supplementalInfo.customer, notNullValue() );
+					final Order order = session.byId(Order.class).getReference(1);
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(false) );
+					assertThat( order.customer, nullValue() );
+					Customer customer = order.getCustomer();
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(true) );
+					assertThat( order.customer, notNullValue() );
 					assertThat( customer, notNullValue() );
 					assertThat( Hibernate.isInitialized(customer), is(false) );
 					assertThat( customer.getId(), is(1) );
@@ -82,27 +82,27 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 		);
 		inTransaction(
 				(session) -> {
-					final SupplementalInfo supplementalInfo = session.byId(SupplementalInfo.class).getReference(1);
-					assertThat( Hibernate.isPropertyInitialized( supplementalInfo, "customer"), is(false) );
-					assertThat( supplementalInfo.customer, nullValue() );
-					Customer customer = supplementalInfo.getCustomer();
-					assertThat( Hibernate.isPropertyInitialized( supplementalInfo, "customer"), is(true) );
-					assertThat( supplementalInfo.customer, notNullValue() );
+					final Order order = session.byId(Order.class).getReference(1);
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(false) );
+					assertThat( order.customer, nullValue() );
+					Customer customer = order.getCustomer();
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(true) );
+					assertThat( order.customer, notNullValue() );
 					assertThat( customer, notNullValue() );
 					assertThat( Hibernate.isInitialized(customer), is(false) );
 					Hibernate.initialize( customer );
 					assertThat( Hibernate.isInitialized(customer), is(true) );
-					assertThat( customer.getId(), is(1) );
-					assertThat( customer.getName(), is("Acme Brick") );
+					assertThat( customer.id, is(1) );
+					assertThat( customer.name, is("Acme Brick") );
 				}
 		);
 	}
 
 	@Test
 	public void testOwnerIsProxy() {
-		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( SupplementalInfo.class );
-		final BytecodeEnhancementMetadata supplementalInfoEnhancementMetadata = supplementalInfoDescriptor.getBytecodeEnhancementMetadata();
-		assertThat( supplementalInfoEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
+		final EntityPersister orderDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Order.class );
+		final BytecodeEnhancementMetadata orderEnhancementMetadata = orderDescriptor.getBytecodeEnhancementMetadata();
+		assertThat( orderEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
 
 		final EntityPersister customerDescriptor = sessionFactory().getMappingMetamodel().getEntityDescriptor( Customer.class );
 		final BytecodeEnhancementMetadata customerEnhancementMetadata = customerDescriptor.getBytecodeEnhancementMetadata();
@@ -110,31 +110,31 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 
 		inTransaction(
 				(session) -> {
-					final SupplementalInfo supplementalInfo = session.byId( SupplementalInfo.class ).getReference( 1 );
+					final Order order = session.byId( Order.class ).getReference( 1 );
 
-					// we should have just the uninitialized SupplementalInfo proxy
-					//		- therefore no SQL statements should have been executed
+					// we should have just the uninitialized proxy of the owner - and
+					// therefore no SQL statements should have been executed
 					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
 
-					final BytecodeLazyAttributeInterceptor initialInterceptor = supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo );
+					final BytecodeLazyAttributeInterceptor initialInterceptor = orderEnhancementMetadata.extractLazyInterceptor( order );
 					assertThat( initialInterceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
 					// access the id - should do nothing with db
-					supplementalInfo.getId();
+					order.getId();
 					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 0 ) );
-					assertThat( supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo ), sameInstance( initialInterceptor ) );
+					assertThat( initialInterceptor, sameInstance( orderEnhancementMetadata.extractLazyInterceptor( order ) ) );
 
 					// this should trigger loading the entity's base state
-					supplementalInfo.getSomething();
+					order.getAmount();
 					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
-					final BytecodeLazyAttributeInterceptor interceptor = supplementalInfoEnhancementMetadata.extractLazyInterceptor( supplementalInfo );
+					final BytecodeLazyAttributeInterceptor interceptor = orderEnhancementMetadata.extractLazyInterceptor( order );
 					assertThat( initialInterceptor, not( sameInstance( interceptor ) ) );
 					assertThat( interceptor, instanceOf( LazyAttributeLoadingInterceptor.class ) );
 					final LazyAttributeLoadingInterceptor attrInterceptor = (LazyAttributeLoadingInterceptor) interceptor;
 					assertThat( attrInterceptor.hasAnyUninitializedAttributes(), is( false ) );
 
 					// should not trigger a load and the `customer` reference should be an uninitialized enhanced proxy
-					final Customer customer = supplementalInfo.getCustomer();
+					final Customer customer = order.getCustomer();
 					assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
 
 					final BytecodeLazyAttributeInterceptor initialCustomerInterceptor = customerEnhancementMetadata.extractLazyInterceptor( customer );
@@ -155,20 +155,20 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 	@Test
 	@TestForIssue(jiraKey = "HHH-14659")
 	public void testQueryJoinFetch() {
-		SupplementalInfo info = fromTransaction( (session) -> {
-			final SupplementalInfo result = session.createQuery(
-							"select s from SupplementalInfo s join fetch s.customer",
-							SupplementalInfo.class )
+		Order order = fromTransaction( (session) -> {
+			final Order result = session.createQuery(
+							"select o from Order o join fetch o.customer",
+							Order.class )
 					.uniqueResult();
 			assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
 			return result;
 		} );
 
 		// The "join fetch" should have already initialized the property,
-		// so that the getter can safely be called outside a session.
-		assertTrue( Hibernate.isPropertyInitialized( info, "customer" ) );
+		// so that the getter can safely be called outside of a session.
+		assertTrue( Hibernate.isPropertyInitialized( order, "customer" ) );
 		// The "join fetch" should have already initialized the associated entity.
-		Customer customer = info.getCustomer();
+		Customer customer = order.getCustomer();
 		assertTrue( Hibernate.isInitialized( customer ) );
 		assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
 	}
@@ -179,8 +179,8 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 				(session) -> {
 					final Customer customer = new Customer( 1, "Acme Brick" );
 					session.persist( customer );
-					final SupplementalInfo supplementalInfo = new SupplementalInfo( 1, customer, "extra details" );
-					session.persist( supplementalInfo );
+					final Order order = new Order( 1, customer, BigDecimal.ONE );
+					session.persist( order );
 				}
 		);
 		sqlStatementInterceptor.clear();
@@ -190,7 +190,7 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 	public void dropTestData() {
 		inTransaction(
 				(session) -> {
-					session.createQuery( "delete SupplementalInfo" ).executeUpdate();
+					session.createQuery( "delete Order" ).executeUpdate();
 					session.createQuery( "delete Customer" ).executeUpdate();
 				}
 		);
@@ -228,25 +228,22 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 		}
 	}
 
-	@Entity( name = "SupplementalInfo" )
-	@Table( name = "supplemental" )
-	public static class SupplementalInfo {
+	@Entity( name = "Order")
+	@Table( name = "`order`")
+	public static class Order {
 		@Id
 		private Integer id;
-
-		@OneToOne( fetch = LAZY, optional = false )
-		@LazyToOne( value = NO_PROXY )
+		@ManyToOne( fetch = LAZY )
 		private Customer customer;
+		private BigDecimal amount;
 
-		private String something;
-
-		public SupplementalInfo() {
+		public Order() {
 		}
 
-		public SupplementalInfo(Integer id, Customer customer, String something) {
+		public Order(Integer id, Customer customer, BigDecimal amount) {
 			this.id = id;
 			this.customer = customer;
-			this.something = something;
+			this.amount = amount;
 		}
 
 		public Integer getId() {
@@ -265,12 +262,12 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 			this.customer = customer;
 		}
 
-		public String getSomething() {
-			return something;
+		public BigDecimal getAmount() {
+			return amount;
 		}
 
-		public void setSomething(String something) {
-			this.something = something;
+		public void setAmount(BigDecimal amount) {
+			this.amount = amount;
 		}
 	}
 }

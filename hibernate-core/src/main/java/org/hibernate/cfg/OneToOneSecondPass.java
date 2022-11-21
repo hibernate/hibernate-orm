@@ -131,31 +131,31 @@ public class OneToOneSecondPass implements SecondPass {
 		return !isEmptyAnnotationValue( mappedBy ) ? ForeignKeyDirection.TO_PARENT : ForeignKeyDirection.FROM_PARENT;
 	}
 
-	private void bindOwned(Map<String, PersistentClass> persistentClasses, OneToOne value, Property property) {
-		value.setMappedByProperty( mappedBy );
-		final PersistentClass targetEntity = persistentClasses.get( value.getReferencedEntityName() );
+	private void bindOwned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, Property property) {
+		oneToOne.setMappedByProperty( mappedBy );
+		final PersistentClass targetEntity = persistentClasses.get( oneToOne.getReferencedEntityName() );
 		if ( targetEntity == null ) {
 			throw new MappingException( "Association '" + getPath( propertyHolder, inferredData )
-					+ "' targets unknown entity type '" + value.getReferencedEntityName() + "'" );
+					+ "' targets unknown entity type '" + oneToOne.getReferencedEntityName() + "'" );
 		}
-		final Property targetProperty = targetProperty( value, targetEntity );
+		final Property targetProperty = targetProperty( oneToOne, targetEntity );
 		if ( targetProperty.getValue() instanceof OneToOne ) {
 			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 		}
 		else if ( targetProperty.getValue() instanceof ManyToOne ) {
-			bindTargetManyToOne( persistentClasses, value, property, targetEntity, targetProperty );
+			bindTargetManyToOne( persistentClasses, oneToOne, property, targetEntity, targetProperty );
 		}
 		else {
 			throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
 					+ "' is 'mappedBy' a property named '" + mappedBy
-					+ "' of the target entity type '" + value.getReferencedEntityName()
+					+ "' of the target entity type '" + oneToOne.getReferencedEntityName()
 					+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 		}
 	}
 
 	private void bindTargetManyToOne(
 			Map<String, PersistentClass> persistentClasses,
-			OneToOne value,
+			OneToOne oneToOne,
 			Property property,
 			PersistentClass targetEntity,
 			Property targetProperty) {
@@ -174,11 +174,11 @@ public class OneToOneSecondPass implements SecondPass {
 			final ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 			//FIXME use ignore not found here
 			manyToOne.setNotFoundAction( notFoundAction );
-			manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
-			manyToOne.setFetchMode( value.getFetchMode() );
-			manyToOne.setLazy( value.isLazy() );
-			manyToOne.setReferencedEntityName( value.getReferencedEntityName() );
-			manyToOne.setUnwrapProxy( value.isUnwrapProxy() );
+			manyToOne.setCascadeDeleteEnabled( oneToOne.isCascadeDeleteEnabled() );
+			manyToOne.setFetchMode( oneToOne.getFetchMode() );
+			manyToOne.setLazy( oneToOne.isLazy() );
+			manyToOne.setReferencedEntityName( oneToOne.getReferencedEntityName() );
+			manyToOne.setUnwrapProxy( oneToOne.isUnwrapProxy() );
 			manyToOne.markAsLogicalOneToOne();
 			property.setValue( manyToOne );
 			for ( Column column: otherSideJoin.getKey().getColumns() ) {
@@ -203,7 +203,7 @@ public class OneToOneSecondPass implements SecondPass {
 			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 		}
 
-		value.setReferencedPropertyName( mappedBy );
+		oneToOne.setReferencedPropertyName( mappedBy );
 
 		// HHH-6813
 		// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
@@ -212,16 +212,16 @@ public class OneToOneSecondPass implements SecondPass {
 		boolean referenceToPrimaryKey = mappedBy == null
 				|| targetEntityIdentifier instanceof Component
 						&& !( (Component) targetEntityIdentifier ).hasProperty( mappedBy );
-		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
+		oneToOne.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
-		final String propertyRef = value.getReferencedPropertyName();
+		final String propertyRef = oneToOne.getReferencedPropertyName();
 		if ( propertyRef != null ) {
 			buildingContext.getMetadataCollector()
-					.addUniquePropertyReference( value.getReferencedEntityName(), propertyRef );
+					.addUniquePropertyReference( oneToOne.getReferencedEntityName(), propertyRef );
 		}
 	}
 
-	private Property targetProperty(OneToOne value, PersistentClass targetEntity) {
+	private Property targetProperty(OneToOne oneToOne, PersistentClass targetEntity) {
 		try {
 			Property targetProperty = findPropertyByName( targetEntity, mappedBy );
 			if ( targetProperty != null ) {
@@ -233,10 +233,10 @@ public class OneToOneSecondPass implements SecondPass {
 		}
 		throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
 				+ "' is 'mappedBy' a property named '" + mappedBy
-				+ "' which does not exist in the target entity type '" + value.getReferencedEntityName() + "'" );
+				+ "' which does not exist in the target entity type '" + oneToOne.getReferencedEntityName() + "'" );
 	}
 
-	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne value, String propertyName, Property property) {
+	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, String propertyName, Property property) {
 		// we need to check if the columns are in the right order
 		// if not, then we need to create a many to one and formula
 		// but actually, since entities linked by a one to one need
@@ -245,7 +245,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		if ( rightOrder ) {
 			final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
-					value,
+					oneToOne,
 					joinColumns,
 					!optional, //cannot have nullable and unique on certain DBs
 					propertyHolder.getPersistentClass(),
@@ -253,8 +253,8 @@ public class OneToOneSecondPass implements SecondPass {
 					buildingContext
 			);
 			secondPass.doSecondPass(persistentClasses);
-			//no column associated since its a one to one
-			propertyHolder.addProperty(property, inferredData.getDeclaringClass() );
+			//no column associated since it's a one to one
+			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
 		}
 //		else {
 			// this is a @ManyToOne with Formula

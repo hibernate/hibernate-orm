@@ -1014,11 +1014,7 @@ public class BinderHelper {
 	}
 
 	private static GenerationType interpretGenerationType(GeneratedValue generatedValueAnn) {
-		if ( generatedValueAnn.strategy() == null ) {
-			return GenerationType.AUTO;
-		}
-
-		return generatedValueAnn.strategy();
+		return generatedValueAnn.strategy() == null ? GenerationType.AUTO : generatedValueAnn.strategy();
 	}
 
 	public static boolean isEmptyAnnotationValue(String annotationString) {
@@ -1265,7 +1261,14 @@ public class BinderHelper {
 	}
 
 	public static FetchMode getFetchMode(FetchType fetch) {
-		return fetch == FetchType.EAGER ? FetchMode.JOIN : FetchMode.SELECT;
+		switch ( fetch ) {
+			case EAGER:
+				return FetchMode.JOIN;
+			case LAZY:
+				return FetchMode.SELECT;
+			default:
+				throw new AssertionFailure("unknown fetch type: " + fetch);
+		}
 	}
 
 	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {

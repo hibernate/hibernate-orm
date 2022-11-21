@@ -15,14 +15,21 @@ package org.hibernate.annotations;
  * @author Emmanuel Bernard
  *
  * @see LazyToOne
+ *
+ * @deprecated since {@link LazyToOne} is deprecated, use
+ *             {@link jakarta.persistence.FetchType} instead
  */
+@Deprecated(since="6.2")
 public enum LazyToOneOption {
 	/**
 	 * The association is always loaded eagerly. The identifier
 	 * and concrete type of the associated entity instance,
 	 * along with all the rest of its non-lazy fields, are always
 	 * available immediately.
+	 *
+	 * @deprecated use {@link jakarta.persistence.FetchType#EAGER}
 	 */
+	@Deprecated
 	FALSE,
 	/**
 	 * The association is proxied and a delegate entity instance
@@ -38,7 +45,8 @@ public enum LazyToOneOption {
 	 * <li>The proxy does not have the same concrete type as the
 	 *     proxied delegate, and so
 	 *     {@link org.hibernate.Hibernate#getClass(Object)}
-	 *     must be used in place of {@link Object#getClass()}.
+	 *     must be used in place of {@link Object#getClass()},
+	 *     and this method fetches the entity by side-effect.
 	 * <li>For a polymorphic association, the concrete type of
 	 *     the proxied entity instance is not known until the
 	 *     delegate is fetched from the database, and so
@@ -48,7 +56,10 @@ public enum LazyToOneOption {
 	 *     must be used instead of the Java {@code instanceof}
 	 *     operator.
 	 * </ul>
+	 *
+	 * @deprecated use {@link jakarta.persistence.FetchType#LAZY}
 	 */
+	@Deprecated
 	PROXY,
 	/**
 	 * The associated entity instance is initially in an unloaded
@@ -65,9 +76,11 @@ public enum LazyToOneOption {
 	 * <li>Bytecode enhancement is required. If the class is not
 	 *     enhanced, this option is equivalent to {@link #PROXY}.
 	 * </ul>
-	 * <strong>Currently, Hibernate does not support this setting
-	 * for polymorphic associations, and instead falls back to
-	 * {@link #PROXY}!</strong>
+	 * Hibernate does not support this setting for polymorphic
+	 * associations, and instead falls back to {@link #PROXY}.
+	 *
+	 * @deprecated this setting no longer has any useful effect
 	 */
+	@Deprecated
 	NO_PROXY
 }

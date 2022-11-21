@@ -300,50 +300,66 @@ public class ToOneBinder {
 			XProperty property,
 			PropertyData inferredData,
 			PropertyHolder propertyHolder) {
-		final FetchType fetchType = getJpaFetchType( property );
+		handleLazy( toOne, property, inferredData, propertyHolder );
+		handleFetch( toOne, property );
+	}
 
-		final LazyToOne lazy = property.getAnnotation( LazyToOne.class );
-		final NotFound notFound = property.getAnnotation( NotFound.class );
-		if ( notFound != null ) {
+	private static void handleFetch(ToOne toOne, XProperty property) {
+		if ( property.isAnnotationPresent( Fetch.class ) ) {
+			// Hibernate @Fetch annotation takes precedence
+			handleHibernateFetchMode( toOne, property );
+		}
+		else {
+			toOne.setFetchMode( getFetchMode( getJpaFetchType( property ) ) );
+		}
+	}
+
+	private static void handleLazy(ToOne toOne, XProperty property, PropertyData inferredData, PropertyHolder propertyHolder) {
+		if ( property.isAnnotationPresent( NotFound.class ) ) {
 			toOne.setLazy( false );
 			toOne.setUnwrapProxy( true );
 		}
-		else if ( lazy != null ) {
-			boolean lazyFalse = lazy.value() == LazyToOneOption.FALSE;
-			if ( fetchType == FetchType.LAZY && lazyFalse ) {
-				throw new AnnotationException("Association '" + getPath( propertyHolder, inferredData )
-						+ "' is marked 'fetch=LAZY' and '@LazyToOne(FALSE)'");
-			}
-			toOne.setLazy( !lazyFalse );
-			toOne.setUnwrapProxy( lazy.value() == LazyToOneOption.NO_PROXY );
-		}
 		else {
-			toOne.setLazy( fetchType == FetchType.LAZY );
-			toOne.setUnwrapProxy( fetchType != FetchType.LAZY );
+			boolean eager = isEager( property, inferredData, propertyHolder );
+			toOne.setLazy( !eager );
+			toOne.setUnwrapProxy( eager );
 			toOne.setUnwrapProxyImplicit( true );
 		}
+	}
 
-		final Fetch fetch = property.getAnnotation( Fetch.class );
-		if ( fetch != null ) {
-			// Hibernate @Fetch annotation takes precedence
-			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+	private static void handleHibernateFetchMode(ToOne toOne, XProperty property) {
+		switch ( property.getAnnotation( Fetch.class ).value() ) {
+			case JOIN:
 				toOne.setFetchMode( FetchMode.JOIN );
 				toOne.setLazy( false );
 				toOne.setUnwrapProxy( false );
-			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
+				break;
+			case SELECT:
 				toOne.setFetchMode( FetchMode.SELECT );
-			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+				break;
+			case SUBSELECT:
 				throw new AnnotationException( "Association '" + property.getName()
 						+ "' is annotated '@Fetch(SUBSELECT)' but is not many-valued");
+			default:
+				throw new AssertionFailure("unknown fetch type");
+		}
+	}
+
+	private static boolean isEager(XProperty property, PropertyData inferredData, PropertyHolder propertyHolder) {
+		final FetchType fetchType = getJpaFetchType( property );
+		if ( property.isAnnotationPresent( LazyToOne.class ) ) {
+			// LazyToOne takes precedent
+			final LazyToOne lazy = property.getAnnotation( LazyToOne.class );
+			boolean eager = lazy.value() == LazyToOneOption.FALSE;
+			if ( eager && fetchType == FetchType.LAZY ) {
+				// conflicts with non-default setting
+				throw new AnnotationException("Association '" + getPath(propertyHolder, inferredData)
+						+ "' is marked 'fetch=LAZY' and '@LazyToOne(FALSE)'");
 			}
-			else {
-				throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
-			}
+			return eager;
 		}
 		else {
-			toOne.setFetchMode( getFetchMode( fetchType ) );
+			return fetchType == FetchType.EAGER;
 		}
 	}
 
@@ -441,7 +457,8 @@ public class ToOneBinder {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
 		LOG.tracev( "Fetching {0} with {1}", propertyName, fetchMode );
-		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne ) || !isEmptyAnnotationValue( mappedBy ) ) {
+		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne )
+				|| !isEmptyAnnotationValue( mappedBy ) ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
 			final OneToOneSecondPass secondPass = new OneToOneSecondPass(
@@ -491,7 +508,7 @@ public class ToOneBinder {
 		}
 		else {
 			//try to find a hidden true one to one (FK == PK columns)
-			KeyValue identifier = propertyHolder.getIdentifier();
+			final KeyValue identifier = propertyHolder.getIdentifier();
 			if ( identifier == null ) {
 				//this is a @OneToOne in an @EmbeddedId (the persistentClass.identifier is not set yet, it's being built)
 				//by definition the PK cannot refer to itself so it cannot map to itself
@@ -562,23 +579,24 @@ public class ToOneBinder {
 	}
 
 	private static boolean noConstraint(ForeignKey joinColumns, MetadataBuildingContext context) {
-		return joinColumns != null
-				&& ( joinColumns.value() == ConstraintMode.NO_CONSTRAINT
-					|| joinColumns.value() == ConstraintMode.PROVIDER_DEFAULT
-						&& context.getBuildingOptions().isNoConstraintByDefault() );
+		if ( joinColumns == null ) {
+			return false;
+		}
+		else {
+			ConstraintMode mode = joinColumns.value();
+			return mode == ConstraintMode.NO_CONSTRAINT
+				|| mode == ConstraintMode.PROVIDER_DEFAULT && context.getBuildingOptions().isNoConstraintByDefault();
+		}
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, MetadataBuildingContext context) {
-		if ( AnnotationBinder.isDefault( targetEntity, context ) ) {
-			return propertyData.getClassOrElementName();
-		}
-		else {
-			return targetEntity.getName();
-		}
+		return AnnotationBinder.isDefault( targetEntity, context )
+				? propertyData.getClassOrElementName()
+				: targetEntity.getName();
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, MetadataBuildingContext context) {
-		XClass targetEntity = getTargetEntity( propertyData, context );
+		final XClass targetEntity = getTargetEntity( propertyData, context );
 		return AnnotationBinder.isDefault( targetEntity, context )
 				? propertyData.getClassOrElementName()
 				: targetEntity.getName();
@@ -590,13 +608,13 @@ public class ToOneBinder {
 	}
 
 	private static Class<?> getTargetEntityClass(XProperty property) {
-		final ManyToOne mTo = property.getAnnotation( ManyToOne.class );
-		if (mTo != null) {
-			return mTo.targetEntity();
+		final ManyToOne manyToOne = property.getAnnotation( ManyToOne.class );
+		if ( manyToOne != null ) {
+			return manyToOne.targetEntity();
 		}
-		final OneToOne oTo = property.getAnnotation( OneToOne.class );
-		if (oTo != null) {
-			return oTo.targetEntity();
+		final OneToOne oneToOne = property.getAnnotation( OneToOne.class );
+		if ( oneToOne != null ) {
+			return oneToOne.targetEntity();
 		}
 		throw new AssertionFailure("Unexpected discovery of a targetEntity: " + property.getName() );
 	}

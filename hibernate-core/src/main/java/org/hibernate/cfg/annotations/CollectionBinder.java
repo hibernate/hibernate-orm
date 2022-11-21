@@ -150,6 +150,8 @@ import org.hibernate.usertype.UserCollectionType;
 import org.jboss.logging.Logger;
 
 import static jakarta.persistence.AccessType.PROPERTY;
+import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
@@ -1465,11 +1467,16 @@ public abstract class CollectionBinder {
 	private void handleLazy(FetchType jpaFetchType) {
 		final LazyCollection lazy = property.getAnnotation( LazyCollection.class );
 		if ( lazy != null ) {
-			collection.setLazy( lazy.value() != LazyCollectionOption.FALSE );
-			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
+			boolean lazyFalse = lazy.value() == LazyCollectionOption.FALSE;
+			if ( jpaFetchType == EAGER && !lazyFalse) {
+				throw new AnnotationException("Collection '" + safeCollectionRole()
+						+ "' is marked 'fetch=EAGER' and '@LazyCollection(" + lazy.value() + ")'");
+			}
+			collection.setLazy( !lazyFalse );
+			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA);
 		}
 		else {
-			collection.setLazy( jpaFetchType == FetchType.LAZY );
+			collection.setLazy( jpaFetchType == LAZY );
 			collection.setExtraLazy( false );
 		}
 	}
@@ -1489,7 +1496,7 @@ public abstract class CollectionBinder {
 			return elementCollection.fetch();
 		}
 		else if ( manyToAny != null ) {
-			return FetchType.LAZY;
+			return LAZY;
 		}
 		else {
 			throw new AssertionFailure(
@@ -2357,7 +2364,7 @@ public abstract class CollectionBinder {
 				inverseJoinColumns,
 				inferredData,
 				cascadeDeleteEnabled,
-				anyAnn.fetch() == FetchType.LAZY,
+				anyAnn.fetch() == LAZY,
 				Nullability.NO_CONSTRAINT,
 				propertyHolder,
 				new EntityBinder(),

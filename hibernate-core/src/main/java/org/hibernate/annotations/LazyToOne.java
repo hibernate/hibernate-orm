@@ -59,7 +59,10 @@ import java.lang.annotation.Target;
  * and instead falls back to using a proxy!</strong>
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated use {@link Proxyless @Proxyless}
  */
+@Deprecated
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LazyToOne {

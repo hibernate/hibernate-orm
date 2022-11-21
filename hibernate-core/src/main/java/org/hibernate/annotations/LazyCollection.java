@@ -10,6 +10,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Specify the laziness of a collection, either a
@@ -22,7 +24,19 @@ import java.lang.annotation.Target;
  * extra-lazy collection fetching}.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated
+ * <ul>
+ * <li>Use the JPA-defined {@link jakarta.persistence.FetchType#EAGER}
+ *     instead of {@code LazyCollection(FALSE)}.
+ * <li>Use static methods of {@link org.hibernate.Hibernate},
+ *     for example {@link org.hibernate.Hibernate#size(Collection)},
+ *     {@link org.hibernate.Hibernate#contains(Collection, Object)},
+ *     or {@link org.hibernate.Hibernate#get(Map, Object)} instead
+ *     of {@code LazyCollection(EXTRA)}.
+ * </ul>
  */
+@Deprecated
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LazyCollection {

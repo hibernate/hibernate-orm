@@ -6,6 +6,9 @@
  */
 package org.hibernate.annotations;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  *  Enumerates the options for lazy loading of a
  *  {@linkplain jakarta.persistence.ElementCollection collection},
@@ -15,7 +18,19 @@ package org.hibernate.annotations;
  * @author Emmanuel Bernard
  *
  * @see LazyCollection
+ *
+ * @deprecated
+ * <ul>
+ * <li>Use the JPA-defined {@link jakarta.persistence.FetchType#EAGER}
+ *     instead of {@code LazyCollection(FALSE)}.
+ * <li>Use static methods of {@link org.hibernate.Hibernate},
+ *     for example {@link org.hibernate.Hibernate#size(Collection)},
+ *     {@link org.hibernate.Hibernate#contains(Collection, Object)},
+ *     or {@link org.hibernate.Hibernate#get(Map, Object)} instead
+ *     of {@code LazyCollection(EXTRA)}.
+ * </ul>
  */
+@Deprecated
 public enum LazyCollectionOption {
 	/**
 	 * The collection is always loaded eagerly, and all its

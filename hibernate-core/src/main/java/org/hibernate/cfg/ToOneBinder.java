@@ -32,6 +32,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Proxyless;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -304,11 +305,16 @@ public class ToOneBinder {
 
 		final LazyToOne lazy = property.getAnnotation( LazyToOne.class );
 		final NotFound notFound = property.getAnnotation( NotFound.class );
+		final boolean proxyless = property.isAnnotationPresent( Proxyless.class );
 		if ( notFound != null ) {
 			toOne.setLazy( false );
 			toOne.setUnwrapProxy( true );
 		}
 		else if ( lazy != null ) {
+			if ( proxyless ) {
+				throw new AnnotationException("Association '" + getPath( propertyHolder, inferredData )
+						+ "' is annotated '@Proxyless' and '@LazyToOne'");
+			}
 			boolean lazyFalse = lazy.value() == LazyToOneOption.FALSE;
 			if ( fetchType == FetchType.LAZY && lazyFalse ) {
 				throw new AnnotationException("Association '" + getPath( propertyHolder, inferredData )
@@ -319,7 +325,7 @@ public class ToOneBinder {
 		}
 		else {
 			toOne.setLazy( fetchType == FetchType.LAZY );
-			toOne.setUnwrapProxy( fetchType != FetchType.LAZY );
+			toOne.setUnwrapProxy( proxyless || fetchType == FetchType.EAGER );
 			toOne.setUnwrapProxyImplicit( true );
 		}
 

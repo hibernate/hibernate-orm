@@ -15,7 +15,10 @@ package org.hibernate.annotations;
  * @author Emmanuel Bernard
  *
  * @see LazyToOne
+ *
+ * @deprecated use {@link Proxyless @Proxyless}
  */
+@Deprecated
 public enum LazyToOneOption {
 	/**
 	 * The association is always loaded eagerly. The identifier
@@ -38,7 +41,8 @@ public enum LazyToOneOption {
 	 * <li>The proxy does not have the same concrete type as the
 	 *     proxied delegate, and so
 	 *     {@link org.hibernate.Hibernate#getClass(Object)}
-	 *     must be used in place of {@link Object#getClass()}.
+	 *     must be used in place of {@link Object#getClass()},
+	 *     and this method fetches the entity by side-effect.
 	 * <li>For a polymorphic association, the concrete type of
 	 *     the proxied entity instance is not known until the
 	 *     delegate is fetched from the database, and so

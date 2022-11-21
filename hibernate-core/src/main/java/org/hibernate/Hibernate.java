@@ -59,6 +59,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * the Hibernate metamodel, to write such generic code for any given serialization
  * library, but the details depend on what facilities the library itself offers for
  * the program to intervene in the process of serialization and of deserialization.
+ * <p>
+ * See {@linkplain org.hibernate.annotations.Proxyless this discussion of proxies in
+ * Hibernate}.
  *
  * @author Gavin King
  */

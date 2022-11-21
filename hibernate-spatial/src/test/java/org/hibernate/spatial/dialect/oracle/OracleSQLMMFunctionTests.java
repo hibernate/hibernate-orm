@@ -31,7 +31,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 @ServiceRegistry(settings = {
 		@Setting(name = HibernateSpatialConfigurationSettings.ORACLE_OGC_STRICT, value = "true")
 })
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 @SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 public class OracleSQLMMFunctionTests extends CommonFunctionTests {
 	public OracleSQLMMFunctionTests() {

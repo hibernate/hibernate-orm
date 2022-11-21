@@ -150,6 +150,8 @@ import org.hibernate.usertype.UserCollectionType;
 import org.jboss.logging.Logger;
 
 import static jakarta.persistence.AccessType.PROPERTY;
+import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnsFromAnnotations;
@@ -1432,44 +1434,53 @@ public abstract class CollectionBinder {
 	}
 
 	private void defineFetchingStrategy() {
-		final FetchType jpaFetchType = getJpaFetchType();
-		handleLazy( jpaFetchType );
-		handleFetch( jpaFetchType );
+		handleLazy();
+		handleFetch();
 	}
 
-	private void handleFetch(FetchType jpaFetchType) {
-		final Fetch fetch = property.getAnnotation( Fetch.class );
-		if ( fetch != null ) {
+	private void handleFetch() {
+		if ( property.isAnnotationPresent( Fetch.class ) ) {
 			// Hibernate @Fetch annotation takes precedence
-			if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+			handleHibernateFetchMode();
+		}
+		else {
+			collection.setFetchMode( getFetchMode( getJpaFetchType() ) );
+		}
+	}
+
+	private void handleHibernateFetchMode() {
+		switch ( property.getAnnotation( Fetch.class ).value() ) {
+			case JOIN:
 				collection.setFetchMode( FetchMode.JOIN );
 				collection.setLazy( false );
-			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SELECT ) {
+				break;
+			case SELECT:
 				collection.setFetchMode( FetchMode.SELECT );
-			}
-			else if ( fetch.value() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+				break;
+			case SUBSELECT:
 				collection.setFetchMode( FetchMode.SELECT );
 				collection.setSubselectLoadable( true );
 				collection.getOwner().setSubselectLoadableCollections( true );
-			}
-			else {
-				throw new AssertionFailure( "Unknown FetchMode: " + fetch.value() );
-			}
-		}
-		else {
-			collection.setFetchMode( getFetchMode(jpaFetchType) );
+				break;
+			default:
+				throw new AssertionFailure( "unknown fetch type");
 		}
 	}
 
-	private void handleLazy(FetchType jpaFetchType) {
-		final LazyCollection lazy = property.getAnnotation( LazyCollection.class );
-		if ( lazy != null ) {
-			collection.setLazy( lazy.value() != LazyCollectionOption.FALSE );
+	private void handleLazy() {
+		final FetchType jpaFetchType = getJpaFetchType();
+		if ( property.isAnnotationPresent( LazyCollection.class ) ) {
+			final LazyCollection lazy = property.getAnnotation( LazyCollection.class );
+			boolean eager = lazy.value() == LazyCollectionOption.FALSE;
+			if ( !eager && jpaFetchType == EAGER ) {
+				throw new AnnotationException("Collection '" + safeCollectionRole()
+						+ "' is marked 'fetch=EAGER' and '@LazyCollection(" + lazy.value() + ")'");
+			}
+			collection.setLazy( !eager );
 			collection.setExtraLazy( lazy.value() == LazyCollectionOption.EXTRA );
 		}
 		else {
-			collection.setLazy( jpaFetchType == FetchType.LAZY );
+			collection.setLazy( jpaFetchType == LAZY );
 			collection.setExtraLazy( false );
 		}
 	}
@@ -1489,7 +1500,7 @@ public abstract class CollectionBinder {
 			return elementCollection.fetch();
 		}
 		else if ( manyToAny != null ) {
-			return FetchType.LAZY;
+			return LAZY;
 		}
 		else {
 			throw new AssertionFailure(
@@ -1526,27 +1537,8 @@ public abstract class CollectionBinder {
 	 * return true if it's a Fk, false if it's an association table
 	 */
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
-		final XClass elementType = getElementType();
-		final PersistentClass persistentClass = persistentClasses.get( elementType.getName() );
-		boolean reversePropertyInJoin = false;
-		if ( persistentClass != null && hasMappedBy() ) {
-			try {
-				reversePropertyInJoin =
-						0 != persistentClass.getJoinNumber( persistentClass.getRecursiveProperty( mappedBy ) );
-			}
-			catch (MappingException e) {
-				throw new AnnotationException( "Collection '" + safeCollectionRole()
-						+ "' is 'mappedBy' a property named '" + mappedBy
-						+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
-			}
-		}
-		if ( persistentClass != null
-				&& !reversePropertyInJoin
-				&& oneToMany
-				&& !isExplicitAssociationTable
-				&& ( joinColumns.getJoinColumns().get(0).isImplicit() && hasMappedBy() //implicit @JoinColumn
-					|| !foreignJoinColumns.getJoinColumns().get(0).isImplicit() ) //this is an explicit @JoinColumn
-		) {
+		final PersistentClass persistentClass = persistentClasses.get( getElementType().getName() );
+		if ( noAssociationTable( persistentClass ) ) {
 			//this is a foreign key
 			bindOneToManySecondPass( persistentClasses );
 			return true;
@@ -1556,6 +1548,39 @@ public abstract class CollectionBinder {
 			bindManyToManySecondPass( persistentClasses );
 			return false;
 		}
+	}
+
+	private boolean isReversePropertyInJoin(XClass elementType, PersistentClass persistentClass) {
+		if ( persistentClass != null && hasMappedBy() ) {
+			try {
+				return persistentClass.getJoinNumber( persistentClass.getRecursiveProperty( mappedBy ) ) != 0;
+			}
+			catch (MappingException e) {
+				throw new AnnotationException( "Collection '" + safeCollectionRole()
+						+ "' is 'mappedBy' a property named '" + mappedBy
+						+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
+			}
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean noAssociationTable(PersistentClass persistentClass) {
+		return persistentClass != null
+			&& !isReversePropertyInJoin( getElementType(), persistentClass )
+			&& oneToMany
+			&& !isExplicitAssociationTable
+			&& ( implicitJoinColumn() || explicitForeignJoinColumn() );
+	}
+
+	private boolean implicitJoinColumn() {
+		return joinColumns.getJoinColumns().get(0).isImplicit()
+			&& hasMappedBy(); //implicit @JoinColumn
+	}
+
+	private boolean explicitForeignJoinColumn() {
+		return !foreignJoinColumns.getJoinColumns().get(0).isImplicit(); //this is an explicit @JoinColumn
 	}
 
 	private boolean hasMappedBy() {
@@ -2357,7 +2382,7 @@ public abstract class CollectionBinder {
 				inverseJoinColumns,
 				inferredData,
 				cascadeDeleteEnabled,
-				anyAnn.fetch() == FetchType.LAZY,
+				anyAnn.fetch() == LAZY,
 				Nullability.NO_CONSTRAINT,
 				propertyHolder,
 				new EntityBinder(),

@@ -47,6 +47,47 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * are intended for use by generic code that must materialize an "amputated" graph of
  * Hibernate entities. (For example, a library which deserializes entities from JSON.)
  * <p>
+ * Lazy fetching of a {@linkplain jakarta.persistence.OneToOne one to one} or
+ * {@linkplain jakarta.persistence.ManyToOne many to one} association requires special
+ * bytecode tricks. The tricks used depend on whether build-time bytecode enhancement
+ * is enabled.
+ * <p>
+ * When bytecode enhancement is <em>not</em> used, an unfetched lazy association* is
+ * represented by a <em>proxy object</em> which holds the identifier (foreign key) of
+ * the associated entity instance.
+ * <ul>
+ * <li>The identifier property of the proxy object is set when the proxy is instantiated.
+ *     The program may obtain the entity identifier value of an unfetched proxy, without
+ *     triggering lazy fetching, by calling the corresponding getter method.
+ *     (It's even possible to set an association to reference an unfetched proxy.)
+ * <li>A delegate entity instance is lazily fetched when any other method of the proxy
+ *     is called. Once fetched, the proxy delegates all method invocations to the
+ *     delegate.
+ * <li>The proxy does not have the same concrete type as the proxied delegate, and so
+ *     {@link #getClass(Object)} must be used in place of {@link Object#getClass()},
+ *     and this method fetches the entity by side-effect.
+ * <li>For a polymorphic association, the concrete type of the associated entity is
+ *     not known until the delegate is fetched from the database, and so
+ *     {@link #unproxy(Object, Class)}} must be used to perform typecasts, and
+ *     {@link #getClass(Object)} must be used instead of the Java {@code instanceof}
+ *     operator.
+ * </ul>
+ * When bytecode enhancement <em>is</em> used, there is no such indirection, but the
+ * associated entity instance is initially in an unloaded state, with only its
+ * identifier field set.
+ * <ul>
+ * <li>The identifier field of an unloaded entity instance is set when the unloaded
+ *     instance is instantiated. The program may obtain the identifier of an unloaded
+ *     entity, without triggering lazy loading, by accessing the field containing the
+ *     identifier.
+ * <li>The remaining non-lazy state of the entity instance is loaded lazily when any
+ *     other field is accessed.
+ * <li>Typecasts, the Java {@code instanceof} operator, and {@link Object#getClass()}
+ *     may be used as normal.
+ * </ul>
+ * As an exception to the above rules, <em>polymorphic</em> associations always work
+ * as if bytecode enhancement was not enabled.
+ *<p>
  * Graphs of Hibernate entities obtained from a {@link Session} are usually in an
  * amputated form, with associations and collections replaced by proxies and lazy
  * collections. (That is, by instances of the internal types {@link HibernateProxy}

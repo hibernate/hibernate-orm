@@ -20,7 +20,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
@@ -37,6 +36,8 @@ import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
@@ -63,6 +64,41 @@ public class ManyToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTes
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
+	}
+
+	@Test public void testLazyManyToOne() {
+		inTransaction(
+				(session) -> {
+					final Order order = session.byId(Order.class).getReference(1);
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(false) );
+					assertThat( order.customer, nullValue() );
+					Customer customer = order.getCustomer();
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(true) );
+					assertThat( order.customer, notNullValue() );
+					assertThat( customer, notNullValue() );
+					assertThat( Hibernate.isInitialized(customer), is(false) );
+					assertThat( customer.getId(), is(1) );
+					assertThat( Hibernate.isInitialized(customer), is(false) );
+					assertThat( customer.getName(), is("Acme Brick") );
+					assertThat( Hibernate.isInitialized(customer), is(true) );
+				}
+		);
+		inTransaction(
+				(session) -> {
+					final Order order = session.byId(Order.class).getReference(1);
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(false) );
+					assertThat( order.customer, nullValue() );
+					Customer customer = order.getCustomer();
+					assertThat( Hibernate.isPropertyInitialized( order, "customer"), is(true) );
+					assertThat( order.customer, notNullValue() );
+					assertThat( customer, notNullValue() );
+					assertThat( Hibernate.isInitialized(customer), is(false) );
+					Hibernate.initialize( customer );
+					assertThat( Hibernate.isInitialized(customer), is(true) );
+					assertThat( customer.id, is(1) );
+					assertThat( customer.name, is("Acme Brick") );
+				}
+		);
 	}
 
 	@Test

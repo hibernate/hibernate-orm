@@ -306,7 +306,7 @@ public class ToOneBinder {
 		}
 		else if ( lazy != null ) {
 			toOne.setLazy( lazy.value() != LazyToOneOption.FALSE );
-			toOne.setUnwrapProxy( ( lazy.value() == LazyToOneOption.NO_PROXY ) );
+			toOne.setUnwrapProxy( lazy.value() == LazyToOneOption.NO_PROXY );
 		}
 		else {
 			toOne.setLazy( fetchType == FetchType.LAZY );

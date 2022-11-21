@@ -186,8 +186,8 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Get the true, underlying class of a proxied persistent class. This operation
-	 * will initialize a proxy by side effect.
+	 * Get the true, underlying class of a proxied entity. This operation will
+	 * initialize a proxy by side effect.
 	 *
 	 * @param proxy an entity instance or proxy
 	 * @return the true class of the instance
@@ -204,6 +204,20 @@ public final class Hibernate {
 			result = proxy.getClass();
 		}
 		return (Class<? extends T>) result;
+	}
+
+	/**
+	 * Determine if the true, underlying class of the proxied entity is assignable
+	 * to the given class. This operation will initialize a proxy by side effect.
+	 *
+	 * @param proxy an entity instance or proxy
+	 * @return {@code true} if the entity is an instance of the given class
+	 *
+	 * @since 6.2
+	 */
+	public static boolean isInstance(Object proxy, Class<?> entityClass) {
+		return entityClass.isInstance( proxy )
+			|| entityClass.isAssignableFrom( getClass( proxy ) );
 	}
 
 	/**

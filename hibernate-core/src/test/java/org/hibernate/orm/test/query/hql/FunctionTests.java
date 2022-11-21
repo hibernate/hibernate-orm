@@ -13,6 +13,8 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.TiDBDialect;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -45,6 +47,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Gavin King
@@ -86,6 +89,44 @@ public class FunctionTests {
 					eom.addNumberByNumber(1,1.0);
 					em.persist(eom);
 				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15711")
+	public void testLowerUpperFunctionsWithEnums(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select lower(e.gender) from EntityOfBasics e", String.class)
+							.list();
+					session.createQuery("select upper(e.gender) from EntityOfBasics e", String.class)
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15711")
+	public void testLowerUpperFunctionsWithConvertedEnums(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select lower(e.convertedGender) from EntityOfBasics e", String.class)
+							.list();
+					session.createQuery("select upper(e.convertedGender) from EntityOfBasics e", String.class)
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15711")
+	public void testLowerFunctionsOrdinalEnumsShouldFail(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						assertThrows( IllegalArgumentException.class, () ->
+								session.createQuery( "select lower(e.ordinalGender) from EntityOfBasics e" )
+										.list()
+						)
 		);
 	}
 

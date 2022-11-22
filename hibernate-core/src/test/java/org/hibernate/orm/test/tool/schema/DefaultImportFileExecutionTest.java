@@ -2,7 +2,9 @@ package org.hibernate.orm.test.tool.schema;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -56,7 +58,12 @@ public class DefaultImportFileExecutionTest {
 	public void tearDown() {
 		serviceRegistry.close();
 		if ( defaultImportFile.exists() ) {
-			defaultImportFile.delete();
+			try {
+				Files.delete( defaultImportFile.toPath() );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
 		}
 	}
 

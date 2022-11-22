@@ -63,7 +63,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -567,7 +566,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			this.identifierGeneratorFactory = new StandardIdentifierGeneratorFactory( serviceRegistry );
+			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );

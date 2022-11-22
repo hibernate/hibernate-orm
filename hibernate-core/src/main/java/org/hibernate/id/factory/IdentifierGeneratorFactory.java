@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
+import org.hibernate.service.Service;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -21,7 +22,7 @@ import jakarta.persistence.GenerationType;
  *
  * @author Steve Ebersole
  */
-public interface IdentifierGeneratorFactory {
+public interface IdentifierGeneratorFactory extends Service {
 	/**
 	 * Get the dialect.
 	 * @deprecated should be removed

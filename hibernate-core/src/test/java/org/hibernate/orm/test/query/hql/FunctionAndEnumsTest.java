@@ -3,12 +3,14 @@ package org.hibernate.orm.test.query.hql;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		annotatedClasses = FunctionAndEnumsTest.TestEntity.class
 )
 @SessionFactory
+@TestForIssue( jiraKey = "HHH-15711")
 public class FunctionAndEnumsTest {
 
 
@@ -102,6 +105,7 @@ public class FunctionAndEnumsTest {
 	public static class EmbeddableFirstLevel {
 
 		@Enumerated(EnumType.STRING)
+		@Column(name = "LEVEL_COLUMN")
 		private Level level;
 
 		private EmbeddableSecondLevel embeddableSecondLevel;

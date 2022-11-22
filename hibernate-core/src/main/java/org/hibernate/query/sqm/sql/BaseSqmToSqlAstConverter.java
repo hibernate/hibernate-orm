@@ -6344,10 +6344,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		boolean hasAnyTreatUsage = false;
 		for ( SqmPredicate subPredicate : predicate.getPredicates() ) {
 			disjunction.add( (Predicate) subPredicate.accept( this ) );
-			if ( conjunctTreatUsages.isEmpty() ) {
-				conjunctTreatUsagesList.add( null );
-			}
-			else {
+			if ( !conjunctTreatUsages.isEmpty() ) {
 				hasAnyTreatUsage = true;
 				for ( Map.Entry<SqmPath<?>, Set<String>> entry : conjunctTreatUsages.entrySet() ) {
 					conjunctTreatUsagesUnion.computeIfAbsent( entry.getKey(), k -> new HashSet<>() )

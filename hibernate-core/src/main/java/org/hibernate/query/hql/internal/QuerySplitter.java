@@ -91,7 +91,6 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.CriteriaQuery;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -710,12 +709,15 @@ public class QuerySplitter {
 		public SqmBasicValuedSimplePath<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 
+			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+
 			final SqmBasicValuedSimplePath<?> copy = new SqmBasicValuedSimplePath<>(
-					path.getNavigablePath(),
+					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
-					pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+					lhs,
 					path.nodeBuilder()
 			);
+
 			pathRegistry.register( copy );
 			sqmPathCopyMap.put( path.getNavigablePath(), copy );
 			return copy;
@@ -724,10 +726,11 @@ public class QuerySplitter {
 		@Override
 		public SqmEmbeddedValuedSimplePath<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
+			final SqmPath<?> lhs = findLhs( path, pathRegistry );
 			final SqmEmbeddedValuedSimplePath<?> copy = new SqmEmbeddedValuedSimplePath<>(
-					path.getNavigablePath(),
+					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
-					pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+					lhs,
 					path.nodeBuilder()
 			);
 			pathRegistry.register( copy );
@@ -738,10 +741,11 @@ public class QuerySplitter {
 		@Override
 		public SqmEntityValuedSimplePath<?> visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
+			final SqmPath<?> lhs = findLhs( path, pathRegistry );
 			final SqmEntityValuedSimplePath<?> copy = new SqmEntityValuedSimplePath<>(
-					path.getNavigablePath(),
+					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
-					pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+					lhs,
 					path.nodeBuilder()
 			);
 			pathRegistry.register( copy );
@@ -752,10 +756,12 @@ public class QuerySplitter {
 		@Override
 		public SqmPluralValuedSimplePath<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
+			SqmPath<?> lhs = findLhs( path, pathRegistry );
+
 			final SqmPluralValuedSimplePath<?> copy = new SqmPluralValuedSimplePath<>(
 					path.getNavigablePath(),
 					path.getReferencedPathSource(),
-					pathRegistry.findFromByPath( path.getLhs().getNavigablePath() ),
+					lhs,
 					path.nodeBuilder()
 			);
 			pathRegistry.register( copy );
@@ -763,13 +769,25 @@ public class QuerySplitter {
 			return copy;
 		}
 
+		private SqmPath<?> findLhs(SqmPath<?> path, SqmPathRegistry pathRegistry) {
+			final SqmPath<?> lhs = path.getLhs();
+			final SqmPath sqmFrom = sqmPathCopyMap.get( lhs.getNavigablePath() );
+			if ( sqmFrom != null ) {
+				return pathRegistry.findFromByPath( sqmFrom.getNavigablePath() );
+			}
+			else {
+				return (SqmPath<?>) lhs.accept( this );
+			}
+		}
+
 		@Override
 		public SqmSelectClause visitSelectClause(SqmSelectClause selectClause) {
 			SqmSelectClause copy = new SqmSelectClause( selectClause.isDistinct(), selectClause.nodeBuilder() );
 			for ( SqmSelection<?> selection : selectClause.getSelections() ) {
+				SqmExpression<?> selectableNode = (SqmExpression<?>) selection.getSelectableNode().accept( this );
 				copy.addSelection(
 						new SqmSelection<>(
-								(SqmExpression<?>) selection.getSelectableNode().accept( this ),
+								selectableNode,
 								selection.getAlias(),
 								selectClause.nodeBuilder()
 						)

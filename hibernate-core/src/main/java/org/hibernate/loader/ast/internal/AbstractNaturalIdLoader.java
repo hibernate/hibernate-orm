@@ -290,14 +290,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					)
 			);
 		}
-		return sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-				(processingState) -> new ColumnReference(
-						tableReference,
-						selectableMapping,
-						sessionFactory
-				)
-		);
+		return sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 	}
 
 	@Override
@@ -423,7 +416,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	private static List<Fetch> visitFetches(
 			FetchParent fetchParent,
-			QuerySpec querySpec,
 			LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();

@@ -94,16 +94,12 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 			column = fetchable.getSelectionExpression();
 		}
 
-		final Expression expression = creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey(
-						parentTableGroup.resolveTableReference( fetchPath, table ),
-						fetchable.getSelectionExpression()
-				),
-				processingState -> {
-					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
-					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-					return new ResultSetMappingSqlSelection( valuesArrayPosition, fetchable );
-				}
+		final Expression expression = ResultsHelper.resolveSqlExpression(
+				creationStateImpl,
+				jdbcResultsMetadata,
+				parentTableGroup.resolveTableReference( fetchPath, table ),
+				fetchable,
+				column
 		);
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(

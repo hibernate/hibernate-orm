@@ -29,7 +29,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -84,8 +83,7 @@ public final class ExecuteWithTemporaryTableHelper {
 							false,
 							null,
 							null,
-							column.getJdbcMapping(),
-							factory
+							column.getJdbcMapping()
 					)
 			);
 		}
@@ -106,15 +104,8 @@ public final class ExecuteWithTemporaryTableHelper {
 									jdbcPosition,
 									jdbcPosition + 1,
 									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													selection.getSelectionExpression()
-											),
-											sqlAstProcessingState -> new ColumnReference(
-													tableReference,
-													selection,
-													factory
-											)
+											tableReference,
+											selection
 									)
 							)
 					);
@@ -243,8 +234,7 @@ public final class ExecuteWithTemporaryTableHelper {
 											false,
 											null,
 											null,
-											temporaryTableColumn.getJdbcMapping(),
-											executionContext.getSession().getFactory()
+											temporaryTableColumn.getJdbcMapping()
 									)
 							)
 					);
@@ -264,8 +254,7 @@ public final class ExecuteWithTemporaryTableHelper {
 												false,
 												null,
 												null,
-												selectableMapping.getJdbcMapping(),
-												executionContext.getSession().getFactory()
+												selectableMapping.getJdbcMapping()
 										)
 								)
 						);
@@ -289,8 +278,7 @@ public final class ExecuteWithTemporaryTableHelper {
 									false,
 									null,
 									null,
-									idTable.getSessionUidColumn().getJdbcMapping(),
-									executionContext.getSession().getFactory()
+									idTable.getSessionUidColumn().getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
 							new QueryLiteral<>(

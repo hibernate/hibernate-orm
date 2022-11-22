@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
@@ -66,6 +68,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		return modelPart;
 	}
 
+	@Override
 	public List<String> getColumnAliases() {
 		return columnAliases;
 	}
@@ -84,16 +87,14 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		modelPart.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, selectableMapping.getContainingTableExpression() );
-					final String mappedColumn = selectableMapping.getSelectionExpression();
 					final String columnAlias = columnAliases.get( selectionIndex );
 					creationStateImpl.resolveSqlSelection(
-							creationStateImpl.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
-									processingState -> {
-										final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-										final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
-									}
+							ResultsHelper.resolveSqlExpression(
+									creationStateImpl,
+									jdbcResultsMetadata,
+									tableReference,
+									selectableMapping,
+									columnAlias
 							),
 							selectableMapping.getJdbcMapping().getJdbcJavaType(),
 							null,

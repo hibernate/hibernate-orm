@@ -56,6 +56,7 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -513,13 +514,8 @@ public class LoaderSelectBuilder {
 								navigablePath, selection.getContainingTableExpression() );
 						final ColumnReference columnRef =
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-										p -> new ColumnReference(
-												tableReference,
-												selection,
-												creationContext.getSessionFactory()
-										)
-
+										tableReference,
+										selection
 								);
 						if ( numberOfKeysToLoad == 1 ) {
 							final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
@@ -552,12 +548,8 @@ public class LoaderSelectBuilder {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-										p -> new ColumnReference(
-												tableReference,
-												selection,
-												creationContext.getSessionFactory()
-										)
+										tableReference,
+										selection
 								)
 						);
 					}
@@ -656,10 +648,7 @@ public class LoaderSelectBuilder {
 		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
-	private List<Fetch> visitFetches(
-			FetchParent fetchParent,
-			QuerySpec querySpec,
-			LoaderSqlAstCreationState creationState) {
+	private List<Fetch> visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 		}
@@ -667,7 +656,6 @@ public class LoaderSelectBuilder {
 		final List<Fetch> fetches = new ArrayList<>();
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
 				fetchParent,
-				querySpec,
 				creationState,
 				fetches
 		);
@@ -688,7 +676,6 @@ public class LoaderSelectBuilder {
 
 	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
 			FetchParent fetchParent,
-			QuerySpec querySpec,
 			LoaderSqlAstCreationState creationState,
 			List<Fetch> fetches) {
 		return (fetchable, isKeyFetchable) -> {
@@ -858,6 +845,7 @@ public class LoaderSelectBuilder {
 						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
 								.getTableGroup( fetchablePath );
+						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
 						applyFiltering(
 								querySpec,
 								joinTableGroup,
@@ -1038,16 +1026,8 @@ public class LoaderSelectBuilder {
 					simpleFkDescriptor.getContainingTableExpression()
 			);
 			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey( tableReference, simpleFkDescriptor.getSelectionExpression() ),
-					sqlAstProcessingState -> new ColumnReference(
-							tableReference,
-							simpleFkDescriptor.getSelectionExpression(),
-							false,
-							null,
-							null,
-							simpleFkDescriptor.getJdbcMapping(),
-							this.creationContext.getSessionFactory()
-					)
+					tableReference,
+					simpleFkDescriptor
 			);
 		}
 		else {
@@ -1060,17 +1040,7 @@ public class LoaderSelectBuilder {
 						);
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
-										.resolveSqlExpression(
-												createColumnReferenceKey(
-														tableReference,
-														selection.getSelectionExpression()
-												),
-												sqlAstProcessingState -> new ColumnReference(
-														tableReference,
-														selection,
-														this.creationContext.getSessionFactory()
-												)
-										)
+										.resolveSqlExpression( tableReference, selection )
 						);
 					}
 			);
@@ -1121,12 +1091,8 @@ public class LoaderSelectBuilder {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
 					final TableReference tableReference = ownerTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference,
-									selection,
-									sessionFactory
-							)
+							tableReference,
+							selection
 					);
 					subQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(

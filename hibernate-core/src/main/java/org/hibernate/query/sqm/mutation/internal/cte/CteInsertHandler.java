@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -45,7 +44,6 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -74,7 +72,6 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -98,7 +95,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -267,8 +263,7 @@ public class CteInsertHandler implements InsertHandler {
 									false,
 									null,
 									null,
-									rowNumberColumn.getJdbcMapping(),
-									sessionFactory
+									rowNumberColumn.getJdbcMapping()
 							);
 							insertStatement.getTargetColumnReferences().set(
 									insertStatement.getTargetColumnReferences().size() - 1,
@@ -322,9 +317,8 @@ public class CteInsertHandler implements InsertHandler {
 													false,
 													null,
 													null,
-													columnReference.getJdbcMapping(),
-													null
-											)
+													columnReference.getJdbcMapping()
+									)
 							)
 					);
 				}
@@ -354,8 +348,7 @@ public class CteInsertHandler implements InsertHandler {
 					false,
 					null,
 					null,
-					rowNumberColumn.getJdbcMapping(),
-					sessionFactory
+					rowNumberColumn.getJdbcMapping()
 			);
 			insertStatement.getTargetColumnReferences().add( columnReference );
 			targetPathCteColumns.add( rowNumberColumn );
@@ -393,8 +386,7 @@ public class CteInsertHandler implements InsertHandler {
 					false,
 					null,
 					null,
-					rowNumberColumn.getJdbcMapping(),
-					factory
+					rowNumberColumn.getJdbcMapping()
 			);
 			final CteColumn idColumn = fullEntityCteTable.getCteColumns().get( 0 );
 			final BasicValuedMapping idType = (BasicValuedMapping) idColumn.getJdbcMapping();
@@ -515,8 +507,7 @@ public class CteInsertHandler implements InsertHandler {
 												false,
 												null,
 												null,
-												rowNumberColumn.getJdbcMapping(),
-												factory
+												rowNumberColumn.getJdbcMapping()
 										)
 								)
 						)
@@ -533,8 +524,7 @@ public class CteInsertHandler implements InsertHandler {
 												false,
 												null,
 												null,
-												idColumn.getJdbcMapping(),
-												factory
+												idColumn.getJdbcMapping()
 										),
 										BinaryArithmeticOperator.ADD,
 										new BinaryArithmeticExpression(
@@ -546,8 +536,7 @@ public class CteInsertHandler implements InsertHandler {
 														false,
 														null,
 														null,
-														rowNumberColumn.getJdbcMapping(),
-														factory
+														rowNumberColumn.getJdbcMapping()
 												),
 												integerType
 										),
@@ -580,8 +569,7 @@ public class CteInsertHandler implements InsertHandler {
 											false,
 											null,
 											null,
-											cteColumn.getJdbcMapping(),
-											factory
+											cteColumn.getJdbcMapping()
 									)
 							)
 					);
@@ -849,8 +837,7 @@ public class CteInsertHandler implements InsertHandler {
 						false,
 						null,
 						null,
-						rowNumberColumn.getJdbcMapping(),
-						factory
+						rowNumberColumn.getJdbcMapping()
 				);
 				// Insert in the same order as the original tuples came
 				insertSelectSpec.addSortSpecification(
@@ -871,8 +858,7 @@ public class CteInsertHandler implements InsertHandler {
 									false,
 									null,
 									null,
-									null,
-									factory
+									null
 							)
 					);
 				}
@@ -914,8 +900,7 @@ public class CteInsertHandler implements InsertHandler {
 												false,
 												null,
 												null,
-												rowNumberColumn.getJdbcMapping(),
-												factory
+												rowNumberColumn.getJdbcMapping()
 										)
 								)
 						)
@@ -934,8 +919,7 @@ public class CteInsertHandler implements InsertHandler {
 										false,
 										null,
 										null,
-										idCteColumn.getJdbcMapping(),
-										factory
+										idCteColumn.getJdbcMapping()
 								)
 						)
 				);
@@ -952,8 +936,7 @@ public class CteInsertHandler implements InsertHandler {
 											false,
 											null,
 											null,
-											cteColumn.getJdbcMapping(),
-											factory
+											cteColumn.getJdbcMapping()
 									)
 							)
 					);
@@ -985,8 +968,7 @@ public class CteInsertHandler implements InsertHandler {
 						false,
 						null,
 						null,
-						idCteColumn.getJdbcMapping(),
-						factory
+						idCteColumn.getJdbcMapping()
 				);
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
@@ -1042,8 +1024,7 @@ public class CteInsertHandler implements InsertHandler {
 									false,
 									null,
 									null,
-									null,
-									factory
+									null
 							)
 					);
 					insertSelectSpec.getSelectClause().addSqlSelection(
@@ -1056,8 +1037,7 @@ public class CteInsertHandler implements InsertHandler {
 											false,
 											null,
 											null,
-											null,
-											factory
+											null
 									)
 							)
 					);
@@ -1092,8 +1072,7 @@ public class CteInsertHandler implements InsertHandler {
 												columnReference.isColumnExpressionFormula(),
 												null,
 												null,
-												columnReference.getJdbcMapping(),
-												factory
+												columnReference.getJdbcMapping()
 										)
 								)
 						);

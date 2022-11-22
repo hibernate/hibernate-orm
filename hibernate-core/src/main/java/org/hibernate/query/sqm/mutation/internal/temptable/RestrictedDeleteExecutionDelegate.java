@@ -408,12 +408,8 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						assert deleteTableReference.getTableReference( selection.getContainingTableExpression() ) != null;
 
 						final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey( deleteTableReference, selection.getSelectionExpression() ),
-								sqlAstProcessingState -> new ColumnReference(
-										deleteTableReference,
-										selection,
-										sessionFactory
-								)
+								deleteTableReference,
+								selection
 						);
 
 						deletingTableColumnRefs.add( (ColumnReference) expression );
@@ -604,8 +600,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					keyColumnCollector.apply(
 							new ColumnReference(
 									targetTable,
-									selection,
-									factory
+									selection
 							)
 					);
 				}

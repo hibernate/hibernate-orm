@@ -11,7 +11,6 @@ import java.sql.Types;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -85,19 +84,10 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						if ( getDialect() instanceof SybaseDialect ) {
-							verify(
-									CONNECTION_PROVIDER.getPreparedStatement(
-											"update AnEntity set AnEntity.name='abc'" ),
-									times( 1 )
-							).setQueryTimeout( 123 );
-						}
-						else {
-							verify(
-									CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
-									times( 1 )
-							).setQueryTimeout( 123 );
-						}
+						verify(
+								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
+								times( 1 )
+						).setQueryTimeout( 123 );
 					}
 					catch (SQLException ex) {
 						fail( "should not have thrown exception" );
@@ -116,19 +106,10 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						if ( getDialect() instanceof SybaseDialect ) {
-							verify(
-									CONNECTION_PROVIDER.getPreparedStatement(
-											"update AnEntity set AnEntity.name='abc'" ),
-									times( 1 )
-							).setQueryTimeout( 123 );
-						}
-						else {
-							verify(
-									CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
-									times( 1 )
-							).setQueryTimeout( 123 );
-						}
+						verify(
+								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
+								times( 1 )
+						).setQueryTimeout( 123 );
 					}
 					catch (SQLException ex) {
 						fail( "should not have thrown exception" );

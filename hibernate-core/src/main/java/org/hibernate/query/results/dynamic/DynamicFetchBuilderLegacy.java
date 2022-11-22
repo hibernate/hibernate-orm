@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.spi.NavigablePath;
@@ -34,11 +35,14 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
+import static org.hibernate.query.results.ResultsHelper.impl;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -129,7 +133,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationState = ResultsHelper.impl( domainResultCreationState );
+		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 		final TableGroup ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
 		final AttributeMapping attributeMapping = parent.getReferencedMappingContainer()
 				.findContainingEntityMapping()
@@ -175,11 +179,8 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 						(selectionIndex, selectableMapping) -> {
 							resolveSqlSelection(
 									columnNames.get( selectionIndex ),
-									createColumnReferenceKey(
-											tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
-											selectableMapping.getSelectionExpression()
-									),
-									selectableMapping.getJdbcMapping(),
+									tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+									selectableMapping,
 									jdbcResultsMetadata,
 									domainResultCreationState
 							);
@@ -232,23 +233,25 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 
 	private void resolveSqlSelection(
 			String columnAlias,
-			String columnKey,
-			JdbcMapping jdbcMapping,
+			TableReference tableReference,
+			SelectableMapping selectableMapping,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						columnKey,
-						state -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-							final int valuesArrayPosition = jdbcPosition - 1;
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
-						}
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						tableReference,
+						selectableMapping,
+						columnAlias
 				),
-				jdbcMapping.getJdbcJavaType(),
+				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
 		);
 	}
 

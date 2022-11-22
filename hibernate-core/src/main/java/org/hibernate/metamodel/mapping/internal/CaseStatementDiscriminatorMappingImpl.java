@@ -149,8 +149,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 												false,
 												null,
 												null,
-												getJdbcMapping(),
-												getSessionFactory()
+												getJdbcMapping()
 										),
 										true
 								);

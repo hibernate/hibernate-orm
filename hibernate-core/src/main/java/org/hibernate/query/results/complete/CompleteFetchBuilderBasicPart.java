@@ -6,11 +6,14 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -63,18 +66,22 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 	}
 
 	@Override
+	public List<String> getColumnAliases() {
+		return Collections.singletonList( selectionAlias );
+	}
+
+	@Override
 	public BasicFetch<?> buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 
 		final String mappedTable = referencedModelPart.getContainingTableExpression();
-		final String mappedColumn = referencedModelPart.getSelectionExpression();
 
-		final TableGroup tableGroup = creationState.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
+		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, mappedTable );
 
 		final String selectedAlias;
@@ -94,20 +101,20 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 			selectedAlias = selectionAlias;
 		}
 		else {
-			if ( ! creationState.arePositionalSelectionsAllowed() ) {
+			if ( ! creationStateImpl.arePositionalSelectionsAllowed() ) {
 				throw new PositionalSelectionsNotAllowedException(
 						"Positional SQL selection resolution not allowed"
 				);
 			}
-			jdbcPosition = creationState.getNumberOfProcessedSelections();
+			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
 			selectedAlias = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 		}
 
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 		// we just care about the registration here.  The ModelPart will find it later
-		creationState.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, mappedColumn ),
+		creationStateImpl.resolveSqlExpression(
+				createColumnReferenceKey( tableReference, referencedModelPart ),
 				processingState -> new ResultSetMappingSqlSelection( valuesArrayPosition, referencedModelPart )
 		);
 

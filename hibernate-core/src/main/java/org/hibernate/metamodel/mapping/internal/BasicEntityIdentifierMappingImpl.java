@@ -260,16 +260,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		}
 
 		final Expression expression = expressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
-				sqlAstProcessingState -> new ColumnReference(
-						rootTableReference,
-						pkColumnName,
-						false,
-						null,
-						null,
-						( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
-						sessionFactory
-				)
+				rootTableReference,
+				this
 		);
 
 		return expressionResolver.resolveSqlSelection(

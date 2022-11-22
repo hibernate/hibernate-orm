@@ -238,17 +238,7 @@ public abstract class AbstractCompositeIdentifierMapping
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-							.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey(
-											tableReference,
-											selection.getSelectionExpression()
-									),
-									sqlAstProcessingState -> new ColumnReference(
-											tableReference.getIdentificationVariable(),
-											selection,
-											sqlAstCreationState.getCreationContext().getSessionFactory()
-									)
-							);
+							.resolveSqlExpression( tableReference, selection );
 
 					columnReferences.add( (ColumnReference) columnReference );
 				}

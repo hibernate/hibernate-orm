@@ -65,7 +65,6 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.CollectionLoader;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -1126,7 +1125,7 @@ public abstract class AbstractCollectionPersister
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
 				LockOptions.NONE,
-				(fetchParent, querySpec, creationState) -> new ArrayList<>(),
+				(fetchParent, creationState) -> new ArrayList<>(),
 				true,
 				getFactory()
 		);

@@ -193,8 +193,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 									new ColumnReference(
 											existsTableReference,
 											keyColumns[selectionIndex],
-											selectableMapping.getJdbcMapping(),
-											factory
+											selectableMapping.getJdbcMapping()
 									)
 							);
 						}
@@ -291,8 +290,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 							(index, selectable) -> columnReferences.add(
 									new ColumnReference(
 											dmlTableReference,
-											selectable,
-											factory
+											selectable
 									)
 							)
 					);

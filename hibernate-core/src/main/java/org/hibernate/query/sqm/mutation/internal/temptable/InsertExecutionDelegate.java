@@ -344,8 +344,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											false,
 											null,
 											null,
-											columnReference.getJdbcMapping(),
-											sessionFactory
+											columnReference.getJdbcMapping()
 									)
 							)
 					);
@@ -364,8 +363,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					false,
 					null,
 					null,
-					identifierMapping.getJdbcMapping(),
-					sessionFactory
+					identifierMapping.getJdbcMapping()
 			);
 			idSelectQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, columnReference ) );
 			idSelectQuerySpec.addSortSpecification(
@@ -427,8 +425,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 				final ColumnReference idColumnReference = new ColumnReference(
 						(String) null,
-						identifierMapping,
-						sessionFactory
+						identifierMapping
 				);
 				temporaryTableAssignments.add(
 						new Assignment(
@@ -458,8 +455,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									false,
 									null,
 									null,
-									sessionUidColumn.getJdbcMapping(),
-									sessionFactory
+									sessionUidColumn.getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
 							sessionUidParameter
@@ -476,8 +472,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											false,
 											null,
 											null,
-											rowNumberColumn.getJdbcMapping(),
-											sessionFactory
+											rowNumberColumn.getJdbcMapping()
 									),
 									ComparisonOperator.EQUAL,
 									rowNumber
@@ -539,8 +534,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 								false,
 								null,
 								null,
-								identifierMapping.getJdbcMapping(),
-								sessionFactory
+								identifierMapping.getJdbcMapping()
 						)
 				);
 				querySpec.getSelectClause().addSqlSelection(
@@ -553,8 +547,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 										false,
 										null,
 										null,
-										idColumnReference.getJdbcMapping(),
-										sessionFactory
+										idColumnReference.getJdbcMapping()
 								)
 						)
 				);
@@ -603,8 +596,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					new Assignment(
 							new ColumnReference(
 									(String) null,
-									identifierMapping,
-									sessionFactory
+									identifierMapping
 							),
 							rootIdentity
 					)
@@ -619,8 +611,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									false,
 									null,
 									null,
-									identifierMapping.getJdbcMapping(),
-									sessionFactory
+									identifierMapping.getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
 							entityIdentity
@@ -723,8 +714,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											false,
 											null,
 											null,
-											columnReference.getJdbcMapping(),
-											sessionFactory
+											columnReference.getJdbcMapping()
 									)
 							)
 					);
@@ -757,8 +747,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							false,
 							null,
 							null,
-							identifierMapping.getJdbcMapping(),
-							sessionFactory
+							identifierMapping.getJdbcMapping()
 					)
 			);
 			querySpec.getSelectClause().addSqlSelection(
@@ -767,8 +756,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							0,
 							new ColumnReference(
 									updatingTableReference.getIdentificationVariable(),
-									identifierMapping,
-									sessionFactory
+									identifierMapping
 							)
 					)
 			);

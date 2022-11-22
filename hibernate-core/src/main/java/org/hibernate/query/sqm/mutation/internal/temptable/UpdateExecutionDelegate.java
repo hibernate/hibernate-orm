@@ -269,8 +269,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
-									selection,
-									sessionFactory
+									selection
 							)
 					);
 				}
@@ -369,8 +368,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 						existsKeyColumnCollector.apply(
 								new ColumnReference(
 										existsTableReference,
-										selection,
-										sessionFactory
+										selection
 								)
 						);
 					}

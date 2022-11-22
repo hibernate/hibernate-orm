@@ -57,17 +57,15 @@ public class MappingModelHelper {
 						if ( sqlExpressionResolver == null ) {
 							colRef = new ColumnReference(
 									qualifier,
-									selection,
-									sessionFactory
+									selection
 							);
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( qualifier, selection.getSelectionExpression() ),
+									createColumnReferenceKey( qualifier, selection ),
 									sqlAstProcessingState -> new ColumnReference(
 											qualifier,
-											selection,
-											sessionFactory
+											selection
 									)
 							);
 						}
@@ -89,17 +87,15 @@ public class MappingModelHelper {
 			if ( sqlExpressionResolver == null ) {
 				return new ColumnReference(
 						qualifier,
-						basicPart,
-						sessionFactory
+						basicPart
 				);
 			}
 			else {
 				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( qualifier, basicPart.getSelectionExpression() ),
+						createColumnReferenceKey( qualifier, basicPart ),
 						sqlAstProcessingState -> new ColumnReference(
 								qualifier,
-								basicPart,
-								sessionFactory
+								basicPart
 						)
 				);
 			}

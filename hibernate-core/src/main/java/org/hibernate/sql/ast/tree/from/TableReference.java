@@ -15,6 +15,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.
  *
@@ -55,7 +57,7 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	default boolean containsAffectedTableName(String requestedName) {
-		return visitAffectedTableNames( requestedName::equals );
+		return isEmpty( requestedName ) || Boolean.TRUE.equals( visitAffectedTableNames( requestedName::equals ) );
 	}
 
 	Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector);

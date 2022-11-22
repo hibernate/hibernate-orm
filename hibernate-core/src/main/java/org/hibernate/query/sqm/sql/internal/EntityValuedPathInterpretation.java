@@ -242,6 +242,11 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				allowFkOptimization = false;
 			}
 		}
+		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {
+			resultModelPart = ( (AnonymousTupleEntityValuedModelPart) mapping ).getForeignKeyPart();
+			resultTableGroup = tableGroup;
+			allowFkOptimization = true;
+		}
 		else {
 			// If the mapping is not an association, use the PK and disallow FK optimizations
 			resultModelPart = mapping.getEntityMappingType().getIdentifierMapping();
@@ -311,17 +316,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						false
 				);
 				expressions.add(
-						sqlExprResolver.resolveSqlExpression(
-								createColumnReferenceKey(
-										tableReference,
-										selectableMapping.getSelectionExpression()
-								),
-								processingState -> new ColumnReference(
-										tableReference,
-										selectableMapping,
-										sessionFactory
-								)
-						)
+						sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping )
 				);
 			};
 			identifierMapping.forEachSelectable( selectableConsumer );
@@ -339,14 +334,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						basicValuedModelPart.getContainingTableExpression(),
 						allowFkOptimization
 				);
-				sqlExpression = sqlExprResolver.resolveSqlExpression(
-						createColumnReferenceKey( tableReference, basicValuedModelPart.getSelectionExpression() ),
-						processingState -> new ColumnReference(
-								tableReference,
-								basicValuedModelPart,
-								sessionFactory
-						)
-				);
+				sqlExpression = sqlExprResolver.resolveSqlExpression( tableReference, basicValuedModelPart );
 			}
 			else {
 				final List<Expression> expressions = new ArrayList<>( resultModelPart.getJdbcTypeCount() );
@@ -357,19 +345,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 									selectableMapping.getContainingTableExpression(),
 									allowFkOptimization
 							);
-							expressions.add(
-									sqlExprResolver.resolveSqlExpression(
-											createColumnReferenceKey(
-													tableReference,
-													selectableMapping.getSelectionExpression()
-											),
-											processingState -> new ColumnReference(
-													tableReference,
-													selectableMapping,
-													sessionFactory
-											)
-									)
-							);
+							expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
 						}
 				);
 				sqlExpression = new SqlTuple( expressions, resultModelPart );

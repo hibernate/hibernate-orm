@@ -96,6 +96,7 @@ import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -141,6 +142,7 @@ import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationTypePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.EmbeddableValuedExpression;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
@@ -331,7 +333,6 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.SyntheticVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -408,7 +409,6 @@ import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
@@ -1275,8 +1275,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(
 					new ColumnReference(
 							rootTableGroup.resolveTableReference( discriminatorMapping.getContainingTableExpression() ),
-							discriminatorMapping,
-							getCreationContext().getSessionFactory()
+							discriminatorMapping
 					),
 					rootTableGroup.getNavigablePath().append( discriminatorMapping.getPartName() ),
 					discriminatorMapping,
@@ -1328,8 +1327,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final BasicValuedPathInterpretation<?> identifierPath = new BasicValuedPathInterpretation<>(
 						new ColumnReference(
 								rootTableGroup.resolveTableReference( identifierMapping.getContainingTableExpression() ),
-								identifierMapping,
-								getCreationContext().getSessionFactory()
+								identifierMapping
 						),
 						rootTableGroup.getNavigablePath().append( identifierMapping.getPartName() ),
 						identifierMapping,
@@ -2605,14 +2603,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								new ComparisonPredicate(
 										new ColumnReference(
 												parentTableGroup.resolveTableReference( navigablePath, selectable.getContainingTableExpression() ),
-												selectable,
-												sessionFactory
+												selectable
 										),
 										ComparisonOperator.EQUAL,
 										new ColumnReference(
 												tableGroup.resolveTableReference( navigablePath, selectable.getContainingTableExpression() ),
-												selectable,
-												sessionFactory
+												selectable
 										)
 								)
 						)
@@ -2626,15 +2622,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							lhs.add(
 									new ColumnReference(
 											parentTableGroup.resolveTableReference( navigablePath, selectable.getContainingTableExpression() ),
-											selectable,
-											sessionFactory
+											selectable
 									)
 							);
 							rhs.add(
 									new ColumnReference(
 											tableGroup.resolveTableReference( navigablePath, selectable.getContainingTableExpression() ),
-											selectable,
-											sessionFactory
+											selectable
 									)
 							);
 						}
@@ -3697,6 +3691,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						resultModelPart = entityValuedModelPart.findSubPart( targetPart.getPartName(), null );
 					}
 				}
+				else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
+					// The FK of AnonymousTupleEntityValuedModelParts always refers to the PK, so we can safely use the FK
+					resultModelPart = ( (AnonymousTupleEntityValuedModelPart) entityValuedModelPart ).getForeignKeyPart();
+				}
 				else {
 					// Otherwise, we use the identifier mapping of the target entity type
 					resultModelPart = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
@@ -3758,6 +3756,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
 					}
 				}
+				else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
+					resultModelPart = ( (AnonymousTupleEntityValuedModelPart) entityValuedModelPart ).getForeignKeyPart();
+				}
 				else {
 					// Since the table group model part is an EntityMappingType,
 					// we can render the FK target model part of the inferred collection part,
@@ -3776,6 +3777,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				interpretationModelPart = inferredEntityMapping;
 				tableGroupToUse = collectionTableGroup;
+			}
+			else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
+				resultModelPart = ( (AnonymousTupleEntityValuedModelPart) entityValuedModelPart ).getForeignKeyPart();
+				interpretationModelPart = inferredEntityMapping;
+				tableGroupToUse = null;
 			}
 			else {
 				// Render the identifier mapping if the inferred mapping is an EntityMappingType
@@ -3839,15 +3845,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey(
-							tableReference,
-							mapping.getSelectionExpression()
-					),
-					sacs -> new ColumnReference(
-							tableReference.getIdentificationVariable(),
-							mapping,
-							getCreationContext().getSessionFactory()
-					)
+					tableReference,
+					mapping
 			);
 			final ColumnReference columnReference;
 			if ( expression instanceof ColumnReference ) {
@@ -4055,12 +4054,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final BasicValuedModelPart basicFkPart = (BasicValuedModelPart) fkKeyPart;
 
 			return getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey( tableReference, basicFkPart.getSelectionExpression() ),
-					(sqlAstProcessingState) -> new ColumnReference(
-							tableReference,
-							basicFkPart,
-							creationContext.getSessionFactory()
-					)
+					tableReference,
+					basicFkPart
 			);
 		}
 		else {
@@ -4070,12 +4065,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Expression> tupleElements = new ArrayList<>( jdbcMappings.size() );
 			compositeFkPart.forEachSelectable( (position, selectable) -> tupleElements.add(
 					getSqlExpressionResolver().resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selectable.getSelectionExpression() ),
-							(sqlAstProcessingState) -> new ColumnReference(
-									tableReference,
-									selectable,
-									creationContext.getSessionFactory()
-							)
+							tableReference,
+							selectable
 					)
 			) );
 
@@ -4371,8 +4362,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 											navigablePath,
 											selectionMapping.getContainingTableExpression()
 									),
-									selectionMapping,
-									creationContext.getSessionFactory()
+									selectionMapping
 							)
 					)
 			);
@@ -4489,8 +4479,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 											navigablePath,
 											selectionMapping.getContainingTableExpression()
 									),
-									selectionMapping,
-									creationContext.getSessionFactory()
+									selectionMapping
 							);
 							final String columnName;
 							if ( selectionMapping.isFormula() ) {
@@ -4528,8 +4517,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										false,
 										null,
 										null,
-										subQueryColumns.get( i ).getJdbcMapping(),
-										creationContext.getSessionFactory()
+										subQueryColumns.get( i ).getJdbcMapping()
 								)
 						);
 					}
@@ -4572,8 +4560,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									expression.getExpressionType().getJdbcMappings().get( 0 ),
-									creationContext.getSessionFactory()
+									expression.getExpressionType().getJdbcMappings().get( 0 )
 							)
 					);
 				}
@@ -4676,8 +4663,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 ),
-									creationContext.getSessionFactory()
+									sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 )
 							)
 					),
 					(ReturnableType<?>) sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 ),
@@ -4694,8 +4680,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									selectionMapping.getJdbcMapping(),
-									creationContext.getSessionFactory()
+									selectionMapping.getJdbcMapping()
 							)
 					)
 			);
@@ -5865,38 +5850,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 					else {
 						final EmbeddableValuedModelPart valueMapping = (EmbeddableValuedModelPart) determineValueMapping( expression );
-						final SqmPath<?> path = SqmExpressionHelper.findPath( expression, expression.getNodeType() );
-						final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
-						final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
-								path.getLhs().getNavigablePath()
-						);
-						final NavigablePath navigablePath = parentTableGroup.getNavigablePath().append(
-								path.getNavigablePath().getLocalName(),
-								Long.toString( System.nanoTime() )
-						);
-						final TableGroup tableGroup = new SyntheticVirtualTableGroup(
-								navigablePath,
+						return new EmbeddableValuedExpression<>(
 								valueMapping,
-								parentTableGroup
-						);
-						fromClauseIndex.registerTableGroup( navigablePath, tableGroup );
-						// Register the expressions under the column reference key
-						final SqlExpressionResolver resolver = getSqlAstCreationState().getSqlExpressionResolver();
-						final TableReference tableReference = tableGroup.getPrimaryTableReference();
-						valueMapping.forEachSelectable(
-								(selectionIndex, selection) -> resolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey(
-												tableReference,
-												selection.getSelectionExpression()
-										),
-										processingState -> (Expression) (selectionIndex == 0 ? result : offset)
-								)
-						);
-						return new EmbeddableValuedPathInterpretation<>(
-								new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping ),
-								navigablePath,
-								valueMapping,
-								tableGroup
+								new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping )
 						);
 					}
 				}

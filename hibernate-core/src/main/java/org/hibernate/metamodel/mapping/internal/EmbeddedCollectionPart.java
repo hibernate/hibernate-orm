@@ -207,12 +207,8 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 					);
 					expressions.add(
 							sqlExpressionResolver.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-									sqlAstProcessingState -> new ColumnReference(
-											tableReference,
-											selection,
-											sqlAstCreationState.getCreationContext().getSessionFactory()
-									)
+									tableReference,
+									selection
 							)
 					);
 				}

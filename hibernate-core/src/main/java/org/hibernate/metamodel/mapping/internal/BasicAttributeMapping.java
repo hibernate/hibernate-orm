@@ -262,15 +262,8 @@ public class BasicAttributeMapping
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								mappedColumnExpression
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference,
-								this,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
+						tableReference,
+						this
 				),
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,

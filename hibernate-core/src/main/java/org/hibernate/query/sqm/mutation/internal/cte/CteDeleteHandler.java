@@ -123,8 +123,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 								(index, selectable) -> columnReferences.add(
 										new ColumnReference(
 												dmlTableReference,
-												selectable,
-												factory
+												selectable
 										)
 								)
 						);
@@ -171,8 +170,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							(index, selectable) -> columnReferences.add(
 									new ColumnReference(
 											dmlTableReference,
-											selectable,
-											factory
+											selectable
 									)
 							)
 					);

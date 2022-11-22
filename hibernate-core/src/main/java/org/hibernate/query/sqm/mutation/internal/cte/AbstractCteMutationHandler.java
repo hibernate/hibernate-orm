@@ -287,8 +287,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 								new ColumnReference(
 										idSelectTableReference,
 										cteColumn.getColumnExpression(),
-										cteColumn.getJdbcMapping(),
-										factory
+										cteColumn.getJdbcMapping()
 								)
 						)
 				);
@@ -304,8 +303,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 										new ColumnReference(
 												idSelectTableReference,
 												selectableMapping.getSelectionExpression(),
-												selectableMapping.getJdbcMapping(),
-												factory
+												selectableMapping.getJdbcMapping()
 										)
 								)
 						);

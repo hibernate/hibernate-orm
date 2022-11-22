@@ -344,9 +344,10 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				);
 			}
 			else {
-				appendSql( getCurrentDmlStatement().getTargetTable().getTableExpression() );
-				appendSql( '.' );
-				appendSql( columnReference.getColumnExpression() );
+				columnReference.appendReadExpression(
+						this,
+						getCurrentDmlStatement().getTargetTable().getTableExpression()
+				);
 			}
 		}
 		else {

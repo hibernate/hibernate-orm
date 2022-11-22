@@ -214,18 +214,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		final TableReference columnTableReference = tableGroup.resolveTableReference( fetchablePath, columnTableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, columnExpression ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								columnExpression,
-								false,
-								null,
-								null,
-								versionBasicType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -288,18 +277,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		);
 
 		return sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, columnExpression ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								columnExpression,
-								false,
-								null,
-								null,
-								versionBasicType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()

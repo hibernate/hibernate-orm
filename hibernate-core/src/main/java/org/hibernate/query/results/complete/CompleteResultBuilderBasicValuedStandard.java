@@ -72,56 +72,20 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
-
+		final int jdbcPosition;
 		final String columnName;
 		if ( explicitColumnName != null ) {
+			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
 			columnName = explicitColumnName;
 		}
 		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
+			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
+			columnName = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 		}
-
-//		final int jdbcPosition;
-//		if ( explicitColumnName != null ) {
-//			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-//		}
-//		else {
-//			jdbcPosition = resultPosition + 1;
-//		}
-//
-//		final BasicValuedMapping basicType;
-//		if ( explicitType != null ) {
-//			basicType = explicitType;
-//		}
-//		else {
-//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType );
-//		}
-//
-//		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-//				creationStateImpl.resolveSqlExpression(
-//						columnName,
-//						processingState -> {
-//							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-//							return new SqlSelectionImpl( valuesArrayPosition, basicType );
-//						}
-//				),
-//				basicType.getExpressibleJavaType(),
-//				sessionFactory.getTypeConfiguration()
-//		);
-
-
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						columnName,
 						processingState -> {
-							final int jdbcPosition;
-							if ( explicitColumnName != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-							}
-							else {
-								jdbcPosition = resultPosition + 1;
-							}
-
 							final BasicValuedMapping basicType;
 							if ( explicitType != null ) {
 								basicType = explicitType;
@@ -144,7 +108,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		);
 
 		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getJdbcMappings().get( 0 );
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
 				jdbcMapping

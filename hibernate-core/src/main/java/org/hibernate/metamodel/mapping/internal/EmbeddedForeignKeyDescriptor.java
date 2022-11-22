@@ -14,7 +14,6 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -369,14 +368,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
 							new ColumnReference(
 									targetSideReference,
-									selection,
-									creationContext.getSessionFactory()
+									selection
 							),
 							ComparisonOperator.EQUAL,
 							new ColumnReference(
 									keySideReference,
-									keySelectableMappings.getSelectable( i ),
-									creationContext.getSessionFactory()
+									keySelectableMappings.getSelectable( i )
 							)
 					);
 					predicate.add( comparisonPredicate );

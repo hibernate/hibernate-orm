@@ -260,15 +260,8 @@ public class EmbeddedAttributeMapping
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableReference,
-									selection.getSelectionExpression()
-							),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference.getIdentificationVariable(),
-									selection,
-									sqlAstCreationState.getCreationContext().getSessionFactory()
-							)
+							tableReference,
+							selection
 					);
 
 					columnReferences.add( columnReference.getColumnReference() );

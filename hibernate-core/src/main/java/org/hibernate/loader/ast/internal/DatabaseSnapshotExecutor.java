@@ -77,7 +77,7 @@ class DatabaseSnapshotExecutor {
 				sqlAliasBaseManager,
 				new FromClauseIndex( null ),
 				LockOptions.NONE,
-				(fetchParent, ast, creationState) -> Collections.emptyList(),
+				(fetchParent, creationState) -> Collections.emptyList(),
 				true,
 				sessionFactory
 		);
@@ -122,14 +122,7 @@ class DatabaseSnapshotExecutor {
 					jdbcParameters.add( jdbcParameter );
 
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver
-							.resolveSqlExpression(
-									createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-									s -> new ColumnReference(
-											tableReference,
-											selection,
-											sessionFactory
-									)
-							);
+							.resolveSqlExpression( tableReference, selection );
 
 					rootQuerySpec.applyPredicate(
 							new ComparisonPredicate(

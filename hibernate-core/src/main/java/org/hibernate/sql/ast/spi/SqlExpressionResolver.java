@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -58,13 +59,31 @@ public interface SqlExpressionResolver {
 	}
 
 	/**
+	 * Convenience form for creating a key from table expression and SelectableMapping
+	 */
+	static String createColumnReferenceKey(String tableExpression, SelectableMapping selectable) {
+		return createColumnReferenceKey( tableExpression, selectable.getSelectionExpression() );
+	}
+
+	/**
 	 * Convenience form for creating a key from TableReference and SelectableMapping
 	 */
 	static String createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
-		assert Objects.equals( selectable.getContainingTableExpression(), tableReference.getTableId() )
+		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
 		return createColumnReferenceKey( tableReference, selectable.getSelectionExpression() );
 	}
+
+	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {
+		return resolveSqlExpression(
+				createColumnReferenceKey( tableReference, selectableMapping ),
+				processingState -> new ColumnReference(
+						tableReference,
+						selectableMapping
+				)
+		);
+	}
+
 
 	/**
 	 * Given a qualifier + a qualifiable {@link org.hibernate.metamodel.mapping.SqlExpressible},

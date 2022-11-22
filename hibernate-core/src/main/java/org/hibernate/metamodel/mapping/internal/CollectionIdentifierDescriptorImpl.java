@@ -216,19 +216,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
 				type.getJdbcJavaType(),
 				fetchParent,
@@ -256,19 +245,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
 				type.getJdbcJavaType(),
 				null,

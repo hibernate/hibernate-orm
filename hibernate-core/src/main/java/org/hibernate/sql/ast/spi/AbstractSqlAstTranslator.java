@@ -1006,6 +1006,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 
+		renderSetClause( statement, clauseStack );
+		visitWhereClause( statement.getRestriction() );
+		visitReturningColumns( statement );
+	}
+
+	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {
 		appendSql( " set " );
 		boolean firstPass = true;
 		try {
@@ -1020,7 +1026,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 				if ( columnReferences.size() == 1 ) {
-					columnReferences.get( 0 ).accept( this );
+					visitSetClauseTarget( columnReferences.get( 0 ) );
 					appendSql( '=' );
 					final Expression assignedValue = assignment.getAssignedValue();
 					final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
@@ -1047,9 +1053,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		finally {
 			clauseStack.pop();
 		}
+	}
 
-		visitWhereClause( statement.getRestriction() );
-		visitReturningColumns( statement );
+	protected void visitSetClauseTarget(ColumnReference columnReference) {
+		appendSql( columnReference.getColumnExpression() );
 	}
 
 	protected void visitInsertStatementOnly(InsertStatement statement) {
@@ -1926,8 +1933,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								false,
 								null,
 								null,
-								currentCteStatement.getCycleMarkColumn().getJdbcMapping(),
-								sessionFactory
+								currentCteStatement.getCycleMarkColumn().getJdbcMapping()
 						);
 						if ( currentCteStatement.getCycleValue().getJdbcMapping() == getBooleanType()
 								&& currentCteStatement.getCycleValue().getLiteralValue() == Boolean.TRUE
@@ -1970,8 +1976,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						false,
 						null,
 						null,
-						integerType,
-						sessionFactory
+						integerType
 				);
 				visitColumnReference( depthColumnReference );
 				appendSql( "+1" );
@@ -2003,8 +2008,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								false,
 								null,
 								null,
-								currentCteStatement.getSearchColumn().getJdbcMapping(),
-								sessionFactory
+								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
 				);
 				appendSql( "||" );
@@ -2116,8 +2120,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						false,
 						null,
 						null,
-						integerType,
-						sessionFactory
+						integerType
 				);
 				visitColumnReference( depthColumnReference );
 				appendSql( "+1" );
@@ -2161,8 +2164,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								false,
 								null,
 								null,
-								currentCteStatement.getSearchColumn().getJdbcMapping(),
-								sessionFactory
+								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
 				);
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
@@ -2307,8 +2309,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					false,
 					null,
 					null,
-					stringType,
-					sessionFactory
+					stringType
 			);
 
 			if ( !supportsRecursiveCycleClause() ) {
@@ -2455,8 +2456,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					false,
 					null,
 					null,
-					stringType,
-					sessionFactory
+					stringType
 			);
 			arguments.add( new QueryLiteral<>( "%", stringType ) );
 			for ( CteColumn cycleColumn : currentCteStatement.getCycleColumns() ) {
@@ -2875,8 +2875,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 											false,
 											null,
 											null,
-											getIntegerType(),
-											null
+											getIntegerType()
 									)
 							)
 					);
@@ -3101,8 +3100,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				false,
 				null,
 				null,
-				expression.getExpressionType().getJdbcMappings().get( 0 ),
-				sessionFactory
+				expression.getExpressionType().getJdbcMappings().get( 0 )
 		);
 	}
 
@@ -5565,8 +5563,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								false,
 								null,
 								null,
-								null,
-								sessionFactory
+								null
 						)
 				);
 			}
@@ -5636,8 +5633,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 									false,
 									null,
 									null,
-									null,
-									sessionFactory
+									null
 							)
 					);
 				}
@@ -5762,8 +5758,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							false,
 							null,
 							null,
-							null,
-							sessionFactory
+							null
 					);
 					sortExpression = sortSpecification.getSortExpression();
 				}
@@ -6018,11 +6013,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 			else {
-				if ( qualifyColumn ) {
-					appendSql( tableExpression );
-					appendSql( '.' );
-				}
-				appendSql( columnReference.getColumnExpression() );
+				columnReference.appendReadExpression( this, qualifyColumn ? tableExpression : null );
 			}
 		}
 		else {

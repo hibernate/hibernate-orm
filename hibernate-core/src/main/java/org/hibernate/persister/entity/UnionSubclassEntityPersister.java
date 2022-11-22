@@ -538,7 +538,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}
-					new ColumnReference( (String) null, selectableMapping, getFactory() ).appendReadExpression( sqlAppender );
+					new ColumnReference( (String) null, selectableMapping ).appendReadExpression( sqlAppender );
 					buf.append( ", " );
 				}
 				buf.append( persister.getDiscriminatorSQLValue() ).append( " as clazz_" );

@@ -69,20 +69,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
-		final String selectionExpression = getSelectionExpression();
-		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, selectionExpression ),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						selectionExpression,
-						columnFormula != null,
-						null,
-						null,
-						getJdbcMapping(),
-						getSessionFactory()
-
-				)
-		);
+		return expressionResolver.resolveSqlExpression( tableReference, this );
 	}
 
 	@Override

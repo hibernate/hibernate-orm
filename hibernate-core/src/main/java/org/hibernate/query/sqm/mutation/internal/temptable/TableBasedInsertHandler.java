@@ -27,7 +27,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
@@ -42,7 +41,6 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -198,8 +196,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 									false,
 									null,
 									null,
-									rowNumberColumn.getJdbcMapping(),
-									sessionFactory
+									rowNumberColumn.getJdbcMapping()
 							);
 							insertStatement.getTargetColumnReferences().set(
 									insertStatement.getTargetColumnReferences().size() - 1,
@@ -224,8 +221,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 										false,
 										null,
 										null,
-										rowNumberColumn.getJdbcMapping(),
-										sessionFactory
+										rowNumberColumn.getJdbcMapping()
 								);
 								insertStatement.getTargetColumnReferences().add( columnReference );
 								targetPathColumns.add( new Assignment( columnReference, columnReference ) );
@@ -248,8 +244,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 									false,
 									null,
 									null,
-									sessionUidColumn.getJdbcMapping(),
-									sessionFactory
+									sessionUidColumn.getJdbcMapping()
 							);
 							insertStatement.getTargetColumnReferences().add(
 									sessionUidColumnReference
@@ -285,8 +280,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 							false,
 							null,
 							null,
-							rowNumberColumn.getJdbcMapping(),
-							sessionFactory
+							rowNumberColumn.getJdbcMapping()
 					);
 					insertStatement.getTargetColumnReferences().add( columnReference );
 					targetPathColumns.add( new Assignment( columnReference, columnReference ) );
@@ -305,8 +299,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 						false,
 						null,
 						null,
-						sessionUidColumn.getJdbcMapping(),
-						sessionFactory
+						sessionUidColumn.getJdbcMapping()
 				);
 				insertStatement.getTargetColumnReferences().add(
 						sessionUidColumnReference

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.List;
+
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.sql.results.graph.Fetchable;
 
@@ -15,4 +17,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 public interface CompleteFetchBuilder extends FetchBuilder, ModelPartReference {
 	@Override
 	Fetchable getReferencedPart();
+
+	List<String> getColumnAliases();
 }

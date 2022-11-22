@@ -52,12 +52,8 @@ public final class ExecuteWithoutIdTableHelper {
 		rootEntityPersister.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> {
 					final ColumnReference columnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( rootTableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									rootTableReference,
-									selection,
-									sessionFactory
-							)
+							rootTableReference,
+							selection
 					);
 					final SqlSelection sqlSelection = new SqlSelectionImpl(
 							// irrelevant

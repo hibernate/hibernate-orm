@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -42,32 +41,28 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			String qualifier,
-			SelectableMapping selectableMapping,
-			SessionFactoryImplementor sessionFactory) {
+			SelectableMapping selectableMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
-				selectableMapping.getJdbcMapping(),
-				sessionFactory
+				selectableMapping.getJdbcMapping()
 		);
 	}
 
 	public ColumnReference(
 			String qualifier,
 			SelectableMapping selectableMapping,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
+			JdbcMapping jdbcMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
-				jdbcMapping,
-				sessionFactory
+				jdbcMapping
 		);
 	}
 
@@ -77,8 +72,7 @@ public class ColumnReference implements Expression, Assignable {
 			boolean isFormula,
 			String customReadExpression,
 			String customWriteExpression,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
+			JdbcMapping jdbcMapping) {
 		this.qualifier = StringHelper.nullIfEmpty( qualifier );
 
 		if ( isFormula ) {
@@ -112,28 +106,24 @@ public class ColumnReference implements Expression, Assignable {
 
 	public ColumnReference(
 			TableReference tableReference,
-			SelectableMapping selectableMapping,
-			SessionFactoryImplementor sessionFactory) {
+			SelectableMapping selectableMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
-				selectableMapping,
-				sessionFactory
+				selectableMapping
 		);
 	}
 
 	public ColumnReference(
 			TableReference tableReference,
 			String mapping,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
+			JdbcMapping jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
 				mapping,
 				false,
 				null,
 				null,
-				jdbcMapping,
-				sessionFactory
+				jdbcMapping
 		);
 	}
 
@@ -143,16 +133,14 @@ public class ColumnReference implements Expression, Assignable {
 			boolean isFormula,
 			String customReadExpression,
 			String customWriteExpression,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
+			JdbcMapping jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
 				columnExpression,
 				isFormula,
 				customReadExpression,
 				customWriteExpression,
-				jdbcMapping,
-				sessionFactory
+				jdbcMapping
 		);
 	}
 
@@ -180,6 +168,10 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public void appendReadExpression(SqlAppender appender) {
+		appendReadExpression( appender, qualifier );
+	}
+
+	public void appendReadExpression(SqlAppender appender, String qualifier) {
 		if ( isFormula ) {
 			appender.append( columnExpression );
 		}

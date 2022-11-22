@@ -754,8 +754,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 						isDiscriminatorFormula(),
 						null,
 						null,
-						discriminatorType.getJdbcMapping(),
-						getFactory()
+						discriminatorType.getJdbcMapping()
 				)
 		);
 

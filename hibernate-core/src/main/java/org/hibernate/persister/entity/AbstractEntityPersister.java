@@ -1489,8 +1489,7 @@ public abstract class AbstractEntityPersister
 									false,
 									null,
 									null,
-									selection.getJdbcMapping(),
-									getFactory()
+									selection.getJdbcMapping()
 							)
 					);
 
@@ -1506,8 +1505,7 @@ public abstract class AbstractEntityPersister
 									false,
 									null,
 									null,
-									selection.getJdbcMapping(),
-									getFactory()
+									selection.getJdbcMapping()
 							)
 					);
 
@@ -1970,7 +1968,7 @@ public abstract class AbstractEntityPersister
 		return expression;
 	}
 
-	private List<Fetch> fetchProcessor(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
+	private List<Fetch> fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
 		final List<Fetch> fetches = new ArrayList<>( size );

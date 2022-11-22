@@ -68,8 +68,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 						//		is no need for the JdbcMapping
 						null,
 						null,
-						null,
-						creationState.getCreationContext().getSessionFactory()
+						null
 				)
 		);
 	}

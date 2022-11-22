@@ -32,9 +32,9 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -43,9 +43,9 @@ import org.hibernate.sql.results.graph.FetchParent;
  * Helper used when generating the database-snapshot select query
  */
 public class LoaderSqlAstCreationState
-		implements SqlAstProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
+		implements SqlAstQueryPartProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
 	public interface FetchProcessor {
-		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
+		List<Fetch> visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
 	}
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -94,6 +94,11 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public QueryPart getInflightQueryPart() {
+		return processingState.getInflightQueryPart();
+	}
+
+	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
 		return processingState;
 	}
@@ -115,7 +120,7 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return fetchProcessor.visitFetches( fetchParent, processingState.getInflightQueryPart().getFirstQuerySpec(), this );
+		return fetchProcessor.visitFetches( fetchParent, this );
 	}
 
 	@Override

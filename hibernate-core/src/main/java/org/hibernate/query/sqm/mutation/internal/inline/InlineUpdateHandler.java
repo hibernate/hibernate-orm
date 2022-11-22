@@ -359,8 +359,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
-									selection,
-									sessionFactory
+									selection
 							)
 					);
 				}
@@ -454,8 +453,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 									false,
 									null,
 									null,
-									columnReference.getJdbcMapping(),
-									null
+									columnReference.getJdbcMapping()
 							);
 							columnNames.add( columnReference.getColumnExpression() );
 							lhs.add( valuesColumnReference );
@@ -466,8 +464,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 											false,
 											null,
 											null,
-											columnReference.getJdbcMapping(),
-											null
+											columnReference.getJdbcMapping()
 									)
 							);
 							querySpec.getSelectClause().addSqlSelection(
@@ -489,8 +486,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 						false,
 						null,
 						null,
-						columnReference.getJdbcMapping(),
-						null
+						columnReference.getJdbcMapping()
 				);
 				columnNames = Collections.singletonList( columnReference.getColumnExpression() );
 				joinPredicate = new ComparisonPredicate(
@@ -502,8 +498,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 								false,
 								null,
 								null,
-								columnReference.getJdbcMapping(),
-								null
+								columnReference.getJdbcMapping()
 						)
 				);
 				querySpec.getSelectClause().addSqlSelection(
@@ -534,8 +529,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 							new ColumnReference(
 									rootTableGroup.resolveTableReference( tableExpression ),
 									columnNames.get( 0 ),
-									entityDescriptor.getIdentifierMapping().getJdbcMappings().get( 0 ),
-									null
+									entityDescriptor.getIdentifierMapping().getJdbcMappings().get( 0 )
 							)
 					)
 			);

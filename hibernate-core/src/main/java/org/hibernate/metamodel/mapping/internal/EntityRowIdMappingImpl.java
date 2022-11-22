@@ -21,7 +21,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -89,22 +88,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		final TableReference columnTableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, rowIdName ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								rowIdName,
-								false,
-								// todo (6.0) : allowing custom read / write transformers on ROW_ID might
-								//		be an easy way to allow customization of the how ROW_ID is rendered
-								//		- e.g. quickly testing whether that syntax works for a db without
-								//			having to write a Dialect
-								null,
-								null,
-								rowIdType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				rowIdType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -174,7 +158,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public String getCustomReadExpression() {
-		return rowIdName;
+		return null;
 	}
 
 	@Override
@@ -204,7 +188,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public boolean isFormula() {
-		return true;
+		return false;
 	}
 
 	@Override

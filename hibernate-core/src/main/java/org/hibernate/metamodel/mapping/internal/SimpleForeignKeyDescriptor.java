@@ -259,21 +259,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
-		final String identificationVariable = tableReference.getIdentificationVariable();
-
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								selectableMapping.getSelectionExpression()
-						),
-						s ->
-								new ColumnReference(
-										identificationVariable,
-										selectableMapping,
-										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-								)
-				),
+				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
@@ -295,14 +282,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return new ComparisonPredicate(
 				new ColumnReference(
 						targetSideReference,
-						targetSide.getModelPart(),
-						creationContext.getSessionFactory()
+						targetSide.getModelPart()
 				),
 				ComparisonOperator.EQUAL,
 				new ColumnReference(
 						keySideReference,
-						keySide.getModelPart(),
-						creationContext.getSessionFactory()
+						keySide.getModelPart()
 				)
 		);
 	}

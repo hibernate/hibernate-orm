@@ -31,6 +31,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.graph.Fetchable;
 
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+
 /**
  * @author Andrea Boriero
  */
@@ -62,14 +64,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey(
+					createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+					processingState -> new ColumnReference(
 							tableReference,
-							selection.getSelectionExpression()
-					),
-					sqlAstProcessingState -> new ColumnReference(
-							tableReference,
-							selection,
-							creationState.getCreationContext().getSessionFactory()
+							selection
 					)
 			);
 		}
@@ -247,14 +245,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey(
+				createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+				processingState -> new ColumnReference(
 						tableReference,
-						selection.getSelectionExpression()
-				),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						selection,
-						creationState.getCreationContext().getSessionFactory()
+						selection
 				)
 		);
 		// It makes no sense to order by an expression multiple times

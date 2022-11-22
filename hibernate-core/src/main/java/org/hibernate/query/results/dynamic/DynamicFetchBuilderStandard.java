@@ -88,13 +88,12 @@ public class DynamicFetchBuilderStandard
 			);
 			final String columnAlias = columnNames.get( selectionIndex );
 			sqlExpressionResolver.resolveSqlSelection(
-					sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-							state -> {
-								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-								final int valuesArrayPosition = resultSetPosition - 1;
-								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
-							}
+					ResultsHelper.resolveSqlExpression(
+							creationStateImpl,
+							jdbcResultsMetadata,
+							tableReference,
+							selectableMapping,
+							columnAlias
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,

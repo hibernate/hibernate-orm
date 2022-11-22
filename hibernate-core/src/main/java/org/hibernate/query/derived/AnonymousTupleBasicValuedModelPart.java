@@ -189,14 +189,7 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				navigablePath,
 				getContainingTableExpression()
 		);
-		final Expression expression = expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, getSelectionExpression() ),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						this,
-						creationState.getCreationContext().getSessionFactory()
-				)
-		);
+		final Expression expression = expressionResolver.resolveSqlExpression( tableReference, this );
 		return expressionResolver.resolveSqlSelection(
 				expression,
 				getJdbcMapping().getJdbcJavaType(),

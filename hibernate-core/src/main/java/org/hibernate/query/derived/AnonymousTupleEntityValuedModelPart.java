@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -100,6 +99,11 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 				persister.getFactory()
 		);
 		this.targetKeyPropertyNames = targetKeyPropertyNames;
+	}
+
+	public ModelPart getForeignKeyPart() {
+		// todo: naming?
+		return identifierMapping;
 	}
 
 	@Override
@@ -310,8 +314,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 									),
 									state -> new ColumnReference(
 											tableReference,
-											selectableMapping,
-											sessionFactory
+											selectableMapping
 									)
 							)
 					);
@@ -331,8 +334,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 								),
 								state -> new ColumnReference(
 										tableReference,
-										selectableMapping,
-										sessionFactory
+										selectableMapping
 								)
 						);
 					}
@@ -353,8 +355,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 												ComparisonOperator.EQUAL,
 												new ColumnReference(
 														targetTableReference,
-														targetMapping,
-														sessionFactory
+														targetMapping
 												)
 										)
 								);

@@ -154,18 +154,12 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 		final SelectableConsumer consumer = (selectionIndex, selectableMapping) -> {
 			final String columnName = columnNames[selectionIndex];
 			creationStateImpl.resolveSqlSelection(
-					creationStateImpl.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
-									selectableMapping.getSelectionExpression()
-							),
-							processingState -> {
-								final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
-								final BasicValuedMapping basicType = (BasicValuedMapping) selectableMapping.getJdbcMapping();
-								final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition(
-										jdbcPosition );
-								return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
-							}
+					ResultsHelper.resolveSqlExpression(
+							creationStateImpl,
+							jdbcResultsMetadata,
+							tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+							selectableMapping,
+							columnName
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,

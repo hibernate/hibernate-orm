@@ -82,38 +82,8 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			columnName = explicitColumnName;
 		}
 		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
+			columnName = jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
 		}
-
-
-//		final int jdbcPosition;
-//		if ( explicitColumnName != null ) {
-//			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-//		}
-//		else {
-//			jdbcPosition = resultPosition + 1;
-//		}
-//
-//		final BasicValuedMapping basicType;
-//		if ( explicitType != null ) {
-//			basicType = explicitType;
-//		}
-//		else {
-//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType );
-//		}
-//
-//		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-//				creationStateImpl.resolveSqlExpression(
-//						columnName,
-//						processingState -> {
-//							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-//							return new SqlSelectionImpl( valuesArrayPosition, basicType );
-//						}
-//				),
-//				basicType.getExpressibleJavaType(),
-//				sessionFactory.getTypeConfiguration()
-//		);
-
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(

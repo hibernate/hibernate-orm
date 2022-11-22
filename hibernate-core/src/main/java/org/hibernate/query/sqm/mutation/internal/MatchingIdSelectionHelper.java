@@ -33,8 +33,6 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -165,12 +163,8 @@ public class MatchingIdSelectionHelper {
 							selection.getContainingTableExpression()
 					);
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference,
-									selection,
-									sessionFactory
-							)
+							tableReference,
+							selection
 					);
 					idSelectionQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(

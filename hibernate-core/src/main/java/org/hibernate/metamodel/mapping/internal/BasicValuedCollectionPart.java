@@ -175,15 +175,8 @@ public class BasicValuedCollectionPart
 		);
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								selectableMapping.getSelectionExpression()
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference,
-								selectableMapping,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
+						tableReference,
+						selectableMapping
 				),
 				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,

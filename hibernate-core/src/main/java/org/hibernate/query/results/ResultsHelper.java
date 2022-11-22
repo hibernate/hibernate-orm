@@ -7,14 +7,21 @@
 package org.hibernate.query.results;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -39,6 +46,25 @@ public class ResultsHelper {
 
 		throw new IllegalArgumentException(
 				"Passed DomainResultCreationState not an instance of org.hibernate.query.results.DomainResultCreationStateImpl"
+		);
+	}
+
+	public static Expression resolveSqlExpression(
+			DomainResultCreationStateImpl resolver,
+			JdbcValuesMetadata jdbcValuesMetadata,
+			TableReference tableReference,
+			SelectableMapping selectableMapping,
+			String columnAlias) {
+		return resolver.resolveSqlExpression(
+				createColumnReferenceKey(
+						tableReference,
+						selectableMapping
+				),
+				processingState -> {
+					final int jdbcPosition = jdbcValuesMetadata.resolveColumnPosition( columnAlias );
+					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
+					return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
+				}
 		);
 	}
 

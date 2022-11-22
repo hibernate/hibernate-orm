@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
@@ -69,6 +71,11 @@ public class DelayedFetchBuilderBasicPart
 				isEnhancedForLazyLoading,
 				domainResultCreationState
 		);
+	}
+
+	@Override
+	public List<String> getColumnAliases() {
+		return Collections.emptyList();
 	}
 
 	@Override

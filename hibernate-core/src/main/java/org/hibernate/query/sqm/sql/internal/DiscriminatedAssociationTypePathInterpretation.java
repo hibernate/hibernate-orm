@@ -51,15 +51,8 @@ public class DiscriminatedAssociationTypePathInterpretation<T> extends AbstractS
 					if ( selectableMapping instanceof AnyDiscriminatorPart ) {
 						final TableReference tableReference = tableGroup.getPrimaryTableReference();
 						final Expression expression = converter.getSqlExpressionResolver().resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										tableReference,
-										selectableMapping.getSelectionExpression()
-								),
-								processingState -> new ColumnReference(
-										tableReference,
-										selectableMapping,
-										converter.getCreationContext().getSessionFactory()
-								)
+								tableReference,
+								selectableMapping
 						);
 						tupleExpressions.add( expression );
 					}

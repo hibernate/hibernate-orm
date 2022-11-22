@@ -37,6 +37,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
@@ -58,7 +59,7 @@ import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
  */
 @SuppressWarnings( { "deprecation" ,"rawtypes" } )
 public class StandardIdentifierGeneratorFactory
-		implements IdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
+		implements IdentifierGeneratorFactory, MutableIdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
 
 	private final ConcurrentHashMap<GenerationType, GenerationTypeStrategy> generatorTypeStrategyMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Class<? extends IdentifierGenerator>> legacyGeneratorClassNameMap = new ConcurrentHashMap<>();
@@ -156,7 +157,8 @@ public class StandardIdentifierGeneratorFactory
 		}
 	}
 
-	private void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
+	@Override
+	public void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
 		ID_GEN_FAC_LOGGER.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = legacyGeneratorClassNameMap.put( strategy, generatorClass );
 		if ( previous != null && ID_GEN_FAC_LOGGER.isDebugEnabled() ) {

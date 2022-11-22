@@ -29,6 +29,7 @@ import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
+import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
@@ -53,6 +54,8 @@ public final class StandardServiceInitiators {
 		final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
 
 		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
+
+		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 
 		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );
 		serviceInitiators.add( ProxyFactoryFactoryInitiator.INSTANCE );

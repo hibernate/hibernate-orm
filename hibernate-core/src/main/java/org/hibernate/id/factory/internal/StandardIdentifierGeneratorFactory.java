@@ -73,7 +73,7 @@ public class StandardIdentifierGeneratorFactory
 	 * Constructs a new factory
 	 */
 	public StandardIdentifierGeneratorFactory(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) );
+		this( serviceRegistry, Helper.shouldIgnoreBeanContainer( serviceRegistry ) );
 	}
 
 	/**

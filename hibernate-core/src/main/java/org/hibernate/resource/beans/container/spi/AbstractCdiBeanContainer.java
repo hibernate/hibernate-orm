@@ -44,7 +44,7 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		final String beanCacheKey = Helper.INSTANCE.determineBeanCacheKey( beanType );
+		final String beanCacheKey = Helper.determineBeanCacheKey( beanType );
 
 		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {
@@ -97,7 +97,7 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		final String beanCacheKey = Helper.INSTANCE.determineBeanCacheKey( beanName, beanType );
+		final String beanCacheKey = Helper.determineBeanCacheKey( beanName, beanType );
 
 		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {

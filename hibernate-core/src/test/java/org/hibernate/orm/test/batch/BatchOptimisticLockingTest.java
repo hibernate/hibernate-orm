@@ -34,7 +34,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(value = CockroachDialect.class, comment = "See https://hibernate.atlassian.net/browse/HHH-15668")
 public class BatchOptimisticLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
@@ -101,9 +100,10 @@ public class BatchOptimisticLockingTest extends
 			if ( getDialect() instanceof CockroachDialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
+				var msg = "org.hibernate.exception.LockAcquisitionException: could not execute batch";
 				assertEquals(
 						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
-						expected.getMessage()
+						expected.getMessage().substring( 0, msg.length() )
 				);
 			}
 			else if ( getDialect() instanceof OracleDialect && getDialect().getVersion().isBefore( 12 ) ) {

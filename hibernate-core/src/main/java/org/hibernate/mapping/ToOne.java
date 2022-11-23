@@ -27,9 +27,11 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	private String propertyName;
 	private boolean lazy = true;
 	private boolean sorted;
-	protected boolean unwrapProxy;
-	protected boolean isUnwrapProxyImplicit;
-	protected boolean referenceToPrimaryKey = true;
+	private boolean unwrapProxy;
+	private boolean unwrapProxyImplicit;
+	private boolean referenceToPrimaryKey = true;
+
+	private boolean lazyPolymorphismAllowed = true;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -44,7 +46,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		this.lazy = original.lazy;
 		this.sorted = original.sorted;
 		this.unwrapProxy = original.unwrapProxy;
-		this.isUnwrapProxyImplicit = original.isUnwrapProxyImplicit;
+		this.unwrapProxyImplicit = original.unwrapProxyImplicit;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
@@ -69,7 +71,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	}
 
 	public void setReferencedEntityName(String referencedEntityName) {
-		this.referencedEntityName = referencedEntityName==null ? 
+		this.referencedEntityName = referencedEntityName==null ?
 				null : referencedEntityName.intern();
 	}
 
@@ -135,7 +137,15 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	}
 
 	public boolean isUnwrapProxyImplicit() {
-		return isUnwrapProxyImplicit;
+		return unwrapProxyImplicit;
+	}
+
+	public boolean isLazyPolymorphismAllowed() {
+		return lazyPolymorphismAllowed;
+	}
+
+	public void setLazyPolymorphismAllowed(boolean lazyPolymorphismAllowed) {
+		this.lazyPolymorphismAllowed = lazyPolymorphismAllowed;
 	}
 
 	/**
@@ -143,7 +153,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	 * for reference later
 	 */
 	public void setUnwrapProxyImplicit(boolean unwrapProxyImplicit) {
-		isUnwrapProxyImplicit = unwrapProxyImplicit;
+		this.unwrapProxyImplicit = unwrapProxyImplicit;
 	}
 
 	public boolean isReferenceToPrimaryKey() {

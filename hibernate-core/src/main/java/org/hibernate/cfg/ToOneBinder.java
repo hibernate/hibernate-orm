@@ -327,6 +327,7 @@ public class ToOneBinder {
 			toOne.setLazy( fetchType == FetchType.LAZY );
 			toOne.setUnwrapProxy( proxyless || fetchType == FetchType.EAGER );
 			toOne.setUnwrapProxyImplicit( true );
+			toOne.setLazyPolymorphismAllowed( !proxyless );
 		}
 
 		final Fetch fetch = property.getAnnotation( Fetch.class );
@@ -447,7 +448,8 @@ public class ToOneBinder {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
 		LOG.tracev( "Fetching {0} with {1}", propertyName, fetchMode );
-		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne ) || !isEmptyAnnotationValue( mappedBy ) ) {
+		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne )
+				|| !isEmptyAnnotationValue( mappedBy ) ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
 			final OneToOneSecondPass secondPass = new OneToOneSecondPass(
@@ -497,7 +499,7 @@ public class ToOneBinder {
 		}
 		else {
 			//try to find a hidden true one to one (FK == PK columns)
-			KeyValue identifier = propertyHolder.getIdentifier();
+			final KeyValue identifier = propertyHolder.getIdentifier();
 			if ( identifier == null ) {
 				//this is a @OneToOne in an @EmbeddedId (the persistentClass.identifier is not set yet, it's being built)
 				//by definition the PK cannot refer to itself so it cannot map to itself
@@ -568,23 +570,24 @@ public class ToOneBinder {
 	}
 
 	private static boolean noConstraint(ForeignKey joinColumns, MetadataBuildingContext context) {
-		return joinColumns != null
-				&& ( joinColumns.value() == ConstraintMode.NO_CONSTRAINT
-					|| joinColumns.value() == ConstraintMode.PROVIDER_DEFAULT
-						&& context.getBuildingOptions().isNoConstraintByDefault() );
+		if (joinColumns == null) {
+			return false;
+		}
+		else {
+			ConstraintMode mode = joinColumns.value();
+			return mode == ConstraintMode.NO_CONSTRAINT || mode == ConstraintMode.PROVIDER_DEFAULT
+				&& context.getBuildingOptions().isNoConstraintByDefault();
+		}
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, MetadataBuildingContext context) {
-		if ( AnnotationBinder.isDefault( targetEntity, context ) ) {
-			return propertyData.getClassOrElementName();
-		}
-		else {
-			return targetEntity.getName();
-		}
+		return AnnotationBinder.isDefault( targetEntity, context )
+				? propertyData.getClassOrElementName()
+				: targetEntity.getName();
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, MetadataBuildingContext context) {
-		XClass targetEntity = getTargetEntity( propertyData, context );
+		final XClass targetEntity = getTargetEntity( propertyData, context );
 		return AnnotationBinder.isDefault( targetEntity, context )
 				? propertyData.getClassOrElementName()
 				: targetEntity.getName();

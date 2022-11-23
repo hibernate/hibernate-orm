@@ -429,6 +429,9 @@ public class QuerySqmImpl<R>
 		}
 	}
 
+	public TupleMetadata getTupleMetadata() {
+		return tupleMetadata;
+	}
 
 	@Override
 	public String getQueryString() {

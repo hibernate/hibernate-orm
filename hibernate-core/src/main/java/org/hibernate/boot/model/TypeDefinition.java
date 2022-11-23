@@ -276,7 +276,7 @@ public class TypeDefinition implements Serializable {
 	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
 			String name, Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( Helper.INSTANCE.shouldIgnoreBeanContainer( serviceRegistry ) ) {
+		if ( Helper.shouldIgnoreBeanContainer( serviceRegistry ) ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );

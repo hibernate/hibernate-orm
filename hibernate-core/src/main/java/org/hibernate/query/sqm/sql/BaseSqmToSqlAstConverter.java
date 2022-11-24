@@ -128,6 +128,7 @@ import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.AsWrappedExpression;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
@@ -174,6 +175,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -8266,6 +8268,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		final JavaType jtd = typeConfiguration
 //				.getJavaTypeRegistry()
 //				.getOrMakeJavaDescriptor( namedClass );
+	}
+
+	@Override
+	public Object visitAsWrapperExpression(AsWrapperSqmExpression<?> sqmExpression) {
+		return new AsWrappedExpression<>(
+				(Expression) sqmExpression.getExpression().accept( this ),
+				sqmExpression.getNodeType()
+		);
 	}
 
 	@Override

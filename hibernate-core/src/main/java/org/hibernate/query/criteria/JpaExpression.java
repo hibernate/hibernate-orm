@@ -56,4 +56,6 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	JpaPredicate equalTo(Expression<T> that);
 
 	JpaPredicate equalTo(T that);
+
+	<X> JpaExpression<X> cast(Class<X> type);
 }

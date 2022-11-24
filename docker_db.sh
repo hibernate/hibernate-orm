@@ -536,7 +536,7 @@ oracle_11() {
       --health-interval 5s \
       --health-timeout 5s \
       --health-retries 10 \
-      docker.io/gvenzl/oracle-xe:11.2.0.2-full
+      docker.io/gvenzl/oracle-xe:11.2.0.2
     oracle_setup_old
 }
 
@@ -549,7 +549,7 @@ oracle_18() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:18.4.0-full
+       docker.io/gvenzl/oracle-xe:18.4.0
     oracle_setup
 }
 
@@ -562,7 +562,7 @@ oracle_21() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:21.3.0-full
+       docker.io/gvenzl/oracle-xe:21.3.0
     oracle_setup
 }
 

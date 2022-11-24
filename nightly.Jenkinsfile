@@ -176,14 +176,14 @@ stage('Build') {
 									break;
 								case "oracle":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
+										docker.image('gvenzl/oracle-xe:21.3.0').pull()
 									}
 									sh "./docker_db.sh oracle"
 									state[buildEnv.tag]['containerName'] = "oracle"
 									break;
 								case "oracle_11_2":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
+										docker.image('gvenzl/oracle-xe:11.2.0.2').pull()
 									}
 									sh "./docker_db.sh oracle_11"
 									state[buildEnv.tag]['containerName'] = "oracle"

@@ -23,6 +23,7 @@ import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.OracleTypes;
 import org.hibernate.dialect.OracleTypesHelper;
 import org.hibernate.dialect.OracleXmlJdbcType;
 import org.hibernate.dialect.Replacer;
@@ -85,6 +86,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -109,6 +111,7 @@ import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
@@ -632,6 +635,12 @@ public class OracleLegacyDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "SYS.XMLTYPE", this ) );
 		if ( getVersion().isSameOrAfter( 10 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
+			if ( getVersion().isSameOrAfter( 21 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			}
+			else if ( getVersion().isSameOrAfter( 12 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
+			}
 		}
 	}
 
@@ -669,6 +678,8 @@ public class OracleLegacyDialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
+			case OracleTypes.JSON:
+				return jdbcTypeRegistry.getDescriptor( JSON );
 			case Types.NUMERIC:
 				if ( scale == -127 ) {
 					// For some reason, the Oracle JDBC driver reports FLOAT
@@ -744,6 +755,13 @@ public class OracleLegacyDialect extends Dialect {
 					BlobJdbcType.DEFAULT;
 
 			typeContributions.contributeJdbcType( descriptor );
+
+			if ( getVersion().isSameOrAfter( 21 ) ) {
+				typeContributions.contributeJdbcType( OracleTypesHelper.INSTANCE.getJsonJdbcType() );
+			}
+			else {
+				typeContributions.contributeJdbcType( JsonBlobJdbcType.INSTANCE );
+			}
 		}
 
 		typeContributions.contributeJdbcType( OracleArrayJdbcType.INSTANCE );

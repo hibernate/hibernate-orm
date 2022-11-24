@@ -191,6 +191,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( SqlTypes.ROWID, RowId.class );
 		workMap.put( SqlTypes.SQLXML, SQLXML.class );
 		workMap.put( SqlTypes.UUID, UUID.class );
+		workMap.put( SqlTypes.JSON, String.class );
 		workMap.put( SqlTypes.INET, InetAddress.class );
 		workMap.put( SqlTypes.TIMESTAMP_UTC, Instant.class );
 		workMap.put( SqlTypes.INTERVAL_SECOND, Duration.class );

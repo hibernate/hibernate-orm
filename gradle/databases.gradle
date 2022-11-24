@@ -131,8 +131,8 @@ ext {
                 oracle_ci : [
                         'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
-                        'jdbc.user'  : 'SYSTEM',
-                        'jdbc.pass'  : 'Oracle18',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE',
                         'connection.init_sql' : ''
                 ],

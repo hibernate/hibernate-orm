@@ -463,6 +463,8 @@ alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter database drop logfile group 3;
 alter system set open_cursors=1000 sid='*' scope=both;
+create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to hibernate_orm_test;
 EOF\""
 }
 
@@ -502,6 +504,8 @@ alter system set open_cursors=1000 sid='*' scope=both;
 alter system set processes=150 scope=spfile;
 alter system set filesystemio_options=asynch scope=spfile;
 alter system set disk_asynch_io=true scope=spfile;
+create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to hibernate_orm_test;
 EOF\""
   echo "Waiting for Oracle to restart after configuration..."
   $CONTAINER_CLI stop oracle

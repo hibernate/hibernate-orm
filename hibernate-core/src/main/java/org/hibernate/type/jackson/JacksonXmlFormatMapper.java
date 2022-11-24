@@ -33,7 +33,7 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
-		if ( javaType.getJavaType() == String.class ) {
+		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (T) charSequence.toString();
 		}
 		try {
@@ -46,7 +46,7 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	@Override
 	public <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
-		if ( javaType.getJavaType() == String.class ) {
+		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (String) value;
 		}
 		try {

@@ -50,6 +50,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 		Thing.class,
 		ThingWithQuantity.class,
 		VersionedEntity.class
-})
+}
+)
 public abstract class AbstractCriteriaTest {
 }

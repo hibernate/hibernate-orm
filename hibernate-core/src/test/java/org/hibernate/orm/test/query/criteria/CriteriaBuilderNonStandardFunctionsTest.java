@@ -237,14 +237,14 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.overlay( theString, "33", 6 ),
-					cb.overlay( theString, from.get( "theInt" ).as( String.class ), 6 ),
+//					cb.overlay( theString, from.get( "theInt" ).as( String.class ), 6 ),
 					cb.overlay( theString, "1234", from.get( "theInteger" ), 2 )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( "thirt33n", result.get( 0 ) );
-			assertEquals( "thirt13n", result.get( 1 ) );
-			assertEquals( "thi1234een", result.get( 2 ) );
+//			assertEquals( "thirt13n", result.get( 1 ) );
+			assertEquals( "thi1234een", result.get( 1 ) );
 		} );
 	}
 
@@ -300,12 +300,12 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.replace( theString, "thi", "12345" ),
-					cb.replace( theString, "t", from.get( "theInteger" ).as( String.class ) )
+					cb.replace( theString, "t", from.get( "theString" ) )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( "12345rteen", result.get( 0 ) );
-			assertEquals( "4hir4een", result.get( 1 ) );
+			assertEquals( "thirteenhirthirteeneen", result.get( 1 ) );
 		} );
 	}
 

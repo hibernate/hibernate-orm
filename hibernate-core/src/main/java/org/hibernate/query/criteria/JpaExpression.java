@@ -52,4 +52,6 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 
 	@Override
 	JpaPredicate in(Expression<Collection<?>> values);
+
+	<X> JpaExpression<X> cast(Class<X> type);
 }

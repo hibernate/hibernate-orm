@@ -298,6 +298,11 @@ public class SingularAttributeImpl<D,J>
 		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
 	}
 
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return sqmPathSource.getRelationalJavaType();
+	}
+
 	private class DelayedKeyTypeAccess implements Supplier<SimpleDomainType<J>>, Serializable {
 		private boolean resolved;
 		private SimpleDomainType<J> type;

@@ -20,6 +20,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.TemporalUnit;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -237,14 +238,14 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.overlay( theString, "33", 6 ),
-//					cb.overlay( theString, from.get( "theInt" ).as( String.class ), 6 ),
+					cb.overlay( theString, ( (JpaExpression) from.get( "theInt" ) ).cast( String.class ), 6 ),
 					cb.overlay( theString, "1234", from.get( "theInteger" ), 2 )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( "thirt33n", result.get( 0 ) );
-//			assertEquals( "thirt13n", result.get( 1 ) );
-			assertEquals( "thi1234een", result.get( 1 ) );
+			assertEquals( "thirt13n", result.get( 1 ) );
+			assertEquals( "thi1234een", result.get( 2 ) );
 		} );
 	}
 
@@ -300,12 +301,12 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.replace( theString, "thi", "12345" ),
-					cb.replace( theString, "t", from.get( "theString" ) )
+					cb.replace( theString, "t", ( (JpaExpression) from.get( "theInteger" ) ).cast( String.class ) )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( "12345rteen", result.get( 0 ) );
-			assertEquals( "thirteenhirthirteeneen", result.get( 1 ) );
+			assertEquals( "4hir4een", result.get( 1 ) );
 		} );
 	}
 

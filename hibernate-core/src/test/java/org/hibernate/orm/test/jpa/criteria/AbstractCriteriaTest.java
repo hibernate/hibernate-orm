@@ -50,6 +50,8 @@ import org.hibernate.testing.orm.junit.Jpa;
 		Thing.class,
 		ThingWithQuantity.class,
 		VersionedEntity.class
-})
+},
+		useCollectingStatementInspector = true
+)
 public abstract class AbstractCriteriaTest {
 }

@@ -9,38 +9,34 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.Product_;
+
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.orm.test.jpa.metamodel.Product;
-import org.hibernate.orm.test.jpa.metamodel.Product_;
-import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
-
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CastTest extends AbstractCriteriaTest {
 	private static final int QUANTITY = 2;
 
-	@AfterEach
-	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
-	}
-
-	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support cast from INTEGER to VARCHAR")
-	@TestForIssue(jiraKey = "HHH-5755")
-	public void testCastToString(EntityManagerFactoryScope scope) {
+	@BeforeEach
+	public void setup(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					Product product = new Product();
@@ -54,7 +50,23 @@ public class CastTest extends AbstractCriteriaTest {
 					entityManager.persist( product );
 				}
 		);
+	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Product" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support cast from INTEGER to VARCHAR")
+	@JiraKey( "HHH-5755")
+	public void testCastToString(EntityManagerFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -66,7 +78,48 @@ public class CastTest extends AbstractCriteriaTest {
 					) );
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
 					Assertions.assertEquals( 1, result.size() );
+
+					assertExecuteQueryContainsACast( statementInspector );
 				}
 		);
+	}
+
+	@Test
+	@JiraKey( "HHH-15713")
+	public void testCastIntegerToIntegreDoesNotCreateACast(EntityManagerFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+					Root<Product> root = criteria.from( Product.class );
+					criteria.where( builder.equal(
+											root.get( Product_.quantity ).as( Integer.class ),
+											builder.literal( QUANTITY )
+									)
+					);
+					List<Product> result = entityManager.createQuery( criteria ).getResultList();
+					Assertions.assertEquals( 1, result.size() );
+
+					assertExecuteQueryDoesNotContainACast( statementInspector );
+				}
+		);
+	}
+
+	private static void assertExecuteQueryContainsACast(SQLStatementInspector statementInspector) {
+		assertTrue( getExecutedQuery( statementInspector ).contains( "cast" ) );
+	}
+
+	private static void assertExecuteQueryDoesNotContainACast(SQLStatementInspector statementInspector) {
+		assertFalse( getExecutedQuery( statementInspector ).contains( "cast" ) );
+	}
+
+	private static String getExecutedQuery(SQLStatementInspector statementInspector) {
+		List<String> sqlQueries = statementInspector.getSqlQueries();
+		assertThat( sqlQueries.size() ).isEqualTo( 1 );
+
+		String executedQuery = sqlQueries.get( 0 );
+		return executedQuery;
 	}
 }

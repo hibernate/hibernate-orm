@@ -58,6 +58,11 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsFilterClause() {
 		return getDialect().getVersion().isSameOrAfter( 3, 3 );
 	}

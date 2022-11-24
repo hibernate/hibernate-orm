@@ -10,13 +10,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
@@ -94,7 +94,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
-		return nodeBuilder().cast( this, type );
+		final BasicType<X> basicTypeForJavaType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+		if ( basicTypeForJavaType == null ) {
+			throw new IllegalArgumentException( "Can't cast expression to unknown type: " + type.getCanonicalName() );
+		}
+		return new AsWrapperSqmExpression<>( basicTypeForJavaType, this );
 	}
 
 	@Override

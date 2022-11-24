@@ -116,7 +116,12 @@ public final class Hibernate {
 		}
 		else if ( isPersistentAttributeInterceptable( proxy ) ) {
 			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( proxy ).$$_hibernate_getInterceptor();
-			return !(interceptor instanceof EnhancementAsProxyLazinessInterceptor);
+			if (interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
+				return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized();
+			}
+			else {
+				return true;
+			}
 		}
 		else if ( proxy instanceof LazyInitializable ) {
 			return ( (LazyInitializable) proxy ).wasInitialized();

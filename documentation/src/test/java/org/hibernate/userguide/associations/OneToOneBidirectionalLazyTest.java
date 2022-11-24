@@ -15,13 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.Proxyless;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
@@ -58,7 +55,7 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 			orphanRemoval = true,
 			fetch = FetchType.LAZY
 		)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
+		@Proxyless // important detail!
 		private PhoneDetails details;
 
 		//Getters and setters are omitted for brevity

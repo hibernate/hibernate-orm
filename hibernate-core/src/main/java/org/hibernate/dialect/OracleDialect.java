@@ -74,6 +74,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -608,6 +609,12 @@ public class OracleDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "SYS.XMLTYPE", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
+		if ( getVersion().isSameOrAfter( 21 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
+		else if ( getVersion().isSameOrAfter( 12 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
+		}
 	}
 
 	@Override
@@ -643,6 +650,8 @@ public class OracleDialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
+			case OracleTypes.JSON:
+				return jdbcTypeRegistry.getDescriptor( JSON );
 			case Types.NUMERIC:
 				if ( scale == -127 ) {
 					// For some reason, the Oracle JDBC driver reports FLOAT
@@ -718,6 +727,13 @@ public class OracleDialect extends Dialect {
 					BlobJdbcType.DEFAULT;
 
 			typeContributions.contributeJdbcType( descriptor );
+
+			if ( getVersion().isSameOrAfter( 21 ) ) {
+				typeContributions.contributeJdbcType( OracleTypesHelper.INSTANCE.getJsonJdbcType() );
+			}
+			else {
+				typeContributions.contributeJdbcType( JsonBlobJdbcType.INSTANCE );
+			}
 		}
 
 		typeContributions.contributeJdbcType( OracleArrayJdbcType.INSTANCE );

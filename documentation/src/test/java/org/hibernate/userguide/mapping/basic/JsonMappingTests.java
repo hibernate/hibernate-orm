@@ -6,6 +6,9 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.util.List;
 import java.util.Map;
 
@@ -107,13 +110,33 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
 					assertThat( entityWithJson.jsonString, isOneOf( json, alternativeJson ) );
-					String nativeJson = session.createNativeQuery(
+					Object nativeJson = session.createNativeQuery(
 									"select jsonString from EntityWithJson",
-									String.class
+									Object.class
 							)
 							.getResultList()
 							.get( 0 );
-					assertThat( nativeJson, isOneOf( json, alternativeJson ) );
+					final String jsonText;
+					try {
+						if ( nativeJson instanceof Blob ) {
+							final Blob blob = (Blob) nativeJson;
+							jsonText = new String(
+									blob.getBytes( 1L, (int) blob.length() ),
+									StandardCharsets.UTF_8
+							);
+						}
+						else if ( nativeJson instanceof Clob ) {
+							final Clob jsonClob = (Clob) nativeJson;
+							jsonText = jsonClob.getSubString( 1L, (int) jsonClob.length() );
+						}
+						else {
+							jsonText = (String) nativeJson;
+						}
+					}
+					catch (Exception e) {
+						throw new RuntimeException( e );
+					}
+					assertThat( jsonText, isOneOf( json, alternativeJson ) );
 				}
 		);
 	}

@@ -62,6 +62,8 @@ dependencies {
 	implementation libs.logging
 
 	compileOnly libs.loggingAnnotations
+	// Used for compiling some Oracle specific JdbcTypes
+	compileOnly dbLibs.oracle
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5

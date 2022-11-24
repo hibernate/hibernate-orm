@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Alias;
 import org.hibernate.orm.test.jpa.metamodel.Country;
@@ -25,31 +26,41 @@ import org.hibernate.orm.test.jpa.metamodel.Thing;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 import org.hibernate.orm.test.jpa.metamodel.VersionedEntity;
 
+import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 /**
  * @author Jan Schatteman
  */
 
-@Jpa(annotatedClasses = {
-		Address.class,
-		Alias.class,
-		Country.class,
-		CreditCard.class,
-		Customer.class,
-		Entity1.class,
-		Entity2.class,
-		Entity3.class,
-		Info.class,
-		LineItem.class,
-		Order.class,
-		Phone.class,
-		Product.class,
-		ShelfLife.class,
-		Spouse.class,
-		Thing.class,
-		ThingWithQuantity.class,
-		VersionedEntity.class
-})
+@Jpa(
+		annotatedClasses = {
+				Address.class,
+				Alias.class,
+				Country.class,
+				CreditCard.class,
+				Customer.class,
+				Entity1.class,
+				Entity2.class,
+				Entity3.class,
+				Info.class,
+				LineItem.class,
+				Order.class,
+				Phone.class,
+				Product.class,
+				ShelfLife.class,
+				Spouse.class,
+				Thing.class,
+				ThingWithQuantity.class,
+				VersionedEntity.class
+		},
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.STATEMENT_INSPECTOR,
+						provider = DefaultSQLStatementInspectorSettingProvider.class
+				)
+		}
+)
 public abstract class AbstractCriteriaTest {
 }

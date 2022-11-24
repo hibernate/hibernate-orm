@@ -10,9 +10,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.Proxyless;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -20,7 +19,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -39,15 +37,14 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.annotations.LazyToOneOption.NO_PROXY;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Baseline test for uni-directional one-to-one, using an explicit @LazyToOne(NO_PROXY) and allowing enhanced proxies
+ * Same as OneToOneExplicitOptionTests but using @Proxyless
  */
 @RunWith( BytecodeEnhancerRunner.class)
 @EnhancementOptions( lazyLoading = true )
-public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTestCase {
+public class LazyProxylessOneToOneTests extends BaseNonConfigCoreFunctionalTestCase {
 	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
@@ -235,7 +232,7 @@ public class OneToOneExplicitOptionTests extends BaseNonConfigCoreFunctionalTest
 		private Integer id;
 
 		@OneToOne( fetch = LAZY, optional = false )
-		@LazyToOne( value = NO_PROXY )
+		@Proxyless
 		private Customer customer;
 
 		private String something;

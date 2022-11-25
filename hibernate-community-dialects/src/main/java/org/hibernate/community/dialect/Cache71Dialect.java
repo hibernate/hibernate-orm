@@ -46,7 +46,6 @@ package org.hibernate.community.dialect;
  * CacheDB.jar depending on your version of Cach&eacute;.
  * <ol>
  * <li>Copy C:\CacheSys\dev\java\lib\JDK15\CacheDB.jar to C:\Hibernate\lib\CacheDB.jar.</li>
- * <p>
  * <li>Insert the following files into your Java classpath:
  * <p>
  * <ul>
@@ -54,7 +53,6 @@ package org.hibernate.community.dialect;
  * <li>The directory (or directories) where hibernate.properties and/or hibernate.cfg.xml are kept.</li>
  * </ul>
  * </li>
- * <p>
  * <li>In the file, hibernate.properties (or hibernate.cfg.xml),
  * specify the Cach&eacute; dialect and the Cach&eacute; version URL settings.</li>
  * </ol>
@@ -62,7 +60,7 @@ package org.hibernate.community.dialect;
  * For example, in Hibernate 3.2, typical entries in hibernate.properties would have the following
  * "name=value" pairs:
  * <p>
- * <table cols=3 border="" cellpadding=5 cellspacing=0>
+ * <table border="">
  * <tr>
  * <th>Property Name</th>
  * <th>Property Value</th>
@@ -106,7 +104,6 @@ package org.hibernate.community.dialect;
  * <ol>
  * <li>org.hibernate.community.dialect.Cache71Dialect (requires Cach&eacute;
  * 2007.1 or above)</li>
- * <p>
  * </ol>
  * <br>
  * <h2>SUPPORT FOR IDENTITY COLUMNS</h2>

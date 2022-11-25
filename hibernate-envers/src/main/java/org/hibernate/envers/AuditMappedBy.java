@@ -19,7 +19,6 @@ import java.lang.annotation.Target;
  * bi-directional relation.
  * </p>
  * <p>
- * <p>
  * This annotation is <b>experimental</b> and may change in future releases.
  * </p>
  *

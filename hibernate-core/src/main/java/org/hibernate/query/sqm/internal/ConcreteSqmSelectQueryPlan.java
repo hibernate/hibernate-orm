@@ -113,25 +113,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
-						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ) {
-							@Override
-							public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-								subSelectFetchKeyHandler.addKey( entityKey, entry );
-							}
-
-							@Override
-							public String getQueryIdentifier(String sql) {
-								if ( CRITERIA_HQL_STRING.equals( hql ) ) {
-									return "[CRITERIA] " + sql;
-								}
-								return hql;
-							}
-
-							@Override
-							public boolean hasQueryExecutionToBeAddedToStatistics() {
-								return true;
-							}
-						},
+						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
 						rowTransformer,
 						uniqueSemantic
 				);
@@ -179,6 +161,32 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		//		`#performList` and `#performScroll`.
 	}
 
+	protected static SqmJdbcExecutionContextAdapter listInterpreterExecutionContext(
+			String hql,
+			DomainQueryExecutionContext executionContext,
+			JdbcOperationQuerySelect jdbcSelect,
+			SubselectFetch.RegistrationHandler subSelectFetchKeyHandler) {
+		return new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ) {
+			@Override
+			public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+				subSelectFetchKeyHandler.addKey( entityKey, entry );
+			}
+
+			@Override
+			public String getQueryIdentifier(String sql) {
+				if ( CRITERIA_HQL_STRING.equals( hql ) ) {
+					return "[CRITERIA] " + sql;
+				}
+				return hql;
+			}
+
+			@Override
+			public boolean hasQueryExecutionToBeAddedToStatistics() {
+				return true;
+			}
+		};
+	}
+
 	private static boolean containsCollectionFetches(QueryOptions queryOptions) {
 		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 		return appliedGraph != null && appliedGraph.getGraph() != null && containsCollectionFetches( appliedGraph.getGraph() );
@@ -199,9 +207,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private RowTransformer<R> determineRowTransformer(
+	protected static <T> RowTransformer<T> determineRowTransformer(
 			SqmSelectStatement<?> sqm,
-			Class<R> resultType,
+			Class<T> resultType,
 			TupleMetadata tupleMetadata,
 			QueryOptions queryOptions) {
 		if ( queryOptions.getTupleTransformer() != null ) {
@@ -213,7 +221,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 
 		if ( resultType.isArray() ) {
-			return (RowTransformer<R>) RowTransformerArrayImpl.instance();
+			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
 
 		// NOTE : if we get here :
@@ -224,7 +232,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( tupleMetadata != null ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
-				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( tupleMetadata );
+				return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
 			}
 
 			throw new IllegalArgumentException(
@@ -243,7 +251,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 	}
 
-	private RowTransformer<R> makeRowTransformerTupleTransformerAdapter(
+	private static <T> RowTransformer<T> makeRowTransformerTupleTransformerAdapter(
 			SqmSelectStatement<?> sqm,
 			QueryOptions queryOptions) {
 		final List<String> aliases = new ArrayList<>();
@@ -261,8 +269,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 
 		@SuppressWarnings("unchecked")
-		TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) queryOptions.getTupleTransformer();
-		return new RowTransformerTupleTransformerAdapter<R>(
+		TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
+		return new RowTransformerTupleTransformerAdapter<T>(
 				ArrayHelper.toStringArray( aliases ),
 				tupleTransformer
 		);

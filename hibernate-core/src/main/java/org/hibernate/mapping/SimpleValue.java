@@ -534,6 +534,7 @@ public abstract class SimpleValue implements KeyValue {
 		//needed to satisfy KeyValue
 		return true;
 	}
+
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
@@ -588,7 +589,7 @@ public abstract class SimpleValue implements KeyValue {
 	@Deprecated @Remove
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
 		this.identifierGeneratorParameters = new HashMap<>();
-		identifierGeneratorProperties.forEach( (key, value) -> {
+		identifierGeneratorProperties.forEach((key, value) -> {
 			if (key instanceof String) {
 				identifierGeneratorParameters.put((String) key, value);
 			}
@@ -792,7 +793,7 @@ public abstract class SimpleValue implements KeyValue {
 	 *     <li>
 	 *         When binding values to PreparedStatements we need to convert the Integer value from the entity
 	 *         into a String and pass that String to setString.  The conversion is handled by calling
-	 *          {@link AttributeConverter#convertToDatabaseColumn(Object)}
+	 *         {@link AttributeConverter#convertToDatabaseColumn(Object)}
 	 *     </li>
 	 *     <li>
 	 *         When extracting values from ResultSets (or CallableStatement parameters) we need to handle the

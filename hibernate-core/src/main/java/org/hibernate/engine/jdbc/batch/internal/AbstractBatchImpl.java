@@ -69,7 +69,7 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	/**
 	 * Perform batch execution..
-	 * <p/>
+	 * <p>
 	 * This is called from the explicit {@linkplain #execute() execution}, but may also be called from elsewhere
 	 * depending on the exact implementation.
 	 */

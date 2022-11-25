@@ -10,7 +10,7 @@ import org.hibernate.boot.jaxb.hbm.spi.SingularAttributeInfo;
 
 /**
  * Unifying contract for any JAXB types which describe an embedded (in JPA terms).
- * <p/>
+ * <p>
  * Essentially this presents a unified contract over the {@code <component/>},
  * {@code <composite-id/>}, {@code <dynamic-component/>} and
  * {@code <nested-dynamic-component/>} elements

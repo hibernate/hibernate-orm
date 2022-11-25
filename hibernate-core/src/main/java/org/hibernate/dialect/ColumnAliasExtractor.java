@@ -12,7 +12,7 @@ import java.sql.SQLException;
 /**
  * Strategy for extracting the unique column alias out of a {@link ResultSetMetaData}.  This is used during the
  * "auto discovery" phase of native SQL queries.
- * <p/>
+ * <p>
  * Generally this should be done via {@link ResultSetMetaData#getColumnLabel}, but not all drivers do this correctly.
  *
  * @author Steve Ebersole

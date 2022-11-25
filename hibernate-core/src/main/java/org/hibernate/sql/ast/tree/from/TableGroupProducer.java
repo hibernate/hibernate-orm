@@ -19,7 +19,7 @@ public interface TableGroupProducer extends ModelPartContainer {
 	/**
 	 * Get the "stem" used as the base for generating SQL table aliases for table
 	 * references that are part of the TableGroup being generated
-	 * <p/>
+	 * <p>
 	 * Note that this is a metadata-ive value.  It is only ever used internal to
 	 * the producer producing its TableGroup.
 	 *

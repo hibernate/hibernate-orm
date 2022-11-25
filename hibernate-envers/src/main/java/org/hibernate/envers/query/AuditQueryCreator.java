@@ -99,7 +99,7 @@ public class AuditQueryCreator {
 
 	/**
 	 * Creates a query, which will return entities modified at the specified revision.
-	 * <p/>
+	 * <p>
 	 * In comparison, the {@link #forEntitiesAtRevision(Class, String, Number)} query takes into all entities
 	 * which were present at a given revision, even if they were not modified.
 	 *
@@ -122,7 +122,7 @@ public class AuditQueryCreator {
 
 	/**
 	 * Creates a query, which will return entities modified at the specified revision.
-	 * <p/>
+	 * <p>
 	 * In comparison, the {@link #forEntitiesAtRevision(Class, String, Number)} query takes into all entities
 	 * which were present at a given revision, even if they were not modified.
 	 *

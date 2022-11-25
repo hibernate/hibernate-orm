@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * the many side. Then, Envers won't use a join table to audit this relation, but will store changes as in a normal
  * bi-directional relation.
  * </p>
- * <p/>
+ * <p>
  * <p>
  * This annotation is <b>experimental</b> and may change in future releases.
  * </p>

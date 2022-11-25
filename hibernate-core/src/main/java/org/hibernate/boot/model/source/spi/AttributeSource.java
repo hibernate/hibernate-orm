@@ -10,7 +10,7 @@ import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
 
 /**
  * Contract for sources of persistent attribute descriptions.
- * <p/>
+ * <p>
  * These values are used to build {@link org.hibernate.mapping.Property} instances.
  *
  * @author Steve Ebersole

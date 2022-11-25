@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * recursively.  Incubating indicates something that is still being
  * actively developed and therefore may change at a later time; a
  * "tech preview".
- * <p/>
+ * <p>
  * Users of these types and methods are considered early adopters who
  * help shape the final definition of these types/methods, along with
  * the needs of consumers.

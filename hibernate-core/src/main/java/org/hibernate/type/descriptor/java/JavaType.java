@@ -230,11 +230,11 @@ public interface JavaType<T> extends Serializable {
 
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.
-	 * <p/>
+	 * <p>
 	 * As an example, if this is a {@code JavaType<Integer>} and we are asked to
 	 * unwrap the {@code Integer value} as a {@code Long}, we would return something
 	 * like <code>Long.valueOf( value.longValue() )</code>.
-	 * <p/>
+	 * <p>
 	 * Intended use is during {@link java.sql.PreparedStatement} binding.
 	 *
 	 * @param value The value to unwrap
@@ -248,7 +248,7 @@ public interface JavaType<T> extends Serializable {
 
 	/**
 	 * Wrap a value as our handled Java type.
-	 * <p/>
+	 * <p>
 	 * Intended use is during {@link java.sql.ResultSet} extraction.
 	 *
 	 * @param value The value to wrap.

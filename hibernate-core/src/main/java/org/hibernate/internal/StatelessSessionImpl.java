@@ -42,12 +42,12 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 
 /**
  * Concrete implementation of the {@link StatelessSession} API.
- * <p/>
+ * <p>
  * Exposes two interfaces:<ul>
  * <li>{@link StatelessSession} to the application</li>
  * <li>{@link org.hibernate.engine.spi.SharedSessionContractImplementor} to other Hibernate components (SPI)</li>
  * </ul>
- * <p/>
+ * <p>
  * This class is not thread-safe.
  *
  * @author Gavin King

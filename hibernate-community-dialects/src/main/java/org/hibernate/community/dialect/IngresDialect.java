@@ -76,7 +76,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * An SQL dialect for Ingres 9.2.
- * <p/>
+ * <p>
  * Known limitations: <ul>
  *     <li>
  *         Only supports simple constants or columns on the left side of an IN,

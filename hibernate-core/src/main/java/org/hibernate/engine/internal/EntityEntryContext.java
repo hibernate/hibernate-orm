@@ -38,7 +38,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
  *         either directly or through bytecode enhancement.
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  *
  * @author Steve Ebersole
  */

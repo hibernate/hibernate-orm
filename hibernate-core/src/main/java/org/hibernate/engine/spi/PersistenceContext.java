@@ -30,7 +30,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
  *     <li>snapshots</li>
  *     <li>proxies</li>
  * </ul>
- * <p/>
+ * <p>
  * Often referred to as the "first level cache".
  *
  * @author Gavin King
@@ -69,7 +69,7 @@ public interface PersistenceContext {
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
 	 * collection was previously added () or was previously removed.
-	 * <p/>
+	 * <p>
 	 * This should indicate the owner is being loaded and we are ready to "link" them.
 	 *
 	 * @param key The collection key for which to locate a collection collection
@@ -123,7 +123,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
-	 * <p/>
+	 * <p>
 	 * This differs from {@link #getDatabaseSnapshot} in two important respects:<ol>
 	 * <li>no snapshot is obtained from the database if not already cached</li>
 	 * <li>an entry of {@link #NO_ROW} here is interpreted as an exception</li>
@@ -461,7 +461,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Remove a proxy from the session cache.
-	 * <p/>
+	 * <p>
 	 * Additionally, ensure that any load optimization references
 	 * such as batch or subselect loading get cleaned up as well.
 	 *
@@ -575,11 +575,11 @@ public interface PersistenceContext {
 	 * the given {@code childEntity}, and return that owner's id value.  This is performed in the scenario of a
 	 * uni-directional, non-inverse one-to-many collection (which means that the collection elements do not maintain
 	 * a direct reference to the owner).
-	 * <p/>
+	 * <p>
 	 * As such, the processing here is basically to loop over every entity currently associated with this persistence
 	 * context and for those of the correct entity (sub) type to extract its collection role property value and see
 	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
-	 * <p/>
+	 * <p>
 	 * Also need to account for {@code mergeMap} which acts as a local copy cache managed for the duration of a merge
 	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
 	 *
@@ -657,7 +657,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Is the entity or proxy read-only?
-	 * <p/>
+	 * <p>
 	 * To determine the default read-only/modifiable setting used for entities and proxies that are loaded into the
 	 * session use {@link org.hibernate.Session#isDefaultReadOnly}
 	 *

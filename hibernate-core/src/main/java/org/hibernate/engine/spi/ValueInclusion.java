@@ -8,7 +8,7 @@ package org.hibernate.engine.spi;
 
 /**
  * An enum of the different ways a value might be "included".
- * <p/>
+ * <p>
  * This is really an expanded true/false notion with "PARTIAL" being the
  * expansion.  PARTIAL deals with components in the cases where
  * parts of the referenced component might define inclusion, but the

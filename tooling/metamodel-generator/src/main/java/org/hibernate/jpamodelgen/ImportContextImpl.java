@@ -51,7 +51,7 @@ public class ImportContextImpl implements ImportContext {
 	/**
 	 * Add fqcn to the import list. Returns fqcn as needed in source code.
 	 * Attempts to handle fqcn with array and generics references.
-	 * <p/>
+	 * <p>
 	 * e.g.
 	 * {@code java.util.Collection<org.marvel.Hulk>} imports {@code java.util.Collection} and returns {@code Collection}
 	 * {@code org.marvel.Hulk[]} imports {@code org.marvel.Hulk} and returns {@code Hulk}

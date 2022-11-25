@@ -99,7 +99,7 @@ public interface CachedDomainDataAccess {
 	/**
 	 * We are going to attempt to update/delete the keyed object. This
 	 * method is used by "asynchronous" concurrency strategies.
-	 * <p/>
+	 * <p>
 	 * The returned object must be passed back to {@link #unlockItem}, to release the
 	 * lock. Concurrency strategies which do not support client-visible
 	 * locks may silently return null.
@@ -152,7 +152,7 @@ public interface CachedDomainDataAccess {
 
 	/**
 	 * Determine whether this region contains data for the given key.
-	 * <p/>
+	 * <p>
 	 * The semantic here is whether the cache contains data visible for the
 	 * current call context.  This should be viewed as a "best effort", meaning
 	 * blocking should be avoided if possible.
@@ -187,7 +187,7 @@ public interface CachedDomainDataAccess {
 	 * Forcibly evict an item from the cache immediately without regard for transaction
 	 * isolation and/or locking.  This behavior is exactly Hibernate legacy behavior, but
 	 * it is also required by JPA - so we cannot remove it.
-	 * <p/>
+	 * <p>
 	 * Used from JPA's {@link jakarta.persistence.Cache#evict(Class, Object)}, as well as the
 	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Object)}
 	 * and {@link org.hibernate.Cache#evictEntityData(String, Object)}
@@ -202,7 +202,7 @@ public interface CachedDomainDataAccess {
 	 * Forcibly evict all items from the cache immediately without regard for transaction
 	 * isolation.  This behavior is exactly Hibernate legacy behavior, but it is also required
 	 * by JPA - so we cannot remove it.
-	 * <p/>
+	 * <p>
 	 * Used from our JPA impl of {@link Cache#evictAll()} as well as the Hibernate
 	 * extensions {@link org.hibernate.Cache#evictEntityData(Class)},
 	 * {@link org.hibernate.Cache#evictEntityData(String)} and

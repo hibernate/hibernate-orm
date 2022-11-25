@@ -36,7 +36,7 @@ public enum ConnectionReleaseMode{
 	 * Indicates that JDBC connections should be released after each transaction
 	 * ends (works with both JTA-registered synch and HibernateTransaction API).
 	 * This mode may not be used with an application server JTA datasource.
-	 * <p/>
+	 * <p>
 	 * This is the default mode starting in 3.1; was previously {@link #ON_CLOSE}.
 	 */
 	AFTER_TRANSACTION,

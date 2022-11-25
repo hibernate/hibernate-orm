@@ -34,7 +34,7 @@ public interface SqlStringGenerationContext {
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
 	 * information.
-	 * <p/>
+	 * <p>
 	 * Note that Identifiers returned from here may be implicitly quoted based on
 	 * 'globally quoted identifiers' or based on reserved words.
 	 *

@@ -39,12 +39,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         value.
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  * This code is generally as one of the values defined in {@link java.sql.Types}, but are not
  * limited to these.  The code is resolved against an internal registry of {@link JdbcType}
  * references.  See the user guide for additional details.
- * <p/>
- * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * <p>
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for high-level discussion
  * of basic value mapping.
  *
  * @see JdbcType

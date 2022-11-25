@@ -48,7 +48,7 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	/**
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
-	 * <p/>
+	 * <p>
 	 * Used by OneToOneType and ManyToOneType to determine what id value should
 	 * be used for an object that may or may not be associated with the session.
 	 * This does a "best guess" using any/all info available to use (not just the

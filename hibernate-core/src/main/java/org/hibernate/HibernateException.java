@@ -10,7 +10,7 @@ import jakarta.persistence.PersistenceException;
 
 /**
  * The base exception type for Hibernate exceptions.
- * <p/>
+ * <p>
  * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
  * {@link JDBCException}.
  * 

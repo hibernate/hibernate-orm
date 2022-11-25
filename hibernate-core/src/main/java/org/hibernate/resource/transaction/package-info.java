@@ -8,11 +8,11 @@
 /**
  * Defines the resource-level transaction capabilities of Hibernate, which revolves around the
  * {@link org.hibernate.resource.transaction.spi.TransactionCoordinator} contract.
- * <p/>
+ * <p>
  * TransactionCoordinator instances can be obtained from
  * {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder}, which is a Service
  * and available from the StandardServiceRegistry
- * <p/>
+ * <p>
  * A few terms/concepts to keep in mind here...
  *
  * <h2>Local transaction</h2>

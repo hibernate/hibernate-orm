@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
  *
- * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for high-level discussion
  * of basic value mapping.
  *
  * @see MapKeyJavaType

@@ -87,7 +87,7 @@ public interface UrlMessageBundle {
 
 	/**
 	 * Access to the exception message used when a URL references names a file that does not exist.
-	 * <p/>
+	 * <p>
 	 * TODO : detail when this is a warning {@link #logFileDoesNotExist} versus an exception...
 	 *
 	 * @param filePart The "file part" that we gleaned from the URL

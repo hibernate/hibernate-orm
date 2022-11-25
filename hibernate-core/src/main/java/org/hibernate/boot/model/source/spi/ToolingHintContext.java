@@ -15,7 +15,7 @@ import org.hibernate.mapping.MetaAttribute;
 
 /**
  * Represents a collection of "tooling hints" ({@code <meta/>} mapping info) keyed by a name.
- * <p/>
+ * <p>
  * NOTE : historically these were called "meta attributes", but as these are values used solely
  * by external tooling it was decided to begin calling them tooling hints.  For temporary
  * backwards compatibility (temporary until we move away from o.h.mapping model) you will

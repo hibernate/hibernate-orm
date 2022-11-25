@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * when said entity contains a reference to a transient entity through a mapped
  * association where that association is not marked for cascading the persist
  * operation.
- * <p/>
+ * <p>
  * This test-case tests that requirement in the various association style
  * scenarios such as many-to-one, one-to-one, many-to-one (property-ref),
  * one-to-one (property-ref).  Additionally, it performs each of these tests

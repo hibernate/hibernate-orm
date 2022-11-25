@@ -10,7 +10,7 @@ package org.hibernate.engine.spi;
  * Contract for classes (specifically, entities and components/embeddables) that are "managed".  Developers can
  * choose to either have their classes manually implement these interfaces or Hibernate can enhance their classes
  * to implement these interfaces via built-time or run-time enhancement.
- * <p/>
+ * <p>
  * The term managed here is used to describe both:<ul>
  *     <li>
  *         the fact that they are known to the persistence provider (this is defined by the interface itself)

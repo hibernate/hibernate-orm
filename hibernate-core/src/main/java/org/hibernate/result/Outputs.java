@@ -9,7 +9,7 @@ package org.hibernate.result;
 /**
  * Represents the outputs of executing a JDBC statement accounting for mixing of result sets and update counts
  * hiding the complexity (IMO) of how this is exposed in the JDBC API.
- * <p/>
+ * <p>
  * The outputs are exposed as a group of {@link Output} objects, each representing a single result set or update count.
  * Conceptually, Result presents those Returns as an iterator.
  *

@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
  * Represents a filter applied to an entity/collection.
- * <p/>
+ * <p>
  * Note, we do not attempt to parse the filter
  *
  * @author Steve Ebersole

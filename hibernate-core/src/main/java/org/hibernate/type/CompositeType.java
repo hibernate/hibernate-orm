@@ -36,7 +36,7 @@ public interface CompositeType extends Type {
 
 	/**
 	 * Retrieve the indicators regarding which component properties are nullable.
-	 * <p/>
+	 * <p>
 	 * An optional operation
 	 *
 	 * @return nullability of component properties
@@ -58,7 +58,7 @@ public interface CompositeType extends Type {
 	/**
 	 * Extract the values of the component properties from the given component instance without access to the
 	 * session.
-	 * <p/>
+	 * <p>
 	 * An optional operation
 	 *
 	 * @param component The component instance
@@ -83,7 +83,7 @@ public interface CompositeType extends Type {
 
 	/**
 	 * Inject property values onto the given component instance
-	 * <p/>
+	 * <p>
 	 * An optional operation
 	 *
 	 * @param component The component instance

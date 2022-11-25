@@ -16,11 +16,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Used to annotate classes which define sub-system style logging where
  * loggers are hierarchically defined around functionalities rather than
  * class and package names
- * <p/>
+ * <p>
  * This is helpful to find such classes and is used to generate report
  * (as a release artifact) describing logger names for logging configuration
  * by the application.
- * <p/>
+ * <p>
  * At the moment Hibernate uses a mix sub-system logging and the more traditional
  * package and class name based logging.  This annotation focuses on the classes
  * defining the sub-system approach

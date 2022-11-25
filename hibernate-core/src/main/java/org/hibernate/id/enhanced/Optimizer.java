@@ -14,7 +14,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
  * Performs optimization on an optimizable identifier generator.  Typically
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
- * <p/>
+ * <p>
  * Optimizers work on constructor injection.  They should provide
  * a constructor with the following arguments <ol>
  * <li>java.lang.Class - The return type for the generated values</li>

@@ -622,7 +622,7 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Decide which tables need to be updated.
-	 * <p/>
+	 * <p>
 	 * The return here is an array of boolean values with each index corresponding
 	 * to a given table in the scope of this persister.
 	 *
@@ -3280,7 +3280,7 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Perform an SQL INSERT, and then retrieve a generated identifier.
-	 * <p/>
+	 * <p>
 	 * This form is used for PostInsertIdentifierGenerator-style ids (IDENTITY,
 	 * select, etc).
 	 */
@@ -3337,7 +3337,7 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Perform an SQL INSERT.
-	 * <p/>
+	 * <p>
 	 * This for is used for all non-root tables as well as the root table
 	 * in cases where the identifier value is known before the insert occurs.
 	 */

@@ -25,7 +25,7 @@ import org.hibernate.internal.util.StringHelper;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
- * <p/>
+ * <p>
  * This registry is used for serialization/deserialization as well as JNDI binding.
  *
  * @author Steve Ebersole

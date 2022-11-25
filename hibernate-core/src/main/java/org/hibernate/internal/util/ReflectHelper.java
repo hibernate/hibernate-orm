@@ -166,7 +166,7 @@ public final class ReflectHelper {
 
 	/**
 	 * Perform resolution of a class name.
-	 * <p/>
+	 * <p>
 	 * Here we first check the context classloader, if one, before delegating to
 	 * {@link Class#forName(String, boolean, ClassLoader)} using the caller's classloader
 	 *
@@ -189,7 +189,7 @@ public final class ReflectHelper {
 
 	/**
 	 * Perform resolution of a class name.
-	 * <p/>
+	 * <p>
 	 * Same as {@link #classForName(String, Class)} except that here we delegate to
 	 * {@link Class#forName(String)} if the context classloader lookup is unsuccessful.
 	 *

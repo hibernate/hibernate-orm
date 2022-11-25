@@ -18,18 +18,18 @@ import org.hibernate.persister.entity.EntityPersister;
  * a large object to allocate in large quantities at runtime.
  * In some extreme cases, for example when the hit ratio is very low, this was making the efficiency
  * penalty vs its benefits tradeoff questionable.
- * <p/>
+ * <p>
  * Depending on configuration settings there might be opportunities to
  * use simpler key implementations, for example when multi-tenancy is not being used to
  * avoid the tenant identifier, or when a cache instance is entirely dedicated to a single type
  * to use the primary id only, skipping the role or entity name.
- * <p/>
+ * <p>
  * Even with multiple types sharing the same cache, their identifiers could be of the same
  * {@link org.hibernate.type.Type}; in this case the cache container could
  * use a single type reference to implement a custom equality function without having
  * to look it up on each equality check: that's a small optimisation but the
  * equality function is often invoked extremely frequently.
- * <p/>
+ * <p>
  * Another reason is to make it more convenient to implement custom serialization protocols when the
  * implementation supports clustering.
  *

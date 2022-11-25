@@ -58,7 +58,7 @@ public interface JdbcServices extends Service {
 
 	/**
 	 * Obtain information about supported behavior reported by the JDBC driver.
-	 * <p/>
+	 * <p>
 	 * Yuck, yuck, yuck!  Much prefer this to be part of a "basic settings" type object.
 	 * 
 	 * @return The extracted database metadata, oddly enough :)

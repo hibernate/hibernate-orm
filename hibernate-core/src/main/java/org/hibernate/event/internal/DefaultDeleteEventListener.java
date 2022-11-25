@@ -287,7 +287,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 	/**
 	 * Called when we have recognized an attempt to delete a detached entity.
-	 * <p/>
+	 * <p>
 	 * This is perfectly valid in Hibernate usage; JPA, however, forbids this.
 	 * Thus, this is a hook for HEM to affect this behavior.
 	 *
@@ -312,7 +312,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 	/**
 	 * We encountered a delete request on a transient instance.
-	 * <p/>
+	 * <p>
 	 * This is a deviation from historical Hibernate (pre-3.2) behavior to
 	 * align with the JPA spec, which states that transient entities can be
 	 * passed to remove operation in which case cascades still need to be

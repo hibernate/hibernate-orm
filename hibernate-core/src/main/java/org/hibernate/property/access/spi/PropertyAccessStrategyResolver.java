@@ -11,7 +11,7 @@ import org.hibernate.service.Service;
 
 /**
  * Contract for resolving the PropertyAccessStrategy to use.
- * <p/>
+ * <p>
  * todo : moving forward I'd prefer this not be a service, but instead a strategy on the MetadataBuildingContext or MetadataBuildingOptions
  *
  * @author Steve Ebersole

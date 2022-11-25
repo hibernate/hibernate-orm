@@ -20,12 +20,12 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  * Parser for string representations of JPA {@link jakarta.persistence.EntityGraph}
  * ({@link RootGraph}) and {@link jakarta.persistence.Subgraph} ({@link SubGraph}),
  * using a simple syntax defined by the `graph.g` Antlr grammar.
- * <p/>
+ * <p>
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
- * <p/>
+ * <p>
  * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a sub-graph
- * <p/>
+ * <p>
  * Multiple graphs made for the same entity type can be merged.  See {@link EntityGraphs#merge(SessionImplementor, Class, GraphImplementor...)}.
  *
  * @author asusnjar

@@ -261,7 +261,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog} and {@code schemaPattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getSchemas(String, String)},
 	 * and are copied here:
@@ -604,12 +604,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getColumns(String, String, String, String)},
 	 * and are copied here:
-	 * <p/>
+	 * <p>
 	 * @param catalog – a catalog name; must match the catalog name as it is
 	 *                   stored in the database; "" retrieves those without
 	 *                   a catalog; null means that the catalog name should
@@ -714,7 +714,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getTables(String, String, String, String[])},
@@ -1072,12 +1072,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)},
 	 * and are copied here:
-	 * <p/>
+	 * <p>
 	 * @param catalog – a catalog name; must match the catalog name as it is
 	 *                   stored in this database; "" retrieves those without
 	 *                   a catalog; null means that the catalog name should
@@ -1231,7 +1231,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schema}, and {@code table}
 	 * parameters are as specified by {@link DatabaseMetaData#getImportedKeys(String, String, String)}
 	 * and are copied here:

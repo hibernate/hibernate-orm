@@ -24,7 +24,7 @@ public enum ResultColumnReferenceStrategy {
 	 * For databases which do not support {@link #SOURCE}, ANSI SQL defines two allowable
 	 * approaches.  One is to reference the result column by the alias it is given in the
 	 * result source (if it is given an alias).  This strategy says to use this approach.
-	 * <p/>
+	 * <p>
 	 * The other QNSI SQL compliant approach is {@link #ORDINAL}.
 	 */
 	ALIAS,
@@ -32,7 +32,7 @@ public enum ResultColumnReferenceStrategy {
 	 * For databases which do not support {@link #SOURCE}, ANSI SQL defines two allowable
 	 * approaches.  One is to reference the result column by the ordinal position at which
 	 * it appears in the result source.  This strategy says to use this approach.
-	 * <p/>
+	 * <p>
 	 * The other QNSI SQL compliant approach is {@link #ALIAS}.
 	 */
 	ORDINAL;

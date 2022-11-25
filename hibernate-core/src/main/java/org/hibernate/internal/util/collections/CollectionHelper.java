@@ -37,7 +37,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized map, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy map contents.
 	 *
 	 * @param size The size to make the map.
@@ -50,7 +50,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized linked map, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy map contents.
 	 *
 	 * @param size The size to make the map.
@@ -81,7 +81,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized set, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy set contents.
 	 *
 	 * @param size The size to make the set.
@@ -103,7 +103,7 @@ public final class CollectionHelper {
 
 	/**
 	 * Build a properly sized linked set, especially handling load size and load factor to prevent immediate resizing.
-	 * <p/>
+	 * <p>
 	 * Especially helpful for copy set contents.
 	 *
 	 * @param size The size to make the set.

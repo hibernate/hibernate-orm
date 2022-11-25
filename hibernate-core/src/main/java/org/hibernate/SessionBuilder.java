@@ -36,11 +36,11 @@ public interface SessionBuilder<T extends SessionBuilder> {
 
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
-	 * <p/>
+	 * <p>
 	 * By default, if no {@code Interceptor} is explicitly specified, the
 	 * {@code Interceptor} associated with the {@link SessionFactory} is
 	 * inherited by the new {@link Session}.
-	 * <p/>
+	 * <p>
 	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
 	 *
 	 * @return {@code this}, for method chaining

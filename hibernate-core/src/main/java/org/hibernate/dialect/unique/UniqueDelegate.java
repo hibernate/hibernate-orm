@@ -40,7 +40,7 @@ import org.hibernate.mapping.UniqueKey;
 public interface UniqueDelegate {
 	/**
 	 * Get the fragment that can be used to make a column unique as part of its column definition.
-	 * <p/>
+	 * <p>
 	 * This is intended for {@code Dialect}s which do not support unique constraints.
 	 * 
 	 * @param column The column to which to apply the unique
@@ -55,7 +55,7 @@ public interface UniqueDelegate {
 	 * The implementation should iterate over the {@link UniqueKey} instances for the given table
 	 * (see {@link org.hibernate.mapping.Table#getUniqueKeys()} and generate the whole fragment
 	 * for all unique keys.
-	 * <p/>
+	 * <p>
 	 * Intended for {@code Dialect}s which support unique constraint definitions, but just not in
 	 * separate ALTER statements.
 	 *

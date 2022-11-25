@@ -577,7 +577,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	/**
 	 * Used to hold the name of subclasses that each "subclass table" is part of.  For example, given a hierarchy like:
 	 * {@code JoinedEntity <- JoinedEntitySubclass <- JoinedEntitySubSubclass}..
-	 * <p/>
+	 * <p>
 	 * For the persister for JoinedEntity, we'd have:
 	 * <pre>
 	 *	 subclassClosure[0] = "JoinedEntitySubSubclass"
@@ -596,14 +596,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 * do not need to account for those here.  The "offset" is defined by the value of {@link #getTableSpan()}.
 	 * Therefore the corresponding row in subclassNameClosureBySubclassTable for a given row in subclassTableNameClosure
 	 * is calculated as {@code subclassTableNameClosureIndex - getTableSpan()}.
-	 * <p/>
+	 * <p>
 	 * As we consider each subclass table we can look into this array based on the subclass table's index and see
 	 * which subclasses would require it to be included.  E.g., given {@code TREAT( x AS JoinedEntitySubSubclass )},
 	 * when trying to decide whether to include join to "T_JoinedEntitySubclass" (subclassTableNameClosureIndex = 1),
 	 * we'd look at {@code subclassNameClosureBySubclassTable[0]} and see if the TREAT-AS subclass name is included in
 	 * its values.  Since {@code subclassNameClosureBySubclassTable[1]} includes "JoinedEntitySubSubclass", we'd
 	 * consider it included.
-	 * <p/>
+	 * <p>
 	 * {@link #subclassTableNameClosure} also accounts for secondary tables and we properly handle those as we
 	 * build the subclassNamesBySubclassTable array and they are therefore properly handled when we use it
 	 */

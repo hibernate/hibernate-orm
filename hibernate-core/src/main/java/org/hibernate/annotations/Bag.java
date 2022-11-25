@@ -18,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Can be used to map a {@link java.util.List}-valued attribute using
  * {@link org.hibernate.metamodel.CollectionClassification#BAG} semantics.
- * <p/>
+ * <p>
  * @apiNote Ignored if either {@link jakarta.persistence.OrderColumn} or
  * {@link ListIndexBase} is used.
  *

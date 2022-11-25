@@ -15,7 +15,7 @@ import org.hibernate.internal.util.StringHelper;
  * A simple implementation of AbstractAuxiliaryDatabaseObject in which the CREATE and DROP strings are
  * provided up front.  Contains simple facilities for templating the catalog and schema
  * names into the provided strings.
- * <p/>
+ * <p>
  * This is the form created when the mapping documents use &lt;create/&gt; and
  * &lt;drop/&gt;.
  *

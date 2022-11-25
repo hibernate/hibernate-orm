@@ -29,7 +29,7 @@ public interface CascadeStyle extends Serializable {
 	/**
 	 * Probably more aptly named something like doCascadeToCollectionElements(); it is
 	 * however used from both the collection and to-one logic branches...
-	 * <p/>
+	 * <p>
 	 * For this style, should the given action really be cascaded?  The default
 	 * implementation is simply to return {@link #doCascade}; for certain
 	 * styles (currently only delete-orphan), however, we need to be able to

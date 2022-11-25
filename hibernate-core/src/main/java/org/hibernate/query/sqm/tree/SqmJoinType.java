@@ -10,7 +10,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * Represents a canonical join type.
- * <p/>
+ * <p>
  * Note that currently HQL really only supports inner and left outer joins
  * (though cross joins can also be achieved).  This is because joins in HQL
  * are always defined in relation to a mapped association.  However, when we

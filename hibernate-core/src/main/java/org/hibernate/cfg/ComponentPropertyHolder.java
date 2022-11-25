@@ -31,7 +31,7 @@ import org.hibernate.mapping.Table;
 
 /**
  * PropertyHolder for composites (Embeddable/Embedded).
- * <p/>
+ * <p>
  * To facilitate code comments, I'll often refer to this example:
  * <pre>
  *     &#064;Embeddable
@@ -110,9 +110,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 *     <li>@Convert annotation at the Embedded attribute level</li>
 	 *     <li>@Converts annotation at the Embedded attribute level</li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The order is important to ensure proper precedence.
-	 * <p/>
+	 * <p>
 	 * {@literal @Convert/@Converts} annotations at the Embeddable attribute level are handled in the calls to
 	 * {@link #startingProperty}.  Duplicates are simply ignored there.
 	 *

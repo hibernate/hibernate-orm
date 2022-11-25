@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 /**
  * A dialect for Oracle 9i databases.
- * <p/>
+ * <p>
  * Specifies to not use "ANSI join syntax" because 9i does not
  * seem to properly handle it in all cases.
  *

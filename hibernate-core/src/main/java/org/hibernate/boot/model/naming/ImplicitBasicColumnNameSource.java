@@ -25,7 +25,7 @@ public interface ImplicitBasicColumnNameSource extends ImplicitNameSource {
 
 	/**
 	 * Is the basic column the "element column" for a collection?
-	 * <p/>
+	 * <p>
 	 * Historical handling for these in {@code hbm.xml} binding was to simply
 	 * name the column "elt".
 	 *

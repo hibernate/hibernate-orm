@@ -107,7 +107,7 @@ import static java.lang.Boolean.TRUE;
  * Base class for implementations of {@link org.hibernate.SharedSessionContract} and
  * {@link SharedSessionContractImplementor}. Intended for concrete implementations of
  * {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
- * <P/>
+ * <p>
  * NOTE: This implementation defines access to a number of instance state values
  * in a manner that is not exactly concurrent-access safe.  However, a Session/EntityManager
  * is never intended to be used concurrently; therefore the condition is not expected

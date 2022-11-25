@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests that after the removal of an entity that maintains a polymorphic relation that
  * the {@code AuditReader} queries return the correct polymorphic type for revisions.
- * <p/>
+ * <p>
  * Previously, this test would have returned {@link EmployeeType} when looking up the
  * entity associated to revision 3 of typeId; however after the fix it properly will
  * return {@link SalaryEmployeeType} instances instead.

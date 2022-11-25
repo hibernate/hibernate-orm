@@ -465,6 +465,7 @@ alter database drop logfile group 3;
 alter system set open_cursors=1000 sid='*' scope=both;
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+alter system set \"_dynamic_sequence_cache\"=FALSE;
 EOF\""
 }
 

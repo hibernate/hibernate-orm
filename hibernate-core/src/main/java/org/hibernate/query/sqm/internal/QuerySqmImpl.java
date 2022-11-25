@@ -720,7 +720,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private void verifyUpdate() {
+	protected void verifyUpdate() {
 		try {
 			SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hql );
 		}
@@ -862,7 +862,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String partName;
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
@@ -885,7 +885,7 @@ public class QuerySqmImpl<R>
 		return false;
 	}
 
-	private boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+	protected boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
 				// An insert is only simple if no SqmMultiTableMutation strategy is available,

@@ -9,7 +9,7 @@ package org.hibernate.community.dialect.unique;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.mapping.UniqueKey;
 
 /**
@@ -17,7 +17,7 @@ import org.hibernate.mapping.UniqueKey;
  * 
  * @author Brett Meyer
  */
-public class InformixUniqueDelegate extends DefaultUniqueDelegate {
+public class InformixUniqueDelegate extends AlterTableUniqueDelegate {
 	
 	public InformixUniqueDelegate( Dialect dialect ) {
 		super( dialect );
@@ -29,7 +29,7 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
-		// We need full, simplified control over whether or not it happens.
+		// We need full, simplified control over whether it happens.
 		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 		final String constraintName = dialect.quote( uniqueKey.getName() );
 		return dialect.getAlterTableString( tableName )

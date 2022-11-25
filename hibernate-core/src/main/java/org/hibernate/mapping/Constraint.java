@@ -118,7 +118,7 @@ public abstract class Constraint implements Exportable, Serializable {
 	public void addColumns(Value value) {
 		for ( Selectable selectable : value.getSelectables() ) {
 			if ( selectable.isFormula() ) {
-				throw new MappingException( "constraint involves a formula: " + this.name );
+				throw new MappingException( "constraint involves a formula: " + name );
 			}
 			else {
 				addColumn( (Column) selectable );

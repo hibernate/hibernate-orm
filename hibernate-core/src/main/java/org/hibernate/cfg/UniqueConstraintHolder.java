@@ -19,6 +19,7 @@ package org.hibernate.cfg;
  */
 public class UniqueConstraintHolder {
 	private String name;
+	private boolean nameExplicit;
 	private String[] columns;
 
 	public String getName() {
@@ -30,6 +31,10 @@ public class UniqueConstraintHolder {
 		return this;
 	}
 
+	public boolean isNameExplicit() {
+		return true;
+	}
+
 	public String[] getColumns() {
 		return columns;
 	}
@@ -37,5 +42,10 @@ public class UniqueConstraintHolder {
 	public UniqueConstraintHolder setColumns(String[] columns) {
 		this.columns = columns;
 		return this;
+	}
+
+	public UniqueConstraintHolder setName(String name, boolean nameExplicit) {
+		this.nameExplicit = nameExplicit;
+		return setName(name);
 	}
 }

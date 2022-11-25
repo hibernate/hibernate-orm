@@ -18,6 +18,8 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
+ * An {@link Exporter} for {@linkplain ForeignKey foreign key constraints}.
+ *
  * @author Steve Ebersole
  */
 public class StandardForeignKeyExporter implements Exporter<ForeignKey> {

@@ -794,7 +794,7 @@ public class TableBinder {
 		else {
 			result = arrayList( annotations.length );
 			for ( UniqueConstraint uc : annotations ) {
-				result.add( new UniqueConstraintHolder().setName( uc.name() ).setColumns( uc.columnNames() ) );
+				result.add( new UniqueConstraintHolder().setName( uc.name(), !uc.name().isEmpty() ).setColumns( uc.columnNames() ) );
 			}
 		}
 		return result;

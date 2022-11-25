@@ -20,6 +20,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class UniqueKey extends Constraint {
 	private final Map<Column, String> columnOrderMap = new HashMap<>();
+	private boolean nameExplicit;
 
 	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(
@@ -50,5 +51,13 @@ public class UniqueKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		return StringHelper.qualify( getTable().getExportIdentifier(), "UK-" + getName() );
+	}
+
+	public boolean isNameExplicit() {
+		return nameExplicit;
+	}
+
+	public void setNameExplicit(boolean nameExplicit) {
+		this.nameExplicit = nameExplicit;
 	}
 }

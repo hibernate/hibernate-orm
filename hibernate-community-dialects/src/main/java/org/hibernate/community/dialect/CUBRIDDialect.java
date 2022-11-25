@@ -277,6 +277,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public String getDropUniqueKeyString() {
+		return " drop index ";
+	}
+
+	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}

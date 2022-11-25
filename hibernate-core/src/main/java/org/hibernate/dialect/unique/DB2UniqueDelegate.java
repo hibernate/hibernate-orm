@@ -15,12 +15,13 @@ import org.hibernate.mapping.UniqueKey;
 import static org.hibernate.mapping.Index.buildSqlCreateIndexString;
 
 /**
- * DB2 does not allow unique constraints on nullable columns.  Rather than
- * forcing "not null", use unique *indexes* instead.
+ * DB2 does not allow unique constraints on nullable columns, but it
+ * does allow the creation of unique <em>indexes</em> instead, using
+ * a different syntax.
  * 
  * @author Brett Meyer
  */
-public class DB2UniqueDelegate extends DefaultUniqueDelegate {
+public class DB2UniqueDelegate extends AlterTableUniqueDelegate {
 	/**
 	 * Constructs a DB2UniqueDelegate
 	 *

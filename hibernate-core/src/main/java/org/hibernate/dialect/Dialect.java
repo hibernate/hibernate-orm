@@ -78,7 +78,7 @@ import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
@@ -288,8 +288,6 @@ public abstract class Dialect implements ConversionContext {
 
 	private final Properties properties = new Properties();
 	private final Set<String> sqlKeywords = new HashSet<>();
-
-	private final UniqueDelegate uniqueDelegate = new DefaultUniqueDelegate( this );
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl();
 
@@ -2699,7 +2697,17 @@ public abstract class Dialect implements ConversionContext {
 		return "";
 	}
 
+	/**
+	 * The {@code alter table} subcommand used to drop a foreign key constraint.
+	 */
 	public String getDropForeignKeyString() {
+		return " drop constraint ";
+	}
+
+	/**
+	 * The {@code alter table} subcommand used to drop a unique key constraint.
+	 */
+	public String getDropUniqueKeyString() {
 		return " drop constraint ";
 	}
 
@@ -3291,7 +3299,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The UniqueDelegate
 	 */
 	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
+		return new AlterTableUniqueDelegate( this );
 	}
 
 	/**

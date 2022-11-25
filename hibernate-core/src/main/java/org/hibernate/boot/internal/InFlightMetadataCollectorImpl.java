@@ -2026,7 +2026,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), buildingContext );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.isNameExplicit(), holder.getColumns(), buildingContext );
 			}
 		}
 
@@ -2036,14 +2036,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void buildUniqueKeyFromColumnNames(
 			Table table,
 			String keyName,
+			boolean nameExplicit,
 			String[] columnNames,
 			MetadataBuildingContext buildingContext) {
-		buildUniqueKeyFromColumnNames( table, keyName, columnNames, null, true, buildingContext );
+		buildUniqueKeyFromColumnNames( table, keyName, nameExplicit, columnNames, null, true, buildingContext );
 	}
 
 	private void buildUniqueKeyFromColumnNames(
 			final Table table,
 			String keyName,
+			boolean nameExplicit,
 			final String[] columnNames,
 			String[] orderings,
 			boolean unique,
@@ -2104,6 +2106,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 
 			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			uk.setNameExplicit( nameExplicit );
 			for ( int i = 0; i < columns.length; i++ ) {
 				Column column = columns[i];
 				String order = orderings != null ? orderings[i] : null;
@@ -2193,6 +2196,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				buildUniqueKeyFromColumnNames(
 						table,
 						holder.getName(),
+						!holder.getName().isEmpty(),
 						holder.getColumns(),
 						holder.getOrdering(),
 						holder.isUnique(),

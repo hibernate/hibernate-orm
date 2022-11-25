@@ -16,7 +16,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -75,7 +75,7 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
 		return getVersion().isSameOrAfter(7, 3)
-				? new DefaultUniqueDelegate(this)
+				? new AlterTableUniqueDelegate(this)
 				: super.createUniqueDelegate();
 	}
 

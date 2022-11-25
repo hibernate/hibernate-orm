@@ -472,7 +472,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 					alter.append( " not null" );
 				}
 
-				if ( column.isUnique() ) {
+				if ( column.isUnique() && !isPrimaryKey( column ) ) {
 					String keyName = Constraint.generateName( "UK_", this, column );
 					UniqueKey uk = getOrCreateUniqueKey( keyName );
 					uk.addColumn( column );
@@ -502,6 +502,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		return results.iterator();
+	}
+
+	public boolean isPrimaryKey(Column column) {
+		return hasPrimaryKey()
+			&& getPrimaryKey().getColumnSpan() == 1
+			&& getPrimaryKey().containsColumn( column );
 	}
 
 	public boolean hasPrimaryKey() {
@@ -549,13 +555,21 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	public UniqueKey createUniqueKey(List<Column> keyColumns) {
-		String keyName = Constraint.generateName( "UK_", this, keyColumns );
-		UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
-		for (Column keyColumn : keyColumns) {
-			uniqueKey.addColumn( keyColumn );
+	/**
+	 * If there is one given column, mark it unique, otherwise
+	 * create a {@link UniqueKey} comprising the given columns.
+	 */
+	public void createUniqueKey(List<Column> keyColumns) {
+		if ( keyColumns.size() == 1 ) {
+			keyColumns.get(0).setUnique( true );
 		}
-		return uniqueKey;
+		else {
+			String keyName = Constraint.generateName( "UK_", this, keyColumns );
+			UniqueKey uniqueKey = getOrCreateUniqueKey( keyName );
+			for ( Column keyColumn : keyColumns ) {
+				uniqueKey.addColumn( keyColumn );
+			}
+		}
 	}
 
 	public UniqueKey getUniqueKey(String keyName) {

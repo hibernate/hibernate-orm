@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -143,12 +144,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public ModelPart getKeyPart() {
+	public EmbeddableValuedModelPart getKeyPart() {
 		return keySide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
 	@Override
-	public ModelPart getTargetPart() {
+	public EmbeddableValuedModelPart getTargetPart() {
 		return targetSide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
@@ -160,6 +161,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public Side getTargetSide() {
 		return targetSide;
+	}
+
+	@Override
+	public int compare(Object key1, Object key2) {
+		return getKeyPart().getEmbeddableTypeDescriptor().compare( key1, key2 );
 	}
 
 	@Override
@@ -502,27 +508,37 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		assert domainValue instanceof Object[];
-
-		final Object[] values = (Object[]) domainValue;
-
-		keySelectableMappings.forEachSelectable(
-				(index, selectable) -> valueConsumer.consume( values[ index ], selectable )
-		);
+		if ( domainValue == null ) {
+			keySelectableMappings.forEachSelectable( (index, selectable) -> {
+				valueConsumer.consume( null, selectable );
+			} );
+		}
+		else if ( domainValue instanceof Object[] ) {
+			final Object[] values = (Object[]) domainValue;
+			keySelectableMappings.forEachSelectable( (index, selectable) -> {
+				valueConsumer.consume( values[ index ], selectable );
+			} );
+		}
+		else {
+			final MutableInteger columnPosition = new MutableInteger();
+			keySide.getModelPart().breakDownJdbcValues(
+					domainValue,
+					(jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+							jdbcValue,
+							keySelectableMappings.getSelectable( columnPosition.getAndIncrement() )
+					),
+					session
+			);
+		}
 	}
 
 	@Override
 	public Object getAssociationKeyFromSide(
 			Object targetObject,
-			Nature nature,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
-		final ModelPart modelPart;
-		if ( nature == Nature.KEY ) {
-			modelPart = keySide.getModelPart();
-		}
-		else {
-			modelPart = targetSide.getModelPart();
-		}
+		final ModelPart modelPart = side.getModelPart();
+
 		// If the mapping type has an identifier type, that identifier is the key
 		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
 			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );

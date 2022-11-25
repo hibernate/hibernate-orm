@@ -39,8 +39,8 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
+import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -62,7 +62,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -74,10 +74,10 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -382,7 +382,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildUpdateTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -555,13 +555,13 @@ public class InlineUpdateHandler implements UpdateHandler {
 				);
 			}
 
-			final InsertStatement insertSqlAst = new InsertStatement(
+			final InsertSelectStatement insertSqlAst = new InsertSelectStatement(
 					dmlTableReference
 			);
 			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 			insertSqlAst.setSourceSelectStatement( querySpec );
 
-			final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
 					.buildInsertTranslator( sessionFactory, insertSqlAst )
 					.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -623,8 +623,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					sessionFactory
+					tableReference.isOptional()
 			);
 		}
 		return (NamedTableReference) tableReference;

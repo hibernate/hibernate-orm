@@ -63,12 +63,7 @@ public class SybaseLegacySqmToSqlAstConverter<T extends Statement> extends BaseS
 								null,
 								null,
 								null,
-								new NamedTableReference(
-										"(select 1)",
-										"dummy_(x)",
-										false,
-										getCreationContext().getSessionFactory()
-								),
+								new NamedTableReference( "(select 1)", "dummy_(x)", false ),
 								null,
 								getCreationContext().getSessionFactory()
 						)

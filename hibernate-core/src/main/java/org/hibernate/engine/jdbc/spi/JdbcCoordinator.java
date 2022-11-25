@@ -11,9 +11,12 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.Batch2;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
@@ -42,6 +45,13 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * @return The batch
 	 */
 	Batch getBatch(BatchKey key);
+
+	MutationStatementPreparer getMutationStatementPreparer();
+
+	Batch2 getBatch2(
+			BatchKey key,
+			Integer batchSize,
+			Supplier<PreparedStatementGroup> statementGroupSupplier);
 
 	/**
 	 * Execute the currently managed batch (if any)

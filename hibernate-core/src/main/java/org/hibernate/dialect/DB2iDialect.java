@@ -7,8 +7,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;

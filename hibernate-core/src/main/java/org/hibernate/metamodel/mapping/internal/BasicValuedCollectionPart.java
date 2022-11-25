@@ -16,11 +16,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -28,7 +28,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -88,6 +87,21 @@ public class BasicValuedCollectionPart
 	@Override
 	public boolean isFormula() {
 		return selectableMapping.isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return selectableMapping.isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return selectableMapping.isInsertable();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return selectableMapping.isUpdateable();
 	}
 
 	@Override
@@ -287,7 +301,12 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+		valueConsumer.consume( disassemble( domainValue, session ), this );
+	}
+
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( disassemble( domainValue, session ), this );
 	}
 
 	@Override

@@ -6,11 +6,13 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Locale;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -23,6 +25,9 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	private final String selectionExpression;
 	private final String customReadExpression;
 	private final String customWriteExpression;
+	private final boolean nullable;
+	private final boolean insertable;
+	private final boolean updateable;
 	private final boolean isFormula;
 
 	public SelectableMappingImpl(
@@ -34,6 +39,9 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
 			boolean isFormula,
 			JdbcMapping jdbcMapping) {
 		super( columnDefinition, length, precision, scale, jdbcMapping );
@@ -42,6 +50,9 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		this.selectionExpression = selectionExpression == null ? null : selectionExpression.intern();
 		this.customReadExpression = customReadExpression == null ? null : customReadExpression.intern();
 		this.customWriteExpression = customWriteExpression == null ? null : customWriteExpression.intern();
+		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
 		this.isFormula = isFormula;
 	}
 
@@ -50,6 +61,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final Selectable selectable,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
+			boolean insertable,
+			boolean updateable,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		final String columnExpression;
@@ -57,12 +70,14 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final Long length;
 		final Integer precision;
 		final Integer scale;
+		final boolean isNullable;
 		if ( selectable.isFormula() ) {
 			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
 			columnDefinition = null;
 			length = null;
 			precision = null;
 			scale = null;
+			isNullable = true;
 		}
 		else {
 			Column column = (Column) selectable;
@@ -71,6 +86,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			length = column.getLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
+
+			isNullable = column.isNullable();
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,
@@ -81,8 +98,21 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				length,
 				precision,
 				scale,
+				isNullable,
+				insertable,
+				updateable,
 				selectable.isFormula(),
 				jdbcMapping
+		);
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"SelectableMapping(`%s`.`%s`)",
+				containingTableExpression,
+				selectionExpression
 		);
 	}
 
@@ -109,5 +139,20 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	@Override
 	public boolean isFormula() {
 		return isFormula;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
 	}
 }

@@ -28,9 +28,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * @author Steve Ebersole
@@ -40,7 +40,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			DeferredResultSetAccess.class
 	);
 
-	private final JdbcSelect jdbcSelect;
+	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParameterBindings jdbcParameterBindings;
 	private final ExecutionContext executionContext;
 	private final Function<String, PreparedStatement> statementCreator;
@@ -54,7 +54,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private ResultSet resultSet;
 
 	public DeferredResultSetAccess(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			Function<String, PreparedStatement> statementCreator) {
@@ -67,7 +67,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions == null ) {
-			finalSql = jdbcSelect.getSql();
+			finalSql = jdbcSelect.getSqlString();
 			limit = null;
 			limitHandler = NoopLimitHandler.NO_LIMIT;
 			usesFollowOnLocking = false;
@@ -79,13 +79,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			String sql;
 			limit = queryOptions.getLimit();
 			if ( limit == null || limit.isEmpty() || jdbcSelect.usesLimitParameters() ) {
-				sql = jdbcSelect.getSql();
+				sql = jdbcSelect.getSqlString();
 				limitHandler = NoopLimitHandler.NO_LIMIT;
 			}
 			else {
 				limitHandler = dialect.getLimitHandler();
 				sql = limitHandler.processSql(
-						jdbcSelect.getSql(),
+						jdbcSelect.getSqlString(),
 						limit,
 						queryOptions
 				);

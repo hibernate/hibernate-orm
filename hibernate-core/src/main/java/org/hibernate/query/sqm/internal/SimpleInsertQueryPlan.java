@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
@@ -39,7 +39,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private final DomainParameterXref domainParameterXref;
 	private Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 
-	private JdbcInsert jdbcInsert;
+	private JdbcOperationQueryInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
 
@@ -50,7 +50,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
+	private SqlAstTranslator<JdbcOperationQueryInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 
@@ -87,7 +87,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<JdbcInsert> insertTranslator = null;
+		SqlAstTranslator<JdbcOperationQueryInsert> insertTranslator = null;
 		if ( jdbcInsert == null ) {
 			insertTranslator = createInsertTranslator( executionContext );
 		}

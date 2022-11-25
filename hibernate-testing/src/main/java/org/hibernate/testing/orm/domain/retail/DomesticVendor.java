@@ -21,4 +21,8 @@ public class DomesticVendor extends Vendor {
 	public DomesticVendor(Integer id, String name, String billingEntity) {
 		super( id, name, billingEntity );
 	}
+
+	public DomesticVendor(Integer id, String name, String billingEntity, String supplementalDetail) {
+		super( id, name, billingEntity, supplementalDetail );
+	}
 }

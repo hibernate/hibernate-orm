@@ -492,6 +492,19 @@ public final class StringHelper {
 		return results;
 	}
 
+	public static int count(String text, String match) {
+		int count = 0;
+
+		int index = text.indexOf( match );
+
+		while ( index > -1 ) {
+			count++;
+			index = text.indexOf( match, index + 1 );
+		}
+
+		return count;
+	}
+
 	public static int count(String text, char match) {
 		if ( text == null ) {
 			return 0;

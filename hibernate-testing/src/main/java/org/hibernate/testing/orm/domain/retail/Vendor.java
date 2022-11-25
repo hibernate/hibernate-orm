@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.domain.retail;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -24,6 +25,7 @@ public class Vendor {
 	private Integer id;
 	private String name;
 	private String billingEntity;
+	private String supplementalDetail;
 
 	public Vendor() {
 	}
@@ -32,6 +34,13 @@ public class Vendor {
 		this.id = id;
 		this.name = name;
 		this.billingEntity = billingEntity;
+	}
+
+	public Vendor(Integer id, String name, String billingEntity, String supplementalDetail) {
+		this.id = id;
+		this.name = name;
+		this.billingEntity = billingEntity;
+		this.supplementalDetail = supplementalDetail;
 	}
 
 	@Id
@@ -57,5 +66,14 @@ public class Vendor {
 
 	public void setBillingEntity(String billingEntity) {
 		this.billingEntity = billingEntity;
+	}
+
+	@Column(table = "vendor_supp")
+	public String getSupplementalDetail() {
+		return supplementalDetail;
+	}
+
+	public void setSupplementalDetail(String supplementalDetail) {
+		this.supplementalDetail = supplementalDetail;
 	}
 }

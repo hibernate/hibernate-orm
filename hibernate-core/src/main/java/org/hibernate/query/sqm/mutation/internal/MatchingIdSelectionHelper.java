@@ -40,8 +40,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -279,7 +279,7 @@ public class MatchingIdSelectionHelper {
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcEnvironment
+		final SqlAstTranslator<JdbcOperationQuerySelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, matchingIdSelection );
 
@@ -312,7 +312,7 @@ public class MatchingIdSelectionHelper {
 					}
 			);
 		}
-		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
+		final JdbcOperationQuerySelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
 				jdbcParameterBindings,
 				executionContext.getQueryOptions()
 		);

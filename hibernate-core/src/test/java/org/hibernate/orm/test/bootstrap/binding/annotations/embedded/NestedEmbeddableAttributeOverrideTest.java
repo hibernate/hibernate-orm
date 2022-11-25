@@ -8,7 +8,6 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -16,7 +15,6 @@ import org.junit.Test;
 /**
  * @author Brett Meyer
  */
-@FailureExpected(jiraKey="HHH-8021")
 public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTestCase {
 	
 	@Test

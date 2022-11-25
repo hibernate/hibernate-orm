@@ -9,7 +9,10 @@ package org.hibernate.id.insert;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -30,16 +33,34 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
+	public Object performInsert(
+			PreparedStatementDetails insertStatementDetails,
+			JdbcValueBindings valueBindings,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		final SqlStatementLogger sqlStatementLogger = session.getJdbcServices().getSqlStatementLogger();
+
+		sqlStatementLogger.logStatement( insertStatementDetails.getSqlString() );
+		valueBindings.beforeStatement( insertStatementDetails, session );
+
+		return executeAndExtract(
+				insertStatementDetails.getSqlString(),
+				insertStatementDetails.getStatement(),
+				session
+		);
+	}
+
+	@Override
 	public final Object performInsert(
-			String insertSQL,
+			String insertSql,
 			SharedSessionContractImplementor session,
 			Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = prepare( insertSQL, session );
+			PreparedStatement insert = prepareStatement( insertSql, session );
 			try {
 				binder.bindValues( insert );
-				return executeAndExtract( insert, session );
+				return executeAndExtract( insertSql, insert, session );
 			}
 			finally {
 				releaseStatement( insert, session );
@@ -49,7 +70,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not insert: " + MessageHelper.infoString( persister ),
-					insertSQL
+					insertSql
 			);
 		}
 	}
@@ -58,10 +79,10 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 		return persister;
 	}
 
-	protected abstract PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException;
-
-	protected abstract Object executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
-			throws SQLException;
+	protected abstract Object executeAndExtract(
+			String insertSql,
+			PreparedStatement insertStatement,
+			SharedSessionContractImplementor session);
 
 	protected void releaseStatement(PreparedStatement insert, SharedSessionContractImplementor session) {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();

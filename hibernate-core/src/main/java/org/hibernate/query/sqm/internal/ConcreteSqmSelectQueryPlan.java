@@ -47,8 +47,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
@@ -99,7 +99,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcSelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
 			try {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
@@ -383,7 +383,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstTranslator<JdbcSelect> selectTranslator = sqlAstTranslatorFactory.buildSelectTranslator(
+		final SqlAstTranslator<JdbcOperationQuerySelect> selectTranslator = sqlAstTranslatorFactory.buildSelectTranslator(
 				sessionFactory,
 				sqmInterpretation.getSqlAst()
 		);
@@ -404,7 +404,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				},
 				session
 		);
-		final JdbcSelect jdbcSelect = selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		final JdbcOperationQuerySelect jdbcSelect = selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return new CacheableSqmInterpretation(
 				sqmInterpretation.getSqlAst(),
@@ -426,7 +426,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private static class CacheableSqmInterpretation {
 		private final SelectStatement selectStatement;
-		private final JdbcSelect jdbcSelect;
+		private final JdbcOperationQuerySelect jdbcSelect;
 		private final FromClauseAccess tableGroupAccess;
 		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
 		private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes;
@@ -434,7 +434,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		CacheableSqmInterpretation(
 				SelectStatement selectStatement,
-				JdbcSelect jdbcSelect,
+				JdbcOperationQuerySelect jdbcSelect,
 				FromClauseAccess tableGroupAccess,
 				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref,
 				Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
@@ -451,7 +451,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return selectStatement;
 		}
 
-		JdbcSelect getJdbcSelect() {
+		JdbcOperationQuerySelect getJdbcSelect() {
 			return jdbcSelect;
 		}
 

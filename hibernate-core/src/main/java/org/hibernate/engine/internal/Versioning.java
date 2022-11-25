@@ -156,11 +156,15 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-		for ( int dirtyProperty : dirtyProperties ) {
-			if ( propertyVersionability[dirtyProperty] ) {
-				return true;
+
+		if ( dirtyProperties != null ) {
+			for ( int dirtyProperty : dirtyProperties ) {
+				if ( propertyVersionability[dirtyProperty] ) {
+					return true;
+				}
 			}
 		}
+
 		return false;
 	}
 }

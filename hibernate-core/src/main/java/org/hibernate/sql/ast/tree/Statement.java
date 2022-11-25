@@ -14,5 +14,8 @@ import org.hibernate.sql.ast.SqlAstWalker;
  * @author Steve Ebersole
  */
 public interface Statement {
+	/**
+	 * Visitation
+	 */
 	void accept(SqlAstWalker walker);
 }

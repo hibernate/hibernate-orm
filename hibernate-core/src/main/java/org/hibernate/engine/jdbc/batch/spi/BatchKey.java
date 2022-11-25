@@ -29,4 +29,8 @@ public interface BatchKey {
 	 * @return The expectations
 	 */
 	Expectation getExpectation();
+
+	default String toLoggableString() {
+		return toString();
+	}
 }

@@ -17,6 +17,7 @@ import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
+import org.hibernate.engine.jdbc.batch.internal.Batch2BuilderInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
@@ -25,6 +26,7 @@ import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
+import org.hibernate.engine.jdbc.mutation.internal.MutationExecutorServiceInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
@@ -74,7 +76,9 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( MultiTenantConnectionProviderInitiator.INSTANCE );
 		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
+		serviceInitiators.add( MutationExecutorServiceInitiator.INSTANCE );
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
+		serviceInitiators.add( Batch2BuilderInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );
 

@@ -68,6 +68,15 @@ public interface OuterJoinLoadable extends Loadable, Joinable {
 	 * class or a subclass.
 	 */
 	String getSubclassPropertyTableName(int i);
+
+	/**
+	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)
+	 * for the given attribute
+	 */
+	default String getAttributeMutationTableName(int attributeIndex) {
+		return getSubclassPropertyTableName( attributeIndex );
+	}
+
 	/**
 	 * Given the number of a property of a subclass, and a table alias,
 	 * return the aliased column names.

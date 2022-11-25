@@ -16,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -40,8 +38,8 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -67,6 +65,9 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
  * through {@link JdbcSelectExecutorStandardImpl#INSTANCE}
@@ -81,7 +82,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@Override
 	public <R> List<R> list(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -104,7 +105,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@Override
 	public <R> ScrollableResultsImplementor<R> scroll(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
@@ -128,7 +129,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@Override
 	public <R> Stream<R> stream(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer) {
@@ -147,7 +148,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private <T, R> T executeQuery(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -181,7 +182,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private <T, R> T executeQueryScroll(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -333,7 +334,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private <T, R> T doExecuteQuery(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -453,7 +454,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			statistics.queryExecuted(
-					executionContext.getQueryIdentifier( jdbcSelect.getSql() ),
+					executionContext.getQueryIdentifier( jdbcSelect.getSqlString() ),
 					getResultSize( result ),
 					milliseconds
 			);
@@ -471,7 +472,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	public JdbcValues resolveJdbcValuesSource(
 			String queryIdentifier,
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			boolean canBeCached,
 			ExecutionContext executionContext,
 			ResultSetAccess resultSetAccess) {
@@ -501,7 +502,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
 			queryResultsCacheKey = QueryKey.from(
-					jdbcSelect.getSql(),
+					jdbcSelect.getSqlString(),
 					executionContext.getQueryOptions().getLimit(),
 					executionContext.getQueryParameterBindings(),
 					session
@@ -541,7 +542,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			cachedResults = null;
 			if ( cacheable && cacheMode.isPutEnabled() ) {
 				queryResultsCacheKey = QueryKey.from(
-						jdbcSelect.getSql(),
+						jdbcSelect.getSqlString(),
 						executionContext.getQueryOptions().getLimit(),
 						executionContext.getQueryParameterBindings(),
 						session

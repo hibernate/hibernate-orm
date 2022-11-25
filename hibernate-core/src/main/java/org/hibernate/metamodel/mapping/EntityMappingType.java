@@ -26,9 +26,9 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -56,7 +56,8 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingType extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminatable {
+public interface EntityMappingType
+		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminatable {
 	/**
 	 * Safety-net.
 	 *
@@ -277,6 +278,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
+
 
 	default EntityMappingType getRootEntityDescriptor() {
 		final EntityMappingType superMappingType = getSuperMappingType();

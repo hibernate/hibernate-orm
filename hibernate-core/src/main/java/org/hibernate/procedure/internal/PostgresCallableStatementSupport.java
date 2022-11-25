@@ -11,13 +11,12 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 
 import jakarta.persistence.ParameterMode;
 
@@ -31,7 +30,7 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 	public static final PostgresCallableStatementSupport INSTANCE = new PostgresCallableStatementSupport();
 
 	@Override
-	public JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
@@ -47,10 +46,7 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 		}
 
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final ParameterStrategy parameterStrategy = parameterMetadata.hasNamedParameters() ?
-				ParameterStrategy.NAMED :
-				ParameterStrategy.POSITIONAL;
-		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder( parameterStrategy );
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder();
 
 		final StringBuilder buffer;
 		final int offset;

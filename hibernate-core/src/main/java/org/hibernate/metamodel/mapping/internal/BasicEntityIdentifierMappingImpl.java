@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -34,7 +33,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -67,6 +65,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final boolean insertable;
+	private final boolean updateable;
 
 	private final BasicType<Object> idType;
 
@@ -82,12 +82,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean insertable,
+			boolean updateable,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.insertable = insertable;
+		this.updateable = updateable;
 		assert attributeName != null;
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
@@ -111,6 +115,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				propertyAccess.getGetter(),
 				instanceCreator
 		);
+	}
+
+	@Override
+	public String toString() {
+		return "EntityIdentifierMapping(" + idRole.getFullPath() + ")";
 	}
 
 	@Override
@@ -285,6 +294,21 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return insertable;
 	}
 
 	@Override

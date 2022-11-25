@@ -19,10 +19,10 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcMutation;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutationNative;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.NativeJdbcMutation;
 
 /**
  * @author Steve Ebersole
@@ -69,7 +69,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 
 		final SQLQueryParser parser = new SQLQueryParser( sql, null, session.getSessionFactory() );
 
-		final JdbcMutation jdbcMutation = new NativeJdbcMutation(
+		final JdbcOperationQueryMutation jdbcMutation = new JdbcOperationQueryMutationNative(
 				parser.process(),
 				jdbcParameterBinders,
 				affectedTableNames

@@ -34,8 +34,10 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -65,13 +67,14 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPart, EntityMappingType,
-		TableGroupJoinProducer {
+public class AnonymousTupleEntityValuedModelPart
+		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer {
 
 	private final EntityIdentifierMapping identifierMapping;
 	private final DomainType<?> domainType;
@@ -270,34 +273,52 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 		// As we will "resolve" the derived column references for these mappings
 		// --------------
 
-		final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
 		final List<SelectableMapping> keyMappings;
 		final List<SelectableMapping> targetMappings;
-		if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
-			final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
-					.getPart( associationMapping.getSideNature().inverse() );
-			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			targetJoinModelPart.forEachSelectable(
-					0,
-					(i, selectableMapping) -> targetMappings.add( selectableMapping )
-			);
-			keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			associationMapping.getForeignKeyDescriptor()
-					.getPart( associationMapping.getSideNature() )
-					.forEachSelectable(
-							0,
-							(i, selectableMapping) -> keyMappings.add( selectableMapping )
-					);
+
+		if ( delegate instanceof OneToManyCollectionPart ) {
+			final OneToManyCollectionPart oneToMany = (OneToManyCollectionPart) delegate;
+			final PluralAttributeMapping pluralAttribute = oneToMany.getCollectionDescriptor().getAttributeMapping();
+
+			final ModelPart keyPart = pluralAttribute.getKeyDescriptor().getKeyPart();
+			final ModelPart keyTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+
+			keyMappings = arrayList( keyPart.getJdbcTypeCount() );
+			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> keyMappings.add( selectableMapping ) );
+
+			targetMappings = arrayList( keyTargetPart.getJdbcTypeCount() );
+			keyTargetPart.forEachSelectable( (selectionIndex, selectableMapping) -> targetMappings.add( selectableMapping ) );
 		}
 		else {
-			final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
-			targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
-			targetJoinModelPart.forEachSelectable(
-					0,
-					(i, selectableMapping) -> targetMappings.add( selectableMapping )
-			);
-			keyMappings = targetMappings;
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) delegate;
+
+			if ( associationMapping.isReferenceToPrimaryKey() && associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+				final ModelPart targetJoinModelPart = associationMapping.getForeignKeyDescriptor()
+						.getPart( associationMapping.getSideNature().inverse() );
+				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				targetJoinModelPart.forEachSelectable(
+						0,
+						(i, selectableMapping) -> targetMappings.add( selectableMapping )
+				);
+				keyMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				associationMapping.getForeignKeyDescriptor()
+						.getPart( associationMapping.getSideNature() )
+						.forEachSelectable(
+								0,
+								(i, selectableMapping) -> keyMappings.add( selectableMapping )
+						);
+			}
+			else {
+				final ModelPart targetJoinModelPart = delegate.getEntityMappingType().getIdentifierMapping();
+				targetMappings = new ArrayList<>( targetJoinModelPart.getJdbcTypeCount() );
+				targetJoinModelPart.forEachSelectable(
+						0,
+						(i, selectableMapping) -> targetMappings.add( selectableMapping )
+				);
+				keyMappings = targetMappings;
+			}
 		}
+
 		final TableReference tableReference = lhs.getPrimaryTableReference();
 		final List<ColumnReference> keyColumnReferences = new ArrayList<>( this.identifierMapping.getJdbcTypeCount() );
 		this.identifierMapping.forEachSelectable(

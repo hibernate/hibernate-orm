@@ -26,9 +26,9 @@ import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -91,7 +91,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
 
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
@@ -138,7 +138,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			);
 		}
 
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,

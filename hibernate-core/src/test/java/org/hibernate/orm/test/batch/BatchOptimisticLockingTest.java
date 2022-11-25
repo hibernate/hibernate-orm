@@ -11,11 +11,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.persistence.Version;
 
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
@@ -25,6 +20,11 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.Version;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -72,8 +72,10 @@ public class BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				List<Person> persons = session.createQuery( "select p from Person p").getResultList();
+			inTransaction( (session) -> {
+				List<Person> persons = session
+						.createSelectionQuery( "select p from Person p", Person.class )
+						.getResultList();
 
 				for ( int i = 0; i < persons.size(); i++ ) {
 					Person person = persons.get( i );

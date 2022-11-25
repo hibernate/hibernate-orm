@@ -15,6 +15,7 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,9 +45,9 @@ public class CustomSqlSchemaResolvingTest {
 		String className = CustomEntity.class.getName();
 
         final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
-		String insertQuery = persister.getSQLInsertStrings()[0];
-		String updateQuery = persister.getSQLUpdateStrings()[0];
-		String deleteQuery = persister.getSQLDeleteStrings()[0];
+		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticInsertGroup().getSingleOperation() ).getSqlString();
+		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticUpdateGroup().getSingleOperation() ).getSqlString();
+		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticDeleteGroup().getSingleOperation() ).getSqlString();
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name, id) VALUES (?, ?)", insertQuery );

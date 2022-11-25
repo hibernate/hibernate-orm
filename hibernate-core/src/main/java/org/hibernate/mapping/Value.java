@@ -107,4 +107,8 @@ public interface Value extends Serializable {
 
 	ServiceRegistry getServiceRegistry();
 	Value copy();
+
+	boolean isColumnInsertable(int index);
+
+	boolean isColumnUpdateable(int index);
 }

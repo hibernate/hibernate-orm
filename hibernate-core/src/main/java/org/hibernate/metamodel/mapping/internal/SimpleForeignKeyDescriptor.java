@@ -71,30 +71,35 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
+			boolean insertable,
+			boolean updateable,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint) {
-		this( keyDeclaringType, keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, hasConstraint, false );
+		this(
+				BasicAttributeMapping.withSelectableMapping(
+						keyDeclaringType,
+						keyModelPart,
+						keyPropertyAccess,
+						NoValueGeneration.INSTANCE,
+						insertable,
+						updateable,
+						keySelectableMapping
+				),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
 	}
 
 	public SimpleForeignKeyDescriptor(
-			ManagedMappingType keyDeclaringType,
 			BasicValuedModelPart keyModelPart,
-			PropertyAccess keyPropertyAccess,
-			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint,
 			boolean swapDirection) {
-		assert keySelectableMapping != null;
 		assert targetModelPart != null;
 
-		keyModelPart = BasicAttributeMapping.withSelectableMapping(
-				keyDeclaringType,
-				keyModelPart,
-				keyPropertyAccess,
-				NoValueGeneration.INSTANCE,
-				keySelectableMapping
-		);
 		if ( swapDirection ) {
 			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, targetModelPart );
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, keyModelPart );
@@ -103,8 +108,54 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
+
 		this.refersToPrimaryKey = refersToPrimaryKey;
 		this.hasConstraint = hasConstraint;
+	}
+
+	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
+			SelectableMapping keySelectableMapping,
+			BasicValuedModelPart targetModelPart,
+			boolean refersToPrimaryKey,
+			boolean hasConstraint) {
+		this(
+				keyDeclaringType,
+				keySelectableMapping,
+				( (PropertyBasedMapping) targetModelPart ).getPropertyAccess(),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
+	}
+
+	/**
+	 *
+	 */
+	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
+			SelectableMapping keySelectableMapping,
+			PropertyAccess valueAccess,
+			BasicValuedModelPart targetModelPart,
+			boolean refersToPrimaryKey,
+			boolean hasConstraint,
+			boolean swapDirection) {
+		this(
+				BasicAttributeMapping.withSelectableMapping(
+						keyDeclaringType,
+						targetModelPart,
+						valueAccess,
+						NoValueGeneration.INSTANCE,
+						keySelectableMapping.isInsertable(),
+						keySelectableMapping.isUpdateable(),
+						keySelectableMapping
+				),
+				targetModelPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				swapDirection
+		);
 	}
 
 	@Override
@@ -138,6 +189,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public int compare(Object key1, Object key2) {
+		//noinspection unchecked,rawtypes
+		return ( (JavaType) keySide.getModelPart().getJavaType() ).getComparator().compare( key1, key2 );
+	}
+
+	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
 			ManagedMappingType declaringType,
 			TableGroupProducer declaringTableGroupProducer,
@@ -149,6 +206,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
 				selectableMappingAccess.apply( 0 ),
 				targetSide.getModelPart(),
+				keySide.getModelPart().isInsertable(),
+				keySide.getModelPart().isUpdateable(),
 				refersToPrimaryKey,
 				hasConstraint
 		);
@@ -367,7 +426,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public Object getAssociationKeyFromSide(
 			Object targetObject,
-			Nature nature,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
 		if ( targetObject == null ) {
 			return null;
@@ -375,13 +434,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( refersToPrimaryKey && targetObject instanceof HibernateProxy ) {
 			return ( (HibernateProxy) targetObject ).getHibernateLazyInitializer().getIdentifier();
 		}
-		final ModelPart modelPart;
-		if ( nature == Nature.KEY ) {
-			modelPart = keySide.getModelPart();
-		}
-		else {
-			modelPart = targetSide.getModelPart();
-		}
+		final ModelPart modelPart = side.getModelPart();
 		if ( modelPart instanceof EntityIdentifierMapping ) {
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
@@ -466,6 +519,21 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public boolean isFormula() {
 		return keySide.getModelPart().isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return keySide.getModelPart().isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return keySide.getModelPart().isInsertable();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return keySide.getModelPart().isUpdateable();
 	}
 
 	@Override

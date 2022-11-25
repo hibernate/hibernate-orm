@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
 /**
@@ -32,7 +32,7 @@ public interface EnumValueConverter<O extends Enum<O>, R> extends BasicValueConv
 	 * @since 6.0
 	 *
 	 * @deprecated Added temporarily in support of dual SQL execution until
-	 * fully migrated to {@link SelectStatement} and {@link JdbcOperation}
+	 * fully migrated to {@link SelectStatement} and {@link JdbcOperationQuery}
 	 */
 	@Remove
 	@Deprecated

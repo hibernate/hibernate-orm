@@ -6,20 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import java.sql.PreparedStatement;
-import java.util.ArrayList;
-import java.util.List;
-import jakarta.persistence.FlushModeType;
-import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
-
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.batch.internal.Batch2BuilderInitiator;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
 import org.hibernate.testing.TestForIssue;
@@ -32,9 +20,13 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.FlushModeType;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
+import org.assertj.core.api.Assertions;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
@@ -62,14 +54,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 						provider = JtaPlatformSettingProvider.class
 				),
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
-						provider = JtaWithStatementsBatchTest.BatchBuilderSettingProvider.class
+						settingName = Batch2BuilderInitiator.BUILDER,
+						provider = AbstractBatchingTest.Batch2BuilderSettingProvider.class
 				)
 		}
 )
 public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
-
-	private static TestBatch testBatch;
 
 	@Test
 	public void testUnableToReleaseStatementMessageIsNotLogged(EntityManagerFactoryScope scope) {
@@ -97,8 +87,10 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 						em.persist( comment );
 
 						transactionManager.commit();
-						assertStatementsListIsCleared();
-						assertAllStatementsAreClosed( testBatch.createdStatements );
+
+						Assertions.assertThat( wasReleaseCalled ).isTrue();
+						Assertions.assertThat( numberOfStatementsBeforeRelease ).isEqualTo( 1 );
+						Assertions.assertThat( numberOfStatementsAfterRelease ).isEqualTo( 0 );
 					}
 					catch (Exception | AssertionError e) {
 						try {
@@ -159,49 +151,5 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 					}
 				}
 		);
-	}
-
-	private void assertStatementsListIsCleared() {
-		assertThat( testBatch.createdStatements.size(), not( 0 ) );
-		assertThat(
-				"Not all PreparedStatements have been released",
-				testBatch.numberOfStatementsAfterReleasing,
-				is( 0 )
-		);
-	}
-
-	public static class BatchBuilderSettingProvider implements SettingProvider.Provider<String> {
-		@Override
-		public String getSetting() {
-			return TestBatchBuilder.class.getName();
-		}
-	}
-
-	public static class TestBatch extends BatchingBatch {
-		private int numberOfStatementsAfterReleasing;
-		private List<PreparedStatement> createdStatements = new ArrayList<>();
-
-		public TestBatch(BatchKey key, JdbcCoordinator jdbcCoordinator, int batchSize) {
-			super( key, jdbcCoordinator, batchSize );
-		}
-
-		protected void releaseStatements() {
-			createdStatements.addAll( getStatements().values() );
-			super.releaseStatements();
-			numberOfStatementsAfterReleasing += getStatements().size();
-		}
-	}
-
-	public static class TestBatchBuilder extends BatchBuilderImpl {
-
-		@Override
-		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return buildBatchTest( key, jdbcCoordinator, getJdbcBatchSize() );
-		}
-
-		protected BatchingBatch buildBatchTest(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {
-			testBatch = new TestBatch( key, jdbcCoordinator, jdbcBatchSize );
-			return testBatch;
-		}
 	}
 }

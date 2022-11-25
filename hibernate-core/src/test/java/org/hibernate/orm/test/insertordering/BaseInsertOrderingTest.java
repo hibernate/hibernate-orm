@@ -13,13 +13,12 @@ import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -92,16 +91,9 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 
 	void verifyPreparedStatementCount(int expectedBatchCount) {
 		final int realBatchCount = connectionProvider.getPreparedSQLStatements().size();
-		assertEquals(
-				expectedBatchCount,
-				realBatchCount,
-				String.format( "expected %d batch%s; but found %d batch%s",
-							   expectedBatchCount,
-							   ( expectedBatchCount == 1 ? "" : "es" ),
-							   realBatchCount,
-							   ( realBatchCount == 1 ? "" : "es" )
-				)
-		);
+		assertThat( realBatchCount )
+				.as( "Expected %d batches, but found %d", expectedBatchCount, realBatchCount )
+				.isEqualTo( expectedBatchCount );
 	}
 
 	void clearBatches() {

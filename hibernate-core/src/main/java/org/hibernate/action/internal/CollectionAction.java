@@ -153,7 +153,10 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 		else {
 			//then by fk
-			return persister.getKeyType().compare( key, action.key );
+			return persister.getAttributeMapping().getKeyDescriptor().compare( key, action.key );
+//			//noinspection unchecked
+//			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
+//			return javaType.getComparator().compare( key, action.key );
 		}
 	}
 

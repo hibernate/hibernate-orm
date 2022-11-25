@@ -88,10 +88,10 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -758,7 +758,9 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion().isSameOrAfter( 2 ) ? H2FinalTableIdentityColumnSupport.INSTANCE : H2IdentityColumnSupport.INSTANCE;
+		return getVersion().isSameOrAfter( 2 )
+				? H2FinalTableIdentityColumnSupport.INSTANCE
+				: H2IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

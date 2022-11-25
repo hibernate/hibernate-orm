@@ -13,6 +13,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -88,5 +89,18 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 								selectionConsumer
 						)
 		);
+	}
+
+	default int compare(Object value1, Object value2) {
+		final List<AttributeMapping> attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final Getter getter = attributeMapping.getPropertyAccess().getGetter();
+			final int comparison = attributeMapping.compare( getter.get( value1 ), getter.get( value2 ) );
+			if ( comparison != 0 ) {
+				return comparison;
+			}
+		}
+		return 0;
 	}
 }

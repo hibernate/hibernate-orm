@@ -11,14 +11,13 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -33,7 +32,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 
 	@Override
 	public int execute(
-			JdbcMutation jdbcMutation,
+			JdbcOperationQueryMutation jdbcMutation,
 			JdbcParameterBindings jdbcParameterBindings,
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCheck,
@@ -49,11 +48,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		final String finalSql;
 		if ( queryOptions == null ) {
-			finalSql = jdbcMutation.getSql();
+			finalSql = jdbcMutation.getSqlString();
 		}
 		else {
 			finalSql = jdbcServices.getDialect().addSqlHintOrComment(
-					jdbcMutation.getSql(),
+					jdbcMutation.getSqlString(),
 					queryOptions,
 					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
 			);

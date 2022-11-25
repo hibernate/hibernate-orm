@@ -15,6 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -180,7 +181,7 @@ public class OneToMany implements Value {
 
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -190,7 +191,7 @@ public class OneToMany implements Value {
 
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -214,6 +215,16 @@ public class OneToMany implements Value {
 		this.notFoundAction = ignoreNotFound
 				? NotFoundAction.IGNORE
 				: null;
+	}
+
+	@Override
+	public boolean isColumnInsertable(int index) {
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		return false;
 	}
 
 	@Override

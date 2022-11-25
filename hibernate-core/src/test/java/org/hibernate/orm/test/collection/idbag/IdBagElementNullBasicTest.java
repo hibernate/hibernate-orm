@@ -160,7 +160,7 @@ public class IdBagElementNullBasicTest {
 		return scope.fromTransaction(
 				session -> {
 					return session.createNativeQuery(
-							"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
+							"SELECT element_value FROM collection_table where entity_fk = " + id
 					).list();
 				}
 		);
@@ -175,9 +175,10 @@ public class IdBagElementNullBasicTest {
 		private int id;
 
 		@ElementCollection
-		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
-		@CollectionId( column = @Column, generator = "increment" )
+		@CollectionTable(name = "collection_table", joinColumns = { @JoinColumn(name = "entity_fk") })
+		@CollectionId( column = @Column(name = "element_id"), generator = "increment" )
 		@CollectionIdJdbcTypeCode( Types.BIGINT )
+		@Column( name = "element_value" )
 		private List<String> aCollection = new ArrayList<>();
 	}
 }

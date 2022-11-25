@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -60,6 +59,9 @@ public class BasicAttributeMapping
 	private final Integer scale;
 
 	private final JdbcMapping jdbcMapping;
+	private final boolean nullable;
+	private final boolean insertable;
+	private final boolean updateable;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -79,6 +81,9 @@ public class BasicAttributeMapping
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
@@ -101,6 +106,9 @@ public class BasicAttributeMapping
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
 		this.jdbcMapping = jdbcMapping;
 		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 
@@ -119,6 +127,8 @@ public class BasicAttributeMapping
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration,
+			boolean insertable,
+			boolean updateable,
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
@@ -153,6 +163,9 @@ public class BasicAttributeMapping
 				selectableMapping.getLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
+				selectableMapping.isNullable(),
+				insertable,
+				updateable,
 				original.getJdbcMapping(),
 				declaringType,
 				propertyAccess,
@@ -183,6 +196,21 @@ public class BasicAttributeMapping
 	@Override
 	public boolean isFormula() {
 		return isFormula;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
 	}
 
 	@Override
@@ -250,7 +278,7 @@ public class BasicAttributeMapping
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
+			@SuppressWarnings("SameParameterValue") boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();

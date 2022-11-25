@@ -25,4 +25,5 @@ final class SharedBatchBuildingCode {
 				? new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse )
 				: new NonBatchingBatch( key, jdbcCoordinator );
 	}
+
 }

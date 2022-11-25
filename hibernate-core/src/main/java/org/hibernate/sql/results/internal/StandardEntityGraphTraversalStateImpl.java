@@ -8,7 +8,6 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -26,6 +25,8 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
  * @author Nathan Xu

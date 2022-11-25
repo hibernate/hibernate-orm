@@ -27,8 +27,8 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -46,7 +46,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final org.hibernate.persister.entity.Loadable persister;
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
-	private final JdbcSelect jdbcSelect;
+	private final JdbcOperationQuerySelect jdbcSelect;
 	private final List<JdbcParameter> jdbcParameters;
 
 	public SingleIdLoadPlan(
@@ -94,7 +94,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	}
 
 	@Override
-	public JdbcSelect getJdbcSelect() {
+	public JdbcOperationQuerySelect getJdbcSelect() {
 		return jdbcSelect;
 	}
 

@@ -66,8 +66,7 @@ public class InformixSqmToSqlAstConverter<T extends Statement> extends BaseSqmTo
 								new NamedTableReference(
 										"(select 1)",
 										"dummy_(x)",
-										false,
-										getCreationContext().getSessionFactory()
+										false
 								),
 								null,
 								getCreationContext().getSessionFactory()

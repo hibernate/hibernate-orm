@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Locale;
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -24,9 +23,8 @@ public class UnionTableReference extends NamedTableReference {
 			String unionTableExpression,
 			String[] subclassTableSpaceExpressions,
 			String identificationVariable,
-			boolean isOptional,
-			SessionFactoryImplementor sessionFactory) {
-		super( unionTableExpression, identificationVariable, isOptional, sessionFactory );
+			boolean isOptional) {
+		super( unionTableExpression, identificationVariable, isOptional );
 
 		this.subclassTableSpaceExpressions = subclassTableSpaceExpressions;
 	}

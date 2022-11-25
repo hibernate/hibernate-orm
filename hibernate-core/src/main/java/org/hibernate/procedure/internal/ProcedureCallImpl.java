@@ -72,9 +72,9 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.NoMoreOutputsException;
@@ -120,6 +120,7 @@ public class ProcedureCallImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
+	private JdbcOperationQueryCall call;
 	private ProcedureOutputsImpl outputs;
 
 
@@ -584,7 +585,7 @@ public class ProcedureCallImpl<R>
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
-		JdbcCall call = callableStatementSupport.interpretCall(this);
+		this.call = callableStatementSupport.interpretCall(this);
 
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
@@ -610,7 +611,7 @@ public class ProcedureCallImpl<R>
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
 				.getStatementPreparer()
-				.prepareStatement( call.getSql(), true );
+				.prepareStatement( call.getSqlString(), true );
 		try {
 			// Register the parameter mode and type
 			callableStatementSupport.registerParameters(

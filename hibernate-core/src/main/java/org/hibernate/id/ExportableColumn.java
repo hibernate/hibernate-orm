@@ -176,6 +176,16 @@ public class ExportableColumn extends Column {
 		public ServiceRegistry getServiceRegistry() {
 			return database.getServiceRegistry();
 		}
+
+		@Override
+		public boolean isColumnInsertable(int index) {
+			return true;
+		}
+
+		@Override
+		public boolean isColumnUpdateable(int index) {
+			return true;
+		}
 	}
 
 	public static class ColumnIterator implements Iterator<Selectable> {

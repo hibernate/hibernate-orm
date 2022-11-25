@@ -86,6 +86,11 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	}
 
 	/**
+	 * Compare the 2 values
+	 */
+	int compare(Object key1, Object key2);
+
+	/**
 	 * Create a DomainResult for the referring-side of the fk
 	 */
 	DomainResult<?> createKeyDomainResult(
@@ -134,9 +139,16 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		return visitKeySelectables( offset, consumer );
 	}
 
-	Object getAssociationKeyFromSide(
+	default Object getAssociationKeyFromSide(
 			Object targetObject,
 			Nature nature,
+			SharedSessionContractImplementor session) {
+		return getAssociationKeyFromSide( targetObject, getSide( nature ), session );
+	}
+
+	Object getAssociationKeyFromSide(
+			Object targetObject,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session);
 
 	int visitKeySelectables(int offset, SelectableConsumer consumer);

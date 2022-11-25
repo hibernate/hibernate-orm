@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.io.Serializable;
-
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;

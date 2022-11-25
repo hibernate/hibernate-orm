@@ -53,11 +53,11 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -664,7 +664,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final TableGroup elementTableGroup = ( (EntityCollectionPart) elementDescriptor ).createTableGroupInternal(
+		final TableGroup elementTableGroup = ( (OneToManyCollectionPart) elementDescriptor ).createAssociatedTableGroup(
 				canUseInnerJoins,
 				navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 				fetched,
@@ -676,6 +676,7 @@ public class PluralAttributeMappingImpl
 		final OneToManyTableGroup tableGroup = new OneToManyTableGroup(
 				this,
 				elementTableGroup,
+//				this::createIndexTableGroup,
 				creationContext.getSessionFactory()
 		);
 
@@ -713,8 +714,7 @@ public class PluralAttributeMappingImpl
 		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),
-				true,
-				creationContext.getSessionFactory()
+				true
 		);
 
 		final CollectionTableGroup tableGroup = new CollectionTableGroup(

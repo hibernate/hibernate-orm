@@ -12,7 +12,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 
@@ -46,7 +46,7 @@ public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
 		this.queryOptions = queryOptions;
 	}
 
-	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, JdbcSelect jdbcSelect) {
+	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, JdbcOperationQuerySelect jdbcSelect) {
 		this( sqmExecutionContext, omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), jdbcSelect ) );
 	}
 	@Override

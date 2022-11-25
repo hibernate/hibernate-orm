@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -31,8 +30,7 @@ public class NamedTableReference extends AbstractTableReference {
 	public NamedTableReference(
 			String tableExpression,
 			String identificationVariable,
-			boolean isOptional,
-			SessionFactoryImplementor sessionFactory) {
+			boolean isOptional) {
 		super( identificationVariable, isOptional );
 		assert tableExpression != null;
 		this.tableExpression = tableExpression;

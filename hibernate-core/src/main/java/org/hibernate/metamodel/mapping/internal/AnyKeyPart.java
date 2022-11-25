@@ -16,18 +16,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -56,13 +55,22 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final Integer precision;
 	private final Integer scale;
 	private final boolean nullable;
+	private boolean isInsertable;
+	private boolean isUpdateable;
 	private final JdbcMapping jdbcMapping;
 
 	public AnyKeyPart(
 			NavigableRole navigableRole,
-			DiscriminatedAssociationModelPart anyPart, String table,
+			DiscriminatedAssociationModelPart anyPart,
+			String table,
 			String column,
-			String columnDefinition, Long length, Integer precision, Integer scale, boolean nullable,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
 			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
@@ -73,6 +81,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.precision = precision;
 		this.scale = scale;
 		this.nullable = nullable;
+		this.isInsertable = insertable;
+		this.isUpdateable = updateable;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -89,6 +99,21 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return isUpdateable;
 	}
 
 	@Override
@@ -250,7 +275,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return anyPart.disassemble( value, session );
+		return value;
 	}
 
 	@Override
@@ -260,7 +285,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return anyPart.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return 1;
 	}
 
 	@Override
@@ -269,6 +295,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// todo (6.2) : how is this correct?
 		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
@@ -277,6 +304,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
+		// todo (6.2) : how is this correct?
 		anyPart.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
@@ -286,6 +314,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		// todo (6.2) : how is this correct?
 		anyPart.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 }

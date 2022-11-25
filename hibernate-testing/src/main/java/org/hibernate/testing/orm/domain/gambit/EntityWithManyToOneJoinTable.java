@@ -53,13 +53,9 @@ public class EntityWithManyToOneJoinTable {
 	}
 
 	@ManyToOne
-	@JoinTable(name = "ENTITY_OTHER",
-			joinColumns =  {
-					@JoinColumn( name = "LHS_ID")
-			},
-			inverseJoinColumns = {
-					@JoinColumn(name="RHS_ID")
-	}
+	@JoinTable(name = "simple_entity_assoc",
+			joinColumns =  @JoinColumn( name = "entity_fk"),
+			inverseJoinColumns = @JoinColumn(name="simple_fk")
 	)
 	public SimpleEntity getOther() {
 		return other;
@@ -70,7 +66,10 @@ public class EntityWithManyToOneJoinTable {
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinTable(name = "ENTITY_ANOTHER")
+	@JoinTable(name = "basic_entity_assoc",
+			joinColumns = @JoinColumn(name="entity_fk"),
+			inverseJoinColumns = @JoinColumn(name="basic_fk")
+	)
 	public BasicEntity getLazyOther() {
 		return lazyOther;
 	}

@@ -25,6 +25,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @apiNote Intended for use at development-time for developers to better understand
  * the lifecycle of the annotated element.
  *
+ * @see Deprecated#forRemoval()
+ *
  * @author Steve Ebersole
  */
 @Target({METHOD, FIELD, TYPE, PACKAGE, CONSTRUCTOR, TYPE_PARAMETER, TYPE_USE})

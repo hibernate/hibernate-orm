@@ -17,11 +17,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -38,16 +38,14 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +55,7 @@ class DatabaseSnapshotExecutor {
 
 	private final EntityMappingType entityDescriptor;
 
-	private final JdbcSelect jdbcSelect;
+	private final JdbcOperationQuerySelect jdbcSelect;
 	private final List<JdbcParameter> jdbcParameters;
 
 	DatabaseSnapshotExecutor(

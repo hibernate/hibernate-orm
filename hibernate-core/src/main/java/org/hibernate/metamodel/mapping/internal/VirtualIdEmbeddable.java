@@ -74,7 +74,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
 		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
 
-		// todo (6.0) : can/should this be a separate VirtualIdEmbedded?
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(

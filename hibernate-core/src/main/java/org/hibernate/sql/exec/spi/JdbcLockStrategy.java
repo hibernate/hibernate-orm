@@ -7,7 +7,7 @@
 package org.hibernate.sql.exec.spi;
 
 /**
- * The strategy to use for applying locks to a {@link JdbcSelect}.
+ * The strategy to use for applying locks to a {@link JdbcOperationQuerySelect}.
  *
  * @author Christian Beikov
  */

@@ -12,13 +12,12 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 
 import jakarta.persistence.ParameterMode;
 
@@ -47,16 +46,13 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 	}
 
 	@Override
-	public JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
 		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final ParameterStrategy parameterStrategy = functionReturn == null && parameterMetadata.hasNamedParameters() ?
-				ParameterStrategy.NAMED :
-				ParameterStrategy.POSITIONAL;
-		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder( parameterStrategy );
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder();
 		final StringBuilder buffer;
 		final int offset;
 		if ( functionReturn != null && !implicitReturn ) {

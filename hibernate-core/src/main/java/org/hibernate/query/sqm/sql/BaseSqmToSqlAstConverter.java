@@ -83,6 +83,8 @@ import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
+import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
@@ -94,11 +96,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
-import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
-import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
@@ -112,7 +109,12 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -338,6 +340,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
@@ -1067,7 +1070,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		currentClauseStack.push( Clause.INSERT );
-		final InsertStatement insertStatement;
+		final InsertSelectStatement insertStatement;
 		final AdditionalInsertValues additionalInsertValues;
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
@@ -1083,7 +1086,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
-			insertStatement = new InsertStatement(
+			insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
@@ -1184,7 +1187,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
-			final InsertStatement insertStatement = new InsertStatement(
+			final InsertSelectStatement insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
@@ -2764,7 +2767,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				navigablePath,
 				sqlAliasBase,
 				tableGroupProducer,
-				new NamedTableReference( cteName, identifierVariable, false, null ),
+				new NamedTableReference( cteName, identifierVariable, false ),
 				tableGroupProducer.getCompatibleTableExpressions()
 		);
 	}
@@ -3655,6 +3658,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Expression visitTableGroup(TableGroup tableGroup, SqmFrom<?, ?> path) {
 		final ModelPartContainer tableGroupModelPart = tableGroup.getModelPart();
+
 		final ModelPart actualModelPart;
 		final NavigablePath navigablePath;
 		if ( tableGroupModelPart instanceof PluralAttributeMapping ) {
@@ -3665,6 +3669,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			actualModelPart = tableGroupModelPart;
 			navigablePath = tableGroup.getNavigablePath();
 		}
+
 		final Expression result;
 		if ( actualModelPart instanceof EntityValuedModelPart ) {
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) actualModelPart;
@@ -3723,60 +3728,70 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else if ( inferredEntityMapping instanceof EntityCollectionPart ) {
 				// If the inferred mapping is a collection part, we try to make use of the FK again to avoid joins
 				final EntityCollectionPart collectionPart = (EntityCollectionPart) inferredEntityMapping;
-				final TableGroup collectionTableGroup;
+
+				// If the inferred mapping is a collection part, we try to make use of the FK again to avoid joins
 				if ( tableGroup.getModelPart() instanceof CollectionPart ) {
-					collectionTableGroup = findTableGroup( tableGroup.getNavigablePath().getParent() );
+					tableGroupToUse = findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}
 				else {
-					collectionTableGroup = tableGroup;
+					tableGroupToUse = tableGroup;
 				}
 
-				if ( entityValuedModelPart == collectionPart ) {
-					// When we compare the same collection parts, we can just use the FK part
-					resultModelPart = collectionPart.getForeignKeyDescriptor()
-							.getPart( collectionPart.getSideNature() );
+				if ( collectionPart.getCardinality() == EntityCollectionPart.Cardinality.ONE_TO_MANY ) {
+					resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
 				}
-				else if ( entityValuedModelPart instanceof EntityAssociationMapping ) {
-					// If the table group model part is an association, we check if the FK targets are compatible
-					final EntityAssociationMapping tableGroupAssociation = (EntityAssociationMapping) entityValuedModelPart;
-					final ModelPart pathTargetPart = tableGroupAssociation.getForeignKeyDescriptor()
-							.getPart( tableGroupAssociation.getSideNature().inverse() );
-					final ModelPart inferredTargetPart = collectionPart.getForeignKeyDescriptor()
-							.getPart( collectionPart.getSideNature().inverse() );
-					// If the inferred association and table group association targets are the same,
-					// or the table group association refers to the primary key, we can safely use the FK part
-					if ( pathTargetPart == inferredTargetPart || tableGroupAssociation.isReferenceToPrimaryKey() ) {
-						resultModelPart = tableGroupAssociation.getForeignKeyDescriptor()
-								.getPart( tableGroupAssociation.getSideNature() );
+				else {
+					assert collectionPart.getCardinality() == EntityCollectionPart.Cardinality.MANY_TO_MANY;
+					final ManyToManyCollectionPart manyToManyPart = (ManyToManyCollectionPart) collectionPart;
+
+					if ( entityValuedModelPart == collectionPart ) {
+						// When we compare the same collection parts, we can just use the FK part
+						resultModelPart = manyToManyPart.getForeignKeyDescriptor().getKeyPart();
 					}
-					else {
-						// Otherwise, we must force the use of the identifier mapping and possibly create a join,
-						// because comparing by primary key is the only sensible thing to do in this case.
-						// Note that EntityValuedPathInterpretation does the same
-						resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
+					else if ( entityValuedModelPart instanceof EntityAssociationMapping ) {
+						// If the table group model part is an association, we check if the FK targets are compatible
+						final EntityAssociationMapping tableGroupAssociation = (EntityAssociationMapping) entityValuedModelPart;
+						final ModelPart pathTargetPart = tableGroupAssociation
+								.getForeignKeyDescriptor()
+								.getPart( tableGroupAssociation.getSideNature().inverse() );
+						final ModelPart inferredTargetPart = manyToManyPart
+								.getForeignKeyDescriptor()
+								.getPart( ForeignKeyDescriptor.Nature.TARGET );
+
+						// If the inferred association and table group association targets are the same,
+						// or the table group association refers to the primary key, we can safely use the FK part
+						if ( pathTargetPart == inferredTargetPart || tableGroupAssociation.isReferenceToPrimaryKey() ) {
+							resultModelPart = tableGroupAssociation.getForeignKeyDescriptor().getKeyPart();
+						}
+						else {
+							// Otherwise, we must force the use of the identifier mapping and possibly create a join,
+							// because comparing by primary key is the only sensible thing to do in this case.
+							// Note that EntityValuedPathInterpretation does the same
+							resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
+						}
 					}
-				}
-				else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
+					else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
 					resultModelPart = ( (AnonymousTupleEntityValuedModelPart) entityValuedModelPart ).getForeignKeyPart();
 				}
 				else {
-					// Since the table group model part is an EntityMappingType,
-					// we can render the FK target model part of the inferred collection part,
-					// which might be a UK, but usually a PK
-					assert entityValuedModelPart instanceof EntityMappingType;
-					if ( collectionPart.getCollectionDescriptor().isOneToMany() ) {
-						// When the inferred mapping is a one-to-many collection part,
-						// we will render the entity identifier mapping for that collection part,
-						// so we will have to do the same for the EntityMappingType side
-						resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
-					}
-					else {
-						resultModelPart = collectionPart.getForeignKeyDescriptor()
-								.getPart( collectionPart.getSideNature().inverse() );
+						// Since the table group model part is an EntityMappingType,
+						// we can render the FK target model part of the inferred collection part,
+						// which might be a UK, but usually a PK
+						assert entityValuedModelPart instanceof EntityMappingType;
+						if ( collectionPart.getCardinality() == EntityCollectionPart.Cardinality.ONE_TO_MANY ) {
+							// When the inferred mapping is a one-to-many collection part,
+							// we will render the entity identifier mapping for that collection part,
+							// so we will have to do the same for the EntityMappingType side
+							resultModelPart = collectionPart.getAssociatedEntityMappingType().getIdentifierMapping();
+						}
+						else {
+							resultModelPart = manyToManyPart
+									.getForeignKeyDescriptor()
+									.getPart( manyToManyPart.getSideNature().inverse() );
+						}
 					}
 				}
 				interpretationModelPart = inferredEntityMapping;
-				tableGroupToUse = collectionTableGroup;
 			}
 			else if ( entityValuedModelPart instanceof AnonymousTupleEntityValuedModelPart ) {
 				resultModelPart = ( (AnonymousTupleEntityValuedModelPart) entityValuedModelPart ).getForeignKeyPart();
@@ -3790,6 +3805,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				interpretationModelPart = inferredEntityMapping;
 				tableGroupToUse = null;
 			}
+
 			final boolean expandToAllColumns;
 			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
 				// When the table group is known to be fetched i.e. a fetch join
@@ -4180,11 +4196,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
-			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
-					.getSessionFactory()
-					.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "count" );
+			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = resolveFunction( "count" );
 			final BasicType<Integer> integerType = creationContext.getMappingMetamodel()
 					.getTypeConfiguration()
 					.getBasicTypeForJavaType( Integer.class );
@@ -4293,10 +4305,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			String function) {
 		prepareReusablePath( pluralPartPath.getLhs(), () -> null );
 
+		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
 		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) determineValueMapping(
 				pluralPartPath.getPluralDomainPath() );
-		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
+
 		final QuerySpec subQuerySpec = new QuerySpec( false );
+
 		pushProcessingState(
 				new SqlAstQueryPartProcessingStateImpl(
 						subQuerySpec,
@@ -4329,18 +4343,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
-			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor =
-					(AbstractSqmSelfRenderingFunctionDescriptor) creationContext
-							.getSessionFactory()
-							.getQueryEngine()
-							.getSqmFunctionRegistry()
-							.findFunctionDescriptor( function );
+			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = resolveFunction( function );
 			final CollectionPart collectionPart = index
 					? pluralAttributeMapping.getIndexDescriptor()
 					: pluralAttributeMapping.getElementDescriptor();
 			final ModelPart modelPart;
-			if ( collectionPart instanceof EntityAssociationMapping ) {
-				modelPart = ( (EntityAssociationMapping) collectionPart ).getKeyTargetMatchPart();
+			if ( collectionPart instanceof OneToManyCollectionPart ) {
+				final OneToManyCollectionPart toManyPart = (OneToManyCollectionPart) collectionPart;
+				modelPart = toManyPart.getAssociatedEntityMappingType().getIdentifierMapping();
+//				modelPart = pluralAttributeMapping.getKeyDescriptor().getTargetPart();
+			}
+			else if ( collectionPart instanceof ManyToManyCollectionPart ) {
+				modelPart = ( (ManyToManyCollectionPart) collectionPart ).getKeyTargetMatchPart();
 			}
 			else {
 				modelPart = collectionPart;
@@ -4396,6 +4410,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			popProcessingStateStack();
 		}
 		return new SelectStatement( subQuerySpec );
+	}
+
+	private AbstractSqmSelfRenderingFunctionDescriptor resolveFunction(String function) {
+		return (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
+				.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionDescriptor( function );
 	}
 
 	protected Expression createLateralJoinExpression(
@@ -4466,11 +4488,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final Boolean max = functionName.equalsIgnoreCase( "max" ) ? Boolean.TRUE
 						: ( functionName.equalsIgnoreCase( "min" ) ? Boolean.FALSE : null );
 				final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor =
-						(AbstractSqmSelfRenderingFunctionDescriptor) creationContext
-								.getSessionFactory()
-								.getQueryEngine()
-								.getSqmFunctionRegistry()
-								.findFunctionDescriptor( functionName );
+						resolveFunction( functionName );
 				final List<ColumnReference> subQueryColumns = new ArrayList<>( jdbcTypeCount );
 				modelPart.forEachSelectable(
 						(selectionIndex, selectionMapping) -> {
@@ -6602,24 +6620,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
-			final CollectionPart elementDescriptor = pluralAttributeMapping.getElementDescriptor();
-			if ( elementDescriptor instanceof EntityCollectionPart ) {
-				( (EntityCollectionPart) elementDescriptor ).getKeyTargetMatchPart()
-						.createDomainResult(
-								pluralPath.getNavigablePath(),
-								tableGroup,
-								null,
-								this
-						);
-			}
-			else {
-				elementDescriptor.createDomainResult(
-						pluralPath.getNavigablePath(),
-						tableGroup,
-						null,
-						this
-				);
-			}
+			pluralAttributeMapping.getElementDescriptor().getInclusionCheckPart().applySqlSelections(
+					pluralPath.getNavigablePath(),
+					tableGroup,
+					this
+			);
 
 			subQuerySpec.applyPredicate(
 					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(

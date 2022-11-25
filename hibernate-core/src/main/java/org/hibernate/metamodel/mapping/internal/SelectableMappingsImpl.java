@@ -61,6 +61,49 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			int[] propertyOrder,
 			Mapping mapping,
 			TypeConfiguration typeConfiguration,
+			boolean[] insertable,
+			boolean[] updateable,
+			Dialect dialect,
+			SqmFunctionRegistry sqmFunctionRegistry) {
+		if ( insertable.length == 0 ) {
+			return from(
+					containingTableExpression,
+					value,
+					propertyOrder,
+					mapping,
+					typeConfiguration,
+					dialect,
+					sqmFunctionRegistry
+			);
+		}
+		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
+		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
+
+		final List<Selectable> selectables = value.getVirtualSelectables();
+
+		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
+		for ( int i = 0; i < selectables.size(); i++ ) {
+			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
+					containingTableExpression,
+					selectables.get( i ),
+					jdbcMappings.get( propertyOrder[i] ),
+					typeConfiguration,
+					insertable[i],
+					updateable[i],
+					dialect,
+					sqmFunctionRegistry
+			);
+		}
+
+		return new SelectableMappingsImpl( selectableMappings );
+	}
+
+	private static SelectableMappings from(
+			String containingTableExpression,
+			Value value,
+			int[] propertyOrder,
+			Mapping mapping,
+			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
@@ -75,6 +118,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					selectables.get( i ),
 					jdbcMappings.get( propertyOrder[i] ),
 					typeConfiguration,
+					false,
+					false,
 					dialect,
 					sqmFunctionRegistry
 			);

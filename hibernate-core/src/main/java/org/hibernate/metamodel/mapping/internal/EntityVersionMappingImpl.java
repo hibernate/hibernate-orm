@@ -14,9 +14,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -122,6 +121,21 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return true;
 	}
 
 	@Override

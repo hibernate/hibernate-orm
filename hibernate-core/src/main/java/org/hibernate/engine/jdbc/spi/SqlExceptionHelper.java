@@ -12,6 +12,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
@@ -107,6 +108,19 @@ public class SqlExceptionHelper {
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		logExceptions( sqlException, message + " [" + sql + "]" );
 		return sqlExceptionConverter.convert( sqlException, message + " [" + sqlException.getMessage() + "]", sql );
+	}
+
+	/**
+	 * Convert an SQLException using the current converter, doing some logging first.
+	 *
+	 * @param sqlException The exception to convert
+	 * @param messageSupplier An error message supplier.
+	 * @param sql The SQL being executed when the exception occurred
+	 *
+	 * @return The converted exception
+	 */
+	public JDBCException convert(SQLException sqlException, Supplier<String> messageSupplier, String sql) {
+		return convert( sqlException, messageSupplier.get(), sql );
 	}
 
 	/**

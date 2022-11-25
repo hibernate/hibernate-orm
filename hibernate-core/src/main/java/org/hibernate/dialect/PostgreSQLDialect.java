@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -83,6 +82,8 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
@@ -94,8 +95,8 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;

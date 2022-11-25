@@ -217,8 +217,7 @@ public class SqmMutationStrategyHelper {
 			final NamedTableReference tableReference = new NamedTableReference(
 					separateCollectionTable,
 					DeleteStatement.DEFAULT_ALIAS,
-					true,
-					sessionFactory
+					true
 			);
 
 			final DeleteStatement sqlAstDelete = new DeleteStatement(

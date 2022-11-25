@@ -27,8 +27,8 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -58,7 +58,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import org.jboss.logging.Logger;
@@ -270,7 +270,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						);
 					}
 					return new InSubQueryPredicate(
-							MappingModelHelper.buildColumnReferenceExpression(
+							MappingModelCreationHelper.buildColumnReferenceExpression(
 									fkDescriptor,
 									null,
 									sessionFactory
@@ -291,8 +291,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						final NamedTableReference tableReference = new NamedTableReference(
 								tableExpression,
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								false,
-								sessionFactory
+								false
 						);
 						final QuerySpec idMatchingSubQuerySpec;
 						// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
@@ -383,8 +382,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final NamedTableReference deleteTableReference = new NamedTableReference(
 				targetTableReference.getTableExpression(),
 				DeleteStatement.DEFAULT_ALIAS,
-				true,
-				sessionFactory
+				true
 		);
 		final Predicate tableDeletePredicate;
 		if ( matchingIdSubQuerySpec == null ) {
@@ -450,7 +448,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
-		final JdbcDelete jdbcDelete = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryDelete jdbcDelete = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildDeleteTranslator( factory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -547,7 +545,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						);
 					}
 					return new InSubQueryPredicate(
-							MappingModelHelper.buildColumnReferenceExpression(
+							MappingModelCreationHelper.buildColumnReferenceExpression(
 									fkDescriptor,
 									null,
 									sessionFactory
@@ -586,8 +584,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final NamedTableReference targetTable = new NamedTableReference(
 				tableExpression,
 				DeleteStatement.DEFAULT_ALIAS,
-				true,
-				factory
+				true
 		);
 
 		tableKeyColumnVisitationSupplier.get().accept(

@@ -94,7 +94,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				metaColumn.getLength(),
 				metaColumn.getPrecision(),
 				metaColumn.getScale(),
-				bootValueMapping.isNullable(),
+				bootValueMapping.isColumnInsertable( 0 ),
+				bootValueMapping.isColumnUpdateable( 0 ),
 				(MetaType) anyType.getDiscriminatorType()
 		);
 
@@ -110,6 +111,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				keyColumn.getPrecision(),
 				keyColumn.getScale(),
 				bootValueMapping.isNullable(),
+				bootValueMapping.isColumnInsertable( 1 ),
+				bootValueMapping.isColumnUpdateable( 1 ),
 				keyType
 		);
 
@@ -129,10 +132,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final DiscriminatedAssociationModelPart modelPart;
 	private final AnyDiscriminatorPart discriminatorPart;
 	private final BasicValuedModelPart keyPart;
-
 	private final JavaType<?> baseAssociationJtd;
-
 	private final FetchTiming fetchTiming;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private static class ValueMapping {
 		private final Object discriminatorValue;
@@ -159,6 +161,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		this.keyPart = keyPart;
 		this.baseAssociationJtd = baseAssociationJtd;
 		this.fetchTiming = fetchTiming;
+		this.sessionFactory = sessionFactory;
 
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 		discriminatorValueMappings.forEach(
@@ -201,6 +204,58 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		return null;
+	}
+
+	public void breakDownJdbcValues(Object domainValue, ModelPart.JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		if ( domainValue == null ) {
+			valueConsumer.consume( null, getDiscriminatorPart() );
+			valueConsumer.consume( null, getKeyPart() );
+			return;
+		}
+
+		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+
+		final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
+		final Object disassembledDiscriminator = getDiscriminatorPart().disassemble( discriminator, session );
+		valueConsumer.consume( disassembledDiscriminator, getDiscriminatorPart() );
+
+		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( domainValue );
+		final Object disassembledKey = getKeyPart().disassemble( identifier, session );
+		valueConsumer.consume( disassembledKey, getKeyPart() );
+	}
+
+	public void decompose(
+			Object domainValue,
+			ModelPart.JdbcValueConsumer valueConsumer,
+			SharedSessionContractImplementor session) {
+		if ( domainValue == null ) {
+			valueConsumer.consume( null, getDiscriminatorPart() );
+			valueConsumer.consume( null, getKeyPart() );
+			return;
+		}
+
+		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+
+		final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
+		getDiscriminatorPart().decompose( discriminator, valueConsumer, session );
+
+		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( domainValue );
+		getKeyPart().decompose( identifier, valueConsumer, session );
+	}
+
+	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
+		final String entityName;
+		if ( session == null ) {
+			entityName = sessionFactory.bestGuessEntityName( entity );
+		}
+		else {
+			entityName = session.bestGuessEntityName( entity );
+		}
+		return sessionFactory
+				.getRuntimeMetamodels()
+				.getEntityMappingType( entityName );
 	}
 
 	public void forEachConcreteType(Consumer<EntityMappingType> consumer) {

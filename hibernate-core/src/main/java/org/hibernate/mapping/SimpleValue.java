@@ -76,7 +76,7 @@ public abstract class SimpleValue implements KeyValue {
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
 	private final MetadataBuildingContext buildingContext;
-	private final MetadataImplementor metadata;
+	private final InFlightMetadataCollector metadata;
 
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
@@ -95,6 +95,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Table table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
+	private Map<String,String> referencedColumnToColumnNames;
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
 	private boolean foreignKeyEnabled = true;
@@ -129,6 +130,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.table = original.table;
 		this.foreignKeyName = original.foreignKeyName;
 		this.foreignKeyDefinition = original.foreignKeyDefinition;
+		this.referencedColumnToColumnNames = original.referencedColumnToColumnNames;
 		this.alternateUniqueKey = original.alternateUniqueKey;
 		this.cascadeDeleteEnabled = original.cascadeDeleteEnabled;
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
@@ -233,7 +235,7 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.size();
 	}
 
-	protected Selectable getColumn(int position){
+	protected Selectable getColumn(int position) {
 		return columns.get( position );
 	}
 
@@ -324,12 +326,40 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
-			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
+			List<Column> referencedColumns = resolveReferencedColumns( entityName );
+			final ForeignKey fk = table.createForeignKey(
+					getForeignKeyName(),
+					getConstraintColumns(),
+					entityName,
+					getForeignKeyDefinition(),
+					referencedColumns
+			);
 			fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
 			return fk;
 		}
 
 		return null;
+	}
+
+	private List<Column> resolveReferencedColumns(String entityName) {
+		List<Column> constraintColumns = getConstraintColumns();
+		List<Column> referencedColumns = null;
+		if ( referencedColumnToColumnNames != null && !referencedColumnToColumnNames.isEmpty() ) {
+			referencedColumns = new ArrayList<>( getConstraintColumns().size() );
+			Map<String, Integer> columnNameToIndex = new HashMap<>();
+			for ( int i = 0; i < constraintColumns.size(); i++ ) {
+				columnNameToIndex.put( constraintColumns.get( i ).getName(), i );
+			}
+			for ( Column referencedTableColumn : metadata.getEntityBinding( entityName ).getTable().getColumns() ) {
+				if ( referencedColumnToColumnNames.containsKey( referencedTableColumn.getName() ) ) {
+					referencedColumns.add(
+							columnNameToIndex.get( referencedColumnToColumnNames.get( referencedTableColumn.getName() ) ),
+							referencedTableColumn
+					);
+				}
+			}
+		}
+		return referencedColumns;
 	}
 
 	@Override
@@ -639,6 +669,14 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setForeignKeyDefinition(String foreignKeyDefinition) {
 		this.foreignKeyDefinition = foreignKeyDefinition;
+	}
+
+	public Map<String, String> getReferencedColumnToColumnNames() {
+		return referencedColumnToColumnNames;
+	}
+
+	public void setReferencedColumnToColumnNames(Map<String, String> referencedColumnToColumnNames) {
+		this.referencedColumnToColumnNames = referencedColumnToColumnNames;
 	}
 
 	public boolean isAlternateUniqueKey() {

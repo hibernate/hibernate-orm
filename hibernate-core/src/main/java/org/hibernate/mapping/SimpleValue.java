@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -343,23 +344,21 @@ public abstract class SimpleValue implements KeyValue {
 
 	private List<Column> resolveReferencedColumns(String entityName) {
 		List<Column> constraintColumns = getConstraintColumns();
-		List<Column> referencedColumns = null;
+		Column[] referencedColumns = new Column[0];
 		if ( referencedColumnToColumnNames != null && !referencedColumnToColumnNames.isEmpty() ) {
-			referencedColumns = new ArrayList<>( getConstraintColumns().size() );
+			referencedColumns = new Column[getConstraintColumns().size()];
 			Map<String, Integer> columnNameToIndex = new HashMap<>();
 			for ( int i = 0; i < constraintColumns.size(); i++ ) {
 				columnNameToIndex.put( constraintColumns.get( i ).getName(), i );
 			}
 			for ( Column referencedTableColumn : metadata.getEntityBinding( entityName ).getTable().getColumns() ) {
 				if ( referencedColumnToColumnNames.containsKey( referencedTableColumn.getName() ) ) {
-					referencedColumns.add(
-							columnNameToIndex.get( referencedColumnToColumnNames.get( referencedTableColumn.getName() ) ),
-							referencedTableColumn
-					);
+					referencedColumns[columnNameToIndex.get( referencedColumnToColumnNames.get( referencedTableColumn.getName() ) )] =
+							referencedTableColumn;
 				}
 			}
 		}
-		return referencedColumns;
+		return Arrays.asList( referencedColumns);
 	}
 
 	@Override

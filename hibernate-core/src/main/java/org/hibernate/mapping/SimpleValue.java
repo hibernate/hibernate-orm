@@ -346,19 +346,22 @@ public abstract class SimpleValue implements KeyValue {
 		List<Column> constraintColumns = getConstraintColumns();
 		Column[] referencedColumns = new Column[0];
 		if ( referencedColumnToColumnNames != null && !referencedColumnToColumnNames.isEmpty() ) {
-			referencedColumns = new Column[getConstraintColumns().size()];
-			Map<String, Integer> columnNameToIndex = new HashMap<>();
-			for ( int i = 0; i < constraintColumns.size(); i++ ) {
-				columnNameToIndex.put( constraintColumns.get( i ).getName(), i );
-			}
-			for ( Column referencedTableColumn : metadata.getEntityBinding( entityName ).getTable().getColumns() ) {
-				if ( referencedColumnToColumnNames.containsKey( referencedTableColumn.getName() ) ) {
-					referencedColumns[columnNameToIndex.get( referencedColumnToColumnNames.get( referencedTableColumn.getName() ) )] =
-							referencedTableColumn;
+			if ( getConstraintColumns().size() == referencedColumnToColumnNames.size() ) {
+				referencedColumns = new Column[getConstraintColumns().size()];
+				Map<String, Integer> columnNameToIndex = new HashMap<>();
+				for ( int i = 0; i < constraintColumns.size(); i++ ) {
+					columnNameToIndex.put( constraintColumns.get( i ).getName(), i );
+				}
+				for ( Column referencedTableColumn : metadata.getEntityBinding( entityName ).getTable().getColumns() ) {
+					if ( referencedColumnToColumnNames.containsKey( referencedTableColumn.getName() ) ) {
+						referencedColumns[columnNameToIndex.get( referencedColumnToColumnNames.get(
+								referencedTableColumn.getName() ) )] =
+								referencedTableColumn;
+					}
 				}
 			}
 		}
-		return Arrays.asList( referencedColumns);
+		return referencedColumns.length == 0 ? null : Arrays.asList( referencedColumns);
 	}
 
 	@Override

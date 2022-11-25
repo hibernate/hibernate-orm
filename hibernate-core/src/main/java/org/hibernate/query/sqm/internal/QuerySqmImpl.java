@@ -516,6 +516,33 @@ public class QuerySqmImpl<R>
 		final boolean needsDistinct = containsCollectionFetches
 				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
 
+		final List<R> list = resolveSelectQueryPlan()
+				.performList( executionContextFordoList( containsCollectionFetches, hasLimit, needsDistinct ) );
+
+		if ( needsDistinct ) {
+			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
+					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
+					: getQueryOptions().getLimit().getFirstRow();
+			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
+					? getMaxRows( sqmStatement, list.size() )
+					: getQueryOptions().getLimit().getMaxRows();
+			if ( first > 0 || max != -1 ) {
+				final int toIndex;
+				final int resultSize = list.size();
+				if ( max != -1 ) {
+					toIndex = first + max;
+				}
+				else {
+					toIndex = resultSize;
+				}
+				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
+			}
+		}
+		return list;
+
+	}
+
+	protected DomainQueryExecutionContext executionContextFordoList(boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
 		final DomainQueryExecutionContext executionContextToUse;
 		if ( hasLimit && containsCollectionFetches ) {
 			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
@@ -570,30 +597,7 @@ public class QuerySqmImpl<R>
 				executionContextToUse = this;
 			}
 		}
-
-		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
-
-		if ( needsDistinct ) {
-			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
-					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
-					: getQueryOptions().getLimit().getFirstRow();
-			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
-					? getMaxRows( sqmStatement, list.size() )
-					: getQueryOptions().getLimit().getMaxRows();
-			if ( first > 0 || max != -1 ) {
-				final int toIndex;
-				final int resultSize = list.size();
-				if ( max != -1 ) {
-					toIndex = first + max;
-				}
-				else {
-					toIndex = resultSize;
-				}
-				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
-			}
-		}
-		return list;
-
+		return executionContextToUse;
 	}
 
 	public static QueryOptions uniqueSemanticQueryOptions(QueryOptions originalOptions) {

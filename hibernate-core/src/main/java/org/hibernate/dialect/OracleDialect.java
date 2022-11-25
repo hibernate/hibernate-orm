@@ -100,6 +100,7 @@ import static org.hibernate.type.SqlTypes.*;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Loïc Lefèvre
  */
 public class OracleDialect extends Dialect {
 
@@ -118,16 +119,41 @@ public class OracleDialect extends Dialect {
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
 
+	/** is it an Autonomous Database Cloud Service? */
+	protected final boolean autonomous;
+
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public OracleDialect(DatabaseVersion version) {
 		super(version);
+		autonomous = false;
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
 		super(info);
+		autonomous = isAutonomous( info.getDatabaseMetadata() );
+	}
+
+	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
+		if ( databaseMetaData != null ) {
+			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+				// v$pdbs is available to any user on Autonomous database
+				try( ResultSet rs = s.executeQuery( "select p.name, t.region, t.base_size, t.service, t.infrastructure\n" +
+						"from v$pdbs p, JSON_TABLE(p.cloud_identity, '$' COLUMNS (region path '$.REGION', base_size number path '$.BASE_SIZE', service path '$.SERVICE', infrastructure path '$.INFRASTRUCTURE')) t" )) {
+					return rs.next();
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		return false;
+	}
+
+	public boolean isAutonomous() {
+		return autonomous;
 	}
 
 	@Override

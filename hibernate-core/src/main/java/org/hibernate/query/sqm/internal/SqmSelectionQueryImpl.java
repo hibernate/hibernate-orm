@@ -217,6 +217,10 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
+	public TupleMetadata getTupleMetadata() {
+		return tupleMetadata;
+	}
+
 	@SuppressWarnings("rawtypes")
 	public SqmSelectStatement getSqmStatement() {
 		return sqm;

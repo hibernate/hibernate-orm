@@ -406,7 +406,14 @@ public interface AvailableSettings {
 	String JNDI_PREFIX = "hibernate.jndi";
 
 	/**
-	 * Specifies the Hibernate SQL {@link org.hibernate.dialect.Dialect} class.
+	 * Specifies the Hibernate {@linkplain org.hibernate.dialect.Dialect SQL dialect}, either
+	 * <ul>
+	 *     <li>an instance of {@link org.hibernate.dialect.Dialect},
+	 *     <li>a {@link Class} representing a class that extends {@code Dialect}, or
+	 *     <li>the name of a class that extends {@code Dialect}.
+	 * </ul>
+	 * By default, Hibernate will attempt to automatically determine the dialect from the
+	 * {@linkplain #URL JDBC URL} and JDBC metadata, so this setting is not usually necessary.
 	 *
 	 * @see org.hibernate.dialect.Dialect
 	 */

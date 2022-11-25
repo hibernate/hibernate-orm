@@ -209,13 +209,13 @@ public abstract class SimpleValue implements KeyValue {
 			final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
-				final Selectable selectable = originalColumns[originalIndex];
+				final Selectable selectable = originalColumns[i];
 				if ( selectable instanceof Column ) {
-					( (Column) selectable ).setTypeIndex( i );
+					( (Column) selectable ).setTypeIndex( originalIndex );
 				}
-				columns.set( i, selectable );
-				insertability.set( i, originalInsertability[originalIndex] );
-				updatability.set( i, originalUpdatability[originalIndex] );
+				columns.set( originalIndex, selectable );
+				insertability.set( originalIndex, originalInsertability[i] );
+				updatability.set( originalIndex, originalUpdatability[i] );
 			}
 		}
 	}

@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  * <ul>
  * <li>the destructured state of entity instances and collections, and
  * <li>mappings from natural id to primary key.
- *</ul>
+ * </ul>
  * This type of data has:
  * <ul>
  * <li>key and value wrapping that should to be applied, and

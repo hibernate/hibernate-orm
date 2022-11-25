@@ -182,8 +182,8 @@ public abstract class SimpleValue implements KeyValue {
 	protected void justAddColumn(Column column, boolean insertable, boolean updatable) {
 		int index = columns.indexOf( column );
 		if ( index == -1 ) {
-			columns.add( column );
-			insertability.add(insertable);
+			columns.add(column);
+			insertability.add( insertable );
 			updatability.add( updatable );
 		}
 		else {
@@ -534,7 +534,6 @@ public abstract class SimpleValue implements KeyValue {
 		//needed to satisfy KeyValue
 		return true;
 	}
-
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
@@ -545,7 +544,6 @@ public abstract class SimpleValue implements KeyValue {
 
 	/**
 	 * Returns the identifierGeneratorStrategy.
-	 *
 	 * @return String
 	 */
 	public String getIdentifierGeneratorStrategy() {
@@ -591,8 +589,8 @@ public abstract class SimpleValue implements KeyValue {
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
 		this.identifierGeneratorParameters = new HashMap<>();
 		identifierGeneratorProperties.forEach( (key, value) -> {
-			if ( key instanceof String ) {
-				identifierGeneratorParameters.put( (String) key, value );
+			if (key instanceof String) {
+				identifierGeneratorParameters.put((String) key, value);
 			}
 		});
 	}
@@ -601,7 +599,7 @@ public abstract class SimpleValue implements KeyValue {
 	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
 	@Deprecated @Remove
-	public void setIdentifierGeneratorProperties(Map<String, Object> identifierGeneratorProperties) {
+	public void setIdentifierGeneratorProperties(Map<String,Object> identifierGeneratorProperties) {
 		this.identifierGeneratorParameters = identifierGeneratorProperties;
 	}
 
@@ -797,9 +795,9 @@ public abstract class SimpleValue implements KeyValue {
 	 *          {@link AttributeConverter#convertToDatabaseColumn(Object)}
 	 *     </li>
 	 *     <li>
-	 *          When extracting values from ResultSets (or CallableStatement parameters) we need to handle the
-	 *          value via getString, and convert that returned String to an Integer.  That conversion is handled
-	 *          by calling {@link AttributeConverter#convertToEntityAttribute(Object)}
+	 *         When extracting values from ResultSets (or CallableStatement parameters) we need to handle the
+	 *         value via getString, and convert that returned String to an Integer.  That conversion is handled
+	 *         by calling {@link AttributeConverter#convertToEntityAttribute(Object)}
 	 *     </li>
 	 * </ul>
 	 *
@@ -1044,14 +1042,13 @@ public abstract class SimpleValue implements KeyValue {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
-
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
 			final Long[] columnLengths = new Long[ columns.size() ];
 
 			for ( int i = 0; i < columns.size(); i++ ) {
-				final Selectable selectable = columns.get( i );
+				final Selectable selectable = columns.get(i);
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
 					columnNames[i] = column.getName();

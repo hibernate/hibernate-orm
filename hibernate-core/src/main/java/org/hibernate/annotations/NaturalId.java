@@ -14,7 +14,22 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * This specifies that a property is part of the natural id of the entity.
+ * Specifies that a field or property of an entity class is part of
+ * the natural id of the entity. This annotation is very useful when
+ * the primary key of an entity class is a surrogate key, that is,
+ * a {@linkplain jakarta.persistence.GeneratedValue system-generated}
+ * synthetic identifier, with no domain-model semantics. Then should
+ * always be some other field or combination of fields which uniquely
+ * identifies an instance of the entity from the point of view of the
+ * user of the system. This is the <em>natural id</em> of the entity.
+ * <p>
+ * The {@link org.hibernate.Session} interface offers several methods
+ * that allow an entity instance to be retrieved by its
+ * {@linkplain org.hibernate.Session#bySimpleNaturalId(Class) simple}
+ * or {@linkplain org.hibernate.Session#byNaturalId(Class) composite}
+ * natural id value. If the entity is also marked for {@linkplain
+ * NaturalIdCache natural id caching}, then these methods may be able
+ * to avoid a database round trip.
  *
  * @author Nicol�s Lichtmaier
  *
@@ -24,8 +39,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface NaturalId {
 	/**
-	 * Whether the natural id is mutable (or immutable)?  {@code false} (the default) indicates it is immutable;
-	 * {@code true} indicates it is mutable.
+	 * Specifies whether the natural id is mutable or immutable.
+	 *
+	 * @return {@code false} (the default) indicates it is immutable;
+	 *         {@code true} indicates it is mutable.
 	 */
 	boolean mutable() default false;
 }

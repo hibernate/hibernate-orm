@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-
 import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AssertionFailure;
@@ -184,17 +183,15 @@ public abstract class SimpleValue implements KeyValue {
 		int index = columns.indexOf( column );
 		if ( index == -1 ) {
 			columns.add( column );
-			insertability.add( insertable );
+			insertability.add(insertable);
 			updatability.add( updatable );
 		}
 		else {
 			if ( insertability.get( index ) != insertable ) {
-				throw new IllegalStateException(
-						"Same column is added more than once with different values for isInsertable" );
+				throw new IllegalStateException( "Same column is added more than once with different values for isInsertable" );
 			}
 			if ( updatability.get( index ) != updatable ) {
-				throw new IllegalStateException(
-						"Same column is added more than once with different values for isUpdatable" );
+				throw new IllegalStateException( "Same column is added more than once with different values for isUpdatable" );
 			}
 		}
 	}
@@ -238,12 +235,11 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.size();
 	}
 
-	protected Selectable getColumn(int position) {
+	protected Selectable getColumn(int position){
 		return columns.get( position );
 	}
 
-	@Override
-	@Deprecated
+	@Override @Deprecated
 	public Iterator<Selectable> getColumnIterator() {
 		return columns.iterator();
 	}
@@ -258,7 +254,7 @@ public abstract class SimpleValue implements KeyValue {
 		if ( hasFormula() ) {
 			// in principle this method should never get called
 			// if we have formulas in the mapping
-			throw new AssertionFailure( "value involves formulas" );
+			throw new AssertionFailure("value involves formulas");
 		}
 		//noinspection unchecked, rawtypes
 		return (List) columns;
@@ -280,7 +276,7 @@ public abstract class SimpleValue implements KeyValue {
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
-				final Class<? extends AttributeConverter<?, ?>> converterClass = cls.classForName( converterClassName );
+				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
 						converterClass,
 						false,
@@ -325,8 +321,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public void createForeignKey() throws MappingException {
-	}
+	public void createForeignKey() throws MappingException {}
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
@@ -477,7 +472,7 @@ public abstract class SimpleValue implements KeyValue {
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		final String columnName = ( (Column) getSelectables().get( 0 ) ).getQuotedName( dialect );
+		final String columnName = ( (Column) getSelectables().get(0) ).getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 
 		//pass the entity-name, if not a collection-id
@@ -509,7 +504,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		if ( identifierGeneratorParameters != null ) {
-			params.putAll( identifierGeneratorParameters );
+			params.putAll(identifierGeneratorParameters);
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
@@ -559,7 +554,6 @@ public abstract class SimpleValue implements KeyValue {
 
 	/**
 	 * Sets the identifierGeneratorStrategy.
-	 *
 	 * @param identifierGeneratorStrategy The identifierGeneratorStrategy to set
 	 */
 	public void setIdentifierGeneratorStrategy(String identifierGeneratorStrategy) {
@@ -583,8 +577,7 @@ public abstract class SimpleValue implements KeyValue {
 	/**
 	 * @deprecated use {@link #getIdentifierGeneratorParameters()}
 	 */
-	@Deprecated
-	@Remove
+	@Deprecated @Remove
 	public Properties getIdentifierGeneratorProperties() {
 		Properties properties = new Properties();
 		properties.putAll( identifierGeneratorParameters );
@@ -594,22 +587,20 @@ public abstract class SimpleValue implements KeyValue {
 	/**
 	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
-	@Deprecated
-	@Remove
+	@Deprecated @Remove
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
 		this.identifierGeneratorParameters = new HashMap<>();
 		identifierGeneratorProperties.forEach( (key, value) -> {
 			if ( key instanceof String ) {
 				identifierGeneratorParameters.put( (String) key, value );
 			}
-		} );
+		});
 	}
 
 	/**
 	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
-	@Deprecated
-	@Remove
+	@Deprecated @Remove
 	public void setIdentifierGeneratorProperties(Map<String, Object> identifierGeneratorProperties) {
 		this.identifierGeneratorParameters = identifierGeneratorProperties;
 	}
@@ -620,7 +611,6 @@ public abstract class SimpleValue implements KeyValue {
 
 	/**
 	 * Sets the nullValue.
-	 *
 	 * @param nullValue The nullValue to set
 	 */
 	public void setNullValue(String nullValue) {
@@ -801,22 +791,23 @@ public abstract class SimpleValue implements KeyValue {
 	 * model defines this attribute as an Integer value (the 'entityAttributeJavaType'), but that we need to treat the
 	 * value as a String (the 'databaseColumnJavaType') when dealing with JDBC (aka, the database type is a
 	 * VARCHAR/CHAR):<ul>
-	 * <li>
-	 * When binding values to PreparedStatements we need to convert the Integer value from the entity
-	 * into a String and pass that String to setString.  The conversion is handled by calling
-	 * {@link AttributeConverter#convertToDatabaseColumn(Object)}
-	 * </li>
-	 * <li>
-	 * When extracting values from ResultSets (or CallableStatement parameters) we need to handle the
-	 * value via getString, and convert that returned String to an Integer.  That conversion is handled
-	 * by calling {@link AttributeConverter#convertToEntityAttribute(Object)}
-	 * </li>
+	 *     <li>
+	 *         When binding values to PreparedStatements we need to convert the Integer value from the entity
+	 *         into a String and pass that String to setString.  The conversion is handled by calling
+	 *          {@link AttributeConverter#convertToDatabaseColumn(Object)}
+	 *     </li>
+	 *     <li>
+	 *          When extracting values from ResultSets (or CallableStatement parameters) we need to handle the
+	 *          value via getString, and convert that returned String to an Integer.  That conversion is handled
+	 *          by calling {@link AttributeConverter#convertToEntityAttribute(Object)}
+	 *     </li>
 	 * </ul>
 	 *
 	 * @return The built AttributeConverter -> Type adapter
 	 *
 	 * @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specify-able separately
 	 * then we can "play them against each other" in terms of determining proper typing
+	 *
 	 * @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter; see note below about caching
 	 */
 	private Type buildAttributeConverterTypeAdapter() {
@@ -924,7 +915,7 @@ public abstract class SimpleValue implements KeyValue {
 		return typeParameters;
 	}
 
-	public void copyTypeFrom(SimpleValue sourceValue) {
+	public void copyTypeFrom( SimpleValue sourceValue ) {
 		setTypeName( sourceValue.getTypeName() );
 		setTypeParameters( sourceValue.getTypeParameters() );
 
@@ -956,7 +947,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public Object accept(ValueVisitor visitor) {
-		return visitor.accept( this );
+		return visitor.accept(this);
 	}
 
 	@Override
@@ -993,10 +984,10 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {
-		final boolean[] array = new boolean[list.size()];
+		final boolean[] array = new boolean[ list.size() ];
 		int i = 0;
 		for ( Boolean value : list ) {
-			array[i++] = value;
+			array[ i++ ] = value;
 		}
 		return array;
 	}
@@ -1011,11 +1002,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	protected void createParameterImpl() {
 		try {
-			final String[] columnNames = new String[columns.size()];
-			final Long[] columnLengths = new Long[columns.size()];
+			final String[] columnNames = new String[ columns.size() ];
+			final Long[] columnLengths = new Long[ columns.size() ];
 
 			for ( int i = 0; i < columns.size(); i++ ) {
-				final Selectable selectable = columns.get( i );
+				final Selectable selectable = columns.get(i);
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
 					columnNames[i] = column.getName();
@@ -1049,15 +1040,15 @@ public abstract class SimpleValue implements KeyValue {
 					)
 			);
 		}
-		catch (ClassLoadingException e) {
+		catch ( ClassLoadingException e ) {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
 
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {
 		try {
-			final String[] columnNames = new String[columns.size()];
-			final Long[] columnLengths = new Long[columns.size()];
+			final String[] columnNames = new String[ columns.size() ];
+			final Long[] columnLengths = new Long[ columns.size() ];
 
 			for ( int i = 0; i < columns.size(); i++ ) {
 				final Selectable selectable = columns.get( i );
@@ -1090,7 +1081,7 @@ public abstract class SimpleValue implements KeyValue {
 					columnLengths
 			);
 		}
-		catch (ClassLoadingException e) {
+		catch ( ClassLoadingException e ) {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}

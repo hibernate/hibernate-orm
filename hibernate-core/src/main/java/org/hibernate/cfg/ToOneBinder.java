@@ -43,9 +43,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.hibernate.cfg.AnnotationBinder.matchIgnoreNotFoundWithFetchType;
 import static org.hibernate.cfg.BinderHelper.getCascadeStrategy;
@@ -177,7 +175,6 @@ public class ToOneBinder {
 		final String fullPath = qualify( propertyHolder.getPath(), propertyName );
 
 		bindForeignKeyNameAndDefinition( value, property, propertyHolder.getOverriddenForeignKey( fullPath ), context );
-		bindReferencedColumns(value, property);
 
 		final FkSecondPass secondPass = new ToOneFkSecondPass(
 				value,
@@ -534,29 +531,6 @@ public class ToOneBinder {
 					}
 					return true;
 				}
-			}
-		}
-	}
-
-	public static void bindReferencedColumns(SimpleValue value, XProperty property) {
-		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
-		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
-		if ( joinColumns != null ) {
-			Map<String, String> referencedColumnToColumnNames = new HashMap<>();
-			for ( JoinColumn joinColumnsValue : joinColumns.value() ) {
-				String referencedColumnName = nullIfEmpty( joinColumnsValue.referencedColumnName() );
-				String columnName = nullIfEmpty( joinColumnsValue.name() );
-				if ( referencedColumnName != null && columnName != null ) {
-					referencedColumnToColumnNames.put( referencedColumnName, columnName );
-				}
-			}
-			value.setReferencedColumnToColumnNames( referencedColumnToColumnNames );
-		}
-		else if ( joinColumn != null ) {
-			String referencedColumnName = nullIfEmpty( joinColumn.referencedColumnName() );
-			String columnName = nullIfEmpty( joinColumn.name() );
-			if ( referencedColumnName != null && columnName != null ) {
-				value.setReferencedColumnToColumnNames( Map.of( referencedColumnName, columnName ) );
 			}
 		}
 	}

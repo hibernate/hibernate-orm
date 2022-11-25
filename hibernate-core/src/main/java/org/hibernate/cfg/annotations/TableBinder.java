@@ -641,6 +641,7 @@ public class TableBinder {
 					else {
 						joinColumn.linkWithValue( value );
 					}
+					value.addReferencedColumn( getReferencedColumn( referencedColumn, referencedEntity ) );
 					joinColumn.overrideFromReferencedColumnIfNecessary( column );
 					match = true;
 					break;
@@ -658,6 +659,15 @@ public class TableBinder {
 		if ( value instanceof ToOne ) {
 			( (ToOne) value).setSorted( true );
 		}
+	}
+
+	private static Column getReferencedColumn(String referencedColumnName, PersistentClass referencedEntity){
+		for ( Column column : referencedEntity.getTable().getColumns() ){
+			if (referencedColumnName.equals( column.getName() )) {
+				return column;
+			}
+		}
+		return null;
 	}
 
 	private static void bindNonPrimaryKeyReference(

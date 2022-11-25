@@ -34,7 +34,6 @@ import static org.hibernate.cfg.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.ToOneBinder.bindForeignKeyNameAndDefinition;
-import static org.hibernate.cfg.ToOneBinder.bindReferencedColumns;
 import static org.hibernate.cfg.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -104,8 +103,6 @@ public class OneToOneSecondPass implements SecondPass {
 		value.setConstrained( !optional );
 		value.setForeignKeyType( getForeignKeyDirection() );
 		bindForeignKeyNameAndDefinition( value, property, property.getAnnotation( ForeignKey.class ), buildingContext );
-		bindReferencedColumns(value, property);
-
 
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );

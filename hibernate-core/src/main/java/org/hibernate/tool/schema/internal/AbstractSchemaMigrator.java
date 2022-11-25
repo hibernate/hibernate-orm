@@ -150,7 +150,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	private SqlStringGenerationContext sqlGenerationContext(Metadata metadata, ExecutionOptions options) {
-		return SqlStringGenerationContextImpl.fromConfigurationMap(
+		return SqlStringGenerationContextImpl.fromConfigurationMapForMigration(
 				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()

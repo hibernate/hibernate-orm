@@ -83,6 +83,10 @@ public interface Value extends Serializable {
 	boolean isNullable();
 
 	void createForeignKey();
+
+	// called when this is the foreign key of a
+	// @OneToOne with a FK, or a @OneToMany with
+	// a join table
 	void createUniqueKey();
 
 	boolean isSimpleValue();

@@ -14,6 +14,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
+ * An {@link Exporter} for {@link Sequence sequences}.
+ *
  * @author Steve Ebersole
  */
 public class StandardSequenceExporter implements Exporter<Sequence> {

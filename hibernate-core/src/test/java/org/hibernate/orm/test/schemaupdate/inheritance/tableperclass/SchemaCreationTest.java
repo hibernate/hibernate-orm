@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.sql.Types;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -73,24 +74,25 @@ public class SchemaCreationTest {
 
 		boolean isUniqueConstraintCreated = false;
 		for ( String statement : sqlLines ) {
+			statement = statement.toLowerCase();
 			assertThat(
 					"Should not try to create the unique constraint for the non existing table element",
-					statement.toLowerCase()
-							.matches( dialect.getAlterTableString( "element" ) ),
+					statement.matches( dialect.getAlterTableString( "element" ) ),
 					is( false )
 			);
-			if (statement.toLowerCase().startsWith("create unique index")
-					&& statement.toLowerCase().contains("category (code)")) {
-				isUniqueConstraintCreated = true;
-			}
-			else if (statement.toLowerCase().startsWith("alter table if exists category add constraint")
-					&& statement.toLowerCase().contains("unique (code)")) {
-				isUniqueConstraintCreated = true;
-			}
-			else if (statement.toLowerCase().startsWith("alter table category add constraint")
-					&& statement.toLowerCase().contains("unique (code)")) {
-				isUniqueConstraintCreated = true;
-			}
+			String varchar255 = metadata.getTypeConfiguration().getDdlTypeRegistry()
+					.getTypeName(Types.VARCHAR,255L,0,0);
+			isUniqueConstraintCreated = isUniqueConstraintCreated
+					|| statement.startsWith("create unique index")
+						&& statement.contains("category (code)")
+					|| statement.startsWith("alter table if exists category add constraint")
+						&& statement.contains("unique (code)")
+					|| statement.startsWith("alter table category add constraint")
+						&& statement.contains("unique (code)")
+					|| statement.startsWith("create table category")
+						&& statement.contains("code " + varchar255 + dialect.getNullColumnString() + " unique")
+					|| statement.startsWith("create table category")
+						&& statement.contains("unique(code)");
 		}
 
 		assertThat(

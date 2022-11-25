@@ -19,6 +19,8 @@ import org.hibernate.mapping.Index;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
+ * An {@link Exporter} for {@linkplain Index indexes}.
+ *
  * @author Steve Ebersole
  */
 public class StandardIndexExporter implements Exporter<Index> {

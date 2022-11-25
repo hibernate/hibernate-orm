@@ -32,8 +32,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.MySQLUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -94,7 +92,6 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public class MySQLLegacyDialect extends Dialect {
 
-	private final UniqueDelegate uniqueDelegate = new MySQLUniqueDelegate( this );
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -776,6 +773,11 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getDropUniqueKeyString() {
+		return " drop index ";
+	}
+
+	@Override
 	public LimitHandler getLimitHandler() {
 		//also supports LIMIT n OFFSET m
 		return LimitLimitHandler.INSTANCE;
@@ -941,11 +943,6 @@ public class MySQLLegacyDialect extends Dialect {
 			isResultSet = ps.getMoreResults();
 		}
 		return ps.getResultSet();
-	}
-
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
 	}
 
 	@Override

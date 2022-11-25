@@ -30,6 +30,8 @@ import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -109,6 +111,7 @@ public class H2Dialect extends Dialect {
 
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public H2Dialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
@@ -812,5 +815,10 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getDisableConstraintsStatement() {
 		return "set referential_integrity false";
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 }

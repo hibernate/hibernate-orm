@@ -14,7 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -92,7 +92,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		}
 	}
 
-	public static class MyUniqueDelegate extends DefaultUniqueDelegate {
+	public static class MyUniqueDelegate extends AlterTableUniqueDelegate {
 
 		/**
 		 * Constructs DefaultUniqueDelegate

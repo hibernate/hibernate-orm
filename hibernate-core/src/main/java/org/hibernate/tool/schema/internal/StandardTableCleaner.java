@@ -20,9 +20,11 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
+ * The basic implementation of {@link Cleaner}.
+ *
  * @author Gavin King
  */
-public class StandardTableCleaner implements Cleaner  {
+public class StandardTableCleaner implements Cleaner {
 	protected final Dialect dialect;
 
 	public StandardTableCleaner(Dialect dialect) {

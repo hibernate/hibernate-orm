@@ -108,4 +108,10 @@ public interface SqlStringGenerationContext {
 	 */
 	String formatWithoutCatalog(QualifiedSequenceName qualifiedName);
 
+	/**
+	 * Is the generated SQL for use in {@linkplain org.hibernate.tool.schema.spi.SchemaMigrator schema migration}?
+	 *
+	 * @return {@code true} if and only if this is a migration
+	 */
+	boolean isMigration();
 }

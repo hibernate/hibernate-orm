@@ -23,6 +23,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.schema.TargetType;
@@ -113,22 +114,24 @@ public class UniqueConstraintDropTest {
 						new TargetDescriptorImpl()
 				);
 
-		if ( getDialect() instanceof MySQLDialect ) {
-			assertThat(
-					"The test_entity_item table unique constraint has not been dropped",
-					checkDropIndex( "test_entity_item", "item" ),
-					is( true )
-			);
-		}
-		else if ( getDialect() instanceof DB2Dialect ) {
-			checkDB2DropIndex( "test_entity_item", "item" );
-		}
-		else {
-			assertThat(
-					"The test_entity_item table unique constraint has not been dropped",
-					checkDropConstraint( "test_entity_item", "item" ),
-					is( true )
-			);
+		if ( getDialect().getUniqueDelegate() instanceof AlterTableUniqueDelegate ) {
+			if ( getDialect() instanceof MySQLDialect ) {
+				assertThat(
+						"The test_entity_item table unique constraint has not been dropped",
+						checkDropIndex( "test_entity_item", "item" ),
+						is( true )
+				);
+			}
+			else if ( getDialect() instanceof DB2Dialect ) {
+				checkDB2DropIndex( "test_entity_item", "item" );
+			}
+			else {
+				assertThat(
+						"The test_entity_item table unique constraint has not been dropped",
+						checkDropConstraint( "test_entity_item", "item" ),
+						is( true )
+				);
+			}
 		}
 	}
 
@@ -137,7 +140,6 @@ public class UniqueConstraintDropTest {
 	}
 
 	private boolean checkDropConstraint(String tableName, String columnName) throws IOException {
-		boolean matches = false;
 		String regex = getDialect().getAlterTableString( tableName ) + " drop constraint";
 
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
@@ -148,11 +150,10 @@ public class UniqueConstraintDropTest {
 			regex += " if exists";
 		}
 
-		return isMatching( matches, regex );
+		return isMatching( regex );
 	}
 
 	private boolean checkDropIndex(String tableName, String columnName) throws IOException {
-		boolean matches = false;
 		String regex = "alter table ";
 
 		if ( getDialect().supportsIfExistsAfterAlterTable() ) {
@@ -167,31 +168,30 @@ public class UniqueConstraintDropTest {
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";
 		}
-		regex += " uk_(.)*";
+		regex += " uk.*";
 		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}
 
-		return isMatching( matches, regex );
+		return isMatching( regex );
 	}
 
 	private boolean checkDB2DropIndex(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = "drop index " + tableName + ".uk_(.)*";
-		return isMatching( matches, regex );
+		String regex = "drop index " + tableName + ".uk.*";
+		return isMatching( regex );
 	}
 
-	private boolean isMatching(boolean matches, String regex) throws IOException {
+	private boolean isMatching(String regex) throws IOException {
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
 			final Matcher matcher = p.matcher( line );
 			if ( matcher.matches() ) {
-				matches = true;
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 
 	private class TargetDescriptorImpl implements TargetDescriptor {

@@ -63,7 +63,7 @@ public class Trainer {
 			joinColumns = @JoinColumn(name = "trainer_id"),
 			inverseJoinColumns = @JoinColumn(name = "monkey_id")
 	)
-	@ForeignKey(name = "TM_TRA_FK", inverseName = "TM_MON_FK")
+//	@ForeignKey(name = "TM_TRA_FK", inverseName = "TM_MON_FK")
 	public Set<Monkey> getTrainedMonkeys() {
 		return trainedMonkeys;
 	}

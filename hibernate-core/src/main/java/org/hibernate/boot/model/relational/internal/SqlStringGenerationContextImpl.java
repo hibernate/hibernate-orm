@@ -37,7 +37,22 @@ public class SqlStringGenerationContextImpl
 			Map<String, Object> configurationMap) {
 		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
 		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
-		return fromExplicit( jdbcEnvironment, database, defaultCatalog, defaultSchema );
+		return create( jdbcEnvironment, database, defaultCatalog, defaultSchema, false );
+	}
+
+	/**
+	 * @param jdbcEnvironment The JDBC environment, to extract the dialect, identifier helper, etc.
+	 * @param database The database metadata, to retrieve the implicit namespace name configured through XML mapping.
+	 * @param configurationMap The configuration map, holding settings such as {@value AvailableSettings#DEFAULT_SCHEMA}.
+	 * @return An {@link SqlStringGenerationContext}.
+	 */
+	public static SqlStringGenerationContext fromConfigurationMapForMigration(
+			JdbcEnvironment jdbcEnvironment,
+			Database database,
+			Map<String, Object> configurationMap) {
+		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
+		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
+		return create( jdbcEnvironment, database, defaultCatalog, defaultSchema, true );
 	}
 
 	/**
@@ -52,6 +67,15 @@ public class SqlStringGenerationContextImpl
 			Database database,
 			String defaultCatalog,
 			String defaultSchema) {
+		return create( jdbcEnvironment, database, defaultCatalog, defaultSchema, false );
+	}
+
+	private static SqlStringGenerationContext create(
+			JdbcEnvironment jdbcEnvironment,
+			Database database,
+			String defaultCatalog,
+			String defaultSchema,
+			boolean forMigration) {
 		final Namespace.Name implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
 		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		final NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
@@ -72,7 +96,7 @@ public class SqlStringGenerationContextImpl
 			}
 		}
 
-		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema );
+		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema, forMigration );
 	}
 
 	public static SqlStringGenerationContext forTests(JdbcEnvironment jdbcEnvironment) {
@@ -83,7 +107,8 @@ public class SqlStringGenerationContextImpl
 			String defaultCatalog, String defaultSchema) {
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		return new SqlStringGenerationContextImpl( jdbcEnvironment,
-				identifierHelper.toIdentifier( defaultCatalog ), identifierHelper.toIdentifier( defaultSchema ) );
+				identifierHelper.toIdentifier( defaultCatalog ), identifierHelper.toIdentifier( defaultSchema ),
+				false );
 	}
 
 	private final Dialect dialect;
@@ -92,16 +117,20 @@ public class SqlStringGenerationContextImpl
 	private final Identifier defaultCatalog;
 	private final Identifier defaultSchema;
 
+	private final boolean migration;
+
 	@SuppressWarnings("deprecation")
 	private SqlStringGenerationContextImpl(
 			JdbcEnvironment jdbcEnvironment,
 			Identifier defaultCatalog,
-			Identifier defaultSchema) {
+			Identifier defaultSchema,
+			boolean migration) {
 		this.dialect = jdbcEnvironment.getDialect();
 		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
+		this.migration = migration;
 	}
 
 	@Override
@@ -193,5 +222,10 @@ public class SqlStringGenerationContextImpl
 			nameToFormat = qualifiedName;
 		}
 		return qualifiedObjectNameFormatter.format( nameToFormat, dialect );
+	}
+
+	@Override
+	public boolean isMigration() {
+		return migration;
 	}
 }

@@ -20,7 +20,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class UniqueKey extends Constraint {
 	private final Map<Column, String> columnOrderMap = new HashMap<>();
-	private boolean nameExplicit;
+	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
 
 	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(

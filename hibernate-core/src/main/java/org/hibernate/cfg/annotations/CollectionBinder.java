@@ -2638,45 +2638,60 @@ public abstract class CollectionBinder {
 			SimpleValue value,
 			boolean unique) {
 		if ( hasMappedBy() ) {
-			final Property property = targetEntity.getRecursiveProperty( mappedBy );
-			final List<Selectable> mappedByColumns = mappedByColumns( targetEntity, property );
-			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
-			for ( Selectable selectable: mappedByColumns ) {
-				firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value );
-			}
-			final String referencedPropertyName = buildingContext.getMetadataCollector()
-					.getPropertyReferencedAssociation( targetEntity.getEntityName(), mappedBy );
-			if ( referencedPropertyName != null ) {
-				//TODO always a many to one?
-				( (ManyToOne) value ).setReferencedPropertyName( referencedPropertyName );
-				buildingContext.getMetadataCollector()
-						.addUniquePropertyReference( targetEntity.getEntityName(), referencedPropertyName );
-			}
-			( (ManyToOne) value ).setReferenceToPrimaryKey( referencedPropertyName == null );
-			value.createForeignKey();
+			bindUnownedManyToManyInverseForeignKey( targetEntity, joinColumns, value );
 		}
 		else {
-			createSyntheticPropertyReference(
-					joinColumns,
-					targetEntity,
-					collection.getOwner(),
-					value,
-					propertyName,
-					true,
-					buildingContext
-			);
-			if ( notFoundAction == NotFoundAction.IGNORE ) {
-				value.disableForeignKey();
-			}
-			TableBinder.bindForeignKey(
-					targetEntity,
-					collection.getOwner(),
-					joinColumns,
-					value,
-					unique,
-					buildingContext
-			);
+			bindOwnedManyToManyForeignKeyMappedBy( targetEntity, joinColumns, value, unique );
 		}
+	}
+
+	private void bindOwnedManyToManyForeignKeyMappedBy(
+			PersistentClass targetEntity,
+			AnnotatedJoinColumns joinColumns,
+			SimpleValue value,
+			boolean unique) { // true when it's actually a logical @OneToMany
+		createSyntheticPropertyReference(
+				joinColumns,
+				targetEntity,
+				collection.getOwner(),
+				value,
+				propertyName,
+				true,
+				buildingContext
+		);
+		if ( notFoundAction == NotFoundAction.IGNORE ) {
+			value.disableForeignKey();
+		}
+		TableBinder.bindForeignKey(
+				targetEntity,
+				collection.getOwner(),
+				joinColumns,
+				value,
+				unique,
+				buildingContext
+		);
+	}
+
+	private void bindUnownedManyToManyInverseForeignKey(
+			PersistentClass targetEntity,
+			AnnotatedJoinColumns joinColumns,
+			SimpleValue value) {
+		final Property property = targetEntity.getRecursiveProperty( mappedBy );
+		final List<Selectable> mappedByColumns = mappedByColumns(targetEntity, property );
+		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+		for ( Selectable selectable: mappedByColumns ) {
+			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value);
+		}
+		final String referencedPropertyName = buildingContext.getMetadataCollector()
+				.getPropertyReferencedAssociation( targetEntity.getEntityName(), mappedBy );
+		if ( referencedPropertyName != null ) {
+			//TODO always a many to one?
+			( (ManyToOne) value).setReferencedPropertyName( referencedPropertyName );
+			buildingContext.getMetadataCollector()
+					.addUniquePropertyReference( targetEntity.getEntityName(), referencedPropertyName );
+		}
+		( (ManyToOne) value).setReferenceToPrimaryKey( referencedPropertyName == null );
+		value.createForeignKey();
 	}
 
 	private static List<Selectable> mappedByColumns(PersistentClass referencedEntity, Property property) {

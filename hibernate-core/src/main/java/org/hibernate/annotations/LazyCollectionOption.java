@@ -38,14 +38,20 @@ public enum LazyCollectionOption {
 	 * the collection is still mediated by an instance of
 	 * {@link org.hibernate.collection.spi.PersistentCollection},
 	 * which tracks modifications to the collection.
+	 *
+	 * @deprecated use {@link jakarta.persistence.FetchType#EAGER}
 	 */
+	@Deprecated
 	FALSE,
 	/**
 	 * The underlying Java collection is proxied by an instance of
 	 * {@link org.hibernate.collection.spi.PersistentCollection}
 	 * and lazily fetched when a method of the proxy is called.
 	 * All elements of the collection are retrieved at once.
+	 *
+	 * @deprecated use {@link jakarta.persistence.FetchType#LAZY}
 	 */
+	@Deprecated
 	TRUE,
 	/**
 	 * The underlying Java collection is proxied by an instance of
@@ -54,6 +60,9 @@ public enum LazyCollectionOption {
 	 * when methods of the proxy are called. When reasonable, the
 	 * proxy will avoid fetching all elements of the collection
 	 * at once.
+	 *
+	 * @deprecated use operations of {@link org.hibernate.Hibernate}
 	 */
+	@Deprecated
 	EXTRA
 }

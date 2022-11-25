@@ -51,7 +51,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
  * 00001 to 10000 inclusively.
- * <p/>
+ * <p>
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")

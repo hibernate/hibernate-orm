@@ -98,7 +98,7 @@ import static org.junit.Assert.fail;
 /**
  * Tests the integration of the new AST parser into the loading of query results using
  * the Hibernate persisters and loaders.
- * <p/>
+ * <p>
  * Also used to test the syntax of the resulting sql against the underlying
  * database, specifically for functionality not supported by the classic
  * parser.

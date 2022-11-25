@@ -20,7 +20,7 @@ public class FetchProfileBinder {
 
 	/**
 	 * Handling for a {@code <fetch-profile/>} declaration.
-	 * <p/>
+	 * <p>
 	 * This form handles fetch profiles defined at the {@code <hibernate-mapping/>}
 	 * root.  For handling of fetch profiles defined within an entity, see
 	 * {@link #processFetchProfile(HbmLocalMetadataBuildingContext, JaxbHbmFetchProfileType, String)}

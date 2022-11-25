@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * generated on insert (like an IDENTITY column) where the insert needed to
  * be delayed because we were outside a transaction when the persist operation
  * was called (save currently still performs the insert).
- * <p/>
+ * <p>
  * The stand-in is only used within the {@link org.hibernate.engine.spi.PersistenceContext}
  * in order to distinguish one instance from another; it is never injected into
  * the entity instance or returned to the client.

@@ -22,7 +22,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#TINYINT TINYINT} handling.
- * <p/>
+ * <p>
  * Note that {@code JDBC} states that TINYINT should be mapped to either byte or short, but points out
  * that using byte can in fact lead to loss of data.
  *

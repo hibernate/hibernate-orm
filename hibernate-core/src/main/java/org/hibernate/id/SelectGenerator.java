@@ -27,7 +27,7 @@ import org.hibernate.type.Type;
  * A generator that selects the just inserted row to determine the identifier
  * value assigned by the database. The correct row is located using a unique
  * key.
- * <p/>
+ * <p>
  * One mapping parameter is required: key (unless a natural-id is defined in the mapping).
  *
  * @author Gavin King

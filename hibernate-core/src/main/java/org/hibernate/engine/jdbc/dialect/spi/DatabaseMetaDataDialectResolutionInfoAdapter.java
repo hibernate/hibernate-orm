@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 /**
  * An implementation of DialectResolutionInfo that delegates calls to a wrapped {@link DatabaseMetaData}.
- * <p/>
+ * <p>
  * All {@link SQLException}s resulting from calls on the DatabaseMetaData are converted to the Hibernate
  * {@link org.hibernate.JDBCException} hierarchy.
  *

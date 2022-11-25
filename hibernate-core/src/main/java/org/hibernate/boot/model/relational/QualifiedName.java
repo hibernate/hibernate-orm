@@ -14,7 +14,7 @@ import org.hibernate.boot.model.naming.Identifier;
  *     <li>{@link java.sql.DatabaseMetaData#isCatalogAtStart}</li>
  *     <li>{@link java.sql.DatabaseMetaData#getCatalogSeparator()}</li>
  * </ol>
- * <p/>
+ * <p>
  * Also, be careful about the usage of {@link #render}.  If the intention is to get the name
  * as used in the database, the {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment} ->
  * {@link org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter#format} should be
@@ -29,7 +29,7 @@ public interface QualifiedName {
 
 	/**
 	 * Returns a String-form of the qualified name.
-	 * <p/>
+	 * <p>
 	 * Depending on intention, may not be appropriate.  May want
 	 * {@link SqlStringGenerationContext#format}
 	 * instead.

@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 
 /**
  * JAXB marshalling for {@link FlushMode}
- * <p/>
+ * <p>
  * NOTE : The XML schemas define the use of {@code "never"}, which corresponds
  * to the removed FlushMode#NEVER.  Here we will also handle mapping
  * FlushMode#NEVER to FlushMode#MANUAL

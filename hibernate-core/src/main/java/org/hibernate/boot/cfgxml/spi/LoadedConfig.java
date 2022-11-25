@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Models the information gleaned from parsing a {@code cfg.xml} file.
- * <p/>
+ * <p>
  * A LoadedConfig is built via {@link #consume}.  An aggregated representation
  * can be maintained through calls to {@link #merge}
  */

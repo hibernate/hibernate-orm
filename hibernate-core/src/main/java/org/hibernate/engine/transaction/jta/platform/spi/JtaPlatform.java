@@ -52,7 +52,7 @@ public interface JtaPlatform extends Service {
 
 	/**
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
-	 * <p/>
+	 * <p>
 	 * Generally speaking the transaction itself will be returned here.  This method was added specifically
 	 * for use in WebSphere and other unfriendly Java EE containers.
 	 *

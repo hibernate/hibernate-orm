@@ -20,10 +20,10 @@ import org.hibernate.service.Service;
 public interface DialectFactory extends Service {
 	/**
 	 * Builds an appropriate Dialect instance.
-	 * <p/>
+	 * <p>
 	 * If a dialect is explicitly named in the incoming properties, it should used. Otherwise, it is
 	 * determined by dialect resolvers based on the passed connection.
-	 * <p/>
+	 * <p>
 	 * An exception is thrown if a dialect was not explicitly set and no resolver could make
 	 * the determination from the given connection.
 	 *

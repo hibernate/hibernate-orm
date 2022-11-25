@@ -13,7 +13,7 @@ import org.hibernate.boot.model.TruthValue;
 /**
  * Contract for source information pertaining to a physical column definition specific to a particular attribute
  * context.
- * <p/>
+ * <p>
  * Conceptual note: this really describes a column from the perspective of its binding to an attribute, not
  * necessarily the column itself.
  *

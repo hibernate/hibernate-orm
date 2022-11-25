@@ -19,7 +19,7 @@ public interface InMemoryValueGenerationStrategy {
 
 	/**
 	 * Obtain the in-VM value generator.
-	 * <p/>
+	 * <p>
 	 * May return {@code null}.  In fact for values that are generated "in the database" via execution of the
 	 * INSERT/UPDATE statement, the expectation is that {@code null} be returned here
 	 *

@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for {@link Blob} handling.
- * <p/>
+ * <p>
  * Note, {@link Blob}s really are mutable (their internal state can in fact be mutated).  We simply
  * treat them as immutable because we cannot properly check them for changes nor deep copy them.
  *

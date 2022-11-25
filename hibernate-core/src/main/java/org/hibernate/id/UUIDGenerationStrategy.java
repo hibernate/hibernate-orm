@@ -29,7 +29,7 @@ public interface UUIDGenerationStrategy extends Serializable {
 	 * </ul>
 	 * Returning the values above should be reserved to those generators creating variants compliant with the
 	 * corresponding RFC definition; others can feel free to return other values as they see fit.
-	 * <p/>
+	 * <p>
 	 * Informational only, and not used at this time.
 	 *
 	 * @return The supported generation version

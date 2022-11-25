@@ -61,19 +61,19 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * An enhanced version of table-based id generation.
- * <p/>
+ * <p>
  * Unlike the simplistic legacy one (which, btw, was only ever intended for subclassing
  * support) we "segment" the table into multiple values.  Thus a single table can
  * actually serve as the persistent storage for multiple independent generators.  One
  * approach would be to segment the values by the name of the entity for which we are
  * performing generation, which would mean that we would have a row in the generator
  * table for each entity name.  Or any configuration really; the setup is very flexible.
- * <p/>
+ * <p>
  * <b>NOTE</b> that by default we use a single row for all generators (based
  * on {@link #DEF_SEGMENT_VALUE}).  The configuration parameter
  * {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to change that to
  * instead default to using a row for each entity name.
- * <p/>
+ * <p>
  * Configuration parameters:
  * <table>
  * 	 <tr>
@@ -258,7 +258,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * The size of the {@link #getSegmentColumnName segment column} in the
 	 * underlying table.
-	 * <p/>
+	 * <p>
 	 * <b>NOTE</b> : should really have been called 'segmentColumnLength' or
 	 * even better 'segmentColumnSize'
 	 *
@@ -364,7 +364,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * Determine the table name to use for the generator values.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getTableName()
@@ -432,7 +432,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the name of the column used to indicate the segment for each
 	 * row.  This column acts as the primary key.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentColumnName()
@@ -447,7 +447,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * Determine the name of the column in which we will store the generator persistent value.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getValueColumnName()
@@ -462,7 +462,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * Determine the segment value corresponding to this generator instance.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValue()
@@ -493,7 +493,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * Determine the size of the {@link #getSegmentColumnName segment column}
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValueLength()

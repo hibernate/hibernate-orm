@@ -24,7 +24,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * A locking strategy where a lock is obtained via a select statement.
- * <p/>
+ * <p>
  * For non-read locks, this is achieved through the dialect's native
  * {@code SELECT ... FOR UPDATE} syntax.
  *

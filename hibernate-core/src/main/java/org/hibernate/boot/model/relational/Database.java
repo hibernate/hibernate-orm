@@ -95,7 +95,7 @@ public class Database {
 	 *     <li>explicit quoting in the name itself</li>
 	 *     <li>global request to quote all identifiers</li>
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * NOTE : quoting from database keywords happens only when building physical identifiers
 	 *
 	 * @param text The raw object name

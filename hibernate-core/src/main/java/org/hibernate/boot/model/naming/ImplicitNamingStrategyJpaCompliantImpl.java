@@ -16,7 +16,7 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * Implementation of the {@link ImplicitNamingStrategy} contract, generally
  * preferring to conform to JPA standards.
- * <p/>
+ * <p>
  * For the legacy JPA-based naming standards initially implemented by Hibernate,
  * see/use {@link ImplicitNamingStrategyLegacyJpaImpl}
  *

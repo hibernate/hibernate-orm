@@ -18,17 +18,17 @@ import org.jboss.logging.Logger;
 /**
  * Optimizer which applies a 'hilo' algorithm in memory to achieve
  * optimization.
- * <p/>
+ * <p>
  * A 'hilo' algorithm is simply a means for a single value stored in the
  * database to represent a "bucket" of possible, contiguous values.  The
  * database value identifies which particular bucket we are on.
- * <p/>
+ * <p>
  * This database value must be paired with another value that defines the
  * size of the bucket; the number of possible values available.
  * The {@link #getIncrementSize() incrementSize} serves this purpose.  The
  * naming here is meant more for consistency in that this value serves the
  * same purpose as the increment supplied to the {@link PooledOptimizer}.
- * <p/>
+ * <p>
  * The general algorithms used to determine the bucket are:<ol>
  * <li>{@code upperLimit = (databaseValue * incrementSize) + 1}</li>
  * <li>{@code lowerLimit = upperLimit - incrementSize}</li>
@@ -45,7 +45,7 @@ import org.jboss.logging.Logger;
  * <li>{@code lowerLimit = 41 - 20 = 21}</li>
  * </ol>
  * And so on...
- * <p/>
+ * <p>
  * Note, 'value' always (after init) holds the next value to return
  *
  * @author Steve Ebersole
@@ -147,7 +147,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	/**
 	 * Getter for property 'lastValue'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'lastValue'.
@@ -158,7 +158,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	/**
 	 * Getter for property 'upperLimit'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'upperLimit'.

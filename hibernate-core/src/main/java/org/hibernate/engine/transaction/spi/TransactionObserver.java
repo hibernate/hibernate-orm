@@ -14,7 +14,7 @@ package org.hibernate.engine.transaction.spi;
 public interface TransactionObserver {
 	/**
 	 * Callback for processing the beginning of a transaction.
-	 * <p/>
+	 * <p>
 	 * Do not rely on this being called as the transaction may be started in a manner other than through the
 	 * {@link org.hibernate.Transaction} API.
 	 */

@@ -20,11 +20,11 @@ import org.hibernate.persister.entity.EntityPersister;
  * </ul>
  * Note the special case of <b>UPDATES</b> above.  Because the cache key itself has changed here we need to remove the
  * old entry as well
- * <p/>
+ * <p>
  * There is another usage pattern that is used to invalidate entries
  * afterQuery performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
- * <p/>
+ * <p>
  * IMPORTANT : NaturalIds are not versioned so {@code null} will always be passed to the version parameter to:<ul>
  *     <li>{@link CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, Object)}</li>
  *     <li>{@link CachedDomainDataAccess#putFromLoad(SharedSessionContractImplementor, Object, Object, Object, boolean)}</li>

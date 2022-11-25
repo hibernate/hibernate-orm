@@ -47,7 +47,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * to use a batch sizing strategy defined by the Dialect in use.  Any greater-than-one
 	 * value here will override that default behavior.  If giving an explicit value here,
 	 * care should be taken to not exceed the capabilities of of the underlying database.
-	 * <p/>
+	 * <p>
 	 * Note that overall a batch-size is considered a hint.  How the underlying loading
 	 * mechanism interprets that is completely up to that underlying loading mechanism.
 	 *
@@ -87,7 +87,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * incoming ids?  If enabled (the default), the return List is ordered and
 	 * positional relative to the incoming ids.  In other words, a request to
 	 * {@code multiLoad([2,1,3])} will return {@code [Entity#2, Entity#1, Entity#3]}.
-	 * <p/>
+	 * <p>
 	 * An important distinction is made here in regards to the handling of
 	 * unknown entities depending on this "ordered return" setting.  If enabled
 	 * a null is inserted into the List at the proper position(s).  If disabled,

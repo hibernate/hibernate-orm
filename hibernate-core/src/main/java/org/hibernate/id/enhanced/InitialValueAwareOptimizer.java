@@ -8,7 +8,7 @@ package org.hibernate.id.enhanced;
 
 /**
  * Marker interface for optimizer which wishes to know the user-specified initial value.
- * <p/>
+ * <p>
  * Used instead of constructor injection since that is already a public understanding and
  * because not all optimizers care.
  *
@@ -17,7 +17,7 @@ package org.hibernate.id.enhanced;
 public interface InitialValueAwareOptimizer {
 	/**
 	 * Reports the user specified initial value to the optimizer.
-	 * <p/>
+	 * <p>
 	 * {@code -1} is used to indicate that the user did not specify.
 	 *
 	 * @param initialValue The initial value specified by the user, or {@code -1} to indicate that the

@@ -117,7 +117,7 @@ public class ForeignKey extends Constraint {
 
 	/**
 	 * Validates that column span of the foreign key and the primary key is the same.
-	 * <p/>
+	 * <p>
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */
 	public void alignColumns() {

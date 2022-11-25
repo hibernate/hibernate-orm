@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates a problem in performing schema management.
- * <p/>
+ * <p>
  * Specifically this represents a a problem of an infrastructural-nature.  For
  * problems applying a specific command see {@link CommandAcceptanceException}
  *

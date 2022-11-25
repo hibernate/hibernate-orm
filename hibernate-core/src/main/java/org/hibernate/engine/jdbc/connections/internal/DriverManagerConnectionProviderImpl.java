@@ -44,7 +44,7 @@ import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MES
 /**
  * A connection provider that uses the {@link DriverManager} directly to open connections and provides
  * a very rudimentary connection pool.
- * <p/>
+ * <p>
  * IMPL NOTE : not intended for production use!
  *
  * @author Gavin King

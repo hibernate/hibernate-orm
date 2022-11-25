@@ -92,7 +92,7 @@ public interface ValueGeneration {
 
     /**
      * Obtain the in-VM value generator.
-     * <p/>
+     * <p>
      * May return {@code null}.  In fact for values that are generated
      * "in the database" via execution of the INSERT/UPDATE statement, the
      * expectation is that {@code null} be returned here
@@ -105,7 +105,7 @@ public interface ValueGeneration {
      * For values which are generated in the database (i.e,
      * {@link #getValueGenerator()} == {@code null}), should the column
      * be referenced in the INSERT / UPDATE SQL?
-     * <p/>
+     * <p>
      * This will be false most often to have a DDL-defined DEFAULT value
      * be applied on INSERT
      *
@@ -119,9 +119,9 @@ public interface ValueGeneration {
      * referenced in the SQL (i.e.,
      * {@link #referenceColumnInSql()} == {@code true}), what value should be
      * used in the SQL as the column value.
-     * <p/>
+     * <p>
      * Generally this will be a function call or a marker (DEFAULTS).
-     * <p/>
+     * <p>
      * NOTE : for in-VM generation, this will not be called and the column
      * value will implicitly be a JDBC parameter ('?')
      *

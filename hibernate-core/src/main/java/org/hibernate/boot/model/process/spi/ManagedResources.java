@@ -15,7 +15,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 /**
  * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.
- * <p/>
+ * <p>
  * Essentially it represents the combination of:<ol>
  *     <li>domain classes, packages and mapping files defined via MetadataSources</li>
  *     <li>attribute converters defined via MetadataBuildingOptions</li>

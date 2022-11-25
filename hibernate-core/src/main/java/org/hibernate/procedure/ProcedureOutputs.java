@@ -18,7 +18,7 @@ import org.hibernate.result.Outputs;
 public interface ProcedureOutputs extends Outputs {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
-	 * <p/>
+	 * <p>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
 	 * accessed via the returns (see {@link #goToNext()}
 	 *

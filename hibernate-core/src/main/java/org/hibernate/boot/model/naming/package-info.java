@@ -12,7 +12,7 @@
  * suffers from many design flaws that are just not addressable in any sort of backwards
  * compatible manner.  So this proposed approach is essentially a clean-room impl based
  * on lessons learned through NamingStrategy.
- * <p/>
+ * <p>
  * Naming is split here into 2 main pieces:<ol>
  *     <li>
  *         <b>logical</b> - Is the process of applying naming rules to determine the names

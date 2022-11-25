@@ -460,7 +460,7 @@ public interface SessionFactoryBuilder {
 	 * if that data already exists.  For some caches (mainly distributed caches) this can have a
 	 * major adverse performance impact.  For these caches, it is best to enable this "minimal puts"
 	 * feature.
-	 * <p/>
+	 * <p>
 	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So it's
 	 * very rare that users need to set this, generally speaking.
 	 *
@@ -511,7 +511,7 @@ public interface SessionFactoryBuilder {
 	 * it is expected that both sides of the association are managed (actually that is true of
 	 * all bidirectional associations).  However, in this case, if the user forgets to manage the
 	 * one-to-many side stale data can be left in the second-level cache.
-	 * <p/>
+	 * <p>
 	 * Warning: enabling this will have a performance impact.  Hence why it is disabled by default
 	 * (for good citizens) and is an opt-in setting.
 	 *
@@ -653,7 +653,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
 	 * released immediately on close?
-	 * <p/>
+	 * <p>
 	 * The other option is to release them as part of an after transaction callback.
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);

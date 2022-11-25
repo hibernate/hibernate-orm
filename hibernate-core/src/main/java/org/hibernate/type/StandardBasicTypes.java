@@ -225,7 +225,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARCHAR LONGVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
 	 */
 	public static final BasicTypeReference<String> TEXT = new BasicTypeReference<>(
@@ -236,7 +236,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGNVARCHAR LONGNVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
 	 */
 	public static final BasicTypeReference<String> NTEXT = new BasicTypeReference<>(
@@ -601,7 +601,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 * <p/>
+	 * <p>
 	 * See especially the discussion wrt {@link ClassLoader} determination on {@link SerializableType}
 	 */
 	public static final BasicTypeReference<Serializable> SERIALIZABLE = new BasicTypeReference<>(

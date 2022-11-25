@@ -563,7 +563,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -606,7 +606,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -647,7 +647,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *

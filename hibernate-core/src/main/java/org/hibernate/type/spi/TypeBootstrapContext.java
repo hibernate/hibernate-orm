@@ -10,7 +10,7 @@ import java.util.Map;
 
 /**
  * Provide a way to customize the {@link org.hibernate.type.Type} instantiation process.
- * <p/>
+ * <p>
  * If a custom {@link org.hibernate.type.Type} defines a constructor which takes the
  * {@link TypeBootstrapContext} argument, Hibernate will use this instead of the
  * default constructor.

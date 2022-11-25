@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@link Serializable} classes.
- * <p/>
+ * <p>
  * Notice specifically the 3 constructors:<ul>
  *     <li>{@link #INSTANCE} indicates a mapping using the {@link Serializable} interface itself.</li>
  *     <li>{@link #SerializableType(Class)} indicates a mapping using the specific class</li>

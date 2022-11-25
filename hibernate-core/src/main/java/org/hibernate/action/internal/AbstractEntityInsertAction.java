@@ -105,7 +105,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * maintained by this action. References to transient entities
 	 * should be nullified when an entity is made "managed" or when this
 	 * action is executed, whichever is first.
-	 * <p/>
+	 * <p>
 	 * References will only be nullified the first time this method is
 	 * called for a this object, so it can safely be called both when
 	 * the entity is made "managed" and when this action is executed.

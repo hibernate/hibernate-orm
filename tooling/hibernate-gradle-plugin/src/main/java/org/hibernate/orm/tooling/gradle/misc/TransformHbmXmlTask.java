@@ -34,7 +34,7 @@ import jakarta.xml.bind.Marshaller;
 /**
  * Task to transform a legacy {@code `hbm.xml`} file into the
  * {@link MappingXsdSupport#latestDescriptor() mapping} format.
- * <p/>
+ * <p>
  * The task creates copies of {@code `hbm.xml`} files:<ul>
  * <li>
  * Into the specified {@link #getOutputDirectory() output directory},

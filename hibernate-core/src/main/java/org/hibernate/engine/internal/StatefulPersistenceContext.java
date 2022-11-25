@@ -74,7 +74,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 /**
  * A <strong>stateful</strong> implementation of the {@link PersistenceContext} contract meaning that we maintain this
  * state throughout the life of the persistence context.
- * <p/>
+ * <p>
  * IMPL NOTE: There is meant to be a one-to-one correspondence between a {@link org.hibernate.internal.SessionImpl}
  * and a PersistentContext.  Event listeners and other Session collaborators then use the PersistentContext to drive
  * their processing.
@@ -312,7 +312,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	/**
 	 * Get the current state of the entity as known to the underlying
 	 * database, or null if there is no corresponding row
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

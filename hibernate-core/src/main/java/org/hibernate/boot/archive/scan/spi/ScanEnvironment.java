@@ -11,14 +11,14 @@ import java.util.List;
 
 /**
  * Describes the environment in which the scan will occur.
- * <p/>
+ * <p>
  * Note that much of this comes from the PU in JPA sense.  This is
  * intended as an abstraction over the PU in JPA cases, as well as a
  * delegate allowing usage in non-JPA cases.  With the planned move
  * to unify the cfg.xml and persistence.xml schemas (like we are doing
  * with hbm.xml and orm.xml) this becomes less needed (at least parts
  * of it).
- * <p/>
+ * <p>
  * After unification, I think the biggest difference is that we will
  * not need to pass ScanEnvironment into the MetadataSources/MetadataBuilder
  * while for the time being we will need to.

@@ -17,7 +17,7 @@
  *     <li>{@link java.sql.Types#REF REF}</li>
  *     <li>{@link java.sql.Types#JAVA_OBJECT JAVA_OBJECT}</li>
  * </ul>
- * <p/>
+ * <p>
  * See <a href="http://java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/mapping.html#996857">http://java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/mapping.html#996857</a>
  * for more information.
  *

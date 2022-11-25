@@ -75,11 +75,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The
  * isolation is defined by each instance of a TypeConfiguration.
- * <p/>
+ * <p>
  * Note that each Type is inherently "scoped" to a TypeConfiguration.  We only ever access
  * a Type through a TypeConfiguration - specifically the TypeConfiguration in effect for
  * the current persistence unit.
- * <p/>
+ * <p>
  * Even though each Type instance is scoped to a TypeConfiguration, Types do not inherently
  * have access to that TypeConfiguration (mainly because Type is an extension contract - meaning
  * that Hibernate does not manage the full set of Types available in ever TypeConfiguration).
@@ -334,7 +334,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *        will now throw an exception
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * {@link #getServiceRegistry()} is available for both "Boot" and "Runtime".
 	 *
 	 * Each stage or phase is consider a scope for the TypeConfiguration.

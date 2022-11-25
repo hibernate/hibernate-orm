@@ -15,7 +15,7 @@ import org.hibernate.service.Service;
 
 /**
  * Contract for providers of bytecode services to Hibernate.
- * <p/>
+ * <p>
  * Bytecode requirements break down into the following areas<ol>
  *     <li>proxy generation (both for runtime-lazy-loading and basic proxy generation) {@link #getProxyFactoryFactory()}</li>
  *     <li>bean reflection optimization {@link #getReflectionOptimizer}</li>

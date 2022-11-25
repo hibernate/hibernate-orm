@@ -112,7 +112,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link Session}.
-	 * <p/>
+	 * <p>
 	 * Any JDBC {@link Connection connection} will be obtained lazily from the
 	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
 	 * as needed to perform requested work.
@@ -285,11 +285,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Destroy this {@code SessionFactory} and release all its resources,
 	 * including caches and connection pools.
-	 * <p/>
+	 * <p>
 	 * It is the responsibility of the application to ensure that there are
 	 * no open {@linkplain Session sessions} before calling this method as
 	 * the impact on those {@linkplain Session sessions} is indeterminate.
-	 * <p/>
+	 * <p>
 	 * No-ops if already {@linkplain #isClosed() closed}.
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.

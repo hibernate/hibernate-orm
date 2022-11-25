@@ -176,7 +176,7 @@ public class PersistenceXmlParser {
 
 	/**
 	 * Intended only for use by Hibernate tests!
-	 * <p/>
+	 * <p>
 	 * Parses a specific persistence.xml file...
 	 */
 	public static Map<String, ParsedPersistenceXmlDescriptor> parse(

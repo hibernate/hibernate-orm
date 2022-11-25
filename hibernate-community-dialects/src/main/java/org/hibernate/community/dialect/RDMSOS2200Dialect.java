@@ -321,7 +321,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	/**
-	 * <TT>FOR UPDATE</TT> only supported for cursors
+	 * {@code FOR UPDATE} only supported for cursors
 	 *
 	 * @return the empty string
 	 */

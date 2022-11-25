@@ -149,7 +149,7 @@ public class AuditQueryCreator {
 	 * <li>the entity instance</li>
 	 * <li>revision entity, corresponding to the revision at which the entity was modified. If no custom
 	 * revision entity is used, this will be an instance of {@link org.hibernate.envers.DefaultRevisionEntity}</li>
-	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>.
+	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>
 	 * </ol>
 	 * Additional conditions that the results must satisfy may be specified.
 	 *
@@ -185,7 +185,7 @@ public class AuditQueryCreator {
 	 * <li>the entity instance</li>
 	 * <li>revision entity, corresponding to the revision at which the entity was modified. If no custom
 	 * revision entity is used, this will be an instance of {@link org.hibernate.envers.DefaultRevisionEntity}</li>
-	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>.
+	 * <li>type of the revision (an enum instance of class {@link org.hibernate.envers.RevisionType})</li>
 	 * </ol>
 	 * Additional conditions that the results must satisfy may be specified.
 	 *

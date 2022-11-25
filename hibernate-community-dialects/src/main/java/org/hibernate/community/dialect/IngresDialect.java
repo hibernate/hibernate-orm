@@ -413,7 +413,7 @@ public class IngresDialect extends Dialect {
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * <TT>FOR UPDATE</TT> only supported for cursors
+	 * {@code FOR UPDATE} only supported for cursors
 	 *
 	 * @return the empty string
 	 */

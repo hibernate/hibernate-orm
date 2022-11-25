@@ -95,7 +95,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Table table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
-	private List<Column> referencedColumns = new ArrayList<>();;
+	private List<Column> referencedColumns = new ArrayList<>();
 	private boolean alternateUniqueKey;
 	private boolean cascadeDeleteEnabled;
 	private boolean foreignKeyEnabled = true;

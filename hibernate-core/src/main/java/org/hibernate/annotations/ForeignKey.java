@@ -36,6 +36,9 @@ public @interface ForeignKey {
 	/**
 	 * Used for the non-owning side of a {@code ManyToMany} association.
 	 * Ignored for other association cardinalities.
+	 *
+	 * @deprecated this member is currently ignored and has no effect
 	 */
+	@Deprecated
 	String inverseName() default "";
 }

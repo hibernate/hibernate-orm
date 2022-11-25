@@ -177,6 +177,7 @@ public class ToOneBinder {
 		final String fullPath = qualify( propertyHolder.getPath(), propertyName );
 
 		bindForeignKeyNameAndDefinition( value, property, propertyHolder.getOverriddenForeignKey( fullPath ), context );
+		bindReferencedColumns(value, property);
 
 		final FkSecondPass secondPass = new ToOneFkSecondPass(
 				value,

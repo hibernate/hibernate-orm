@@ -845,4 +845,14 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public void setMappedByProperty(String mappedByProperty) {
 		this.mappedByProperty = mappedByProperty;
 	}
+
+	@Override
+	public boolean isColumnInsertable(int index) {
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		return false;
+	}
 }

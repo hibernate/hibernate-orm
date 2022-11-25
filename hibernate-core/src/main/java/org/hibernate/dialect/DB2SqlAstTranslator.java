@@ -26,11 +26,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -339,7 +339,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertStatement statement) {
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
 		super.visitInsertStatementOnly( statement );
 		if ( closeWrapper ) {
@@ -435,7 +435,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected void visitReturningColumns(MutationStatement mutationStatement) {
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}
 

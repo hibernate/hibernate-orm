@@ -51,7 +51,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -74,6 +74,13 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * A walker that allows to replace expressions.
@@ -469,7 +476,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -555,6 +562,41 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
 		throw new UnsupportedOperationException();
 	}
 }

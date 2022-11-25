@@ -10,6 +10,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 
@@ -79,5 +80,10 @@ public interface AttributeMapping
 	@Override
 	default MutabilityPlan<?> getExposedMutabilityPlan() {
 		return getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan();
+	}
+
+	default int compare(Object value1, Object value2) {
+		//noinspection unchecked,rawtypes
+		return ( (JavaType) getJavaType() ).getComparator().compare( value1, value2 );
 	}
 }

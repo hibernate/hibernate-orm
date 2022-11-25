@@ -160,6 +160,21 @@ public interface JdbcType extends Serializable {
 		return SqlTypes.isTemporalType( getDefaultSqlTypeCode() );
 	}
 
+	default boolean isLob() {
+		return isLob( getJdbcTypeCode() );
+	}
+
+	static boolean isLob(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case SqlTypes.BLOB:
+			case SqlTypes.CLOB:
+			case SqlTypes.NCLOB: {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	default boolean isInterval() {
 		return SqlTypes.isIntervalType( getDefaultSqlTypeCode() );
 	}

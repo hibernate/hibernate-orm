@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.InnoDBStorageEngine;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.NationalizationSupport;

@@ -13,8 +13,14 @@ import org.hibernate.persister.entity.PropertyMapping;
 
 /**
  * A collection role that may be queried or loaded by outer join.
+ *
  * @author Gavin King
+ *
+ * @deprecated Given the mapping-model and SQM, this contract is no longer needed.
+ * Note however that {@link org.hibernate.query.sql.internal.SQLQueryParser} currently
+ * uses this along with other
  */
+@Deprecated( since = "6", forRemoval = true )
 public interface QueryableCollection extends PropertyMapping, Joinable, CollectionPersister {
 	/**
 	 * Generate a list of collection index and element columns

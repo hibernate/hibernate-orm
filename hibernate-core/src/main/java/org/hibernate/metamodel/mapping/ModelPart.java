@@ -11,8 +11,8 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -103,6 +103,15 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);
+
+	@FunctionalInterface
+	interface IndexedJdbcValueConsumer {
+		void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping);
+	}
+
+	default void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
 
 	EntityMappingType findContainingEntityMapping();
 

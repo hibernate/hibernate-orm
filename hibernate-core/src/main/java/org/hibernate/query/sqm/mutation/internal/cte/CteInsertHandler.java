@@ -35,22 +35,21 @@ import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
@@ -58,6 +57,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -81,7 +81,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -89,8 +89,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -198,10 +198,9 @@ public class CteInsertHandler implements InsertHandler {
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				cteTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
-				true,
-				sessionFactory
+				true
 		);
-		final InsertStatement insertStatement = new InsertStatement( entityTableReference );
+		final InsertSelectStatement insertStatement = new InsertSelectStatement( entityTableReference );
 
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
@@ -265,8 +264,8 @@ public class CteInsertHandler implements InsertHandler {
 									null,
 									rowNumberColumn.getJdbcMapping()
 							);
-							insertStatement.getTargetColumnReferences().set(
-									insertStatement.getTargetColumnReferences().size() - 1,
+							insertStatement.getTargetColumns().set(
+									insertStatement.getTargetColumns().size() - 1,
 									columnReference
 							);
 							targetPathCteColumns.set(
@@ -350,7 +349,7 @@ public class CteInsertHandler implements InsertHandler {
 					null,
 					rowNumberColumn.getJdbcMapping()
 			);
-			insertStatement.getTargetColumnReferences().add( columnReference );
+			insertStatement.getTargetColumns().add( columnReference );
 			targetPathCteColumns.add( rowNumberColumn );
 		}
 
@@ -418,8 +417,7 @@ public class CteInsertHandler implements InsertHandler {
 								new NamedTableReference(
 										baseTableName,
 										"e",
-										false,
-										factory
+										false
 								)
 						)
 				);
@@ -475,8 +473,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								baseTableName,
 								"e",
-								false,
-								factory
+								false
 						),
 						null
 				);
@@ -484,8 +481,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								ROW_NUMBERS_WITH_SEQUENCE_VALUE,
 								"t",
-								false,
-								factory
+								false
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -645,15 +641,14 @@ public class CteInsertHandler implements InsertHandler {
 								// We want to return the insertion count of the base table
 								baseInsertCte,
 								CTE_TABLE_IDENTIFIER,
-								false,
-								factory
+								false
 						)
 				)
 		);
 
 		// Execute the statement
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
+		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
@@ -670,7 +665,7 @@ public class CteInsertHandler implements InsertHandler {
 				},
 				executionContext.getSession()
 		);
-		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		final JdbcOperationQuerySelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
@@ -823,8 +818,7 @@ public class CteInsertHandler implements InsertHandler {
 								new NamedTableReference(
 										baseTableName,
 										"e",
-										false,
-										factory
+										false
 								)
 						)
 				);
@@ -873,8 +867,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								baseTableName,
 								"e",
-								false,
-								factory
+								false
 						),
 						null
 				);
@@ -882,8 +875,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								getCteTableName( tableExpression ),
 								"t",
-								false,
-								factory
+								false
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -956,8 +948,7 @@ public class CteInsertHandler implements InsertHandler {
 							new NamedTableReference(
 									dmlResultCte.getTableExpression(),
 									"e",
-									false,
-									factory
+									false
 							)
 						)
 				);
@@ -1007,8 +998,7 @@ public class CteInsertHandler implements InsertHandler {
 								new NamedTableReference(
 										queryCte.getCteTable().getTableExpression(),
 										"e",
-										false,
-										factory
+										false
 								)
 						)
 				);
@@ -1045,7 +1035,7 @@ public class CteInsertHandler implements InsertHandler {
 				insertColumnReferences = returningColumnReferences;
 			}
 
-			final InsertStatement dmlStatement = new InsertStatement(
+			final InsertSelectStatement dmlStatement = new InsertSelectStatement(
 					dmlTableReference,
 					returningColumnReferences
 			);
@@ -1099,8 +1089,7 @@ public class CteInsertHandler implements InsertHandler {
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					sessionFactory
+					tableReference.isOptional()
 			);
 		}
 		else {

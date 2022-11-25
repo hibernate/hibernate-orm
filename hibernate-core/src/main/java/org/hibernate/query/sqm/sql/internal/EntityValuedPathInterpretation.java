@@ -25,9 +25,9 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -42,8 +42,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Koen Aers
@@ -285,7 +283,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
 		return associationMapping instanceof EntityCollectionPart
-				&& !( (EntityCollectionPart) associationMapping ).getCollectionDescriptor().isOneToMany();
+				&& ( (EntityCollectionPart) associationMapping ).getCardinality() == EntityCollectionPart.Cardinality.MANY_TO_MANY;
 	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(

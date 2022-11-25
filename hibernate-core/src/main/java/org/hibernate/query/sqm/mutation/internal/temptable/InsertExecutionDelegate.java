@@ -37,11 +37,11 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -54,7 +54,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -67,16 +67,17 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.ValueBinder;
 
 /**
+ * @author Christian Beikov
  * @author Steve Ebersole
  */
 public class InsertExecutionDelegate implements TableBasedInsertHandler.ExecutionDelegate {
@@ -87,7 +88,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
-	private final InsertStatement insertStatement;
+	private final InsertSelectStatement insertStatement;
 
 	private final EntityMappingType entityDescriptor;
 
@@ -108,7 +109,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			TableGroup insertingTableGroup,
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
-			InsertStatement insertStatement,
+			InsertSelectStatement insertStatement,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
 			JdbcParameter sessionUidParameter,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
@@ -280,8 +281,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					sessionFactory
+					tableReference.isOptional()
 			);
 		}
 		else {
@@ -318,8 +318,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final NamedTableReference temporaryTableReference = new NamedTableReference(
 				insertStatement.getTargetTable().getTableExpression(),
 				updatingTableReference.getIdentificationVariable(),
-				false,
-				sessionFactory
+				false
 		);
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
@@ -328,7 +327,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
-		final InsertStatement insertStatement = new InsertStatement( dmlTableReference );
+		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTableReference );
 		insertStatement.setSourceSelectStatement( querySpec );
 		if ( assignments != null ) {
 			for ( Assignment assignment : assignments ) {
@@ -385,7 +384,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							)
 					)
 			);
-			final JdbcSelect jdbcSelect = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQuerySelect jdbcSelect = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
 					.buildSelectTranslator( sessionFactory, selectStatement )
 					.translate( null, executionContext.getQueryOptions() );
@@ -415,7 +414,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			// then we load update rows from the temporary table with the generated identifiers,
 			// to then insert into the target tables in once statement
 			if ( needsIdentifierGeneration( identifierGenerator )
-					&& insertStatement.getTargetColumnReferences()
+					&& insertStatement.getTargetColumns()
 					.stream()
 					.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
 				final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
@@ -481,7 +480,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						)
 				);
 
-				final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+				final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 						.getSqlAstTranslatorFactory()
 						.buildUpdateTranslator( sessionFactory, updateStatement )
 						.translate( null, executionContext.getQueryOptions() );
@@ -554,7 +553,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			}
 		}
 
-		final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildInsertTranslator( sessionFactory, insertStatement )
 				.translate( null, executionContext.getQueryOptions() );
@@ -567,7 +566,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					jdbcServices.getDialect(),
 					generatedKeysEnabled
 			);
-			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSql() );
+			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
 			final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 			final ValueBinder jdbcValueBinder = identifierMapping.getJdbcMapping().getJdbcValueBinder();
 			for ( Map.Entry<Object, Object> entry : entityTableToRootIdentity.entrySet() ) {
@@ -618,7 +617,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					)
 			);
 
-			final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
 					.buildUpdateTranslator( sessionFactory, updateStatement )
 					.translate( null, executionContext.getQueryOptions() );
@@ -692,13 +691,12 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				new NamedTableReference(
 						insertStatement.getTargetTable().getTableExpression(),
 						updatingTableReference.getIdentificationVariable(),
-						false,
-						sessionFactory
+						false
 				),
 				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
-		final InsertStatement insertStatement = new InsertStatement( dmlTargetTableReference );
+		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTargetTableReference );
 		insertStatement.setSourceSelectStatement( querySpec );
 		if ( assignments != null && !assignments.isEmpty() ) {
 			for ( Assignment assignment : assignments ) {
@@ -736,7 +734,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		else {
 			needsKeyInsert = true;
 		}
-		if ( needsKeyInsert && insertStatement.getTargetColumnReferences()
+		if ( needsKeyInsert && insertStatement.getTargetColumns()
 				.stream()
 				.noneMatch( c -> targetKeyColumnName.equals( c.getColumnExpression() ) ) ) {
 			final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
@@ -762,7 +760,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 		}
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildInsertTranslator( sessionFactory, insertStatement )
 				.translate( null, executionContext.getQueryOptions() );

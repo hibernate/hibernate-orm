@@ -19,8 +19,6 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import jakarta.transaction.Synchronization;
-import jakarta.transaction.SystemException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -42,6 +40,9 @@ import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
+
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -71,6 +72,10 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 8)
 	void autoFlushWillNotWork();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#batchContainedStatementsOnRelease} instead
+	 */
+	@Deprecated
 	@LogMessage(level = INFO)
 	@Message(value = "On release of batch it still contained JDBC statements", id = 10)
 	void batchContainedStatementsOnRelease();
@@ -1019,8 +1024,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to evictData temporary id table after use [%s]", id = 314)
 	void unableToDropTemporaryIdTable(String message);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToExecuteBatch} instead
+	 */
 	@LogMessage(level = ERROR)
 	@Message(value = "Exception executing batch [%s], SQL: %s", id = 315)
+	@Deprecated
 	void unableToExecuteBatch(Exception e, String sql );
 
 	@LogMessage(level = WARN)
@@ -1147,8 +1156,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not read or init a hi value", id = 351)
 	void unableToReadOrInitHiValue(@Cause SQLException e);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToReleaseBatchStatement} instead
+	 */
 	@LogMessage(level = ERROR)
 	@Message(value = "Unable to release batch statement...", id = 352)
+	@Deprecated
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = ERROR)
@@ -1268,8 +1281,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unexpected literal token type [%s] passed for numeric processing", id = 380)
 	void unexpectedLiteralTokenType(int type);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.JdbcLogging#unexpectedRowCounts} instead
+	 */
 	@LogMessage(level = WARN)
 	@Message(value = "JDBC driver did not return the expected number of row counts", id = 381)
+	@Deprecated
 	void unexpectedRowCounts();
 
 	@LogMessage(level = WARN)

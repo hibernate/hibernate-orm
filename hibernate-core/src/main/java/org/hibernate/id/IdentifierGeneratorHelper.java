@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
@@ -21,6 +22,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
@@ -62,7 +64,7 @@ public final class IdentifierGeneratorHelper {
 	 * Get the generated identifier when using identity columns
 	 *
 	 * @param rs The result set from which to extract the generated identity.
-	 * @param identifier The name of the identifier column
+	 * @param identityColumn The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
 	 * @param dialect The current database dialect.
 	 *
@@ -71,13 +73,18 @@ public final class IdentifierGeneratorHelper {
 	 * @throws SQLException Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
-	public static Object getGeneratedIdentity(ResultSet rs, String identifier, Type type, Dialect dialect)
-			throws SQLException, HibernateException {
+	public static Object getGeneratedIdentity(
+			ResultSet rs,
+			NavigableRole insertionTargetRole,
+			String identityColumn,
+			Type type,
+			Dialect dialect) throws SQLException {
 		if ( !rs.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value" );
+			throw new HibernateException( "The database returned no natively generated identity value : " + insertionTargetRole.getFullPath() );
 		}
-		final Object id = get( rs, identifier, type, dialect );
-		LOG.debugf( "Natively generated identity: %s", id );
+
+		final Object id = get( rs, insertionTargetRole, identityColumn, type, dialect );
+		LOG.debugf( "Natively generated identity (%s) : %s", insertionTargetRole.getFullPath(), id );
 		return id;
 	}
 
@@ -95,7 +102,12 @@ public final class IdentifierGeneratorHelper {
 	 * @throws SQLException Indicates problems access the result set
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
-	public static Object get(ResultSet rs, String identifier, Type type, Dialect dialect)
+	public static Object get(
+			ResultSet rs,
+			NavigableRole insertionTargetRole,
+			String identifier,
+			Type type,
+			Dialect dialect)
 			throws SQLException, IdentifierGenerationException {
 		if ( type instanceof ResultSetIdentifierConsumer ) {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
@@ -116,7 +128,7 @@ public final class IdentifierGeneratorHelper {
 			//Oracle driver will throw NPE
 		}
 
-		Class<?> clazz = type.getReturnedClass();
+		final Class<?> clazz = type.getReturnedClass();
 		if ( columnCount == 1 ) {
 			if ( clazz == Long.class ) {
 				return rs.getLong( 1 );
@@ -131,14 +143,23 @@ public final class IdentifierGeneratorHelper {
 				return rs.getString( 1 );
 			}
 			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
+				return rs.getBigDecimal( 1 )
+						.setScale( 0, RoundingMode.UNNECESSARY )
+						.toBigInteger();
 			}
 			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( 1 ).setScale( 0, RoundingMode.UNNECESSARY );
+				return rs.getBigDecimal( 1 )
+						.setScale( 0, RoundingMode.UNNECESSARY );
 			}
 			else {
 				throw new IdentifierGenerationException(
-						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
+						String.format(
+								Locale.ROOT,
+								"Unrecognized id type (%s - %s) for extraction - %s",
+								type.getName(),
+								clazz.getName(),
+								insertionTargetRole.getFullPath()
+						)
 				);
 			}
 		}
@@ -153,6 +174,18 @@ public final class IdentifierGeneratorHelper {
 				throw e;
 			}
 		}
+	}
+
+	private static int getColumnCount(ResultSet rs) {
+		try {
+			final ResultSetMetaData resultSetMetaData = rs.getMetaData();
+			return resultSetMetaData.getColumnCount();
+		}
+		catch (Exception e) {
+			//Oracle driver will throw NPE
+		}
+
+		return 1;
 	}
 
 	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class<?> clazz)

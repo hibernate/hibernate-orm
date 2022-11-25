@@ -6,6 +6,12 @@
  */
 package org.hibernate.dialect.identity;
 
+import java.util.function.Consumer;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.model.ast.TableInsert;
+
 /**
  * @author Andrea Boriero
  */
@@ -35,5 +41,20 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public String getIdentityInsertString() {
 		return "default";
+	}
+	
+	@FunctionalInterface
+	public interface InsertValuesHandler {
+		void renderInsertValues();
+	}
+
+	public void render(
+			TableInsert tableInsert,
+			Consumer<String> sqlAppender,
+			Consumer<ColumnReference> returnColumnHandler,
+			InsertValuesHandler insertValuesHandler,
+			SessionFactoryImplementor sessionFactory) {
+		insertValuesHandler.renderInsertValues();
+		sqlAppender.accept( " call identity();" );
 	}
 }

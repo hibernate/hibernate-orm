@@ -16,6 +16,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.type.Type;
 
 /**
@@ -222,6 +223,22 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	boolean entryExists(Object entry, int i);
 
 	/**
+	 * Whether the given entry should be included in recreation events
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInRecreate(
+			Object entry,
+			int i,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return entryExists( entry, i );
+	}
+
+	/**
 	 * Do we need to insert this element?
 	 *
 	 * @param entry The collection element to check
@@ -231,6 +248,39 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 * @return {@code true} if the element needs inserting
 	 */
 	boolean needsInserting(Object entry, int i, Type elemType);
+
+	/**
+	 * Whether to include the entry for insertion operations
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInInsert(
+			Object entry,
+			int entryPosition,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return needsInserting( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
+
+	/**
+	 * Do we need to update this element?
+	 *
+	 * @param entry The collection element to check
+	 * @param entryPosition The index (for indexed collections)
+	 * @param attributeDescriptor The type for the element
+	 * @return {@code true} if the element needs updating
+	 */
+	default boolean needsUpdating(
+			Object entry,
+			int entryPosition,
+			PluralAttributeMapping attributeDescriptor) {
+		assert attributeDescriptor != null;
+
+		return needsUpdating( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
 
 	/**
 	 * Do we need to update this element?

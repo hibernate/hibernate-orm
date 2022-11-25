@@ -174,4 +174,9 @@ public enum CollectionClassification {
 
 		return null;
 	}
+
+	public boolean isRowUpdatePossible() {
+		// anything other than BAG and SET
+		return this != BAG && this != SET;
+	}
 }

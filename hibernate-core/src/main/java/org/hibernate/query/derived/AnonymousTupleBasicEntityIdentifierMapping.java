@@ -18,7 +18,8 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBasicValuedModelPart
+public class AnonymousTupleBasicEntityIdentifierMapping
+		extends AnonymousTupleBasicValuedModelPart
 		implements BasicEntityIdentifierMapping {
 
 	private final BasicEntityIdentifierMapping delegate;

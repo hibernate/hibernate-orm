@@ -6,8 +6,16 @@
  */
 package org.hibernate.id.insert;
 
+import java.sql.PreparedStatement;
+
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 
 /**
  * Responsible for handling delegation relating to variants in how
@@ -19,6 +27,31 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface InsertGeneratedIdentifierDelegate {
+	/**
+	 * Create a TableInsertBuilder with any specific identity handling encoded
+	 */
+	TableInsertBuilder createTableInsertBuilder(
+			BasicEntityIdentifierMapping identifierMapping,
+			Expectation expectation,
+			SessionFactoryImplementor sessionFactory);
+
+	PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session);
+
+	/**
+	 * Perform the insert and extract the database-generated value
+	 *
+	 * @see #createTableInsertBuilder
+	 */
+	Object performInsert(
+			PreparedStatementDetails insertStatementDetails,
+			JdbcValueBindings valueBindings,
+			Object entity,
+			SharedSessionContractImplementor session);
+
+
+
+
+
 
 	/**
 	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode

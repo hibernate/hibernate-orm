@@ -102,4 +102,40 @@ public class NullnessHelper {
 
 		return null;
 	}
+
+	/**
+	 * Ensures that either:<ul>
+	 *     <li>all values are null</li>
+	 *     <li>all values are non-null</li>
+	 * </ul>
+	 */
+	public static boolean areSameNullness(Object... values) {
+		if ( values == null || values.length > 2 ) {
+			// we have no elements or 1
+			return true;
+		}
+
+		final boolean firstValueIsNull = values[0] == null;
+		for ( int i = 1; i < values.length; i++ ) {
+			// look for mismatch
+			if ( firstValueIsNull != (values[i] == null) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean areAllNonNull(Object... objects) {
+		if ( objects == null || objects.length == 0 ) {
+			return true;
+		}
+
+		for ( int i = 0; i < objects.length; i++ ) {
+			if ( objects[i] == null ) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

@@ -74,7 +74,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
 		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
 
-		// todo (6.0) : can/should this be a separate VirtualIdEmbedded?
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -318,11 +317,30 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		if ( idMapping.getIdClassEmbeddable() != null ) {
+			// during decompose, if there is an IdClass for the entity the
+			// incoming `domainValue` should be an instance of that IdClass
+			idMapping.getIdClassEmbeddable().decompose( domainValue, valueConsumer, session );
+		}
+		else {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
+				attributeMapping.decompose(
+						attributeMapping.getValue( domainValue ),
+						valueConsumer,
+						session
+				);
+			}
+		}
+	}
+
+	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		final Object[] result = new Object[ attributeMappings.size() ];
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			final Object o = attributeMapping.getValue( value );
 			result[i] = attributeMapping.disassemble( o, session );
 		}
 

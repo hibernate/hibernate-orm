@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
- * Executor for JdbcDelete and JdbcUpdate operations
+ * Executor for model-mutation operations
  *
  * @author Steve Ebersole
  */
@@ -20,7 +20,7 @@ public interface JdbcMutationExecutor {
 	 * Perform the execution
 	 */
 	int execute(
-			JdbcMutation jdbcMutation,
+			JdbcOperationQueryMutation jdbcMutation,
 			JdbcParameterBindings jdbcParameterBindings,
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCheck,

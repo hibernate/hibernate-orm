@@ -30,7 +30,6 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -42,8 +41,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Acts as a ModelPart for the discriminator portion of an any-valued mapping
@@ -62,8 +59,9 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
-	private final boolean nullable;
 
+	private boolean isInsertable;
+	private boolean isUpdateable;
 	private final MetaType metaType;
 
 	public AnyDiscriminatorPart(
@@ -75,7 +73,8 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			Long length,
 			Integer precision,
 			Integer scale,
-			boolean nullable,
+			boolean insertable,
+			boolean updateable,
 			MetaType metaType) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -85,7 +84,8 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
-		this.nullable = nullable;
+		this.isInsertable = insertable;
+		this.isUpdateable = updateable;
 		this.metaType = metaType;
 	}
 
@@ -110,6 +110,21 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return isUpdateable;
 	}
 
 	@Override

@@ -16,6 +16,23 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public interface Expectation {
+
+	/**
+	 * Is it acceptable to combiner this expectation with statement batching?
+	 *
+	 * @return True if batching can be combined with this expectation; false otherwise.
+	 */
+	boolean canBeBatched();
+
+	/**
+	 * The number of parameters this expectation implies.  E.g.,
+	 * {@link Expectations.BasicParamExpectation} requires a single
+	 * OUT parameter for reading back the number of affected rows.
+	 */
+	default int getNumberOfParametersUsed() {
+		return 0;
+	}
+
 	/**
 	 * Perform verification of the outcome of the RDBMS operation based on
 	 * the type of expectation defined.
@@ -38,11 +55,4 @@ public interface Expectation {
 	 * @throws HibernateException Problem performing preparation.
 	 */
 	int prepare(PreparedStatement statement) throws SQLException, HibernateException;
-
-	/**
-	 * Is it acceptable to combiner this expectation with statement batching?
-	 *
-	 * @return True if batching can be combined with this expectation; false otherwise.
-	 */
-	boolean canBeBatched();
 }

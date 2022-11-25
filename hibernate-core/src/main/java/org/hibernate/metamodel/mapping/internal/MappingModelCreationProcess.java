@@ -10,10 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -178,6 +181,44 @@ public class MappingModelCreationProcess {
 
 	public void registerForeignKeyPostInitCallbacks(String description, PostInitCallback callback) {
 		registerInitializationCallback( description, callback );
+	}
+
+	private final Map<NavigableRole,ForeignKeyDescriptor> keyDescriptorMap = new HashMap<>();
+	private final Map<NavigableRole,List<Consumer<ForeignKeyDescriptor>>> keyDescriptorWaitingConsumerMap = new HashMap<>();
+
+	public void withForeignKey(ModelPart keyOwner, Consumer<ForeignKeyDescriptor> consumer) {
+		withForeignKey( keyOwner.getNavigableRole(), consumer );
+	}
+
+	private void withForeignKey(NavigableRole navigableRole, Consumer<ForeignKeyDescriptor> consumer) {
+		final ForeignKeyDescriptor keyDescriptor = keyDescriptorMap.get( navigableRole );
+		if ( keyDescriptor != null ) {
+			consumer.accept( keyDescriptor );
+		}
+		else {
+			final List<Consumer<ForeignKeyDescriptor>> existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
+			final List<Consumer<ForeignKeyDescriptor>> consumers;
+			if ( existingConsumers != null ) {
+				consumers = existingConsumers;
+			}
+			else {
+				consumers = new ArrayList<>();
+				keyDescriptorWaitingConsumerMap.put( navigableRole, consumers );
+			}
+			consumers.add( consumer );
+		}
+	}
+
+	public void registerForeignKey(ModelPart keyOwner, ForeignKeyDescriptor keyDescriptor) {
+		final NavigableRole navigableRole = keyOwner.getNavigableRole();
+		keyDescriptorMap.put( navigableRole, keyDescriptor );
+
+		final List<Consumer<ForeignKeyDescriptor>> waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
+		if ( waitingConsumers != null ) {
+			for ( int i = 0; i < waitingConsumers.size(); i++ ) {
+				waitingConsumers.get( i ).accept( keyDescriptor );
+			}
+		}
 	}
 
 	@FunctionalInterface

@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
@@ -24,14 +25,14 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -49,6 +50,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class DiscriminatedCollectionPart implements DiscriminatedAssociationModelPart, CollectionPart {
 	private final Nature nature;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private final NavigableRole partRole;
 	private final CollectionPersister collectionDescriptor;
@@ -73,6 +75,8 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				bootValueMapping,
 				creationProcess
 		);
+
+		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -252,7 +256,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		discriminatorMapping.getDiscriminatorPart().breakDownJdbcValues( domainValue, valueConsumer, session );
+		discriminatorMapping.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		discriminatorMapping.decompose( domainValue, valueConsumer, session );
 	}
 
 	@Override

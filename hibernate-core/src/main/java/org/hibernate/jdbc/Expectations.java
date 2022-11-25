@@ -115,6 +115,11 @@ public class Expectations {
 		}
 
 		@Override
+		public int getNumberOfParametersUsed() {
+			return 1;
+		}
+
+		@Override
 		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
 			toCallableStatement( statement ).registerOutParameter( parameterPosition, Types.NUMERIC );
 			return 1;

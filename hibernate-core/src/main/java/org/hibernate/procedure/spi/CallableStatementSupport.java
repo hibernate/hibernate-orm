@@ -10,17 +10,17 @@ import java.sql.CallableStatement;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
-import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 
 /**
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
-	JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall);
+	JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall);
 
 	void registerParameters(
 			String procedureName,
-			JdbcCall procedureCall,
+			JdbcOperationQueryCall procedureCall,
 			CallableStatement statement,
 			ProcedureParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session);

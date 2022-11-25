@@ -6,17 +6,19 @@
  */
 
 package org.hibernate.orm.test.annotations.entity;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 
 /**
  * @author Sharath Reddy
@@ -28,6 +30,7 @@ public class Topic {
 
 	@Id @GeneratedValue
 	private int id;
+	private String name;
 	@OneToMany(mappedBy="topic", cascade=CascadeType.ALL)
 	@Filter(name="byState", condition=":state = state")
 	private Set<Narrative> narratives = new HashSet<Narrative>();

@@ -16,6 +16,7 @@ import org.hibernate.service.Service;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**
@@ -75,7 +76,7 @@ public interface JdbcServices extends Service {
 	LobCreator getLobCreator(LobCreationContext lobCreationContext);
 
 	/**
-	 * Access the executor for {@link org.hibernate.sql.exec.spi.JdbcSelect} operations
+	 * Access the executor for {@link JdbcOperationQuerySelect} operations
 	 */
 	default JdbcSelectExecutor getJdbcSelectExecutor() {
 		return JdbcSelectExecutorStandardImpl.INSTANCE;

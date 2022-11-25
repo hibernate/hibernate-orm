@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -32,7 +31,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Nathan Xu
  */
-public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMapping {
+public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	private final String rowIdName;
 	private final EntityMappingType declaringType;
 	private final String tableExpression;
@@ -188,6 +187,21 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public boolean isFormula() {
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return false;
+	}
+
+	@Override
+	public boolean isUpdateable() {
 		return false;
 	}
 

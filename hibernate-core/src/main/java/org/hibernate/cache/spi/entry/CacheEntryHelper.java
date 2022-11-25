@@ -6,12 +6,12 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import java.io.Serializable;
+
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.Type;
-
-import java.io.Serializable;
 
 /**
  * Operations for assembly and disassembly of an array of property values.
@@ -35,7 +35,7 @@ class CacheEntryHelper {
 			final boolean[] nonCacheable,
 			final SharedSessionContractImplementor session,
 			final Object owner) {
-		Serializable[] disassembled = new Serializable[row.length];
+		Serializable[] disassembled = new Serializable[types.length];
 		for ( int i = 0; i < row.length; i++ ) {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
 				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;

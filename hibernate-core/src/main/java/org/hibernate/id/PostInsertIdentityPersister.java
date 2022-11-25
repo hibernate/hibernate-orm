@@ -6,6 +6,7 @@
  */
 package org.hibernate.id;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 
 /**
  * A persister that may have an identity assigned by execution of 
@@ -13,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Gavin King
  */
-public interface PostInsertIdentityPersister extends EntityPersister {
+public interface PostInsertIdentityPersister extends EntityPersister, EntityMutationTarget {
 	/**
 	 * Get a SQL select string that performs a select based on a unique
 	 * key determined by the given property name).

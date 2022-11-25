@@ -35,6 +35,8 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedList;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
@@ -138,7 +140,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLInsertCheckStyle();
 		customSQLInsert = new String[] {sql};
 		insertCallable = new boolean[] {callable};
-		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
+		insertExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
 
 		sql = persistentClass.getCustomSQLUpdate();
 		callable = sql != null && persistentClass.isCustomUpdateCallable();
@@ -149,7 +151,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLUpdateCheckStyle();
 		customSQLUpdate = new String[] {sql};
 		updateCallable = new boolean[] {callable};
-		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
+		updateExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
 
 		sql = persistentClass.getCustomSQLDelete();
 		callable = sql != null && persistentClass.isCustomDeleteCallable();
@@ -160,7 +162,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLDeleteCheckStyle();
 		customSQLDelete = new String[] {sql};
 		deleteCallable = new boolean[] {callable};
-		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[] {checkStyle};
+		deleteExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
@@ -275,8 +277,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				getTableName(),
 				subclassTableExpressions,
 				sqlAliasBase.generateNewAlias(),
-				false,
-				getFactory()
+				false
 		);
 	}
 
@@ -363,6 +364,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public String getAttributeMutationTableName(int attributeIndex) {
+		return getRootTableName();
+	}
+
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return 0;
 	}
@@ -370,6 +376,17 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public int getSubclassPropertyTableNumber(String propertyName) {
 		return 0;
+	}
+
+	@Override
+	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
+		assert !selectableMapping.isFormula();
+		return tableName;
+	}
+
+	@Override
+	protected boolean isIdentifierTable(String tableExpression) {
+		return tableExpression.equals( getRootTableName() );
 	}
 
 	@Override
@@ -396,6 +413,15 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
 			);
 		}
+	}
+
+	@Override
+	protected void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer) {
+		consumer.consume(
+				tableName,
+				0,
+				() -> (columnConsumer) -> columnConsumer.accept( tableName, getIdentifierMapping(), getIdentifierColumnNames() )
+		);
 	}
 
 	@Override

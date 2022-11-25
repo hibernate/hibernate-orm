@@ -45,7 +45,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -55,9 +55,9 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -230,8 +230,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					sessionFactory
+					tableReference.isOptional()
 			);
 		}
 		return (NamedTableReference) tableReference;
@@ -293,7 +292,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildUpdateTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -349,8 +348,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			final NamedTableReference existsTableReference = new NamedTableReference(
 					tableExpression,
 					"dml_",
-					false,
-					sessionFactory
+					false
 			);
 			existsQuerySpec.getFromClause().addRoot(
 					new TableGroupImpl(
@@ -410,13 +408,13 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				);
 			}
 
-			final InsertStatement insertSqlAst = new InsertStatement(
+			final InsertSelectStatement insertSqlAst = new InsertSelectStatement(
 					dmlTableReference
 			);
 			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 			insertSqlAst.setSourceSelectStatement( querySpec );
 
-			final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
 					.buildInsertTranslator( sessionFactory, insertSqlAst )
 					.translate( jdbcParameterBindings, executionContext.getQueryOptions() );

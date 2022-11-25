@@ -9,6 +9,7 @@ package org.hibernate.dialect.identity;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 
 /**
  * @author Andrea Boriero

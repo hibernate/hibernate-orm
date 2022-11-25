@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class Update {
 
 	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
 	protected Map<String,String> columns = new LinkedHashMap<>();
+	protected Map<String,String> lobColumns;
 	protected Map<String,String> whereColumns = new LinkedHashMap<>();
 	
 	private Dialect dialect;
@@ -130,6 +132,14 @@ public class Update {
 	public Update addColumn(String columnName, String valueExpression) {
 		columns.put(columnName, valueExpression);
 		return this;
+	}
+
+	public void addLobColumn(String columnName, String valueExpression) {
+		assert dialect.forceLobAsLastValue();
+		if ( lobColumns == null ) {
+			lobColumns = new HashMap<>();
+		}
+		lobColumns.put( columnName, valueExpression );
 	}
 
 	public Update addWhereColumns(String[] columnNames) {

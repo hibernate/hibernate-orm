@@ -42,7 +42,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -182,8 +182,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final NamedTableReference existsTableReference = new NamedTableReference(
 						tableExpression,
 						"dml_",
-						false,
-						factory
+						false
 				);
 				final List<ColumnReference> existsKeyColumns = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 				final String[] keyColumns = entityPersister.getKeyColumns( i );
@@ -253,7 +252,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					);
 				}
 
-				final InsertStatement dmlStatement = new InsertStatement( dmlTableReference, existsKeyColumns );
+				final InsertSelectStatement dmlStatement = new InsertSelectStatement( dmlTableReference, existsKeyColumns );
 				dmlStatement.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 				dmlStatement.setSourceSelectStatement( querySpec );
 				statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -26,7 +27,6 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -77,6 +77,21 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public boolean isFormula() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
 		return false;
 	}
 
@@ -169,6 +184,12 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				creationState,
 				selectionConsumer
 		);
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return 1;
 	}
 
 	@Override

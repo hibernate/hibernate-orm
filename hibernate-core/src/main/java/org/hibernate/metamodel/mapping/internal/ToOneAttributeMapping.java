@@ -33,6 +33,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -53,9 +54,9 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -958,8 +959,8 @@ public class ToOneAttributeMapping
 				final NavigablePath parentPath = grandparentNavigablePath.getParent();
 				// This can be null for a collection loader
 				if ( parentPath == null ) {
-					return grandparentNavigablePath.equals(
-							entityMappingType.findSubPart( bidirectionalAttributeName ).getNavigableRole()
+					return grandparentNavigablePath.getFullPath().equals(
+							entityMappingType.findSubPart( bidirectionalAttributeName ).getNavigableRole().getFullPath()
 					);
 				}
 				else {
@@ -1600,58 +1601,61 @@ public class ToOneAttributeMapping
 					break;
 				}
 			}
+
 			if ( CollectionPart.Nature.ELEMENT.getName().equals( parentTableGroup.getNavigablePath().getLocalName() ) ) {
-				final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup(
-						parentTableGroup.getNavigablePath().getParent()
-				);
-				final String indexPropertyName = pluralTableGroup.getModelPart()
-						.getIndexMetadata()
-						.getIndexPropertyName();
-				final String pathName;
-				if ( embeddablePathSb != null ) {
-					pathName = embeddablePathSb.append( getAttributeName() ).toString();
-				}
-				else {
-					pathName = getAttributeName();
-				}
-				if ( pathName.equals( indexPropertyName ) ) {
-					final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
-					// If this is the map key property, we can reuse the index table group
-					initializeIfNeeded( lhs, requestedJoinType, indexTableGroup );
-					return new TableGroupJoin(
-							navigablePath,
-							joinType,
-							new MappedByTableGroup(
-									navigablePath,
-									this,
-									indexTableGroup,
-									fetched,
-									pluralTableGroup,
-									(np, tableExpression) -> {
-										if ( !canUseParentTableGroup ) {
-											return false;
-										}
+				final NavigablePath parentParentPath = parentTableGroup.getNavigablePath().getParent();
+				final PluralTableGroup pluralTableGroup = (PluralTableGroup) fromClauseAccess.findTableGroup( parentParentPath );
+				if ( pluralTableGroup != null ) {
+					final String indexPropertyName = pluralTableGroup.getModelPart()
+							.getIndexMetadata()
+							.getIndexPropertyName();
+					final String pathName;
+					if ( embeddablePathSb != null ) {
+						pathName = embeddablePathSb.append( getAttributeName() ).toString();
+					}
+					else {
+						pathName = getAttributeName();
+					}
 
-										if ( !identifyingColumnsTableExpression.equals( tableExpression ) ) {
-											return false;
-										}
+					if ( pathName.equals( indexPropertyName ) ) {
+						final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
+						// If this is the map key property, we can reuse the index table group
+						initializeIfNeeded( lhs, requestedJoinType, indexTableGroup );
+						return new TableGroupJoin(
+								navigablePath,
+								joinType,
+								new MappedByTableGroup(
+										navigablePath,
+										this,
+										indexTableGroup,
+										fetched,
+										pluralTableGroup,
+										(np, tableExpression) -> {
+											if ( !canUseParentTableGroup ) {
+												return false;
+											}
 
-										if ( navigablePath.equals( np.getParent() ) ) {
-											return targetKeyPropertyNames.contains( np.getLocalName() );
-										}
+											if ( !identifyingColumnsTableExpression.equals( tableExpression ) ) {
+												return false;
+											}
 
-										final String relativePath = np.relativize( navigablePath );
-										if ( relativePath == null ) {
-											return false;
-										}
+											if ( navigablePath.equals( np.getParent() ) ) {
+												return targetKeyPropertyNames.contains( np.getLocalName() );
+											}
 
-										// Empty relative path means the navigable paths are equal,
-										// in which case we allow resolving the parent table group
-										return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
-									}
-							),
-							null
-					);
+											final String relativePath = np.relativize( navigablePath );
+											if ( relativePath == null ) {
+												return false;
+											}
+
+											// Empty relative path means the navigable paths are equal,
+											// in which case we allow resolving the parent table group
+											return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
+										}
+								),
+								null
+						);
+					}
 				}
 			}
 		}
@@ -1922,11 +1926,53 @@ public class ToOneAttributeMapping
 			Object domainValue,
 			JdbcValueConsumer valueConsumer,
 			SharedSessionContractImplementor session) {
-		foreignKeyDescriptor.breakDownJdbcValues(
-				foreignKeyDescriptor.getAssociationKeyFromSide( domainValue, sideNature.inverse(), session ),
-				valueConsumer,
-				session
-		);
+		if ( cardinality == Cardinality.ONE_TO_ONE && sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+			return;
+		}
+
+		final Object value = extractValue( domainValue, session );
+		foreignKeyDescriptor.breakDownJdbcValues( value, valueConsumer, session );
+	}
+
+	private Object extractValue(Object domainValue, SharedSessionContractImplementor session) {
+		if ( domainValue == null ) {
+			return null;
+		}
+
+		if ( referencedPropertyName != null ) {
+			assert getAssociatedEntityMappingType()
+					.getRepresentationStrategy()
+					.getInstantiator()
+					.isInstance( domainValue, session.getSessionFactory() );
+			return extractAttributePathValue( domainValue, getAssociatedEntityMappingType(), referencedPropertyName );
+		}
+
+		return foreignKeyDescriptor.getAssociationKeyFromSide( domainValue, sideNature.inverse(), session );
+	}
+
+	private static Object extractAttributePathValue(Object domainValue, EntityMappingType entityType, String attributePath) {
+		if ( ! attributePath.contains( "." ) ) {
+			return entityType.findAttributeMapping( attributePath ).getValue( domainValue );
+		}
+
+		Object value = domainValue;
+		ManagedMappingType managedType = entityType;
+		final String[] pathParts = attributePath.split( "\\." );
+		for ( int i = 0; i < pathParts.length; i++ ) {
+			assert managedType != null;
+
+			final String pathPart = pathParts[ i ];
+			final AttributeMapping attributeMapping = managedType.findAttributeMapping( pathPart );
+			value = attributeMapping.getValue( value );
+			if ( attributeMapping.getMappedType() instanceof ManagedMappingType ) {
+				managedType = (ManagedMappingType) attributeMapping.getMappedType();
+			}
+			else {
+				managedType = null;
+			}
+		}
+
+		return value;
 	}
 
 	@Override

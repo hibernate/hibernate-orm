@@ -33,6 +33,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
@@ -81,9 +82,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	public static EmbeddableMappingTypeImpl from(
 			Component bootDescriptor,
 			CompositeType compositeType,
+			boolean[] insertability,
+			boolean[] updateability,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
-		return from( bootDescriptor, compositeType, null, null, embeddedPartBuilder, creationProcess );
+		return from( bootDescriptor, compositeType, null, null, insertability, updateability, embeddedPartBuilder, creationProcess );
 	}
 
 	public static EmbeddableMappingTypeImpl from(
@@ -91,6 +94,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			boolean[] insertability,
+			boolean[] updateability,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
@@ -113,6 +118,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
+								insertability,
+								updateability,
 								creationProcess
 						)
 		);
@@ -199,6 +206,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			boolean[] insertability,
+			boolean[] updateability,
 			MappingModelCreationProcess creationProcess) {
 // for some reason I cannot get this to work, though only a single test fails - `CompositeElementTest`
 //		return finishInitialization(
@@ -245,8 +254,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
+			final Value value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
-				final BasicValue basicValue = (BasicValue) bootPropertyDescriptor.getValue();
+				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
@@ -279,18 +289,21 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final Long length;
 				final Integer precision;
 				final Integer scale;
+				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					Column column = (Column) selectable;
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
+					nullable = column.isNullable();
 				}
 				else {
 					columnDefinition = null;
 					length = null;
 					precision = null;
 					scale = null;
+					nullable = true;
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
@@ -308,6 +321,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						length,
 						precision,
 						scale,
+						nullable,
+						insertability[columnPosition],
+						updateability[columnPosition],
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -316,19 +332,19 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				columnPosition++;
 			}
 			else if ( subtype instanceof AnyType ) {
-				final Any bootValueMapping = (Any) bootPropertyDescriptor.getValue();
+				final Any bootValueMapping = (Any) value;
 				final AnyType anyType = (AnyType) subtype;
 
 				final PropertyAccess propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
 				final boolean nullable = bootValueMapping.isNullable();
-				final boolean insertable = bootPropertyDescriptor.isInsertable();
-				final boolean updateable = bootPropertyDescriptor.isUpdateable();
+				final boolean insertable = insertability[columnPosition];
+				final boolean updateable = updateability[columnPosition];
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
 				final MutabilityPlan<?> mutabilityPlan;
 
 				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan<Object>() {
+					mutabilityPlan = new MutabilityPlan<>() {
 						@Override
 						public boolean isMutable() {
 							return true;
@@ -618,9 +634,37 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+				final Object attributeValue = domainValue == null
+						? null
+						: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}
+		}
+	}
+
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		if ( domainValue instanceof Object[] ) {
+			final Object[] values = (Object[]) domainValue;
+			assert values.length == attributeMappings.size();
+
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object attributeValue = values[ i ];
+				attributeMapping.decompose( attributeValue, valueConsumer, session );
+			}
+		}
+		else {
+			attributeMappings.forEach( (attributeMapping) -> {
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					return;
+				}
+
+				final Object attributeValue = domainValue == null
+						? null
+						: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+				attributeMapping.decompose( attributeValue, valueConsumer, session );
+			} );
 		}
 	}
 

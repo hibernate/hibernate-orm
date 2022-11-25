@@ -22,7 +22,6 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -30,9 +29,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmQuery;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
 /**
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for
@@ -148,7 +146,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
 		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
-		if ( !( statement instanceof InsertStatement ) ) {
+		if ( !( statement instanceof InsertSelectStatement ) ) {
 			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {

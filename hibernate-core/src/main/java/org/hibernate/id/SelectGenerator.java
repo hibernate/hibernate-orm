@@ -12,14 +12,20 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
@@ -48,7 +54,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 		return new SelectGeneratorDelegate( persister, dialect, uniqueKeyPropertyName );
 	}
 
-	private static String determineNameOfPropertyToUse(PostInsertIdentityPersister persister, String supplied) {
+	@Internal
+	public static String determineNameOfPropertyToUse(PostInsertIdentityPersister persister, String supplied) {
 		if ( supplied != null ) {
 			return supplied;
 		}
@@ -74,13 +81,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
 	}
 
-
-	/**
-	 * The delegate for the select generation strategy.
-	 */
-	public static class SelectGeneratorDelegate
-			extends AbstractSelectingDelegate
-			implements InsertGeneratedIdentifierDelegate {
+	private static class SelectGeneratorDelegate extends AbstractSelectingDelegate {
 		private final PostInsertIdentityPersister persister;
 		private final Dialect dialect;
 
@@ -90,19 +91,23 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 
 		private final String idSelectString;
 
-		private SelectGeneratorDelegate(
+		public SelectGeneratorDelegate(
 				PostInsertIdentityPersister persister,
 				Dialect dialect,
-				String suppliedUniqueKeyPropertyName) {
+				String configuredPropertyName) {
 			super( persister );
 
 			this.persister = persister;
 			this.dialect = dialect;
-			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
+			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, configuredPropertyName );
 
 			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
 			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
 			idType = (BasicType<?>) persister.getIdentifierType();
+		}
+
+		protected String getSelectSQL() {
+			return idSelectString;
 		}
 
 		@Override
@@ -110,25 +115,26 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 			return new IdentifierGeneratingInsert( dialect );
 		}
 
-
-		// AbstractSelectingDelegate impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		protected String getSelectSQL() {
-			return idSelectString;
+		@Override
+		public TableInsertBuilder createTableInsertBuilder(BasicEntityIdentifierMapping identifierMapping, Expectation expectation, SessionFactoryImplementor sessionFactory) {
+			return new TableInsertBuilderStandard(
+					persister,
+					persister.getIdentifierTableMapping(),
+					sessionFactory
+			);
 		}
 
 		protected void bindParameters(
-				SharedSessionContractImplementor session,
-				PreparedStatement ps,
-				Object entity) throws SQLException {
+				Object entity, PreparedStatement ps, SharedSessionContractImplementor session) throws SQLException {
 			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
 			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
-		protected Object getResult(
-				SharedSessionContractImplementor session,
+		@Override
+		protected Object extractGeneratedValue(
+				Object entity,
 				ResultSet rs,
-				Object entity) throws SQLException {
+				SharedSessionContractImplementor session) throws SQLException {
 			if ( !rs.next() ) {
 				throw new IdentifierGenerationException(
 						"the inserted row could not be located by the unique key: " +

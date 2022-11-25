@@ -21,8 +21,17 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  */
 public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressible {
 	enum Nature {
+		/**
+		 * The Collection element or Map element
+		 */
 		ELEMENT( "{element}" ),
+		/**
+		 * The List index or Map key
+		 */
 		INDEX( "{index}" ),
+		/**
+		 * The identifier for
+		 */
 		ID( "{collection-id}" );
 
 		private final String name;
@@ -81,5 +90,9 @@ public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressib
 	@Override
 	default String getPartName() {
 		return getNature().getName();
+	}
+
+	default ModelPart getInclusionCheckPart() {
+		return this;
 	}
 }

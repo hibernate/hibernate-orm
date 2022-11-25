@@ -26,6 +26,16 @@ public final class ArrayHelper {
 		return indexOf( array, object ) > -1;
 	}
 
+	public static boolean contains(int[] array, int value) {
+		for ( int i = 0; i < array.length; i++ ) {
+			if ( array[i] == value ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public static int indexOf(Object[] array, Object object) {
 		return indexOf( array, array.length, object );
 	}
@@ -244,6 +254,15 @@ public final class ArrayHelper {
 			}
 		}
 		return true;
+	}
+
+	public static boolean isAnyTrue(boolean... values) {
+		for ( boolean value : values ) {
+			if ( value ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static boolean[] negate(boolean[] valueNullness) {

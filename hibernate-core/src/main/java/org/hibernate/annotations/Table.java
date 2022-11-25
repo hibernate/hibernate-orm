@@ -87,9 +87,8 @@ public @interface Table {
 	 * If enabled, Hibernate will insert a row only if the columns of the secondary table
 	 * would not all be null, and will always use an outer join to read the columns. Thus,
 	 * by default, Hibernate avoids creating a row of null values.
-	 * <p>
-	 * <em>Only applies to secondary tables.</em>
 	 *
+	 * @apiNote Only relevant for secondary tables
 	 * @deprecated use {@link SecondaryRow#optional()}
 	 */
 	@Deprecated(since = "6.2")

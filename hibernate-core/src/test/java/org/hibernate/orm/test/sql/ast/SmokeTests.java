@@ -15,7 +15,6 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryOptions;
@@ -23,6 +22,7 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -31,7 +31,7 @@ import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -40,8 +40,6 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -55,7 +53,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -119,13 +116,13 @@ public class SmokeTests {
 					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
 					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
-					final JdbcSelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcSelect>(
+					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
 							session.getSessionFactory(),
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
 					assertThat(
-							jdbcSelectOperation.getSql(),
+							jdbcSelectOperation.getSqlString(),
 							is( "select s1_0.name from mapping_simple_entity s1_0" )
 					);
 				}
@@ -223,13 +220,13 @@ public class SmokeTests {
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 
-					final JdbcSelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcSelect>(
+					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
 							session.getSessionFactory(),
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
 					assertThat(
-							jdbcSelectOperation.getSql(),
+							jdbcSelectOperation.getSqlString(),
 							is( "select s1_0.gender from mapping_simple_entity s1_0" )
 					);
 				}

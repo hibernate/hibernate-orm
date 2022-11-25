@@ -14,13 +14,12 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.FilterJdbcParameter;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -30,7 +29,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  *
  * @author Steve Ebersole
  */
-public class JdbcCallImpl implements JdbcCall {
+public class JdbcCallImpl implements JdbcOperationQueryCall {
 	private final String callableName;
 
 	private final JdbcCallFunctionReturn functionReturn;
@@ -40,26 +39,57 @@ public class JdbcCallImpl implements JdbcCall {
 	private final List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
 	public JdbcCallImpl(Builder builder) {
-		this.callableName = builder.callableName;
+		this(
+				builder.callableName,
+				builder.functionReturn,
+				builder.parameterRegistrations == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterRegistrations ),
+				builder.parameterBinders == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterBinders ),
+				builder.parameterExtractors == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.parameterExtractors ),
+				builder.refCursorExtractors == null
+						? Collections.emptyList()
+						: Collections.unmodifiableList( builder.refCursorExtractors )
+		);
+	}
 
-		this.functionReturn = builder.functionReturn;
+	protected JdbcCallImpl(
+			String callableName,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
+			List<JdbcParameterBinder> parameterBinders,
+			List<JdbcCallParameterExtractor> parameterExtractors,
+			List<JdbcCallRefCursorExtractor> refCursorExtractors) {
+		this.callableName = callableName;
+		this.functionReturn = functionReturn;
+		this.parameterRegistrations = parameterRegistrations;
+		this.parameterBinders = parameterBinders;
+		this.parameterExtractors = parameterExtractors;
+		this.refCursorExtractors = refCursorExtractors;
+	}
 
-		this.parameterRegistrations = builder.parameterRegistrations == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterRegistrations );
-		this.parameterBinders = builder.parameterBinders == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterBinders );
-		this.parameterExtractors = builder.parameterExtractors == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.parameterExtractors );
-		this.refCursorExtractors = builder.refCursorExtractors == null
-				? Collections.emptyList()
-				: Collections.unmodifiableList( builder.refCursorExtractors );
+	protected JdbcCallImpl(
+			String callableName,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
+			List<JdbcParameterBinder> parameterBinders,
+			List<JdbcCallParameterExtractor> parameterExtractors) {
+		this(
+				callableName,
+				functionReturn,
+				parameterRegistrations,
+				parameterBinders,
+				parameterExtractors,
+				null
+		);
 	}
 
 	@Override
-	public String getSql() {
+	public String getSqlString() {
 		return callableName;
 	}
 
@@ -85,7 +115,7 @@ public class JdbcCallImpl implements JdbcCall {
 
 	@Override
 	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return null;
+		return Collections.emptySet();
 	}
 
 	@Override
@@ -115,8 +145,6 @@ public class JdbcCallImpl implements JdbcCall {
 	}
 
 	public static class Builder {
-		private final ParameterStrategy parameterStrategy;
-
 		private String callableName;
 		private JdbcCallFunctionReturn functionReturn;
 
@@ -125,11 +153,10 @@ public class JdbcCallImpl implements JdbcCall {
 		private List<JdbcCallParameterExtractor> parameterExtractors;
 		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-		public Builder(ParameterStrategy parameterStrategy) {
-			this.parameterStrategy = parameterStrategy;
+		public Builder() {
 		}
 
-		public JdbcCall buildJdbcCall() {
+		public JdbcOperationQueryCall buildJdbcCall() {
 			return new JdbcCallImpl( this );
 		}
 

@@ -16,8 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.MappingModelHelper;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
@@ -29,6 +28,7 @@ import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -36,7 +36,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
@@ -48,7 +48,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 	private final SqmDeleteStatement<?> sqmDelete;
 	private final DomainParameterXref domainParameterXref;
 
-	private JdbcDelete jdbcDelete;
+	private JdbcOperationQueryDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
 
@@ -63,7 +63,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcDelete> createDeleteTranslator(DomainQueryExecutionContext executionContext) {
+	private SqlAstTranslator<JdbcOperationQueryDelete> createDeleteTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 
@@ -94,7 +94,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<JdbcDelete> deleteTranslator = null;
+		SqlAstTranslator<JdbcOperationQueryDelete> deleteTranslator = null;
 		if ( jdbcDelete == null ) {
 			deleteTranslator = createDeleteTranslator( executionContext );
 		}
@@ -143,7 +143,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					}
 
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-					final Expression fkColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
+					final Expression fkColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
 							fkDescriptor.getKeyPart(),
 							null,
 							factory
@@ -156,7 +156,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							attributeMapping,
 							sqmInterpretation.getSqlAst().getTargetTable()
 					);
-					final Expression fkTargetColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
+					final Expression fkTargetColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
 							tableGroup,
 							fkDescriptor.getTargetPart(),
 							sqmInterpretation.getSqlExpressionResolver(),

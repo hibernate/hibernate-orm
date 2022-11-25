@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -65,6 +64,8 @@ import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -981,6 +982,22 @@ public abstract class SimpleValue implements KeyValue {
 			}
 		}
 
+		return false;
+	}
+
+	@Override
+	public boolean isColumnInsertable(int index) {
+		if ( insertability.size() > 0 ) {
+			return insertability.get( index );
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		if ( updatability.size() > 0 ) {
+			return updatability.get( index );
+		}
 		return false;
 	}
 

@@ -113,17 +113,14 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 						final NamedTableReference dmlTableReference = new NamedTableReference(
 								tableExpression,
 								DeleteStatement.DEFAULT_ALIAS,
-								true,
-								factory
-						);
-						final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable()
-																								.getCteColumns()
-																								.size() );
-						pluralAttribute.getKeyDescriptor().visitKeySelectables(
-								(index, selectable) -> columnReferences.add(
-										new ColumnReference(
-												dmlTableReference,
-												selectable
+								true
+							);
+							final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
+							pluralAttribute.getKeyDescriptor().visitKeySelectables(
+									(index, selectable) -> columnReferences.add(
+											new ColumnReference(
+													dmlTableReference,
+													selectable
 										)
 								)
 						);

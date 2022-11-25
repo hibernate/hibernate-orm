@@ -7,7 +7,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.LockOptions;
-import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
@@ -37,7 +37,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		return omitSqlQueryOptions( originalOptions, true, true );
 	}
 
-	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcSelect select) {
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcOperationQuerySelect select) {
 		return omitSqlQueryOptions( originalOptions, !select.usesLimitParameters(), false );
 	}
 

@@ -565,6 +565,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return sortProperties( false );
 	}
 
+
 	private int[] sortProperties(boolean forceRetainOriginalOrder) {
 		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
 			return originalPropertyOrder;

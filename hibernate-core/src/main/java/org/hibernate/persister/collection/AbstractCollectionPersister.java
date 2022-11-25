@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
+import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -37,7 +39,8 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
@@ -49,13 +52,10 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
@@ -75,40 +75,57 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
+import org.hibernate.persister.collection.mutation.CollectionTableMapping;
+import org.hibernate.persister.collection.mutation.RemoveCoordinator;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
-import org.hibernate.sql.Delete;
-import org.hibernate.sql.Insert;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.model.ModelMutationLogging;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.TableMapping.MutationDetails;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.CollectionType;
@@ -116,7 +133,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * Base implementation of the {@code QueryableCollection} interface.
@@ -127,20 +145,13 @@ import org.jboss.logging.Logger;
  * @see OneToManyPersister
  */
 public abstract class AbstractCollectionPersister
-		implements CollectionMetadata, SQLLoadableCollection, PluralAttributeMappingImpl.Aware {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			AbstractCollectionPersister.class.getName() );
-
-	// TODO: encapsulate the protected instance variables!
+		implements SQLLoadableCollection, PluralAttributeMappingImpl.Aware, CollectionMutationTarget, CollectionMetadata {
 
 	private final NavigableRole navigableRole;
+	private final CollectionSemantics<?,?> collectionSemantics;
 
-	// SQL statements
-	private final String sqlDeleteString;
-	private final String sqlInsertRowString;
-	private final String sqlUpdateRowString;
-	private final String sqlDeleteRowString;
+	private final CollectionTableMapping tableMapping;
+
 	private final String sqlSelectSizeString;
 	private final String sqlDetectRowByIndexString;
 	private final String sqlDetectRowByElementString;
@@ -187,7 +198,6 @@ public abstract class AbstractCollectionPersister
 
 	protected final String identifierColumnName;
 	private final String identifierColumnAlias;
-	// private final String unquotedIdentifierColumnName;
 
 	protected final String qualifiedTableName;
 
@@ -232,16 +242,6 @@ public abstract class AbstractCollectionPersister
 	private final String manyToManyWhereString;
 	private final String manyToManyWhereTemplate;
 
-	// custom sql
-	private final boolean insertCallable;
-	private final boolean updateCallable;
-	private final boolean deleteCallable;
-	private final boolean deleteAllCallable;
-	private final ExecuteUpdateResultCheckStyle insertCheckStyle;
-	private final ExecuteUpdateResultCheckStyle updateCheckStyle;
-	private final ExecuteUpdateResultCheckStyle deleteCheckStyle;
-	private final ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
-
 	private final Serializable[] spaces;
 
 	private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
@@ -252,10 +252,8 @@ public abstract class AbstractCollectionPersister
 	private volatile CollectionLoader standardCollectionLoader;
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// "mapping model"
+	private PluralAttributeMapping attributeMapping;
 
-	private final CollectionSemantics<?,?> collectionSemantics;
 
 	@Deprecated(since = "6.0")
 	public AbstractCollectionPersister(
@@ -271,9 +269,6 @@ public abstract class AbstractCollectionPersister
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 
 		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
-		final Value indexBootDescriptor = collectionBootDescriptor instanceof IndexedCollection
-				? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
-				: null;
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -486,8 +481,10 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			indexContainsFormula = hasFormula;
-			baseIndex = indexedCollection.isList() ?
-					( (List) indexedCollection ).getBaseIndex() : 0;
+			//noinspection ConstantConditions
+			baseIndex = indexedCollection.isList()
+					? ( (List) indexedCollection ).getBaseIndex()
+					: 0;
 		}
 		else {
 			indexContainsFormula = false;
@@ -506,6 +503,7 @@ public abstract class AbstractCollectionPersister
 			if ( collectionBootDescriptor.isOneToMany() ) {
 				throw new MappingException( "one-to-many collections with identifiers are not supported" );
 			}
+			//noinspection ConstantConditions
 			IdentifierCollection idColl = (IdentifierCollection) collectionBootDescriptor;
 			identifierType = idColl.getIdentifier().getType();
 			Column col = idColl.getIdentifier().getColumns().get(0);
@@ -522,68 +520,14 @@ public abstract class AbstractCollectionPersister
 			identifierType = null;
 			identifierColumnName = null;
 			identifierColumnAlias = null;
-			// unquotedIdentifierColumnName = null;
 			identifierGenerator = null;
 		}
 
 		// GENERATE THE SQL:
 
-		// sqlSelectString = sqlSelectString();
-		// sqlSelectRowString = sqlSelectRowString();
-
-		if ( collectionBootDescriptor.getCustomSQLInsert() == null ) {
-			sqlInsertRowString = generateInsertRowString();
-			insertCallable = false;
-			insertCheckStyle = ExecuteUpdateResultCheckStyle.COUNT;
-		}
-		else {
-			sqlInsertRowString = collectionBootDescriptor.getCustomSQLInsert();
-			insertCallable = collectionBootDescriptor.isCustomInsertCallable();
-			insertCheckStyle = collectionBootDescriptor.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( collectionBootDescriptor.getCustomSQLInsert(), insertCallable )
-					: collectionBootDescriptor.getCustomSQLInsertCheckStyle();
-		}
-
-		if ( collectionBootDescriptor.getCustomSQLUpdate() == null ) {
-			sqlUpdateRowString = generateUpdateRowString();
-			updateCallable = false;
-			updateCheckStyle = ExecuteUpdateResultCheckStyle.COUNT;
-		}
-		else {
-			sqlUpdateRowString = collectionBootDescriptor.getCustomSQLUpdate();
-			updateCallable = collectionBootDescriptor.isCustomUpdateCallable();
-			updateCheckStyle = collectionBootDescriptor.getCustomSQLUpdateCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( collectionBootDescriptor.getCustomSQLUpdate(), insertCallable )
-					: collectionBootDescriptor.getCustomSQLUpdateCheckStyle();
-		}
-
-		if ( collectionBootDescriptor.getCustomSQLDelete() == null ) {
-			sqlDeleteRowString = generateDeleteRowString();
-			deleteCallable = false;
-			deleteCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
-		}
-		else {
-			sqlDeleteRowString = collectionBootDescriptor.getCustomSQLDelete();
-			deleteCallable = collectionBootDescriptor.isCustomDeleteCallable();
-			deleteCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
-		}
-
-		if ( collectionBootDescriptor.getCustomSQLDeleteAll() == null ) {
-			sqlDeleteString = generateDeleteString();
-			deleteAllCallable = false;
-			deleteAllCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
-		}
-		else {
-			sqlDeleteString = collectionBootDescriptor.getCustomSQLDeleteAll();
-			deleteAllCallable = collectionBootDescriptor.isCustomDeleteAllCallable();
-			deleteAllCheckStyle = ExecuteUpdateResultCheckStyle.NONE;
-		}
-
 		sqlSelectSizeString = generateSelectSizeString( collectionBootDescriptor.isIndexed() && !collectionBootDescriptor.isMap() );
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
-
-		logStaticSQL();
 
 		isLazy = collectionBootDescriptor.isLazy();
 		isExtraLazy = collectionBootDescriptor.isExtraLazy();
@@ -670,13 +614,26 @@ public abstract class AbstractCollectionPersister
 				.resolveRepresentation( collectionBootDescriptor );
 
 		if ( queryLoaderName != null ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
+			final NamedQueryMemento namedQueryMemento = factory
+					.getQueryEngine()
+					.getNamedObjectRepository()
 					.resolve( factory, collectionBootDescriptor.getMetadata(), queryLoaderName );
 			if ( namedQueryMemento == null ) {
 				throw new IllegalArgumentException( "Could not resolve named load-query [" + navigableRole + "] : " + queryLoaderName );
 			}
 		}
+
+		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public String getRole() {
+		return navigableRole.getFullPath();
 	}
 
 	@Override
@@ -687,61 +644,6 @@ public abstract class AbstractCollectionPersister
 	protected String determineTableName(Table table) {
 		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
 	}
-
-//	private class ColumnMapperImpl implements ColumnMapper {
-//		@Override
-//		public SqlValueReference[] map(String reference) {
-//			final String[] columnNames;
-//			final String[] formulaTemplates;
-//
-//			// handle the special "$element$" property name...
-//			if ( "$element$".equals( reference ) ) {
-//				columnNames = elementColumnNames;
-//				formulaTemplates = elementFormulaTemplates;
-//			}
-//			else {
-//				columnNames = elementPropertyMapping.toColumns( reference );
-//				formulaTemplates = formulaTemplates( reference, columnNames.length );
-//			}
-//
-//			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];
-//			int i = 0;
-//			for ( final String columnName : columnNames ) {
-//				if ( columnName == null ) {
-//					// if the column name is null, it indicates that this index in the property value mapping is
-//					// actually represented by a formula.
-////					final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
-//					final String formulaTemplate = formulaTemplates[i];
-//					result[i] = new FormulaReference() {
-//						@Override
-//						public String getFormulaFragment() {
-//							return formulaTemplate;
-//						}
-//					};
-//				}
-//				else {
-//					result[i] = new ColumnReference() {
-//						@Override
-//						public String getColumnName() {
-//							return columnName;
-//						}
-//					};
-//				}
-//				i++;
-//			}
-//			return result;
-//		}
-//	}
-
-//	private String[] formulaTemplates(String reference, int expectedSize) {
-//		try {
-//			final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
-//			return  ( (Queryable) elementPersister ).getSubclassPropertyFormulaTemplateClosure()[propertyIndex];
-//		}
-//		catch (Exception e) {
-//			return new String[expectedSize];
-//		}
-//	}
 
 	@Override
 	public void postInstantiate() throws MappingException {
@@ -754,6 +656,7 @@ public abstract class AbstractCollectionPersister
 					.resolve( factory, null, queryLoaderName );
 			collectionLoader = new CollectionLoaderNamedQuery( this, namedQueryMemento );
 		}
+
 		if ( attributeMapping.getIndexDescriptor() != null ) {
 			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
 					attributeMapping,
@@ -762,29 +665,40 @@ public abstract class AbstractCollectionPersister
 					getFactory()
 			);
 		}
+
+		logStaticSQL();
 	}
 
 	protected void logStaticSQL() {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Static SQL for collection: %s", getRole() );
-			if ( getSQLInsertRowString() != null ) {
-				LOG.debugf( " Row insert: %s", getSQLInsertRowString() );
-			}
-			if ( getSQLUpdateRowString() != null ) {
-				LOG.debugf( " Row update: %s", getSQLUpdateRowString() );
-			}
-			if ( getSQLDeleteRowString() != null ) {
-				LOG.debugf( " Row delete: %s", getSQLDeleteRowString() );
-			}
-			if ( getSQLDeleteString() != null ) {
-				LOG.debugf( " One-shot delete: %s", getSQLDeleteString() );
-			}
+		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			return;
+		}
+
+		MODEL_MUTATION_LOGGER.debugf( "Static SQL for collection: %s", getRole() );
+
+		final String insertRowSql = getRowMutationOperations().getInsertRowOperation().getSqlString();
+		if ( insertRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row insert: %s", insertRowSql );
+		}
+
+		final String updateRowSql = getRowMutationOperations().getUpdateRowOperation().getSqlString();
+		if ( updateRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row update: %s", updateRowSql );
+		}
+
+		final String deleteRowSql = getRowMutationOperations().getDeleteRowOperation().getSqlString();
+		if ( deleteRowSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " Row delete: %s", deleteRowSql );
+		}
+
+		final String deleteAllSql = getRemoveCoordinator().getSqlString();
+		if ( deleteAllSql != null ) {
+			MODEL_MUTATION_LOGGER.debugf( " One-shot delete: %s", deleteAllSql );
 		}
 	}
 
 	@Override
 	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
-//		getAppropriateInitializer( key, session ).initialize( key, session );
 		determineLoaderToUse( key, session ).load( key, session );
 	}
 
@@ -869,11 +783,6 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public NavigableRole getNavigableRole() {
-		return navigableRole;
-	}
-
-	@Override
 	public CollectionDataAccess getCacheAccessStrategy() {
 		return cacheAccessStrategy;
 	}
@@ -887,6 +796,9 @@ public abstract class AbstractCollectionPersister
 	public CollectionType getCollectionType() {
 		return collectionType;
 	}
+
+	protected abstract RowMutationOperations getRowMutationOperations();
+	protected abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
 	public String getSQLOrderByString(String alias) {
@@ -932,22 +844,6 @@ public abstract class AbstractCollectionPersister
 		return hasWhere;
 	}
 
-	protected String getSQLDeleteString() {
-		return sqlDeleteString;
-	}
-
-	protected String getSQLInsertRowString() {
-		return sqlInsertRowString;
-	}
-
-	protected String getSQLUpdateRowString() {
-		return sqlUpdateRowString;
-	}
-
-	protected String getSQLDeleteRowString() {
-		return sqlDeleteRowString;
-	}
-
 	@Override
 	public Type getKeyType() {
 		return keyType;
@@ -963,16 +859,6 @@ public abstract class AbstractCollectionPersister
 		return elementType;
 	}
 
-	@Override
-	public BasicValueConverter<?,?> getElementConverter() {
-		return elementType instanceof JdbcMapping ? ( (JdbcMapping) elementType ).getValueConverter() : null;
-	}
-
-	@Override
-	public BasicValueConverter<?,?> getIndexConverter() {
-		return indexType instanceof JdbcMapping ? ( (JdbcMapping) indexType ).getValueConverter() : null;
-	}
-
 	/**
 	 * Return the element class of an array, or null otherwise.  needed by arrays
 	 */
@@ -981,6 +867,11 @@ public abstract class AbstractCollectionPersister
 		return elementClass;
 	}
 
+	/**
+	 * @deprecated No longer used.
+	 */
+	@Deprecated(forRemoval = true)
+	@Remove
 	protected Object decrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
 			index = (Integer)index - baseIndex;
@@ -988,79 +879,11 @@ public abstract class AbstractCollectionPersister
 		return index;
 	}
 
-	/**
-	 * Write the key to a JDBC {@code PreparedStatement}
-	 */
-	protected int writeKey(PreparedStatement st, Object key, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-
-		if ( key == null ) {
-			throw new NullPointerException( "null key for collection: " + navigableRole.getFullPath() ); // an assertion
-		}
-		getKeyType().nullSafeSet( st, key, i, session );
-		return i + keyColumnAliases.length;
-	}
-
-	/**
-	 * Write the element to a JDBC {@code PreparedStatement}
-	 */
-	protected int writeElement(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		getElementType().nullSafeSet( st, elt, i, elementColumnIsSettable, session );
-
-		return i + ArrayHelper.countTrue( elementColumnIsSettable );
-
-	}
-
-	/**
-	 * Write the index to a JDBC {@code PreparedStatement}
-	 */
-	protected int writeIndex(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		getIndexType().nullSafeSet( st, incrementIndexByBase( index ), i, indexColumnIsSettable, session );
-
-		return i + ArrayHelper.countTrue( indexColumnIsSettable );
-	}
-
 	protected Object incrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
 			index = (Integer)index + baseIndex;
 		}
 		return index;
-	}
-
-	/**
-	 * Write the element to a JDBC {@code PreparedStatement}
-	 */
-	protected int writeElementToWhere(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		if ( elementIsPureFormula ) {
-			throw new AssertionFailure( "cannot use a formula-based element in the where condition" );
-		}
-		getElementType().nullSafeSet( st, elt, i, elementColumnIsInPrimaryKey, session );
-		return i + elementColumnAliases.length;
-	}
-
-	/**
-	 * Write the index to a JDBC {@code PreparedStatement}
-	 */
-	protected int writeIndexToWhere(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		if ( indexContainsFormula ) {
-			throw new AssertionFailure( "cannot use a formula-based index in the where condition" );
-		}
-		getIndexType().nullSafeSet( st, incrementIndexByBase( index ), i, session );
-		return i + indexColumnAliases.length;
-	}
-
-	/**
-	 * Write the identifier to a JDBC {@code PreparedStatement}
-	 */
-	public int writeIdentifier(PreparedStatement st, Object id, int i, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-
-		getIdentifierType().nullSafeSet( st, id, i, session );
-		return i + 1;
 	}
 
 	@Override
@@ -1071,36 +894,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isArray() {
 		return isArray;
-	}
-
-	@Override
-	public String[] getKeyColumnAliases(String suffix) {
-		return new Alias( suffix ).toAliasStrings( keyColumnAliases );
-	}
-
-	@Override
-	public String[] getElementColumnAliases(String suffix) {
-		return new Alias( suffix ).toAliasStrings( elementColumnAliases );
-	}
-
-	@Override
-	public String[] getIndexColumnAliases(String suffix) {
-		if ( hasIndex ) {
-			return new Alias( suffix ).toAliasStrings( indexColumnAliases );
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
-	public String getIdentifierColumnAlias(String suffix) {
-		if ( hasIdentifier ) {
-			return new Alias( suffix ).toAliasString( identifierColumnAlias );
-		}
-		else {
-			return null;
-		}
 	}
 
 	@Override
@@ -1205,7 +998,7 @@ public abstract class AbstractCollectionPersister
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
 				.translate( null, QueryOptions.NONE )
-				.getSql();
+				.getSqlString();
 		final int fromIndex = sql.lastIndexOf( " from" );
 		final String expression;
 		if ( fromIndex != -1 ) {
@@ -1319,203 +1112,9 @@ public abstract class AbstractCollectionPersister
 		return qualifiedTableName;
 	}
 
-	private BasicBatchKey removeBatchKey;
-
 	@Override
 	public void remove(Object id, SharedSessionContractImplementor session) throws HibernateException {
-		if ( !isInverse && isRowDeleteEnabled() ) {
-
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Deleting collection: %s",
-						MessageHelper.collectionInfoString( this, id, getFactory() ) );
-			}
-
-			// Remove all the old entries
-
-			try {
-				int offset = 1;
-				final PreparedStatement st;
-				Expectation expectation = Expectations.appropriateExpectation( getDeleteAllCheckStyle() );
-				boolean callable = isDeleteAllCallable();
-				boolean useBatch = expectation.canBeBatched();
-				final String sql = getSQLDeleteString();
-				if ( useBatch ) {
-					if ( removeBatchKey == null ) {
-						removeBatchKey = new BasicBatchKey(
-								getRole() + "#REMOVE",
-								expectation
-								);
-					}
-					st = session
-							.getJdbcCoordinator()
-							.getBatch( removeBatchKey )
-							.getBatchStatement( sql, callable );
-				}
-				else {
-					st = session
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql, callable );
-				}
-
-				try {
-					offset += expectation.prepare( st );
-
-					writeKey( st, id, offset, session );
-					if ( useBatch ) {
-						session
-								.getJdbcCoordinator()
-								.getBatch( removeBatchKey )
-								.addToBatch();
-					}
-					else {
-						expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
-					}
-				}
-				catch ( SQLException sqle ) {
-					if ( useBatch ) {
-						session.getJdbcCoordinator().abortBatch();
-					}
-					throw sqle;
-				}
-				finally {
-					if ( !useBatch ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-						session.getJdbcCoordinator().afterStatementExecution();
-					}
-				}
-
-				LOG.debug( "Done deleting collection" );
-			}
-			catch ( SQLException sqle ) {
-				throw sqlExceptionHelper.convert(
-						sqle,
-						"could not delete collection: " +
-								MessageHelper.collectionInfoString( this, id, getFactory() ),
-						getSQLDeleteString()
-						);
-			}
-
-		}
-
-	}
-
-	protected BasicBatchKey recreateBatchKey;
-
-	@Override
-	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-
-		if ( isInverse ) {
-			return;
-		}
-
-		if ( !isRowInsertEnabled() ) {
-			return;
-		}
-
-
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Inserting collection: %s",
-					MessageHelper.collectionInfoString( this, collection, id, session )
-			);
-		}
-
-		try {
-			// create all the new entries
-			Iterator<?> entries = collection.entries( this );
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			if ( entries.hasNext() ) {
-				Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
-				collection.preInsert( this );
-				int i = 0;
-				int count = 0;
-				while ( entries.hasNext() ) {
-
-					final Object entry = entries.next();
-					if ( collection.entryExists( entry, i ) ) {
-						int offset = 1;
-						final PreparedStatement st;
-						boolean callable = isInsertCallable();
-						boolean useBatch = expectation.canBeBatched();
-						final String sql = getSQLInsertRowString();
-
-						if ( useBatch ) {
-							if ( recreateBatchKey == null ) {
-								recreateBatchKey = new BasicBatchKey(
-										getRole() + "#RECREATE",
-										expectation
-								);
-							}
-							st = jdbcCoordinator
-									.getBatch( recreateBatchKey )
-									.getBatchStatement( sql, callable );
-						}
-						else {
-							st = jdbcCoordinator
-									.getStatementPreparer()
-									.prepareStatement( sql, callable );
-						}
-
-						try {
-							offset += expectation.prepare( st );
-
-							// TODO: copy/paste from insertRows()
-							int loc = writeKey( st, id, offset, session );
-							if ( hasIdentifier ) {
-								loc = writeIdentifier( st, collection.getIdentifier( entry, i ), loc, session );
-							}
-							if ( hasIndex /* && !indexIsFormula */) {
-								loc = writeIndex( st, collection.getIndex( entry, i, this ), loc, session );
-							}
-							loc = writeElement( st, collection.getElement( entry ), loc, session );
-
-							if ( useBatch ) {
-								jdbcCoordinator
-										.getBatch( recreateBatchKey )
-										.addToBatch();
-							}
-							else {
-								expectation.verifyOutcome( jdbcCoordinator
-																.getResultSetReturn().executeUpdate( st ), st, -1, sql );
-							}
-
-							collection.afterRowInsert( this, entry, i );
-							count++;
-						}
-						catch ( SQLException sqle ) {
-							if ( useBatch ) {
-								jdbcCoordinator.abortBatch();
-							}
-							throw sqle;
-						}
-						finally {
-							if ( !useBatch ) {
-								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
-								jdbcCoordinator.afterStatementExecution();
-							}
-						}
-
-					}
-					i++;
-				}
-
-				LOG.debugf( "Done inserting collection: %s rows inserted", count );
-
-			}
-			else {
-				LOG.debug( "Collection was empty" );
-			}
-		}
-		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper.convert(
-					sqle,
-					"could not insert collection: " +
-							MessageHelper.collectionInfoString( this, collection, id, session ),
-					getSQLInsertRowString()
-			);
-		}
+		getRemoveCoordinator().deleteAllRows( id, session );
 	}
 
 	protected boolean isRowDeleteEnabled() {
@@ -1527,230 +1126,8 @@ public abstract class AbstractCollectionPersister
 		return !isInverse() && isRowDeleteEnabled();
 	}
 
-	private BasicBatchKey deleteBatchKey;
-
-	@Override
-	public void deleteRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-
-		if ( isInverse ) {
-			return;
-		}
-
-		if ( !isRowDeleteEnabled() ) {
-			return;
-		}
-
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Deleting rows of collection: %s",
-					MessageHelper.collectionInfoString( this, collection, id, session )
-			);
-		}
-
-		boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
-		final Expectation expectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
-		try {
-			// delete all the deleted entries
-			Iterator<?> deletes = collection.getDeletes( this, !deleteByIndex );
-			if ( deletes.hasNext() ) {
-				int offset = 1;
-				int count = 0;
-				while ( deletes.hasNext() ) {
-					final PreparedStatement st;
-					boolean callable = isDeleteCallable();
-					boolean useBatch = expectation.canBeBatched();
-					final String sql = getSQLDeleteRowString();
-
-					if ( useBatch ) {
-						if ( deleteBatchKey == null ) {
-							deleteBatchKey = new BasicBatchKey(
-									getRole() + "#DELETE",
-									expectation
-									);
-						}
-						st = session
-								.getJdbcCoordinator()
-								.getBatch( deleteBatchKey )
-								.getBatchStatement( sql, callable );
-					}
-					else {
-						st = session
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( sql, callable );
-					}
-
-					try {
-						expectation.prepare( st );
-
-						Object entry = deletes.next();
-						int loc = offset;
-						if ( hasIdentifier ) {
-							writeIdentifier( st, entry, loc, session );
-						}
-						else {
-							loc = writeKey( st, id, loc, session );
-							if ( deleteByIndex ) {
-								writeIndexToWhere( st, entry, loc, session );
-							}
-							else {
-								writeElementToWhere( st, entry, loc, session );
-							}
-						}
-
-						if ( useBatch ) {
-							session
-									.getJdbcCoordinator()
-									.getBatch( deleteBatchKey )
-									.addToBatch();
-						}
-						else {
-							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
-						}
-						count++;
-					}
-					catch ( SQLException sqle ) {
-						if ( useBatch ) {
-							session.getJdbcCoordinator().abortBatch();
-						}
-						throw sqle;
-					}
-					finally {
-						if ( !useBatch ) {
-							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-							session.getJdbcCoordinator().afterStatementExecution();
-						}
-					}
-
-					LOG.debugf( "Done deleting collection rows: %s deleted", count );
-				}
-			}
-			else {
-				LOG.debug( "No rows to delete" );
-			}
-		}
-		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper.convert(
-					sqle,
-					"could not delete collection rows: " +
-							MessageHelper.collectionInfoString( this, collection, id, session ),
-					getSQLDeleteRowString()
-			);
-		}
-	}
-
 	protected boolean isRowInsertEnabled() {
 		return true;
-	}
-
-	private BasicBatchKey insertBatchKey;
-
-	@Override
-	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-
-		if ( isInverse ) {
-			return;
-		}
-
-		if ( !isRowInsertEnabled() ) {
-			return;
-		}
-
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Inserting rows of collection: %s",
-					MessageHelper.collectionInfoString( this, collection, id, session )
-			);
-		}
-
-		try {
-			// insert all the new entries
-			collection.preInsert( this );
-			Iterator<?> entries = collection.entries( this );
-			Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
-			boolean callable = isInsertCallable();
-			boolean useBatch = expectation.canBeBatched();
-			String sql = getSQLInsertRowString();
-			int i = 0;
-			int count = 0;
-			while ( entries.hasNext() ) {
-				int offset = 1;
-				Object entry = entries.next();
-				PreparedStatement st;
-				if ( collection.needsInserting( entry, i, elementType ) ) {
-
-					if ( useBatch ) {
-						if ( insertBatchKey == null ) {
-							insertBatchKey = new BasicBatchKey(
-									getRole() + "#INSERT",
-									expectation
-									);
-						}
-						st = session
-								.getJdbcCoordinator()
-								.getBatch( insertBatchKey )
-								.getBatchStatement( sql, callable );
-					}
-					else {
-						st = session
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( sql, callable );
-					}
-
-					try {
-						offset += expectation.prepare( st );
-						// TODO: copy/paste from recreate()
-						offset = writeKey( st, id, offset, session );
-						if ( hasIdentifier ) {
-							offset = writeIdentifier( st, collection.getIdentifier( entry, i ), offset, session );
-						}
-						if ( hasIndex /* && !indexIsFormula */) {
-							offset = writeIndex( st, collection.getIndex( entry, i, this ), offset, session );
-						}
-						writeElement( st, collection.getElement( entry ), offset, session );
-
-						if ( useBatch ) {
-							session.getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
-						}
-						else {
-							expectation.verifyOutcome( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1, sql );
-						}
-						collection.afterRowInsert( this, entry, i );
-						count++;
-					}
-					catch ( SQLException sqle ) {
-						if ( useBatch ) {
-							session.getJdbcCoordinator().abortBatch();
-						}
-						throw sqle;
-					}
-					finally {
-						if ( !useBatch ) {
-							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-							session.getJdbcCoordinator().afterStatementExecution();
-						}
-					}
-				}
-				i++;
-			}
-			LOG.debugf( "Done inserting rows: %s inserted", count );
-		}
-		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper.convert(
-					sqle,
-					"could not insert collection rows: " +
-							MessageHelper.collectionInfoString( this, collection, id, session ),
-					getSQLInsertRowString()
-			);
-		}
-	}
-
-	@Override
-	public String getRole() {
-		return navigableRole.getFullPath();
 	}
 
 	public String getOwnerEntityName() {
@@ -1957,31 +1334,6 @@ public abstract class AbstractCollectionPersister
 		return spaces;
 	}
 
-	protected abstract String generateDeleteString();
-
-	protected abstract String generateDeleteRowString();
-
-	protected abstract String generateUpdateRowString();
-
-	protected abstract String generateInsertRowString();
-
-	@Override
-	public void updateRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-
-		if ( !isInverse && collection.isRowUpdatePossible() ) {
-
-			LOG.debugf( "Updating rows of collection: %s#%s", navigableRole.getFullPath(), id );
-
-			// update all the modified entries
-			int count = doUpdateRows( id, collection, session );
-
-			LOG.debugf( "Done updating rows: %s updated", count );
-		}
-	}
-
-	protected abstract int doUpdateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);
-
 	@Override
 	public void processQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
 		if ( collection.hasQueuedOperations() ) {
@@ -2002,38 +1354,6 @@ public abstract class AbstractCollectionPersister
 		return factory;
 	}
 
-	protected boolean isInsertCallable() {
-		return insertCallable;
-	}
-
-	protected ExecuteUpdateResultCheckStyle getInsertCheckStyle() {
-		return insertCheckStyle;
-	}
-
-	protected boolean isUpdateCallable() {
-		return updateCallable;
-	}
-
-	protected ExecuteUpdateResultCheckStyle getUpdateCheckStyle() {
-		return updateCheckStyle;
-	}
-
-	protected boolean isDeleteCallable() {
-		return deleteCallable;
-	}
-
-	protected ExecuteUpdateResultCheckStyle getDeleteCheckStyle() {
-		return deleteCheckStyle;
-	}
-
-	protected boolean isDeleteAllCallable() {
-		return deleteAllCallable;
-	}
-
-	protected ExecuteUpdateResultCheckStyle getDeleteAllCheckStyle() {
-		return deleteAllCheckStyle;
-	}
-
 	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) + '(' + navigableRole.getFullPath() + ')';
@@ -2042,11 +1362,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isVersioned() {
 		return isVersioned && getOwnerEntityPersister().isVersioned();
-	}
-
-	// TODO: deprecate???
-	protected SQLExceptionConverter getSQLExceptionConverter() {
-		return getSQLExceptionHelper().getSqlExceptionConverter();
 	}
 
 	// TODO: needed???
@@ -2226,10 +1541,10 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
 
-	// todo (6.0) : atm there is no way to get a `PluralAttributeMapping` reference except through its declaring `ManagedTypeMapping` attributes.  this is a backhand way
-	//		of getting access to it for use from the persister
+	// todo (6.0) : atm there is no way to get a `PluralAttributeMapping` reference except through
+	//  	its declaring `ManagedTypeMapping` attributes.  this is a backhand way of getting access
+	//  	to it for use from the persister
 
-	private PluralAttributeMapping attributeMapping;
 
 	@Override
 	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
@@ -2278,15 +1593,234 @@ public abstract class AbstractCollectionPersister
 		return collectionSemantics;
 	}
 
-	protected Insert createInsert() {
-		return new Insert( getFactory().getJdbcServices().getDialect() );
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// CollectionMutationTarget
+
+	@Override
+	public PluralAttributeMapping getTargetPart() {
+		return attributeMapping;
 	}
 
-	protected Update createUpdate() {
-		return new Update( getFactory().getJdbcServices().getDialect() );
+	@Override
+	public String getIdentifierTableName() {
+		return tableMapping.getTableName();
 	}
 
-	protected Delete createDelete() {
-		return new Delete();
+	@Override
+	public CollectionTableMapping getCollectionTableMapping() {
+		return tableMapping;
+	}
+
+	@Override
+	public boolean hasPhysicalIndexColumn() {
+		return hasIndex && !indexContainsFormula;
+	}
+
+	@Override
+	public void forEachMutableTable(Consumer<CollectionTableMapping> consumer) {
+		consumer.accept( tableMapping );
+	}
+
+	@Override
+	public void forEachMutableTableReverse(Consumer<CollectionTableMapping> consumer) {
+		consumer.accept( tableMapping );
+	}
+
+	private static CollectionTableMapping buildCollectionTableMapping(
+			Collection collectionBootDescriptor,
+			String qualifiedTableName) {
+		return new CollectionTableMapping(
+				qualifiedTableName,
+				!collectionBootDescriptor.isOneToMany(),
+				collectionBootDescriptor.isInverse(),
+				new MutationDetails(
+						MutationType.INSERT,
+						determineExpectation(
+								collectionBootDescriptor.getCustomSQLInsertCheckStyle(),
+								collectionBootDescriptor.getCustomSQLInsert(),
+								collectionBootDescriptor.isCustomInsertCallable()
+						),
+						collectionBootDescriptor.getCustomSQLInsert(),
+						collectionBootDescriptor.isCustomInsertCallable()
+				),
+				new MutationDetails(
+						MutationType.UPDATE,
+						determineExpectation(
+								collectionBootDescriptor.getCustomSQLUpdateCheckStyle(),
+								collectionBootDescriptor.getCustomSQLUpdate(),
+								collectionBootDescriptor.isCustomUpdateCallable()
+						),
+						collectionBootDescriptor.getCustomSQLUpdate(),
+						collectionBootDescriptor.isCustomUpdateCallable()
+				),
+				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
+				new MutationDetails(
+						MutationType.DELETE,
+						determineExpectation(
+								collectionBootDescriptor.getCustomSQLDeleteAllCheckStyle(),
+								collectionBootDescriptor.getCustomSQLDeleteAll(),
+								collectionBootDescriptor.isCustomDeleteAllCallable(),
+								Expectations.NONE
+						),
+						collectionBootDescriptor.getCustomSQLDeleteAll(),
+						collectionBootDescriptor.isCustomDeleteAllCallable()
+				),
+				new MutationDetails(
+						MutationType.DELETE,
+						determineExpectation(
+								collectionBootDescriptor.getCustomSQLDeleteCheckStyle(),
+								collectionBootDescriptor.getCustomSQLDelete(),
+								collectionBootDescriptor.isCustomDeleteCallable()
+						),
+						collectionBootDescriptor.getCustomSQLDelete(),
+						collectionBootDescriptor.isCustomDeleteCallable()
+				)
+		);
+	}
+
+	private static Expectation determineExpectation(
+			ExecuteUpdateResultCheckStyle explicitStyle,
+			String customSql,
+			boolean customSqlCallable,
+			Expectation fallback) {
+		if ( explicitStyle != null ) {
+			return Expectations.appropriateExpectation( explicitStyle );
+		}
+
+		if ( customSql == null ) {
+			return fallback;
+		}
+
+		return Expectations.appropriateExpectation(
+				ExecuteUpdateResultCheckStyle.determineDefault( customSql, customSqlCallable )
+		);
+	}
+
+	private static Expectation determineExpectation(
+			ExecuteUpdateResultCheckStyle explicitStyle,
+			String customSql,
+			boolean customSqlCallable) {
+		return determineExpectation( explicitStyle, customSql, customSqlCallable, Expectations.BASIC );
+	}
+
+	protected JdbcMutationOperation buildDeleteAllOperation(MutatingTableReference tableReference) {
+		if ( tableMapping.getDeleteDetails().getCustomSql() != null ) {
+			return buildCustomSqlDeleteAllOperation( tableReference );
+		}
+
+		return buildGeneratedDeleteAllOperation( tableReference );
+	}
+
+	private JdbcDeleteMutation buildCustomSqlDeleteAllOperation(MutatingTableReference tableReference) {
+		final PluralAttributeMapping attributeMapping = getAttributeMapping();
+		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
+
+		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyDescriptor.getJdbcTypeCount() );
+		keyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
+			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
+					columnReference,
+					ParameterUsage.RESTRICT
+			);
+			parameterBinders.add( columnValueParameter );
+		} );
+
+		final TableMapping tableMapping = tableReference.getTableMapping();
+		return new JdbcDeleteMutation(
+				tableMapping,
+				this,
+				tableMapping.getDeleteDetails().getCustomSql(),
+				tableMapping.getDeleteDetails().isCallable(),
+				tableMapping.getDeleteDetails().getExpectation(),
+				parameterBinders
+		);
+	}
+
+	private JdbcMutationOperation buildGeneratedDeleteAllOperation(MutatingTableReference tableReference) {
+		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateDeleteAllAst( tableReference );
+
+		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
+				.getDialect()
+				.getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( sqlAst, getFactory() );
+
+		return translator.translate( null, MutationQueryOptions.INSTANCE );
+	}
+
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+		assert getAttributeMapping() != null;
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+		final java.util.List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
+		final java.util.List<ColumnValueParameter> parameters = arrayList( keyColumnCount );
+
+		//noinspection Convert2Lambda
+		fkDescriptor.getKeyPart().forEachSelectable( new SelectableConsumer() {
+			@Override
+			public void accept(int selectionIndex, SelectableMapping selectableMapping) {
+				final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
+				final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
+						columnReference,
+						ParameterUsage.RESTRICT
+				);
+				parameters.add( columnValueParameter );
+				keyRestrictionBindings.add(
+						new ColumnValueBinding(
+								columnReference,
+								new ColumnWriteFragment(
+										"?",
+										columnValueParameter,
+										selectableMapping.getJdbcMapping()
+								)
+						)
+				);
+			}
+		} );
+
+		//noinspection unchecked,rawtypes
+		return (RestrictedTableMutation) new TableDeleteStandard(
+				tableReference,
+				this,
+				keyRestrictionBindings,
+				Collections.emptyList(),
+				parameters
+		);
+	}
+
+
+
+
+	@Override
+	public String[] getKeyColumnAliases(String suffix) {
+		return new Alias( suffix ).toAliasStrings( keyColumnAliases );
+	}
+
+	@Override
+	public String[] getElementColumnAliases(String suffix) {
+		return new Alias( suffix ).toAliasStrings( elementColumnAliases );
+	}
+
+	@Override
+	public String[] getIndexColumnAliases(String suffix) {
+		if ( hasIndex ) {
+			return new Alias( suffix ).toAliasStrings( indexColumnAliases );
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public String getIdentifierColumnAlias(String suffix) {
+		if ( hasIdentifier ) {
+			return new Alias( suffix ).toAliasString( identifierColumnAlias );
+		}
+		else {
+			return null;
+		}
 	}
 }

@@ -29,6 +29,8 @@ import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -51,14 +53,15 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.Insert;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
@@ -70,6 +73,8 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
 /**
  * An {@link EntityPersister} implementing the normalized
@@ -398,30 +403,41 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		insertCallable = new boolean[tableSpan];
 		updateCallable = new boolean[tableSpan];
 		deleteCallable = new boolean[tableSpan];
-		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
-		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
-		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
+
+		insertExpectations = new Expectation[tableSpan];
+		updateExpectations = new Expectation[tableSpan];
+		deleteExpectations = new Expectation[tableSpan];
 
 		PersistentClass pc = persistentClass;
 		int jk = coreTableSpan - 1;
 		while ( pc != null ) {
 			isNullableTable[jk] = false;
 			isInverseTable[jk] = false;
+
 			customSQLInsert[jk] = pc.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && pc.isCustomInsertCallable();
-			insertResultCheckStyles[jk] = pc.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
-					: pc.getCustomSQLInsertCheckStyle();
+			insertExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLInsertCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
+							: pc.getCustomSQLInsertCheckStyle()
+			);
+
 			customSQLUpdate[jk] = pc.getCustomSQLUpdate();
 			updateCallable[jk] = customSQLUpdate[jk] != null && pc.isCustomUpdateCallable();
-			updateResultCheckStyles[jk] = pc.getCustomSQLUpdateCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
-					: pc.getCustomSQLUpdateCheckStyle();
+			updateExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLUpdateCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
+							: pc.getCustomSQLUpdateCheckStyle()
+			);
+
 			customSQLDelete[jk] = pc.getCustomSQLDelete();
 			deleteCallable[jk] = customSQLDelete[jk] != null && pc.isCustomDeleteCallable();
-			deleteResultCheckStyles[jk] = pc.getCustomSQLDeleteCheckStyle() == null
+			deleteExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLDeleteCheckStyle() == null
 					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
-					: pc.getCustomSQLDeleteCheckStyle();
+					: pc.getCustomSQLDeleteCheckStyle()
+			);
+
 			jk--;
 			pc = pc.getSuperclass();
 		}
@@ -437,19 +453,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
-			insertResultCheckStyles[j] = join.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-					: join.getCustomSQLInsertCheckStyle();
+			insertExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLInsertCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
+							: join.getCustomSQLInsertCheckStyle()
+			);
+
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
 			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
-			updateResultCheckStyles[j] = join.getCustomSQLUpdateCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-					: join.getCustomSQLUpdateCheckStyle();
+			updateExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLUpdateCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
+							: join.getCustomSQLUpdateCheckStyle()
+			);
+
 			customSQLDelete[j] = join.getCustomSQLDelete();
 			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
-			deleteResultCheckStyles[j] = join.getCustomSQLDeleteCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-					: join.getCustomSQLDeleteCheckStyle();
+			deleteExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLDeleteCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
+							: join.getCustomSQLDeleteCheckStyle()
+			);
+
 			j++;
 		}
 
@@ -725,6 +750,35 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer) {
+		for ( int i = 0; i < naturalOrderTableNames.length; i++ ) {
+			final String tableName = naturalOrderTableNames[i];
+			final int tableIndex = i;
+
+			consumer.consume(
+					tableName,
+					tableIndex,
+					() -> (columnConsumer) -> columnConsumer.accept(
+							tableName,
+							getIdentifierMapping(),
+							naturalOrderTableKeyColumns[tableIndex]
+					)
+			);
+		}
+	}
+
+	@Override
+	protected boolean isIdentifierTable(String tableExpression) {
+		return tableExpression.equals( getRootTableName() );
+	}
+
+	@Override
+	public boolean hasSkippableTables() {
+		// todo (6.x) : cache this?
+		return hasAnySkippableTables( isNullableTable, isInverseTable );
+	}
+
+	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
@@ -807,9 +861,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected void addDiscriminatorToInsert(Insert insert) {
+	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
-			insert.addColumn( explicitDiscriminatorColumnName, getDiscriminatorSQLValue() );
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
+			final String discriminatorValueToUse;
+			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+				discriminatorValueToUse = "null";
+			}
+			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+				discriminatorValueToUse = "not null";
+			}
+			else {
+				discriminatorValueToUse = discriminatorSQLString;
+			}
+			tableInsertBuilder.addValueColumn(
+					explicitDiscriminatorColumnName,
+					discriminatorValueToUse,
+					getDiscriminatorMapping().getJdbcMapping()
+			);
 		}
 	}
 
@@ -1051,7 +1120,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
-		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+		throw new HibernateException(
+				"Could not locate table which owns column [" + columnName + "] referenced in order-by mapping - " + getEntityName()
+		);
 	}
 
 	@Override
@@ -1132,6 +1203,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			precision = column.getPrecision();
 			scale = column.getScale();
 		}
+		final Value value = bootEntityDescriptor.getIdentifierProperty().getValue();
 		return new BasicEntityIdentifierMappingImpl(
 				this,
 				templateInstanceCreator,
@@ -1142,6 +1214,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				length,
 				precision,
 				scale,
+				value.isColumnInsertable( 0 ),
+				value.isColumnUpdateable( 0 ),
 				(BasicType<?>) idType,
 				creationProcess
 		);

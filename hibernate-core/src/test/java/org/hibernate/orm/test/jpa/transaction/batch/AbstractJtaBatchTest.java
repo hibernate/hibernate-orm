@@ -6,15 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.internal.HEMLogging;
@@ -27,39 +18,29 @@ import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.fail;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractJtaBatchTest {
+public abstract class AbstractJtaBatchTest extends AbstractBatchingTest {
 
 	protected Triggerable triggerable;
 
+
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension
-			.builder().setLogger(
-					HEMLogging.messageLogger( ProviderChecker.class.getName() )
-			).build();
+	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder()
+			.setLogger( HEMLogging.messageLogger( ProviderChecker.class.getName() )	)
+			.build();
 
 	@BeforeEach
 	public void setUp() {
-		triggerable = logger.watchForLogMessages(
-				"HHH000352: Unable to release batch statement..." );
+		triggerable = logger.watchForLogMessages( "HHH000352: Unable to release batch statement..." );
 		triggerable.reset();
-	}
-
-	protected void assertAllStatementsAreClosed(List<PreparedStatement> statements) {
-		statements.forEach( statement -> {
-			try {
-				assertThat( "A PreparedStatement has not been closed", statement.isClosed(), is( true ) );
-			}
-			catch (SQLException e) {
-				fail( e.getMessage() );
-			}
-		} );
 	}
 
 	public static class ConnectionSettingProvider implements SettingProvider.Provider<String> {

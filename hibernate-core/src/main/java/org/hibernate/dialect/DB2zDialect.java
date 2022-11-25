@@ -7,8 +7,6 @@
 package org.hibernate.dialect;
 
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -27,6 +25,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import jakarta.persistence.TemporalType;
 
 import java.util.List;
 

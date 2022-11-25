@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -52,7 +53,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
@@ -76,6 +77,13 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * A simple walker that checks for aggregate functions.
@@ -281,7 +289,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
@@ -511,5 +519,50 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 		for ( SqlAstNode argument : tableReference.getFunctionExpression().getArguments() ) {
 			argument.accept( this );
 		}
+	}
+
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		tableInsert.getMutatingTable().accept( this );
+
+		tableInsert.forEachValueBinding( (integer, columnValueBinding) -> {
+			columnValueBinding.getColumnReference().accept( this );
+			columnValueBinding.getValueExpression().accept( this );
+		} );
+
+		tableInsert.forEachReturningColumn( (integer, columnReference) -> {
+			columnReference.accept( this );
+		} );
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

@@ -32,7 +32,7 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 		return getMappedType().getMappedJavaType();
 	}
 
-	/**return null;
+	/**
 	 * Treat operation.  Asks the ValueMapping to treat itself as the
 	 * given `targetType`, if it can.
 	 *

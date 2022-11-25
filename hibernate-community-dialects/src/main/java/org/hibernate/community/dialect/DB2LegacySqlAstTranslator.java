@@ -27,11 +27,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -333,15 +332,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 	}
 
-	@Override
-	protected void visitInsertStatementOnly(InsertStatement statement) {
-		final boolean closeWrapper = renderReturningClause( statement );
-		super.visitInsertStatementOnly( statement );
-		if ( closeWrapper ) {
-			appendSql( ')' );
-		}
-	}
-
 	protected boolean renderReturningClause(MutationStatement statement) {
 		final List<ColumnReference> returningColumns = statement.getReturningColumns();
 		final int size = returningColumns.size();
@@ -427,11 +417,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected String getFromDualForSelectOnly() {
 		return getFromDual();
-	}
-
-	@Override
-	protected void visitReturningColumns(MutationStatement mutationStatement) {
-		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}
 
 	public DatabaseVersion getDB2Version() {

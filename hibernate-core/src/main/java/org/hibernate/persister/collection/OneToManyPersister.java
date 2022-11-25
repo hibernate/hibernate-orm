@@ -6,9 +6,9 @@
  */
 package org.hibernate.persister.collection;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -17,20 +17,67 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.mutation.CollectionTableMapping;
+import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
+import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.OperationProducer;
+import org.hibernate.persister.collection.mutation.RemoveCoordinator;
+import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.RemoveCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
+import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
+import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 
 /**
  * A {@link CollectionPersister} for {@link jakarta.persistence.OneToMany one-to-one
@@ -42,24 +89,16 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * @author Brett Meyer
  */
 public class OneToManyPersister extends AbstractCollectionPersister {
+	private final RowMutationOperations rowMutationOperations;
+
+	private final InsertRowsCoordinator insertRowsCoordinator;
+	private final UpdateRowsCoordinator updateRowsCoordinator;
+	private final DeleteRowsCoordinator deleteRowsCoordinator;
+	private final RemoveCoordinator removeCoordinator;
 
 	private final boolean cascadeDeleteEnabled;
 	private final boolean keyIsNullable;
 	private final boolean keyIsUpdateable;
-
-	@Override
-	protected boolean isRowDeleteEnabled() {
-		return keyIsUpdateable && keyIsNullable;
-	}
-
-	@Override
-	protected boolean isRowInsertEnabled() {
-		return keyIsUpdateable;
-	}
-
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
-	}
 
 	@Deprecated(since = "6.0")
 	public OneToManyPersister(
@@ -78,128 +117,74 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				&& creationContext.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
 		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
+
+		this.rowMutationOperations = buildRowMutationOperations();
+
+		this.insertRowsCoordinator = buildInsertCoordinator();
+		this.updateRowsCoordinator = buildUpdateCoordinator();
+		this.deleteRowsCoordinator = buildDeleteCoordinator();
+		this.removeCoordinator = buildDeleteAllCoordinator();
 	}
 
-	/**
-	 * Generate the SQL UPDATE that updates all the foreign keys to null
-	 */
 	@Override
-	protected String generateDeleteString() {
-		final Update update = createUpdate().setTableName( qualifiedTableName )
-				.addColumns( keyColumnNames, "null" );
-
-		if ( hasIndex && !indexContainsFormula ) {
-			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
-					update.addColumn( indexColumnNames[i], "null" );
-				}
-			}
-		}
-
-		update.addPrimaryKeyColumns( keyColumnNames );
-
-		if ( hasWhere ) {
-			update.setWhere( sqlWhereString );
-		}
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			update.setComment( "delete one-to-many " + getRole() );
-		}
-
-		return update.toStatementString();
+	protected RowMutationOperations getRowMutationOperations() {
+		return rowMutationOperations;
 	}
 
-	/**
-	 * Generate the SQL UPDATE that updates a foreign key to a value
-	 */
-	@Override
-	protected String generateInsertRowString() {
-		final Update update = createUpdate().setTableName( qualifiedTableName )
-				.addColumns( keyColumnNames );
-
-		if ( hasIndex && !indexContainsFormula ) {
-			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
-					update.addColumn( indexColumnNames[i] );
-				}
-			}
-		}
-
-		//identifier collections not supported for 1-to-many
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			update.setComment( "create one-to-many row " + getRole() );
-		}
-
-		return update.addPrimaryKeyColumns( elementColumnNames, elementColumnWriters )
-				.toStatementString();
+	protected InsertRowsCoordinator getInsertRowsCoordinator() {
+		return insertRowsCoordinator;
 	}
 
-	/**
-	 * Generate the SQL UPDATE that inserts a collection index
-	 */
-	@Override
-	protected String generateUpdateRowString() {
-		final Update update = createUpdate().setTableName( qualifiedTableName );
-
-		if ( hasIndex && !indexContainsFormula ) {
-			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
-					update.addColumn( indexColumnNames[i] );
-				}
-			}
-		}
-
-		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
-
-		if ( hasIdentifier ) {
-			update.addPrimaryKeyColumns( new String[] {identifierColumnName} );
-		}
-
-		return update.toStatementString();
+	protected UpdateRowsCoordinator getUpdateRowsCoordinator() {
+		return updateRowsCoordinator;
 	}
 
-	/**
-	 * Generate the SQL UPDATE that updates a particular row's foreign
-	 * key to null
-	 */
+	protected DeleteRowsCoordinator getDeleteRowsCoordinator() {
+		return deleteRowsCoordinator;
+	}
+
 	@Override
-	protected String generateDeleteRowString() {
-		final Update update = createUpdate().setTableName( qualifiedTableName )
-				.addColumns( keyColumnNames, "null" );
+	protected RemoveCoordinator getRemoveCoordinator() {
+		return removeCoordinator;
+	}
 
-		if ( hasIndex && !indexContainsFormula ) {
-			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
-					update.addColumn( indexColumnNames[i], "null" );
-				}
-			}
-		}
+	@Override
+	protected boolean isRowDeleteEnabled() {
+		return keyIsUpdateable && keyIsNullable;
+	}
 
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			update.setComment( "delete one-to-many row " + getRole() );
-		}
+	@Override
+	protected boolean isRowInsertEnabled() {
+		return keyIsUpdateable;
+	}
 
-		//use a combination of foreign key columns and pk columns, since
-		//the ordering of removal and addition is not guaranteed when
-		//a child moves from one parent to another
-		String[] rowSelectColumnNames = ArrayHelper.join( keyColumnNames, elementColumnNames );
-		return update.addPrimaryKeyColumns( rowSelectColumnNames )
-				.toStatementString();
+	public boolean isCascadeDeleteEnabled() {
+		return cascadeDeleteEnabled;
 	}
 
 	@Override
 	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
-		super.recreate( collection, id, session );
+		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInRecreate, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
 	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
-		super.insertRows( collection, id, session );
+		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
+	}
+
+	@Override
+	public void updateRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session) {
+		getUpdateRowsCoordinator().updateRows( id, collection, session );
+//		oldUpdateRows( collection, id, session );
+	}
+
+	@Override
+	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		getDeleteRowsCoordinator().deleteRows( collection, key, session );
 	}
 
 	@Override
@@ -211,102 +196,83 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private void writeIndex(
 			PersistentCollection<?> collection,
 			Iterator<?> entries,
-			Object id,
+			Object key,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
+		if ( !entries.hasNext() ) {
+			// no entries to update
+			return;
+		}
+
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
-		if ( isInverse && hasIndex && !indexContainsFormula && ArrayHelper.countTrue( indexColumnIsSettable ) > 0 ) {
-			try {
-				if ( entries.hasNext() ) {
-					int nextIndex = resetIndex ? 0 : getSize( id, session );
-					Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
-					while ( entries.hasNext() ) {
+		final boolean doWrite = isInverse
+				&& hasIndex
+				&& !indexContainsFormula
+				&& ArrayHelper.countTrue( indexColumnIsSettable ) > 0;
+		if ( !doWrite ) {
+			return;
+		}
 
-						final Object entry = entries.next();
-						if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
-							int offset = 1;
-							PreparedStatement st;
-							boolean callable = isUpdateCallable();
-							boolean useBatch = expectation.canBeBatched();
-							String sql = getSQLUpdateRowString();
+		final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+		final RowMutationOperations.Values updateRowValues = rowMutationOperations.getUpdateRowValues();
+		final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
+		assert NullnessHelper.areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
 
-							if ( useBatch ) {
-								if ( recreateBatchKey == null ) {
-									recreateBatchKey = new BasicBatchKey(
-											getRole() + "#RECREATE",
-											expectation
-									);
-								}
-								st = session
-										.getJdbcCoordinator()
-										.getBatch( recreateBatchKey )
-										.getBatchStatement( sql, callable );
-							}
-							else {
-								st = session
-										.getJdbcCoordinator()
-										.getStatementPreparer()
-										.prepareStatement( sql, callable );
-							}
+		final MutationExecutorService mutationExecutorService = getFactory()
+				.getServiceRegistry()
+				.getService( MutationExecutorService.class );
+		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
+				new MutationOperationGroupSingle( MutationType.UPDATE, this, updateRowOperation ),
+				session
+		);
 
-							try {
-								offset += expectation.prepare( st );
-								if ( hasIdentifier ) {
-									offset = writeIdentifier(
-											st,
-											collection.getIdentifier( entry, nextIndex ),
-											offset,
-											session
-									);
-								}
-								offset = writeIndex(
-										st,
-										collection.getIndex( entry, nextIndex, this ),
-										offset,
-										session
-								);
-								offset = writeElement( st, collection.getElement( entry ), offset, session );
+		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
-								if ( useBatch ) {
-									session.getJdbcCoordinator()
-											.getBatch( recreateBatchKey )
-											.addToBatch();
-								}
-								else {
-									expectation.verifyOutcome(
-											session.getJdbcCoordinator()
-													.getResultSetReturn()
-													.executeUpdate( st ), st, -1, sql
-									);
-								}
-							}
-							catch (SQLException sqle) {
-								if ( useBatch ) {
-									session.getJdbcCoordinator().abortBatch();
-								}
-								throw sqle;
-							}
-							finally {
-								if ( !useBatch ) {
-									session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-									session.getJdbcCoordinator().afterStatementExecution();
-								}
-							}
+		try {
+			int nextIndex = resetIndex ? 0 : getSize( key, session );
 
-						}
-						nextIndex++;
-					}
+			while ( entries.hasNext() ) {
+				final Object entry = entries.next();
+
+				if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
+					updateRowValues.applyValues(
+							collection,
+							key,
+							entry,
+							nextIndex,
+							session,
+							(jdbcValue, jdbcValueMapping, usage) -> jdbcValueBindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									usage,
+									session
+							)
+					);
+
+					updateRowRestrictions.applyRestrictions(
+							collection,
+							key,
+							entry,
+							nextIndex,
+							session,
+							(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									ParameterUsage.RESTRICT,
+									session
+							)
+					);
+
+					mutationExecutor.execute( collection, null, null, null, session );
+					nextIndex++;
 				}
 			}
-			catch (SQLException sqle) {
-				throw sqlExceptionHelper.convert(
-						sqle,
-						"could not update collection: " +
-								MessageHelper.collectionInfoString( this, collection, id, session ),
-						getSQLUpdateRowString()
-				);
-			}
 		}
+		finally {
+			mutationExecutor.release();
+		}
+
 	}
 
 	public boolean consumesEntityAlias() {
@@ -324,171 +290,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public boolean isManyToMany() {
 		return false;
-	}
-
-	private BasicBatchKey deleteRowBatchKey;
-	private BasicBatchKey insertRowBatchKey;
-
-	@Override
-	protected int doUpdateRows(Object id, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-
-		// we finish all the "removes" first to take care of possible unique
-		// constraints and so that we can take better advantage of batching
-
-		try {
-			int count = 0;
-			if ( isRowDeleteEnabled() ) {
-				final Expectation deleteExpectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
-				final boolean useBatch = deleteExpectation.canBeBatched();
-				if ( useBatch && deleteRowBatchKey == null ) {
-					deleteRowBatchKey = new BasicBatchKey(
-							getRole() + "#DELETEROW",
-							deleteExpectation
-					);
-				}
-				final String sql = getSQLDeleteRowString();
-
-				PreparedStatement st = null;
-				// update removed rows fks to null
-				try {
-					int i = 0;
-					Iterator<?> entries = collection.entries( this );
-					int offset = 1;
-					while ( entries.hasNext() ) {
-						Object entry = entries.next();
-						if ( collection.needsUpdating(
-								entry,
-								i,
-								elementType
-						) ) {  // will still be issued when it used to be null
-							if ( useBatch ) {
-								st = session
-										.getJdbcCoordinator()
-										.getBatch( deleteRowBatchKey )
-										.getBatchStatement( sql, isDeleteCallable() );
-							}
-							else {
-								st = session
-										.getJdbcCoordinator()
-										.getStatementPreparer()
-										.prepareStatement( sql, isDeleteCallable() );
-							}
-							int loc = writeKey( st, id, offset, session );
-							writeElementToWhere( st, collection.getSnapshotElement( entry, i ), loc, session );
-							if ( useBatch ) {
-								session
-										.getJdbcCoordinator()
-										.getBatch( deleteRowBatchKey )
-										.addToBatch();
-							}
-							else {
-								deleteExpectation.verifyOutcome(
-										session.getJdbcCoordinator()
-												.getResultSetReturn()
-												.executeUpdate( st ), st, -1, sql
-								);
-							}
-							count++;
-						}
-						i++;
-					}
-				}
-				catch (SQLException e) {
-					if ( useBatch ) {
-						session.getJdbcCoordinator().abortBatch();
-					}
-					throw e;
-				}
-				finally {
-					if ( !useBatch ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-						session.getJdbcCoordinator().afterStatementExecution();
-					}
-				}
-			}
-
-			if ( isRowInsertEnabled() ) {
-				final Expectation insertExpectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
-				boolean useBatch = insertExpectation.canBeBatched();
-				boolean callable = isInsertCallable();
-				if ( useBatch && insertRowBatchKey == null ) {
-					insertRowBatchKey = new BasicBatchKey(
-							getRole() + "#INSERTROW",
-							insertExpectation
-					);
-				}
-				final String sql = getSQLInsertRowString();
-
-				PreparedStatement st = null;
-				// now update all changed or added rows fks
-				try {
-					int i = 0;
-					Iterator<?> entries = collection.entries( this );
-					while ( entries.hasNext() ) {
-						Object entry = entries.next();
-						int offset = 1;
-						if ( collection.needsUpdating( entry, i, elementType ) ) {
-							if ( useBatch ) {
-								st = session
-										.getJdbcCoordinator()
-										.getBatch( insertRowBatchKey )
-										.getBatchStatement( sql, callable );
-							}
-							else {
-								st = session
-										.getJdbcCoordinator()
-										.getStatementPreparer()
-										.prepareStatement( sql, callable );
-							}
-
-							offset += insertExpectation.prepare( st );
-
-							int loc = writeKey( st, id, offset, session );
-							if ( hasIndex && !indexContainsFormula ) {
-								loc = writeIndexToWhere( st, collection.getIndex( entry, i, this ), loc, session );
-							}
-
-							writeElementToWhere( st, collection.getElement( entry ), loc, session );
-
-							if ( useBatch ) {
-								session.getJdbcCoordinator().getBatch( insertRowBatchKey ).addToBatch();
-							}
-							else {
-								insertExpectation.verifyOutcome(
-										session.getJdbcCoordinator()
-												.getResultSetReturn()
-												.executeUpdate( st ), st, -1, sql
-								);
-							}
-							count++;
-						}
-						i++;
-					}
-				}
-				catch (SQLException sqle) {
-					if ( useBatch ) {
-						session.getJdbcCoordinator().abortBatch();
-					}
-					throw sqle;
-				}
-				finally {
-					if ( !useBatch ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-						session.getJdbcCoordinator().afterStatementExecution();
-					}
-				}
-			}
-
-			return count;
-		}
-		catch (SQLException sqle) {
-			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not update collection rows: " +
-							MessageHelper.collectionInfoString( this, collection, id, session ),
-					getSQLInsertRowString()
-			);
-		}
 	}
 
 	@Override
@@ -529,4 +330,481 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
 		return getElementPersister().getFilterAliasGenerator( rootTableGroup );
 	}
+
+
+	@Override
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+		assert getAttributeMapping() != null;
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+		final int valuesCount = hasIndex
+				? keyColumnCount + indexColumnNames.length
+				: keyColumnCount;
+
+		final List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
+		final List<ColumnValueParameter> parameters = arrayList( keyColumnCount );
+		final List<ColumnValueBinding> valueBindings = arrayList( valuesCount );
+
+		fkDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
+			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
+					columnReference,
+					ParameterUsage.RESTRICT
+			);
+			parameters.add( columnValueParameter );
+			keyRestrictionBindings.add(
+					new ColumnValueBinding(
+							columnReference,
+							new ColumnWriteFragment(
+									"?",
+									columnValueParameter,
+									selectableMapping.getJdbcMapping()
+							)
+					)
+			);
+			valueBindings.add( new ColumnValueBinding(
+					columnReference,
+					new ColumnWriteFragment(
+							"null",
+							null,
+							selectableMapping.getJdbcMapping()
+					)
+			) );
+		} );
+
+		if ( hasIndex && !indexContainsFormula ) {
+			getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
+				if ( ! selectableMapping.isUpdateable() ) {
+					return;
+				}
+				valueBindings.add(
+						new ColumnValueBinding( new ColumnReference( tableReference, selectableMapping ),
+						new ColumnWriteFragment( "null", null, selectableMapping.getJdbcMapping() )
+				) );
+			} );
+		}
+
+		return new TableUpdateStandard(
+				tableReference,
+				this,
+				parameters,
+				valueBindings,
+				keyRestrictionBindings,
+				Collections.emptyList(),
+				sqlWhereString
+		);
+	}
+
+
+	private RowMutationOperations buildRowMutationOperations() {
+		final OperationProducer insertRowOperationProducer;
+		final RowMutationOperations.Values insertRowValues;
+		if ( !isInverse() && isRowInsertEnabled() ) {
+			insertRowOperationProducer = this::generateInsertRowOperation;
+			insertRowValues = this::applyInsertRowValues;
+		}
+		else {
+			insertRowOperationProducer = null;
+			insertRowValues = null;
+		}
+
+		final OperationProducer writeIndexOperationProducer;
+		final RowMutationOperations.Values writeIndexValues;
+		final RowMutationOperations.Restrictions writeIndexRestrictions;
+		final boolean needsWriteIndex = isInverse
+				&& hasIndex
+				&& !indexContainsFormula
+				&& !ArrayHelper.isAllFalse( indexColumnIsSettable );
+		if ( needsWriteIndex ) {
+			writeIndexOperationProducer = this::generateWriteIndexOperation;
+			writeIndexValues = this::applyWriteIndexValues;
+			writeIndexRestrictions = this::applyWriteIndexRestrictions;
+		}
+		else {
+			writeIndexOperationProducer = null;
+			writeIndexValues = null;
+			writeIndexRestrictions = null;
+		}
+
+		final OperationProducer deleteEntryOperationProducer;
+		final RowMutationOperations.Restrictions deleteEntryRestrictions;
+		if ( !isInverse() && isRowDeleteEnabled() ) {
+			deleteEntryOperationProducer = this::generateDeleteRowOperation;
+			deleteEntryRestrictions = this::applyDeleteRowRestrictions;
+		}
+		else {
+			deleteEntryOperationProducer = null;
+			deleteEntryRestrictions = null;
+		}
+
+		return new RowMutationOperations(
+				this,
+				insertRowOperationProducer,
+				insertRowValues,
+				writeIndexOperationProducer,
+				writeIndexValues,
+				writeIndexRestrictions,
+				deleteEntryOperationProducer,
+				deleteEntryRestrictions
+		);
+	}
+
+
+	private InsertRowsCoordinator buildInsertCoordinator() {
+		if ( isInverse() || !isRowInsertEnabled() ) {
+			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Skipping collection (re)creation - %s",
+						getRolePath()
+				);
+			}
+			return new InsertRowsCoordinatorNoOp( this );
+		}
+
+		return new InsertRowsCoordinatorStandard( this, rowMutationOperations );
+	}
+
+	private UpdateRowsCoordinator buildUpdateCoordinator() {
+		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
+			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Skipping collection row updates - %s",
+						getRolePath()
+				);
+			}
+			return new UpdateRowsCoordinatorNoOp( this );
+		}
+
+		return new UpdateRowsCoordinatorOneToMany( this, getRowMutationOperations(), getFactory() );
+	}
+
+	private DeleteRowsCoordinator buildDeleteCoordinator() {
+		if ( !needsRemove() ) {
+			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Skipping collection row deletions - %s",
+						getRolePath()
+				);
+			}
+			return new DeleteRowsCoordinatorNoOp( this );
+		}
+
+		return new DeleteRowsCoordinatorStandard(
+				this,
+				rowMutationOperations,
+				// never delete by index for one-to-many
+				false
+		);
+	}
+
+	private RemoveCoordinator buildDeleteAllCoordinator() {
+		if ( ! needsRemove() ) {
+			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Skipping collection removals - %s",
+						getRolePath()
+				);
+			}
+			return new RemoveCoordinatorNoOp( this );
+		}
+
+		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation );
+	}
+
+	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
+		if ( getIdentifierTableMapping().getDeleteRowDetails().getCustomSql() != null ) {
+			return buildCustomSqlDeleteRowOperation( tableReference );
+		}
+
+		return buildGeneratedDeleteRowOperation( tableReference );
+	}
+
+	private JdbcMutationOperation buildCustomSqlDeleteRowOperation(MutatingTableReference tableReference) {
+		final PluralAttributeMapping attribute = getAttributeMapping();
+		assert attribute != null;
+
+		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
+		assert foreignKey != null;
+
+		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
+
+		final int keyColumnCount = foreignKey.getJdbcTypeCount();
+		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
+		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
+			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
+					columnReference,
+					ParameterUsage.RESTRICT
+			);
+			parameterBinders.add( columnValueParameter );
+		} );
+
+		return new JdbcDeleteMutation(
+				tableMapping,
+				this,
+				tableMapping.getDeleteDetails().getCustomSql(),
+				tableMapping.getDeleteDetails().isCallable(),
+				tableMapping.getDeleteDetails().getExpectation(),
+				parameterBinders
+		);
+	}
+
+	private JdbcMutationOperation buildGeneratedDeleteRowOperation(MutatingTableReference tableReference) {
+		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateDeleteRowAst( tableReference );
+
+		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
+				.getDialect()
+				.getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( sqlAst, getFactory() );
+
+		return translator.translate( null, MutationQueryOptions.INSTANCE );
+	}
+
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
+		final TableUpdateBuilderStandard<MutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+
+		// for each key column -
+		// 		1) set the value to null
+		// 		2) restrict based on key value
+		getAttributeMapping().getKeyDescriptor().forEachSelectable( (index, selectable) -> {
+			if ( selectable.isFormula() ) {
+				return;
+			}
+
+			if ( selectable.isUpdateable() ) {
+				// set null
+				updateBuilder.addValueColumn(
+						selectable.getSelectionExpression(),
+						NULL,
+						selectable.getJdbcMapping()
+				);
+			}
+
+			// restrict
+			updateBuilder.addKeyRestriction( selectable );
+		} );
+
+		// set the value for each index column to null
+		if ( hasIndex && !indexContainsFormula ) {
+			assert getAttributeMapping().getIndexDescriptor() != null;
+
+			getAttributeMapping().getIndexDescriptor().forEachSelectable( (index, selectable) -> {
+				if ( !selectable.isUpdateable() ) {
+					return;
+				}
+
+				updateBuilder.addValueColumn(
+						selectable.getSelectionExpression(),
+						NULL,
+						selectable.getJdbcMapping()
+				);
+			} );
+		}
+
+		// for one-to-many, we know the element is an entity and need to restrict the update
+		// based on the element's id
+		final EntityCollectionPart entityPart = (EntityCollectionPart) getAttributeMapping().getElementDescriptor();
+		final EntityIdentifierMapping entityId = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
+		entityId.forEachSelectable( (index, selectable) -> updateBuilder.addKeyRestriction( selectable ) );
+
+		//noinspection unchecked,rawtypes
+		return (RestrictedTableMutation) updateBuilder.buildMutation();
+	}
+
+	private void applyDeleteRowRestrictions(
+			PersistentCollection<?> collection,
+			Object keyValue,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session,
+			JdbcValueConsumer jdbcValueConsumer) {
+		final PluralAttributeMapping pluralAttribute = getAttributeMapping();
+//		pluralAttribute.getKeyDescriptor().decompose( keyValue, jdbcValueConsumer, session );
+		pluralAttribute.getElementDescriptor().decompose( rowValue, jdbcValueConsumer, session );
+	}
+
+
+	private JdbcMutationOperation generateInsertRowOperation(MutatingTableReference tableReference) {
+		// NOTE : `TableUpdateBuilderStandard` and `TableUpdate` already handle custom-sql
+		final TableUpdate<JdbcMutationOperation> tableUpdate = buildTableUpdate( tableReference );
+		return tableUpdate.createMutationOperation( null, getFactory() );
+	}
+
+	private TableUpdate<JdbcMutationOperation> buildTableUpdate(MutatingTableReference tableReference) {
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+		final PluralAttributeMapping attributeMapping = getAttributeMapping();
+
+		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( (position, mapping) -> updateBuilder.addValueColumn( mapping ) );
+
+		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			indexDescriptor.forEachSelectable( (position,mapping) -> {
+				if ( !mapping.isUpdateable() ) {
+					return;
+				}
+				updateBuilder.addValueColumn( mapping );
+			} );
+		}
+
+		final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final EntityMappingType elementType = elementDescriptor.getAssociatedEntityMappingType();
+		elementType.getIdentifierMapping().forEachSelectable( (position, mapping) -> {
+			assert tableReference.getTableName().equals( mapping.getContainingTableExpression() );
+			updateBuilder.addKeyRestriction( mapping );
+		} );
+
+		return (TableUpdate<JdbcMutationOperation>) updateBuilder.buildMutation();
+	}
+
+	private void applyInsertRowValues(
+			PersistentCollection<?> collection,
+			Object keyValue,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session,
+			RowMutationOperations.ValuesBindingConsumer bindingsConsumer) {
+		final PluralAttributeMapping attributeMapping = getAttributeMapping();
+
+		attributeMapping.getKeyDescriptor().getKeyPart().decompose( keyValue, bindingsConsumer, session );
+
+		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
+
+		if ( indexDescriptor != null ) {
+			indexDescriptor.decompose(
+					incrementIndexByBase( collection.getIndex( rowValue, rowPosition, this ) ),
+					(value, jdbcValueMapping) -> {
+						if ( !jdbcValueMapping.isUpdateable() ) {
+							return;
+						}
+						bindingsConsumer.consume( value, jdbcValueMapping );
+					},
+					session
+			);
+		}
+
+		final Object elementValue = collection.getElement( rowValue );
+		final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
+		final EntityIdentifierMapping identifierMapping = elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping();
+		identifierMapping.decompose(
+				identifierMapping.getIdentifier( elementValue ),
+				(jdbcValue, jdbcValueMapping) -> bindingsConsumer.consumeJdbcValueBinding(
+						jdbcValue,
+						jdbcValueMapping,
+						ParameterUsage.RESTRICT
+				),
+				session
+		);
+	}
+
+
+	private JdbcMutationOperation generateWriteIndexOperation(MutatingTableReference tableReference) {
+		if ( getIdentifierTableMapping().getUpdateDetails().getCustomSql() != null ) {
+			return buildCustomSqlWriteIndexOperation( tableReference );
+		}
+
+		return buildGeneratedWriteIndexOperation( tableReference );
+	}
+
+	private JdbcMutationOperation buildCustomSqlWriteIndexOperation(MutatingTableReference tableReference) {
+		final PluralAttributeMapping attribute = getAttributeMapping();
+		assert attribute != null;
+
+		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
+		assert foreignKey != null;
+
+		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
+
+		final int keyColumnCount = foreignKey.getJdbcTypeCount();
+		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
+		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
+			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
+					columnReference,
+					ParameterUsage.RESTRICT
+			);
+			parameterBinders.add( columnValueParameter );
+		} );
+
+		return new JdbcUpdateMutation(
+				tableMapping,
+				this,
+				tableMapping.getUpdateDetails().getCustomSql(),
+				tableMapping.getUpdateDetails().isCallable(),
+				tableMapping.getUpdateDetails().getExpectation(),
+				parameterBinders
+		);
+	}
+
+	private JdbcMutationOperation buildGeneratedWriteIndexOperation(MutatingTableReference tableReference) {
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+
+		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();
+		elementDescriptor
+				.getAssociatedEntityMappingType()
+				.getIdentifierMapping()
+				.forEachSelectable( updateBuilder::addKeyRestriction );
+
+		// if the collection has an identifier, add its column as well
+		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
+			getAttributeMapping()
+					.getIdentifierDescriptor()
+					.forEachSelectable( updateBuilder::addKeyRestriction );
+		}
+
+		// for each index column:
+		// 		* add a restriction based on the previous value
+		//		* add an assignment for the new value
+		getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			if ( selectableMapping.isUpdateable() ) {
+				updateBuilder.addValueColumn( selectableMapping );
+			}
+		} );
+
+		final RestrictedTableMutation<JdbcMutationOperation> tableUpdate = updateBuilder.buildMutation();
+		return tableUpdate.createMutationOperation( null, getFactory() );
+	}
+
+	private void applyWriteIndexValues(
+			PersistentCollection<?> collection,
+			Object key,
+			Object entry,
+			int entryPosition,
+			SharedSessionContractImplementor session,
+			RowMutationOperations.ValuesBindingConsumer bindingsConsumer) {
+		final Object index = collection.getIndex( entry, entryPosition, this );
+
+		getAttributeMapping().getIndexDescriptor().decompose(
+				index,
+				(jdbcValue, jdbcValueMapping) -> {
+					if ( !jdbcValueMapping.isUpdateable() ) {
+						return;
+					}
+					bindingsConsumer.consume( jdbcValue, jdbcValueMapping );
+				},
+				session
+		);
+	}
+
+	private void applyWriteIndexRestrictions(
+			PersistentCollection<?> collection,
+			Object key,
+			Object entry,
+			int entryPosition,
+			SharedSessionContractImplementor session,
+			JdbcValueConsumer jdbcValueConsumer) {
+		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();
+		final EntityMappingType associatedType = elementDescriptor.getAssociatedEntityMappingType();
+		final Object element = collection.getElement( entry );
+		final Object elementIdentifier = associatedType.getIdentifierMapping().getIdentifier( element );
+		associatedType.getIdentifierMapping().decompose( elementIdentifier, jdbcValueConsumer, session );
+
+		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
+			final Object identifier = collection.getIdentifier( entry, entryPosition );
+			getAttributeMapping().getIdentifierDescriptor().decompose( identifier, jdbcValueConsumer, session );
+		}
+	}
+
 }

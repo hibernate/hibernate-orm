@@ -25,8 +25,8 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -35,12 +35,12 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
@@ -67,11 +67,10 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
-				InsertStatement.DEFAULT_ALIAS,
-				false,
-				factory
+				InsertSelectStatement.DEFAULT_ALIAS,
+				false
 		);
-		final InsertStatement idTableInsert = new InsertStatement( idTableReference );
+		final InsertSelectStatement idTableInsert = new InsertSelectStatement( idTableReference );
 
 		for ( int i = 0; i < idTable.getColumns().size(); i++ ) {
 			final TemporaryTableColumn column = idTable.getColumns().get( i );
@@ -131,7 +130,7 @@ public final class ExecuteWithTemporaryTableHelper {
 	}
 
 	public static int saveIntoTemporaryTable(
-			InsertStatement temporaryTableInsert,
+			InsertSelectStatement temporaryTableInsert,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
@@ -157,7 +156,7 @@ public final class ExecuteWithTemporaryTableHelper {
 					}
 			);
 		}
-		final JdbcInsert jdbcInsert = sqlAstTranslatorFactory.buildInsertTranslator( factory, temporaryTableInsert )
+		final JdbcOperationQueryInsert jdbcInsert = sqlAstTranslatorFactory.buildInsertTranslator( factory, temporaryTableInsert )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setLockMode( lockMode );
 
@@ -192,8 +191,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
-				true,
-				executionContext.getSession().getFactory()
+				true
 		);
 		final TableGroup idTableGroup = new StandardTableGroup(
 				true,

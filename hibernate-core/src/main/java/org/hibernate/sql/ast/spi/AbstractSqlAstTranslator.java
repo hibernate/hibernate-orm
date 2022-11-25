@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -68,8 +69,8 @@ import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
@@ -137,7 +138,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
@@ -163,19 +164,28 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcDelete;
-import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 import org.hibernate.type.BasicPluralType;
@@ -457,7 +467,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public MutationStatement getCurrentDmlStatement() {
 		return statementStack.findCurrentFirst(
 				stmt -> {
-					if ( stmt instanceof MutationStatement && !( stmt instanceof InsertStatement ) ) {
+					if ( stmt instanceof MutationStatement && !( stmt instanceof InsertSelectStatement ) ) {
 						return (MutationStatement) stmt;
 					}
 					return null;
@@ -721,9 +731,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
 		try {
 			this.jdbcParameterBindings = jdbcParameterBindings;
+
+			final Statement statement = statementStack.pop();
+
+			if ( statement instanceof TableMutation ) {
+				return translateTableMutation( (TableMutation<?>) statement );
+			}
+
 			this.lockOptions = queryOptions.getLockOptions().makeCopy();
 			this.limit = queryOptions.getLimit() == null ? null : queryOptions.getLimit().makeCopy();
-			final Statement statement = statementStack.pop();
 			final JdbcOperation jdbcOperation;
 			if ( statement instanceof DeleteStatement ) {
 				jdbcOperation = translateDelete( (DeleteStatement) statement );
@@ -731,14 +747,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( statement instanceof UpdateStatement ) {
 				jdbcOperation = translateUpdate( (UpdateStatement) statement );
 			}
-			else if ( statement instanceof InsertStatement ) {
-				jdbcOperation = translateInsert( (InsertStatement) statement );
+			else if ( statement instanceof InsertSelectStatement ) {
+				jdbcOperation = translateInsert( (InsertSelectStatement) statement );
 			}
 			else if ( statement instanceof SelectStatement ) {
 				jdbcOperation = translateSelect( (SelectStatement) statement );
 			}
 			else {
-				throw new IllegalArgumentException( "Unexpected statement" );
+				throw new IllegalArgumentException( "Unexpected statement - " + statement );
 			}
 
 			if ( jdbcParameterBindings != null && CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
@@ -757,10 +773,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected JdbcDelete translateDelete(DeleteStatement sqlAst) {
+	protected JdbcOperationQueryDelete translateDelete(DeleteStatement sqlAst) {
 		visitDeleteStatement( sqlAst );
 
-		return new JdbcDelete(
+		return new JdbcOperationQueryDelete(
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
@@ -769,10 +785,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		);
 	}
 
-	protected JdbcUpdate translateUpdate(UpdateStatement sqlAst) {
+	protected JdbcOperationQueryUpdate translateUpdate(UpdateStatement sqlAst) {
 		visitUpdateStatement( sqlAst );
 
-		return new JdbcUpdate(
+		return new JdbcOperationQueryUpdate(
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
@@ -781,26 +797,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		);
 	}
 
-	protected JdbcInsert translateInsert(InsertStatement sqlAst) {
+	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
-		return new JdbcInsert(
+		return new JdbcOperationQueryInsertImpl(
 				getSql(),
 				getParameterBinders(),
-				getAffectedTableNames(),
-				getFilterJdbcParameters(),
-				getAppliedParameterBindings()
+				getAffectedTableNames()
 		);
 	}
 
-	protected JdbcSelect translateSelect(SelectStatement selectStatement) {
+	protected JdbcOperationQuerySelect translateSelect(SelectStatement selectStatement) {
 		logDomainResultGraph( selectStatement.getDomainResultDescriptors() );
 		logSqlAst( selectStatement );
 
 		visitSelectStatement( selectStatement );
 
 		final int rowsToSkip;
-		return new JdbcSelect(
+		return new JdbcOperationQuerySelect(
 				getSql(),
 				getParameterBinders(),
 				new JdbcValuesMappingProducerStandard(
@@ -967,7 +981,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		try {
 			statementStack.push( statement );
 			visitCteContainer( statement );
@@ -991,7 +1005,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		visitWhereClause( statement.getRestriction() );
-		visitReturningColumns( statement );
+		visitReturningColumns( statement.getReturningColumns() );
 	}
 
 	protected void visitUpdateStatementOnly(UpdateStatement statement) {
@@ -1008,7 +1022,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		renderSetClause( statement, clauseStack );
 		visitWhereClause( statement.getRestriction() );
-		visitReturningColumns( statement );
+		visitReturningColumns( statement.getReturningColumns() );
 	}
 
 	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {
@@ -1059,14 +1073,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( columnReference.getColumnExpression() );
 	}
 
-	protected void visitInsertStatementOnly(InsertStatement statement) {
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		appendSql( "insert into " );
 		appendSql( statement.getTargetTable().getTableExpression() );
 
 		appendSql( OPEN_PARENTHESIS );
 		boolean firstPass = true;
 
-		final List<ColumnReference> targetColumnReferences = statement.getTargetColumnReferences();
+		final List<ColumnReference> targetColumnReferences = statement.getTargetColumns();
 		if ( targetColumnReferences == null ) {
 			renderImplicitTargetColumnSpec();
 		}
@@ -1091,7 +1105,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			visitValuesList( statement.getValuesList() );
 		}
-		visitReturningColumns( statement );
+		visitReturningColumns( statement.getReturningColumns() );
 	}
 
 	private void renderImplicitTargetColumnSpec() {
@@ -1407,8 +1421,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return strategy;
 	}
 
-	protected void visitReturningColumns(MutationStatement mutationStatement) {
-		final List<ColumnReference> returningColumns = mutationStatement.getReturningColumns();
+	protected void visitReturningColumns(Supplier<List<ColumnReference>> returningColumnsAccess) {
+		final List<ColumnReference> returningColumns = returningColumnsAccess.get();
+
+		if ( returningColumns.isEmpty() ) {
+			return;
+		}
+
+		visitReturningColumns( returningColumns );
+	}
+
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
 		final int size = returningColumns.size();
 		if ( size == 0 ) {
 			return;
@@ -4329,7 +4352,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( "select " );
 			// When we emulate a root statement, we don't need to select the select items
 			// to filter out the row number column we introduce, because we will simply ignore it anyway
-			if ( getClauseStack().isEmpty() && !( getStatement() instanceof InsertStatement )
+			if ( getClauseStack().isEmpty() && !( getStatement() instanceof InsertSelectStatement )
 					// If the query part is a child of a query group, we have can't do that,
 					// since we need the select items to properly align in query group parts
 					&& !( getCurrentQueryPart() instanceof QueryGroup ) ) {
@@ -4531,7 +4554,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final SqlAstNodeRenderingMode original = parameterRenderingMode;
 		final SqlAstNodeRenderingMode defaultRenderingMode;
-		if ( getStatement() instanceof InsertStatement && clauseStack.depth() == 1 && queryPartStack.depth() == 1 ) {
+		if ( getStatement() instanceof InsertSelectStatement && clauseStack.depth() == 1 && queryPartStack.depth() == 1 ) {
 			// Databases support inferring parameter types for simple insert-select statements
 			defaultRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 		}
@@ -7592,4 +7615,220 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	private T translateTableMutation(TableMutation<?> mutation) {
+		mutation.accept( this );
+		//noinspection unchecked
+		return (T) mutation.createMutationOperation( getSql(), parameterBinders );
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		getCurrentClauseStack().push( Clause.INSERT );
+		try {
+			renderInsertInto( tableInsert );
+
+			if ( tableInsert.getNumberOfReturningColumns() > 0 ) {
+				visitReturningColumns( tableInsert::getReturningColumns );
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
+
+	private void renderInsertInto(TableInsertStandard tableInsert) {
+		sqlBuffer.append( "insert into " );
+
+		appendSql( tableInsert.getMutatingTable().getTableName() );
+		registerAffectedTable( tableInsert.getMutatingTable().getTableName() );
+
+		sqlBuffer.append( " (" );
+
+		tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+
+			if ( columnPosition < tableInsert.getNumberOfValueBindings() - 1 ) {
+				sqlBuffer.append( ", " );
+			}
+		} );
+
+		getCurrentClauseStack().push( Clause.VALUES );
+		try {
+			sqlBuffer.append( ") values (" );
+
+			tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				columnValueBinding.getValueExpression().accept( this );
+
+				if ( columnPosition < tableInsert.getNumberOfValueBindings() - 1 ) {
+					sqlBuffer.append( ", " );
+				}
+			} );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+
+		sqlBuffer.append( ")" );
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		assert sqlBuffer.toString().isEmpty();
+		sqlBuffer.append( tableInsert.getCustomSql() );
+
+		tableInsert.getParameters().forEach( (parameter) -> {
+			parameterBinders.add( parameter.getParameterBinder() );
+			jdbcParameters.addParameter( parameter );
+		} );
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		getCurrentClauseStack().push( Clause.UPDATE );
+		try {
+			sqlBuffer.append( "update " );
+			appendSql( tableUpdate.getMutatingTable().getTableName() );
+			registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+
+			getCurrentClauseStack().push( Clause.SET );
+			try {
+				sqlBuffer.append( " set " );
+				tableUpdate.forEachValueBinding( (position, columnValueBinding) -> {
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					sqlBuffer.append( "=" );
+					columnValueBinding.getValueExpression().accept( this );
+
+					if ( position < tableUpdate.getNumberOfValueBindings() - 1 ) {
+						sqlBuffer.append( ", " );
+					}
+				} );
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+
+			getCurrentClauseStack().push( Clause.WHERE );
+			try {
+				sqlBuffer.append( " where " );
+				tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					sqlBuffer.append( "=" );
+					columnValueBinding.getValueExpression().accept( this );
+
+					if ( position < tableUpdate.getNumberOfKeyBindings() - 1 ) {
+						sqlBuffer.append( " and " );
+					}
+				} );
+
+				if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
+					sqlBuffer.append( " and " );
+					tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
+						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+						if ( columnValueBinding.getValueExpression() == null ) {
+							sqlBuffer.append( " is null" );
+						}
+						else {
+							sqlBuffer.append( "=" );
+							columnValueBinding.getValueExpression().accept( this );
+						}
+
+						if ( position < tableUpdate.getNumberOfOptimisticLockBindings() - 1 ) {
+							sqlBuffer.append( " and " );
+						}
+					} );
+				}
+
+				if ( tableUpdate.getWhereFragment() != null ) {
+					sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		assert sqlBuffer.toString().isEmpty();
+		sqlBuffer.append( tableUpdate.getCustomSql() );
+
+		tableUpdate.getParameters().forEach( (parameter) -> {
+			parameterBinders.add( parameter.getParameterBinder() );
+			jdbcParameters.addParameter( parameter );
+		} );
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		getCurrentClauseStack().push( Clause.DELETE );
+		try {
+			sqlBuffer.append( "delete from " );
+			appendSql( tableDelete.getMutatingTable().getTableName() );
+			registerAffectedTable( tableDelete.getMutatingTable().getTableName() );
+
+			getCurrentClauseStack().push( Clause.WHERE );
+			try {
+				sqlBuffer.append( " where " );
+
+				tableDelete.forEachKeyBinding( (columnPosition, columnValueBinding) -> {
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					sqlBuffer.append( "=" );
+					columnValueBinding.getValueExpression().accept( this );
+
+					if ( columnPosition < tableDelete.getNumberOfKeyBindings() - 1 ) {
+						sqlBuffer.append( " and " );
+					}
+				} );
+
+				if ( tableDelete.getNumberOfOptimisticLockBindings() > 0 ) {
+					sqlBuffer.append( " and " );
+
+					tableDelete.forEachOptimisticLockBinding( (columnPosition, columnValueBinding) -> {
+						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+						if ( columnValueBinding.getValueExpression() == null ) {
+							sqlBuffer.append( " is null" );
+						}
+						else {
+							sqlBuffer.append( "=" );
+							columnValueBinding.getValueExpression().accept( this );
+						}
+
+						if ( columnPosition < tableDelete.getNumberOfOptimisticLockBindings() - 1 ) {
+							sqlBuffer.append( " and " );
+						}
+					} );
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		assert sqlBuffer.toString().isEmpty();
+		sqlBuffer.append( tableDelete.getCustomSql() );
+
+		tableDelete.getParameters().forEach( (parameter) -> {
+			parameterBinders.add( parameter.getParameterBinder() );
+			jdbcParameters.addParameter( parameter );
+		} );
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
+		sqlBuffer.append( columnWriteFragment.getFragment() );
+		if ( columnWriteFragment.getParameter() != null ) {
+			parameterBinders.add( columnWriteFragment.getParameter().getParameterBinder() );
+			jdbcParameters.addParameter( columnWriteFragment.getParameter() );
+		}
+	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -298,18 +299,12 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+		discriminatorMapping.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
 
-		final Object discriminator = discriminatorMapping
-				.getModelPart()
-				.resolveDiscriminatorForEntityType( concreteMappingType );
-		final Object disassembledDiscriminator = discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
-		valueConsumer.consume( disassembledDiscriminator, discriminatorMapping.getDiscriminatorPart() );
-
-		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( domainValue );
-		final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
-		valueConsumer.consume( disassembledKey, discriminatorMapping.getKeyPart() );
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		discriminatorMapping.decompose( domainValue, valueConsumer, session );
 	}
 
 	@Override
@@ -341,7 +336,7 @@ public class DiscriminatedAssociationAttributeMapping
 		consumer.accept( getKeyPart() );
 	}
 
-	public static class MutabilityPlanImpl implements MutabilityPlan {
+	public static class MutabilityPlanImpl implements MutabilityPlan<Object> {
 		// for now use the AnyType for consistency with write-operations
 		private final AnyType anyType;
 
@@ -406,13 +401,7 @@ public class DiscriminatedAssociationAttributeMapping
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = Objects.requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,

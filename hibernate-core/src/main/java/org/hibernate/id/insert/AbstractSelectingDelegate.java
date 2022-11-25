@@ -10,6 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -26,6 +31,86 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 	protected AbstractSelectingDelegate(PostInsertIdentityPersister persister) {
 		this.persister = persister;
+	}
+
+	/**
+	 * Get the SQL statement to be used to retrieve generated key values.
+	 *
+	 * @return The SQL command string
+	 */
+	protected abstract String getSelectSQL();
+
+	protected void bindParameters(
+			Object entity,
+			PreparedStatement ps,
+			SharedSessionContractImplementor session) throws SQLException {
+	}
+
+	/**
+	 * Extract the generated key value from the given result set
+	 * from execution of {@link #getSelectSQL()}.
+	 *
+	 */
+	protected abstract Object extractGeneratedValue(
+			Object entity,
+			ResultSet rs,
+			SharedSessionContractImplementor session) throws SQLException;
+
+	@Override
+	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
+		return statementPreparer.prepareStatement( insertSql, PreparedStatement.NO_GENERATED_KEYS );
+	}
+
+	@Override
+	public Object performInsert(
+			PreparedStatementDetails insertStatementDetails,
+			JdbcValueBindings jdbcValueBindings,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final JdbcServices jdbcServices = session.getJdbcServices();
+
+		jdbcServices.getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
+		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
+
+		final PreparedStatement insertStatement = insertStatementDetails.getStatement();
+		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
+
+		// the insert is complete, select the generated id...
+
+		final String idSelectSql = getSelectSQL();
+		final PreparedStatement idSelect = jdbcCoordinator
+				.getStatementPreparer()
+				.prepareStatement( idSelectSql );
+
+		try {
+			bindParameters( entity, idSelect, session );
+
+			final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
+			try {
+				return extractGeneratedValue( entity, rs, session );
+			}
+			catch (SQLException e) {
+				throw jdbcServices.getSqlExceptionHelper().convert(
+						e,
+						"Unable to execute post-insert id selection query",
+						idSelectSql
+				);
+			}
+			finally {
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( idSelect );
+				session.getJdbcCoordinator().afterStatementExecution();
+			}
+		}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert(
+					e,
+					"Unable to bind parameters for post-insert id selection query",
+					idSelectSql
+			);
+		}
 	}
 
 	@Override
@@ -65,10 +150,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 					.getStatementPreparer()
 					.prepareStatement( selectSQL, false );
 			try {
-				bindParameters( session, idSelect, binder.getEntity() );
+				bindParameters( binder.getEntity(), idSelect, session );
 				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 				try {
-					return getResult( session, rs, binder.getEntity() );
+					return extractGeneratedValue( binder.getEntity(), rs, session );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, idSelect );
@@ -88,41 +173,5 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			);
 		}
 	}
-
-	/**
-	 * Get the SQL statement to be used to retrieve generated key values.
-	 *
-	 * @return The SQL command string
-	 */
-	protected abstract String getSelectSQL();
-
-	/**
-	 * Bind any required parameter values into the SQL command {@link #getSelectSQL}.
-	 *
-	 * @param session The session
-	 * @param ps The prepared {@linkplain #getSelectSQL SQL} command
-	 * @param entity The entity being saved.
-	 *
-	 */
-	protected void bindParameters(
-			SharedSessionContractImplementor session,
-			PreparedStatement ps,
-			Object entity) throws SQLException {
-	}
-
-	/**
-	 * Extract the generated key value from the given result set.
-	 *
-	 * @param session The session
-	 * @param rs The result set containing the generated primary key values.
-	 * @param entity The entity being saved.
-	 *
-	 * @return The generated identifier
-	 *
-	 */
-	protected abstract Object getResult(
-			SharedSessionContractImplementor session,
-			ResultSet rs,
-			Object entity) throws SQLException;
 
 }

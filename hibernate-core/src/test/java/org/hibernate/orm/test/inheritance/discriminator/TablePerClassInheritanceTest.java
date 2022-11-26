@@ -16,6 +16,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
@@ -166,10 +167,10 @@ public class TablePerClassInheritanceTest {
 
 		private String favouriteToy;
 
-		@OneToOne
+		@ManyToOne
 		private Woman mother;
 
-		@OneToOne
+		@ManyToOne
 		private Man father;
 
 		public Child() {

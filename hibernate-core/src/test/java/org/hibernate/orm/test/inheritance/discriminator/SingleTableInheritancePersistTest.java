@@ -16,9 +16,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -225,10 +223,10 @@ public class SingleTableInheritancePersistTest {
 
 		private String favouriteToy;
 
-		@OneToOne
+		@ManyToOne
 		private Woman mother;
 
-		@OneToOne
+		@ManyToOne
 		private Man father;
 
 		public Child() {

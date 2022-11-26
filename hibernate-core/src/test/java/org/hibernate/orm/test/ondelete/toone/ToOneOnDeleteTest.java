@@ -120,7 +120,7 @@ public class ToOneOnDeleteTest {
 
 		private String name;
 
-		@OneToOne
+		@ManyToOne
 		@OnDelete(action = OnDeleteAction.CASCADE)
 		private Child parent;
 	}

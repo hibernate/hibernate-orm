@@ -61,15 +61,13 @@ public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
 			Contained contained2 = embed2.getContained();
 
 			// switch associations: 1:1 2:2 -> 1:2 2:1
+			contained1.setContaining( null );
+			embed2.setContained( null );
+			session.flush();
 			embed1.setContained( contained2 );
 			contained2.setContaining( containing1 );
 			embed2.setContained( contained1 );
 			contained1.setContaining( containing2 );
-
-			session.update( containing1 );
-			session.update( containing2 );
-			session.update( contained1 );
-			session.update( contained2 );
 		} );
 
 		inTransaction( session -> {

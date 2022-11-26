@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.Audited;
@@ -131,7 +130,7 @@ public class InheritanceAssociationToOneInnerJoinTest extends BaseEnversJPAFunct
 	public static class EntityA {
 		@Id
 		private Integer id;
-		@OneToOne
+		@ManyToOne
 		private EntityD relationToD;
 		@ManyToOne
 		private EntityC relationToC;

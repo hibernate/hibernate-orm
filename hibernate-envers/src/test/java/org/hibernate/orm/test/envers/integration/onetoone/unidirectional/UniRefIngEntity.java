@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.onetoone.unidirectional;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 
@@ -26,7 +26,7 @@ public class UniRefIngEntity {
 	private String data;
 
 	@Audited
-	@OneToOne
+	@ManyToOne
 	private UniRefEdEntity reference;
 
 	public UniRefIngEntity() {

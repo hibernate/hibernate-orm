@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
@@ -24,7 +25,9 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 		final Object setting = configurationValues.get( AvailableSettings.SCHEMA_MANAGEMENT_TOOL );
 		SchemaManagementTool tool = registry.getService( StrategySelector.class ).resolveStrategy( SchemaManagementTool.class, setting );
 		if ( tool == null ) {
-			tool = new HibernateSchemaManagementTool();
+			tool = registry.getService( JdbcServices.class )
+					.getDialect()
+					.getFallbackSchemaManagementTool( configurationValues, registry );
 		}
 
 		return tool;

@@ -641,7 +641,10 @@ public class TableBinder {
 					else {
 						joinColumn.linkWithValue( value );
 					}
-					value.addReferencedColumn( getReferencedColumn( referencedColumn, referencedEntity ) );
+					Column referenced = getReferencedColumn( referencedColumn, referencedEntity );
+					if ( referenced != null ) {
+						value.addReferencedColumn( referenced );
+					}
 					joinColumn.overrideFromReferencedColumnIfNecessary( column );
 					match = true;
 					break;

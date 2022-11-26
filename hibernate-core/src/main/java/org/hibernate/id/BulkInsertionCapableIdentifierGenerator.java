@@ -18,7 +18,7 @@ import org.hibernate.id.factory.spi.StandardGenerator;
 public interface BulkInsertionCapableIdentifierGenerator extends StandardGenerator {
 	/**
 	 * Given the configuration of this generator, is identifier generation as part of bulk insertion supported?
-	 * <p/>
+	 * <p>
 	 * IMPL NOTE : Mainly here to allow stuff like SequenceStyleGenerator which *can* support this based on
 	 * configuration
 	 *

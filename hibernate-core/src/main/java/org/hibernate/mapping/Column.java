@@ -266,7 +266,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	/**
 	 * Returns the underlying columns SqlTypeCode.
 	 * If null, it is because the SqlTypeCode is unknown.
-	 * <p/>
+	 * <p>
 	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
 	 * for the columns associated Value/Type.
 	 *

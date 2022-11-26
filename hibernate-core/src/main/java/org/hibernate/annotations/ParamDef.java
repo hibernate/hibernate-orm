@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Details about a parameter declared in a {@link FilterDef}.
- * <p/>
+ * <p>
  * Mainly used to support cases where the proper {@link #type type}
  * cannot be deduced by Hibernate.
  *
@@ -32,10 +32,10 @@ public @interface ParamDef {
 
 	/**
 	 * The type to use when binding the parameter value.
-	 * <p/>
+	 * <p>
 	 * Generally deduced from the bind value.  Allows to
 	 * specify a specific type to use.
-	 * <p/>
+	 * <p>
 	 * The supplied Class can be one of the following:<ul>
 	 *     <li>
 	 *         a {@link org.hibernate.usertype.UserType}

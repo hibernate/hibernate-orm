@@ -18,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Names a persistent property access strategy ({@link PropertyAccessStrategy}) to use.
- * <p/>
+ * <p>
  * Can be specified at either:<ul>
  *     <li>
  *         <strong>TYPE</strong> level, which will act as the default accessor strategy for
@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         <strong>METHOD/FIELD</strong> level, which will be in effect for just that attribute.
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  * Should only be used to name custom {@link PropertyAccessStrategy}.  For
  * {@code property/field} access, the JPA {@link jakarta.persistence.Access} annotation should be preferred
  * using the appropriate {@link jakarta.persistence.AccessType}.  However, if this annotation is used with

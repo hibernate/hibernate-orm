@@ -48,28 +48,28 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 */
 	String JAKARTA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
 
 	/**
 	 * Specifies the type of transactions supported by the entity managers.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 */
 	String JAKARTA_TRANSACTION_TYPE = "jakarta.persistence.transactionType";
 
 	/**
 	 * Specifies the JNDI name of a JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
 	String JAKARTA_JTA_DATASOURCE = "jakarta.persistence.jtaDataSource";
 
 	/**
 	 * Specifies the JNDI name of a non-JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
 	String JAKARTA_NON_JTA_DATASOURCE = "jakarta.persistence.nonJtaDataSource";
@@ -125,7 +125,7 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that the second-level cache (which JPA calls the
 	 * "shared" cache) may be used, as per the rules defined in JPA 2 section 3.1.7.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 *
 	 * @see jakarta.persistence.SharedCacheMode
@@ -145,7 +145,7 @@ public interface AvailableSettings {
 	/**
 	 * Indicates which form of automatic validation is in effect as per the
 	 * rules defined in JPA 2 section 3.6.1.1.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
 	 * @see jakarta.persistence.ValidationMode
 	 */
@@ -160,7 +160,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
@@ -168,7 +168,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
@@ -176,7 +176,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
@@ -184,14 +184,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to request (hint) a pessimistic lock scope.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 */
 	String JAKARTA_LOCK_SCOPE = "jakarta.persistence.lock.scope";
 
 	/**
 	 * Used to request (hint) a pessimistic lock timeout in milliseconds.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 */
 	String JAKARTA_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
@@ -291,7 +291,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} representing a class that implements {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * The term {@code "class"} appears in the setting name due to legacy reasons;
 	 * however it can accept instances.
 	 */
@@ -368,7 +368,7 @@ public interface AvailableSettings {
 	 * have autocommit disabled when we acquire them from the provider. When we obtain
 	 * connections with autocommit already disabled, we may circumvent some operations in
 	 * the interest of performance.
-	 * <p/>
+	 * <p>
 	 * By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)} on
 	 * newly-obtained connections.
 	 *
@@ -430,10 +430,10 @@ public interface AvailableSettings {
 	 * Specifies the name of the database provider in cases where a connection to the
 	 * database is not available (usually for generating scripts). In such cases, a value
 	 * for this setting <em>must</em> be specified.
-	 * <p/>
+	 * <p>
 	 * The value of this setting is expected to match the value returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
-	 * <p/>
+	 * <p>
 	 * Additionally, specifying {@value #DIALECT_DB_MAJOR_VERSION}, and perhaps even
 	 * {@value #DIALECT_DB_MINOR_VERSION}, may be required for high quality DDL generation.
 	 *
@@ -453,7 +453,7 @@ public interface AvailableSettings {
 	 * to help more precisely determine how to perform schema generation tasks for the
 	 * underlying database in cases where {@value #DIALECT_DB_NAME} does not provide
 	 * enough distinction.
-	 * <p/>
+	 * <p>
 	 * The value of this setting is expected to match the value returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target
 	 * database.
@@ -631,14 +631,14 @@ public interface AvailableSettings {
 	 * (Hibernate does not need the discriminator.). However, some JPA providers do need the
 	 * discriminator for handling joined inheritance, so in the interest of portability this
 	 * capability has been added to Hibernate.
-	 * <p/>
+	 * <p>
 	 * However, we want to make sure that legacy applications continue to work as well.
 	 * Which puts us in a bind in terms of how to handle "implicit" discriminator mappings.
 	 * The solution is to assume that the absence of discriminator metadata means to follow
 	 * the legacy behavior <em>unless</em> this setting is enabled. With this setting enabled,
 	 * Hibernate will interpret the absence of discriminator metadata as an indication to use
 	 * the JPA defined defaults for these absent annotations.
-	 * <p/>
+	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
@@ -651,13 +651,13 @@ public interface AvailableSettings {
 	 * (Hibernate does not need the discriminator). However, some JPA providers do need the
 	 * discriminator for handling joined inheritance, so in the interest of portability this
 	 * capability has been added to Hibernate.
-	 * <p/>
+	 * <p>
 	 * Existing applications rely (implicitly or explicitly) on Hibernate ignoring any
 	 * {@link jakarta.persistence.DiscriminatorColumn} declarations on joined inheritance
 	 * hierarchies. This setting allows these applications to maintain the legacy behavior
 	 * of {@code @DiscriminatorColumn} annotations being ignored when paired with joined
 	 * inheritance.
-	 * <p/>
+	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
@@ -728,7 +728,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} representing a class that implements {@code ArchiveDescriptorFactory}, or
 	 *     <li>the name of a class that implements {@code ArchiveDescriptorFactory}.
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
 	 * about expected constructor forms.
 	 *
@@ -841,14 +841,14 @@ public interface AvailableSettings {
 	 * Specifies the {@link org.hibernate.metamodel.CollectionClassification} to use when
 	 * Hibernate detects a plural attribute typed as {@link java.util.List} with no explicit
 	 * list index configuration.
-	 * <p/>
+	 * <p>
 	 * Accepts any of:
 	 * <ul>
 	 *     <li>an instance of {@code CollectionClassification}
 	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 *
 	 * @since 6.0
 	 */
@@ -1462,7 +1462,7 @@ public interface AvailableSettings {
 	 * Setting to perform {@link org.hibernate.tool.schema.spi.SchemaManagementTool}
 	 * actions automatically as part of the {@link org.hibernate.SessionFactory}
 	 * lifecycle. Valid options are enumeratd by {@link org.hibernate.tool.schema.Action}.
-	 * <p/>
+	 * <p>
 	 * Interpreted in combination with {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} and
 	 * {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
 	 * is {@link org.hibernate.tool.schema.Action#NONE "none"}.
@@ -2642,7 +2642,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 *
 	 * @deprecated Use {@link #JAKARTA_PERSISTENCE_PROVIDER} instead
@@ -2653,7 +2653,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The type of transactions supported by the entity managers.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 *
 	 * @deprecated Use {@link #JAKARTA_TRANSACTION_TYPE} instead
@@ -2663,7 +2663,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The JNDI name of a JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 *
 	 * @deprecated Use {@link #JAKARTA_JTA_DATASOURCE} instead
@@ -2674,7 +2674,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The JNDI name of a non-JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 *
 	 * @deprecated Use {@link #JAKARTA_NON_JTA_DATASOURCE} instead
@@ -2748,7 +2748,7 @@ public interface AvailableSettings {
 	/**
 	 * Used to indicate whether second-level (what JPA terms shared cache)
 	 * caching is enabled as per the rules defined in JPA 2 section 3.1.7.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 * @see jakarta.persistence.SharedCacheMode
 	 *
@@ -2787,7 +2787,7 @@ public interface AvailableSettings {
 	/**
 	 * Used to indicate what form of automatic validation is in effect as
 	 * per rules defined in JPA 2 section 3.6.1.1.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
 	 *
 	 * @see jakarta.persistence.ValidationMode
@@ -2809,7 +2809,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_PERSIST_VALIDATION_GROUP} instead
@@ -2819,7 +2819,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_UPDATE_VALIDATION_GROUP} instead
@@ -2829,7 +2829,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_REMOVE_VALIDATION_GROUP} instead
@@ -2839,7 +2839,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to request (hint) a pessimistic lock scope.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 *
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
@@ -2850,7 +2850,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 *
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
@@ -2977,7 +2977,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.
-	 * <p/>
+	 * <p>
 	 * Default is {@code true}
 	 *
 	 * @since 6.1
@@ -2994,7 +2994,7 @@ public interface AvailableSettings {
 
 	/**
 	 * How features in a `hbm.xml` file which are not supported for transformation should be handled.
-	 * <p/>
+	 * <p>
 	 * Default is {@link org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling#ERROR}
 	 *
 	 * @see org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling

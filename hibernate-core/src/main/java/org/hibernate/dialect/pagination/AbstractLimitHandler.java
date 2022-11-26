@@ -119,7 +119,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * Hibernate {@link Query#setFirstResult(int)} accepts
 	 * a zero-based offset. Does this dialect require a one-based offset to be
 	 * specified in the offset clause?
-	 * <p/>
+	 * <p>
 	 * NOTE: what gets passed into
 	 * {@link AbstractLimitHandler#processSql(String, Limit)}
      * is the zero-based offset. Handlers which do not {@link #supportsVariableLimit}

@@ -65,7 +65,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
-	 * <p/>
+	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
@@ -77,7 +77,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * When mapping a duration type to the database what is the preferred SQL type code to use?
-	 * <p/>
+	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
@@ -88,7 +88,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * When mapping an uuid type to the database what is the preferred SQL type code to use?
-	 * <p/>
+	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
@@ -99,7 +99,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * When mapping an instant type to the database what is the preferred SQL type code to use?
-	 * <p/>
+	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
@@ -110,7 +110,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use?
-	 * <p/>
+	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.
 	 *
 	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()

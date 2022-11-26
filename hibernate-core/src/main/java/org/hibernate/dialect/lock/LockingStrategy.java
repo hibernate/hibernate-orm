@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
- * <p/>
+ * <p>
  * All locking provided implementations assume the underlying database supports
  * (and that the connection is in) at least read-committed transaction isolation.
  * The most glaring exclusion to this is HSQLDB which only offers support for

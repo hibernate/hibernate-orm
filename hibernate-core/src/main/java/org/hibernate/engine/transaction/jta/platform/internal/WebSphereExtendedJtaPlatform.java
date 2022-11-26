@@ -23,15 +23,15 @@ import org.hibernate.HibernateException;
 
 /**
  * JTA platform implementation intended for use with WebSphere Application Server (WAS).
- * <p/>
+ * <p>
  * WAS, unlike every other app server on the planet, does not allow direct access to the JTS TransactionManager.
  * Instead, for common transaction-related tasks users must utilize a proprietary API known as ExtendedJTATransaction.
- * <p/>
+ * <p>
  * Even more unfortunate, the exact TransactionManagerLookup to use inside of WAS is highly dependent upon<ul>
  *     <li>WAS version</li>
  *     <li>the WAS container in which Hibernate will be utilized</li>
  * </ul>
- * <p/>
+ * <p>
  * This class is reported to work on WAS version 6 in any of the standard J2EE/Java EE component containers.
  *
  * @author Gavin King

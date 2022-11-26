@@ -22,7 +22,7 @@ public interface Orderable {
 	/**
 	 * The order by clause used during loading this plural attribute.
 	 *
-	 * <p/>
+	 * <p>
 	 * If the ordering element is not specified, ordering by
 	 * the primary key of the associated entity is assumed
 	 *

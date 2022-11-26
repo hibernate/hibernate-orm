@@ -53,7 +53,7 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing
 	 * lookups?  The default is to perform "synchronization" (for correctness).
-	 * <p/>
+	 * <p>
 	 * "synchronization" here indicates updating the natural-id -> pk cross reference maintained as part of the
 	 * session.  When enabled, prior to performing the lookup, Hibernate will check all entities of the given
 	 * type associated with the session to see if its natural-id values have changed and, if so, update the

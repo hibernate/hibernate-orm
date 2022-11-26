@@ -170,12 +170,12 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * Concrete implementation of the {@link Session} API.
- * <p/>
+ * <p>
  * Exposes two interfaces:<ul>
  * <li>{@link Session} to the application</li>
  * <li>{@link SessionImplementor} and {@link EventSource} to other Hibernate components (SPI)</li>
  * </ul>
- * <p/>
+ * <p>
  * This class is not thread-safe.
  *
  * @author Gavin King

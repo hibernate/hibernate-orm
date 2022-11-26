@@ -13,7 +13,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
 /**
  * ScriptTargetOutput implementation for supplied Writer references.
- * <p/>
+ * <p>
  * Specifically, we are handed this Writer so we do not want to close it.
  *
  * @author Steve Ebersole

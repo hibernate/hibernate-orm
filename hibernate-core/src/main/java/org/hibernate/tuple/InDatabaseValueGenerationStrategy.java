@@ -21,7 +21,7 @@ public interface InDatabaseValueGenerationStrategy {
 
 	/**
 	 * Should the column(s) be referenced in the INSERT / UPDATE SQL?
-	 * <p/>
+	 * <p>
 	 * This will be {@code false} most often to have a DDL-defined DEFAULT value be applied on INSERT.  For
 	 * trigger-generated values this could be {@code true} or {@code false} depending on whether the user wants
 	 * the trigger to have access to some value for the column passed in.

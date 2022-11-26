@@ -19,11 +19,11 @@ import org.jboss.logging.Logger;
 /**
  * Optimizer which uses a pool of values, storing the next low value of the
  * range in the database.
- * <p/>
+ * <p>
  * Note that this optimizer works essentially the same as the
  * {@link HiLoOptimizer} except that here the bucket ranges are actually
  * encoded into the database structures.
- * <p/>
+ * <p>
  * Note if you prefer that the database value be interpreted as the bottom end of our current range,
  * then use the {@link PooledLoOptimizer} strategy
  *
@@ -143,7 +143,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 
 	/**
 	 * Getter for property 'lastValue'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'lastValue'.

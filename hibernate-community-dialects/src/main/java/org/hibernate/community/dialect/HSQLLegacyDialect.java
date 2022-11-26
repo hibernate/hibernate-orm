@@ -652,7 +652,7 @@ public class HSQLLegacyDialect extends Dialect {
 	 * be treated as a callable statement. It is equivalent to
 	 * "select current_timestamp from dual" in some databases.
 	 * HSQLDB 2.0 also supports VALUES CURRENT_TIMESTAMP
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -673,7 +673,7 @@ public class HSQLLegacyDialect extends Dialect {
 	/**
 	 * For HSQLDB 2.0, this is a copy of the base class implementation.
 	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

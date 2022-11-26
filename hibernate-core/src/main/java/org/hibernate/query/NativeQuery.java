@@ -70,7 +70,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically
 	 * detect the underlying type.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -83,7 +83,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -97,7 +97,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -244,7 +244,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
 	 * same as the unqualified entity name
-	 * <p/>
+	 * <p>
 	 * Use {@link #addRoot} if you need further control of the mapping
 	 *
 	 * @param entityName The entity name that is the root return of the query.

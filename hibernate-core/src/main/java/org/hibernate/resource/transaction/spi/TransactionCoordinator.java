@@ -60,7 +60,7 @@ public interface TransactionCoordinator {
 
 	/**
 	 * Is this transaction still active?
-	 * <p/>
+	 * <p>
 	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
 	 * transaction is active when it is initiated directly through the JDBC {@link java.sql.Connection}, only when
 	 * it is initiated from here.
@@ -80,7 +80,7 @@ public interface TransactionCoordinator {
 
 	/**
 	 * Adds an observer to the coordinator.
-	 * <p/>
+	 * <p>
 	 * observers are not to be cleared on transaction completion.
 	 *
 	 * @param observer The observer to add.

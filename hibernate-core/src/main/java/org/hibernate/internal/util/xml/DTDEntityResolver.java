@@ -28,7 +28,7 @@ import org.xml.sax.InputSource;
  * the current thread context classloader and then the classloader which loaded
  * the Hibernate classes.
  * </ol>
- * <p/>
+ * <p>
  * Any entity references which cannot be resolved in relation to the above
  * rules result in returning null, which should force the SAX reader to
  * handle the entity reference in its default manner.

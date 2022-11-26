@@ -752,7 +752,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create a predicate that tests whether a Map is empty.
-	 * <p/>
+	 * <p>
 	 * NOTE : Due to type-erasure we cannot name this the same as
 	 * {@link CriteriaBuilder#isEmpty}
 	 *
@@ -767,7 +767,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a predicate that tests whether a Map is
 	 * not empty.
-	 * <p/>
+	 * <p>
 	 * NOTE : Due to type-erasure we cannot name this the same as
 	 * {@link CriteriaBuilder#isNotEmpty}
 	 *
@@ -780,7 +780,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create an expression that tests the size of a map.
-	 * <p/>
+	 * <p>
 	 * NOTE : Due to type-erasure we cannot name this the same as
 	 * {@link CriteriaBuilder#size}
 	 *

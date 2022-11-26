@@ -245,14 +245,14 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Load an instance without checking if it was deleted.
-	 * <p/>
+	 * <p>
 	 * When {@code nullable} is disabled this method may create a new proxy or
 	 * return an existing proxy; if it does not exist, throw an exception.
-	 * <p/>
+	 * <p>
 	 * When {@code nullable} is enabled, the method does not create new proxies
 	 * (but might return an existing proxy); if it does not exist, return
 	 * {@code null}.
-	 * <p/>
+	 * <p>
 	 * When {@code eager} is enabled, the object is eagerly fetched
 	 */
 	Object internalLoad(String entityName, Object id, boolean eager, boolean nullable)
@@ -319,7 +319,7 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Get the flush mode for this session.
-	 * <p/>
+	 * <p>
 	 * For users of the Hibernate native APIs, we've had to rename this method
 	 * as defined by Hibernate historically because the JPA contract defines a method of the same
 	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.  For
@@ -331,11 +331,11 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Set the flush mode for this session.
-	 * <p/>
+	 * <p>
 	 * The flush mode determines the points at which the session is flushed.
 	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.
-	 * <p/>
+	 * <p>
 	 * For a logically "read only" session, it is reasonable to set the session's
 	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
 	 * order to achieve some extra performance).

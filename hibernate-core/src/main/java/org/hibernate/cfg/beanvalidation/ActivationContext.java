@@ -20,7 +20,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 public interface ActivationContext {
 	/**
 	 * Access the requested validation mode(s).
-	 * <p/>
+	 * <p>
 	 * IMPL NOTE : the legacy code allowed multiple mode values to be specified, so that is why it is multi-valued here.
 	 * However, I cannot find any good reasoning why it was defined that way and even JPA states it should be a single
 	 * value.  For 4.1 (in maintenance) I think it makes the most sense to not mess with it.  Discuss for

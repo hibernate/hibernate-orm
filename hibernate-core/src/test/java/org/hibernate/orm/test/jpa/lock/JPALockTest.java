@@ -57,9 +57,9 @@ public class JPALockTest extends AbstractJPATest {
 
 	/**
 	 * Test the equivalent of EJB3 LockModeType.READ
-	 * <p/>
+	 * <p>
 	 * From the spec:
-	 * <p/>
+	 * <p>
 	 * If transaction T1 calls lock(entity, LockModeType.READ) on a versioned object, the entity
 	 * manager must ensure that neither of the following phenomena can occur:<ul>
 	 * <li>P1 (Dirty read): Transaction T1 modifies a row. Another transaction T2 then reads that row and
@@ -68,19 +68,19 @@ public class JPALockTest extends AbstractJPATest {
 	 * so before or after T2 commits.
 	 * <li>P2 (Non-repeatable read): Transaction T1 reads a row. Another transaction T2 then modifies or
 	 * deletes that row, before T1 has committed. Both transactions eventually commit successfully.
-	 * <p/>
+	 * <p>
 	 * This will generally be achieved by the entity manager acquiring a lock on the underlying database row.
 	 * Any such lock may be obtained immediately (so long as it is retained until commit completes), or the
 	 * lock may be deferred until commit time (although even then it must be retained until the commit completes).
 	 * Any implementation that supports repeatable reads in a way that prevents the above phenomena
 	 * is permissible.
-	 * <p/>
+	 * <p>
 	 * The persistence implementation is not required to support calling lock(entity, LockMode-Type.READ)
 	 * on a non-versioned object. When it cannot support such a lock call, it must throw the
 	 * PersistenceException. When supported, whether for versioned or non-versioned objects, LockMode-Type.READ
 	 * must always prevent the phenomena P1 and P2. Applications that call lock(entity, LockModeType.READ)
 	 * on non-versioned objects will not be portable.
-	 * <p/>
+	 * <p>
 	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
 	@Test
@@ -161,16 +161,16 @@ public class JPALockTest extends AbstractJPATest {
 
 	/**
 	 * Test the equivalent of EJB3 LockModeType.WRITE
-	 * <p/>
+	 * <p>
 	 * From the spec:
-	 * <p/>
+	 * <p>
 	 * If transaction T1 calls lock(entity, LockModeType.WRITE) on a versioned object, the entity
 	 * manager must avoid the phenomena P1 and P2 (as with LockModeType.READ) and must also force
 	 * an update (increment) to the entity's version column. A forced version update may be performed immediately,
 	 * or may be deferred until a flush or commit. If an entity is removed before a deferred version
 	 * update was to have been applied, the forced version update is omitted, since the underlying database
 	 * row no longer exists.
-	 * <p/>
+	 * <p>
 	 * The persistence implementation is not required to support calling lock(entity, LockMode-Type.WRITE)
 	 * on a non-versioned object. When it cannot support a such lock call, it must throw the
 	 * PersistenceException. When supported, whether for versioned or non-versioned objects, LockMode-Type.WRITE

@@ -14,7 +14,7 @@ package org.hibernate.bytecode.enhance.spi;
  * <li>Runtime, via agent</li>
  * <li>Runtime, via JPA constructs</li>
  * </ul>
- * <p/>
+ * <p>
  * This interface isolates the code that actually does the enhancement from the underlying context in which
  * the enhancement is being performed.
  *
@@ -105,7 +105,7 @@ public interface EnhancementContext {
 
 	/**
 	 * Does the field represent persistent state?  Persistent fields will be "enhanced".
-	 * <p/>
+	 * <p>
 	 * may be better to perform basic checks in the caller (non-static, etc) and call out with just the
 	 * Class name and field name...
 	 *

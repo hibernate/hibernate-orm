@@ -119,7 +119,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 
 	/**
 	 * Getter for property 'lastValue'.
-	 * <p/>
+	 * <p>
 	 * Exposure intended for testing purposes.
 	 *
 	 * @return Value for property 'lastValue'.

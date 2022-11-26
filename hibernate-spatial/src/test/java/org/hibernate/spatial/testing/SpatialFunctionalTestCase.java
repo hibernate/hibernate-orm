@@ -139,7 +139,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 
 	/**
 	 * Adds the query results to a Map.
-	 * <p/>
+	 * <p>
 	 * Each row is added as a Map entry with the first column the key,
 	 * and the second the value. It is assumed that the first column is an
 	 * identifier of a type assignable to Integer.

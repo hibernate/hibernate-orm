@@ -32,10 +32,10 @@ import org.jboss.logging.Logger;
 
 /**
  * Copied & modified from {@link Parameterized}.
- * <p/>
+ * <p>
  * The modification is that the generated runners extend {@link CustomRunner} instead of the default
  * {@code TestClassRunnerForParameters}.
- * <p/>
+ * <p>
  * The runner itself sets the data using a setter instead of a constructor, and creates only one test instance. Moreover
  * it doesn't override {@code classBlock} which causes the custom {@code @BeforeClassOnce} and {@code @AfterClassOnce}
  * annotations to work.

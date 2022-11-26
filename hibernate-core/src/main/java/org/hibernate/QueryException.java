@@ -106,7 +106,7 @@ public class QueryException extends HibernateException {
 	/**
 	 * Called from {@link #wrapWithQueryString(String)} when we really need to generate a new QueryException
 	 * (or subclass).
-	 * <p/>
+	 * <p>
 	 * NOTE : implementors should take care to use {@link #getOriginalMessage()} for the message, not
 	 * {@link #getMessage()}
 	 *

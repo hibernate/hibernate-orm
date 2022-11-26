@@ -88,7 +88,7 @@ public class LoadContexts {
 
 	/**
 	 * Release internal state associated with *all* result sets.
-	 * <p/>
+	 * <p>
 	 * This is intended as a "failsafe" process to make sure we get everything
 	 * cleaned up and released.
 	 */

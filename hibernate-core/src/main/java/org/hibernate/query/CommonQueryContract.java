@@ -276,7 +276,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -319,7 +319,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -360,7 +360,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -400,7 +400,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *

@@ -17,7 +17,7 @@ import org.hibernate.Incubating;
 public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	/**
 	 * Does this parameter allow multi-valued (collection, array, etc) binding?
-	 * <p/>
+	 * <p>
 	 * This is only valid for HQL/JPQL and (I think) Criteria queries, and is
 	 * determined based on the context of the parameters declaration.
 	 *

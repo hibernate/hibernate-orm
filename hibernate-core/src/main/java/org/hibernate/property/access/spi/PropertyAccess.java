@@ -11,7 +11,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 /**
  * Describes access to a particular persistent property in terms of getting and setting
  * values.
- * <p/>
+ * <p>
  * Instances are obtained from {@link PropertyAccessStrategy}
  *
  * @see ManagedTypeRepresentationStrategy

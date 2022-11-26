@@ -11,7 +11,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 /**
  * Contract for an entity to report that it tracks the dirtiness of its own state,
  * as opposed to needing Hibernate to perform state-diff dirty calculations.
- * <p/>
+ * <p>
  * Entity classes are free to implement this contract themselves.  This contract is
  * also introduced into the entity when using bytecode enhancement and requesting
  * that entities track their own dirtiness.

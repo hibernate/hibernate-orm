@@ -52,7 +52,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 
 /**
  * A SQL dialect for TimesTen 5.1.
- * <p/>
+ * <p>
  * Known limitations:
  * joined-subclass support because of no CASE support in TimesTen
  * No support for subqueries that includes aggregation

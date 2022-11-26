@@ -26,7 +26,7 @@ import org.hibernate.type.BasicTypeReference;
 
 /**
  * Defines support for executing database stored procedures and functions.
- * <p/>
+ * <p>
  * Note that here we use the terms "procedure" and "function" as follows:<ul>
  *     <li>procedure is a named database executable we expect to call via : {@code {call procedureName(...)}}</li>
  *     <li>function is a named database executable we expect to call via : {@code {? = call functionName(...)}}</li>
@@ -37,13 +37,13 @@ import org.hibernate.type.BasicTypeReference;
  *     <li>use {@code storedProcedureQuery.unwrap( ProcedureCall.class }.markAsFunctionCall()</li>
  *     <li>set the {@link #FUNCTION_RETURN_TYPE_HINT} hint (avoids casting to Hibernate-specific classes)</li>
  * </ul>
- * <p/>
+ * <p>
  * When using function-call syntax:<ul>
  *     <li>parameters must be registered by position (not name)</li>
  *     <li>The first parameter is considered to be the function return (the `?` before the call)</li>
  *     <li>the first parameter must have mode of OUT, INOUT or REF_CURSOR; IN is invalid</li>
  * </ul>
- * <p/>
+ * <p>
  * In some cases, based on the Dialect, we will have other validations and
  * assumptions as well.  For example, on PGSQL, whenever we see a REF_CURSOR mode
  * parameter, we know that:<ul>
@@ -196,7 +196,7 @@ public interface ProcedureCall
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
 	 * ProcedureOutputs instance each time.
-	 * <p/>
+	 * <p>
 	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureOutputs
 	 * will be returned.
 	 *

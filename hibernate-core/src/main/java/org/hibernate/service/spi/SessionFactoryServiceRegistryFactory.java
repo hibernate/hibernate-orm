@@ -12,7 +12,7 @@ import org.hibernate.service.Service;
 
 /**
  * Contract for builder of {@link SessionFactoryServiceRegistry} instances.
- * <p/>
+ * <p>
  * Is itself a service within the standard service registry.
  *
  * @author Steve Ebersole

@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
  * identifiable types as entities or mapped-superclasses.  Basically things to which an
  * identifier can be attached.
- * <p/>
+ * <p>
  * NOTE : Currently we only really have support for direct entities in the Hibernate metamodel
  * as the information for them is consumed into the closest actual entity subclass(es) in the
  * internal Hibernate mapping-metamodel.

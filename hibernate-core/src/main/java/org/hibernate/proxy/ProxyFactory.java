@@ -22,7 +22,7 @@ public interface ProxyFactory {
 
 	/**
 	 * Called immediately after instantiation of this factory.
-	 * <p/>
+	 * <p>
 	 * Essentially equivalent to constructor injection, but contracted
 	 * here via interface.
 	 *

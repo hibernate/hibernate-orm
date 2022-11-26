@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * Contract representing a from clause.
- * <p/>
+ * <p>
  * The parent/child bit represents sub-queries.  The child from clauses are only used for test assertions,
  * but are left here as it is most convenient to maintain them here versus another structure.
  *

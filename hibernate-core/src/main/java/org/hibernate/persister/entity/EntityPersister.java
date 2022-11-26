@@ -199,7 +199,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class only.
-	 * <p/>
+	 * <p>
 	 * For most implementations, this returns the complete set of table names
 	 * to which instances of the mapped entity are persisted (not accounting
 	 * for superclass entity mappings).
@@ -211,7 +211,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class and its subclasses.
-	 * <p/>
+	 * <p>
 	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
 	 * entity spaces.
 	 *
@@ -234,7 +234,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class and its subclasses.
-	 * <p/>
+	 * <p>
 	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
 	 * entity spaces.
 	 *
@@ -382,7 +382,7 @@ public interface EntityPersister
 	/**
 	 * Determine whether detached instances of this entity carry their own
 	 * identifier value.
-	 * <p/>
+	 * <p>
 	 * The other option is the deprecated feature where users could supply
 	 * the id during session calls.
 	 *
@@ -784,7 +784,7 @@ public interface EntityPersister
 	 * back from the database, injecting these generated values into the
 	 * given entity as well as writing this state to the
 	 * {@link org.hibernate.engine.spi.PersistenceContext}.
-	 * <p/>
+	 * <p>
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.
@@ -796,7 +796,7 @@ public interface EntityPersister
 	 * back from the database, injecting these generated values into the
 	 * given entity as well as writing this state to the
 	 * {@link org.hibernate.engine.spi.PersistenceContext}.
-	 * <p/>
+	 * <p>
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.

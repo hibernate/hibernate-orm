@@ -19,7 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *     <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
  *     <li><b>LOADS</b> : {@link #putFromLoad}</li>
  * </ul>
- * <p/>
+ * <p>
  * There is another usage pattern that is used to invalidate entries
  * after performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}

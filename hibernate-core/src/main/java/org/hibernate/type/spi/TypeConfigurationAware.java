@@ -10,7 +10,7 @@ package org.hibernate.type.spi;
  * Optional contract for Types that would like to be part of the scoping process of the
  * TypeConfiguration, specifically to receive access to the TypeConfiguration it is scoped
  * to.  For additional information on TypeConfiguration scoping, see {@link TypeConfiguration}
- * <p/>
+ * <p>
  * Note that it is illegal for a Type to implement TypeConfigurationAware and at the same time
  * be scoped to more than one TypeConfiguration.  Hibernate will enforce this internally
  * which is why {@link #getTypeConfiguration()} is exposed here.

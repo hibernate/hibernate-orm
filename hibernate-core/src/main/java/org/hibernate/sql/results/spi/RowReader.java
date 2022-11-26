@@ -25,9 +25,9 @@ public interface RowReader<R> {
 	/**
 	 * The type actually returned from this reader's {@link #readRow} call,
 	 * accounting for any transformers.
-	 * <p/>
+	 * <p>
 	 * May be null to indicate that no transformation is applied.
-	 * <p/>
+	 * <p>
 	 * Ultimately intended for use in comparing values are being de-duplicated
 	 */
 	Class<R> getDomainResultResultJavaType();

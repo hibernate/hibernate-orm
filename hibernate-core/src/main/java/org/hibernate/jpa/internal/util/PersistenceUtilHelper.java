@@ -52,7 +52,7 @@ public final class PersistenceUtilHelper {
 	/**
 	 * Determine if the given object reference represents loaded state.  The reference may be to an entity or a
 	 * persistent collection.
-	 * <p/>
+	 * <p>
 	 * Return is defined as follows:<ol>
 	 *     <li>
 	 *         If the reference is a {@link HibernateProxy}, we return {@link LoadState#LOADED} if

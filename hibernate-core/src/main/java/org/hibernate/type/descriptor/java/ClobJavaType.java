@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 /**
  * Descriptor for {@link Clob} handling.
- * <p/>
+ * <p>
  * Note, strictly-speaking a {@link Clob} object is actually mutable (its internal state can in fact be mutated).
  * But we treat them as immutable because we simply have no way to dirty check nor deep copy them.
  *

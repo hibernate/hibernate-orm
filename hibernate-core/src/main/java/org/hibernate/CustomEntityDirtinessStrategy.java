@@ -12,7 +12,7 @@ import org.hibernate.type.Type;
 /**
  * During a flush cycle, Hibernate needs to determine which of the entities associated with a {@link Session}
  * are <em>dirty</em>, meaning modified. Dirty entities will be {@literal UPDATE}ed in the database.
- * <p/>
+ * <p>
  * In some circumstances, the process of determining whether an entity is dirty can carry a significant overhead,
  * since, by default, Hibernate must check each of the entity's attribute values one by one. Sometimes, an
  * application already has knowledge of an entity's dirtiness and making use of that information would save some
@@ -118,7 +118,7 @@ public interface CustomEntityDirtinessStrategy {
 		/**
 		 * Many of Hibernate internals use arrays to define information about attributes.  This value
 		 * provides this index into those arrays for this particular attribute.
-		 * <p/>
+		 * <p>
 		 * It can be useful if needing to leverage those Hibernate internals.
 		 *
 		 * @return The attribute index.
@@ -148,7 +148,7 @@ public interface CustomEntityDirtinessStrategy {
 
 		/**
 		 * Get the loaded value of this attribute.
-		 * <p/>
+		 * <p>
 		 * <b>NOTE : A call to this method may require hitting the database in cases where the loaded state is
 		 * not known.  In those cases the db hit is incurred only once per entity, not for each attribute.</b>
 		 *

@@ -9,7 +9,7 @@ package org.hibernate.persister.entity;
 
 /**
  * Contract for things that can be locked via a {@link org.hibernate.dialect.lock.LockingStrategy}.
- * <p/>
+ * <p>
  * Currently only the root table gets locked, except for the case of HQL and Criteria queries
  * against dialects which do not support either (1) FOR UPDATE OF or (2) support hint locking
  * (in which case *all* queried tables would be locked).

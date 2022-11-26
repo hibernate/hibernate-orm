@@ -119,7 +119,7 @@ public class XmlSources {
 	/**
 	 * Read all {@code .hbm.xml} mappings from a jar file and pass them
 	 * to the given {@link Consumer}.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *

@@ -51,7 +51,7 @@ public interface EntityGraphTraversalState {
 	/**
 	 * Traverses to the next part of the Jakarta Persistence entity graph relating to the
 	 * given fetchable.
-	 * <p/>
+	 * <p>
 	 *
 	 * The {@link AttributeNode} corresponding to the given `fetchable` is resolved.
 	 *

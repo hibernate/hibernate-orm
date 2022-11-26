@@ -21,19 +21,19 @@ public enum Action {
 	/**
 	 * Database creation will be generated.  This is an action introduced by JPA.  Hibernate's
 	 * legacy hbm2ddl had no such action - its "create" action is actually equivalent to {@link #CREATE}
-	 * <p/>
+	 * <p>
 	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaCreator}
 	 */
 	CREATE_ONLY( "create", "create-only" ),
 	/**
 	 * Database dropping will be generated.
-	 * <p/>
+	 * <p>
 	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaDropper}
 	 */
 	DROP( "drop" ),
 	/**
 	 * Database dropping will be generated followed by database creation.
-	 * <p/>
+	 * <p>
 	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaDropper}
 	 * followed immediately by a call to {@link org.hibernate.tool.schema.spi.SchemaCreator}
 	 */
@@ -41,10 +41,10 @@ public enum Action {
 	/**
 	 * Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the
 	 * schema on SessionFactory shutdown.
-	 * <p/>
+	 * <p>
 	 * Has no corresponding call to a SchemaManagementTool delegate.  It is equivalent to a
 	 *
-	 * <p/>
+	 * <p>
 	 * While this is a valid option for auto schema tooling, it is not a valid action to pass to
 	 * SchemaManagementTool; instead it would be expected that the caller to SchemaManagementTool
 	 * would split this into 2 separate requests for:<ol>

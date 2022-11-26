@@ -47,7 +47,7 @@ public class BatchFetchQueue {
 	/**
 	 * Used to hold information about the entities that are currently eligible for batch-fetching.  Ultimately
 	 * used by {@link #getBatchLoadableEntityIds} to build entity load batches.
-	 * <p/>
+	 * <p>
 	 * A Map structure is used to segment the keys by entity type since loading can only be done for a particular entity
 	 * type at a time.
 	 */
@@ -70,7 +70,7 @@ public class BatchFetchQueue {
 
 	/**
 	 * Clears all entries from this fetch queue.
-	 * <p/>
+	 * <p>
 	 * Called after flushing or clearing the session.
 	 */
 	public void clear() {
@@ -134,7 +134,7 @@ public class BatchFetchQueue {
 	/**
 	 * If an EntityKey represents a batch loadable entity, add
 	 * it to the queue.
-	 * <p/>
+	 * <p>
 	 * Note that the contract here is such that any key passed in should
 	 * previously have been been checked for existence within the
 	 * {@link PersistenceContext}; failure to do so may cause the

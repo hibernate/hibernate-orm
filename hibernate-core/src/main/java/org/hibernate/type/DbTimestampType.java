@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
  * {@code dbtimestamp}: A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}.
  * It maps to the database's current timestamp, rather than the jvm's
  * current timestamp.
- * <p/>
+ * <p>
  * Note: May/may-not cause issues on dialects which do not properly support
  * a true notion of timestamp (Oracle < 8, for example, where only its DATE
  * datatype is supported).  Depends on the frequency of DML operations...

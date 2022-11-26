@@ -58,11 +58,11 @@ import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
@@ -76,6 +76,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	private ServiceRegistry serviceRegistry;
 	private GenerationTarget customTarget;
+
+	public HibernateSchemaManagementTool() {
+	}
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -146,10 +149,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		return customTarget;
 	}
 
-	GenerationTarget[] buildGenerationTargets(
+	@Override
+	public GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
 			JdbcContext jdbcContext,
-			Map<String,Object> options,
+			Map<String, Object> options,
 			boolean needsAutoCommit) {
 		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
@@ -158,7 +162,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		int index = 0;
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.STDOUT ) ) {
-			targets[index] = new GenerationTargetToStdout( scriptDelimiter );
+			targets[index] = buildStdoutTarget( scriptDelimiter );
 			index++;
 		}
 
@@ -166,18 +170,30 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			if ( targetDescriptor.getScriptTargetOutput() == null ) {
 				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
 			}
-			targets[index] = new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+			targets[index] = buildScriptTarget( targetDescriptor, scriptDelimiter );
 			index++;
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
 			targets[index] = customTarget == null
-					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true, needsAutoCommit )
+					? buildDatabaseTarget( jdbcContext, needsAutoCommit )
 					: customTarget;
 			index++;
 		}
 
 		return targets;
+	}
+
+	protected GenerationTarget buildStdoutTarget(String scriptDelimiter) {
+		return new GenerationTargetToStdout( scriptDelimiter );
+	}
+
+	protected GenerationTarget buildScriptTarget(TargetDescriptor targetDescriptor, String scriptDelimiter) {
+		return new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+	}
+
+	protected GenerationTarget buildDatabaseTarget(JdbcContext jdbcContext, boolean needsAutoCommit) {
+		return new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true, needsAutoCommit );
 	}
 
 	GenerationTarget[] buildGenerationTargets(
@@ -191,7 +207,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		int index = 0;
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.STDOUT ) ) {
-			targets[index] = new GenerationTargetToStdout( scriptDelimiter );
+			targets[index] = buildStdoutTarget( scriptDelimiter );
 			index++;
 		}
 
@@ -199,7 +215,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			if ( targetDescriptor.getScriptTargetOutput() == null ) {
 				throw new SchemaManagementException( "Writing to script was requested, but no script file was specified" );
 			}
-			targets[index] = new GenerationTargetToScript( targetDescriptor.getScriptTargetOutput(), scriptDelimiter );
+			targets[index] = buildScriptTarget( targetDescriptor, scriptDelimiter );
 			index++;
 		}
 

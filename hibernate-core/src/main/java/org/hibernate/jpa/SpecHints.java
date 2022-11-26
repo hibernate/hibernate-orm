@@ -62,8 +62,9 @@ public interface SpecHints {
 	String HINT_SPEC_QUERY_TIMEOUT = "jakarta.persistence.query.timeout";
 
 	/**
-	 * Hint specifying how Hibernate should handle retrieving data from
-	 * the second level cache.
+	 * Hint specifying how Hibernate should interact with the second level cache
+	 * when it has the opportunity to retrieve data from the cache. The value must
+	 * be a {@link jakarta.persistence.CacheRetrieveMode}.
 	 *
 	 * @see jakarta.persistence.CacheRetrieveMode
 	 * @see jakarta.persistence.EntityManager#setProperty
@@ -73,8 +74,9 @@ public interface SpecHints {
 	String HINT_SPEC_CACHE_RETRIEVE_MODE = "jakarta.persistence.cache.retrieveMode";
 
 	/**
-	 * Hint specifying how Hibernate should handle retrieving data from
-	 * the second level cache.
+	 * Hint specifying how Hibernate should interact with the second level cache
+	 * when it has the opportunity to store data in the cache. The value must be a
+	 * {@link jakarta.persistence.CacheStoreMode}.
 	 *
 	 * @see jakarta.persistence.CacheStoreMode
 	 * @see jakarta.persistence.EntityManager#setProperty

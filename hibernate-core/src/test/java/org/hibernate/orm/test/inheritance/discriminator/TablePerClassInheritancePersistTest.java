@@ -206,10 +206,10 @@ public class TablePerClassInheritancePersistTest {
 
 		private String favouriteToy;
 
-		@OneToOne
+		@ManyToOne
 		private Woman mother;
 
-		@OneToOne
+		@ManyToOne
 		private Man father;
 
 		public Child() {

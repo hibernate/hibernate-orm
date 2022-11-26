@@ -154,14 +154,14 @@ gradle.taskGraph.whenReady { tg ->
 		}
 		else {
 			// use the values from the credentials provider, if any
-			if ( credentials.hibernatePluginPortalUsername == null ) {
+			if ( credentials.forKey( 'hibernatePluginPortalUsername' ) == null ) {
 				throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
 			}
-			if ( credentials.hibernatePluginPortalPassword == null ) {
+			if ( credentials.forKey( 'hibernatePluginPortalPassword' ) == null ) {
 				throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
 			}
-			System.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
-			System.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
+			System.setProperty( 'gradle.publish.key', credentials.forKey( 'hibernatePluginPortalUsername' ) )
+			System.setProperty( 'gradle.publish.secret', credentials.forKey( 'hibernatePluginPortalPassword') )
 		}
 	}
 }

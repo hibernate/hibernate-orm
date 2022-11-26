@@ -369,7 +369,6 @@ alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter database drop logfile group 3;
 alter system set open_cursors=1000 sid='*' scope=both;
-alter system set \"_dynamic_sequence_cache\"=FALSE;
 EOF\""
 }
 

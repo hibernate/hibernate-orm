@@ -110,10 +110,7 @@ public class NonRootTablePolymorphicTests {
 											// this is how the boot model represents an fk pointing to the pk..
 											assertThat(
 													foreignKey.getReferencedColumns(),
-													anyOf(
-															nullValue(),
-															CollectionMatchers.isEmpty()
-													)
+													is(root.getTable().getPrimaryKey().getColumns())
 											);
 										}
 										else if ( foreignKey.getReferencedTable().getName().equals( "sub_child" ) ) {
@@ -121,11 +118,8 @@ public class NonRootTablePolymorphicTests {
 
 											// this is how the boot model represents an fk pointing to the pk..
 											assertThat(
-													foreignKey.getReferencedColumns(),
-													anyOf(
-															nullValue(),
-															CollectionMatchers.isEmpty()
-													)
+													foreignKey.getReferencedColumns().get( 0 ).getName(),
+													is("child_id")
 											);
 										}
 										else {

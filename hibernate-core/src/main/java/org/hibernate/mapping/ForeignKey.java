@@ -191,7 +191,7 @@ public class ForeignKey extends Constraint {
 	 * Does this foreignkey reference the primary key of the reference table
 	 */
 	public boolean isReferenceToPrimaryKey() {
-		return referencedColumns.isEmpty();
+		return referencedColumns.isEmpty() || referencedTable.getPrimaryKey().getColumns().equals( referencedColumns );
 	}
 
 	public void addReferencedColumns(List<Column> referencedColumns) {

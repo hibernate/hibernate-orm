@@ -102,6 +102,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
@@ -1981,6 +1982,14 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getCreateTableString() {
 		return "create table";
+	}
+
+	public String getCreateIndexString(boolean unique) {
+		return unique ? "create unique index" : "create index";
+	}
+
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return "";
 	}
 
 	/**

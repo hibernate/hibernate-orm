@@ -9,32 +9,31 @@ package org.hibernate.dialect.unique;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 
 import static org.hibernate.mapping.Index.buildSqlCreateIndexString;
 
 /**
- * DB2 does not allow unique constraints on nullable columns, but it
- * does allow the creation of unique <em>indexes</em> instead, using
- * a different syntax.
+ * A {@link UniqueDelegate} which uses {@code create unique index} commands when necessary.
+ * <ul>
+ * <li>DB2 does not allow unique constraints on nullable columns, but it does allow the creation
+ *     of unique indexes instead, using {@code create unique index ... exclude null keys}.
+ * <li>SQL Server <em>does</em> allow unique constraints on nullable columns, but the semantics
+ *     are that two null values are non-unique. So here we need to jump through hoops with the
+ *     {@code create unique nonclustered index} command.
+ * </ul>
  * 
  * @author Brett Meyer
  */
-public class DB2UniqueDelegate extends AlterTableUniqueDelegate {
-	/**
-	 * Constructs a DB2UniqueDelegate
-	 *
-	 * @param dialect The dialect
-	 */
-	public DB2UniqueDelegate( Dialect dialect ) {
+public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
+	public AlterTableUniqueIndexDelegate(Dialect dialect ) {
 		super( dialect );
 	}
 
 	@Override
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( hasNullable( uniqueKey ) ) {
+		if ( uniqueKey.hasNullableColumn() ) {
 			return buildSqlCreateIndexString(
 					context,
 					uniqueKey.getName(),
@@ -53,7 +52,7 @@ public class DB2UniqueDelegate extends AlterTableUniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( hasNullable( uniqueKey ) ) {
+		if ( uniqueKey.hasNullableColumn() ) {
 			return org.hibernate.mapping.Index.buildSqlDropIndexString(
 					uniqueKey.getName(),
 					context.format( uniqueKey.getTable().getQualifiedTableName() )
@@ -62,14 +61,5 @@ public class DB2UniqueDelegate extends AlterTableUniqueDelegate {
 		else {
 			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
-	}
-	
-	private boolean hasNullable(UniqueKey uniqueKey) {
-		for ( Column column : uniqueKey.getColumns() ) {
-			if ( column.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

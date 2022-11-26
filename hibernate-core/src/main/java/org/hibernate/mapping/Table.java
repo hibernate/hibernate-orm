@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
@@ -28,6 +29,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -244,6 +246,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return null;
 		}
 		return columns.get( name.getCanonicalName() );
+	}
+
+	@Internal
+	public Column getColumn(InFlightMetadataCollector collector, String logicalName) {
+		if ( name == null ) {
+			return null;
+		}
+		return getColumn( new Column( collector.getPhysicalColumnName( this, logicalName ) ) );
 	}
 
 	public Column getColumn(int n) {

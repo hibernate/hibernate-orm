@@ -21,7 +21,7 @@ import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.DB2UniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -30,6 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.IntervalType;
@@ -66,6 +67,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 import jakarta.persistence.TemporalType;
 
@@ -181,7 +183,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	protected UniqueDelegate createUniqueDelegate() {
-		return new DB2UniqueDelegate( this );
+		return new AlterTableUniqueIndexDelegate( this );
 	}
 
 	@Override
@@ -493,6 +495,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean dropConstraints() {
 		return false;
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return unique ? " exclude null keys" : "";
 	}
 
 	@Override

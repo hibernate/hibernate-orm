@@ -10,8 +10,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
-import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -50,8 +48,6 @@ import static org.hibernate.type.SqlTypes.*;
  * @author Gavin King
  */
 public abstract class AbstractTransactSQLDialect extends Dialect {
-
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public AbstractTransactSQLDialect(DatabaseVersion version) {
 		super(version);
@@ -391,10 +387,5 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
-	}
-
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
 	}
 }

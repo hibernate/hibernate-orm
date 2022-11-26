@@ -16,6 +16,14 @@ import org.hibernate.mapping.UniqueKey;
 /**
  * A {@link UniqueDelegate} which includes the unique constraint in the {@code create table}
  * statement, except when called during schema migration.
+ * <ul>
+ * <li>For columns marked {@linkplain jakarta.persistence.Column#unique() unique}, this results
+ *     in a {@code unique} column definition.
+ * <li>For {@linkplain jakarta.persistence.UniqueConstraint#name named unique keys}, it results
+ *     in {@code constraint abc unique(a,b,c)} after the column list in {@code create table}.
+ * <li>For unique keys with no explicit name, it results in {@code unique(x, y)} after the
+ *     column list.
+ * </ul>
  *
  * @author Gavin King
  */
@@ -52,15 +60,19 @@ public class CreateTableUniqueDelegate extends AlterTableUniqueDelegate {
 				// signature of getColumnDefinitionUniquenessFragment() doesn't let me
 				// detect this case. (But that would be easy to fix!)
 				if ( !isSingleColumnUnique( uniqueKey ) ) {
-					fragment.append( ", " );
-					if ( uniqueKey.isNameExplicit() ) {
-						fragment.append( "constraint " ).append( uniqueKey.getName() ).append( " " );
-					}
-					fragment.append( uniqueConstraintSql( uniqueKey ) );
+					appendUniqueConstraint( fragment, uniqueKey );
 				}
 			}
 			return fragment.toString();
 		}
+	}
+
+	protected void appendUniqueConstraint(StringBuilder fragment, UniqueKey uniqueKey) {
+		fragment.append( ", " );
+		if ( uniqueKey.isNameExplicit() ) {
+			fragment.append( "constraint " ).append( uniqueKey.getName() ).append( " " );
+		}
+		fragment.append( uniqueConstraintSql(uniqueKey) );
 	}
 
 	private static boolean isSingleColumnUnique(UniqueKey uniqueKey) {

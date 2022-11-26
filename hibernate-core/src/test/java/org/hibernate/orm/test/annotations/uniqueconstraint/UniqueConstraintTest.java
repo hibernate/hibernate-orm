@@ -11,6 +11,8 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -21,6 +23,8 @@ import static org.junit.Assert.fail;
  * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
  * @author Brett Meyer
  */
+@SkipForDialect(value = SybaseDialect.class,
+        comment = "Sybase does not properly support unique constraints on nullable columns")
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	protected Class[] getAnnotatedClasses() {
@@ -32,7 +36,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-	public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
+	public void testUniquenessConstraintWithSuperclassProperty() {
         Session s = openSession();
         Transaction tx = s.beginTransaction();
         Room livingRoom = new Room();
@@ -55,7 +59,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
         s.persist(house2);
         try {
             s.flush();
-            fail( "Database constraint non-existant" );
+            fail( "Database constraint non-existent" );
         }
         catch (PersistenceException e) {
             assertTyping( JDBCException.class, e.getCause() );

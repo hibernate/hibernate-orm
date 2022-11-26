@@ -24,7 +24,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -141,7 +141,7 @@ public class SQLiteDialect extends Dialect {
 		return -1;
 	}
 
-	private static class SQLiteUniqueDelegate extends DefaultUniqueDelegate {
+	private static class SQLiteUniqueDelegate extends AlterTableUniqueDelegate {
 		public SQLiteUniqueDelegate(Dialect dialect) {
 			super( dialect );
 		}

@@ -28,6 +28,8 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
+ * An {@link Exporter} for {@linkplain Table tables}.
+ *
  * @author Steve Ebersole
  */
 public class StandardTableExporter implements Exporter<Table> {
@@ -123,7 +125,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 				}
 
-				if ( col.isUnique() ) {
+				if ( col.isUnique() && !table.isPrimaryKey( col ) ) {
 					String keyName = Constraint.generateName( "UK_", table, col );
 					UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 					uk.addColumn( col );

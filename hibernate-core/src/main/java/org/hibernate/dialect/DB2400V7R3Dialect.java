@@ -10,7 +10,7 @@ import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 
 /**
@@ -28,7 +28,7 @@ public class DB2400V7R3Dialect extends DB2400Dialect {
 	public DB2400V7R3Dialect() {
 		super();
 
-		uniqueDelegate = new DefaultUniqueDelegate(this);
+		uniqueDelegate = new AlterTableUniqueDelegate(this);
 	}
 
 	@Override

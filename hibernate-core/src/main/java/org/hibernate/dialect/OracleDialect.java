@@ -28,6 +28,8 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -118,6 +120,7 @@ public class OracleDialect extends Dialect {
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -1317,5 +1320,10 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getEnableConstraintStatement(String tableName, String name) {
 		return "alter table " + tableName + " enable constraint " + name;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 }

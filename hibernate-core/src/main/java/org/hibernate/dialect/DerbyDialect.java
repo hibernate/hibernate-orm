@@ -21,6 +21,8 @@ import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -96,6 +98,7 @@ public class DerbyDialect extends Dialect {
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 14, 2 );
 
 	private final LimitHandler limitHandler = new DerbyLimitHandler( true );
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public DerbyDialect() {
 		this( MINIMUM_VERSION);
@@ -925,5 +928,10 @@ public class DerbyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 }

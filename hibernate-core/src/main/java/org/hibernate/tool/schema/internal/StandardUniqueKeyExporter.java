@@ -14,8 +14,9 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
- * Unique constraint Exporter.  Note that it's parameterized for Constraint, rather than UniqueKey.  This is
- * to allow Dialects to decide whether or not to create unique constraints for unique indexes.
+ * An {@link Exporter} for {@link UniqueKey unique constraints}. The type argument is
+ * {@link Constraint}, rather than {@link UniqueKey}, allowing for {@link Dialect}s
+ * which create unique constraints for unique indexes.
  * 
  * @author Brett Meyer
  */

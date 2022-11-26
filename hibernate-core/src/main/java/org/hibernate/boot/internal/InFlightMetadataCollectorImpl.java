@@ -1931,45 +1931,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				Identifier nameIdentifier;
 
-				ImplicitForeignKeyNameSource foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
-					final List<Identifier> columnNames = extractColumnNames( foreignKey.getColumns() );
-					List<Identifier> referencedColumnNames = null;
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return columnNames;
-					}
-
-					@Override
-					public Identifier getReferencedTableName() {
-						return foreignKey.getReferencedTable().getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getReferencedColumnNames() {
-						if ( referencedColumnNames == null ) {
-							referencedColumnNames = extractColumnNames( foreignKey.getReferencedColumns() );
-						}
-						return referencedColumnNames;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return foreignKey.getName() != null ? Identifier.toIdentifier( foreignKey.getName() ) : null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-				};
-
-				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(foreignKeyNameSource);
+				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+						.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
 
 				foreignKey.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
@@ -2026,7 +1989,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), buildingContext );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.isNameExplicit(), holder.getColumns(), buildingContext );
 			}
 		}
 
@@ -2036,14 +1999,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void buildUniqueKeyFromColumnNames(
 			Table table,
 			String keyName,
+			boolean nameExplicit,
 			String[] columnNames,
 			MetadataBuildingContext buildingContext) {
-		buildUniqueKeyFromColumnNames( table, keyName, columnNames, null, true, buildingContext );
+		buildUniqueKeyFromColumnNames( table, keyName, nameExplicit, columnNames, null, true, buildingContext );
 	}
 
 	private void buildUniqueKeyFromColumnNames(
 			final Table table,
 			String keyName,
+			boolean nameExplicit,
 			final String[] columnNames,
 			String[] orderings,
 			boolean unique,
@@ -2061,124 +2026,114 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {
-				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.  In order
-				// to exhaustively report all of the unbound columns at once, w/o an NPE in
+				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.
+				// In order to exhaustively report all the unbound columns at once, w/o an NPE in
 				// Constraint#generateName's array sorting, simply create a fake Column.
 				columns[index] = new Column( logicalColumnName );
 				unboundNoLogical.add( columns[index] );
 			}
 		}
 
-		final String originalKeyName = keyName;
-
-		if ( unique ) {
-			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
-				new ImplicitUniqueKeyNameSource() {
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					private List<Identifier> columnNameIdentifiers;
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						// be lazy about building these
-						if ( columnNameIdentifiers == null ) {
-							columnNameIdentifiers = toIdentifiers( columnNames );
-						}
-						return columnNameIdentifiers;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
-					}
-				}
-			);
-			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
-				if ( table.containsColumn( column ) ) {
-					uk.addColumn( column, order );
-					unbound.remove( column );
-				}
-			}
-		}
-		else {
-			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineIndexName(
-				new ImplicitIndexNameSource() {
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					private List<Identifier> columnNameIdentifiers;
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						// be lazy about building these
-						if ( columnNameIdentifiers == null ) {
-							columnNameIdentifiers = toIdentifiers( columnNames );
-						}
-						return columnNameIdentifiers;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
-					}
-				}
-			);
-			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-			Index index = table.getOrCreateIndex( keyName );
-			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
-				if ( table.containsColumn( column ) ) {
-					index.addColumn( column, order );
-					unbound.remove( column );
-				}
-			}
-		}
+		createIndexOrUniqueKey( table, keyName, nameExplicit, columnNames, orderings, unique, buildingContext, columns, unbound );
 
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			StringBuilder sb = new StringBuilder( "Unable to create " );
-			if ( unique ) {
-				sb.append( "unique key constraint (" );
-			}
-			else {
-				sb.append( "index (" );
-			}
-			for ( String columnName : columnNames ) {
-				sb.append( columnName ).append( ", " );
-			}
-			sb.setLength( sb.length() - 2 );
-			sb.append( ") on table '" ).append( table.getName() ).append( "' since the column " );
-			for ( Column column : unbound ) {
-				sb.append("'").append( column.getName() ).append( "', " );
-			}
-			for ( Column column : unboundNoLogical ) {
-				sb.append("'").append( column.getName() ).append( "', " );
-			}
-			sb.setLength( sb.length() - 2 );
-			sb.append( " was not found (specify the correct column name, which depends on the naming strategy, and may not be the same as the entity property name)" );
-			throw new AnnotationException( sb.toString() );
+			throwUnableToCreateConstraint( table, columnNames, unique, unbound, unboundNoLogical );
 		}
+	}
+
+	private void createIndexOrUniqueKey(
+			Table table,
+			String originalKeyName,
+			boolean nameExplicit,
+			String[] columnNames,
+			String[] orderings,
+			boolean unique,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		if (unique) {
+			createUniqueKey( table, originalKeyName, nameExplicit, columnNames, orderings, buildingContext, columns, unbound );
+		}
+		else {
+			createIndex( table, originalKeyName, columnNames, orderings, buildingContext, columns, unbound );
+		}
+	}
+
+	private void createIndex(
+			Table table,
+			String originalKeyName,
+			String[] columnNames,
+			String[] orderings,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+				.determineIndexName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
+		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+
+		final Index index = table.getOrCreateIndex( keyName );
+		for (int i = 0; i < columns.length; i++ ) {
+			Column column = columns[i];
+			String order = orderings != null ? orderings[i] : null;
+			if ( table.containsColumn( column ) ) {
+				index.addColumn( column, order );
+				unbound.remove( column );
+			}
+		}
+	}
+
+	private void createUniqueKey(
+			Table table,
+			String originalKeyName,
+			boolean nameExplicit,
+			String[] columnNames,
+			String[] orderings,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+				.determineUniqueKeyName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
+		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+
+		final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+		uk.setNameExplicit(nameExplicit);
+		for (int i = 0; i < columns.length; i++ ) {
+			Column column = columns[i];
+			String order = orderings != null ? orderings[i] : null;
+			if ( table.containsColumn( column ) ) {
+				uk.addColumn( column, order );
+				unbound.remove( column );
+			}
+		}
+	}
+
+	private static void throwUnableToCreateConstraint(
+			Table table,
+			String[] columnNames,
+			boolean unique,
+			Set<Column> unbound,
+			Set<Column> unboundNoLogical) {
+		final StringBuilder message = new StringBuilder( "Unable to create " );
+		if (unique) {
+			message.append( "unique key constraint (" );
+		}
+		else {
+			message.append( "index (" );
+		}
+		for ( String columnName : columnNames) {
+			message.append( columnName ).append( ", " );
+		}
+		message.setLength( message.length() - 2 );
+		message.append( ") on table '" ).append( table.getName() ).append( "' since the column " );
+		for ( Column column : unbound) {
+			message.append("'").append( column.getName() ).append( "', " );
+		}
+		for ( Column column : unboundNoLogical) {
+			message.append("'").append( column.getName() ).append( "', " );
+		}
+		message.setLength( message.length() - 2 );
+		message.append( " was not found (specify the correct column name, which depends on the naming strategy, and may not be the same as the entity property name)" );
+		throw new AnnotationException( message.toString() );
 	}
 
 	private void processJPAIndexHolders(MetadataBuildingContext buildingContext) {
@@ -2193,6 +2148,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				buildUniqueKeyFromColumnNames(
 						table,
 						holder.getName(),
+						!holder.getName().isEmpty(),
 						holder.getColumns(),
 						holder.getOrdering(),
 						holder.isUnique(),
@@ -2374,5 +2330,94 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return null;
 		}
 		return identifier.render( dialect );
+	}
+
+	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
+		private final MetadataBuildingContext buildingContext;
+		private final Table table;
+		private final String[] columnNames;
+		private final String originalKeyName;
+
+		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
+			this.buildingContext = buildingContext;
+			this.table = table;
+			this.columnNames = columnNames;
+			this.originalKeyName = originalKeyName;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return buildingContext;
+		}
+
+		@Override
+		public Identifier getTableName() {
+			return table.getNameIdentifier();
+		}
+
+		private List<Identifier> columnNameIdentifiers;
+
+		@Override
+		public List<Identifier> getColumnNames() {
+			// be lazy about building these
+			if ( columnNameIdentifiers == null ) {
+				columnNameIdentifiers = toIdentifiers(columnNames);
+			}
+			return columnNameIdentifiers;
+		}
+
+		@Override
+		public Identifier getUserProvidedIdentifier() {
+			return originalKeyName != null ? Identifier.toIdentifier(originalKeyName) : null;
+		}
+	}
+
+	private class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
+		final List<Identifier> columnNames;
+		private final ForeignKey foreignKey;
+		private final Table table;
+		private final MetadataBuildingContext buildingContext;
+		List<Identifier> referencedColumnNames;
+
+		public ForeignKeyNameSource(ForeignKey foreignKey, Table table, MetadataBuildingContext buildingContext) {
+			this.foreignKey = foreignKey;
+			this.table = table;
+			this.buildingContext = buildingContext;
+			columnNames = extractColumnNames(foreignKey.getColumns());
+			referencedColumnNames = null;
+		}
+
+		@Override
+		public Identifier getTableName() {
+			return table.getNameIdentifier();
+		}
+
+		@Override
+		public List<Identifier> getColumnNames() {
+			return columnNames;
+		}
+
+		@Override
+		public Identifier getReferencedTableName() {
+			return foreignKey.getReferencedTable().getNameIdentifier();
+		}
+
+		@Override
+		public List<Identifier> getReferencedColumnNames() {
+			if ( referencedColumnNames == null ) {
+				referencedColumnNames = extractColumnNames( foreignKey.getReferencedColumns() );
+			}
+			return referencedColumnNames;
+		}
+
+		@Override
+		public Identifier getUserProvidedIdentifier() {
+			return foreignKey.getName() != null ? Identifier.toIdentifier( foreignKey.getName() ) : null;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return buildingContext;
+		}
 	}
 }

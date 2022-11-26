@@ -20,6 +20,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -92,34 +94,40 @@ public class UniqueConstraintGenerationTest {
 	}
 
 	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		final String regex = getDialect().getAlterTableString( tableName ) + " add constraint uk_(.)* unique \\(" + columnName + "\\);";
+		final String regex;
+		Dialect dialect = getDialect();
+		if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
+			regex = dialect.getCreateTableString() + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
+					+ dialect.getTableTypeString().toLowerCase() + ";";
+		}
+		else if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueDelegate) {
+			regex = dialect.getAlterTableString( tableName ) + " add constraint uk.* unique \\(" + columnName + "\\);";
+		}
+		else {
+			return true;
+		}
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
-		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
-			final Matcher matcher = p.matcher( line );
-			if ( matcher.matches() ) {
-				matches = true;
+			if ( line.matches(regex) ) {
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 
 	private boolean isCreateUniqueIndexGenerated(String tableName, String columnName) throws IOException {
-		boolean matches = false;
-		String regex = "create unique index uk_(.)* on " + tableName + " \\(" + columnName + "\\);";
-
+		String regex = "create unique index uk.* on " + tableName + " \\(" + columnName + "\\);";
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
 		Pattern p = Pattern.compile( regex );
 		for ( String line : split ) {
 			final Matcher matcher = p.matcher( line );
 			if ( matcher.matches() ) {
-				matches = true;
+				return true;
 			}
 		}
-		return matches;
+		return false;
 	}
 }

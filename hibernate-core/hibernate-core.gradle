@@ -188,7 +188,7 @@ task copyBundleResources (type: Copy) {
 
 processTestResources {
     dependsOn copyBundleResources
-    duplicatesStrategy = DuplicatesStrategy.WARN
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 sourcesJar {

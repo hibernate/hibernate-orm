@@ -25,7 +25,7 @@ plugins {
 	id 'org.hibernate.orm.database-service' apply false
 
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-	id 'nu.studer.credentials' version '2.1'
+	id 'nu.studer.credentials' version '3.0'
 
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
@@ -80,8 +80,8 @@ ext {
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = credentials.hibernatePublishUsername
-			password = credentials.hibernatePublishPassword
+			username = credentials.forKey( 'hibernatePublishUsername' )
+			password = credentials.forKey( 'hibernatePublishPassword' )
 		}
 	}
 }
@@ -102,10 +102,10 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 					if ( graph.hasTask( taskToLookFor ) ) {
 						// trying to publish - make sure the needed credentials are available
 
-						if ( credentials.hibernatePublishUsername == null ) {
+						if ( credentials.forKey( 'hibernatePublishUsername' ) == null ) {
 							throw new GradleException( "Publishing credentials not specified" );
 						}
-						if ( credentials.hibernatePublishPassword == null ) {
+						if ( credentials.forKey( 'hibernatePublishPassword' ) == null ) {
 							throw new GradleException( "Publishing credentials not specified" );
 						}
 

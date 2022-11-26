@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -48,13 +49,25 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
+	 * Naturally, this should always be {@link org.hibernate.jpa.HibernatePersistenceProvider},
+	 * which is the best damn persistence provider ever. There's no need to explicitly specify
+	 * this setting when there are no inferior persistence providers floating about.
 	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 */
 	String JAKARTA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
 
 	/**
-	 * Specifies the type of transactions supported by the entity managers.
+	 * Specifies the {@linkplain jakarta.persistence.spi.PersistenceUnitTransactionType
+	 * type of transactions} supported by the entity managers. The default depends on
+	 * whether the program is considered to be executing in a Java SE or EE environment:
+	 * <ul>
+	 *     <li>For Java SE, the default is
+	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 *     RESOURCE_LOCAL}.
+	 *     <li>For Java EE, the default is
+	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#JTA JTA}.
+	 * </ul>
 	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 */
@@ -133,20 +146,33 @@ public interface AvailableSettings {
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 * Set a default value for {@link SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE},
+	 * used when the hint is not explicitly specified.
+	 * <p>
+	 * It does not usually make sense to change the default from
+	 * {@link jakarta.persistence.CacheRetrieveMode#USE}.
+	 *
+	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
+	 * Set a default value for {@link SpecHints#HINT_SPEC_CACHE_STORE_MODE},
+	 * used when the hint is not explicitly specified.
+	 * <p>
+	 * It does not usually make sense to change the default from
+	 * {@link jakarta.persistence.CacheStoreMode#USE}.
+	 *
+	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
+	String JAKARTA_SHARED_CACHE_STORE_MODE = SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
 	/**
-	 * Indicates which form of automatic validation is in effect as per the
-	 * rules defined in JPA 2 section 3.6.1.1.
+	 * Indicates which {@linkplain jakarta.persistence.ValidationMode form of automatic
+	 * validation} is in effect as per the rules defined in JPA 2 section 3.6.1.1.
 	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
+	 *
 	 * @see jakarta.persistence.ValidationMode
 	 */
 	String JAKARTA_VALIDATION_MODE = "jakarta.persistence.validation.mode";
@@ -183,18 +209,24 @@ public interface AvailableSettings {
 	String JAKARTA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
 
 	/**
-	 * Used to request (hint) a pessimistic lock scope.
+	 * Set a default value for the hint {@link SpecHints#HINT_SPEC_LOCK_SCOPE},
+	 * used when the hint is not explicitly specified.
 	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 *
+	 * @see SpecHints#HINT_SPEC_LOCK_SCOPE
 	 */
-	String JAKARTA_LOCK_SCOPE = "jakarta.persistence.lock.scope";
+	String JAKARTA_LOCK_SCOPE = SpecHints.HINT_SPEC_LOCK_SCOPE;
 
 	/**
-	 * Used to request (hint) a pessimistic lock timeout in milliseconds.
+	 * Set a default value for the hint {@link SpecHints#HINT_SPEC_LOCK_TIMEOUT},
+	 * used when the hint is not explicitly specified.
 	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 *
+	 * @see SpecHints#HINT_SPEC_LOCK_TIMEOUT
 	 */
-	String JAKARTA_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
+	String JAKARTA_LOCK_TIMEOUT = SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
 	/**
 	 * Used to pass a CDI {@link jakarta.enterprise.inject.spi.BeanManager} to
@@ -298,12 +330,17 @@ public interface AvailableSettings {
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
 	/**
-	 * Specifies the JDBC driver class.
+	 * Specifies the {@linkplain java.sql.Driver JDBC driver} class.
+	 *
+	 * @see java.sql.Driver
+	 * @see #JAKARTA_JDBC_DRIVER
 	 */
 	String DRIVER = "hibernate.connection.driver_class";
 
 	/**
 	 * Specifies the JDBC connection URL.
+	 *
+	 * @see #JAKARTA_JDBC_URL
 	 */
 	String URL = "hibernate.connection.url";
 
@@ -322,6 +359,7 @@ public interface AvailableSettings {
 	 * </ul>
 	 *
 	 * @see #PASS
+	 * @see #JAKARTA_JDBC_PASSWORD
 	 */
 	String USER = "hibernate.connection.username";
 
@@ -329,6 +367,7 @@ public interface AvailableSettings {
 	 * Specifies password to use when connecting via JDBC.
 	 *
 	 * @see #USER
+	 * @see #JAKARTA_JDBC_USER
 	 */
 	String PASS = "hibernate.connection.password";
 
@@ -359,6 +398,10 @@ public interface AvailableSettings {
 	 *     <li>a JNDI name under which to obtain the {@link javax.sql.DataSource}.
 	 * </ul>
 	 * For JNDI names, see also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
+	 *
+	 * @see javax.sql.DataSource
+	 * @see #JAKARTA_JTA_DATASOURCE
+	 * @see #JAKARTA_NON_JTA_DATASOURCE
 	 */
 	String DATASOURCE = "hibernate.connection.datasource";
 

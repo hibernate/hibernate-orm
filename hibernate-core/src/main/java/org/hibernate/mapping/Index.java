@@ -11,13 +11,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 import static java.util.Collections.unmodifiableList;
@@ -27,6 +25,9 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A mapping model object representing an {@linkplain jakarta.persistence.Index index} on a relational database table.
+ * <p>
+ * We regularize the semantics of unique constraints on nullable columns: two null values are not considered to be
+ * "equal" for the purpose of determining uniqueness, just as specified by ANSI SQL and common sense.
  *
  * @author Gavin King
  */
@@ -49,9 +50,8 @@ public class Index implements Exportable, Serializable {
 			java.util.List<Column> columns,
 			java.util.Map<Column, String> columnOrderMap,
 			boolean unique) {
-		StringBuilder buf = new StringBuilder( "create" )
-				.append( unique ? " unique" : "" )
-				.append( " index " )
+		StringBuilder statement = new StringBuilder( dialect.getCreateIndexString( unique ) )
+				.append( " " )
 				.append( dialect.qualifyIndexName() ? name : StringHelper.unqualify( name ) )
 				.append( " on " )
 				.append( tableName )
@@ -62,15 +62,17 @@ public class Index implements Exportable, Serializable {
 				first = false;
 			}
 			else {
-				buf.append(", ");
+				statement.append(", ");
 			}
-			buf.append( column.getQuotedName( dialect ) );
+			statement.append( column.getQuotedName( dialect ) );
 			if ( columnOrderMap.containsKey( column ) ) {
-				buf.append( " " ).append( columnOrderMap.get( column ) );
+				statement.append( " " ).append( columnOrderMap.get( column ) );
 			}
 		}
-		buf.append( ")" );
-		return buf.toString();
+		statement.append( ")" );
+		statement.append( dialect.getCreateIndexTail( unique, columns ) );
+
+		return statement.toString();
 	}
 
 	public static String buildSqlCreateIndexString(

@@ -17,6 +17,8 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -68,6 +70,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
 
 	public SybaseLegacyDialect() {
 		this( DatabaseVersion.make( 11, 0 ) );
@@ -338,4 +341,8 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		return NameQualifierSupport.CATALOG;
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
 }

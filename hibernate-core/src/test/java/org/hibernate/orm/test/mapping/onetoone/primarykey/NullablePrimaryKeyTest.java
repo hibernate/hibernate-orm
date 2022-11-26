@@ -54,7 +54,7 @@ public class NullablePrimaryKeyTest {
 					metadata,
 					false
 			);
-			String expectedMappingTableSql = "create table personAddress (address_id bigint unique, " +
+			String expectedMappingTableSql = "create table personAddress (address_id bigint, " +
 					"person_id bigint not null, primary key (person_id))";
 
 			assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );

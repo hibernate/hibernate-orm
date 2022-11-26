@@ -2020,9 +2020,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( int index = 0; index < size; index++ ) {
 			final String logicalColumnName = columnNames[index];
 			try {
-				final String physicalColumnName = getPhysicalColumnName( table, logicalColumnName );
-				columns[index] = new Column( physicalColumnName );
-				unbound.add( columns[index] );
+				Column column = table.getColumn( buildingContext.getMetadataCollector(), logicalColumnName );
+				if ( column == null ) {
+					throw new AnnotationException(
+							"Table '" + table.getName() + "' has no column named '" + logicalColumnName
+									+ "' matching the column specified in '@UniqueConstraint'"
+					);
+				}
+				columns[index] = column;
+				unbound.add( column );
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {

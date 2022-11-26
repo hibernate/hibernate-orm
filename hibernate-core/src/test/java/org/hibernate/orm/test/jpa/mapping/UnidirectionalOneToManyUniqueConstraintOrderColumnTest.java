@@ -149,7 +149,7 @@ public class UnidirectionalOneToManyUniqueConstraintOrderColumnTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 		@JoinColumn(name = "parentId", nullable = false)
-		@OrderColumn(name = "listOrder")
+		@OrderColumn(name = "listOrder", nullable = false)
 		private List<ChildData> children = new ArrayList<>();
 
 		public List<ChildData> getChildren() {

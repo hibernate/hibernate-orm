@@ -60,4 +60,13 @@ public class UniqueKey extends Constraint {
 	public void setNameExplicit(boolean nameExplicit) {
 		this.nameExplicit = nameExplicit;
 	}
+
+	public boolean hasNullableColumn() {
+		for ( Column column : getColumns() ) {
+			if ( column.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

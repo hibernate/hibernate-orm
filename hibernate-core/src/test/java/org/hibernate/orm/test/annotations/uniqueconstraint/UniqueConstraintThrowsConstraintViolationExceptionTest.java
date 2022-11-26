@@ -15,8 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.TestForIssue;
@@ -75,7 +73,7 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 		@Column(name = "CUSTOMER_ACCOUNT_NUMBER")
 		public Long customerAccountNumber;
 
-		@Basic
+		@Basic(optional = false)
 		@Column(name = "CUSTOMER_ID", unique = true)
 		public String customerId;
 

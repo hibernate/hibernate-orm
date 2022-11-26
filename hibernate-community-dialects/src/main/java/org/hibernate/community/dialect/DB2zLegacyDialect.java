@@ -18,8 +18,12 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -30,6 +34,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
+
+import java.util.List;
 
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
@@ -78,6 +84,25 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION9;
+	}
+
+	@Override
+	protected UniqueDelegate createUniqueDelegate() {
+		return getVersion().isSameOrAfter(11)
+				? new AlterTableUniqueIndexDelegate(this)
+				: new SkipNullableUniqueDelegate(this);
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique where not null index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return "";
 	}
 
 	@Override

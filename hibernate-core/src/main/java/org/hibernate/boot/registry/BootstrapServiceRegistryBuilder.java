@@ -140,10 +140,10 @@ public class BootstrapServiceRegistryBuilder {
 	/**
 	 * By default, when a ServiceRegistry is no longer referenced by any other
 	 * registries as a parent it will be closed.
-	 * <p/>
+	 * <p>
 	 * Some applications that explicitly build "shared registries" may want to
 	 * circumvent that behavior.
-	 * <p/>
+	 * <p>
 	 * This method indicates that the registry being built should not be
 	 * automatically closed.  The caller agrees to take responsibility to
 	 * close it themselves.

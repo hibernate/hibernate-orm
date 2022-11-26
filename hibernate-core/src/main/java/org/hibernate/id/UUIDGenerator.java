@@ -26,12 +26,12 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
  * {@link UUIDGenerationStrategy generation strategy}.  The values this generator can return
  * include {@link UUID}, {@link String} and byte[16]
- * <p/>
+ * <p>
  * Supports 2 config parameters:<ul>
  * <li>{@link #UUID_GEN_STRATEGY} - names the {@link UUIDGenerationStrategy} instance to use</li>
  * <li>{@link #UUID_GEN_STRATEGY_CLASS} - names the {@link UUIDGenerationStrategy} class to use</li>
  * </ul>
- * <p/>
+ * <p>
  * Currently there are 2 standard implementations of {@link UUIDGenerationStrategy}:<ul>
  * <li>{@link StandardRandomStrategy} (the default, if none specified)</li>
  * <li>{@link org.hibernate.id.uuid.CustomVersionOneStrategy}</li>

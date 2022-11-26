@@ -383,10 +383,10 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	/**
 	 * Was {@code collection} provided directly to this PersistentCollection
 	 * (i.e., provided as an argument to a constructor)?
-	 * <p/>
+	 * <p>
 	 * Implementors that can copy elements out of a directly provided
 	 * collection into the wrapped collection should override this method.
-	 * <p/>
+	 * <p>
 	 * @param collection The collection
 	 * @return true, if {@code collection} was provided directly to this
 	 * PersistentCollection; false, otherwise.

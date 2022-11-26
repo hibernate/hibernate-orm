@@ -271,12 +271,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Obtain the {@link CacheMode} in effect for this query. By default,
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
-	 * <p/>
+	 * <p>
 	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to
 	 * the entity/collection caches as we process query results. For caching
 	 * of the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
-	 * <p/>
+	 * <p>
 	 * In order for this setting to have any affect, second-level caching
 	 * would have to be enabled and the entities/collections in question
 	 * configured for caching.
@@ -318,10 +318,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Should the results of the query be stored in the second level cache?
-	 * <p/>
+	 * <p>
 	 * This is different to second level caching of any returned entities and
 	 * collections, which is controlled by {@link #getCacheMode()}.
-	 * <p/>
+	 * <p>
 	 * NOTE: the query being "eligible" for caching does not necessarily mean
 	 * its results will be cached. Second-level query caching still has to be
 	 * enabled on the {@link SessionFactory} for this to happen. Usually that

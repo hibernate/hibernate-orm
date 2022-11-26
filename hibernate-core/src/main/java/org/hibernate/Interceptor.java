@@ -47,7 +47,7 @@ public interface Interceptor {
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
 	 * be propagated to the persistent object. Note that when this method is called, {@code entity} will be
 	 * an empty uninitialized instance of the class.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code state}, {@code propertyNames} and {@code types} arrays match.
 	 *
 	 * @param entity The entity instance being loaded
@@ -72,7 +72,7 @@ public interface Interceptor {
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
 	 * be propagated to the persistent object. Note that when this method is called, {@code entity} will be
 	 * an empty uninitialized instance of the class.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code state}, {@code propertyNames} and {@code types} arrays match.
 	 *
 	 * @param entity The entity instance being loaded
@@ -99,7 +99,7 @@ public interface Interceptor {
 	 * Note that not all flushes end in actual synchronization with the database, in which case the
 	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
 	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames} and
 	 * {@code types} arrays match.
 	 *
@@ -133,7 +133,7 @@ public interface Interceptor {
 	 * Note that not all flushes end in actual synchronization with the database, in which case the
 	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
 	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames} and
 	 * {@code types} arrays match.
 	 *

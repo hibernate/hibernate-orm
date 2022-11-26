@@ -7290,7 +7290,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * Is this dialect known to support quantified predicates.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where FIRST_NAME > ALL (select ...) ...".
 	 *
@@ -7302,7 +7302,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * Is this SQL dialect known to support some kind of distinct from predicate.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where FIRST_NAME IS DISTINCT FROM LAST_NAME"
 	 *
@@ -7315,7 +7315,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
 	 *
@@ -7330,7 +7330,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
 	 * and <code>&ge;</code> operators.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where (FIRST_NAME, LAST_NAME) < ('Steve', 'Ebersole') ...".
 	 *
@@ -7345,7 +7345,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
 	 * and <code>is not distinct from</code> operators.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...".
 	 *
@@ -7359,7 +7359,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax,
 	 * sometimes called tuple syntax, in the SET clause;
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
 	 *
@@ -7372,7 +7372,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
-	 * <p/>
+	 * <p>
 	 * Basically, does it support syntax like
 	 * "... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...".
 	 *
@@ -7386,7 +7386,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN lists as well?
-	 * <p/>
+	 * <p>
 	 * For example, "... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ..."
 	 *
 	 * @return True if this SQL dialect is known to support "row value
@@ -7399,7 +7399,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN subqueries as well?
-	 * <p/>
+	 * <p>
 	 * For example, "... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ..."
 	 *
 	 * @return True if this SQL dialect is known to support "row value

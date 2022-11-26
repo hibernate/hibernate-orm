@@ -7,7 +7,7 @@
 
 /**
  * Defines the SPI for support of "scanning" of "archives".
- * <p/>
+ * <p>
  * Scanning might mean:<ul>
  *     <li>searching for classes/packages that define certain interfaces</li>
  *     <li>locating named resources</li>

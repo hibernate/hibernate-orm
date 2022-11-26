@@ -10,9 +10,9 @@ package org.hibernate.boot.model.naming;
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
  * naming rules initially implemented by Hibernate for JPA 1.0, prior to many
  * things being clarified.
- * <p/>
+ * <p>
  * For a more JPA 2 compliant strategy, see/use {@link ImplicitNamingStrategyJpaCompliantImpl}
- * <p/>
+ * <p>
  * Corresponds roughly to the legacy org.hibernate.cfg.EJB3NamingStrategy class.
  *
  * @author Steve Ebersole

@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Contract for a container of {@link AttributeSource} references.  Entities,
  * MappedSuperclasses and composites (Embeddables) all contain attributes.
- * <p/>
+ * <p>
  * Think of this as the corollary to what JPA calls a ManagedType on the
  * source side of things.
  *

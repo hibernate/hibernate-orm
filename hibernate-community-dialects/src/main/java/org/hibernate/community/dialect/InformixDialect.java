@@ -313,7 +313,7 @@ public class InformixDialect extends Dialect {
 
 	/**
 	 * Informix constraint name must be at the end.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -350,7 +350,7 @@ public class InformixDialect extends Dialect {
 
 	/**
 	 * Informix constraint name must be at the end.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

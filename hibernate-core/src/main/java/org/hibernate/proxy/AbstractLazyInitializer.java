@@ -324,7 +324,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	/**
 	 * Getter for property 'target'.
-	 * <p/>
+	 * <p>
 	 * Same as {@link #getImplementation()} except that this method will not force initialization.
 	 *
 	 * @return Value for property 'target'.
@@ -382,7 +382,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	/**
 	 * Get the read-only/modifiable setting that should be put in affect when it is
 	 * attached to a session.
-	 * <p/>
+	 * <p>
 	 * This method should only be called during serialization when read-only/modifiable setting
 	 * is not available (i.e., isReadOnlySettingAvailable() == false)
 	 *

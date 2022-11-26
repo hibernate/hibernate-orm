@@ -49,7 +49,7 @@ public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link CollectionType}. Shortcut for
 	 * {@code type instanceof CollectionType}
-	 * <p/>
+	 * <p>
 	 * A {@link CollectionType} is additionally an {@link AssociationType}; so if this method
 	 * returns true, {@link #isAssociationType()} should also return true.
 	 *
@@ -60,7 +60,7 @@ public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link EntityType}. Shortcut for
 	 * {@code type instanceof EntityType}.
-	 * <p/>
+	 * <p>
 	 * An {@link EntityType} is additionally an {@link AssociationType}; so if this method
 	 * returns true, {@link #isAssociationType()} should also return true.
 	 *
@@ -71,7 +71,7 @@ public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link AnyType}. Shortcut for
 	 * {@code type instanceof AnyType}.
-	 * <p/>
+	 * <p>
 	 * An {@link AnyType} is additionally an {@link AssociationType}; so if this method
 	 * returns true, then {@link #isAssociationType()} should also return true.
 	 *
@@ -106,7 +106,7 @@ public interface Type extends Serializable {
 	/**
 	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
 	 * for the columns mapped by this type.
-	 * <p/>
+	 * <p>
 	 * The number of elements in this array must match the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
@@ -127,7 +127,7 @@ public interface Type extends Serializable {
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality",
 	 * that is, equality of persistent state, taking a shortcut for entity references.
-	 * <p/>
+	 * <p>
 	 * For most types this should boil down to an {@linkplain Object#equals equality}
 	 * comparison of the given values, and it's reasonable to simply delegate to
 	 * {@link #isEqual(Object, Object)}. But for associations the semantics are a bit
@@ -165,7 +165,7 @@ public interface Type extends Serializable {
 	 * Compare two instances of the class mapped by this type for persistence "equality",
 	 * that is, equality of persistent state. For most types this could simply delegate to
 	 * {@link #isEqual(Object, Object)}.
-	 * <p/>
+	 * <p>
 	 * This should always equate to some form of comparison of the value's internal state.
 	 * As an example, for Java's {@link java.util.Date} class, the comparison should be of
 	 * its internal state, but based only on the specific part which is persistent (the

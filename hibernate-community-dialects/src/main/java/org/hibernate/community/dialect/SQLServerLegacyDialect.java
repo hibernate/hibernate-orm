@@ -507,7 +507,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	/**
 	 * The current_timestamp is more accurate, but only known to be supported in SQL Server 7.0 and later and
 	 * Sybase not known to support it at all
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

@@ -22,7 +22,7 @@ public interface Instantiator extends Serializable {
 
 	/**
 	 * Perform the requested entity instantiation.
-	 * <p/>
+	 * <p>
 	 * This form is never called for component instantiation, only entity instantiation.
 	 *
 	 * @param id The id of the entity to be instantiated.

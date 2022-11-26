@@ -256,7 +256,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Cancel the execution of the current query.
-	 * <p/>
+	 * <p>
 	 * This is the sole method on session which may be safely called from
 	 * another thread.
 	 *
@@ -369,7 +369,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p/>
+	 * <p>
 	 * Convenient form of {@link #load(Class, Object, LockOptions)}.
 	 *
 	 * @param theClass a persistent class
@@ -402,7 +402,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p/>
+	 * <p>
 	 * Convenient form of {@link #load(String, Object, LockOptions)}.
 	 *
 	 * @param entityName the entity name
@@ -548,7 +548,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Either {@link #save(Object)} or {@link #update(Object)} the given
 	 * instance, depending upon resolution of the unsaved-value checks (see the
 	 * manual for discussion of unsaved-value checking).
-	 * <p/>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
 	 *
@@ -566,7 +566,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Either {@link #save(String, Object)} or {@link #update(String, Object)}
 	 * the given instance, depending upon resolution of the unsaved-value checks
 	 * (see the manual for discussion of unsaved-value checking).
-	 * <p/>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link org.hibernate.annotations.CascadeType#SAVE_UPDATE}.
 	 *
@@ -957,7 +957,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * or null if there is no such persistent instance. If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized
 	 * instance. Obtain the specified lock mode if the instance exists.
-	 * <p/>
+	 * <p>
 	 * Convenient form of {@link #get(String, Object, LockOptions)}
 	 *
 	 * @param entityName the entity name

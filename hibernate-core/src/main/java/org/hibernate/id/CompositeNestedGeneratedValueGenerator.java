@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
 /**
  * For composite identifiers, defines a number of "nested" generations that
  * need to happen to "fill" the identifier property(s).
- * <p/>
+ * <p>
  * This generator is used implicitly for all composite identifier scenarios if an
  * explicit generator is not in place.  So it make sense to discuss the various 
  * potential scenarios:<ul>
@@ -45,7 +45,7 @@ import org.hibernate.type.Type;
  * and is only possible in annotations
  * </li>
  * </ul>
- * <p/>
+ * <p>
  * Most of the grunt work is done in {@link org.hibernate.mapping.Component}.
  *
  * @author Steve Ebersole

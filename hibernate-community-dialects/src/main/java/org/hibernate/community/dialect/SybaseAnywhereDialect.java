@@ -126,7 +126,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	/**
 	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
 	 * but I suppose Hibernate use this syntax only with tables with just 1 column
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -136,10 +136,10 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	/**
 	 * ASA does not require to drop constraint before dropping tables, so disable it.
-	 * <p/>
+	 * <p>
 	 * NOTE : Also, the DROP statement syntax used by Hibernate to drop constraints is
 	 * not compatible with ASA.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

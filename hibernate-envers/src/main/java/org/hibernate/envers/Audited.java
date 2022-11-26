@@ -54,9 +54,9 @@ public @interface Audited {
 	 * Specifies the superclasses for which properties should be audited, even if the superclasses are not
 	 * annotated with {@link Audited}. Causes all properties of the listed classes to be audited, just as if the
 	 * classes had {@link Audited} annotation applied on the class level.
-	 * <p/>
+	 * <p>
 	 * The scope of this functionality is limited to the class hierarchy of the annotated entity.
-	 * <p/>
+	 * <p>
 	 * If a parent type lists any of its parent types using this attribute, all properties in the specified classes
 	 * will also be audited.
 	 *

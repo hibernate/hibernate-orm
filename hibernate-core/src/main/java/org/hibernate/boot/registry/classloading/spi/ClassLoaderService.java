@@ -88,7 +88,7 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 
 	/**
 	 * Discovers and instantiates implementations of the named service contract.
-	 * <p/>
+	 * <p>
 	 * NOTE : the terms service here is used differently than {@link Service}.  Instead here we are talking about
 	 * services as defined by {@link java.util.ServiceLoader}.
 	 *

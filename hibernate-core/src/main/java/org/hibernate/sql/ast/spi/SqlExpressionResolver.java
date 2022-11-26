@@ -25,7 +25,7 @@ import static java.util.Locale.ROOT;
  * by the QualifiableSqlSelectable sub-type.  The NonQualifiableSqlSelectable
  * sub-type indicates a SqlSelectable that does not require qualification (e.g. a
  * literal).
- * <p/>
+ * <p>
  * The point of this contract is to allow "unique-ing" of SqlSelectable references
  * in a query to a single SqlSelection reference - effectively a caching of
  * SqlSelection instances keyed by the SqlSelectable (+ qualifier when applicable)

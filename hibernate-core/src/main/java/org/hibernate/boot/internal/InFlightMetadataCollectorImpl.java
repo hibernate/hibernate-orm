@@ -1825,7 +1825,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
 	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
 	 * on some sort of table name sorting which failed in certain circumstances.
-	 * <p/>
+	 * <p>
 	 * See {@code ANN-722} and {@code ANN-730}
 	 *
 	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready

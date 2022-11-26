@@ -25,7 +25,7 @@ import org.locationtech.jts.io.WKTReader;
  * An <code>AbstractExpectationsFactory</code> provides the expected
  * values to be used in the integration tests of the spatial functions
  * provided by specific providers.
- * <p/>
+ * <p>
  * The expected values are returned as a map of (identifier, expected value) pairs.
  *
  * @author Karel Maesen, Geovise BVBA

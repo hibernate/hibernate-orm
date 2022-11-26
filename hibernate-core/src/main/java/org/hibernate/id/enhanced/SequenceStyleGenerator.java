@@ -44,7 +44,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
- * <p/>
+ * <p>
  * General configuration parameters:
  * <table>
  * 	 <tr>
@@ -78,7 +78,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  * </table>
- * <p/>
+ * <p>
  * Configuration parameters used specifically when the underlying structure is a table:
  * <table>
  * 	 <tr>
@@ -271,7 +271,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the name of the sequence (or table if this resolves to a physical table)
 	 * to use.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -353,7 +353,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the name of the column used to store the generator value in
 	 * the db.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
 	 *
@@ -370,7 +370,7 @@ public class SequenceStyleGenerator
 	 * Determine the initial sequence value to use.  This value is used when
 	 * initializing the {@link #getDatabaseStructure() database structure}
 	 * (i.e. sequence/table).
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -383,7 +383,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the increment size to be applied.  The exact implications of
 	 * this value depends on the {@linkplain #getOptimizer() optimizer} being used.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -395,7 +395,7 @@ public class SequenceStyleGenerator
 
 	/**
 	 * Determine the optimizer to use.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).

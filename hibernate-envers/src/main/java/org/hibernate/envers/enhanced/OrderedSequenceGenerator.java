@@ -16,7 +16,7 @@ import org.hibernate.type.Type;
 
 /**
  * Revision number generator has to produce values in ascending order (gaps may occur).
- * <p/>
+ * <p>
  * This generator is only applicable when {@code USE_REVISION_ENTITY_WITH_NATIVE_ID} is {@code false} in the
  * bootstrapping configuration properties.
  *

@@ -24,7 +24,7 @@ public class ValueHolder<T> {
 	public interface DeferredInitializer<T> {
 		/**
 		 * Build the initialization value.
-		 * <p/>
+		 * <p>
 		 * Implementation note: returning {@code null} is "ok" but will cause this method to keep being called.
 		 *
 		 * @return The initialization value.

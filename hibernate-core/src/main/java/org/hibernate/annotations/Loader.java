@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface Loader {
 	/**
-	 * THe named query to use for loading the entity.
+	 * The named query to use for loading the entity.
 	 */
 	String namedQuery() default "";
 }

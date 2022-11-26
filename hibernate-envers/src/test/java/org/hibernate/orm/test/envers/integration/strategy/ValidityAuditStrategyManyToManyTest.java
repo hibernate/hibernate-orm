@@ -44,7 +44,6 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( EnversSettings.AUDIT_STRATEGY, "org.hibernate.envers.strategy.ValidityAuditStrategy" );
-		options.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 	}
 
 	@Test

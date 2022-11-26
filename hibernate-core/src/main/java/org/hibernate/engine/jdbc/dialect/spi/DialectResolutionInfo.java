@@ -13,7 +13,7 @@ import java.sql.DatabaseMetaData;
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
  * to use.
- * <p/>
+ * <p>
  * The information here mimics part of the JDBC {@link java.sql.DatabaseMetaData} contract, specifically the portions
  * about database and driver names and versions.
  */

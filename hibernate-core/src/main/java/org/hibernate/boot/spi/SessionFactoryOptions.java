@@ -274,14 +274,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * specified in a {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link jakarta.persistence.StoredProcedureQuery} to named parameters in
 	 * the JDBC {@link java.sql.CallableStatement}.
-	 * <p/>
+	 * <p>
 	 * As JPA is defined, the use of named parameters is essentially of dubious
 	 * value since by spec the parameters have to be defined in the order they are
 	 * defined in the procedure/function declaration - we can always bind them
 	 * positionally.  The whole idea of named parameters for CallableStatement
 	 * is the ability to bind these in any order, but since we unequivocally
 	 * know the order anyway binding them via name really gains nothing.
-	 * <p/>
+	 * <p>
 	 * If this is {@code true}, we still need to make sure the Dialect supports
 	 * named binding.  Setting this to {@code false} simply circumvents that
 	 * check and always performs positional binding.

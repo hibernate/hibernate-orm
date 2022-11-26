@@ -243,7 +243,7 @@ public final class ForeignKeys {
 
 	/**
 	 * Is this instance persistent or detached?
-	 * <p/>
+	 * <p>
 	 * If {@code assumed} is non-null, don't hit the database to make the determination, instead assume that
 	 * value; the client code must be prepared to "recover" in the case that this assumed result is incorrect.
 	 *
@@ -263,7 +263,7 @@ public final class ForeignKeys {
 
 	/**
 	 * Is this instance, which we know is not persistent, actually transient?
-	 * <p/>
+	 * <p>
 	 * If {@code assumed} is non-null, don't hit the database to make the determination, instead assume that
 	 * value; the client code must be prepared to "recover" in the case that this assumed result is incorrect.
 	 *
@@ -311,7 +311,7 @@ public final class ForeignKeys {
 	/**
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
-	 * <p/>
+	 * <p>
 	 * Used by OneToOneType and ManyToOneType to determine what id value should
 	 * be used for an object that may or may not be associated with the session.
 	 * This does a "best guess" using any/all info available to use (not just the

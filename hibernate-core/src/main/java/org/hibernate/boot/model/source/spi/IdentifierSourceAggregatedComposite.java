@@ -12,7 +12,7 @@ import java.util.List;
  * Additional contract describing the source of an identifier mapping whose
  * {@linkplain #getNature() nature} is
  * {@link org.hibernate.id.EntityIdentifierNature#AGGREGATED_COMPOSITE}.
- * <p/>
+ * <p>
  * This equates to an identifier which is made up of multiple values which are
  * defined as part of a component/embedded; i.e. {@link jakarta.persistence.EmbeddedId}
  *

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Generates increasing identifiers (in a single VM only). Not valid across multiple VMs.  Identifiers are not
  * necessarily strictly increasing, but usually are.
- * <p/>
+ * <p>
  * Core while loop implemented by Alex Snaps - EHCache project - under ASL 2.0
  *
  * @author Hibernate team

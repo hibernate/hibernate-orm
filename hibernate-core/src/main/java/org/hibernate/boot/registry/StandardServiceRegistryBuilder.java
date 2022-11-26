@@ -332,7 +332,7 @@ public class StandardServiceRegistryBuilder {
 	 * By default, when a {@link ServiceRegistry} is no longer referenced by any
 	 * other registries as a parent it will be closed. Some applications that
 	 * explicitly build "shared registries" may need to circumvent that behavior.
-	 * <p/>
+	 * <p>
 	 * This method indicates that the registry being built should not be
 	 * automatically closed. The caller takes responsibility for closing it.
 	 *

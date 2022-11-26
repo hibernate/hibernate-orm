@@ -26,7 +26,7 @@ public interface ExtendedBeanManager {
 	/**
 	 * Contract for things interested in receiving notifications of
 	 * BeanManager lifecycle events.
-	 * <p/>
+	 * <p>
 	 * A "beanManagerDestroyed" notifications would probably also be generally
 	 * useful, although we do not need it here and not sure WildFly can really
 	 * tell us that reliably.

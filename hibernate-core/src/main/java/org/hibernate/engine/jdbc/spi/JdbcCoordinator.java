@@ -91,7 +91,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Signals the end of transaction.
-	 * <p/>
+	 * <p>
 	 * Intended for use from the transaction coordinator, after local transaction completion.  Used to conditionally
 	 * release the JDBC connection aggressively if the configured release mode indicates.
 	 */

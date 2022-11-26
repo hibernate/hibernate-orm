@@ -15,7 +15,7 @@ import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 
 /**
  * Controls extracting values from REF_CURSOR parameters.
- * <p/>
+ * <p>
  * For extracting results from OUT/INOUT params, see {@link JdbcCallParameterExtractorImpl} instead.
  *
  * @author Steve Ebersole

@@ -72,7 +72,7 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Inject the exception converter to use.
-	 * <p/>
+	 * <p>
 	 * NOTE : {@code null} is allowed and signifies to use the default.
 	 *
 	 * @param sqlExceptionConverter The converter to use.
@@ -158,7 +158,7 @@ public class SqlExceptionHelper {
 
 		/**
 		 * Prepare for processing of a {@linkplain SQLWarning warning} stack.
-		 * <p/>
+		 * <p>
 		 * Note that the warning here is also the first passed to {@link #handleWarning}
 		 *
 		 * @param warning The first warning in the stack.
@@ -256,7 +256,7 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Standard (legacy) behavior for logging warnings associated with a JDBC {@link Connection} and clearing them.
-	 * <p/>
+	 * <p>
 	 * Calls {@link #handleAndClearWarnings(Connection, WarningHandler)} using {@link #STANDARD_WARNING_HANDLER}
 	 *
 	 * @param connection The JDBC connection potentially containing warnings

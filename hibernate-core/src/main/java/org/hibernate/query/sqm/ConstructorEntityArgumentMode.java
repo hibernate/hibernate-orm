@@ -9,7 +9,7 @@ package org.hibernate.query.sqm;
 /**
  * Describes the allowable ways in which entity references
  * can be handled as dynamic-instantiation (ctor result) argument.
- * <p/>
+ * <p>
  * NOTE that this only applies to Hibernate extension to JPA.  JPA
  * does not allow ctor-result arguments to be anything other than
  * scalar values (column result).

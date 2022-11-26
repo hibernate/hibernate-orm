@@ -38,6 +38,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -128,6 +129,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -137,6 +139,7 @@ import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
@@ -146,6 +149,7 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -1593,7 +1597,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Resolves the native generation strategy associated to this dialect.
-	 * <p/>
+	 * <p>
 	 * Comes into play whenever the user specifies the native generator.
 	 *
 	 * @return The native generator strategy.
@@ -1644,7 +1648,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the command used to select a GUID from the underlying database.
-	 * <p/>
+	 * <p>
 	 * Optional operation.
 	 *
 	 * @return The appropriate command.
@@ -1941,7 +1945,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Some dialects support an alternative means to {@code SELECT FOR UPDATE},
 	 * whereby a "lock hint" is appended to the table name in the from clause.
-	 * <p/>
+	 * <p>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
 	 * @param lockOptions The lock options to apply
@@ -1955,7 +1959,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Modifies the given SQL by applying the appropriate updates for the specified
 	 * lock modes and key columns.
-	 * <p/>
+	 * <p>
 	 * The behavior here is that of an ANSI SQL {@code SELECT FOR UPDATE}.  This
 	 * method is really intended to allow dialects which do not support
 	 * {@code SELECT FOR UPDATE} to achieve this in their own fashion.
@@ -2001,7 +2005,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Slight variation on {@link #getCreateTableString}.  Here, we have the
 	 * command used to create a table when there is no primary key and
 	 * duplicate rows are expected.
-	 * <p/>
+	 * <p>
 	 * Most databases do not care about the distinction; originally added for
 	 * Teradata support which does care.
 	 *
@@ -2177,7 +2181,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
-	 * <p/>
+	 * <p>
 	 * If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
 	 * {@link SQLExceptionConversionDelegate} in addition to the following
@@ -2187,11 +2191,11 @@ public abstract class Dialect implements ConversionContext {
 	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
 	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * It is strongly recommended that specific Dialect implementations override this
 	 * method, since interpretation of a SQL error is much more accurate when based on
 	 * the vendor-specific ErrorCode rather than the SQLState.
-	 * <p/>
+	 * <p>
 	 * Specific Dialects may override to return whatever is most appropriate for that vendor.
 	 *
 	 * @return The SQLExceptionConversionDelegate for this dialect
@@ -2212,7 +2216,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Given a {@link Types} type code, determine an appropriate
 	 * null value to use in a select clause.
-	 * <p/>
+	 * <p>
 	 * One thing to consider here is that certain databases might
 	 * require proper casting for the nulls here since the select here
 	 * will be part of a UNION/UNION ALL.
@@ -2316,7 +2320,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * What is the maximum length Hibernate can use for generated aliases?
-	 * <p/>
+	 * <p>
 	 * The maximum here should account for the fact that Hibernate often needs to append "uniqueing" information
 	 * to the end of generated aliases.  That "uniqueing" information will be added to the end of a identifier
 	 * generated to the length specified here; so be sure to leave some room (generally speaking 5 positions will
@@ -2374,13 +2378,13 @@ public abstract class Dialect implements ConversionContext {
 	 * Returning {@code null} is allowed and indicates that Hibernate should fallback to building a
 	 * "standard" helper.  In the fallback path, any changes made to the IdentifierHelperBuilder
 	 * during this call will still be incorporated into the built IdentifierHelper.
-	 * <p/>
+	 * <p>
 	 * The incoming builder will have the following set:<ul>
 	 *     <li>{@link IdentifierHelperBuilder#isGloballyQuoteIdentifiers()}</li>
 	 *     <li>{@link IdentifierHelperBuilder#getUnquotedCaseStrategy()} - initialized to UPPER</li>
 	 *     <li>{@link IdentifierHelperBuilder#getQuotedCaseStrategy()} - initialized to MIXED</li>
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * By default Hibernate will do the following:<ul>
 	 *     <li>Call {@link IdentifierHelperBuilder#applyIdentifierCasing(DatabaseMetaData)}
 	 *     <li>Call {@link IdentifierHelperBuilder#applyReservedWords(DatabaseMetaData)}
@@ -2449,7 +2453,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Apply dialect-specific quoting.
-	 * <p/>
+	 * <p>
 	 * By default, the incoming value is checked to see if its first character
 	 * is the back-tick (`).  If so, the dialect specific quoting is applied.
 	 *
@@ -2820,7 +2824,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase "{@code if exists} be
 	 * applied before the table name?
-	 * <p/>
+	 * <p>
 	 * NOTE : Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterTableName} should return true.
 	 *
@@ -2833,7 +2837,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase {@code if exists} be
 	 * applied after the table name?
-	 * <p/>
+	 * <p>
 	 * NOTE : Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeTableName} should return true.
 	 *
@@ -2847,7 +2851,7 @@ public abstract class Dialect implements ConversionContext {
 	 * For dropping a constraint with an {@code alter table} statement,
 	 * can the phrase {@code if exists} be applied before the constraint
 	 * name?
-	 * <p/>
+	 * <p>
 	 * NOTE : Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
@@ -2860,7 +2864,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a constraint with an {@code alter table}, can the phrase
 	 * {@code if exists} be applied after the constraint name?
-	 * <p/>
+	 * <p>
 	 * NOTE : Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeConstraintName} should return true.
 	 *
@@ -3025,7 +3029,7 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst}.  Certain drivers do not
 	 * allow access to these methods for forward only cursors.
-	 * <p/>
+	 * <p>
 	 * NOTE : this is highly driver dependent!
 	 *
 	 * @return True if methods like {@link ResultSet#isAfterLast} and
@@ -3052,7 +3056,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Are subselects supported as the left-hand-side (LHS) of
 	 * IN-predicates.
-	 * <p/>
+	 * <p>
 	 * In other words, is syntax like {@code ... <subquery> IN (1, 2, 3) ...} supported?
 	 *
 	 * @return True if subselects can appear as the LHS of an in-predicate;
@@ -3067,7 +3071,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Expected LOB usage pattern is such that I can perform an insert
 	 * via prepared statement with a parameter binding for a LOB value
 	 * without crazy casting to JDBC driver implementation-specific classes...
-	 * <p/>
+	 * <p>
 	 * Part of the trickiness here is the fact that this is largely
 	 * driver dependent.  For example, Oracle (which is notoriously bad with
 	 * LOB support in their drivers historically) actually does a pretty good
@@ -3086,20 +3090,20 @@ public abstract class Dialect implements ConversionContext {
 	 * values back to the database?  Talking about mutating the
 	 * internal value of the locator as opposed to supplying a new
 	 * locator instance...
-	 * <p/>
+	 * <p>
 	 * For BLOBs, the internal value might be changed by:
 	 * {@link Blob#setBinaryStream},
 	 * {@link Blob#setBytes(long, byte[])},
 	 * {@link Blob#setBytes(long, byte[], int, int)},
 	 * or {@link Blob#truncate(long)}.
-	 * <p/>
+	 * <p>
 	 * For CLOBs, the internal value might be changed by:
 	 * {@link Clob#setAsciiStream(long)},
 	 * {@link Clob#setCharacterStream(long)},
 	 * {@link Clob#setString(long, String)},
 	 * {@link Clob#setString(long, String, int, int)},
 	 * or {@link Clob#truncate(long)}.
-	 * <p/>
+	 * <p>
 	 * NOTE : I do not know the correct answer currently for
 	 * databases which (1) are not part of the cruise control process
 	 * or (2) do not {@link #supportsExpectedLobUsagePattern}.
@@ -3116,10 +3120,10 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Is it supported to materialize a LOB locator outside the transaction
 	 * in which it was created?
-	 * <p/>
+	 * <p>
 	 * Again, part of the trickiness here is the fact that this is largely
 	 * driver dependent.
-	 * <p/>
+	 * <p>
 	 * NOTE: all database I have tested which {@link #supportsExpectedLobUsagePattern()}
 	 * also support the ability to materialize a LOB outside the owning transaction...
 	 *
@@ -4377,5 +4381,17 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NONE;
+	}
+
+	/**
+	 * The SchemaManagementTool to use if none explicitly specified.
+	 * <p/>
+	 * Allows Dialects to override how schema tooling works by default
+	 */
+	@Incubating
+	public SchemaManagementTool getFallbackSchemaManagementTool(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry) {
+		return new HibernateSchemaManagementTool();
 	}
 }

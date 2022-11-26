@@ -11,7 +11,7 @@ import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema creation.
- * <p/>
+ * <p>
  * The actual contract here is kind of convoluted with the design
  * idea of allowing this to work in ORM (JDBC) as well as in non-JDBC
  * environments (OGM, e.g.) simultaneously.

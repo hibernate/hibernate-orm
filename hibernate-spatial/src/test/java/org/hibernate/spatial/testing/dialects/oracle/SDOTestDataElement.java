@@ -12,7 +12,7 @@ import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 /**
  * A specialised subclass for SDOGeometry test objects
- * <p/>
+ * <p>
  * Oracle 10g WKT support is limited to 2D geometries, and there is
  * no method of specifying SRID. That is why we here add the equivalent SDO expression
  * that can be used by the TestData

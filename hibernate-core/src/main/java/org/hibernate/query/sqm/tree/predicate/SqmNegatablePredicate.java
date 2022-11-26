@@ -23,11 +23,11 @@ public interface SqmNegatablePredicate extends SqmPredicate {
 	/**
 	 * Apply an external negation.  Called when we encounter a {@code NOT}
 	 * grouping.
-	 * <p/>
+	 * <p>
 	 * For example, for {@code not(x is null)} we build the
 	 * {@link SqmNullnessPredicate} and then call its negate method which results
 	 * in {@code x is not null}.
-	 * <p/>
+	 * <p>
 	 * Can be applied nested as well.  For example, {@code not(not(x is null))}
 	 * becomes {@code x is null} because the double-negative cancel each other out.
 	 */

@@ -41,7 +41,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 
 	/**
 	 * Can a collection/array of values be bound to this parameter?
-	 * <P/>
+	 * <p>
 	 * This is allowed in very limited contexts within the query:
 	 * <ol>
 	 *     <li>as the value of an IN predicate if the only value is a single param</li>
@@ -56,7 +56,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	/**
 	 * Based on the context it is declared, what is the anticipated type for
 	 * bind values?
-	 * <p/>
+	 * <p>
 	 * NOTE: If {@link #allowMultiValuedBinding()} is true, this will indicate
 	 * the Type of the individual values.
 	 *

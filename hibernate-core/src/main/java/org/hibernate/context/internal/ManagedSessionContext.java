@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * This external manager is responsible for scoping these contextual sessions
  * appropriately binding/unbinding them here for exposure to the application
  * through {@link SessionFactory#getCurrentSession} calls.
- * <p/>
+ * <p>
  *  Basically exposes two interfaces.  <ul>
  * <li>First is the implementation of CurrentSessionContext which is then used
  * by the {@link SessionFactory#getCurrentSession()} calls.  This

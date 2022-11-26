@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
  * manages its underlying jdbc connection across different config
  * scenarios.  The different config scenarios are controlled by the
  * individual test subclasses.
- * <p/>
+ * <p>
  * In general, all the tests required are defined here in templated fashion.
  * Subclassed then override various hook methods specific to their given
  * scneario being tested.

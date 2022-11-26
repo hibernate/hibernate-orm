@@ -19,7 +19,7 @@ public interface DatabaseSnapshotContributor extends Fetchable {
 
 	/**
 	 * Create a DomainResult to be used when selecting snapshots from the database.
-	 * <p/>
+	 * <p>
 	 * By default, simply use {@link #createDomainResult}
 	 */
 	default <T> DomainResult<T> createSnapshotDomainResult(

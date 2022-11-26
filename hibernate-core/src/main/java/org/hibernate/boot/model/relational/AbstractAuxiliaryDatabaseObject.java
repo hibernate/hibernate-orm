@@ -14,7 +14,7 @@ import org.hibernate.dialect.Dialect;
 
 /**
  * Convenience base class for {@link AuxiliaryDatabaseObject}s.
- * <p/>
+ * <p>
  * This implementation performs dialect scoping checks strictly based on
  * dialect name comparisons.  Custom implementations might want to do
  * instanceof-type checks.

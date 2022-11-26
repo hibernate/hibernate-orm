@@ -30,7 +30,7 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing 
 	 * lookups?  The default is to perform "synchronization" (for correctness).
-	 * <p/>
+	 * <p>
 	 * See {@link NaturalIdLoadAccess#setSynchronizationEnabled} for detailed discussion.
 	 *
 	 * @param enabled Should synchronization be performed?  {@code true} indicates synchronization will be performed;

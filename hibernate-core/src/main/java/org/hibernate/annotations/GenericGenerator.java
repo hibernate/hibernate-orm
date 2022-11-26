@@ -18,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Generator annotation describing any kind of Hibernate generator in a
  * generic (de-typed) manner.
- * <p/>
+ * <p>
  * For a more type-safe way to specify generators in annotations, see
  * {@link IdGeneratorType}
  *

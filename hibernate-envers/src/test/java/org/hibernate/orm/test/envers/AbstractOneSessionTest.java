@@ -43,6 +43,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 		config = new Configuration();
 		URL url = Thread.currentThread().getContextClassLoader().getResource( getHibernateConfigurationFileName() );
 		config.configure( new File( url.toURI() ) );
+		// Envers tests expect sequences to not skip values...
+		config.setProperty( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 
 		String auditStrategy = getAuditStrategy();
 		if ( auditStrategy != null && !"".equals( auditStrategy ) ) {

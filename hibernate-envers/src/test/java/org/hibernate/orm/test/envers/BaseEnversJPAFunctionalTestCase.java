@@ -157,6 +157,8 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 					SharedDriverManagerConnectionProviderImpl.getInstance()
 			);
 		}
+		// Envers tests expect sequences to not skip values...
+		config.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 		addConfigOptions( config );
 
 		return config;

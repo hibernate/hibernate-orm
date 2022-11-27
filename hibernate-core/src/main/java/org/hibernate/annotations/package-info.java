@@ -6,7 +6,7 @@
  */
 
 /**
- * Package containing all Hibernate's specific annotations.
+ * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
  *
  * <h3 id="basic-value-mapping">Basic value mapping</h3>
  *
@@ -41,6 +41,6 @@
  * the compositional approach.  Though the compositional approach is recommended, both forms are
  * fully supported.
  *
- * See the user-guide for a more in-depth discussion
+ * Please see the user guide for a more in-depth discussion.
  */
 package org.hibernate.annotations;

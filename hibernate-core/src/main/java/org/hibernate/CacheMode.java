@@ -11,7 +11,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 /**
- * Controls how the session interacts with the {@link Cache second-level cache}
+ * Controls how the session interacts with the {@linkplain Cache second-level cache}
  * or {@linkplain org.hibernate.query.SelectionQuery#isCacheable() query cache}.
  * An instance of {@code CacheMode} may be viewed as packaging a JPA-defined
  * {@link CacheStoreMode} with a {@link CacheRetrieveMode}. For example,

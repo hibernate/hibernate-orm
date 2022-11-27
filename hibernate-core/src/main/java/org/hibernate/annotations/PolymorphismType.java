@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 import java.util.Locale;
 
 /**
- * Type of available polymorphism for a particular entity.
+ * Specifies whether implicit polymorphism is enabled or disabled.
  *
  * @see Polymorphism
  *
@@ -17,11 +17,15 @@ import java.util.Locale;
  */
 public enum PolymorphismType {
 	/**
-	 * This entity is retrieved if any of its super entity are retrieved.  The default,
+	 * Implicit polymorphism is enabled, and queries against mapped
+	 * superclasses and other arbitrary Java supertypes of an entity
+	 * will return instances of the entity.
 	 */
 	IMPLICIT,
 	/**
-	 * This entity is retrieved only if explicitly asked.
+	 * Implicit polymorphism is disabled, and queries against mapped
+	 * superclasses and other arbitrary Java supertypes of an entity
+	 * will not return the entity.
 	 */
 	EXPLICIT;
 

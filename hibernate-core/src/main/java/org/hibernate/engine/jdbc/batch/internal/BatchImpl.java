@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -34,11 +34,11 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
- * Standard implementation of Batch2
+ * Standard implementation of Batch
  *
  * @author Steve Ebersole
  */
-public class Batch2Impl implements Batch2 {
+public class BatchImpl implements Batch {
 	private final BatchKey key;
 	private final int batchSizeToUse;
 	private final PreparedStatementGroup statementGroup;
@@ -52,7 +52,7 @@ public class Batch2Impl implements Batch2 {
 	private int batchPosition;
 	private boolean batchExecuted;
 
-	public Batch2Impl(
+	public BatchImpl(
 			BatchKey key,
 			PreparedStatementGroup statementGroup,
 			int batchSizeToUse,
@@ -80,7 +80,7 @@ public class Batch2Impl implements Batch2 {
 
 		if ( BATCH_TRACE_ENABLED ) {
 			BATCH_LOGGER.tracef(
-					"Created Batch2 (%s) - `%s`",
+					"Created Batch (%s) - `%s`",
 					batchSizeToUse,
 					key.toLoggableString()
 			);
@@ -342,6 +342,6 @@ public class Batch2Impl implements Batch2 {
 
 	@Override
 	public String toString() {
-		return "Batch2Impl(" + getKey().toLoggableString() + ")";
+		return "BatchImpl(" + getKey().toLoggableString() + ")";
 	}
 }

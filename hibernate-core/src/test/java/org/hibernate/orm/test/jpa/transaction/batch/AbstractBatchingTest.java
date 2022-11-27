@@ -9,8 +9,8 @@ package org.hibernate.orm.test.jpa.transaction.batch;
 import java.sql.SQLException;
 import java.util.function.Supplier;
 
-import org.hibernate.engine.jdbc.batch.internal.Batch2BuilderImpl;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -26,7 +26,7 @@ import org.hibernate.testing.orm.junit.SettingProvider;
  */
 public abstract class AbstractBatchingTest {
 
-	protected static Batch2Wrapper batchWrapper;
+	protected static BatchWrapper batchWrapper;
 	protected static boolean wasReleaseCalled;
 	protected static int numberOfStatementsBeforeRelease = -1;
 	protected static int numberOfStatementsAfterRelease = -1;
@@ -34,29 +34,29 @@ public abstract class AbstractBatchingTest {
 	public static class Batch2BuilderSettingProvider implements SettingProvider.Provider<String> {
 		@Override
 		public String getSetting() {
-			return Batch2BuilderLocal.class.getName();
+			return BatchBuilderLocal.class.getName();
 		}
 	}
 
-	public static class Batch2BuilderLocal extends Batch2BuilderImpl {
+	public static class BatchBuilderLocal extends BatchBuilderImpl {
 		private final boolean throwError;
 
-		public Batch2BuilderLocal() {
+		public BatchBuilderLocal() {
 			this( false );
 		}
 
-		public Batch2BuilderLocal(boolean throwError) {
+		public BatchBuilderLocal(boolean throwError) {
 			super( 50 );
 			this.throwError = throwError;
 		}
 
 		@Override
-		public Batch2 buildBatch(
+		public Batch buildBatch(
 				BatchKey key,
 				Integer explicitBatchSize,
 				Supplier<PreparedStatementGroup> statementGroupSupplier,
 				JdbcCoordinator jdbcCoordinator) {
-			batchWrapper = new Batch2Wrapper(
+			batchWrapper = new BatchWrapper(
 					throwError,
 					super.buildBatch( key, explicitBatchSize, statementGroupSupplier, jdbcCoordinator ),
 					jdbcCoordinator
@@ -68,25 +68,25 @@ public abstract class AbstractBatchingTest {
 	public static class ErrorBatch2BuilderSettingProvider implements SettingProvider.Provider<String> {
 		@Override
 		public String getSetting() {
-			return ErrorBatch2BuilderLocal.class.getName();
+			return ErrorBatchBuilderLocal.class.getName();
 		}
 	}
 
-	public static class ErrorBatch2BuilderLocal extends Batch2BuilderLocal {
-		public ErrorBatch2BuilderLocal() {
+	public static class ErrorBatchBuilderLocal extends BatchBuilderLocal {
+		public ErrorBatchBuilderLocal() {
 			super( true );
 		}
 	}
 
-	public static class Batch2Wrapper implements Batch2 {
+	public static class BatchWrapper implements Batch {
 		private final boolean throwError;
-		private final Batch2 wrapped;
+		private final Batch wrapped;
 		private final JdbcCoordinator jdbcCoordinator;
 
 		private int numberOfBatches;
 		private int numberOfSuccessfulBatches;
 
-		public Batch2Wrapper(boolean throwError, Batch2 wrapped, JdbcCoordinator jdbcCoordinator) {
+		public BatchWrapper(boolean throwError, Batch wrapped, JdbcCoordinator jdbcCoordinator) {
 			this.throwError = throwError;
 			this.wrapped = wrapped;
 			this.jdbcCoordinator = jdbcCoordinator;

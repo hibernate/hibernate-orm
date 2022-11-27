@@ -14,7 +14,6 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -38,17 +37,19 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	LogicalConnectionImplementor getLogicalConnection();
 
 	/**
-	 * Get a batch instance.
-	 *
-	 * @param key The unique batch key.
-	 *
-	 * @return The batch
+	 * The builder of prepared and callable JDBC statements for
+	 * mutation operations (insert, update and delete) originating
+	 * from persistent context events, as opposed to Query handling
 	 */
-	Batch getBatch(BatchKey key);
-
 	MutationStatementPreparer getMutationStatementPreparer();
 
-	Batch2 getBatch2(
+	/**
+	 * Get the {@linkplain Batch batch} for the supplied key, creating one
+	 * if needed using the supplied {@linkplain PreparedStatementGroup statementGroupSupplier}.
+	 *
+	 * @implNote Any previous Batch is executed and released prior to returning
+	 */
+	Batch getBatch2(
 			BatchKey key,
 			Integer batchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier);

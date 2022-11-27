@@ -19,8 +19,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
-import org.hibernate.engine.jdbc.batch.spi.Batch2Builder;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -64,7 +62,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private transient final JdbcServices jdbcServices;
 
 	private transient Batch currentBatch;
-	private transient Batch2 currentBatch2;
 
 	private transient long transactionTimeOutInstant = -1;
 
@@ -126,10 +123,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return this.owner.getJdbcSessionContext().getSessionFactory();
 	}
 
-	protected BatchBuilder batchBuilder() {
-		return sessionFactory().getServiceRegistry().getService( BatchBuilder.class );
-	}
-
 	/**
 	 * Access to the SqlExceptionHelper
 	 *
@@ -171,10 +164,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				LOG.closingUnreleasedBatch();
 				currentBatch.release();
 			}
-			if ( currentBatch2 != null ) {
-				LOG.closingUnreleasedBatch();
-				currentBatch2.release();
-			}
 		}
 		finally {
 			connection = logicalConnection.close();
@@ -183,7 +172,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public Batch getBatch(BatchKey key) {
+	public Batch getBatch2(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier) {
 		if ( currentBatch != null ) {
 			if ( currentBatch.getKey().equals( key ) ) {
 				return currentBatch;
@@ -193,47 +182,21 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				currentBatch.release();
 			}
 		}
-		currentBatch = batchBuilder().buildBatch( key, this );
+
+		final BatchBuilder batchBuilder = sessionFactory().getServiceRegistry().getService( BatchBuilder.class );
+		currentBatch = batchBuilder.buildBatch( key, batchSize, statementGroupSupplier, this );
+
 		return currentBatch;
-	}
-
-	@Override
-	public Batch2 getBatch2(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier) {
-		if ( currentBatch2 != null ) {
-			if ( currentBatch2.getKey().equals( key ) ) {
-				return currentBatch2;
-			}
-			else {
-				currentBatch2.execute();
-				currentBatch2.release();
-			}
-		}
-
-		final Batch2Builder batchBuilder = sessionFactory().getServiceRegistry().getService( Batch2Builder.class );
-		currentBatch2 = batchBuilder.buildBatch( key, batchSize, statementGroupSupplier, this );
-
-		return currentBatch2;
 	}
 
 	@Override
 	public void executeBatch() {
 		if ( currentBatch != null ) {
-			currentBatch.execute();
-			// needed?
-			currentBatch.release();
-		}
-
-		if ( currentBatch2 != null ) {
-			currentBatch2.execute();
-			currentBatch2.release();
-		}
-
-		if ( currentBatch2 != null ) {
 			try {
-				currentBatch2.execute();
+				currentBatch.execute();
 			}
 			finally {
-				currentBatch2.release();
+				currentBatch.release();
 			}
 		}
 	}
@@ -242,14 +205,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void abortBatch() {
 		if ( currentBatch != null ) {
 			currentBatch.release();
-		}
-
-		if ( currentBatch2 != null ) {
-			currentBatch2.release();
-		}
-
-		if ( currentBatch2 != null ) {
-			currentBatch2.release();
 		}
 	}
 

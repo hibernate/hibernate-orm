@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.Batch2BuilderInitiator;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
 import org.hibernate.testing.TestForIssue;
@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 						provider = JtaPlatformSettingProvider.class
 				),
 				@SettingProvider(
-						settingName = Batch2BuilderInitiator.BUILDER,
+						settingName = BatchBuilderInitiator.BUILDER,
 						provider = AbstractBatchingTest.ErrorBatch2BuilderSettingProvider.class
 				)
 		}

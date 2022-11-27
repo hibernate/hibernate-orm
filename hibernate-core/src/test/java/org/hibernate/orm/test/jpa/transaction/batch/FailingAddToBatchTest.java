@@ -51,7 +51,7 @@ public class FailingAddToBatchTest extends AbstractBatchingTest {
 			} );
 		}
 		catch (PersistenceException e) {
-			assertThat( batchWrapper.getStatementGroup().getNumberOfStatements() ).isEqualTo( 0 );
+			assertThat( batchWrapper.getStatementGroup().getNumberOfActiveStatements() ).isEqualTo( 0 );
 			assertThat( batchWrapper.getNumberOfBatches() ).isEqualTo( 1 );
 			assertThat( batchWrapper.getNumberOfSuccessfulBatches() ).isEqualTo( 0 );
 		}

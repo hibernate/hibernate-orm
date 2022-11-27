@@ -13,7 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -41,7 +41,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 	/**
 	 * The batched statements
 	 */
-	private final Batch2 batch;
+	private final Batch batch;
 
 	/**
 	 * Any non-batched JDBC statements

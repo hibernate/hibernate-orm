@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -70,9 +70,9 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 			try {
 				//at this point the transaction is still active but the batch should have been aborted (have to use reflection to get at the field)
 				SessionImplementor sessionImplementor = (SessionImplementor) session;
-				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch2" );
+				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
 				field.setAccessible( true );
-				Batch2 batch = (Batch2) field.get( sessionImplementor.getJdbcCoordinator() );
+				Batch batch = (Batch) field.get( sessionImplementor.getJdbcCoordinator() );
 				if ( batch == null ) {
 					throw new Exception( "Current batch was null" );
 				}

@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -29,6 +30,8 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 	/**
 	 * Names the BatchBuilder implementation to use.
+	 *
+	 * @see AvailableSettings#BATCH_STRATEGY
 	 */
 	public static final String BUILDER = "hibernate.jdbc.batch.builder";
 
@@ -39,7 +42,12 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 	@Override
 	public BatchBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final Object builder = configurationValues.get( BUILDER );
+		Object builder = configurationValues.get( BUILDER );
+
+		if ( builder == null ) {
+			builder = configurationValues.get( AvailableSettings.BATCH_STRATEGY );
+		}
+
 		if ( builder == null ) {
 			return new BatchBuilderImpl(
 					ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, 1 )
@@ -52,7 +60,10 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 		final String builderClassName = builder.toString();
 		try {
-			return (BatchBuilder) registry.getService( ClassLoaderService.class ).classForName( builderClassName ).newInstance();
+			return (BatchBuilder) registry.getService( ClassLoaderService.class )
+					.classForName( builderClassName )
+					.getConstructor()
+					.newInstance();
 		}
 		catch (Exception e) {
 			throw new ServiceException( "Could not build explicit BatchBuilder [" + builderClassName + "]", e );

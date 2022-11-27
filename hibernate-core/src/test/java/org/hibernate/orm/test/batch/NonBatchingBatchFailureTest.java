@@ -7,17 +7,10 @@
 package org.hibernate.orm.test.batch;
 
 import java.lang.reflect.Field;
-import java.util.Map;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
-import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -25,7 +18,12 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -71,14 +69,7 @@ public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 				Field field = sessionImplementor.getJdbcCoordinator().getClass().getDeclaredField( "currentBatch" );
 				field.setAccessible( true );
 				Batch batch = (Batch) field.get( sessionImplementor.getJdbcCoordinator() );
-				if ( batch != null ) {
-					//make sure it's actually a batching impl
-					assertEquals( NonBatchingBatch.class, batch.getClass() );
-					field = AbstractBatchImpl.class.getDeclaredField( "statements" );
-					field.setAccessible( true );
-					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)
-					assertEquals( 0, ((Map) field.get( batch )).size() );
-				}
+				assertNull( batch );
 			}
 			catch (Exception fieldException) {
 				fail( "Couldn't inspect field " + fieldException.getMessage() );

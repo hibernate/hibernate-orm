@@ -15,6 +15,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -1011,7 +1012,7 @@ public interface AvailableSettings {
 	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 
 	/**
-	 * Specifies a custom {@link org.hibernate.engine.jdbc.batch.spi.BatchBuilder}.
+	 * Specifies a custom {@link BatchBuilder}.
 	 */
 	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 

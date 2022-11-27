@@ -6,7 +6,7 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -40,9 +40,9 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 		return (PreparedStatementGroupSingleTable) resolveBatch().getStatementGroup();
 	}
 
-	private Batch2 batch;
+	private Batch batch;
 
-	private Batch2 resolveBatch() {
+	private Batch resolveBatch() {
 		if ( batch == null ) {
 			batch = session.getJdbcCoordinator().getBatch2(
 					batchKey,

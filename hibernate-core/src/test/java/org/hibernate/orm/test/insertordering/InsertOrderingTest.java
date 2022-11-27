@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.function.Supplier;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.Batch2BuilderInitiator;
-import org.hibernate.engine.jdbc.batch.internal.Batch2Impl;
-import org.hibernate.engine.jdbc.batch.spi.Batch2;
-import org.hibernate.engine.jdbc.batch.spi.Batch2Builder;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
+import org.hibernate.engine.jdbc.batch.internal.BatchImpl;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry(
 		settings = {@Setting( name = Environment.ORDER_INSERTS, value = "true"),
 				@Setting( name = Environment.STATEMENT_BATCH_SIZE, value = "10"),
-				@Setting( name = Batch2BuilderInitiator.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
+				@Setting( name = BatchBuilderInitiator.BUILDER, value = "org.hibernate.orm.test.insertordering.InsertOrderingTest$StatsBatchBuilder" )
 		}
 )
 public class InsertOrderingTest {
@@ -79,15 +79,15 @@ public class InsertOrderingTest {
 	}
 
 	@SuppressWarnings("unused")
-	public static class StatsBatchBuilder implements Batch2Builder {
+	public static class StatsBatchBuilder implements BatchBuilder {
 
 		@Override
-		public Batch2 buildBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier, JdbcCoordinator jdbcCoordinator) {
+		public Batch buildBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier, JdbcCoordinator jdbcCoordinator) {
 			return new StatsBatch( key, batchSize, statementGroupSupplier.get(), jdbcCoordinator );
 		}
 	}
 
-	public static class StatsBatch extends Batch2Impl {
+	public static class StatsBatch extends BatchImpl {
 		private static int numberOfBatches = -1;
 
 		public StatsBatch(

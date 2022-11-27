@@ -170,6 +170,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
         return parent;
     }
 
+    /**
+     * Called for join tables in {@link jakarta.persistence.ManyToMany} associations.
+     */
     public static AnnotatedJoinColumns buildJoinTableJoinColumns(
             JoinColumn[] joinColumns,
             Map<String, Join> secondaryTables,

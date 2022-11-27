@@ -138,7 +138,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
-import static org.hibernate.cfg.AnnotatedJoinColumn.buildJoinColumn;
+import static org.hibernate.cfg.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
@@ -937,7 +937,7 @@ public class EntityBinder {
 			final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
 			if ( columns.length > 0 ) {
 				for ( PrimaryKeyJoinColumn column : columns ) {
-					buildJoinColumn(
+					buildInheritanceJoinColumn(
 							column,
 							null,
 							superEntity.getIdentifier(),
@@ -947,7 +947,7 @@ public class EntityBinder {
 				}
 			}
 			else {
-				buildJoinColumn(
+				buildInheritanceJoinColumn(
 						clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class ),
 						null,
 						superEntity.getIdentifier(),
@@ -957,7 +957,7 @@ public class EntityBinder {
 			}
 		}
 		else {
-			buildJoinColumn(
+			buildInheritanceJoinColumn(
 					clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class ),
 					null,
 					superEntity.getIdentifier(),
@@ -1689,7 +1689,7 @@ public class EntityBinder {
 		joinColumns.setBuildingContext( context );
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
-		buildJoinColumn(
+		buildInheritanceJoinColumn(
 				null,
 				null,
 				persistentClass.getIdentifier(),
@@ -1715,7 +1715,7 @@ public class EntityBinder {
 			for ( int colIndex = 0; colIndex < joinColumnCount; colIndex++ ) {
 				final PrimaryKeyJoinColumn primaryKeyJoinColumn = primaryKeyJoinColumns != null ? primaryKeyJoinColumns[colIndex] : null;
 				final JoinColumn joinColumn = joinColumns != null ? joinColumns[colIndex] : null;
-				buildJoinColumn(
+				buildInheritanceJoinColumn(
 						primaryKeyJoinColumn,
 						joinColumn,
 						persistentClass.getIdentifier(),

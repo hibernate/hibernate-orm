@@ -76,15 +76,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			String mappedBy,
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
-			String propertyName) {
-		final String path = qualify( propertyHolder.getPath(), propertyName );
+			PropertyData inferredData) {
+		final String path = qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
 		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
 		if ( overrides != null ) {
 			//TODO: relax this restriction
-			throw new AnnotationException("Property '" + path
-					+ "' overrides mapping specified using '@JoinColumnOrFormula'");
+			throw new AnnotationException( "Property '" + path
+					+ "' overrides mapping specified using '@JoinColumnOrFormula'" );
 		}
-		return buildJoinColumn( joinColumn, null, mappedBy, parent, propertyHolder, propertyName, "" );
+		return buildJoinColumn( joinColumn, null, mappedBy, parent, propertyHolder, inferredData, "" );
 	}
 
 	public static AnnotatedJoinColumn buildJoinFormula(
@@ -108,19 +108,18 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			String mappedBy,
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
-			String propertyName,
+			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		if ( joinColumn != null ) {
 			if ( !isEmptyOrNullAnnotationValue( mappedBy ) ) {
-				throw new AnnotationException(
-						"Association '" + getRelativePath( propertyHolder, propertyName )
-								+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'"
-				);
+				throw new AnnotationException( "Association '"
+						+ getRelativePath( propertyHolder, inferredData.getPropertyName() )
+						+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" );
 			}
-			return explicitJoinColumn( joinColumn, comment, parent, propertyName, defaultColumnSuffix );
+			return explicitJoinColumn( joinColumn, comment, parent, inferredData, defaultColumnSuffix );
 		}
 		else {
-			return implicitJoinColumn( parent, propertyName, defaultColumnSuffix );
+			return implicitJoinColumn( parent, inferredData, defaultColumnSuffix );
 		}
 	}
 
@@ -128,7 +127,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			JoinColumn joinColumn,
 			Comment comment,
 			AnnotatedJoinColumns parent,
-			String propertyName,
+			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setComment( comment != null ? comment.value() : null );
@@ -136,19 +135,20 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setJoins( joins );
 //		column.setPropertyHolder( propertyHolder );
 		if ( isEmpty( column.getLogicalColumnName() ) && isNotEmpty( defaultColumnSuffix ) ) {
-			column.setLogicalColumnName( propertyName + defaultColumnSuffix );
+			column.setLogicalColumnName( inferredData.getPropertyName() + defaultColumnSuffix );
 		}
 //		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		column.setImplicit( false );
 		column.setParent( parent );
 		column.applyJoinAnnotation( joinColumn, null );
+		column.applyColumnDefault( inferredData, parent.getColumns().size() );
 		column.bind();
 		return column;
 	}
 
 	private static AnnotatedJoinColumn implicitJoinColumn(
 			AnnotatedJoinColumns parent,
-			String propertyName,
+			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 //		column.setContext( context );
@@ -157,13 +157,14 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		// property name + suffix is an "explicit" column name
 		if ( isNotEmpty( defaultColumnSuffix ) ) {
-			column.setLogicalColumnName( propertyName + defaultColumnSuffix );
+			column.setLogicalColumnName( inferredData.getPropertyName() + defaultColumnSuffix );
 			column.setImplicit( false );
 		}
 		else {
 			column.setImplicit( true );
 		}
 		column.setParent( parent );
+		column.applyColumnDefault( inferredData, parent.getColumns().size() );
 		column.bind();
 		return column;
 	}
@@ -401,7 +402,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	static AnnotatedJoinColumn buildImplicitJoinTableJoinColumn(
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
-			String propertyName) {
+			PropertyData inferredData) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setImplicit( true );
 		column.setNullable( false ); //I break the spec, but it's for good
@@ -417,7 +418,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	static AnnotatedJoinColumn buildExplicitJoinTableJoinColumn(
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
-			String propertyName,
+			PropertyData inferredData,
 			JoinColumn joinColumn) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setImplicit( true );
@@ -428,7 +429,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		column.setNullable( false ); //I break the spec, but it's for good
 		//done after the annotation to override it
 		column.setParent( parent );
-		column.applyJoinAnnotation( joinColumn, propertyName );
+		column.applyJoinAnnotation( joinColumn, inferredData.getPropertyName() );
 		column.bind();
 		return column;
 	}

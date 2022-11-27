@@ -282,6 +282,7 @@ public class AnnotatedColumn {
 			mappingColumn.setSqlType( sqlType );
 			mappingColumn.setUnique( unique );
 			mappingColumn.setCheckConstraint( checkConstraint );
+			mappingColumn.setDefaultValue( defaultValue );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -766,7 +767,7 @@ public class AnnotatedColumn {
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
 	}
 
-	private void applyColumnDefault(PropertyData inferredData, int length) {
+	void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty property = inferredData.getProperty();
 		if ( property != null ) {
 			final ColumnDefault columnDefault =
@@ -783,7 +784,7 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private void applyGeneratedAs(PropertyData inferredData, int length) {
+	void applyGeneratedAs(PropertyData inferredData, int length) {
 		final XProperty property = inferredData.getProperty();
 		if ( property != null ) {
 			final GeneratedColumn generatedColumn =

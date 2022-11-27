@@ -136,7 +136,7 @@ class ColumnsBuilder {
 					oneToMany != null ? oneToMany.mappedBy() : "",
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					inferredData,
 					buildingContext
 			);
 		}
@@ -182,7 +182,7 @@ class ColumnsBuilder {
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					inferredData,
 					buildingContext
 			);
 		}
@@ -194,7 +194,7 @@ class ColumnsBuilder {
 					oneToOneAnn != null ? oneToOneAnn.mappedBy() : null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					inferredData.getPropertyName(),
+					inferredData,
 					buildingContext
 			);
 		}
@@ -202,8 +202,6 @@ class ColumnsBuilder {
 
 	private AnnotatedJoinColumns buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		// process @JoinColumns before @Columns to handle collection of entities properly
-		final String propertyName = inferredData.getPropertyName();
-
 		final JoinColumn[] joinColumnAnnotations = getJoinColumnAnnotations( property, inferredData );
 		if ( joinColumnAnnotations != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
@@ -212,7 +210,7 @@ class ColumnsBuilder {
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					propertyName,
+					inferredData,
 					buildingContext
 			);
 		}
@@ -224,7 +222,7 @@ class ColumnsBuilder {
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
-					propertyName,
+					inferredData,
 					buildingContext
 			);
 		}
@@ -232,10 +230,10 @@ class ColumnsBuilder {
 		if ( property.isAnnotationPresent( JoinFormula.class) ) {
 			final JoinFormula joinFormula = getOverridableAnnotation( property, JoinFormula.class, buildingContext );
 			return AnnotatedJoinColumns.buildJoinColumnsWithFormula(
-					propertyName,
 					joinFormula,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
+					inferredData,
 					buildingContext
 			);
 		}

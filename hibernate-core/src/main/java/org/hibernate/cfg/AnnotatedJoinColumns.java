@@ -67,13 +67,13 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             String mappedBy,
             Map<String, Join> joins,
             PropertyHolder propertyHolder,
-            String propertyName,
+            PropertyData inferredData,
             MetadataBuildingContext context) {
         final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
         parent.setBuildingContext( context );
         parent.setJoins( joins );
         parent.setPropertyHolder( propertyHolder );
-        parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+        parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
         parent.setMappedBy( mappedBy );
         for ( JoinColumnOrFormula columnOrFormula : joinColumnOrFormulas ) {
             final JoinFormula formula = columnOrFormula.formula();
@@ -82,23 +82,23 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                 AnnotatedJoinColumn.buildJoinFormula( formula, parent );
             }
             else {
-                AnnotatedJoinColumn.buildJoinColumn( column, mappedBy, parent, propertyHolder, propertyName );
+                AnnotatedJoinColumn.buildJoinColumn( column, mappedBy, parent, propertyHolder, inferredData );
             }
         }
         return parent;
     }
 
     static AnnotatedJoinColumns buildJoinColumnsWithFormula(
-            String propertyName,
             JoinFormula joinFormula,
             Map<String, Join> secondaryTables,
             PropertyHolder propertyHolder,
+            PropertyData inferredData,
             MetadataBuildingContext context) {
         final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
         joinColumns.setBuildingContext( context );
         joinColumns.setJoins( secondaryTables );
         joinColumns.setPropertyHolder( propertyHolder );
-        joinColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+        joinColumns.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
         AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns );
         return joinColumns;
     }
@@ -109,7 +109,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             String mappedBy,
             Map<String, Join> joins,
             PropertyHolder propertyHolder,
-            String propertyName,
+            PropertyData inferredData,
             MetadataBuildingContext buildingContext) {
         return buildJoinColumnsWithDefaultColumnSuffix(
                 joinColumns,
@@ -117,7 +117,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                 mappedBy,
                 joins,
                 propertyHolder,
-                propertyName,
+                inferredData,
                 "",
                 buildingContext
         );
@@ -129,9 +129,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             String mappedBy,
             Map<String, Join> joins,
             PropertyHolder propertyHolder,
-            String propertyName,
+            PropertyData inferredData,
             String defaultColumnSuffix,
             MetadataBuildingContext context) {
+        final String propertyName = inferredData.getPropertyName();
         final String path = qualify( propertyHolder.getPath(), propertyName );
         final JoinColumn[] overriddes = propertyHolder.getOverriddenJoinColumn( path );
         final JoinColumn[] actualColumns = overriddes == null ? joinColumns : overriddes;
@@ -148,7 +149,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                     mappedBy,
                     parent,
                     propertyHolder,
-                    propertyName,
+                    inferredData,
                     defaultColumnSuffix
             );
         }
@@ -161,7 +162,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
                         mappedBy,
                         parent,
                         propertyHolder,
-                        propertyName,
+                        inferredData,
                         defaultColumnSuffix
                 );
             }
@@ -173,21 +174,21 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             JoinColumn[] joinColumns,
             Map<String, Join> secondaryTables,
             PropertyHolder propertyHolder,
-            String propertyName,
+            PropertyData inferredData,
             String mappedBy,
             MetadataBuildingContext context) {
         final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
         parent.setBuildingContext( context );
         parent.setJoins( secondaryTables );
         parent.setPropertyHolder( propertyHolder );
-        parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+        parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
         parent.setMappedBy( mappedBy );
         if ( joinColumns == null ) {
-            AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn( parent, propertyHolder, propertyName );
+            AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn( parent, propertyHolder, inferredData );
         }
         else {
             for ( JoinColumn joinColumn : joinColumns ) {
-                AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, propertyName, joinColumn );
+                AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn( parent, propertyHolder, inferredData, joinColumn );
             }
         }
         return parent;

@@ -26,6 +26,7 @@ import jakarta.persistence.LockModeType;
  * @see Session#lock(Object, LockMode)
  * @see LockModeType
  * @see LockOptions
+ * @see org.hibernate.annotations.OptimisticLocking
  */
 public enum LockMode {
 	/**

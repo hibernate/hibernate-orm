@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 /**
- * Possible optimistic locking strategies.
+ * Enumerates the possible optimistic lock checking strategies.
  *
  * @see OptimisticLocking
  *
@@ -15,25 +15,38 @@ package org.hibernate.annotations;
  */
 public enum OptimisticLockType {
 	/**
-	 * Perform no optimistic locking.
+	 * No optimistic locking.
 	 */
 	NONE,
 	/**
-	 * Perform optimistic locking using a dedicated version column.
+	 * Optimistic locking using a dedicated timestamp column or
+	 * {@linkplain jakarta.persistence.Version version column}.
+	 * This is the usual strategy.
+	 * <p>
+	 * Any SQL {@code update} or {@code delete} statement will
+	 * have a {@code where} clause restriction which specifies
+	 * the primary key and current version. If no rows are
+	 * updated, this is interpreted as a lock checking failure.
 	 *
 	 * @see jakarta.persistence.Version
 	 */
 	VERSION,
 	/**
-	 * Perform optimistic locking based on <em>dirty</em> fields as
-	 * part of an expanded {@code WHERE} clause restriction for the
-	 * SQL {@code UPDATE} or {@code DELETE} statement.
+	 * Optimistic locking based on <em>dirty</em> fields of the
+	 * entity.
+	 * <p>
+	 * A SQL {@code update} or {@code delete} statement will
+	 * have every dirty field of the entity instance listed in
+	 * the {@code where} clause restriction.
 	 */
 	DIRTY,
 	/**
-	 * Perform optimistic locking based on <em>all</em> fields as
-	 * part of an expanded {@code WHERE} clause restriction for the
-	 * SQL {@code UPDATE} or {@code DELETE} statement.
+	 * Optimistic locking based on <em>all</em> fields of the
+	 * entity.
+	 * <p>
+	 * A SQL {@code update} or {@code delete} statement will
+	 * have every field of the entity listed in the {@code where}
+	 * clause restriction.
 	 */
 	ALL
 }

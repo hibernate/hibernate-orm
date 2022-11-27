@@ -205,9 +205,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	}
 
 	/**
-	 * Build JoinColumn for a JOINED hierarchy
+	 * Called for {@link jakarta.persistence.InheritanceType#JOINED} entities.
 	 */
-	public static AnnotatedJoinColumn buildJoinColumn(
+	public static AnnotatedJoinColumn buildInheritanceJoinColumn(
 			PrimaryKeyJoinColumn primaryKeyJoinColumn,
 			JoinColumn joinColumn,
 			Value identifier,
@@ -216,11 +216,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String defaultColumnName = context.getMetadataCollector()
 				.getLogicalColumnName( identifier.getTable(),  identifier.getColumns().get(0).getQuotedName() );
 		return primaryKeyJoinColumn != null || joinColumn != null
-				? explicitJoinColumn( primaryKeyJoinColumn, joinColumn, parent, context, defaultColumnName )
-				: implicitJoinColumn( parent, context, defaultColumnName );
+				? buildExplicitInheritanceJoinColumn( primaryKeyJoinColumn, joinColumn, parent, context, defaultColumnName )
+				: buildImplicitInheritanceJoinColumn( parent, context, defaultColumnName );
 	}
 
-	private static AnnotatedJoinColumn explicitJoinColumn(
+	private static AnnotatedJoinColumn buildExplicitInheritanceJoinColumn(
 			PrimaryKeyJoinColumn primaryKeyJoinColumn,
 			JoinColumn joinColumn,
 			AnnotatedJoinColumns parent,
@@ -259,7 +259,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		return column;
 	}
 
-	private static AnnotatedJoinColumn implicitJoinColumn(
+	private static AnnotatedJoinColumn buildImplicitInheritanceJoinColumn(
 			AnnotatedJoinColumns parent,
 			MetadataBuildingContext context,
 			String defaultColumnName ) {

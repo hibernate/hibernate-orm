@@ -75,17 +75,16 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
-
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString(tableName) );
-		buf.append( dialect.getDropUniqueKeyString() );
+		final StringBuilder command = new StringBuilder( dialect.getAlterTableString(tableName) );
+		command.append( dialect.getDropUniqueKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
+			command.append( "if exists " );
 		}
-		buf.append( dialect.quote( uniqueKey.getName() ) );
+		command.append( dialect.quote( uniqueKey.getName() ) );
 		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
+			command.append( " if exists" );
 		}
-		return buf.toString();
+		return command.toString();
 	}
 
 }

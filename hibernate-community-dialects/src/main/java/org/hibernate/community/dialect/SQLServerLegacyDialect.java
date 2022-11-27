@@ -120,7 +120,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	private UniqueDelegate createUniqueDelgate(DatabaseVersion version) {
 		return version.isSameOrAfter(10)
+				//use 'create unique nonclustered index ... where ...'
 				? new AlterTableUniqueIndexDelegate(this)
+				//ignore unique keys on nullable columns in versions before 2008
 				: new SkipNullableUniqueDelegate(this);
 	}
 

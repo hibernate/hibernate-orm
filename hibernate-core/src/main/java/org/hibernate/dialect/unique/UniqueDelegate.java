@@ -13,7 +13,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
 /**
- * Dialect-level delegate in charge of applying unique constraints in DDL. Uniqueness can
+ * Dialect-level delegate responsible for applying unique constraints in DDL. Uniqueness can
  * be specified in any of three ways:
  * <ol>
  *     <li>
@@ -30,7 +30,18 @@ import org.hibernate.mapping.UniqueKey;
  *         Also, see {@link #getAlterTableToDropUniqueKeyCommand}.
  *     </li>
  * </ol>
- * The first two options are generally preferred.
+ * The first two options are generally preferred, and so we use {@link CreateTableUniqueDelegate}
+ * where possible. However, for databases where unique constraints may not contain a nullable
+ * column, and unique indexes must be used instead, we use {@link AlterTableUniqueIndexDelegate}.
+ * <p>
+ * Hibernate specifies that a unique constraint on a nullable column considers null values to be
+ * distinct. Some databases default to the opposite semantic, where null values are considered
+ * equal for the purpose of determining uniqueness. This is almost never useful, and is the
+ * opposite of what we want when we use a unique constraint on a foreign key to map an optional
+ * {@link org.hibernate.mapping.OneToOne} association. Therefore, our {@code UniqueDelegate}s must
+ * jump through hoops to emulate the sensible semantics specified by ANSI, Hibernate, and common
+ * sense, namely, that two null values are distinct. A particularly egregious offender is Sybase,
+ * where we must simply {@linkplain SkipNullableUniqueDelegate skip creating the unique constraint}.
  *
  * @author Brett Meyer
  */

@@ -19,7 +19,7 @@ import org.hibernate.mapping.UniqueKey;
  * Needed because unique constraints on nullable columns in Sybase always consider null values to be non-unique.
  * There is simply no way to create a unique constraint with the semantics we want on a nullable column in Sybase >:-(
  * <p>
- * You might argue that this was a bad decision because if the programmer explicitly specifies an {@code @UniqueKey},
+ * You might argue that this behavior is bad because if the programmer explicitly specifies an {@code @UniqueKey},
  * then we should damn well respect their wishes. But the simple answer is that the user should have also specified
  * {@code @Column(nullable=false)} if that is what they wanted. A unique key on a nullable column just really doesn't
  * make sense in Sybase, except, perhaps, in some incredibly corner cases.

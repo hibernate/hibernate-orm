@@ -73,8 +73,11 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
+		//TODO: when was 'create unique where not null index' really first introduced?
 		return getVersion().isSameOrAfter(7, 1)
+				//use 'create unique where not null index'
 				? new AlterTableUniqueIndexDelegate(this)
+				//ignore unique keys on nullable columns in earlier versions
 				: new SkipNullableUniqueDelegate(this);
 	}
 

@@ -212,7 +212,9 @@ public class DB2LegacyDialect extends Dialect {
 
 	protected UniqueDelegate createUniqueDelegate() {
 		return getDB2Version().isSameOrAfter(10,5)
+				//use 'create unique index ... exclude null keys'
 				? new AlterTableUniqueIndexDelegate( this )
+				//ignore unique keys on nullable columns in earlier versions
 				: new SkipNullableUniqueDelegate( this );
 	}
 
@@ -495,6 +497,8 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
 		return unique ? " exclude null keys" : "";
 	}
 

@@ -16,10 +16,11 @@ import java.lang.annotation.Target;
 import org.hibernate.tuple.CreationTimestampGeneration;
 
 /**
- * Marks a property as the creation timestamp of the containing entity. The property value will be set to the current
- * VM date exactly once when saving the owning entity for the first time.
+ * Marks a property as the creation timestamp of the containing entity.
+ * The property value is set to the current VM datetime when the owning
+ * entity is made persistent for the first time.
  * <p>
- * Supported property types:
+ * The annotated field or property must be of one of the following types:
  * <ul>
  * <li>{@link java.util.Date}</li>
  * <li>{@link java.util.Calendar}</li>

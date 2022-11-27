@@ -13,10 +13,12 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Ensures that auto-flush happens correctly and that queries against the derived 
- * entity do not return stale data.
- * 
- * Mostly used with {@link Subselect}.
+ * Specifies the tables that hold state mapped by the annotated derived
+ * entity, ensuring that auto-flush happens correctly and that queries
+ * against the derived entity do not return stale data.
+ * <p>
+ * This annotation may be used in combination with {@link Subselect}, or
+ * when an entity maps a database view.
  * 
  * @author Sharath Reddy
  */
@@ -24,7 +26,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Synchronize {
 	/**
-	 * Table names.
+	 * Names of tables that hold state mapped by the derived entity.
+	 * Updates to these tables must be flushed to the database before
+	 * the derived entity is queried.
 	 */
 	String[] value();
 }

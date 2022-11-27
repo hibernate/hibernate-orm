@@ -14,6 +14,11 @@ package org.hibernate.annotations;
  * the expected number of rows.
  *
  * @author L�szl� Benke
+ *
+ * @see SQLInsert#check()
+ * @see SQLUpdate#check()
+ * @see SQLDelete#check()
+ * @see SQLDeleteAll#check()
  */
 public enum ResultCheckStyle {
 	/**

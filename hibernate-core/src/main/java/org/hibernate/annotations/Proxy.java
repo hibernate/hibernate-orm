@@ -13,7 +13,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Lazy and proxy configuration of a particular class.
+ * Allows the proxy class of an entity class to be explicitly specified.
+ * This annotation is almost never useful.
  *
  * @author Emmanuel Bernard
  */
@@ -21,12 +22,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Proxy {
 	/**
-	 * Whether this class is lazy or not.  Default to true.
+	 * Whether this class may be proxied.  Default to true.
 	 */
 	boolean lazy() default true;
 
 	/**
-	 * Proxy class or interface used.  Default is to use the entity class name.
+	 * Proxy class or interface used.  Default is to the annotated entity class itself.
 	 */
 	Class<?> proxyClass() default void.class;
 }

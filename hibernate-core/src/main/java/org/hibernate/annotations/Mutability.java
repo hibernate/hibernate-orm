@@ -20,7 +20,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify a {@link MutabilityPlan} for a basic value mapping.
+ * Specifies a {@link MutabilityPlan} for a basic value mapping.
  * <ul>
  *     <li>
  *         When applied to a Map-valued attribute, describes the

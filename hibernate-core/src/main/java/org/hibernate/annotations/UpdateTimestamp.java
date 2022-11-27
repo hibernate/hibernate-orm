@@ -16,10 +16,11 @@ import java.lang.annotation.Target;
 import org.hibernate.tuple.UpdateTimestampGeneration;
 
 /**
- * Marks a property as the update timestamp of the containing entity. The property value will be set to the current VM
- * date whenever the owning entity is updated.
+ * Marks a property as the update timestamp of the containing entity.
+ * The property value will be set to the current VM datetime whenever
+ * the owning entity is updated.
  * <p>
- * Supported property types:
+ * The annotated field or property must be of one of the following types:
  * <ul>
  * <li>{@link java.util.Date}</li>
  * <li>{@link java.util.Calendar}</li>

@@ -105,7 +105,7 @@ public class ManyToOne extends ToOne {
 							getForeignKeyDefinition(),
 							new ArrayList<>( property.getColumns() )
 					);
-					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
+					fk.setCascadeDeleteEnabled( isCascadeDeleteEnabled() );
 				}
 			}
 		}

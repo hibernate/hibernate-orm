@@ -23,6 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@code @Generated(INSERT)}, to populate an entity attribute with
  *         the defaulted value of a database column.
  * </ul>
+ * If {@link Generated} is not used, a {@code default} value can state held
+ * in memory to lose synchronization with the database.
  *
  * @author Steve Ebersole
  *
@@ -33,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface ColumnDefault {
 	/**
-	 * The {@code DEFAULT} value to use in generated DDL.
+	 * The {@code default} value to use in generated DDL.
 	 *
 	 * @return a SQL expression that evaluates to the default column value
 	 */

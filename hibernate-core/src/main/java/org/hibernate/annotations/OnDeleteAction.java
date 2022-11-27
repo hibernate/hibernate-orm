@@ -6,29 +6,39 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.AssertionFailure;
+
 /**
- * Possible actions for on-delete.
+ * Enumerates the possible actions for the {@code on delete} clause
+ * of a foreign key constraint. Specifies what action the database
+ * should take when deletion of a row would result in a violation of
+ * the constraint.
  *
  * @author Emmanuel Bernard
+ *
+ * @see OnDelete
  */
 public enum OnDeleteAction {
-	/**
-	 * Take no action.  The default.
-	 */
-	NO_ACTION( "no-action" ),
-	/**
-	 * Use cascade delete capabilities of the database foreign-key.
-	 */
-	CASCADE( "cascade" );
 
-	private final String alternativeName;
+	/**
+	 * No action. The default.
+	 */
+	NO_ACTION,
 
-	OnDeleteAction(String alternativeName) {
-		this.alternativeName = alternativeName;
-	}
+	/**
+	 * Cascade deletion of the parent to the child.
+	 */
+	CASCADE;
 
 	public String getAlternativeName() {
-		return alternativeName;
+		switch (this) {
+			case NO_ACTION:
+				return "no-action";
+			case CASCADE:
+				return "cascade";
+			default:
+				throw new AssertionFailure("unknown action");
+		}
 	}
 
 	public static OnDeleteAction fromExternalForm(Object value) {
@@ -49,7 +59,7 @@ public enum OnDeleteAction {
 		}
 
 		for ( OnDeleteAction checkAction : values() ) {
-			if ( checkAction.alternativeName.equalsIgnoreCase( valueString ) ) {
+			if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
 				return checkAction;
 			}
 		}

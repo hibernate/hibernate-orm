@@ -91,9 +91,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	}
 
 	private void addConstraintToColumn(final String columnName ) {
-		Column column = table.getColumn(
-				new Column( buildingContext.getMetadataCollector().getPhysicalColumnName( table, columnName ) )
-		);
+		Column column = table.getColumn( buildingContext.getMetadataCollector(), columnName );
 		if ( column == null ) {
 			throw new AnnotationException(
 					"Table '" + table.getName() + "' has no column named '" + columnName

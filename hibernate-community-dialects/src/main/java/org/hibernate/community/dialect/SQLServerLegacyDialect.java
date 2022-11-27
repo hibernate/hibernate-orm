@@ -30,6 +30,9 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -39,6 +42,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
@@ -71,6 +75,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
@@ -91,6 +96,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
 	private final StandardSequenceExporter exporter;
+	private final UniqueDelegate uniqueDelegate;
 
 	public SQLServerLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -99,15 +105,23 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	public SQLServerLegacyDialect(DatabaseVersion version) {
 		super(version);
 		exporter = createSequenceExporter(version);
+		uniqueDelegate = createUniqueDelgate(version);
 	}
 
 	public SQLServerLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		exporter = createSequenceExporter(info);
+		uniqueDelegate = createUniqueDelgate(info);
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
 		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
+	}
+
+	private UniqueDelegate createUniqueDelgate(DatabaseVersion version) {
+		return version.isSameOrAfter(10)
+				? new AlterTableUniqueIndexDelegate(this)
+				: new SkipNullableUniqueDelegate(this);
 	}
 
 	@Override
@@ -950,6 +964,36 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			return super.getSequenceExporter();
 		}
 		return exporter;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique nonclustered index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		if (unique) {
+			StringBuilder tail = new StringBuilder();
+			for ( Column column : columns ) {
+				if ( column.isNullable() ) {
+					tail.append( tail.length() == 0 ? " where " : " and " )
+						.append( column.getQuotedName( this ) )
+						.append( " is not null" );
+				}
+			}
+			return tail.toString();
+		}
+		else {
+			return "";
+		}
 	}
 
 	private static class SqlServerSequenceExporter extends StandardSequenceExporter {

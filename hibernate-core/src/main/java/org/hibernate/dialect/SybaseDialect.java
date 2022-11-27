@@ -10,6 +10,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -50,6 +52,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+
 import jakarta.persistence.TemporalType;
 
 
@@ -66,6 +69,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
 
 	public SybaseDialect() {
 		this( MINIMUM_VERSION );
@@ -350,4 +354,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		}
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
 }

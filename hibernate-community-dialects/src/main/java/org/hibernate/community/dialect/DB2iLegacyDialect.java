@@ -17,16 +17,20 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.List;
 
 /**
  * An SQL dialect for DB2 for iSeries previously known as DB2/400.
@@ -69,9 +73,21 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
-		return getVersion().isSameOrAfter(7, 3)
-				? new AlterTableUniqueDelegate(this)
-				: super.createUniqueDelegate();
+		return getVersion().isSameOrAfter(7, 1)
+				? new AlterTableUniqueIndexDelegate(this)
+				: new SkipNullableUniqueDelegate(this);
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique where not null index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return "";
 	}
 
 	@Override

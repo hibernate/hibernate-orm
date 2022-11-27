@@ -241,36 +241,32 @@ public class OneToOneSecondPass implements SecondPass {
 		// if not, then we need to create a many to one and formula
 		// but actually, since entities linked by a one to one need
 		// to share the same composite id class, this cannot happen
-		boolean rightOrder = true;
-
-		if ( rightOrder ) {
-			final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
-					oneToOne,
-					joinColumns,
-					!optional, //cannot have nullable and unique on certain DBs
-					propertyHolder.getPersistentClass(),
-					qualify( propertyHolder.getPath(), propertyName),
-					buildingContext
-			);
-			secondPass.doSecondPass(persistentClasses);
-			//no column associated since it's a one to one
-			propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
-		}
+//		boolean rightOrder = true;
+//
+//		if ( rightOrder ) {
+		final ToOneFkSecondPass secondPass = new ToOneFkSecondPass(
+				oneToOne,
+				joinColumns,
+				true,
+				propertyHolder.getPersistentClass(),
+				qualify( propertyHolder.getPath(), propertyName),
+				buildingContext
+		);
+		secondPass.doSecondPass(persistentClasses);
+		//no column associated since it's a one to one
+		propertyHolder.addProperty( property, inferredData.getDeclaringClass() );
+//		}
 //		else {
 			// this is a @ManyToOne with Formula
 //		}
 	}
 
 	/**
-	 * Builds the <code>Join</code> instance for the mapped by side of a <i>OneToOne</i> association using
-	 * a join table.
-	 * <p>
-	 * Note:<br/>
-	 * <ul>
-	 * <li>From the mappedBy side we should not create the PK nor the FK, this is handled from the other side.</li>
-	 * <li>This method is a dirty dupe of EntityBinder.bindSecondaryTable</li>.
-	 * </ul>
-	 * </p>
+	 * Builds the {@link Join} instance for the unowned side
+	 * of a {@code OneToOne} association using a join table.
+	 * From the {@code mappedBy} side we should not create
+	 * neither the PK, nor the FK, this is all handled from
+	 * the owning side.
 	 */
 	private Join buildJoinFromMappedBySide(PersistentClass persistentClass, Property otherSideProperty, Join originalJoin) {
 		Join join = new Join();

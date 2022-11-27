@@ -85,12 +85,14 @@ public class SchemaCreationTest {
 			isUniqueConstraintCreated = isUniqueConstraintCreated
 					|| statement.startsWith("create unique index")
 						&& statement.contains("category (code)")
+					|| statement.startsWith("create unique nonclustered index")
+					&& statement.contains("category (code)")
 					|| statement.startsWith("alter table if exists category add constraint")
 						&& statement.contains("unique (code)")
 					|| statement.startsWith("alter table category add constraint")
 						&& statement.contains("unique (code)")
 					|| statement.startsWith("create table category")
-						&& statement.contains("code " + varchar255 + dialect.getNullColumnString() + " unique")
+						&& statement.contains("code " + varchar255 + " not null unique")
 					|| statement.startsWith("create table category")
 						&& statement.contains("unique(code)");
 		}

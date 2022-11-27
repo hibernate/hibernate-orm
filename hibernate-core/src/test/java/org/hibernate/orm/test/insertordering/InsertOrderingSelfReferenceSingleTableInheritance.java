@@ -77,12 +77,9 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 	@Test
 	public void test2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			NodeLongValue aparam = new NodeLongValue();
-			aparam.setLongValue( 123L );
-
-			ContentNode xa = new ContentNode( aparam, null, null );
-			ContentNode xb = new ContentNode( aparam, null, null );
-			ContentNode xc = new ContentNode( aparam, xb, null );
+			ContentNode xa = new ContentNode(new NodeLongValue(123L), null, null );
+			ContentNode xb = new ContentNode(new NodeLongValue(123L), null, null );
+			ContentNode xc = new ContentNode(new NodeLongValue(123L), xb, null );
 
 			NodeLink nl = new NodeLink( xc );
 
@@ -118,8 +115,9 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 			NodeStringValue stringVal = new NodeStringValue();
 			stringVal.setStringValue( "Node 123" );
 
+			ContentNode cn0 = new ContentNode( null, null, null );
 			ContentNode cn1 = new ContentNode( stringVal, null, null );
-			ContentNode cn2 = new ContentNode( longVal, cn1, null );
+			ContentNode cn2 = new ContentNode( longVal, cn0, null );
 
 			ContentNode cn3 = new ContentNode( null, cn1, cn2 );
 
@@ -342,6 +340,11 @@ public class InsertOrderingSelfReferenceSingleTableInheritance {
 
 		public NodeLongValue(String dataType, Long longValue) {
 			super( dataType );
+			this.longValue = longValue;
+		}
+
+		public NodeLongValue(Long longValue) {
+			super();
 			this.longValue = longValue;
 		}
 

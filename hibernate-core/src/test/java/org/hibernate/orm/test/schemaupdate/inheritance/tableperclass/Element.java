@@ -25,7 +25,7 @@ public abstract class Element {
 	@GeneratedValue
 	private Long id;
 
-	@Column(unique = true)
+	@Column(unique = true, nullable = false)
 	@NaturalId
 	private String code;
 }

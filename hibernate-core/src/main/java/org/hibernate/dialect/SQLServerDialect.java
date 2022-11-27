@@ -24,6 +24,8 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -33,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
@@ -68,6 +71,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
@@ -80,7 +84,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * A dialect for Microsoft SQL Server 2000 and above
+ * A dialect for Microsoft SQL Server 2008 and above
  *
  * @author Gavin King
  */
@@ -89,6 +93,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
 	private final StandardSequenceExporter exporter;
+	private final UniqueDelegate uniqueDelegate = new AlterTableUniqueIndexDelegate(this);
 
 	public SQLServerDialect() {
 		this( MINIMUM_VERSION );
@@ -937,12 +942,42 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return super.getDropSchemaCommand( schemaName );
 	}
 
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique nonclustered index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		if (unique) {
+			StringBuilder tail = new StringBuilder();
+			for ( Column column : columns ) {
+				if ( column.isNullable() ) {
+					tail.append( tail.length() == 0 ? " where " : " and " )
+							.append( column.getQuotedName( this ) )
+							.append( " is not null" );
+				}
+			}
+			return tail.toString();
+		}
+		else {
+			return "";
+		}
+	}
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
 	public Exporter<Sequence> getSequenceExporter() {
 		if ( exporter == null ) {
 			return super.getSequenceExporter();

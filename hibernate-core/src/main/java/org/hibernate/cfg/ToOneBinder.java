@@ -179,7 +179,7 @@ public class ToOneBinder {
 		final FkSecondPass secondPass = new ToOneFkSecondPass(
 				value,
 				joinColumns,
-				!optional && unique, //cannot have nullable and unique on certain DBs like Derby
+				unique,
 				propertyHolder.getPersistentClass(),
 				fullPath,
 				context

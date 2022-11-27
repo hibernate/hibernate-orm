@@ -14,6 +14,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -50,7 +51,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private final NotFoundAction notFoundAction;
 	private final PropertyData inferredData;
 	private final XClass targetEntity;
-	private final boolean cascadeOnDelete;
+	private final OnDeleteAction onDeleteAction;
 	private final boolean optional;
 	private final String cascadeStrategy;
 	private final AnnotatedJoinColumns joinColumns;
@@ -64,7 +65,7 @@ public class OneToOneSecondPass implements SecondPass {
 			PropertyData inferredData,
 			XClass targetEntity,
 			NotFoundAction notFoundAction,
-			boolean cascadeOnDelete,
+			OnDeleteAction onDeleteAction,
 			boolean optional,
 			String cascadeStrategy,
 			AnnotatedJoinColumns columns,
@@ -77,7 +78,7 @@ public class OneToOneSecondPass implements SecondPass {
 		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
 		this.targetEntity = targetEntity;
-		this.cascadeOnDelete = cascadeOnDelete;
+		this.onDeleteAction = onDeleteAction;
 		this.optional = optional;
 		this.cascadeStrategy = cascadeStrategy;
 		this.joinColumns = columns;
@@ -97,7 +98,7 @@ public class OneToOneSecondPass implements SecondPass {
 		XProperty property = inferredData.getProperty();
 		ToOneBinder.defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
-		value.setCascadeDeleteEnabled( cascadeOnDelete );
+		value.setOnDeleteAction(onDeleteAction);
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
 		value.setConstrained( !optional );
@@ -174,7 +175,7 @@ public class OneToOneSecondPass implements SecondPass {
 			final ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 			//FIXME use ignore not found here
 			manyToOne.setNotFoundAction( notFoundAction );
-			manyToOne.setCascadeDeleteEnabled( oneToOne.isCascadeDeleteEnabled() );
+			manyToOne.setOnDeleteAction( oneToOne.getOnDeleteAction() );
 			manyToOne.setFetchMode( oneToOne.getFetchMode() );
 			manyToOne.setLazy( oneToOne.isLazy() );
 			manyToOne.setReferencedEntityName( oneToOne.getReferencedEntityName() );
@@ -285,7 +286,7 @@ public class OneToOneSecondPass implements SecondPass {
 		join.setKey( key );
 		//TODO support for inverse and optional
 		join.setOptional( true ); //perhaps not quite per-spec, but a Good Thing anyway
-		key.setCascadeDeleteEnabled( false );
+		key.setOnDeleteAction( null );
 		for ( Column column: otherSideProperty.getValue().getColumns() ) {
 			Column copy = new Column();
 			copy.setLength( column.getLength() );

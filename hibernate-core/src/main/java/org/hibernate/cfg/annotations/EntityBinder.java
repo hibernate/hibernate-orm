@@ -58,7 +58,6 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.Persister;
@@ -672,7 +671,7 @@ public class EntityBinder {
 			jsc.setKey( key );
 			handleForeignKeys( annotatedClass, context, key );
 			final OnDelete onDelete = annotatedClass.getAnnotation( OnDelete.class );
-			key.setCascadeDeleteEnabled( onDelete != null && OnDeleteAction.CASCADE == onDelete.action() );
+			key.setOnDeleteAction( onDelete == null ? null : onDelete.action() );
 			//we are never in a second pass at that stage, so queue it
 			context.getMetadataCollector()
 					.addSecondPass( new JoinedSubclassFkSecondPass( jsc, joinColumns, key, context) );
@@ -1732,7 +1731,7 @@ public class EntityBinder {
 		DependantValue key = new DependantValue( context, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setForeignKeyNameIfDefined( join );
-		key.setCascadeDeleteEnabled( false );
+		key.setOnDeleteAction( null );
 		TableBinder.bindForeignKey( persistentClass, null, joinColumns, key, false, context );
 		key.sortProperties();
 		join.createPrimaryKey();

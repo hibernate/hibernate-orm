@@ -100,7 +100,7 @@ public class ToOneBinder {
 				joinColumns,
 				!mandatory,
 				notFoundAction,
-				onDelete != null && OnDeleteAction.CASCADE == onDelete.action(),
+				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),
 				propertyHolder,
 				inferredData,
@@ -130,7 +130,7 @@ public class ToOneBinder {
 			AnnotatedJoinColumns joinColumns,
 			boolean optional,
 			NotFoundAction notFoundAction,
-			boolean cascadeOnDelete,
+			OnDeleteAction onDeleteAction,
 			XClass targetEntity,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -151,7 +151,7 @@ public class ToOneBinder {
 		defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
 		value.setNotFoundAction( notFoundAction );
-		value.setCascadeDeleteEnabled( cascadeOnDelete );
+		value.setOnDeleteAction( onDeleteAction );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
 			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
@@ -425,7 +425,7 @@ public class ToOneBinder {
 				!mandatory,
 				getFetchMode( oneToOne.fetch() ),
 				notFoundAction,
-				onDelete != null && OnDeleteAction.CASCADE == onDelete.action(),
+				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),
 				propertyHolder,
 				inferredData,
@@ -444,7 +444,7 @@ public class ToOneBinder {
 			boolean optional,
 			FetchMode fetchMode,
 			NotFoundAction notFoundAction,
-			boolean cascadeOnDelete,
+			OnDeleteAction cascadeOnDelete,
 			XClass targetEntity,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,

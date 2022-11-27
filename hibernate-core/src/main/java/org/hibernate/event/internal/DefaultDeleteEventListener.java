@@ -168,7 +168,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
-			deleteTransientEntity( source, entity, event.isCascadeDeleteEnabled(), persister, transientEntities );
+			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
 		else {
 			performDetachedEntityDeletionCheck( event );
@@ -320,7 +320,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 *
 	 * @param session The session which is the source of the event
 	 * @param entity The entity being delete processed
-	 * @param cascadeDeleteEnabled Is cascading of deletes enabled
 	 * @param persister The entity persister
 	 * @param transientEntities A cache of already visited transient entities
 	 * (to avoid infinite recursion).
@@ -328,7 +327,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	protected void deleteTransientEntity(
 			EventSource session,
 			Object entity,
-			boolean cascadeDeleteEnabled,
 			EntityPersister persister,
 			DeleteContext transientEntities) {
 		LOG.handlingTransientEntity();
@@ -336,7 +334,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			LOG.trace( "Already handled transient entity; skipping" );
 			return;
 		}
-		cascadeBeforeDelete( session, persister, entity, null, transientEntities );
+		cascadeBeforeDelete( session, persister, entity, transientEntities );
 		cascadeAfterDelete( session, persister, entity, transientEntities );
 	}
 
@@ -390,7 +388,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
 		final EntityKey key = session.generateEntityKey( entityEntry.getId(), persister );
 
-		cascadeBeforeDelete( session, persister, entity, entityEntry, transientEntities );
+		cascadeBeforeDelete( session, persister, entity, transientEntities );
 
 		new ForeignKeys.Nullifier(  entity, true, false, session, persister )
 				.nullifyTransientReferences( entityEntry.getDeletedState() );
@@ -493,7 +491,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EventSource session,
 			EntityPersister persister,
 			Object entity,
-			EntityEntry entityEntry,
 			DeleteContext transientEntities) throws HibernateException {
 
 		CacheMode cacheMode = session.getCacheMode();

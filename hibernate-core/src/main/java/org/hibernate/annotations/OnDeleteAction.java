@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.AssertionFailure;
+import static java.util.Locale.ROOT;
 
 /**
  * Enumerates the possible actions for the {@code on delete} clause
@@ -21,24 +21,38 @@ import org.hibernate.AssertionFailure;
 public enum OnDeleteAction {
 
 	/**
-	 * No action. The default.
+	 * No action. The default. An error is raised if rows still reference
+	 * the parent when the constraint is checked, possibly later in the
+	 * transaction.
 	 */
 	NO_ACTION,
 
 	/**
 	 * Cascade deletion of the parent to the child.
 	 */
-	CASCADE;
+	CASCADE,
+
+	/**
+	 * Prevents deletion of the parent by raising an error immediately.
+	 */
+	RESTRICT,
+
+	/**
+	 * Set the referencing foreign key to null.
+	 */
+	SET_NULL,
+
+	/**
+	 * Set the referencing foreign key to its default value.
+	 */
+	SET_DEFAULT;
 
 	public String getAlternativeName() {
-		switch (this) {
-			case NO_ACTION:
-				return "no-action";
-			case CASCADE:
-				return "cascade";
-			default:
-				throw new AssertionFailure("unknown action");
-		}
+		return toString().toLowerCase(ROOT).replace('_', '-');
+	}
+
+	public String toSqlString() {
+		return toString().toLowerCase(ROOT).replace('_', ' ');
 	}
 
 	public static OnDeleteAction fromExternalForm(Object value) {

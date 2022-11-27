@@ -1649,7 +1649,7 @@ public final class AnnotationBinder {
 				BinderHelper.getCascadeStrategy( null, hibernateCascade, false, forcePersist ),
 				//@Any has no cascade attribute
 				joinColumns,
-				onDeleteAnn != null && OnDeleteAction.CASCADE == onDeleteAnn.action(),
+				onDeleteAnn == null ? null : onDeleteAnn.action(),
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -2331,7 +2331,7 @@ public final class AnnotationBinder {
 	private static void bindAny(
 			String cascadeStrategy,
 			AnnotatedJoinColumns columns,
-			boolean cascadeOnDelete,
+			OnDeleteAction onDeleteAction,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -2350,7 +2350,7 @@ public final class AnnotationBinder {
 				getOverridableAnnotation( property, Formula.class, context ),
 				columns,
 				inferredData,
-				cascadeOnDelete,
+				onDeleteAction,
 				lazy,
 				nullability,
 				propertyHolder,

@@ -2923,7 +2923,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support column-level check constraints?
 	 *
-	 * @return True if column-level {@code CHECK} constraints are supported;
+	 * @return True if column-level {@code check} constraints are supported;
 	 *         false otherwise.
 	 */
 	public boolean supportsColumnCheck() {
@@ -2933,7 +2933,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support table-level check constraints?
 	 *
-	 * @return True if table-level {@code CHECK} constraints are supported;
+	 * @return True if table-level {@code check} constraints are supported;
 	 *         false otherwise.
 	 */
 	public boolean supportsTableCheck() {
@@ -2941,9 +2941,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support cascaded delete on foreign key definitions?
+	 * Does this dialect support {@code on delete} actions in foreign key definitions?
 	 *
-	 * @return {@code true} indicates that the dialect does support cascaded delete on foreign keys.
+	 * @return {@code true} if the dialect does support the {@code on delete} clause.
 	 */
 	public boolean supportsCascadeDelete() {
 		return true;

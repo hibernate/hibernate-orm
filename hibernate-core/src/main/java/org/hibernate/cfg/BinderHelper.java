@@ -36,6 +36,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -1035,7 +1036,7 @@ public class BinderHelper {
 			Formula discriminatorFormula,
 			AnnotatedJoinColumns keyColumns,
 			PropertyData inferredData,
-			boolean cascadeOnDelete,
+			OnDeleteAction onDeleteAction,
 			boolean lazy,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -1046,7 +1047,7 @@ public class BinderHelper {
 
 		final Any value = new Any( context, keyColumns.getTable(), true );
 		value.setLazy( lazy );
-		value.setCascadeDeleteEnabled( cascadeOnDelete );
+		value.setOnDeleteAction( onDeleteAction );
 
 		final BasicValueBinder discriminatorValueBinder =
 				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );

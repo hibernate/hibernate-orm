@@ -388,7 +388,7 @@ public abstract class CollectionBinder {
 				null,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
-				inferredData.getPropertyName(),
+				inferredData,
 				"_KEY",
 				context
 		);
@@ -706,7 +706,7 @@ public abstract class CollectionBinder {
 				annJoins,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
-				inferredData.getPropertyName(),
+				inferredData,
 				mappedBy,
 				buildingContext
 		) );
@@ -714,7 +714,7 @@ public abstract class CollectionBinder {
 				annInverseJoins,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
-				inferredData.getPropertyName(),
+				inferredData,
 				mappedBy,
 				buildingContext
 		) );

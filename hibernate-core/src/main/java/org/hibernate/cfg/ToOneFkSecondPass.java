@@ -63,7 +63,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		}
 		final PersistentClass persistentClass = buildingContext.getMetadataCollector()
 				.getEntityBinding( entityClassName );
-		Property property = persistentClass.getIdentifierProperty();
+		final Property property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
 		}
@@ -82,7 +82,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 					localPath = path.substring( 3 );
 				}
 
-				Component component = (Component) valueIdentifier;
+				final Component component = (Component) valueIdentifier;
 				for ( Property idProperty : component.getProperties() ) {
 					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;

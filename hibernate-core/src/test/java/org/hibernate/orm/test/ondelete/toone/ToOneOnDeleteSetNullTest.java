@@ -3,11 +3,10 @@ package org.hibernate.orm.test.ondelete.toone;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.dialect.SybaseDialect;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -19,18 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 
-/**
- * @author Vlad Mihalcea
- */
 @DomainModel(
 		annotatedClasses = {
-				ToOneOnDeleteTest.Parent.class,
-				ToOneOnDeleteTest.Child.class,
-				ToOneOnDeleteTest.GrandChild.class
+				ToOneOnDeleteSetNullTest.Parent.class,
+				ToOneOnDeleteSetNullTest.Child.class,
+				ToOneOnDeleteSetNullTest.GrandChild.class
 		}
 )
 @SessionFactory
-public class ToOneOnDeleteTest {
+public class ToOneOnDeleteSetNullTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
@@ -79,10 +75,10 @@ public class ToOneOnDeleteTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNotNull( session.get(Child.class, 1L) );
-					assertNotNull( session.get(Child.class, 2L) );
-					assertNotNull( session.get(GrandChild.class, 2L) );
-					assertNotNull( session.get(GrandChild.class, 3L) );
+					assertNotNull( session.get(Child.class, 1L).parent );
+					assertNotNull( session.get(Child.class, 2L).parent );
+					assertNotNull( session.get(GrandChild.class, 2L).parent );
+					assertNotNull( session.get(GrandChild.class, 3L).parent );
 				}
 		);
 		scope.inTransaction(
@@ -93,13 +89,14 @@ public class ToOneOnDeleteTest {
 		);
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get(Child.class, 1L) );
-					assertNull( session.get(Child.class, 2L) );
-					assertNull( session.get(GrandChild.class, 2L) );
-					assertNull( session.get(GrandChild.class, 3L) );
+					assertNull( session.get(Child.class, 1L).parent );
+					assertNull( session.get(Child.class, 2L).parent );
+					assertNotNull( session.get(GrandChild.class, 2L).parent );
+					assertNotNull( session.get(GrandChild.class, 3L).parent );
 					assertNull( session.get( Parent.class, 1L ) );
 				}
-		);	}
+		);
+	}
 
 
 	@Entity(name = "Parent")
@@ -120,7 +117,7 @@ public class ToOneOnDeleteTest {
 		private String name;
 
 		@ManyToOne
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OnDelete(action = OnDeleteAction.SET_NULL)
 		private Parent parent;
 	}
 
@@ -133,7 +130,8 @@ public class ToOneOnDeleteTest {
 		private String name;
 
 		@ManyToOne
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OnDelete(action = OnDeleteAction.SET_DEFAULT)
+		@ColumnDefault("null")
 		private Child parent;
 	}
 }

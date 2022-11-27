@@ -24,6 +24,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -96,7 +97,7 @@ public abstract class SimpleValue implements KeyValue {
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
-	private boolean cascadeDeleteEnabled;
+	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
 	private ConverterDescriptor attributeConverterDescriptor;
@@ -130,7 +131,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.foreignKeyName = original.foreignKeyName;
 		this.foreignKeyDefinition = original.foreignKeyDefinition;
 		this.alternateUniqueKey = original.alternateUniqueKey;
-		this.cascadeDeleteEnabled = original.cascadeDeleteEnabled;
+		this.onDeleteAction = original.onDeleteAction;
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
@@ -150,14 +151,31 @@ public abstract class SimpleValue implements KeyValue {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
-	@Override
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
+	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
 	}
+
+	/**
+	 * @deprecated use {@link #getOnDeleteAction()}
+	 */
+	@Deprecated(since = "6.2")
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return onDeleteAction == OnDeleteAction.CASCADE;
+	}
+
+	/**
+	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
+	 */
+	@Deprecated(since = "6.2")
+	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
+		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
+	}
+
 
 	public void addColumn(Column column) {
 		addColumn( column, true, true );
@@ -325,7 +343,7 @@ public abstract class SimpleValue implements KeyValue {
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
 			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
+			fk.setOnDeleteAction( onDeleteAction );
 			return fk;
 		}
 

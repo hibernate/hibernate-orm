@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -24,7 +25,7 @@ public class ForeignKey extends Constraint {
 	private Table referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
-	private boolean cascadeDeleteEnabled;
+	private OnDeleteAction onDeleteAction;
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
 
@@ -90,8 +91,8 @@ public class ForeignKey extends Constraint {
 						isReferenceToPrimaryKey()
 				);
 
-		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
-				? result + " on delete cascade"
+		return onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION && dialect.supportsCascadeDelete()
+				? result + " on delete " + onDeleteAction.toSqlString()
 				: result;
 	}
 
@@ -166,12 +167,28 @@ public class ForeignKey extends Constraint {
 		this.keyDefinition = keyDefinition;
 	}
 
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
+	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
+	/**
+	 * @deprecated use {@link #getOnDeleteAction()}
+	 */
+	@Deprecated(since = "6.2")
+	public boolean isCascadeDeleteEnabled() {
+		return onDeleteAction == OnDeleteAction.CASCADE;
+	}
+
+	/**
+	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
+	 */
+	@Deprecated(since = "6.2")
 	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
 	}
 
 	public boolean isPhysicalConstraint() {

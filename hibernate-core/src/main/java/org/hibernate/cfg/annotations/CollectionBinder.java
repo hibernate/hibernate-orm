@@ -212,7 +212,7 @@ public abstract class CollectionBinder {
 	private String cacheRegionName;
 	private boolean oneToMany;
 	protected IndexColumn indexColumn;
-	protected boolean cascadeDeleteEnabled;
+	protected OnDeleteAction onDeleteAction;
 	protected String mapKeyPropertyName;
 	private boolean insertable = true;
 	private boolean updatable = true;
@@ -288,7 +288,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 		collectionBinder.setEmbedded( property.isAnnotationPresent( Embedded.class ) );
 		collectionBinder.setProperty( property );
-		collectionBinder.setCascadeDeleteEnabled( hasOnDeleteCascade( property ) );
+		collectionBinder.setOnDeleteActionAction( onDeleteAction( property ) );
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
@@ -394,9 +394,9 @@ public abstract class CollectionBinder {
 		);
 	}
 
-	private static boolean hasOnDeleteCascade(XProperty property) {
+	private static OnDeleteAction onDeleteAction(XProperty property) {
 		final OnDelete onDelete = property.getAnnotation( OnDelete.class );
-		return onDelete != null && OnDeleteAction.CASCADE == onDelete.action();
+		return onDelete == null ? null : onDelete.action();
 	}
 
 	private static PropertyData virtualPropertyData(PropertyData inferredData, XProperty property) {
@@ -1631,7 +1631,7 @@ public abstract class CollectionBinder {
 		handleWhere( false );
 
 		final PersistentClass targetEntity = persistentClasses.get( getElementType().getName() );
-		bindCollectionSecondPass( targetEntity, foreignJoinColumns, cascadeDeleteEnabled );
+		bindCollectionSecondPass( targetEntity, foreignJoinColumns, onDeleteAction);
 
 		if ( !collection.isInverse() && !collection.getKey().isNullable() ) {
 			createOneToManyBackref( oneToMany );
@@ -1906,7 +1906,7 @@ public abstract class CollectionBinder {
 	private DependantValue buildCollectionKey(
 			Collection collection,
 			AnnotatedJoinColumns joinColumns,
-			boolean cascadeDeleteEnabled,
+			OnDeleteAction onDeleteAction,
 			boolean noConstraintByDefault,
 			XProperty property,
 			PropertyHolder propertyHolder) {
@@ -1928,7 +1928,7 @@ public abstract class CollectionBinder {
 		final List<AnnotatedColumn> columns = joinColumns.getColumns();
 		key.setNullable( columns.isEmpty() || columns.get(0).isNullable() );
 		key.setUpdateable( columns.isEmpty() || columns.get(0).isUpdatable() );
-		key.setCascadeDeleteEnabled( cascadeDeleteEnabled );
+		key.setOnDeleteAction( onDeleteAction );
 		collection.setKey( key );
 
 		if ( property != null ) {
@@ -2088,7 +2088,7 @@ public abstract class CollectionBinder {
 		bindFilters( isCollectionOfEntities );
 		handleWhere( isCollectionOfEntities );
 
-		bindCollectionSecondPass( targetEntity, joinColumns, cascadeDeleteEnabled );
+		bindCollectionSecondPass( targetEntity, joinColumns, onDeleteAction);
 
 		if ( isCollectionOfEntities ) {
 			final ManyToOne element = handleCollectionOfEntities(
@@ -2106,7 +2106,7 @@ public abstract class CollectionBinder {
 			handleManyToAny(
 					collection,
 					inverseJoinColumns,
-					cascadeDeleteEnabled,
+					onDeleteAction,
 					property,
 					buildingContext
 			);
@@ -2356,7 +2356,7 @@ public abstract class CollectionBinder {
 	private void handleManyToAny(
 			Collection collection,
 			AnnotatedJoinColumns inverseJoinColumns,
-			boolean cascadeDeleteEnabled,
+			OnDeleteAction onDeleteAction,
 			XProperty property,
 			MetadataBuildingContext buildingContext) {
 		//@ManyToAny
@@ -2381,7 +2381,7 @@ public abstract class CollectionBinder {
 				discriminatorFormulaAnn,
 				inverseJoinColumns,
 				inferredData,
-				cascadeDeleteEnabled,
+				onDeleteAction,
 				anyAnn.fetch() == LAZY,
 				Nullability.NO_CONSTRAINT,
 				propertyHolder,
@@ -2579,7 +2579,7 @@ public abstract class CollectionBinder {
 	private void bindCollectionSecondPass(
 			PersistentClass targetEntity,
 			AnnotatedJoinColumns joinColumns,
-			boolean cascadeDeleteEnabled) {
+			OnDeleteAction onDeleteAction) {
 
 		if ( !hasMappedBy() ) {
 			createSyntheticPropertyReference(
@@ -2596,7 +2596,7 @@ public abstract class CollectionBinder {
 		final DependantValue key = buildCollectionKey(
 				collection,
 				joinColumns,
-				cascadeDeleteEnabled,
+				onDeleteAction,
 				buildingContext.getBuildingOptions().isNoConstraintByDefault(),
 				property,
 				propertyHolder
@@ -2617,8 +2617,8 @@ public abstract class CollectionBinder {
 		key.sortProperties();
 	}
 
-	public void setCascadeDeleteEnabled(boolean onDeleteCascade) {
-		this.cascadeDeleteEnabled = onDeleteCascade;
+	public void setOnDeleteActionAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
 	String safeCollectionRole() {

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -77,8 +78,9 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				);
 
 		if ( dialect.supportsCascadeDelete() ) {
-			if ( foreignKey.isCascadeDeleteEnabled() ) {
-				buffer.append( " on delete cascade" );
+			OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
 		}
 

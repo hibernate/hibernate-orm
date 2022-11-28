@@ -25,7 +25,6 @@ plugins {
 	id 'org.hibernate.orm.database-service' apply false
 
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-	id 'nu.studer.credentials' version '3.0'
 
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
@@ -60,28 +59,18 @@ task publish {
 }
 
 ext {
-	// look for command-line overrides of the username/password pairs for publishing
 	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
 		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
 			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
 		}
-		credentials.hibernatePublishUsername = project.property( 'hibernatePublishUsername' )
-		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
-	}
-	else if ( System.properties.hibernatePublishUsername != null ) {
-		if ( System.properties.hibernatePublishPassword == null ) {
-			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as system properties" );
-		}
-		credentials.hibernatePublishUsername = System.properties.hibernatePublishUsername
-		credentials.hibernatePublishPassword = System.properties.hibernatePublishPassword
 	}
 }
 
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = credentials.forKey( 'hibernatePublishUsername' )
-			password = credentials.forKey( 'hibernatePublishPassword' )
+			username = project.property( 'hibernatePublishUsername' )
+			password = project.property( 'hibernatePublishPassword' )
 		}
 	}
 }
@@ -102,11 +91,11 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 					if ( graph.hasTask( taskToLookFor ) ) {
 						// trying to publish - make sure the needed credentials are available
 
-						if ( credentials.forKey( 'hibernatePublishUsername' ) == null ) {
-							throw new GradleException( "Publishing credentials not specified" );
+						if ( project.property( 'hibernatePublishUsername' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
 						}
-						if ( credentials.forKey( 'hibernatePublishPassword' ) == null ) {
-							throw new GradleException( "Publishing credentials not specified" );
+						if ( project.property( 'hibernatePublishPassword' ) == null ) {
+							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
 						}
 
 						break;

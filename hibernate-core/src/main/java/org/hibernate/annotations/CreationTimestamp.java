@@ -8,9 +8,9 @@ package org.hibernate.annotations;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.tuple.CreationTimestampGeneration;
@@ -29,7 +29,7 @@ import org.hibernate.tuple.CreationTimestampGeneration;
  * @see CurrentTimestamp
  */
 @ValueGenerationType(generatedBy = CreationTimestampGeneration.class)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface CreationTimestamp {
 	/**

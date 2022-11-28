@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.model.ast;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.annotations.ColumnTransformer;
@@ -22,12 +25,21 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  */
 public class ColumnWriteFragment implements Expression {
 	private final String fragment;
-	private final ColumnValueParameter parameter;
+	private final List<ColumnValueParameter> parameters;
 	private final JdbcMapping jdbcMapping;
 
+	public ColumnWriteFragment(String fragment, JdbcMapping jdbcMapping) {
+		this( fragment, Collections.emptyList(), jdbcMapping );
+	}
+
 	public ColumnWriteFragment(String fragment, ColumnValueParameter parameter, JdbcMapping jdbcMapping) {
+		this( fragment, Collections.singletonList( parameter ), jdbcMapping );
+		assert parameter != null;
+	}
+
+	public ColumnWriteFragment(String fragment, List<ColumnValueParameter> parameters, JdbcMapping jdbcMapping) {
 		this.fragment = fragment;
-		this.parameter = parameter;
+		this.parameters = parameters;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -35,8 +47,8 @@ public class ColumnWriteFragment implements Expression {
 		return fragment;
 	}
 
-	public ColumnValueParameter getParameter() {
-		return parameter;
+	public Collection<ColumnValueParameter> getParameters() {
+		return parameters;
 	}
 
 	@Override
@@ -51,13 +63,32 @@ public class ColumnWriteFragment implements Expression {
 
 	@Override
 	public String toString() {
-		return String.format(
-				Locale.ROOT,
-				"ColumnWriteFragment(%s = %s (%s))@%s",
-				parameter.getColumnReference().getColumnExpression(),
-				fragment,
-				parameter.getUsage(),
-				hashCode()
-		);
+		switch ( parameters.size() ) {
+			case 0:
+				return String.format(
+						Locale.ROOT,
+						"ColumnWriteFragment(%s)@%s",
+						fragment,
+						hashCode()
+				);
+			case 1:
+				return String.format(
+						Locale.ROOT,
+						"ColumnWriteFragment(%s = %s (%s))@%s",
+						parameters.get( 0 ).getColumnReference().getColumnExpression(),
+						fragment,
+						parameters.get( 0 ).getUsage(),
+						hashCode()
+				);
+			default:
+				return String.format(
+						Locale.ROOT,
+						"ColumnWriteFragment(%s = %s (%s))@%s",
+						parameters,
+						fragment,
+						parameters.get( 0 ).getUsage(),
+						hashCode()
+				);
+		}
 	}
 }

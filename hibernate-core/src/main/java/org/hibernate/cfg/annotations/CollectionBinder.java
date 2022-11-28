@@ -2218,6 +2218,7 @@ public abstract class CollectionBinder {
 				true,
 				resolveCustomInstantiator( property, elementClass, buildingContext ),
 				compositeUserType,
+				null,
 				buildingContext,
 				inheritanceStatePerClass
 		);

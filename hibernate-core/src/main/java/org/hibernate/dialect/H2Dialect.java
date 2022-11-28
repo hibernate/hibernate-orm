@@ -63,6 +63,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -88,6 +89,7 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -95,7 +97,8 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
@@ -346,8 +349,17 @@ public class H2Dialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
-		if ( jdbcTypeCode == FLOAT && "DOUBLE PRECISION".equals( columnTypeName ) ) {
-			return jdbcTypeRegistry.getDescriptor( DOUBLE );
+		switch ( jdbcTypeCode ) {
+			case FLOAT:
+				if ( "DOUBLE PRECISION".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( DOUBLE );
+				}
+				break;
+			case OTHER:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				break;
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
@@ -447,12 +459,12 @@ public class H2Dialect extends Dialect {
 			case TIMESTAMP:
 				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "timestamp with time zone '" );
-					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
+					appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( '\'' );
 				}
 				else {
 					appender.appendSql( "timestamp '" );
-					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
+					appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
 					appender.appendSql( '\'' );
 				}
 				break;
@@ -482,7 +494,7 @@ public class H2Dialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:

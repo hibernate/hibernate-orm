@@ -19,10 +19,16 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.Value;
+import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import static java.util.Collections.addAll;
@@ -232,10 +238,126 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			for (String constraint : table.getCheckConstraints() ) {
+			for ( String constraint : table.getCheckConstraints() ) {
 				buf.append( ", check (" ).append( constraint ).append( ')' );
 			}
+			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
+			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
+				for ( Column column : table.getColumns() ) {
+					if ( column instanceof AggregateColumn ) {
+						final AggregateColumn aggregateColumn = (AggregateColumn) column;
+						applyAggregateColumnCheck( buf, aggregateColumn );
+					}
+				}
+			}
 		}
+	}
+
+	private void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
+		final int checkStart = buf.length();
+		buf.append( ", check (" );
+		final int start = buf.length();
+
+		// TODO: consider support for pg_jsonschema
+		applyAggregateColumnCheck(
+				buf,
+				"",
+				aggregateColumn,
+				null,
+				aggregateSupport,
+				aggregateColumn.getComponent()
+		);
+
+		if ( buf.length() == start ) {
+			buf.setLength( checkStart );
+		}
+		else {
+			buf.append( ')' );
+		}
+	}
+
+	private String applyAggregateColumnCheck(
+			StringBuilder buf,
+			String separator,
+			AggregateColumn aggregateColumn,
+			String aggregatePath,
+			AggregateSupport aggregateSupport,
+			Value value) {
+		if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			final AggregateColumn subAggregateColumn = component.getAggregateColumn();
+			if ( subAggregateColumn != null ) {
+				final String subAggregatePath = subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
+						.replace( Template.TEMPLATE + ".", "" );
+				final int checkStart = buf.length();
+				if ( subAggregateColumn.isNullable() ) {
+					buf.append( subAggregatePath );
+					buf.append( " is null or (" );
+				}
+				final int start = buf.length();
+				separator = "";
+				for ( Property property : component.getProperties() ) {
+					separator = applyAggregateColumnCheck(
+							buf,
+							separator,
+							subAggregateColumn,
+							subAggregatePath,
+							aggregateSupport,
+							property.getValue()
+					);
+				}
+
+				if ( buf.length() == start ) {
+					buf.setLength( checkStart );
+				}
+				else if ( aggregateColumn.isNullable() ) {
+					buf.append( ')' );
+				}
+			}
+		}
+		else {
+			for ( Column subColumn : value.getColumns() ) {
+				final String checkConstraint = subColumn.getCheckConstraint();
+				if ( !subColumn.isNullable() || checkConstraint != null ) {
+					final String subColumnName = subColumn.getQuotedName( dialect );
+					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+							subColumnName,
+							subColumnName,
+							aggregatePath,
+							subColumnName,
+							aggregateColumn, subColumn
+					);
+					if ( !subColumn.isNullable() ) {
+						buf.append( separator );
+						buf.append( columnExpression );
+						buf.append( " is not null" );
+						separator = " and ";
+					}
+					if ( checkConstraint != null ) {
+						if ( subColumn.isNullable() ) {
+							buf.append( separator );
+							buf.append( '(' );
+							buf.append( columnExpression );
+							buf.append( " is null" );
+							separator = " or ";
+						}
+						buf.append( separator );
+						buf.append(
+								checkConstraint.replace(
+										subColumnName,
+										columnExpression
+								)
+						);
+						if ( subColumn.isNullable() ) {
+							buf.append( ')' );
+						}
+						separator = " and ";
+					}
+				}
+			}
+		}
+		return separator;
 	}
 
 	protected String tableCreateString(boolean hasPrimaryKey) {

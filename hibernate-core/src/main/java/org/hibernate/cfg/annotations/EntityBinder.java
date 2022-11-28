@@ -432,6 +432,7 @@ public class EntityBinder {
 				false,
 				null,
 				null,
+				null,
 				context,
 				inheritanceStates
 		);
@@ -513,6 +514,7 @@ public class EntityBinder {
 				true,
 				false,
 				false,
+				null,
 				null,
 				null,
 				buildingContext,

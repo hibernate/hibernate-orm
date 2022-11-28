@@ -75,10 +75,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
 			final ColumnWriteFragment valueExpression = binding.getValueExpression();
 			if ( valueExpression != null ) {
-				final ColumnValueParameter parameter = valueExpression.getParameter();
-				if ( parameter != null ) {
-					params.add( parameter );
-				}
+				params.addAll( valueExpression.getParameters() );
 			}
 		};
 
@@ -112,8 +109,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	@Override
 	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
-			final ColumnValueParameter parameter = binding.getValueExpression().getParameter();
-			if ( parameter != null ) {
+			for ( ColumnValueParameter parameter : binding.getValueExpression().getParameters() ) {
 				consumer.accept( parameter );
 			}
 		};

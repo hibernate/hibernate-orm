@@ -1466,6 +1466,15 @@ public final class AnnotationBinder {
 					compositeUserType
 			);
 		}
+		else if ( property.isCollection() && property.getElementClass() != null
+				&& isEmbedded( property, property.getElementClass() ) ) {
+			// This is a special kind of basic aggregate component array type
+			// todo: see HHH-15830
+			throw new AnnotationException(
+					"Property '" + BinderHelper.getPath( propertyHolder, inferredData )
+							+ "' is mapped as basic aggregate component array, but this is not yet supported."
+			);
+		}
 		else {
 			createBasicBinder(
 					propertyHolder,
@@ -1654,7 +1663,8 @@ public final class AnnotationBinder {
 				propertyName,
 				determineCustomInstantiator( property, returnedClass, context ),
 				compositeUserType,
-				actualColumns
+				actualColumns,
+				columns
 		);
 	}
 
@@ -1941,7 +1951,8 @@ public final class AnnotationBinder {
 			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
-			AnnotatedJoinColumns columns) {
+			AnnotatedJoinColumns columns,
+			AnnotatedColumns annotatedColumns) {
 		final Component component;
 		if ( referencedEntityName != null ) {
 			component = createComponent(
@@ -1972,6 +1983,7 @@ public final class AnnotationBinder {
 					false,
 					customInstantiatorImpl,
 					compositeUserTypeClass,
+					annotatedColumns,
 					context,
 					inheritanceStatePerClass
 			);
@@ -2030,6 +2042,7 @@ public final class AnnotationBinder {
 			boolean inSecondPass,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
+			AnnotatedColumns columns,
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return fillComponent(
@@ -2044,6 +2057,7 @@ public final class AnnotationBinder {
 				inSecondPass,
 				customInstantiatorImpl,
 				compositeUserTypeClass,
+				columns,
 				context,
 				inheritanceStatePerClass
 		);
@@ -2061,6 +2075,7 @@ public final class AnnotationBinder {
 			boolean inSecondPass,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
+			AnnotatedColumns columns,
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		// inSecondPass can only be used to apply right away the second pass of a composite-element
@@ -2135,6 +2150,14 @@ public final class AnnotationBinder {
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );
 		}
+		AggregateComponentBinder.processAggregate(
+				component,
+				propertyHolder,
+				inferredData,
+				returnedClassOrElement,
+				columns,
+				context
+		);
 		return component;
 	}
 

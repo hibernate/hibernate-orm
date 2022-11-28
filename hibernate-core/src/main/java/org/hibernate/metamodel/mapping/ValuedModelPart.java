@@ -41,4 +41,28 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return ModelPart.super.forEachSelectable( consumer );
 	}
+
+	default void forEachInsertable(SelectableConsumer consumer) {
+		ModelPart.super.forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( ! selectableMapping.isInsertable() || selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
+
+	default void forEachUpdatable(SelectableConsumer consumer) {
+		ModelPart.super.forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( ! selectableMapping.isUpdateable() || selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
 }

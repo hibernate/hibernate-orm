@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -223,7 +224,11 @@ public class TypeDefinition implements Serializable {
 					.getJavaTypeRegistry()
 					.resolveDescriptor( typeImplementorClass );
 			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
-			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+			final BasicType<Serializable> resolved = InferredBasicValueResolver.resolveSqlTypeIndicators(
+					indicators,
+					typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType ),
+					jtd
+			);
 			@SuppressWarnings({"rawtypes", "unchecked"})
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
 

@@ -52,11 +52,6 @@ public class H2GisTestSupport extends TestSupport {
 
 	@Override
 	public GeomCodec codec() {
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return H2GISWkb.from( in );
-			}
-		};
+		return in -> (Geometry<?>) in;
 	}
 }

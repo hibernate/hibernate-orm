@@ -17,18 +17,14 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  * @author Steve Ebersole
  */
 public interface TableUpdateBuilder<O extends MutationOperation>
-		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>, ColumnValuesTableMutationBuilder {
+		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>, ColumnValuesTableMutationBuilder, SelectableConsumer {
 
 	/**
-	 * Convenience form of {@link #addValueColumn(SelectableMapping)} matching the
-	 * signature of {@link SelectableConsumer} allowing it to be used as a method reference
-	 * in its place.
-	 *
-	 * @param dummy Ignored; here simply to satisfy the {@link SelectableConsumer} signature
-	 *
-	 * @see RestrictedTableMutationBuilder#addKeyRestriction(int, SelectableMapping)
+	 * Allows using the update builder as selectable consumer.
+	 * @see org.hibernate.metamodel.mapping.ValuedModelPart#forEachUpdatable(SelectableConsumer)
 	 */
-	default void addValueColumn(@SuppressWarnings("unused") int dummy, SelectableMapping selectableMapping) {
+	@Override
+	default void accept(int selectionIndex, SelectableMapping selectableMapping) {
 		addValueColumn( selectableMapping );
 	}
 

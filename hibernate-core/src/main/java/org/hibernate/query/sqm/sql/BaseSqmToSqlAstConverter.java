@@ -155,6 +155,7 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -444,6 +445,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean resolvingCircularFetch;
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
+	private SqmStatement<?> currentSqmStatement;
 	private SqmQueryPart<?> currentSqmQueryPart;
 	private CteContainer cteContainer;
 	/**
@@ -517,6 +519,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.isJpaQueryComplianceEnabled();
 
 		this.statement = statement;
+		this.currentSqmStatement = statement;
 		this.deduplicateSelectionItems = deduplicateSelectionItems;
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
@@ -741,7 +744,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public UpdateStatement visitUpdateStatement(SqmUpdateStatement<?> sqmStatement) {
 		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
+		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
 
+		this.currentSqmStatement = sqmStatement;
 		final SqmRoot<?> sqmTarget = sqmStatement.getTarget();
 		final String entityName = sqmTarget.getEntityName();
 
@@ -809,6 +814,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
 		}
 	}
@@ -869,11 +875,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
-		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
+		final ArrayList<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
+		final ArrayList<ColumnReference> targetColumnReferences = new ArrayList<>( 1 );
+
+		final SqmRoot<?> target = ( (SqmDmlStatement<?>) currentSqmStatement ).getTarget();
+		final String entityName = target.getEntityName();
+		final EntityPersister entityDescriptor = getCreationContext()
+				.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+
+		// Returns a new instance for collecting assignments if needed
+		final AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler = AggregateColumnAssignmentHandler.forEntityDescriptor(
+				entityDescriptor,
+				setClause.getAssignments().size()
+		);
 
 		for ( SqmAssignment<?> sqmAssignment : setClause.getAssignments() ) {
-			final List<ColumnReference> targetColumnReferences = new ArrayList<>();
-
+			targetColumnReferences.clear();
 			pushProcessingState(
 					new SqlAstProcessingStateImpl(
 							getCurrentProcessingState(),
@@ -881,7 +901,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							getCurrentClauseStack()::getCurrent) {
 						@Override
 						public Expression resolveSqlExpression(
-								String key,
+								ColumnReferenceKey key,
 								Function<SqlAstProcessingState, Expression> creator) {
 							final Expression expression = getParentState()
 									.getSqlExpressionResolver()
@@ -894,17 +914,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					getFromClauseIndex()
 			);
 
+			currentClauseStack.push( Clause.SET );
 			final SqmPathInterpretation<?> assignedPathInterpretation;
 			try {
 				assignedPathInterpretation = (SqmPathInterpretation<?>) sqmAssignment.getTargetPath().accept( this );
 			}
 			finally {
+				currentClauseStack.pop();
 				popProcessingStateStack();
 			}
 
 			inferrableTypeAccessStack.push( assignedPathInterpretation::getExpressionType );
 
 //			final List<ColumnReference> valueColumnReferences = new ArrayList<>();
+			// todo: check if we can remove this
 			pushProcessingState(
 					new SqlAstProcessingStateImpl(
 							getCurrentProcessingState(),
@@ -912,7 +935,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							getCurrentClauseStack()::getCurrent) {
 						@Override
 						public Expression resolveSqlExpression(
-								String key,
+								ColumnReferenceKey key,
 								Function<SqlAstProcessingState, Expression> creator) {
 							final Expression expression = getParentState()
 									.getSqlExpressionResolver()
@@ -924,6 +947,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					},
 					getFromClauseIndex()
 			);
+			currentClauseStack.push( Clause.SET_EXPRESSION );
 
 			try {
 				final SqmExpression<?> assignmentValue = sqmAssignment.getValue();
@@ -932,13 +956,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					consumeSqmParameter(
 							assignmentValueParameter,
 							assignedPathInterpretation.getExpressionType(),
-							(index, jdbcParameter) -> assignments.add(
-									new Assignment(
-											targetColumnReferences.get( index ),
-											jdbcParameter
-									)
+							(index, jdbcParameter) -> addAssignment(
+									assignments,
+									aggregateColumnAssignmentHandler,
+									targetColumnReferences.get( index ),
+									jdbcParameter
 							)
 					);
+				}
+				else if ( assignmentValue instanceof SqmLiteralNull<?> ) {
+					for ( ColumnReference columnReference : targetColumnReferences ) {
+						addAssignment(
+								assignments,
+								aggregateColumnAssignmentHandler,
+								columnReference,
+								new QueryLiteral<>( null, (BasicValuedMapping) columnReference.getExpressionType() )
+						);
+					}
 				}
 				else {
 					final Expression valueExpression = (Expression) assignmentValue.accept( this );
@@ -956,21 +990,43 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					assert assignedPathJdbcCount == valueExprJdbcCount;
 
-					for ( ColumnReference columnReference : targetColumnReferences ) {
-						assignments.add(
-								new Assignment( columnReference, valueExpression )
-						);
+					if ( valueExpression instanceof SqlTuple ) {
+						final List<? extends Expression> expressions = ( (SqlTuple) valueExpression ).getExpressions();
+						assert targetColumnReferences.size() == expressions.size();
+						for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
+							final ColumnReference columnReference = targetColumnReferences.get( i );
+							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, expressions.get( i ) );
+						}
+					}
+					else {
+						for ( ColumnReference columnReference : targetColumnReferences ) {
+							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, valueExpression );
+						}
 					}
 				}
+				currentClauseStack.pop();
 			}
 			finally {
 				popProcessingStateStack();
 				inferrableTypeAccessStack.pop();
 			}
-
+		}
+		if ( aggregateColumnAssignmentHandler != null ) {
+			aggregateColumnAssignmentHandler.aggregateAssignments( assignments );
 		}
 
 		return assignments;
+	}
+
+	private void addAssignment(
+			List<Assignment> assignments,
+			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler,
+			ColumnReference columnReference,
+			Expression valueExpression) {
+		if ( aggregateColumnAssignmentHandler != null ) {
+			aggregateColumnAssignmentHandler.addAssignment( assignments.size(), columnReference );
+		}
+		assignments.add( new Assignment( columnReference, valueExpression ) );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -980,7 +1036,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public DeleteStatement visitDeleteStatement(SqmDeleteStatement<?> statement) {
 		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( statement );
+		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
 
+		this.currentSqmStatement = statement;
 		final String entityName = statement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
@@ -1037,6 +1095,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
 		}
 	}
@@ -1048,7 +1107,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public InsertStatement visitInsertSelectStatement(SqmInsertSelectStatement<?> sqmStatement) {
 		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
+		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
 
+		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
@@ -1124,6 +1185,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 		);
 
+		this.currentSqmStatement = oldSqmStatement;
 		this.cteContainer = oldCteContainer;
 
 		return insertStatement;
@@ -1154,6 +1216,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public InsertStatement visitInsertValuesStatement(SqmInsertValuesStatement<?> sqmStatement) {
 		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( sqmStatement );
+		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
+
+		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
@@ -1216,6 +1281,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
 		}
 	}
@@ -1476,6 +1542,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Values visitValues(SqmValues sqmValues) {
 		final Values values = new Values();
 		for ( SqmExpression<?> expression : sqmValues.getExpressions() ) {
+			// todo: add WriteExpression handling
 			values.getExpressions().add( (Expression) expression.accept( this ) );
 		}
 		return values;
@@ -1488,12 +1555,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
 		final CteContainer oldCteContainer = cteContainer;
 		final CteContainer cteContainer = this.visitCteContainer( statement );
+		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
+
+		this.currentSqmStatement = statement;
 		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : Collections.emptyList();
 		try {
 			return new SelectStatement( cteContainer, queryPart, domainResults );
 		}
 		finally {
+			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
 		}
 	}
@@ -2102,6 +2173,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final boolean contributesToTopLevelSelectClause = currentClauseStack.depth() == 1 && currentClauseStack.getCurrent() == Clause.SELECT;
 		// Only infer the type on the "top level" select clauses
 		final boolean inferTargetPath = statement instanceof SqmInsertSelectStatement<?> && contributesToTopLevelSelectClause;
+		// todo: add WriteExpression handling
 		if ( inferTargetPath ) {
 			final SqmPath<?> path = ( (SqmInsertSelectStatement<?>) statement ).getInsertionTargetPaths().get( index );
 			inferrableTypeAccessStack.push( () -> determineValueMapping( path ) );
@@ -4857,14 +4929,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final List<Expression> expressions = new ArrayList<>( keyExpressible.getJdbcTypeCount() );
 
-			keyExpressible.forEachJdbcType(
-					(index, jdbcMapping) -> expressions.add(
-							new QueryLiteral<>(
-									null,
-									(BasicValuedMapping) jdbcMapping
-							)
-					)
-			);
+			if ( keyExpressible instanceof ModelPart ) {
+				// Use the selectable mappings as BasicValuedMapping if possible to retain column definition info for possible casts
+				( (ModelPart) keyExpressible ).forEachSelectable(
+						(index, selectableMapping) -> expressions.add(
+								new QueryLiteral<>(
+										null,
+										selectableMapping instanceof BasicValuedMapping
+												? (BasicValuedMapping) selectableMapping
+												: (BasicValuedMapping) selectableMapping.getJdbcMapping()
+								)
+						)
+				);
+			}
+			else {
+				keyExpressible.forEachJdbcType(
+						(index, jdbcMapping) -> expressions.add(
+								new QueryLiteral<>(
+										null,
+										(BasicValuedMapping) jdbcMapping
+								)
+						)
+				);
+			}
 			return new SqlTuple( expressions, mappingModelExpressible);
 		}
 
@@ -7243,6 +7330,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public List<Fetch> visitNestedFetches(FetchParent fetchParent) {
+		final SqlAstQueryPartProcessingStateImpl processingState = (SqlAstQueryPartProcessingStateImpl) getCurrentProcessingState();
+		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
+		processingState.setNestingFetchParent( fetchParent );
+		final List<Fetch> fetches = visitFetches( fetchParent );
+		processingState.setNestingFetchParent( nestingFetchParent );
+		return fetches;
+	}
+
+	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
@@ -7435,7 +7532,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		@Override
-		public Expression resolveSqlExpression(String key, Function<SqlAstProcessingState, Expression> creator) {
+		public Expression resolveSqlExpression(ColumnReferenceKey key, Function<SqlAstProcessingState, Expression> creator) {
 			return delegate.resolveSqlExpression( key, creator );
 		}
 
@@ -7489,7 +7586,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		@Override
-		public Expression resolveSqlExpression(String key, Function<SqlAstProcessingState, Expression> creator) {
+		public Expression resolveSqlExpression(ColumnReferenceKey key, Function<SqlAstProcessingState, Expression> creator) {
 			return delegate.resolveSqlExpression( key, creator );
 		}
 

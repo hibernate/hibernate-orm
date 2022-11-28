@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -21,13 +22,17 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -38,6 +43,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
 
@@ -484,4 +490,49 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}
 
+	@Override
+	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
+		appendSql( tableReference.getTableExpression() );
+		registerAffectedTable( tableReference );
+		renderTableReferenceIdentificationVariable( tableReference );
+		return false;
+	}
+
+	@Override
+	protected void visitSetAssignment(Assignment assignment) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				sqlTuple.getExpressions().get( 0 ).accept( this );
+			}
+			else {
+				assignedValue.accept( this );
+			}
+		}
+		else {
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this );
+				separator = COMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			assignment.getAssignedValue().accept( this );
+		}
+	}
+
+	@Override
+	public void visitColumnReference(ColumnReference columnReference) {
+		columnReference.appendReadExpression( this );
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		aggregateColumnWriteExpression.appendWriteExpression( this, this );
+	}
 }

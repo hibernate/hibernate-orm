@@ -8,8 +8,9 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -31,7 +32,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final DateJavaType INSTANCE = new DateJavaType();
-	public static final String DATE_FORMAT = "dd MMMM yyyy";
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
@@ -80,15 +80,20 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( DATE_FORMAT ).format( value );
+		return JdbcTimestampJavaType.LITERAL_FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			return new SimpleDateFormat(DATE_FORMAT).parse( string.toString() );
+			final TemporalAccessor accessor = JdbcTimestampJavaType.LITERAL_FORMATTER.parse( string );
+			return new Date(
+					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
+							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
+			);
 		}
-		catch ( ParseException pe) {
-			throw new HibernateException( "could not parse date string" + string, pe );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string" + string, pe );
 		}
 	}
 

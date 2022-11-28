@@ -39,6 +39,8 @@ import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -73,6 +75,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -98,6 +101,7 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -105,7 +109,8 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
@@ -124,6 +129,7 @@ public class H2LegacyDialect extends Dialect {
 
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
 
 	public H2LegacyDialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
@@ -376,8 +382,17 @@ public class H2LegacyDialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
-		if ( jdbcTypeCode == FLOAT && "DOUBLE PRECISION".equals( columnTypeName ) ) {
-			return jdbcTypeRegistry.getDescriptor( DOUBLE );
+		switch ( jdbcTypeCode ) {
+			case FLOAT:
+				if ( "DOUBLE PRECISION".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( DOUBLE );
+				}
+				break;
+			case OTHER:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				break;
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
@@ -450,6 +465,7 @@ public class H2LegacyDialect extends Dialect {
 		return "datediff(?1,?2,?3)";
 	}
 
+
 	@Override
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
@@ -463,7 +479,7 @@ public class H2LegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) && supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )  ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				}
@@ -474,9 +490,16 @@ public class H2LegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -492,7 +515,7 @@ public class H2LegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, date, jdbcTimeZone );
 				}
@@ -504,7 +527,7 @@ public class H2LegacyDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:
@@ -525,7 +548,7 @@ public class H2LegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTimeWithTimeZoneLiteral() ) {
+				if ( supportsTimeLiteralOffset() ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, calendar, jdbcTimeZone );
 				}
@@ -545,7 +568,7 @@ public class H2LegacyDialect extends Dialect {
 		}
 	}
 
-	public boolean supportsTimeWithTimeZoneLiteral() {
+	public boolean supportsTimeLiteralOffset() {
 		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
@@ -823,5 +846,25 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ")";
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set referential_integrity false";
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 }

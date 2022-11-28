@@ -100,8 +100,7 @@ public class TableUpsert
 	@Override
 	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
 		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
-			final ColumnValueParameter parameter = binding.getValueExpression().getParameter();
-			if ( parameter != null ) {
+			for ( ColumnValueParameter parameter : binding.getValueExpression().getParameters() ) {
 				consumer.accept( parameter );
 			}
 		};

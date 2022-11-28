@@ -9,6 +9,7 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.PostgreSQLStructJdbcType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -154,11 +155,23 @@ public class PostgreSQLCallableStatementSupport extends AbstractStandardCallable
 						procedureCall
 				);
 				final OutputableType<?> type = registration.getParameterType();
+				final String castType;
+				if ( type != null && type.getJdbcType() instanceof PostgreSQLStructJdbcType ) {
+					// We have to cast struct type parameters so that PostgreSQL understands nulls
+					castType = ( (PostgreSQLStructJdbcType) type.getJdbcType() ).getTypeName();
+					buffer.append( "cast(" );
+				}
+				else {
+					castType = null;
+				}
 				if ( registration.getName() != null ) {
 					buffer.append( ':' ).append( registration.getName() );
 				}
 				else {
 					buffer.append( "?" );
+				}
+				if ( castType != null ) {
+					buffer.append( " as " ).append( castType ).append( ')' );
 				}
 				sep = ',';
 				builder.addParameterRegistration( registration );

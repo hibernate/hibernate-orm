@@ -28,7 +28,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
@@ -400,6 +402,12 @@ public class AnnotatedColumn {
 	}
 
 	//TODO: move this operation to AnnotatedColumns!!
+
+	public void linkWithAggregateValue(SimpleValue value, Component component) {
+		mappingColumn = new AggregateColumn( mappingColumn, component );
+		linkWithValue( value );
+	}
+
 	public void linkWithValue(SimpleValue value) {
 		if ( formula != null ) {
 			value.addFormula( formula );

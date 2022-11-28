@@ -48,14 +48,14 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null && length == 1 ) {
-			return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
+			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
 		}
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 
 	@Override

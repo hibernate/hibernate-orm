@@ -23,7 +23,10 @@ import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -406,21 +409,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 					continue;
 				}
 
-				attributeMapping.forEachSelectable( (selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isFormula() ) {
-						// no physical column
-						return;
-					}
-
-					if ( !selectableMapping.isInsertable() ) {
-						return;
-					}
-
-					final String tableNameForMutation = entityPersister().physicalTableNameForMutation( selectableMapping );
-					final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
-
-					tableInsertBuilder.addValueColumn( selectableMapping );
-				} );
+				attributeMapping.forEachInsertable( insertGroupBuilder );
 			}
 		} );
 

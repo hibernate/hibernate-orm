@@ -63,8 +63,11 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -95,6 +98,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+	// See microsoft.sql.Types.GEOMETRY
+	private static final int GEOMETRY_TYPE_CODE = -157;
+	// See microsoft.sql.Types.GEOGRAPHY
+	private static final int GEOGRAPHY_TYPE_CODE = -158;
 
 	private final StandardSequenceExporter exporter;
 	private final UniqueDelegate uniqueDelegate;
@@ -198,6 +205,32 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		}
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uniqueidentifier", this ) );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uniqueidentifier":
+						jdbcTypeCode = UUID;
+						break;
+				}
+				break;
+			case GEOMETRY_TYPE_CODE:
+				jdbcTypeCode = GEOMETRY;
+				break;
+			case GEOGRAPHY_TYPE_CODE:
+				jdbcTypeCode = GEOGRAPHY;
+				break;
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override
@@ -237,6 +270,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				SmallIntJdbcType.INSTANCE
 		);
 		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -266,6 +300,8 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
+
+		functionFactory.log_log();
 
 		functionFactory.truncate_round();
 		functionFactory.everyAny_minMaxIif();
@@ -848,6 +884,13 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
+		appender.appendSql( "cast('" );
+		appender.appendSql( literal.toString() );
+		appender.appendSql( "' as uniqueidentifier)" );
+	}
+
+	@Override
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -867,12 +910,14 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+
 				//needed because the {ts ... } JDBC escape chokes on microseconds
 				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( "' as datetimeoffset)" );
 				}
 				else {
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
 					appender.appendSql( "' as datetime2)" );
 				}
 				break;
@@ -956,24 +1001,6 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		return super.getDropSchemaCommand( schemaName );
 	}
 
-
-	@Override
-	public NameQualifierSupport getNameQualifierSupport() {
-		return NameQualifierSupport.BOTH;
-	}
-
-	public Exporter<Sequence> getSequenceExporter() {
-		if ( exporter == null ) {
-			return super.getSequenceExporter();
-		}
-		return exporter;
-	}
-
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
-	}
-
 	@Override
 	public String getCreateIndexString(boolean unique) {
 		// we only create unique indexes, as opposed to unique constraints,
@@ -997,6 +1024,24 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		else {
 			return "";
 		}
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Sequence> getSequenceExporter() {
+		if ( exporter == null ) {
+			return super.getSequenceExporter();
+		}
+		return exporter;
 	}
 
 	private static class SqlServerSequenceExporter extends StandardSequenceExporter {
@@ -1029,4 +1074,17 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return false;
 	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+//	@Override
+//	public String getDisableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " nocheck constraint " + name;
+//	}
+//
+//	@Override
+//	public String getEnableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " with check check constraint " + name;
+//	}
 }

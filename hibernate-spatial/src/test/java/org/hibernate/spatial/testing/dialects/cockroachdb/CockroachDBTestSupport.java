@@ -40,12 +40,7 @@ public class CockroachDBTestSupport extends TestSupport {
 	}
 
 	public GeomCodec codec() {
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return (Geometry<?>)( in );
-			}
-		};
+		return in -> (Geometry<?>) in;
 	}
 
 }

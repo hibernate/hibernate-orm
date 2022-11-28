@@ -119,6 +119,11 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return valueConverter == null ? value : valueConverter.toRelationalValue( value );
 	}
 
+	default Object convertToDomainValue(Object value) {
+		BasicValueConverter valueConverter = getValueConverter();
+		return valueConverter == null ? value : valueConverter.toDomainValue( value );
+	}
+
 
 	@Override
 	default int getJdbcTypeCount() {

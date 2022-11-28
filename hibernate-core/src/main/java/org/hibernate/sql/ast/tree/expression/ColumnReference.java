@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -22,7 +23,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
 import static org.hibernate.internal.util.StringHelper.replace;
-import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
 import static org.hibernate.sql.Template.TEMPLATE;
 
 /**
@@ -34,17 +34,17 @@ import static org.hibernate.sql.Template.TEMPLATE;
 public class ColumnReference implements Expression, Assignable {
 	private final String qualifier;
 	private final String columnExpression;
+	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final String readExpression;
-	private final String writeExpression;
+	private final String customWriteExpression;
 	private final JdbcMapping jdbcMapping;
 
-	public ColumnReference(
-			String qualifier,
-			SelectableMapping selectableMapping) {
+	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
 		this(
-				qualifier,
+				tableReference.getIdentificationVariable(),
 				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
@@ -52,75 +52,38 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(
-			String qualifier,
-			SelectableMapping selectableMapping,
-			JdbcMapping jdbcMapping) {
+	public ColumnReference(TableReference tableReference, String mapping, JdbcMapping jdbcMapping) {
 		this(
-				qualifier,
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.isFormula(),
-				selectableMapping.getCustomReadExpression(),
-				selectableMapping.getCustomWriteExpression(),
+				tableReference.getIdentificationVariable(),
+				mapping,
+				null,
+				false,
+				null,
+				null,
 				jdbcMapping
 		);
 	}
 
-	public ColumnReference(
-			String qualifier,
-			String columnExpression,
-			boolean isFormula,
-			String customReadExpression,
-			String customWriteExpression,
-			JdbcMapping jdbcMapping) {
-		this.qualifier = StringHelper.nullIfEmpty( qualifier );
-
-		if ( isFormula ) {
-			assert qualifier != null;
-			this.columnExpression = replace( columnExpression, TEMPLATE, qualifier );
-		}
-		else {
-			this.columnExpression = columnExpression;
-		}
-
-		this.isFormula = isFormula;
-		this.readExpression = customReadExpression;
-
-		//TODO: writeExpression is never used, can it be removed?
-		if ( isFormula ) {
-			this.writeExpression = null;
-		}
-		else if ( customWriteExpression != null ) {
-			this.writeExpression = this.qualifier == null
-					? replace( customWriteExpression, TEMPLATE + ".", "" )
-					: replace( customWriteExpression, TEMPLATE, qualifier );
-		}
-		else {
-			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
-		}
-
-		this.jdbcMapping = jdbcMapping;
-	}
-
-	public ColumnReference(
-			TableReference tableReference,
-			SelectableMapping selectableMapping) {
+	public ColumnReference(String qualifier, SelectableMapping selectableMapping) {
 		this(
-				tableReference.getIdentificationVariable(),
-				selectableMapping
+				qualifier,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
+				selectableMapping.getJdbcMapping()
 		);
 	}
 
-	public ColumnReference(
-			TableReference tableReference,
-			String mapping,
-			JdbcMapping jdbcMapping) {
+	public ColumnReference(String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
 		this(
-				tableReference.getIdentificationVariable(),
-				mapping,
-				false,
-				null,
-				null,
+				qualifier,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
+				selectableMapping.isFormula(),
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
 				jdbcMapping
 		);
 	}
@@ -135,11 +98,60 @@ public class ColumnReference implements Expression, Assignable {
 		this(
 				tableReference.getIdentificationVariable(),
 				columnExpression,
+				null,
 				isFormula,
 				customReadExpression,
 				customWriteExpression,
 				jdbcMapping
 		);
+	}
+
+	public ColumnReference(
+			String qualifier,
+			String columnExpression,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
+			JdbcMapping jdbcMapping) {
+		this( qualifier, columnExpression, null, isFormula, customReadExpression, customWriteExpression, jdbcMapping );
+	}
+
+	public ColumnReference(
+			String qualifier,
+			String columnExpression,
+			SelectablePath selectablePath,
+			boolean isFormula,
+			String customReadExpression,
+			String customWriteExpression,
+			JdbcMapping jdbcMapping) {
+		this.qualifier = StringHelper.nullIfEmpty( qualifier );
+
+		if ( isFormula ) {
+			assert qualifier != null;
+			this.columnExpression = replace( columnExpression, TEMPLATE, qualifier );
+		}
+		else {
+			this.columnExpression = columnExpression;
+		}
+		if ( selectablePath == null ) {
+			this.selectablePath = new SelectablePath( this.columnExpression );
+		}
+		else {
+			this.selectablePath = selectablePath;
+		}
+
+		this.isFormula = isFormula;
+		this.readExpression = customReadExpression;
+
+		//TODO: writeExpression is never used, can it be removed?
+		if ( !isFormula && customWriteExpression != null ) {
+			this.customWriteExpression = customWriteExpression;
+		}
+		else {
+			this.customWriteExpression = null;
+		}
+
+		this.jdbcMapping = jdbcMapping;
 	}
 
 	@Override
@@ -153,6 +165,18 @@ public class ColumnReference implements Expression, Assignable {
 
 	public String getColumnExpression() {
 		return columnExpression;
+	}
+
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
+	}
+
+	public String getCustomWriteExpression() {
+		return customWriteExpression;
 	}
 
 	public boolean isColumnExpressionFormula() {
@@ -188,6 +212,18 @@ public class ColumnReference implements Expression, Assignable {
 			}
 			appender.append( columnExpression );
 		}
+	}
+
+	public void appendColumnForWrite(SqlAppender appender) {
+		appendColumnForWrite( appender, qualifier );
+	}
+
+	public void appendColumnForWrite(SqlAppender appender, String qualifier) {
+		if ( qualifier != null ) {
+			appender.append( qualifier );
+			appender.append( '.' );
+		}
+		appender.append( columnExpression );
 	}
 
 	public JdbcMapping getJdbcMapping() {

@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -21,6 +22,7 @@ import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -35,6 +37,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A legacy SQL AST translator for H2.
@@ -47,6 +50,39 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	public H2LegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		if ( CollectionHelper.isNotEmpty( tableInsert.getReturningColumns() ) ) {
+			visitReturningInsertStatement( tableInsert );
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
+		assert tableInsert.getReturningColumns() != null
+				&& !tableInsert.getReturningColumns().isEmpty();
+
+		final H2IdentityColumnSupport identitySupport = (H2IdentityColumnSupport) getSessionFactory()
+				.getJdbcServices()
+				.getDialect()
+				.getIdentityColumnSupport();
+
+		identitySupport.render(
+				tableInsert,
+				this::appendSql,
+				(columnReference) -> columnReference.accept( this ),
+				() -> super.visitStandardTableInsert( tableInsert ),
+				getSessionFactory()
+		);
+	}
+
+	@Override
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
+		// do nothing - this is handled via `#visitReturningInsertStatement`
 	}
 
 	@Override
@@ -180,7 +216,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );

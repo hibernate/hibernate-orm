@@ -50,6 +50,6 @@ public class NCharJdbcType extends NVarcharJdbcType {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
 		}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 }

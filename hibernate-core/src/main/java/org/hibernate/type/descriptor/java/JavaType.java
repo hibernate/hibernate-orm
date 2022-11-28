@@ -16,8 +16,11 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -227,6 +230,26 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	T fromString(CharSequence string);
+
+	/**
+	 * Appends the value to the SqlAppender in an encoded format that can be decoded again by {@link #fromEncodedString(CharSequence, int, int)}.
+	 * Implementers do not need to care about escaping. This is similar to {@link #toString(Object)},
+	 * with the difference that the aim of this method is encoding to the appender.
+	 * @since 6.2
+	 */
+	default void appendEncodedString(SqlAppender sb, T value) {
+		sb.append( toString( value ) );
+	}
+
+	/**
+	 * Reads the encoded value from the char sequence start index until the end index and returns the decoded value.
+	 * Implementers do not need to care about escaping. This is similar to {@link #fromString(CharSequence)},
+	 * with the difference that the aim of this method is decoding from a range within an existing char sequence.
+	 * @since 6.2
+	 */
+	default T fromEncodedString(CharSequence charSequence, int start, int end) {
+		return fromString( CharSequenceHelper.subSequence( charSequence, start, end ) );
+	}
 
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.

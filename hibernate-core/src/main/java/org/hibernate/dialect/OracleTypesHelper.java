@@ -9,8 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 
 import org.jboss.logging.Logger;
 
@@ -29,10 +27,8 @@ public class OracleTypesHelper {
 
 	private static final String ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.OracleTypes";
 	private static final String DEPRECATED_ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.driver.OracleTypes";
-	private static final String ORACLE_JSON_JDBC_TYPE_CLASS_NAME = "org.hibernate.dialect.OracleJsonJdbcType";
 
 	private final int oracleCursorTypeSqlType;
-	private final JdbcType jsonJdbcType;
 
 	private OracleTypesHelper() {
 		int typeCode = -99;
@@ -43,17 +39,6 @@ public class OracleTypesHelper {
 			log.warn( "Unable to resolve Oracle CURSOR JDBC type code: the class OracleTypesHelper was initialized but the Oracle JDBC driver could not be loaded." );
 		}
 		oracleCursorTypeSqlType = typeCode;
-
-		JdbcType jsonJdbcType = JsonJdbcType.INSTANCE;
-		try {
-			jsonJdbcType = (JdbcType) ReflectHelper.classForName( ORACLE_JSON_JDBC_TYPE_CLASS_NAME )
-					.getField( "INSTANCE" )
-					.get( null );
-		}
-		catch (Exception e) {
-			log.warn( "Unable to resolve OracleJsonJdbcType: the class OracleTypesHelper was initialized but the Oracle JDBC driver could not be loaded." );
-		}
-		this.jsonJdbcType = jsonJdbcType;
 	}
 
 	private int extractOracleCursorTypeValue() {
@@ -88,10 +73,6 @@ public class OracleTypesHelper {
 
 	public int getOracleCursorTypeSqlType() {
 		return oracleCursorTypeSqlType;
-	}
-
-	public JdbcType getJsonJdbcType() {
-		return jsonJdbcType;
 	}
 
 // initial code as copied from Oracle8iDialect

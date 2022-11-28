@@ -17,11 +17,11 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -352,6 +352,33 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		else {
 			columnReference.appendReadExpression( this );
+		}
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		final String dmlTargetTableAlias = getDmlTargetTableAlias();
+		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
+		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
+			// Sybase needs a table name prefix
+			// but not if this is a restricted union table reference subquery
+			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+			final List<TableGroup> roots;
+			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
+					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
+					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
+				aggregateColumnWriteExpression.appendWriteExpression( this, this );
+			}
+			else {
+				aggregateColumnWriteExpression.appendWriteExpression(
+						this,
+						this,
+						getCurrentDmlStatement().getTargetTable().getTableExpression()
+				);
+			}
+		}
+		else {
+			aggregateColumnWriteExpression.appendWriteExpression( this, this );
 		}
 	}
 

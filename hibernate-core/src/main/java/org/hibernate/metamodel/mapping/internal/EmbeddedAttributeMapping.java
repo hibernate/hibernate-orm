@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
@@ -52,8 +54,10 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
 
 /**
  * @author Steve Ebersole
@@ -186,6 +190,16 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public void forEachInsertable(SelectableConsumer consumer) {
+		getEmbeddableTypeDescriptor().forEachInsertable( 0, consumer );
+	}
+
+	@Override
+	public void forEachUpdatable(SelectableConsumer consumer) {
+		getEmbeddableTypeDescriptor().forEachUpdatable( 0, consumer );
+	}
+
+	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
@@ -201,6 +215,14 @@ public class EmbeddedAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableResultImpl<>(
+					navigablePath,
+					this,
+					resultVariable,
+					creationState
+			);
+		}
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -239,6 +261,16 @@ public class EmbeddedAttributeMapping
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableFetchImpl(
+					fetchablePath,
+					this,
+					fetchParent,
+					fetchTiming,
+					selected,
+					creationState
+			);
+		}
 		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
@@ -255,6 +287,23 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping()
+				// We always want to set the whole aggregate mapping in the SET clause if a single expression is given
+				// This usually happens when we try to set the aggregate to e.g. null or a parameter
+				|| clause == Clause.SET && embeddableMappingType.getAggregateMapping() != null ) {
+			final SelectableMapping selection = embeddableMappingType.getAggregateMapping();
+			final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+			final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+			return new SqlTuple(
+					Collections.singletonList(
+							sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+									tableReference,
+									selection
+							)
+					),
+					this
+			);
+		}
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
@@ -351,6 +400,11 @@ public class EmbeddedAttributeMapping
 	@Override
 	public Fetchable getFetchable(int position) {
 		return getEmbeddableTypeDescriptor().getFetchable( position );
+	}
+
+	@Override
+	public int getSelectableIndex(String selectableName) {
+		return getEmbeddableTypeDescriptor().getSelectableIndex( selectableName );
 	}
 
 	@Override

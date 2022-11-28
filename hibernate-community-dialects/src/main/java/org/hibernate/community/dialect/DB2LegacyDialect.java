@@ -16,9 +16,12 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DB2StructJdbcType;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
@@ -187,6 +190,9 @@ public class DB2LegacyDialect extends Dialect {
 				return "timestamp($p)";
 			case TIME_WITH_TIMEZONE:
 				return "time";
+			case BINARY:
+				// should use 'binary' since version 11
+				return getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
 			case VARBINARY:
 				// should use 'varbinary' since version 11
 				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
@@ -205,8 +211,8 @@ public class DB2LegacyDialect extends Dialect {
 		if ( getDB2Version().isBefore( 11 ) ) {
 			// should use 'binary' since version 11
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( BINARY, "varchar($l) for bit data", this )
-							.withTypeCapacity( 254, "char($l) for bit data" )
+					CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), this )
+							.withTypeCapacity( 254, columnType( BINARY ) )
 							.build()
 			);
 		}
@@ -250,8 +256,10 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		functionFactory.cot();
+		functionFactory.sinh();
+		functionFactory.cosh();
+		functionFactory.tanh();
 		functionFactory.degrees();
-		functionFactory.log();
 		functionFactory.log10();
 		functionFactory.radians();
 		functionFactory.rand();
@@ -291,6 +299,7 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.trunc();
 		functionFactory.truncate();
 		functionFactory.insert();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.stddev();
 		functionFactory.regrLinearRegressionAggregates();
 		functionFactory.variance();
@@ -424,14 +433,14 @@ public class DB2LegacyDialect extends Dialect {
 		else {
 			pattern.append( "?3" );
 		}
-		pattern.append( "," );
+		pattern.append( ',' );
 		if ( castFrom ) {
 			pattern.append( "cast(?2 as timestamp)" );
 		}
 		else {
 			pattern.append( "?2" );
 		}
-		pattern.append( ")" );
+		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
 				pattern.append( "+(microsecond(?3)-microsecond(?2))/1e6)" );
@@ -440,7 +449,7 @@ public class DB2LegacyDialect extends Dialect {
 				pattern.append( "*1e9+(microsecond(?3)-microsecond(?2))*1e3)" );
 				break;
 			case MONTH:
-				pattern.append( ")" );
+				pattern.append( ')' );
 				break;
 			case QUARTER:
 				pattern.append( "/3)" );
@@ -720,6 +729,7 @@ public class DB2LegacyDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );
@@ -733,6 +743,11 @@ public class DB2LegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -896,5 +911,30 @@ public class DB2LegacyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " alter foreign key " + name + " not enforced";
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " alter foreign key " + name + " enforced";
+	}
+
+	@Override
+	public String getTruncateTableStatement(String tableName) {
+		return super.getTruncateTableStatement(tableName) + " immediate";
+	}
+
+	@Override
+	public String getCreateUserDefinedTypeExtensionsString() {
+		return " instantiable mode db2sql";
 	}
 }

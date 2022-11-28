@@ -80,13 +80,7 @@ public class MySQLTestSupport extends TestSupport {
 
 	@Override
 	public GeomCodec codec() {
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return MySQLGeometryJdbcType.INSTANCE.toGeometry( (byte[]) in );
-			}
-
-		};
+		return in -> (Geometry<?>) in;
 
 	}
 }

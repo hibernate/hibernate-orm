@@ -58,6 +58,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
+	private String assignmentExpression;
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
@@ -205,25 +206,28 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		Type type = getValue().getType();
-		try {
-			int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
-			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
-				throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
+		if ( sqlTypeCode == null ) {
+			Type type = getValue().getType();
+			try {
+				int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
+				if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
+					throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
+				}
+				return this.sqlTypeCode = sqlTypeCode;
 			}
-			return sqlTypeCode;
+			catch (Exception e) {
+				throw new MappingException(
+						"Could not determine type for column " +
+								name +
+								" of type " +
+								type.getClass().getName() +
+								": " +
+								e.getClass().getName(),
+						e
+				);
+			}
 		}
-		catch (Exception e) {
-			throw new MappingException(
-					"Could not determine type for column " +
-							name +
-							" of type " +
-							type.getClass().getName() +
-							": " +
-							e.getClass().getName(),
-					e
-			);
-		}
+		return sqlTypeCode;
 	}
 
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
@@ -495,12 +499,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	@Override
 	public String getText(Dialect d) {
-		return getQuotedName( d );
+		return assignmentExpression != null ? assignmentExpression : getQuotedName( d );
 	}
 
 	@Override
 	public String getText() {
-		return getName();
+		return assignmentExpression != null ? assignmentExpression : getName();
 	}
 
 	@Override
@@ -553,6 +557,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		this.generatedAs = generatedAs;
 	}
 
+	public String getAssignmentExpression() {
+		return assignmentExpression;
+	}
+
+	public void setAssignmentExpression(String assignmentExpression) {
+		this.assignmentExpression = assignmentExpression;
+	}
+
 	public String getCustomWrite() {
 		return customWrite;
 	}
@@ -599,6 +611,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.setComment( comment );
 		copy.setDefaultValue( defaultValue );
 		copy.setGeneratedAs( generatedAs );
+		copy.setAssignmentExpression( assignmentExpression );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
 		return copy;

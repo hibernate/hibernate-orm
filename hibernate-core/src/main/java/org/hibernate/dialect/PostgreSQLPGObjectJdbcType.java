@@ -81,7 +81,11 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 		return sqlTypeCode;
 	}
 
-	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
+	public String getTypeName() {
+		return typeName;
+	}
+
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		return javaType.wrap( string, options );
 	}
 
@@ -143,26 +147,26 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getObject( rs.getString( paramIndex ), options );
+				return getObject( rs.getObject( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getObject( statement.getString( index ), options );
+				return getObject( statement.getObject( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getObject( statement.getString( name ), options );
+				return getObject( statement.getObject( name ), options );
 			}
 
-			private X getObject(String string, WrapperOptions options) throws SQLException {
-				if ( string == null ) {
+			private X getObject(Object object, WrapperOptions options) throws SQLException {
+				if ( object == null ) {
 					return null;
 				}
 				return ( (PostgreSQLPGObjectJdbcType) getJdbcType() ).fromString(
-						string,
+						object.toString(),
 						getJavaType(),
 						options
 				);

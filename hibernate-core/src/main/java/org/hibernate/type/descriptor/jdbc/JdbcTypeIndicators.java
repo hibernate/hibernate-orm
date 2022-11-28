@@ -76,7 +76,7 @@ public interface JdbcTypeIndicators {
 	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
-		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForBoolean();
+		return resolveJdbcTypeCode( getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	/**
@@ -87,7 +87,7 @@ public interface JdbcTypeIndicators {
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForDuration() {
-		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForDuration();
+		return resolveJdbcTypeCode( getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForDuration() );
 	}
 
 	/**
@@ -98,7 +98,7 @@ public interface JdbcTypeIndicators {
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForUuid() {
-		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForUuid();
+		return resolveJdbcTypeCode( getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForUuid() );
 	}
 
 	/**
@@ -109,7 +109,7 @@ public interface JdbcTypeIndicators {
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
 	 */
 	default int getPreferredSqlTypeCodeForInstant() {
-		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForInstant();
+		return resolveJdbcTypeCode( getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForInstant() );
 	}
 
 	/**
@@ -122,7 +122,7 @@ public interface JdbcTypeIndicators {
 	 * @since 6.1
 	 */
 	default int getPreferredSqlTypeCodeForArray() {
-		return getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForArray();
+		return resolveJdbcTypeCode( getCurrentBaseSqlTypeIndicators().getPreferredSqlTypeCodeForArray() );
 	}
 
 	/**
@@ -168,6 +168,19 @@ public interface JdbcTypeIndicators {
 	 */
 	default JdbcType getJdbcType(int jdbcTypeCode) {
 		return getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+	}
+
+	/**
+	 * Resolves the given type code to a possibly different type code, based on context.
+	 *
+	 * A database might not support a certain type code in certain scenarios like within a UDT
+	 * and has to resolve to a different type code in such a scenario.
+	 *
+	 * @param jdbcTypeCode a type code from {@link org.hibernate.type.SqlTypes}
+	 * @return The jdbc type code to use
+	 */
+	default int resolveJdbcTypeCode(int jdbcTypeCode) {
+		return jdbcTypeCode;
 	}
 
 	/**

@@ -66,10 +66,12 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
+import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
 /**
  * The default implementation of the {@link EntityPersister} interface.
@@ -634,7 +636,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
 					discriminatorColumnName,
-					discriminatorValue == NULL_DISCRIMINATOR ? null : discriminatorSQLValue,
+					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
 					getDiscriminatorMapping().getJdbcMapping()
 			);
 		}
@@ -771,7 +773,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			String alias,
 			TableGroup tableGroup,
 			SqlExpressionResolver sqlExpressionResolver) {
-		final String columnReferenceKey;
+		final SqlExpressionResolver.ColumnReferenceKey columnReferenceKey;
 		final String discriminatorExpression;
 		if ( isDiscriminatorFormula() ) {
 			discriminatorExpression = getDiscriminatorFormulaTemplate();

@@ -69,7 +69,7 @@ public class DomainResultCreationStateImpl
 
 	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
-	private final Map<String, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
+	private final Map<ColumnReferenceKey, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -254,9 +254,11 @@ public class DomainResultCreationStateImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlExpressionResolver
 
+	private FetchParent nestingFetchParent;
+
 	@Override
 	public Expression resolveSqlExpression(
-			String key,
+			ColumnReferenceKey key,
 			Function<SqlAstProcessingState, Expression> creator) {
 		final ResultSetMappingSqlSelection existing = sqlSelectionMap.get( key );
 		if ( existing != null ) {
@@ -271,9 +273,15 @@ public class DomainResultCreationStateImpl
 		}
 		else if ( created instanceof ColumnReference ) {
 			final ColumnReference columnReference = (ColumnReference) created;
-			final String columnExpression = columnReference.getColumnExpression();
-			final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnExpression );
-			final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+			final String selectableName = columnReference.getSelectableName();
+			final int valuesArrayPosition;
+			if ( nestingFetchParent != null ) {
+				valuesArrayPosition = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
+			}
+			else {
+				final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectableName );
+				valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+			}
 
 			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
 					valuesArrayPosition,
@@ -321,6 +329,15 @@ public class DomainResultCreationStateImpl
 
 			return fetchBuilders.get( fetchedPartPath );
 		}
+	}
+
+	@Override
+	public List<Fetch> visitNestedFetches(FetchParent fetchParent) {
+		final FetchParent oldNestingFetchParent = this.nestingFetchParent;
+		this.nestingFetchParent = fetchParent;
+		final List<Fetch> fetches = visitFetches( fetchParent );
+		this.nestingFetchParent = oldNestingFetchParent;
+		return fetches;
 	}
 
 	@Override

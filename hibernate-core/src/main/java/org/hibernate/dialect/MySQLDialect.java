@@ -472,8 +472,14 @@ public class MySQLDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == Types.BIT ) {
-			return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
+		switch ( jdbcTypeCode ) {
+			case Types.BIT:
+				return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
+			case Types.BINARY:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					jdbcTypeCode = GEOMETRY;
+				}
+				break;
 		}
 		return super.resolveSqlTypeDescriptor(
 				columnTypeName,

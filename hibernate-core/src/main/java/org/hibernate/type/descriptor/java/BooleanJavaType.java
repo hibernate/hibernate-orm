@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -49,6 +50,19 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	@Override
 	public Boolean fromString(CharSequence string) {
 		return Boolean.valueOf( string.toString() );
+	}
+
+	@Override
+	public Boolean fromEncodedString(CharSequence charSequence, int start, int end) {
+		switch ( charSequence.charAt( start ) ) {
+			case 't':
+			case 'T':
+				return CharSequenceHelper.regionMatchesIgnoreCase( charSequence, start + 1, "rue", 0, 3 );
+			case 'y':
+			case 'Y':
+				return end == start + 1;
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -50,6 +50,9 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( URL.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
@@ -59,6 +62,9 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 	public <X> URL wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
+		}
+		if (value instanceof URL) {
+			return (URL) value;
 		}
 		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );

@@ -49,6 +49,8 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
@@ -108,6 +110,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
@@ -155,6 +158,7 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.internal.TableMigrator;
+import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -228,8 +232,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -2043,6 +2047,47 @@ public abstract class Dialect implements ConversionContext {
 		);
 	}
 
+	// UDT support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Command used to create a table.
+	 *
+	 * @return The command used to create a table.
+	 */
+	public String getCreateUserDefinedTypeKindString() {
+		return "";
+	}
+
+	public String getCreateUserDefinedTypeExtensionsString() {
+		return "";
+	}
+
+	/**
+	 * For dropping a type, can the phrase "{@code if exists} be
+	 * applied before the type name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterTypeName} should return true.
+	 *
+	 * @return {@code true} if {@code if exists} can be applied before the type name
+	 */
+	public boolean supportsIfExistsBeforeTypeName() {
+		return false;
+	}
+
+	/**
+	 * For dropping a type, can the phrase {@code if exists} be
+	 * applied after the type name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeTypeName} should return true.
+	 *
+	 * @return {@code true} if {@code if exists} can be applied after the type name
+	 */
+	public boolean supportsIfExistsAfterTypeName() {
+		return false;
+	}
+
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -2483,6 +2528,7 @@ public abstract class Dialect implements ConversionContext {
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private final StandardUserDefinedTypeExporter userDefinedTypeExporter = new StandardUserDefinedTypeExporter( this );
 	private final StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
 	private final StandardIndexExporter indexExporter = new StandardIndexExporter( this );
 	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
@@ -2502,6 +2548,10 @@ public abstract class Dialect implements ConversionContext {
 
 	public Cleaner getTableCleaner() {
 		return tableCleaner;
+	}
+
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
 	}
 
 	public Exporter<Sequence> getSequenceExporter() {
@@ -2826,6 +2876,17 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The comment fragment
 	 */
 	public String getTableComment(String comment) {
+		return "";
+	}
+
+	/**
+	 * Get the comment into a form supported for UDT definition.
+	 *
+	 * @param comment The comment to apply
+	 *
+	 * @return The comment fragment
+	 */
+	public String getUserDefinedTypeComment(String comment) {
 		return "";
 	}
 
@@ -3511,6 +3572,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.EXPLICIT;
+	}
+
+	/**
+	 * How the Dialect supports aggregate types like {@link SqlTypes#STRUCT}.
+	 *
+	 * @since 6.2
+	 */
+	public AggregateSupport getAggregateSupport() {
+		return AggregateSupportImpl.INSTANCE;
 	}
 
 	/**
@@ -4325,7 +4395,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:
@@ -4347,7 +4417,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:

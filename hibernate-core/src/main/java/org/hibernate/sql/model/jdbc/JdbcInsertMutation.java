@@ -26,7 +26,7 @@ public class JdbcInsertMutation extends AbstractJdbcMutation {
 			String sql,
 			boolean callable,
 			Expectation expectation,
-			List<JdbcParameterBinder> parameterBinders) {
+			List<? extends JdbcParameterBinder> parameterBinders) {
 		super( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders );
 	}
 

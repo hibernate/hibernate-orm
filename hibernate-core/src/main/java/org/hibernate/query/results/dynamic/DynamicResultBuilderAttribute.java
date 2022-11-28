@@ -15,6 +15,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.ResultsHelper;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -84,7 +85,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 
 		final SqlSelection sqlSelection = domainResultCreationStateImpl.resolveSqlSelection(
 				domainResultCreationStateImpl.resolveSqlExpression(
-						columnAlias,
+						SqlExpressionResolver.createColumnReferenceKey( columnAlias ),
 						processingState -> {
 							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );

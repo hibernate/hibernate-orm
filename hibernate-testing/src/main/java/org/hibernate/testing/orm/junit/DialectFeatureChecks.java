@@ -6,6 +6,9 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.sql.Types;
+
+import org.hibernate.boot.model.TruthValue;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -26,6 +29,8 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -478,6 +483,154 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof SybaseDialect
 				|| dialect instanceof DerbyDialect
 				|| dialect instanceof HSQLDialect;
+		}
+	}
+
+	public static class SupportsStructAggregate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				return dialect.getAggregateSupport() != null
+						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
+						"",
+						"",
+						"",
+						"",
+						new ColumnTypeInformation() {
+							@Override
+							public TruthValue getNullable() {
+								return TruthValue.UNKNOWN;
+							}
+
+							@Override
+							public int getTypeCode() {
+								return SqlTypes.STRUCT;
+							}
+
+							@Override
+							public String getTypeName() {
+								return null;
+							}
+
+							@Override
+							public int getColumnSize() {
+								return 0;
+							}
+
+							@Override
+							public int getDecimalDigits() {
+								return 0;
+							}
+						}, new ColumnTypeInformation() {
+							@Override
+							public TruthValue getNullable() {
+								return TruthValue.UNKNOWN;
+							}
+
+							@Override
+							public int getTypeCode() {
+								return Types.VARCHAR;
+							}
+
+							@Override
+							public String getTypeName() {
+								return "varchar";
+							}
+
+							@Override
+							public int getColumnSize() {
+								return 0;
+							}
+
+							@Override
+							public int getDecimalDigits() {
+								return 0;
+							}
+						}
+				) != null;
+			}
+			catch (Exception e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsJsonAggregate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				return dialect.getAggregateSupport() != null
+						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
+						"",
+						"",
+						"",
+						"",
+						new ColumnTypeInformation() {
+							@Override
+							public TruthValue getNullable() {
+								return TruthValue.UNKNOWN;
+							}
+
+							@Override
+							public int getTypeCode() {
+								return SqlTypes.JSON;
+							}
+
+							@Override
+							public String getTypeName() {
+								return null;
+							}
+
+							@Override
+							public int getColumnSize() {
+								return 0;
+							}
+
+							@Override
+							public int getDecimalDigits() {
+								return 0;
+							}
+						}, new ColumnTypeInformation() {
+							@Override
+							public TruthValue getNullable() {
+								return TruthValue.UNKNOWN;
+							}
+
+							@Override
+							public int getTypeCode() {
+								return Types.VARCHAR;
+							}
+
+							@Override
+							public String getTypeName() {
+								return "varchar";
+							}
+
+							@Override
+							public int getColumnSize() {
+								return 0;
+							}
+
+							@Override
+							public int getDecimalDigits() {
+								return 0;
+							}
+						}
+				) != null;
+			}
+				catch (Exception e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsJsonComponentUpdate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.JSON );
+				return true;
+			}
+			catch (Exception e) {
+				return false;
+			}
 		}
 	}
 }

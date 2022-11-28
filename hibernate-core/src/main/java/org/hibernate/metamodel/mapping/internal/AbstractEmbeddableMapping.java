@@ -35,6 +35,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -84,12 +85,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		}
 
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
-		forEachAttributeMapping( (position, attribute) -> {
-			final Getter getter = attribute.getAttributeMetadata()
+		for ( int i = 0; i < results.length; i++ ) {
+			final Getter getter = getAttributeMapping( i ).getAttributeMetadata()
 					.getPropertyAccess()
 					.getGetter();
-			results[position] = getter.get( compositeInstance );
-		} );
+			results[i] = getter.get( compositeInstance );
+		}
 		return results;
 	}
 
@@ -100,9 +101,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
 		}
 		else {
-			forEachAttributeMapping( (position, attribute) -> {
-				attribute.getPropertyAccess().getSetter().set( component, values[position] );
-			} );
+			for ( int i = 0; i < values.length; i++ ) {
+				getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
+			}
 		}
 	}
 
@@ -193,7 +194,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
 				}
-				attributeMapping = (AttributeMapping) MappingModelCreationHelper.createInverseModelPart(
+				attributeMapping = MappingModelCreationHelper.createInverseModelPart(
 						(EmbeddableValuedModelPart) attributeMapping,
 						declaringType,
 						declaringTableGroupProducer,
@@ -271,18 +272,20 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[ columnPosition ];
 				}
+				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
 				final Integer precision;
 				final Integer scale;
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
-					Column column = (Column) selectable;
+					final Column column = (Column) selectable;
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
+					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
 					columnDefinition = null;
@@ -290,6 +293,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					precision = null;
 					scale = null;
 					nullable = true;
+					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
 				}
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -301,6 +305,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						(BasicType<?>) subtype,
 						containingTableExpression,
 						columnExpression,
+						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),

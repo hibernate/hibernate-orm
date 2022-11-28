@@ -55,11 +55,11 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		final JdbcTypeRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
 		return indicators.isLob()
-				? jdbcTypeRegistry.getDescriptor( Types.BLOB )
+				? jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( Types.BLOB ) )
 				: this;
 	}
 

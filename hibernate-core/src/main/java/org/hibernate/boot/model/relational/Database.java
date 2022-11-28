@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,7 +34,7 @@ public class Database {
 	private final TypeConfiguration typeConfiguration;
 	private final JdbcEnvironment jdbcEnvironment;
 	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<>();
-	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<>();
+	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new LinkedHashMap<>();
 	private final ServiceRegistry serviceRegistry;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 

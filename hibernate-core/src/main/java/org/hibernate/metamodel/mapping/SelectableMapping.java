@@ -25,6 +25,12 @@ public interface SelectableMapping extends SqlTypedMapping {
 	 * The selection's expression.  This is the column name or formula
 	 */
 	String getSelectionExpression();
+	default String getSelectableName() {
+		return getSelectionExpression();
+	}
+	default SelectablePath getSelectablePath() {
+		return new SelectablePath( getSelectableName() );
+	}
 
 	/**
 	 * The selection's read expression accounting for formula treatment as well

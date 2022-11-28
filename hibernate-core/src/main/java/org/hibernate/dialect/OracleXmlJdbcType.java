@@ -11,9 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 
 /**
@@ -21,7 +23,16 @@ import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
  */
 public class OracleXmlJdbcType extends XmlJdbcType {
 
-	public static final OracleXmlJdbcType INSTANCE = new OracleXmlJdbcType();
+	public static final OracleXmlJdbcType INSTANCE = new OracleXmlJdbcType( null );
+
+	private OracleXmlJdbcType(EmbeddableMappingType embeddableMappingType) {
+		super( embeddableMappingType );
+	}
+
+	@Override
+	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
+		return new OracleXmlJdbcType( mappingType );
+	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {

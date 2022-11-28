@@ -55,6 +55,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -82,7 +83,8 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
@@ -664,7 +666,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:
@@ -687,7 +689,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:

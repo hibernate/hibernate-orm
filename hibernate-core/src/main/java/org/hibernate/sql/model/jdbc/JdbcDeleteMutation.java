@@ -26,7 +26,7 @@ public class JdbcDeleteMutation extends AbstractJdbcMutation {
 			String sql,
 			boolean callable,
 			Expectation expectation,
-			List<JdbcParameterBinder> parameterBinders) {
+			List<? extends JdbcParameterBinder> parameterBinders) {
 		this( tableDetails, MutationType.DELETE, mutationTarget, sql, callable, expectation, parameterBinders );
 	}
 
@@ -37,7 +37,7 @@ public class JdbcDeleteMutation extends AbstractJdbcMutation {
 			String sql,
 			boolean callable,
 			Expectation expectation,
-			List<JdbcParameterBinder> parameterBinders) {
+			List<? extends JdbcParameterBinder> parameterBinders) {
 		super( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders );
 		this.mutationType = mutationType;
 	}

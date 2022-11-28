@@ -30,9 +30,12 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.time.Duration;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -138,6 +141,13 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -1194,6 +1204,56 @@ public abstract class AbstractHANADialect extends Dialect {
 				return "seconds_between(?2,?3)/3600";
 			default:
 				return "?1s_between(?2,?3)";
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
 		}
 	}
 

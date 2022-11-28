@@ -35,8 +35,10 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MariaDB
@@ -119,6 +121,11 @@ public class MariaDBDialect extends MySQLDialect {
 					case "uuid":
 						jdbcTypeCode = UUID;
 						break;
+				}
+				break;
+			case VARBINARY:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					jdbcTypeCode = GEOMETRY;
 				}
 				break;
 		}

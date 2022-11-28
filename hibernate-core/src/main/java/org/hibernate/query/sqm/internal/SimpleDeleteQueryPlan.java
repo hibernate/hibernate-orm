@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
@@ -144,6 +145,11 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 					final Expression fkColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
+							new MutatingTableReferenceGroupWrapper(
+									new NavigablePath( attributeMapping.getRootPathName() ),
+									attributeMapping,
+									(NamedTableReference) tableReference
+							),
 							fkDescriptor.getKeyPart(),
 							null,
 							factory

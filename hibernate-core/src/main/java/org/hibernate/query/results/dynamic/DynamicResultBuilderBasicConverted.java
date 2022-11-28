@@ -101,18 +101,23 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				.getTypeConfiguration();
 
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final String columnName;
+		if ( columnAlias != null ) {
+			columnName = columnAlias;
+		}
+		else {
+			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
+		}
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						columnAlias,
+						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						state -> {
-							final int currentJdbcPosition = resultPosition + 1;
-
 							final int jdbcPosition;
 							if ( columnAlias != null ) {
 								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							}
 							else {
-								jdbcPosition = currentJdbcPosition;
+								jdbcPosition = resultPosition + 1;
 							}
 							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
 									jdbcPosition,

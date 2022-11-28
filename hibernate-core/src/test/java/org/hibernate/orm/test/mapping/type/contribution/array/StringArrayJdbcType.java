@@ -32,8 +32,8 @@ public class StringArrayJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(Integer precision, Integer scale, TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( String[].class );
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(Integer precision, Integer scale, TypeConfiguration typeConfiguration) {
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( String[].class );
 	}
 
 	private final ValueBinder<String[]> binder = new BasicBinder<String[]>( StringArrayJavaType.INSTANCE, this ) {

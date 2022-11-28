@@ -77,8 +77,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -113,13 +111,13 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.TableMapping.MutationDetails;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -1741,15 +1739,12 @@ public abstract class AbstractCollectionPersister
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
 
-		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyDescriptor.getJdbcTypeCount() );
-		keyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-					columnReference,
-					ParameterUsage.RESTRICT
-			);
-			parameterBinders.add( columnValueParameter );
-		} );
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyDescriptor.getJdbcTypeCount()
+		);
+		keyDescriptor.getKeyPart().forEachSelectable( parameterBinders );
 
 		final TableMapping tableMapping = tableReference.getTableMapping();
 		return new JdbcDeleteMutation(
@@ -1780,31 +1775,26 @@ public abstract class AbstractCollectionPersister
 		assert fkDescriptor != null;
 
 		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
 		final java.util.List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
-		final java.util.List<ColumnValueParameter> parameters = arrayList( keyColumnCount );
-
-		//noinspection Convert2Lambda
-		fkDescriptor.getKeyPart().forEachSelectable( new SelectableConsumer() {
-			@Override
-			public void accept(int selectionIndex, SelectableMapping selectableMapping) {
-				final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-				final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-						columnReference,
-						ParameterUsage.RESTRICT
-				);
-				parameters.add( columnValueParameter );
-				keyRestrictionBindings.add(
-						new ColumnValueBinding(
-								columnReference,
-								new ColumnWriteFragment(
-										"?",
-										columnValueParameter,
-										selectableMapping.getJdbcMapping()
-								)
-						)
-				);
-			}
-		} );
+		fkDescriptor.getKeyPart().forEachSelectable( parameterBinders );
+		for ( ColumnValueParameter columnValueParameter : parameterBinders ) {
+			final ColumnReference columnReference = columnValueParameter.getColumnReference();
+			keyRestrictionBindings.add(
+					new ColumnValueBinding(
+							columnReference,
+							new ColumnWriteFragment(
+									"?",
+									columnValueParameter,
+									columnReference.getJdbcMapping()
+							)
+					)
+			);
+		}
 
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) new TableDeleteStandard(
@@ -1813,7 +1803,7 @@ public abstract class AbstractCollectionPersister
 				"one-shot delete for " + getRolePath(),
 				keyRestrictionBindings,
 				Collections.emptyList(),
-				parameters
+				parameterBinders
 		);
 	}
 

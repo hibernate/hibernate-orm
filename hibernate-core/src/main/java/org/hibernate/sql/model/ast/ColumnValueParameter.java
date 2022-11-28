@@ -33,4 +33,9 @@ public class ColumnValueParameter extends AbstractJdbcParameter {
 	public ParameterUsage getUsage() {
 		return usage;
 	}
+
+	@Override
+	public String toString() {
+		return "ColumnValueParameter(" + columnReference.getColumnExpression() + ')';
+	}
 }

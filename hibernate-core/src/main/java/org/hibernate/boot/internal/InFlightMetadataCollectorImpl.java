@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,6 +63,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.cfg.AggregateComponentSecondPass;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CreateKeySecondPass;
@@ -76,6 +78,7 @@ import org.hibernate.cfg.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.cfg.SecondaryTableSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
+import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -83,6 +86,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -100,6 +104,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -1634,6 +1639,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
+	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
@@ -1655,6 +1661,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 		else if ( secondPass instanceof SetBasicValueTypeSecondPass ) {
 			addSetBasicValueTypeSecondPass( (SetBasicValueTypeSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof AggregateComponentSecondPass ) {
+			addAggregateComponentSecondPass( (AggregateComponentSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof FkSecondPass ) {
 			addFkSecondPass( (FkSecondPass) secondPass, onTopOfTheQueue );
@@ -1700,6 +1709,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			setBasicValueTypeSecondPassList = new ArrayList<>();
 		}
 		addSecondPass( secondPass, setBasicValueTypeSecondPassList, onTopOfTheQueue );
+	}
+
+	private void addAggregateComponentSecondPass(AggregateComponentSecondPass secondPass, boolean onTopOfTheQueue) {
+		if ( aggregateComponentSecondPassList == null ) {
+			aggregateComponentSecondPassList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, aggregateComponentSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1766,6 +1782,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
+			processSecondPasses( aggregateComponentSecondPassList );
 
 			composites.forEach( Component::sortProperties );
 

@@ -36,6 +36,8 @@ import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -98,6 +100,7 @@ public class HSQLLegacyDialect extends Dialect {
 			CoreMessageLogger.class,
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
 	);
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
 
 	public HSQLLegacyDialect(DialectResolutionInfo info) {
 		super( info );
@@ -826,5 +829,10 @@ public class HSQLLegacyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 }

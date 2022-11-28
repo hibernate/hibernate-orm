@@ -69,6 +69,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -135,6 +136,7 @@ public class MappingModelCreationHelper {
 				cidType,
 				rootTableName,
 				rootTableKeyColumnNames,
+				bootProperty,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				embeddable -> new EmbeddedIdentifierMappingImpl(
@@ -181,6 +183,7 @@ public class MappingModelCreationHelper {
 			BasicType attrType,
 			String tableExpression,
 			String attrColumnName,
+			SelectablePath selectablePath,
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
@@ -225,6 +228,7 @@ public class MappingModelCreationHelper {
 				fetchStyle,
 				tableExpression,
 				attrColumnName,
+				selectablePath,
 				isAttrFormula,
 				readExpr,
 				writeExpr,
@@ -267,6 +271,7 @@ public class MappingModelCreationHelper {
 				attrType,
 				tableExpression,
 				rootTableKeyColumnNames,
+				bootProperty,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				attributeMappingType -> {
@@ -1152,13 +1157,25 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
+			final boolean insertable;
+			final boolean updatable;
+			if ( indexedCollection instanceof org.hibernate.mapping.Map
+					&& ( (org.hibernate.mapping.Map) indexedCollection ).getMapKeyPropertyName() != null ) {
+				// Replicate behavior of AbstractCollectionPersister#indexColumnIsSettable
+				insertable = false;
+				updatable = false;
+			}
+			else {
+				insertable = updatable = basicValue.isColumnInsertable( 0 )
+						|| basicValue.isColumnUpdateable( 0 );
+			}
 			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					basicValue.getSelectables().get(0),
+					basicValue.getSelectables().get( 0 ),
 					basicValue.resolve().getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
-					basicValue.isColumnInsertable( 0 ),
-					basicValue.isColumnUpdateable( 0 ),
+					insertable,
+					updatable,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1395,13 +1412,6 @@ public class MappingModelCreationHelper {
 	}
 
 	public static Expression buildColumnReferenceExpression(
-			ModelPart modelPart,
-			SqlExpressionResolver sqlExpressionResolver,
-			SessionFactoryImplementor sessionFactory) {
-		return buildColumnReferenceExpression( null, modelPart, sqlExpressionResolver, sessionFactory );
-	}
-
-	public static Expression buildColumnReferenceExpression(
 			TableGroup tableGroup,
 			ModelPart modelPart,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -1425,7 +1435,7 @@ public class MappingModelCreationHelper {
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( qualifier, selection.getSelectionExpression() ),
+									createColumnReferenceKey( qualifier, selection ),
 									sqlAstProcessingState -> new ColumnReference( qualifier, selection )
 							);
 						}
@@ -1449,7 +1459,7 @@ public class MappingModelCreationHelper {
 			}
 			else {
 				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( qualifier, basicPart.getSelectionExpression() ),
+						createColumnReferenceKey( qualifier, basicPart ),
 						sqlAstProcessingState -> new ColumnReference( qualifier, basicPart )
 				);
 			}

@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -228,8 +230,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		// NOTE : init commands are irrelevant for dropping...
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		// Reverse the list on drop to retain possible dependencies
+		final Collection<AuxiliaryDatabaseObject> reversedAuxiliaryDatabaseObjects = reverse( database.getAuxiliaryDatabaseObjects() );
+
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : reversedAuxiliaryDatabaseObjects ) {
+			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
 			}
 			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
@@ -289,8 +294,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : reversedAuxiliaryDatabaseObjects ) {
+			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;
 			}
 			if ( !auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
@@ -303,6 +308,24 @@ public class SchemaDropperImpl implements SchemaDropper {
 					options,
 					targets
 			);
+		}
+
+		for ( Namespace namespace : database.getNamespaces() ) {
+
+			if ( !options.getSchemaFilter().includeNamespace( namespace ) ) {
+				continue;
+			}
+			final List<UserDefinedType> dependencyOrderedUserDefinedTypes = namespace.getDependencyOrderedUserDefinedTypes();
+			Collections.reverse( dependencyOrderedUserDefinedTypes );
+			for ( UserDefinedType userDefinedType : dependencyOrderedUserDefinedTypes ) {
+				applySqlStrings(
+						dialect.getUserDefinedTypeExporter()
+								.getSqlDropStrings( userDefinedType, metadata, sqlStringGenerationContext ),
+						formatter,
+						options,
+						targets
+				);
+			}
 		}
 
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
@@ -342,6 +365,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 				}
 			}
 		}
+	}
+
+	private Collection<AuxiliaryDatabaseObject> reverse(Collection<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects) {
+		final List<AuxiliaryDatabaseObject> list = new ArrayList<>( auxiliaryDatabaseObjects );
+		Collections.reverse( list );
+		return list;
 	}
 
 	private void applyConstraintDropping(

@@ -1046,7 +1046,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			Value value = prop.getValue();
 			if ( value instanceof Component ) {
 				Component component = (Component) value;
-				checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
+				AggregateColumn aggregateColumn = component.getAggregateColumn();
+				if ( aggregateColumn == null ) {
+					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
+				}
+				else {
+					component.checkColumnDuplication();
+					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
+				}
 			}
 			else {
 				if ( prop.isUpdateable() || prop.isInsertable() ) {

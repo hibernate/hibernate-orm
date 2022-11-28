@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -50,6 +51,7 @@ public class BasicAttributeMapping
 
 	private final String tableExpression;
 	private final String mappedColumnExpression;
+	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final String customReadExpression;
 	private final String customWriteExpression;
@@ -74,6 +76,7 @@ public class BasicAttributeMapping
 			FetchStyle mappedFetchStyle,
 			String tableExpression,
 			String mappedColumnExpression,
+			SelectablePath selectablePath,
 			boolean isFormula,
 			String customReadExpression,
 			String customWriteExpression,
@@ -99,6 +102,12 @@ public class BasicAttributeMapping
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
+		if ( selectablePath == null ) {
+			this.selectablePath = new SelectablePath( mappedColumnExpression );
+		}
+		else {
+			this.selectablePath = selectablePath;
+		}
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -153,6 +162,7 @@ public class BasicAttributeMapping
 				FetchStyle.JOIN,
 				selectableMapping.getContainingTableExpression(),
 				selectableMapping.getSelectionExpression(),
+				selectableMapping.getSelectablePath(),
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
@@ -187,6 +197,16 @@ public class BasicAttributeMapping
 	@Override
 	public String getSelectionExpression() {
 		return mappedColumnExpression;
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	@Override

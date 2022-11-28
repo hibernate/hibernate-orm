@@ -8,6 +8,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.dialect.SybaseDialect;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -43,6 +44,7 @@ public class ToOneOnDeleteTest {
 			matchSubTypes = true,
 			reason = "Sybase does not support on delete actions"
 	)
+	@SkipForDialect(dialectClass = TiDBDialect.class)
 	public void testManyToOne(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

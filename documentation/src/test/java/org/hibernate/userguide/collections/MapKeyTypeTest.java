@@ -140,8 +140,10 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			joinColumns = @JoinColumn(name = "person_id")
 		)
 		@MapKeyJdbcTypeCode(Types.BIGINT)
+	//end::collections-map-custom-key-type-mapping-example[]
 // todo (6.0) : figure out why `@MapKeyTemporal` did not work.  imo it should
 //		@MapKeyTemporal(TemporalType.TIMESTAMP)
+	//tag::collections-map-custom-key-type-mapping-example[]
 		@MapKeyJavaType(JdbcTimestampJavaType.class)
 		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")

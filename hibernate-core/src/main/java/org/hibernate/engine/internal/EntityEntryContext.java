@@ -460,16 +460,17 @@ public class EntityEntryContext {
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
 				if ( entry.getPersister().isMutable() ) {
-					managedEntity = (ManagedEntity) entity;
+					managedEntity = ManagedTypeHelper.asManagedEntity( entity );
 				}
 				else {
-					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					final ManagedEntity castedEntity = asManagedEntity( entity );
+					managedEntity = new ImmutableManagedEntityHolder( castedEntity );
 					if ( context.immutableManagedEntityXref == null ) {
 						context.immutableManagedEntityXref =
 								new IdentityHashMap<>();
 					}
 					context.immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
+							castedEntity,
 							(ImmutableManagedEntityHolder) managedEntity
 
 					);

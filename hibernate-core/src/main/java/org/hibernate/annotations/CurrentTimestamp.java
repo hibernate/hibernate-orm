@@ -6,13 +6,15 @@
  */
 package org.hibernate.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.tuple.GenerationTiming;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that the annotated field of property is a generated timestamp,
@@ -56,9 +58,8 @@ import org.hibernate.tuple.GenerationTiming;
  * @see CreationTimestamp
  */
 @ValueGenerationType(generatedBy = CurrentTimestampGeneration.class)
-@Retention(RetentionPolicy.RUNTIME)
-@Target( { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE } )
-@Inherited
+@Retention(RUNTIME)
+@Target({ FIELD, METHOD, ANNOTATION_TYPE })
 public @interface CurrentTimestamp {
 	/**
 	 * Determines when the timestamp is generated. But default, it is updated

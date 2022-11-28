@@ -45,11 +45,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * hierarchy, as defied by the JPA specification. "Implicit"
  * polymorphism is about queries that span multiple such
  * entity inheritance hierarchies.
- * <p>
- * This annotation is hardly ever useful.
+ *
+ * @deprecated This annotation is hardly ever useful.
  *
  * @author Steve Ebersole
  */
+@Deprecated(since = "6.2")
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface Polymorphism {

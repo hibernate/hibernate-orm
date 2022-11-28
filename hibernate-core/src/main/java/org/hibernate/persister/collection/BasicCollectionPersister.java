@@ -42,10 +42,8 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableInsert;
@@ -57,7 +55,6 @@ import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
@@ -289,26 +286,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 
 		final ForeignKeyDescriptor foreignKey = attributeMapping.getKeyDescriptor();
-		foreignKey.getKeyPart().forEachSelectable( (position, mapping) -> insertBuilder.addValueColumn( mapping ) );
+		foreignKey.getKeyPart().forEachSelectable( insertBuilder );
 
 		final CollectionIdentifierDescriptor identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
 		if ( identifierDescriptor != null ) {
-			identifierDescriptor.forEachSelectable( (position, mapping) -> insertBuilder.addValueColumn( mapping ) );
+			identifierDescriptor.forEachSelectable( insertBuilder );
 		}
 		else if ( indexDescriptor != null ) {
-			indexDescriptor.forEachSelectable( (position, mapping) -> {
-				if ( indexColumnIsSettable[position] ) {
-					insertBuilder.addValueColumn( mapping );
-				}
-			} );
+			indexDescriptor.forEachInsertable( insertBuilder );
 		}
 
-		attributeMapping.getElementDescriptor().forEachSelectable( (position, mapping) -> {
-			if ( elementColumnIsSettable[position] ) {
-				insertBuilder.addValueColumn( mapping );
-			}
-		} );
+		attributeMapping.getElementDescriptor().forEachInsertable( insertBuilder );
 	}
 
 	private JdbcMutationOperation buildGeneratedInsertRowOperation(MutatingTableReference tableReference) {
@@ -422,13 +411,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		assert foreignKey != null;
 
 		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
-		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> parameterBinders.add(
-				new ColumnValueParameter(
-						new ColumnReference( tableReference, selectableMapping ),
-						ParameterUsage.RESTRICT
-				)
-		) );
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
+		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
 
 		return new JdbcUpdateMutation(
 				getCollectionTableMapping(),
@@ -460,14 +448,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET
 
-		attribute.getElementDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			if ( ! selectableMapping.isUpdateable() || selectableMapping.isFormula() ) {
-				return;
-			}
-
-			updateBuilder.addValueColumn( selectableMapping );
-		} );
-
+		attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE
@@ -578,15 +559,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
 
 		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
-		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-					columnReference,
-					ParameterUsage.RESTRICT
-			);
-			parameterBinders.add( columnValueParameter );
-		} );
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
+		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
 
 		return new JdbcDeleteMutation(
 				tableMapping,

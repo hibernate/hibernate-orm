@@ -85,7 +85,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
 		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER )
+				&& !ssrBuilder.getSettings().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
 			ssrBuilder.applySetting(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()

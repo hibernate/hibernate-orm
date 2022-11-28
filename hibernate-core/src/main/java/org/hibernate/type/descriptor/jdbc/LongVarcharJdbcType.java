@@ -57,6 +57,6 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 			jdbcTypeCode = indicators.isNationalized() ? Types.LONGNVARCHAR : Types.LONGVARCHAR;
 		}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 }

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +20,7 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 

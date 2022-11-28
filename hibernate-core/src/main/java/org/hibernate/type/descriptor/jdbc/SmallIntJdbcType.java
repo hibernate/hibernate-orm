@@ -47,11 +47,11 @@ public class SmallIntJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Short.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Short.class );
 	}
 
 	@Override

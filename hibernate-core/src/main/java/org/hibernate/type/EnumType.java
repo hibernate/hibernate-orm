@@ -195,7 +195,7 @@ public class EnumType<T extends Enum<T>>
 		}
 	}
 
-	private BasicJavaType<?> resolveRelationalJavaType(
+	private JavaType<?> resolveRelationalJavaType(
 			LocalJdbcTypeIndicators indicators,
 			EnumJavaType<?> enumJavaType) {
 		return enumJavaType.getRecommendedJdbcType( indicators )

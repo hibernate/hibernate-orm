@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstHelper;
@@ -201,7 +200,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 			@Override
 			public Expression resolveSqlExpression(
-					String key, Function<SqlAstProcessingState, Expression> creator) {
+					ColumnReferenceKey key, Function<SqlAstProcessingState, Expression> creator) {
 				final Expression expression = rootProcessingState.getSqlExpressionResolver().resolveSqlExpression(
 						key,
 						creator

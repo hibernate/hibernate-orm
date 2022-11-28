@@ -632,6 +632,20 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
+	public String toQuotedIdentifier(String name) {
+		if ( name == null || name.isEmpty() ) {
+			return name;
+		}
+		if ( name.charAt( 0 ) == '#' ) {
+			// Temporary tables must start with a '#' character,
+			// but Sybase doesn't support quoting of such identifiers,
+			// so we simply don't apply quoting in this case
+			return name;
+		}
+		return super.toQuotedIdentifier( name );
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}

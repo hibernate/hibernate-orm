@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -22,11 +23,20 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Christian Beikov
  */
-public class XmlAsStringJdbcType implements JdbcType {
+public class XmlAsStringJdbcType extends XmlJdbcType {
 	/**
 	 * Singleton access
 	 */
-	public static final XmlAsStringJdbcType INSTANCE = new XmlAsStringJdbcType();
+	public static final XmlAsStringJdbcType INSTANCE = new XmlAsStringJdbcType( null );
+
+	private XmlAsStringJdbcType(EmbeddableMappingType embeddableMappingType) {
+		super( embeddableMappingType );
+	}
+
+	@Override
+	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
+		return new XmlAsStringJdbcType( mappingType );
+	}
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -44,18 +54,12 @@ public class XmlAsStringJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		// No literal support for now
-		return null;
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String xml = options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
+				final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -66,7 +70,7 @@ public class XmlAsStringJdbcType implements JdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String xml = options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
+				final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -99,7 +103,7 @@ public class XmlAsStringJdbcType implements JdbcType {
 				if ( xml == null ) {
 					return null;
 				}
-				return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
+				return ( (XmlAsStringJdbcType) getJdbcType() ).fromString(
 						xml,
 						getJavaType(),
 						options

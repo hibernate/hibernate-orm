@@ -17,10 +17,10 @@ public class JdbcDateJavaTypeDescriptorTest {
 		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 
 		final String utilDate = javaType.toString( new java.util.Date( 0 ) );
-		assertThat( utilDate ).isEqualTo( "01 January 1970" );
+		assertThat( utilDate ).isEqualTo( "1970-01-01" );
 
 		final String sqlDate = javaType.toString( new java.sql.Date( 0 ) );
-		assertThat( sqlDate ).isEqualTo( "01 January 1970" );
+		assertThat( sqlDate ).isEqualTo( "1970-01-01" );
 	}
 
 	@Test

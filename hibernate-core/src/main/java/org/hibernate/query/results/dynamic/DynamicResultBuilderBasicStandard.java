@@ -128,7 +128,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-				columnName,
+				SqlExpressionResolver.createColumnReferenceKey( columnName ),
 				state -> {
 					final int jdbcPosition;
 					if ( columnPosition > 0 ) {

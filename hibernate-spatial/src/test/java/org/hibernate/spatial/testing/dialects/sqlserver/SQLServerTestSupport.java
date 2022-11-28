@@ -55,12 +55,7 @@ public class SQLServerTestSupport extends TestSupport {
 
 	@Override
 	public GeomCodec codec() {
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return Decoders.decode( (byte[]) in );
-			}
-		};
+		return in -> (Geometry<?>) in;
 	}
 
 	@Override

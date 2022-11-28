@@ -12,6 +12,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutationGroup;
@@ -25,7 +28,7 @@ import org.hibernate.sql.model.internal.MutationGroupStandard;
  *
  * @author Steve Ebersole
  */
-public class MutationGroupBuilder {
+public class MutationGroupBuilder implements SelectableConsumer {
 	private final MutationType mutationType;
 	private final EntityMutationTarget mutationTarget;
 
@@ -66,6 +69,15 @@ public class MutationGroupBuilder {
 
 	public void forEachTableMutationBuilder(Consumer<TableMutationBuilder<?>> consumer) {
 		tableMutationBuilderMap.forEach( (name, mutationBuilder) -> consumer.accept( mutationBuilder ) );
+	}
+
+	@Override
+	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
+		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) mutationTarget.getTargetPart()
+				.getEntityPersister();
+		final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
+		final ColumnValuesTableMutationBuilder mutationBuilder = findTableDetailsBuilder( tableNameForMutation );
+		mutationBuilder.addValueColumn( selectableMapping );
 	}
 
 	public MutationGroup buildMutationGroup() {

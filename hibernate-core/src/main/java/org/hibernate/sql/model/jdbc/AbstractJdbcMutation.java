@@ -28,7 +28,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	private final Expectation expectation;
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
-	private final List<JdbcParameterBinder> parameterBinders;
+	private final List<? extends JdbcParameterBinder> parameterBinders;
 
 	public AbstractJdbcMutation(
 			TableMapping tableDetails,
@@ -36,7 +36,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 			String sql,
 			boolean callable,
 			Expectation expectation,
-			List<JdbcParameterBinder> parameterBinders) {
+			List<? extends JdbcParameterBinder> parameterBinders) {
 		this.tableDetails = tableDetails;
 		this.mutationTarget = mutationTarget;
 		this.sql = sql;
@@ -71,7 +71,8 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 
 	@Override
 	public List<JdbcParameterBinder> getParameterBinders() {
-		return parameterBinders;
+		//noinspection unchecked
+		return (List<JdbcParameterBinder>) parameterBinders;
 	}
 
 	@Override

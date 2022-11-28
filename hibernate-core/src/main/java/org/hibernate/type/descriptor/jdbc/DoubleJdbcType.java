@@ -58,11 +58,11 @@ public class DoubleJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Double.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Double.class );
 	}
 
 	@Override

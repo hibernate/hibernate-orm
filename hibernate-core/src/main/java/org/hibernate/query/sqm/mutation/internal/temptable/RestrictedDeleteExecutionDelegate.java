@@ -43,12 +43,14 @@ import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -271,6 +273,11 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					}
 					return new InSubQueryPredicate(
 							MappingModelCreationHelper.buildColumnReferenceExpression(
+									new MutatingTableReferenceGroupWrapper(
+											new NavigablePath( attributeMapping.getRootPathName() ),
+											attributeMapping,
+											(NamedTableReference) tableReference
+									),
 									fkDescriptor,
 									null,
 									sessionFactory
@@ -546,6 +553,11 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					}
 					return new InSubQueryPredicate(
 							MappingModelCreationHelper.buildColumnReferenceExpression(
+									new MutatingTableReferenceGroupWrapper(
+											new NavigablePath( attributeMapping.getRootPathName() ),
+											attributeMapping,
+											(NamedTableReference) tableReference
+									),
 									fkDescriptor,
 									null,
 									sessionFactory

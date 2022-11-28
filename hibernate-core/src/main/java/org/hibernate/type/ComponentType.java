@@ -17,7 +17,6 @@ import java.util.Map;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Remove;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -32,6 +31,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -57,6 +57,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final CascadeStyle[] cascade;
 	private final FetchMode[] joinedFetch;
 
+	private final boolean isAggregate;
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
 	private final CompositeUserType<Object> compositeUserType;
@@ -68,6 +69,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				? Map.class
 				: component.getComponentClass();
 
+		this.isAggregate = component.getAggregateColumn() != null;
 		this.isKey = component.isKey();
 		this.propertySpan = component.getPropertySpan();
 		this.originalPropertyOrder = originalPropertyOrder;
@@ -103,6 +105,10 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		else {
 			this.compositeUserType = null;
 		}
+	}
+
+	private boolean isAggregate() {
+		return isAggregate;
 	}
 
 	public boolean isKey() {
@@ -337,7 +343,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			throws HibernateException, SQLException {
 
 		Object[] subvalues = nullSafeGetValues( value );
-
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
@@ -665,29 +670,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return joinedFetch[i];
 	}
 
-	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException {
-
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		if ( value != null ) {
-//			Object result = instantiate( owner, session );
-//			Object[] values = (Object[]) value;
-//			Object[] resolvedValues = new Object[values.length]; //only really need new array during semi-resolve!
-//			for ( int i = 0; i < values.length; i++ ) {
-//				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
-//			}
-//			setPropertyValues( result, resolvedValues, entityMode );
-//			return result;
-//		}
-//		else if ( isCreateEmptyCompositesEnabled() ) {
-//			return instantiate( owner, session );
-//		}
-//		else {
-//			return null;
-//		}
-	}
-
 	@Override
 	public boolean[] getPropertyNullability() {
 		return propertyNullability;
@@ -743,7 +725,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public JdbcType getJdbcType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SelectableMapping aggregateMapping = mappingModelPart.getEmbeddableTypeDescriptor().getAggregateMapping();
+		return aggregateMapping == null ? null : aggregateMapping.getJdbcMapping().getJdbcType();
 	}
 
 	private boolean determineIfProcedureParamExtractionCanBePerformed() {
@@ -760,65 +743,60 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
-		Object[] values = new Object[propertySpan];
-
-		int currentIndex = startIndex;
-		boolean notNull = false;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			// we know this cast is safe from canDoExtraction
-			final Type propertyType = propertyTypes[i];
-			final Object value = ( (ProcedureParameterExtractionAware<?>) propertyType )
-					.extract( statement, currentIndex, session );
-			if ( value == null ) {
-				if ( isKey ) {
-					return null; //different nullability rules for pk/fk
+		Object[] values;
+		if ( isAggregate() ) {
+			values = (Object[]) getMappingModelPart().getEmbeddableTypeDescriptor().getAggregateMapping()
+					.getJdbcMapping()
+					.getJdbcValueExtractor()
+					.extract( statement, startIndex, session );
+		}
+		else {
+			values = new Object[propertySpan];
+			int currentIndex = startIndex;
+			boolean notNull = false;
+			for ( int i = 0; i < propertySpan; i++ ) {
+				// we know this cast is safe from canDoExtraction
+				final Type propertyType = propertyTypes[i];
+				final Object value = ( (ProcedureParameterExtractionAware<?>) propertyType )
+						.extract( statement, currentIndex, session );
+				if ( value == null ) {
+					if ( isKey ) {
+						return null; //different nullability rules for pk/fk
+					}
 				}
+				else {
+					notNull = true;
+				}
+				values[i] = value;
+				currentIndex += propertyType.getColumnSpan( session.getFactory() );
 			}
-			else {
-				notNull = true;
+
+			if ( !notNull ) {
+				values = null;
 			}
-			values[i] = value;
-			currentIndex += propertyType.getColumnSpan( session.getFactory() );
 		}
 
-		if ( !notNull ) {
-			values = null;
-		}
-
-		return resolve( values, session, null );
+		return resolve( values, session );
 	}
 
 	@Override
 	public Object extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
-		// for this form to work all sub-property spans must be one (1)...
 
-//		Object[] values = new Object[propertySpan];
-//
-//		int indx = 0;
-//		boolean notNull = false;
-//		for ( String paramName : paramName ) {
-//			// we know this cast is safe from canDoExtraction
-//			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
-//			final Object value = propertyType.extract( statement, new String[] {paramName}, session );
-//			if ( value == null ) {
-//				if ( isKey ) {
-//					return null; //different nullability rules for pk/fk
-//				}
-//			}
-//			else {
-//				notNull = true;
-//			}
-//			values[indx] = value;
-//		}
-//
-//		if ( !notNull ) {
-//			values = null;
-//		}
-//
-//		return resolve( values, session, null );
-		throw new NotYetImplementedFor6Exception( getClass() );
+		assert isAggregate();
+		final Object[] values = (Object[]) getMappingModelPart().getEmbeddableTypeDescriptor().getAggregateMapping()
+				.getJdbcMapping()
+				.getJdbcValueExtractor()
+				.extract( statement, paramName, session );
 
+		return resolve( values, session );
+	}
+
+	private Object resolve(Object[] value, SharedSessionContractImplementor session) throws HibernateException {
+		final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
+				.getRepresentationStrategy()
+				.getInstantiator();
+		return instantiator.instantiate( () -> value, session.getFactory() );
 	}
 
 	@Override

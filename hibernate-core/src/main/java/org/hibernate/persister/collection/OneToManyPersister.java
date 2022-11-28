@@ -57,11 +57,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -343,36 +343,33 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				? keyColumnCount + indexColumnNames.length
 				: keyColumnCount;
 
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
 		final List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
-		final List<ColumnValueParameter> parameters = arrayList( keyColumnCount );
 		final List<ColumnValueBinding> valueBindings = arrayList( valuesCount );
-
-		fkDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-					columnReference,
-					ParameterUsage.RESTRICT
-			);
-			parameters.add( columnValueParameter );
+		fkDescriptor.getKeyPart().forEachSelectable( parameterBinders );
+		for ( ColumnValueParameter columnValueParameter : parameterBinders ) {
+			final ColumnReference columnReference = columnValueParameter.getColumnReference();
 			keyRestrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,
 							new ColumnWriteFragment(
 									"?",
 									columnValueParameter,
-									selectableMapping.getJdbcMapping()
+									columnReference.getJdbcMapping()
 							)
 					)
 			);
-			valueBindings.add( new ColumnValueBinding(
-					columnReference,
-					new ColumnWriteFragment(
-							"null",
-							null,
-							selectableMapping.getJdbcMapping()
+			valueBindings.add(
+					new ColumnValueBinding(
+							columnReference,
+							new ColumnWriteFragment( "null", columnReference.getJdbcMapping() )
 					)
-			) );
-		} );
+			);
+		}
 
 		if ( hasIndex && !indexContainsFormula ) {
 			getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -381,7 +378,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				valueBindings.add(
 						new ColumnValueBinding( new ColumnReference( tableReference, selectableMapping ),
-						new ColumnWriteFragment( "null", null, selectableMapping.getJdbcMapping() )
+						new ColumnWriteFragment( "null", selectableMapping.getJdbcMapping() )
 				) );
 			} );
 		}
@@ -393,7 +390,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				valueBindings,
 				keyRestrictionBindings,
 				null,
-				parameters,
+				parameterBinders,
 				sqlWhereString
 		);
 	}
@@ -532,15 +529,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
 
 		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
-		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-					columnReference,
-					ParameterUsage.RESTRICT
-			);
-			parameterBinders.add( columnValueParameter );
-		} );
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
+		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
 
 		return new JdbcDeleteMutation(
 				tableMapping,
@@ -637,16 +631,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 
-		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( (position, mapping) -> updateBuilder.addValueColumn( mapping ) );
+		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder );
 
 		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
-			indexDescriptor.forEachSelectable( (position,mapping) -> {
-				if ( !mapping.isUpdateable() ) {
-					return;
-				}
-				updateBuilder.addValueColumn( mapping );
-			} );
+			indexDescriptor.forEachUpdatable( updateBuilder );
 		}
 
 		final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
@@ -718,15 +707,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
 
 		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final java.util.List<JdbcParameterBinder> parameterBinders = arrayList( keyColumnCount );
-		foreignKey.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			final ColumnReference columnReference = new ColumnReference( tableReference, selectableMapping );
-			final ColumnValueParameter columnValueParameter = new ColumnValueParameter(
-					columnReference,
-					ParameterUsage.RESTRICT
-			);
-			parameterBinders.add( columnValueParameter );
-		} );
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
+		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
 
 		return new JdbcUpdateMutation(
 				tableMapping,
@@ -757,11 +743,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		// for each index column:
 		// 		* add a restriction based on the previous value
 		//		* add an assignment for the new value
-		getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			if ( selectableMapping.isUpdateable() ) {
-				updateBuilder.addValueColumn( selectableMapping );
-			}
-		} );
+		getAttributeMapping().getIndexDescriptor().forEachUpdatable( updateBuilder );
 
 		final RestrictedTableMutation<JdbcMutationOperation> tableUpdate = updateBuilder.buildMutation();
 		return tableUpdate.createMutationOperation( null, getFactory() );

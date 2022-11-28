@@ -24,6 +24,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -67,6 +69,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -108,6 +111,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -321,6 +325,12 @@ public class PostgreSQLDialect extends Dialect {
 					}
 				}
 				return jdbcType;
+			case STRUCT:
+				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
+				if ( aggregateDescriptor != null ) {
+					return aggregateDescriptor;
+				}
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -642,6 +652,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
 		return true;
 	}
 
@@ -1017,6 +1032,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return PostgreSQLAggregateSupport.valueOf( this );
+	}
+
+	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -1260,6 +1280,7 @@ public class PostgreSQLDialect extends Dialect {
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
 			}
 
 			// HHH-9562

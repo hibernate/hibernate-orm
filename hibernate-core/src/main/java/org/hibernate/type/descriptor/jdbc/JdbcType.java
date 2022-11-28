@@ -83,12 +83,12 @@ public interface JdbcType extends Serializable {
 		return getJdbcTypeCode();
 	}
 
-	default <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	default <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor(
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getDefaultSqlTypeCode() )
 		);
 	}
@@ -220,6 +220,8 @@ public interface JdbcType extends Serializable {
 			case Types.LONGVARCHAR:
 			case Types.LONGNVARCHAR:
 				return CastType.STRING;
+			case Types.CLOB:
+				return CastType.CLOB;
 			case Types.BOOLEAN:
 				return CastType.BOOLEAN;
 			case Types.DECIMAL:

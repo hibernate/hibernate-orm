@@ -71,7 +71,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final Object[] rowState;
 	private Boolean stateAllNull;
 	private Boolean stateInjected;
-	private Object compositeInstance;
+	protected Object compositeInstance;
 
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
@@ -95,6 +95,22 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 		this.assemblers = arrayList( size );
+
+		// We never want to create empty composites for the FK target or PK, otherwise collections would break
+		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
+				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
+				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
+
+		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
+		initializeAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
+	}
+
+	protected void initializeAssemblers(
+			EmbeddableResultGraphNode resultDescriptor,
+			AssemblerCreationState creationState,
+			EmbeddableMappingType embeddableTypeDescriptor) {
+		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
 			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
@@ -105,14 +121,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 			assemblers.add( stateAssembler );
 		}
-
-		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
-				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
-				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
-
-		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -120,6 +128,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return embedded;
 	}
 
+	@Override
 	public FetchParentAccess getFetchParentAccess() {
 		return fetchParentAccess;
 	}
@@ -189,7 +198,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		stateInjected = false;
-
+		// We need to possibly wrap the processing state if the embeddable is within an aggregate
+		processingState = wrapProcessingState( processingState );
 		extractRowState( processingState );
 		prepareCompositeInstance( processingState );
 		handleParentInjection( processingState );

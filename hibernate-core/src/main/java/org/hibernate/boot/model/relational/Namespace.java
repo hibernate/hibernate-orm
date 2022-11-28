@@ -6,9 +6,18 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 
@@ -18,8 +27,11 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedType;
 
 /**
  * Represents a namespace (named schema/catalog pair) with a Database and manages objects defined within.
@@ -36,6 +48,7 @@ public class Namespace {
 
 	private final Map<Identifier, Table> tables = new TreeMap<>();
 	private final Map<Identifier, Sequence> sequences = new TreeMap<>();
+	private final Map<Identifier, UserDefinedType> udts = new HashMap<>();
 
 	public Namespace(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment, Name name) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
@@ -130,6 +143,83 @@ public class Namespace {
 		sequences.put( logicalName, sequence );
 
 		return sequence;
+	}
+
+	public Collection<UserDefinedType> getUserDefinedTypes() {
+		return udts.values();
+	}
+
+	public List<UserDefinedType> getDependencyOrderedUserDefinedTypes() {
+		final var orderedUdts = new LinkedHashMap<Identifier, UserDefinedType>( udts.size() );
+		final var udtDependencies = new HashMap<Identifier, Set<Identifier>>( udts.size() );
+		for ( var entry : udts.entrySet() ) {
+			final var dependencies = new HashSet<Identifier>();
+			final UserDefinedType udt = entry.getValue();
+			for ( Column udtColumn : udt.getColumns() ) {
+				if ( udtColumn.getSqlTypeCode() == Types.STRUCT ) {
+					final String structName = ( (AggregateColumn) udtColumn ).getComponent().getStructName();
+					dependencies.add( Identifier.toIdentifier( structName ) );
+				}
+			}
+			if ( dependencies.isEmpty() ) {
+				// The UDTs without dependencies are added directly
+				orderedUdts.put( udt.getNameIdentifier(), udt );
+			}
+			else {
+				// For the rest we record the direct dependencies
+				udtDependencies.put( entry.getKey(), dependencies );
+			}
+		}
+		// Traverse the dependency sets
+		while ( !udtDependencies.isEmpty() ) {
+			for ( final var iterator = udtDependencies.entrySet().iterator(); iterator.hasNext(); ) {
+				final var entry = iterator.next();
+				final Set<Identifier> dependencies = entry.getValue();
+				// Remove the already ordered UDTs from the dependencies
+				dependencies.removeAll( orderedUdts.keySet() );
+				// If the dependencies have become empty
+				if ( dependencies.isEmpty() ) {
+					// the UDT can be inserted
+					orderedUdts.put( entry.getKey(), udts.get( entry.getKey() ) );
+					iterator.remove();
+				}
+			}
+		}
+
+		return new ArrayList<>( orderedUdts.values() );
+	}
+
+	/**
+	 * Returns the UDT with the specified logical UDT name.
+	 *
+	 * @param logicalTypeName - the logical name of the UDT
+	 *
+	 * @return the table with the specified UDT name,
+	 *         or null if there is no table with the specified
+	 *         UDT name.
+	 */
+	public UserDefinedType locateUserDefinedType(Identifier logicalTypeName) {
+		return udts.get( logicalTypeName );
+	}
+
+	/**
+	 * Creates a mapping UDT instance.
+	 *
+	 * @param logicalTypeName The logical UDT name
+	 *
+	 * @return the created UDT.
+	 */
+	public UserDefinedType createUserDefinedType(Identifier logicalTypeName, Function<Identifier,UserDefinedType> creator) {
+		final UserDefinedType existing = udts.get( logicalTypeName );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
+		final UserDefinedType type = creator.apply( physicalTableName );
+		udts.put( logicalTypeName, type );
+
+		return type;
 	}
 
 	@Override

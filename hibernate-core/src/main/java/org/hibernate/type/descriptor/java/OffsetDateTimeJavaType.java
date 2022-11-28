@@ -8,23 +8,30 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 /**
@@ -38,6 +45,18 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	 * Singleton access
 	 */
 	public static final OffsetDateTimeJavaType INSTANCE = new OffsetDateTimeJavaType();
+
+	private static final DateTimeFormatter PARSE_FORMATTER;
+	static {
+		PARSE_FORMATTER = new DateTimeFormatterBuilder()
+				.parseCaseInsensitive()
+				.append(ISO_LOCAL_DATE_TIME)
+				.optionalStart()
+				.parseLenient()
+				.appendOffset( "+HH:MM:ss", "Z" )
+				.parseStrict()
+				.toFormatter();
+	}
 
 	public OffsetDateTimeJavaType() {
 		super( OffsetDateTime.class, ImmutableMutabilityPlan.instance(), OffsetDateTime.timeLineOrder() );
@@ -68,6 +87,20 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	@Override
 	public OffsetDateTime fromString(CharSequence string) {
 		return OffsetDateTime.from( ISO_OFFSET_DATE_TIME.parse( string ) );
+	}
+
+	@Override
+	public OffsetDateTime fromEncodedString(CharSequence string, int start, int end) {
+		final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse(
+				CharSequenceHelper.subSequence( string, start, end )
+		);
+		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			return OffsetDateTime.from( temporalAccessor );
+		}
+		else {
+			// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
+			return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+		}
 	}
 
 	@Override

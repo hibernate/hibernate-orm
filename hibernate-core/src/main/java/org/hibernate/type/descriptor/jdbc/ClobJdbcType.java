@@ -50,8 +50,8 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		return indicators.isNationalized()
-				? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
-				: jdbcTypeRegistry.getDescriptor( Types.CLOB );
+				? jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( Types.NCLOB ) )
+				: jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( Types.CLOB ) );
 	}
 
 	@Override

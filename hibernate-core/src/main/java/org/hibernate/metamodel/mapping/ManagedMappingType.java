@@ -73,4 +73,16 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		getAttributeMapping( position ).setValue( instance, value );
 	}
 
+	default boolean anyRequiresAggregateColumnWriter() {
+		final int end = getNumberOfAttributeMappings();
+		for ( int i = 0; i < end; i++ ) {
+			final MappingType mappedType = getAttributeMapping( i ).getMappedType();
+			if ( mappedType instanceof EmbeddableMappingType ) {
+				if ( ( (EmbeddableMappingType) mappedType ).anyRequiresAggregateColumnWriter() ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

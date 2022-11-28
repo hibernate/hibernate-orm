@@ -35,10 +35,13 @@ import org.hibernate.dialect.PostgreSQLInetJdbcType;
 import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
 import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
+import org.hibernate.dialect.PostgreSQLStructJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -48,6 +51,8 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -80,7 +85,9 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -122,6 +129,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -145,6 +153,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
 	private final PostgreSQLDriverKind driverKind;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public PostgreSQLLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -333,6 +342,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 					}
 				}
 				return jdbcType;
+			case STRUCT:
+				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
+				if ( aggregateDescriptor != null ) {
+					return aggregateDescriptor;
+				}
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -660,6 +675,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
+		return getVersion().isSameOrAfter( 8, 2 );
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return getVersion().isSameOrAfter( 9 );
 	}
@@ -715,17 +735,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		/*
-		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
-		 */
+		// parent's implementation for (aliases, lockOptions) ignores aliases
 		if ( aliases.isEmpty() ) {
 			LockMode lockMode = lockOptions.getLockMode();
-			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
-			while ( itr.hasNext() ) {
+			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				// seek the highest lock mode
-				final Map.Entry<String, LockMode> entry = itr.next();
-				final LockMode lm = entry.getValue();
-				if ( lm.greaterThan( lockMode ) ) {
+				if ( entry.getValue().greaterThan(lockMode) ) {
 					aliases = entry.getKey();
 				}
 			}
@@ -1004,6 +1019,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return true;
+	}
+
+	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
@@ -1040,6 +1060,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return PostgreSQLAggregateSupport.valueOf( this );
+	}
+
+	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -1059,7 +1084,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, true, jdbcTimeZone );
 				}
@@ -1070,9 +1095,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -1219,6 +1251,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:
@@ -1275,6 +1312,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
 			}
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
@@ -1301,4 +1339,40 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				)
 		);
 	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	/**
+	 * @return {@code true}, but only because we can "batch" truncate
+	 */
+	@Override
+	public boolean canBatchTruncate() {
+		return true;
+	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+//	@Override
+//	public String getDisableConstraintsStatement() {
+//		return "set constraints all deferred";
+//	}
+//
+//	@Override
+//	public String getEnableConstraintsStatement() {
+//		return "set constraints all immediate";
+//	}
+//
+//	@Override
+//	public String getDisableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
+//	}
+//
+//	@Override
+//	public String getEnableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
+//	}
 }

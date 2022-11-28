@@ -73,12 +73,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (BasicJavaType<T>) jtd;
+		return (JavaType<T>) jtd;
 	}
 
 	@Override

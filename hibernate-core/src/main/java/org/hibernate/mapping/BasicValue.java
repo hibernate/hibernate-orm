@@ -39,6 +39,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -93,6 +94,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private String ownerName;
 	private String propertyName;
+	private AggregateColumn aggregateColumn;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
@@ -347,6 +349,21 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 	}
 
+	public AggregateColumn getAggregateColumn() {
+		return aggregateColumn;
+	}
+
+	public void setAggregateColumn(AggregateColumn aggregateColumn) {
+		this.aggregateColumn = aggregateColumn;
+	}
+
+	public SelectablePath createSelectablePath(String selectableName) {
+		if ( aggregateColumn != null ) {
+			return aggregateColumn.getSelectablePath().append( selectableName );
+		}
+		return new SelectablePath( selectableName );
+	}
+
 	protected Resolution<?> buildResolution() {
 		Properties typeParameters = getTypeParameters();
 		if ( typeParameters != null
@@ -450,15 +467,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				? explicitJdbcTypeAccess.apply( typeConfiguration )
 				: null;
 
-		final BasicJavaType<?> basicJavaType = javaType == null && jdbcType != null
+		final JavaType<?> basicJavaType = javaType == null && jdbcType != null
 				? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration )
-				: (BasicJavaType<?>) javaType;
+				: javaType;
 		if ( basicJavaType == null ) {
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		final TypeDefinition autoAppliedTypeDef =
-				getBuildingContext().getTypeDefinitionRegistry().resolveAutoApplied( basicJavaType );
+		final TypeDefinition autoAppliedTypeDef = basicJavaType instanceof BasicJavaType<?>
+				? getBuildingContext().getTypeDefinitionRegistry().resolveAutoApplied( (BasicJavaType<?>) basicJavaType )
+				: null;
 		if ( autoAppliedTypeDef != null
 				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
@@ -681,27 +699,35 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return getBuildingContext().getPreferredSqlTypeCodeForBoolean();
+		return resolveJdbcTypeCode( getBuildingContext().getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
-		return getBuildingContext().getPreferredSqlTypeCodeForDuration();
+		return resolveJdbcTypeCode( getBuildingContext().getPreferredSqlTypeCodeForDuration() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForUuid() {
-		return getBuildingContext().getPreferredSqlTypeCodeForUuid();
+		return resolveJdbcTypeCode( getBuildingContext().getPreferredSqlTypeCodeForUuid() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForInstant() {
-		return getBuildingContext().getPreferredSqlTypeCodeForInstant();
+		return resolveJdbcTypeCode( getBuildingContext().getPreferredSqlTypeCodeForInstant() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
-		return getBuildingContext().getPreferredSqlTypeCodeForArray();
+		return resolveJdbcTypeCode( getBuildingContext().getPreferredSqlTypeCodeForArray() );
+	}
+
+	@Override
+	public int resolveJdbcTypeCode(int jdbcTypeCode) {
+		return aggregateColumn == null
+				? jdbcTypeCode
+				: getMetadata().getDatabase().getDialect().getAggregateSupport()
+				.aggregateComponentSqlTypeCode( aggregateColumn.getSqlTypeCode(), jdbcTypeCode );
 	}
 
 	@Override

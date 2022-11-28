@@ -24,12 +24,16 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleBooleanJdbcType;
+import org.hibernate.dialect.OracleJsonJdbcType;
 import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.OracleStructJdbcType;
 import org.hibernate.dialect.OracleTypesHelper;
 import org.hibernate.dialect.OracleXmlJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
@@ -42,6 +46,8 @@ import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -83,11 +89,13 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOr
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -118,6 +126,7 @@ import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -146,6 +155,7 @@ public class OracleLegacyDialect extends Dialect {
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
 			: new LegacyOracleLimitHandler( getVersion() );
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -197,6 +207,9 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
+
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
 
 		functionFactory.median();
 		functionFactory.stddev();
@@ -352,6 +365,9 @@ public class OracleLegacyDialect extends Dialect {
 						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
 				break;
+			case CLOB:
+				// Oracle doesn't like casting to clob
+				return "to_clob(?1)";
 			case DATE:
 				if ( from == CastType.STRING ) {
 					return "to_date(?1,'YYYY-MM-DD')";
@@ -681,6 +697,20 @@ public class OracleLegacyDialect extends Dialect {
 		switch ( jdbcTypeCode ) {
 			case OracleTypes.JSON:
 				return jdbcTypeRegistry.getDescriptor( JSON );
+			case STRUCT:
+				if ( "MDSYS.SDO_GEOMETRY".equals( columnTypeName ) ) {
+					jdbcTypeCode = SqlTypes.GEOMETRY;
+				}
+				else {
+					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
+							// Skip the schema
+							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+					);
+					if ( aggregateDescriptor != null ) {
+						return aggregateDescriptor;
+					}
+				}
+				break;
 			case Types.NUMERIC:
 				if ( scale == -127 ) {
 					// For some reason, the Oracle JDBC driver reports FLOAT
@@ -742,6 +772,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( OracleStructJdbcType.INSTANCE );
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
@@ -759,10 +790,10 @@ public class OracleLegacyDialect extends Dialect {
 			typeContributions.contributeJdbcType( descriptor );
 
 			if ( getVersion().isSameOrAfter( 21 ) ) {
-				typeContributions.contributeJdbcType( OracleTypesHelper.INSTANCE.getJsonJdbcType() );
+				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
 			}
 			else {
-				typeContributions.contributeJdbcType( JsonBlobJdbcType.INSTANCE );
+				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
 			}
 		}
 
@@ -788,6 +819,11 @@ public class OracleLegacyDialect extends Dialect {
 								.getDescriptor( Object.class )
 						)
 		);
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return OracleAggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -1355,5 +1391,30 @@ public class OracleLegacyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " disable constraint " + name;
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "alter table " + tableName + " enable constraint " + name;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public String getCreateUserDefinedTypeKindString() {
+		return "object";
 	}
 }

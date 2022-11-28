@@ -9,10 +9,12 @@ package org.hibernate.mapping;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.MappingException;
@@ -25,6 +27,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -71,6 +74,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	// cache the status of the type
 	private volatile Type type;
 
+	private AggregateColumn aggregateColumn;
+	private AggregateColumn parentAggregateColumn;
+	private String structName;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private transient List<Selectable> cachedSelectables;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
@@ -152,11 +158,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public int getColumnSpan() {
-		int span = 0;
-		for ( Property property : getProperties() ) {
-			span += property.getColumnSpan();
-		}
-		return span;
+		return getSelectables().size();
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
@@ -195,6 +197,121 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isEmbedded() {
 		return embedded;
+	}
+
+	public AggregateColumn getAggregateColumn() {
+		return aggregateColumn;
+	}
+
+	public void setAggregateColumn(AggregateColumn aggregateColumn) {
+		this.aggregateColumn = aggregateColumn;
+		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
+	}
+
+	public List<Column> getAggregatedColumns() {
+		final List<Column> aggregatedColumns = new ArrayList<>( getPropertySpan() );
+		collectAggregatedColumns( aggregatedColumns, this );
+		return aggregatedColumns;
+	}
+
+	private void collectAggregatedColumns(List<Column> aggregatedColumns, Component component) {
+		for ( Property property : component.getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof Component ) {
+				final Component subComponent = (Component) value;
+				final AggregateColumn subAggregate = subComponent.getAggregateColumn();
+				if ( subAggregate != null ) {
+					aggregatedColumns.add( subAggregate );
+				}
+				else {
+					collectAggregatedColumns( aggregatedColumns, subComponent );
+				}
+			}
+			else {
+				aggregatedColumns.addAll( value.getColumns() );
+			}
+		}
+	}
+
+	private void notifyPropertiesAboutAggregateColumn(AggregateColumn aggregateColumn, Component component) {
+		for ( Property property : component.getProperties() ) {
+			// Let the BasicValue of every sub-column know about the aggregate,
+			// which is needed in type resolution
+			final Value value = property.getValue();
+			if ( value instanceof BasicValue ) {
+				assert ( (BasicValue) value ).getResolution() == null;
+				( (BasicValue) value ).setAggregateColumn( aggregateColumn );
+			}
+			else if ( value instanceof Component ) {
+				final Component subComponent = (Component) value;
+				if ( subComponent.getAggregateColumn() == null ) {
+					subComponent.notifyPropertiesAboutAggregateColumn( aggregateColumn, subComponent );
+				}
+				else {
+					( (Component) value ).setParentAggregateColumn( aggregateColumn );
+				}
+			}
+		}
+	}
+
+	public AggregateColumn getParentAggregateColumn() {
+		return parentAggregateColumn;
+	}
+
+	public void setParentAggregateColumn(AggregateColumn parentAggregateColumn) {
+		this.parentAggregateColumn = parentAggregateColumn;
+	}
+
+	public String getStructName() {
+		return structName;
+	}
+
+	public void setStructName(String structName) {
+		this.structName = structName;
+	}
+
+	protected void checkColumnDuplication() throws MappingException {
+		checkPropertyColumnDuplication( new HashSet<>(), getProperties() );
+	}
+	protected void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
+			throws MappingException {
+		if ( value != null ) {
+			for ( Selectable columnOrFormula : value.getSelectables() ) {
+				if ( !columnOrFormula.isFormula() ) {
+					final Column col = (Column) columnOrFormula;
+					if ( !distinctColumns.add( col.getName() ) ) {
+						throw new MappingException(
+								"Column '" + col.getName()
+										+ "' is duplicated in mapping for component '" + getRoleName()
+										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
+						);
+					}
+				}
+			}
+		}
+	}
+
+	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
+			throws MappingException {
+		for ( Property prop : properties ) {
+			Value value = prop.getValue();
+			if ( value instanceof Component ) {
+				Component component = (Component) value;
+				AggregateColumn aggregateColumn = component.getAggregateColumn();
+				if ( aggregateColumn == null ) {
+					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
+				}
+				else {
+					component.checkColumnDuplication();
+					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
+				}
+			}
+			else {
+				if ( prop.isUpdateable() || prop.isInsertable() ) {
+					checkColumnDuplication( distinctColumns, value);
+				}
+			}
+		}
 	}
 
 	public String getComponentClassName() {
@@ -309,6 +426,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				&& Objects.equals( properties, other.properties )
 				&& Objects.equals( componentClassName, other.componentClassName )
 				&& embedded == other.embedded
+				&& Objects.equals( aggregateColumn, other.aggregateColumn )
+				&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
+				&& Objects.equals( structName, other.structName )
 				&& Objects.equals( parentProperty, other.parentProperty )
 				&& Objects.equals( metaAttributes, other.metaAttributes );
 	}

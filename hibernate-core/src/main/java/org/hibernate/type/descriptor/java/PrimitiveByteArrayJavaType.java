@@ -66,6 +66,16 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		}
 	}
 
+	public void appendString(StringBuilder appender, byte[] bytes) {
+		for ( byte aByte : bytes ) {
+			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
+			if ( hexStr.length() == 1 ) {
+				appender.append( '0' );
+			}
+			appender.append( hexStr );
+		}
+	}
+
 	@Override
 	public String extractLoggableRepresentation(byte[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );

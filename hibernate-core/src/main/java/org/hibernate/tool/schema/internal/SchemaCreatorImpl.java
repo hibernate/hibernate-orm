@@ -42,6 +42,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
@@ -283,6 +284,27 @@ public class SchemaCreatorImpl implements SchemaCreator {
 							targets
 					);
 				}
+			}
+		}
+
+		// next, create all UDTs
+		for ( Namespace namespace : database.getNamespaces() ) {
+
+			if ( !options.getSchemaFilter().includeNamespace( namespace ) ) {
+				continue;
+			}
+
+			for ( UserDefinedType userDefinedType : namespace.getDependencyOrderedUserDefinedTypes() ) {
+				applySqlStrings(
+						dialect.getUserDefinedTypeExporter().getSqlCreateStrings(
+								userDefinedType,
+								metadata,
+								sqlStringGenerationContext
+						),
+						formatter,
+						options,
+						targets
+				);
 			}
 		}
 

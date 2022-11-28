@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -18,6 +20,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -56,6 +59,26 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		booleanExpressionPredicate.getExpression().accept( this );
 		if ( isNegated ) {
 			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	@Override
+	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+		final Expression expression = nullnessPredicate.getExpression();
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		if ( isStruct( expressionType ) ) {
+			// Surprise, the null predicate checks if all components of the struct are null or not,
+			// rather than the column itself, so we have to use the distinct from predicate to implement this instead
+			expression.accept( this );
+			if ( nullnessPredicate.isNegated() ) {
+				appendSql( " is distinct from null" );
+			}
+			else {
+				appendSql( " is not distinct from null" );
+			}
+		}
+		else {
+			super.visitNullnessPredicate( nullnessPredicate );
 		}
 	}
 

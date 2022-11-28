@@ -42,9 +42,13 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -98,6 +102,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -1030,42 +1035,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {
-		appendSql( " set " );
-		boolean firstPass = true;
+		appendSql( " set" );
+		char separator = ' ';
 		try {
 			clauseStack.push( Clause.SET );
 			for ( Assignment assignment : statement.getAssignments() ) {
-				if ( firstPass ) {
-					firstPass = false;
-				}
-				else {
-					appendSql( COMA_SEPARATOR_CHAR );
-				}
-
-				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
-				if ( columnReferences.size() == 1 ) {
-					visitSetClauseTarget( columnReferences.get( 0 ) );
-					appendSql( '=' );
-					final Expression assignedValue = assignment.getAssignedValue();
-					final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
-					if ( sqlTuple != null ) {
-						final Expression expression = sqlTuple
-								.getExpressions()
-								.get( 0 );
-						expression.accept( this );
-					}
-					else {
-						assignedValue.accept( this );
-					}
-				}
-				else {
-					appendSql( OPEN_PARENTHESIS );
-					for ( ColumnReference columnReference : columnReferences ) {
-						columnReference.accept( this );
-					}
-					appendSql( ")=" );
-					assignment.getAssignedValue().accept( this );
-				}
+				appendSql( separator );
+				separator = COMA_SEPARATOR_CHAR;
+				visitSetAssignment( assignment );
 			}
 		}
 		finally {
@@ -1073,8 +1050,46 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitSetClauseTarget(ColumnReference columnReference) {
-		appendSql( columnReference.getColumnExpression() );
+	protected void visitSetAssignment(Assignment assignment) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				sqlTuple.getExpressions().get( 0 ).accept( this );
+			}
+			else {
+				assignedValue.accept( this );
+			}
+		}
+		else {
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this, null );
+				separator = COMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			assignment.getAssignedValue().accept( this );
+		}
+	}
+
+	protected boolean isStruct(JdbcMappingContainer expressionType) {
+		if ( expressionType instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableMappingType embeddableMappingType = ( (EmbeddableValuedModelPart) expressionType ).getEmbeddableTypeDescriptor();
+			return embeddableMappingType.getAggregateMapping() != null && embeddableMappingType.getAggregateMapping()
+					.getJdbcMapping()
+					.getJdbcType()
+					.getDefaultSqlTypeCode() == SqlTypes.STRUCT;
+		}
+		else if ( expressionType instanceof BasicValuedMapping ) {
+			final JdbcMapping jdbcMapping = ( (BasicValuedMapping) expressionType ).getJdbcMapping();
+			return jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.STRUCT;
+		}
+		return false;
 	}
 
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
@@ -6049,6 +6064,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		final String dmlTargetTableAlias = getDmlTargetTableAlias();
+		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
+		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
+			final String tableExpression = getCurrentDmlStatement().getTargetTable().getTableExpression();
+			// Qualify the column reference with the table expression only in subqueries
+			final boolean qualifyColumn = !queryPartStack.isEmpty();
+			aggregateColumnWriteExpression.appendWriteExpression( this, this, qualifyColumn ? tableExpression : null );
+		}
+		else {
+			aggregateColumnWriteExpression.appendWriteExpression( this, this );
+		}
+	}
+
+	@Override
 	public void visitExtractUnit(ExtractUnit extractUnit) {
 		appendSql( getDialect().translateExtractField( extractUnit.getUnit() ) );
 	}
@@ -6149,6 +6179,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( getParameterRenderingMode() ) {
+			case NO_UNTYPED:
 			case NO_PLAIN_PARAMETER:
 				renderCasted( jdbcParameter );
 				break;
@@ -6500,16 +6531,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
-			appendSql( SqlAppender.NULL_KEYWORD );
+			renderNull( literal );
 		}
 		else {
 			renderLiteral( literal, false );
 		}
 	}
 
+	private void renderNull(Literal literal) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
+			renderCasted( literal );
+		}
+		else {
+			appendSql( SqlAppender.NULL_KEYWORD );
+		}
+	}
+
 	protected void renderAsLiteral(JdbcParameter jdbcParameter, Object literalValue) {
 		if ( literalValue == null ) {
-			appendSql( SqlAppender.NULL_KEYWORD );
+			renderNull( new QueryLiteral<>( null, (BasicValuedMapping) jdbcParameter.getExpressionType() ) );
 		}
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
@@ -7929,9 +7969,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
 		sqlBuffer.append( columnWriteFragment.getFragment() );
-		if ( columnWriteFragment.getParameter() != null ) {
-			parameterBinders.add( columnWriteFragment.getParameter().getParameterBinder() );
-			jdbcParameters.addParameter( columnWriteFragment.getParameter() );
+		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
+			parameterBinders.add( parameter.getParameterBinder() );
+			jdbcParameters.addParameter( parameter );
 		}
 	}
 }

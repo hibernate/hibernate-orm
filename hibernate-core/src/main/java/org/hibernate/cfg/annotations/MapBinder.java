@@ -385,6 +385,7 @@ public class MapBinder extends CollectionBinder {
 				true,
 				null,
 				compositeUserType,
+				null,
 				buildingContext,
 				inheritanceStatePerClass
 		) );

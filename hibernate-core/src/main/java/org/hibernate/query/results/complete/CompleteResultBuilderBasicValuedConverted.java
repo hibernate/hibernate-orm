@@ -18,6 +18,7 @@ import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -87,7 +88,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
-						columnName,
+						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						processingState -> {
 							final int jdbcPosition;
 							if ( explicitColumnName != null ) {

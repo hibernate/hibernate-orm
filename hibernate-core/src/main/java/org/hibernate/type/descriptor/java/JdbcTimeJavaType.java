@@ -8,16 +8,20 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -49,6 +53,13 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	 */
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
+	private static final DateTimeFormatter ENCODED_FORMATTER = new DateTimeFormatterBuilder()
+			.optionalStart()
+			.append( DateTimeFormatter.ISO_DATE )
+			.appendLiteral( 'T' )
+			.optionalEnd()
+			.append( DateTimeFormatter.ISO_LOCAL_TIME )
+			.toFormatter();
 
 	public JdbcTimeJavaType() {
 		super( Time.class, TimeMutabilityPlan.INSTANCE );
@@ -183,16 +194,52 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( TIME_FORMAT ).format( value );
+		if ( value instanceof java.sql.Time ) {
+			return LITERAL_FORMATTER.format( ( (java.sql.Time) value ).toLocalTime() );
+		}
+		else {
+			return LITERAL_FORMATTER.format( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
+		}
 	}
 
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string.toString() ).getTime() );
+			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
+			final LocalTime localTime = LocalTime.from( accessor );
+			final Time time = Time.valueOf( localTime );
+			time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
+			return time;
 		}
-		catch ( ParseException pe ) {
-			throw new HibernateException( "could not parse time string" + string, pe );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse time string " + string, pe );
+		}
+	}
+
+	@Override
+	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse(
+					CharSequenceHelper.subSequence(
+							charSequence,
+							start,
+							end
+					)
+			);
+			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
+		}
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse time string " + charSequence, pe );
+		}
+	}
+
+	@Override
+	public void appendEncodedString(SqlAppender sb, Date value) {
+		if ( value instanceof java.sql.Time ) {
+			LITERAL_FORMATTER.formatTo( ( (java.sql.Time) value ).toLocalTime(), sb );
+		}
+		else {
+			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
 		}
 	}
 

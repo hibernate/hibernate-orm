@@ -62,4 +62,11 @@ public interface PhysicalNamingStrategy {
 	 * Determine the physical column name from the given logical name
 	 */
 	Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+
+	/**
+	 * Determine the physical UDT type name from the given logical name
+	 */
+	default Identifier toPhysicalTypeName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return toPhysicalTableName( logicalName, jdbcEnvironment );
+	}
 }

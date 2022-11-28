@@ -74,6 +74,7 @@ import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -113,6 +114,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+	// See microsoft.sql.Types.GEOMETRY
+	private static final int GEOMETRY_TYPE_CODE = -157;
+	// See microsoft.sql.Types.GEOGRAPHY
+	private static final int GEOGRAPHY_TYPE_CODE = -158;
 
 	private final StandardSequenceExporter exporter;
 	private final UniqueDelegate uniqueDelegate = new AlterTableUniqueIndexDelegate(this);
@@ -222,6 +227,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						jdbcTypeCode = UUID;
 						break;
 				}
+				break;
+			case GEOMETRY_TYPE_CODE:
+				jdbcTypeCode = GEOMETRY;
+				break;
+			case GEOGRAPHY_TYPE_CODE:
+				jdbcTypeCode = GEOGRAPHY;
 				break;
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
@@ -848,6 +859,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 	}
 
+	@Override
 	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
 		appender.appendSql( "cast('" );
 		appender.appendSql( literal.toString() );

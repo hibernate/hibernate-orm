@@ -179,11 +179,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
 	}
@@ -191,6 +186,11 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected boolean supportsNestedSubqueryCorrelation() {
 		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClause() {
+		return getDialect().getVersion().isSameOrAfter( 8 );
 	}
 
 	@Override

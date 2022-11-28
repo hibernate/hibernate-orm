@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.spi;
 import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -41,36 +42,50 @@ public interface SqlExpressionResolver {
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static String createColumnReferenceKey(String tableExpression, String columnExpression) {
-		return tableExpression + columnExpression;
+	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, String columnExpression) {
+		return new ColumnReferenceKey(tableExpression, new SelectablePath( columnExpression ) );
 	}
 	/**
 	 * Helper for generating an expression key for a column reference.
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static String createColumnReferenceKey(TableReference tableReference, String columnExpression) {
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, String columnExpression) {
+		return createColumnReferenceKey( tableReference, new SelectablePath( columnExpression ) );
+	}
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectablePath selectablePath) {
 		assert tableReference != null : "tableReference expected to be non-null";
-		assert columnExpression != null : "columnExpression expected to be non-null";
+		assert selectablePath != null : "selectablePath expected to be non-null";
 		assert tableReference.getIdentificationVariable() != null : "tableReference#identificationVariable expected to be non-null";
 		final String qualifier = tableReference.getIdentificationVariable();
-		return qualifier + columnExpression;
+		return createColumnReferenceKey( qualifier, selectablePath );
+	}
+
+	static ColumnReferenceKey createColumnReferenceKey(String qualifier, SelectablePath selectablePath) {
+		assert qualifier != null : "qualifier expected to be non-null";
+		assert selectablePath != null : "selectablePath expected to be non-null";
+		return new ColumnReferenceKey( qualifier, selectablePath );
+	}
+
+	static ColumnReferenceKey createColumnReferenceKey(String columnExpression) {
+		assert columnExpression != null : "columnExpression expected to be non-null";
+		return new ColumnReferenceKey( "", new SelectablePath( columnExpression ) );
 	}
 
 	/**
 	 * Convenience form for creating a key from table expression and SelectableMapping
 	 */
-	static String createColumnReferenceKey(String tableExpression, SelectableMapping selectable) {
-		return createColumnReferenceKey( tableExpression, selectable.getSelectionExpression() );
+	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, SelectableMapping selectable) {
+		return createColumnReferenceKey( tableExpression, selectable.getSelectablePath() );
 	}
 
 	/**
 	 * Convenience form for creating a key from TableReference and SelectableMapping
 	 */
-	static String createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
 		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
-		return createColumnReferenceKey( tableReference, selectable.getSelectionExpression() );
+		return createColumnReferenceKey( tableReference, selectable.getSelectablePath() );
 	}
 
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {
@@ -88,7 +103,7 @@ public interface SqlExpressionResolver {
 	 * Given a qualifier + a qualifiable {@link org.hibernate.metamodel.mapping.SqlExpressible},
 	 * resolve the (Sql)Expression reference.
 	 */
-	Expression resolveSqlExpression(String key, Function<SqlAstProcessingState,Expression> creator);
+	Expression resolveSqlExpression(ColumnReferenceKey key, Function<SqlAstProcessingState,Expression> creator);
 
 	/**
 	 * Resolve the SqlSelection for the given expression
@@ -96,5 +111,40 @@ public interface SqlExpressionResolver {
 	SqlSelection resolveSqlSelection(
 			Expression expression,
 			JavaType<?> javaType,
-			FetchParent fetchParent, TypeConfiguration typeConfiguration);
+			FetchParent fetchParent,
+			TypeConfiguration typeConfiguration);
+
+	final class ColumnReferenceKey {
+		private final String tableQualifier;
+		private final SelectablePath selectablePath;
+
+		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath) {
+			this.tableQualifier = tableQualifier;
+			this.selectablePath = selectablePath;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			ColumnReferenceKey that = (ColumnReferenceKey) o;
+
+			if ( !tableQualifier.equals( that.tableQualifier ) ) {
+				return false;
+			}
+			return selectablePath.equals( that.selectablePath );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = tableQualifier.hashCode();
+			result = 31 * result + selectablePath.hashCode();
+			return result;
+		}
+	}
 }

@@ -65,6 +65,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -125,6 +126,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private final Kind kind;
+	private final Component aggregateComponent;
 	private final MetadataBuildingContext buildingContext;
 
 
@@ -163,12 +165,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private String returnedClassName;
 	private String referencedEntityName;
 
-
 	public BasicValueBinder(Kind kind, MetadataBuildingContext buildingContext) {
+		this( kind, null, buildingContext );
+	}
+
+	public BasicValueBinder(Kind kind, Component aggregateComponent, MetadataBuildingContext buildingContext) {
 		assert kind != null;
 		assert buildingContext != null;
 
 		this.kind = kind;
+		this.aggregateComponent = aggregateComponent;
 		this.buildingContext = buildingContext;
 	}
 
@@ -203,27 +209,35 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return buildingContext.getPreferredSqlTypeCodeForBoolean();
+		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForBoolean() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
-		return buildingContext.getPreferredSqlTypeCodeForDuration();
+		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForDuration() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForUuid() {
-		return buildingContext.getPreferredSqlTypeCodeForUuid();
+		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForUuid() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForInstant() {
-		return buildingContext.getPreferredSqlTypeCodeForInstant();
+		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForInstant() );
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
-		return buildingContext.getPreferredSqlTypeCodeForArray();
+		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForArray() );
+	}
+
+	@Override
+	public int resolveJdbcTypeCode(int jdbcTypeCode) {
+		return aggregateComponent == null
+				? jdbcTypeCode
+				: buildingContext.getMetadataCollector().getDatabase().getDialect().getAggregateSupport()
+				.aggregateComponentSqlTypeCode( aggregateComponent.getAggregateColumn().getSqlTypeCode(), jdbcTypeCode );
 	}
 
 	@Override
@@ -1129,6 +1143,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			collector.addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, joinColumns, basicValue )
 			);
+		}
+		else if ( aggregateComponent != null ) {
+			assert columns.getColumns().size() == 1;
+			firstColumn.linkWithAggregateValue( basicValue, aggregateComponent );
 		}
 		else {
 			for ( AnnotatedColumn column : columns.getColumns() ) {

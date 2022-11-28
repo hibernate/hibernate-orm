@@ -612,13 +612,24 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			Dialect dialect,
 			String fkKeyTableName,
 			BasicValuedModelPart basicFkTargetPart) {
+		final boolean columnInsertable;
+		final boolean columnUpdateable;
+		if ( getNature() == Nature.ELEMENT ) {
+			// Replicate behavior of AbstractCollectionPersister#elementColumnIsSettable
+			columnInsertable = true;
+			columnUpdateable = true;
+		}
+		else {
+			columnInsertable = fkBootDescriptorSource.isColumnInsertable( 0 );
+			columnUpdateable = fkBootDescriptorSource.isColumnUpdateable( 0 );
+		}
 		final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 				fkKeyTableName,
 				fkBootDescriptorSource.getSelectables().get(0),
 				basicFkTargetPart.getJdbcMapping(),
 				creationProcess.getCreationContext().getTypeConfiguration(),
-				fkBootDescriptorSource.isColumnInsertable( 0 ),
-				fkBootDescriptorSource.isColumnUpdateable( 0 ),
+				columnInsertable,
+				columnUpdateable,
 				dialect,
 				creationProcess.getSqmFunctionRegistry()
 		);

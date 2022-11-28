@@ -15,6 +15,8 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
@@ -43,6 +45,8 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.procedure.internal.DB2CallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
@@ -181,6 +185,9 @@ public class DB2Dialect extends Dialect {
 				return "timestamp($p)";
 			case TIME_WITH_TIMEZONE:
 				return "time";
+			case BINARY:
+				// should use 'binary' since version 11
+				return getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
 			case VARBINARY:
 				// should use 'varbinary' since version 11
 				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
@@ -196,8 +203,8 @@ public class DB2Dialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, "varchar($l) for bit data", this )
-						.withTypeCapacity( 254, "char($l) for bit data" )
+				CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), this )
+						.withTypeCapacity( 254, columnType( BINARY ) )
 						.build()
 		);
 	}
@@ -736,6 +743,7 @@ public class DB2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );
@@ -749,6 +757,11 @@ public class DB2Dialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -932,5 +945,10 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getTruncateTableStatement(String tableName) {
 		return super.getTruncateTableStatement(tableName) + " immediate";
+	}
+
+	@Override
+	public String getCreateUserDefinedTypeExtensionsString() {
+		return " instantiable mode db2sql";
 	}
 }

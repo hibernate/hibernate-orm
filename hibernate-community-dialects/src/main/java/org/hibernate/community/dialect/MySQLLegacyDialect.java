@@ -56,12 +56,14 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -211,7 +213,7 @@ public class MySQLLegacyDialect extends Dialect {
 			return MyISAMStorageEngine.INSTANCE;
 		}
 		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
+			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported" );
 		}
 	}
 
@@ -480,8 +482,14 @@ public class MySQLLegacyDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == Types.BIT ) {
-			return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
+		switch ( jdbcTypeCode ) {
+			case Types.BIT:
+				return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
+			case Types.BINARY:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					jdbcTypeCode = GEOMETRY;
+				}
+				break;
 		}
 		return super.resolveSqlTypeDescriptor(
 				columnTypeName,
@@ -516,7 +524,6 @@ public class MySQLLegacyDialect extends Dialect {
 		functionFactory.log();
 		functionFactory.log2();
 		functionFactory.log10();
-		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.octetLength();
 		functionFactory.reverse();
@@ -543,7 +550,6 @@ public class MySQLLegacyDialect extends Dialect {
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
-		functionFactory.chr_char();
 		functionFactory.instr();
 		functionFactory.substr();
 		//also natively supports ANSI-style substring()
@@ -565,25 +571,52 @@ public class MySQLLegacyDialect extends Dialect {
 
 		BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "localtime" )
+		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+		functionRegistry.noArgsBuilder( "localtime" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
-
-		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
-			functionFactory.sysdateParens();
+		// pi() produces a value with 7 digits unless we're explicit
+		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+					.setExactArgumentCount( 0 )
+					.setArgumentListSignature( "" )
+					.register();
 		}
 		else {
-			// MySQL timestamp type defaults to precision 0 (seconds) but
-			// we want the standard default precision of 6 (microseconds)
-			functionFactory.sysdateExplicitMicros();
-			if ( getMySQLVersion().isSameOrAfter( 8, 0, 2 ) ) {
-				functionFactory.windowFunctions();
-				if ( getMySQLVersion().isSameOrAfter( 8, 0, 11 ) ) {
-					functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			// But before MySQL 8, it's not possible to cast to double. Double has a default precision of 53
+			// and since the internal representation of pi has only 15 decimal places, we cast to decimal(53,15)
+			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as decimal(53,15))" )
+					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+					.setExactArgumentCount( 0 )
+					.setArgumentListSignature( "" )
+					.register();
+
+			if ( getMySQLVersion().isBefore( 5, 7 ) ) {
+				functionFactory.sysdateParens();
+			}
+			else {
+				// MySQL timestamp type defaults to precision 0 (seconds) but
+				// we want the standard default precision of 6 (microseconds)
+				functionFactory.sysdateExplicitMicros();
+				if ( getMySQLVersion().isSameOrAfter( 8, 0, 2 ) ) {
+					functionFactory.windowFunctions();
+					if ( getMySQLVersion().isSameOrAfter( 8, 0, 11 ) ) {
+						functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+					}
 				}
 			}
 		}
+
+		// By default char() produces a binary string, not a character string.
+		// (Note also that char() is actually a variadic function in MySQL.)
+		functionRegistry.patternDescriptorBuilder( "chr", "char(?1 using ascii)" )
+				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER ))
+				.setExactArgumentCount(1)
+				.setParameterTypes(FunctionParameterType.INTEGER)
+				.register();
+		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
 	}
@@ -754,7 +787,25 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return false;
+		return getMySQLVersion().isSameOrAfter( 8, 0, 16 );
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, String[] values) {
+		//not needed, because we use an 'enum' type
+		return null;
 	}
 
 	@Override
@@ -1316,6 +1367,21 @@ public class MySQLLegacyDialect extends Dialect {
 
 	boolean supportsAliasLocks() {
 		return getMySQLVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set foreign_key_checks = 0";
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set foreign_key_checks = 1";
 	}
 
 }

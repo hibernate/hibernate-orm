@@ -45,5 +45,14 @@ public enum SqlAstNodeRenderingMode {
 	 * it will be rendered either as literal or wrapped into a semantically equivalent expression
 	 * such that it doesn't appear as plain parameter.
 	 */
-	NO_PLAIN_PARAMETER
+	NO_PLAIN_PARAMETER,
+
+	/**
+	 * Don't render untyped expressions e.g. plain parameters or <code>null</code> literals. Render it as literal or as expression.
+	 * If the {@link SqlAstNode} to render is a parameter,
+	 * it will be rendered either as literal or wrapped into a semantically equivalent expression
+	 * such that it doesn't appear as plain parameter.
+	 * <code>null</code> literals will be wrapped in a cast.
+	 */
+	NO_UNTYPED
 }

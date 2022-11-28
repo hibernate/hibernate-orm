@@ -8,8 +8,6 @@
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
-import java.sql.Struct;
-
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -27,8 +25,6 @@ import org.geolatte.geom.PositionSequence;
 import org.geolatte.geom.PositionSequenceBuilders;
 import org.geolatte.geom.PositionSequenceEquality;
 import org.geolatte.geom.PositionSequencePositionEquality;
-import org.geolatte.geom.codec.db.oracle.Decoders;
-import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
 import static org.geolatte.geom.builder.DSL.g;
 import static org.geolatte.geom.builder.DSL.polygon;
@@ -57,10 +53,7 @@ public class OracleSDOTestSupport extends TestSupport {
 	}
 
 	public GeomCodec codec() {
-		return in -> {
-			SDOGeometry geom = SDOGeometry.load( (Struct) in );
-			return Decoders.decode( geom );
-		};
+		return in -> (Geometry<?>) in;
 	}
 
 

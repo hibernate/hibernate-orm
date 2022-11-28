@@ -141,3 +141,8 @@ As in the previous two cases, the parameter now accepts `EventSource` instead of
 
 The same conversion can be safely applied.
 
+=== Changes to JdbcType
+
+The return type of `JdbcType#getJdbcRecommendedJavaTypeMapping()` was changed from `BasicJavaType` to `JavaType`.
+Even though this is a source compatible change, it breaks binary backwards compatibility.
+We decided that it is fine to do this though, as this is a new minor version.

@@ -84,16 +84,16 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		final BasicJavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
+		final JavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
 				precision,
 				scale,
 				typeConfiguration
 		);
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
 		);
 	}

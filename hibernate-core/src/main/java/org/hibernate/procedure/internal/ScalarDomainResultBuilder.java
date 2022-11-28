@@ -47,7 +47,9 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 				.getSqlExpressionResolver();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						Integer.toString( resultPosition ),
+						SqlExpressionResolver.createColumnReferenceKey(
+								Integer.toString( resultPosition + 1 )
+						),
 						processingState -> {
 							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
 									resultPosition + 1,

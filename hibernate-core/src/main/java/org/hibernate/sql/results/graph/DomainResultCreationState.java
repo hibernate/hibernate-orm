@@ -110,6 +110,8 @@ public interface DomainResultCreationState {
  	 */
 	List<Fetch> visitFetches(FetchParent fetchParent);
 
+	List<Fetch> visitNestedFetches(FetchParent fetchParent);
+
 	boolean isResolvingCircularFetch();
 
 	void setResolvingCircularFetch(boolean resolvingCircularFetch);

@@ -22,6 +22,7 @@ import javax.xml.namespace.QName;
 
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -55,6 +56,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			return (T) charSequence.toString();
 		}
 		try {
+			// No need for an appender here, but we need it for creating a transformer
+			final StringBuilderSqlAppender appender = null;
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
 				final Class<Object> keyClass;
@@ -79,8 +82,16 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBElementTransformer keyTransformer;
 				final JAXBElementTransformer valueTransformer;
 				if ( javaType instanceof BasicPluralJavaType<?> ) {
-					keyTransformer = createTransformer( keyClass, "key", null, jaxbIntrospector, wrapperOptions );
+					keyTransformer = createTransformer(
+							appender,
+							keyClass,
+							"key",
+							null,
+							jaxbIntrospector,
+							wrapperOptions
+					);
 					valueTransformer = createTransformer(
+							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 							"value",
 							null,
@@ -89,8 +100,22 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					);
 				}
 				else {
-					keyTransformer = createTransformer( keyClass, "key", null, jaxbIntrospector, wrapperOptions );
-					valueTransformer = createTransformer( valueClass, "value", null, jaxbIntrospector, wrapperOptions );
+					keyTransformer = createTransformer(
+							appender,
+							keyClass,
+							"key",
+							null,
+							jaxbIntrospector,
+							wrapperOptions
+					);
+					valueTransformer = createTransformer(
+							appender,
+							valueClass,
+							"value",
+							null,
+							jaxbIntrospector,
+							wrapperOptions
+					);
 				}
 				for ( final Iterator<Object> iterator = elements.iterator(); iterator.hasNext(); ) {
 					final Object key = keyTransformer.fromJAXBElement( iterator.next(), unmarshaller );
@@ -120,6 +145,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBElementTransformer valueTransformer;
 				if ( javaType instanceof BasicPluralJavaType<?> ) {
 					valueTransformer = createTransformer(
+							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 							"value",
 							null,
@@ -128,7 +154,14 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					);
 				}
 				else {
-					valueTransformer = createTransformer( valueClass, "value", null, jaxbIntrospector, wrapperOptions );
+					valueTransformer = createTransformer(
+							appender,
+							valueClass,
+							"value",
+							null,
+							jaxbIntrospector,
+							wrapperOptions
+					);
 				}
 				for ( Object element : elements ) {
 					final Object value = valueTransformer.fromJAXBElement( element, unmarshaller );
@@ -147,6 +180,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBElementTransformer valueTransformer;
 				if ( javaType instanceof BasicPluralJavaType<?> ) {
 					valueTransformer = createTransformer(
+							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 							"value",
 							null,
@@ -155,7 +189,14 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					);
 				}
 				else {
-					valueTransformer = createTransformer( valueClass, "value", null, jaxbIntrospector, wrapperOptions );
+					valueTransformer = createTransformer(
+							appender,
+							valueClass,
+							"value",
+							null,
+							jaxbIntrospector,
+							wrapperOptions
+					);
 				}
 				final int length = elements.size();
 				if ( Object[].class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
@@ -199,6 +240,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 		try {
 			final StringWriter stringWriter = new StringWriter();
+			final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
 				final Class<Object> keyClass;
@@ -246,8 +288,22 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						}
 					}
 					final JAXBIntrospector jaxbIntrospector = context.createJAXBIntrospector();
-					final JAXBElementTransformer keyTransformer = createTransformer( keyClass, "key", exampleKey, jaxbIntrospector, wrapperOptions );
-					final JAXBElementTransformer valueTransformer = createTransformer( valueClass, "value", exampleValue, jaxbIntrospector, wrapperOptions );
+					final JAXBElementTransformer keyTransformer = createTransformer(
+							appender,
+							keyClass,
+							"key",
+							exampleKey,
+							jaxbIntrospector,
+							wrapperOptions
+					);
+					final JAXBElementTransformer valueTransformer = createTransformer(
+							appender,
+							valueClass,
+							"value",
+							exampleValue,
+							jaxbIntrospector,
+							wrapperOptions
+					);
 					for ( Map.Entry<?, ?> entry : map.entrySet() ) {
 						mapWrapper.elements.add( keyTransformer.toJAXBElement( entry.getKey() ) );
 						mapWrapper.elements.add( valueTransformer.toJAXBElement( entry.getValue() ) );
@@ -291,6 +347,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final JAXBElementTransformer valueTransformer;
 					if ( javaType instanceof BasicPluralJavaType<?> ) {
 						valueTransformer = createTransformer(
+								appender,
 								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 								"value",
 								exampleValue,
@@ -300,6 +357,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					}
 					else {
 						valueTransformer = createTransformer(
+								appender,
 								valueClass,
 								"value",
 								exampleValue,
@@ -331,6 +389,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final JAXBElementTransformer transformer;
 					if ( javaType instanceof BasicPluralJavaType<?> ) {
 						transformer = createTransformer(
+								appender,
 								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 								"value",
 								exampleElement,
@@ -340,6 +399,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					}
 					else {
 						transformer = createTransformer(
+								appender,
 								valueClass,
 								"value",
 								exampleElement,
@@ -357,6 +417,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final int length = Array.getLength( value );
 					final List<Object> list = new ArrayList<>( length );
 					final JavaTypeJAXBElementTransformer transformer = new JavaTypeJAXBElementTransformer(
+							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
 							"value"
 					);
@@ -379,6 +440,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 	}
 
 	private JAXBElementTransformer createTransformer(
+			StringBuilderSqlAppender appender,
 			Class<?> elementClass,
 			String tagName,
 			Object exampleElement,
@@ -399,12 +461,20 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 		final QName elementName = exampleElement == null ? null : introspector.getElementName( exampleElement );
 		if ( elementName == null && elementClass != String.class && elementJavaType != null ) {
-			return createTransformer( elementJavaType, tagName, exampleElement, introspector, wrapperOptions );
+			return createTransformer(
+					appender,
+					elementJavaType,
+					tagName,
+					exampleElement,
+					introspector,
+					wrapperOptions
+			);
 		}
 		return new SimpleJAXBElementTransformer( elementClass, tagName );
 	}
 
 	private JAXBElementTransformer createTransformer(
+			StringBuilderSqlAppender appender,
 			JavaType<?> elementJavaType,
 			String tagName,
 			Object exampleElement,
@@ -421,7 +491,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 		final QName elementName = exampleElement == null ? null : introspector.getElementName( exampleElement );
 		if ( elementName == null && elementJavaType.getJavaTypeClass() != String.class ) {
-			return new JavaTypeJAXBElementTransformer( elementJavaType, tagName );
+			return new JavaTypeJAXBElementTransformer( appender, elementJavaType, tagName );
 		}
 		return new SimpleJAXBElementTransformer( elementJavaType.getJavaTypeClass(), tagName );
 	}
@@ -495,10 +565,15 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 	}
 
 	private static class JavaTypeJAXBElementTransformer implements JAXBElementTransformer {
+		private final StringBuilderSqlAppender appender;
 		private final JavaType<Object> elementJavaType;
 		private final QName tagName;
 
-		public JavaTypeJAXBElementTransformer(JavaType<?> elementJavaType, String tagName) {
+		public JavaTypeJAXBElementTransformer(
+				StringBuilderSqlAppender appender,
+				JavaType<?> elementJavaType,
+				String tagName) {
+			this.appender = appender;
 			//noinspection unchecked
 			this.elementJavaType = (JavaType<Object>) elementJavaType;
 			this.tagName = new QName( tagName );
@@ -506,17 +581,22 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 
 		@Override
 		public JAXBElement<?> toJAXBElement(Object o) {
-			return new JAXBElement<>(
-					tagName,
-					String.class,
-					o == null ? null : elementJavaType.toString( o )
-			);
+			final String value;
+			if ( o == null ) {
+				value = null;
+			}
+			else {
+				elementJavaType.appendEncodedString( appender, o );
+				value = appender.toString();
+				appender.getStringBuilder().setLength( 0 );
+			}
+			return new JAXBElement<>( tagName, String.class, value );
 		}
 
 		@Override
 		public Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
 			final String value = unmarshaller.unmarshal( (Node) element, String.class ).getValue();
-			return value == null ? null : elementJavaType.fromString( value );
+			return value == null ? null : elementJavaType.fromEncodedString( value, 0, value.length() );
 		}
 	}
 }

@@ -88,4 +88,16 @@ public interface FetchableContainer extends ModelPartContainer {
 				treatTargetType
 		);
 	}
+
+	default int getSelectableIndex(String selectableName) {
+		final MutableInteger position = new MutableInteger( -1 );
+		forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( selectableMapping.getSelectableName().equals( selectableName ) ) {
+						position.set( selectionIndex );
+					}
+				}
+		);
+		return position.get();
+	}
 }

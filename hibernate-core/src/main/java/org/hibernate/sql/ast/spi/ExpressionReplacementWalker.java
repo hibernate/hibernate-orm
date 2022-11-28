@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -112,6 +113,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		doReplaceExpression( columnReference );
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		doReplaceExpression( aggregateColumnWriteExpression );
 	}
 
 	@Override

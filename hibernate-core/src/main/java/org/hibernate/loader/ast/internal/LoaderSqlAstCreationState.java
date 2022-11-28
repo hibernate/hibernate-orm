@@ -124,6 +124,15 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public List<Fetch> visitNestedFetches(FetchParent fetchParent) {
+		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
+		processingState.setNestingFetchParent( fetchParent );
+		final List<Fetch> fetches = fetchProcessor.visitFetches( fetchParent, this );
+		processingState.setNestingFetchParent( nestingFetchParent );
+		return fetches;
+	}
+
+	@Override
 	public boolean isResolvingCircularFetch() {
 		return resolvingCircularFetch;
 	}

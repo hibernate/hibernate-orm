@@ -11,6 +11,7 @@ import java.sql.Types;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -22,6 +23,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,7 +68,14 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 				Types.VARCHAR
 		);
-		expectedSqlQuery = "update AnEntity set name=" + jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
+		final String baseQuery;
+		if ( DialectContext.getDialect() instanceof OracleDialect ) {
+			baseQuery = "update AnEntity a1_0 set a1_0.name=";
+		}
+		else {
+			baseQuery = "update AnEntity set name=";
+		}
+		expectedSqlQuery = baseQuery + jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
 				.toJdbcLiteral(
 						"abc",
 						sessionFactory().getJdbcServices().getDialect(),

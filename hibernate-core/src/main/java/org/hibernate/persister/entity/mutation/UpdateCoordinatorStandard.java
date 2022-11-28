@@ -32,8 +32,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
@@ -46,6 +49,7 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
@@ -959,19 +963,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						}
 
 						if ( includeInSet ) {
-							attributeMapping.forEachSelectable( (selectionIndex, selectableMapping) -> {
-								if ( selectableMapping.isFormula() ) {
-									// no physical column
-									return;
-								}
-
-								if ( !selectableMapping.isUpdateable() ) {
-									// column is not updateable
-									return;
-								}
-
-								tableUpdateBuilder.addValueColumn( selectableMapping );
-							} );
+							attributeMapping.forEachUpdatable( tableUpdateBuilder );
 						}
 					}
 				}

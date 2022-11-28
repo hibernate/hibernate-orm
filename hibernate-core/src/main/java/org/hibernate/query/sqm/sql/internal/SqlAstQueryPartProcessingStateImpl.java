@@ -17,11 +17,13 @@ import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -34,6 +36,7 @@ public class SqlAstQueryPartProcessingStateImpl
 
 	private final QueryPart queryPart;
 	private final boolean deduplicateSelectionItems;
+	private FetchParent nestingFetchParent;
 
 	public SqlAstQueryPartProcessingStateImpl(
 			QueryPart queryPart,
@@ -58,6 +61,14 @@ public class SqlAstQueryPartProcessingStateImpl
 		this.deduplicateSelectionItems = deduplicateSelectionItems;
 	}
 
+	public FetchParent getNestingFetchParent() {
+		return nestingFetchParent;
+	}
+
+	public void setNestingFetchParent(FetchParent nestedParent) {
+		this.nestingFetchParent = nestedParent;
+	}
+
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return queryPart;
@@ -74,6 +85,21 @@ public class SqlAstQueryPartProcessingStateImpl
 			JavaType<?> javaType,
 			FetchParent fetchParent,
 			TypeConfiguration typeConfiguration) {
+		if ( nestingFetchParent != null ) {
+			final String selectableName;
+			if ( expression instanceof ColumnReference ) {
+				selectableName = ( (ColumnReference) expression ).getSelectableName();
+			}
+			else {
+				throw new IllegalArgumentException( "Illegal expression passed for nested fetching: " + expression );
+			}
+			return expression.createSqlSelection(
+					-1,
+					nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName ),
+					javaType,
+					typeConfiguration
+			);
+		}
 		final Map<Expression, SqlSelection> selectionMap;
 		if ( deduplicateSelectionItems ) {
 			final SqlSelection existing;

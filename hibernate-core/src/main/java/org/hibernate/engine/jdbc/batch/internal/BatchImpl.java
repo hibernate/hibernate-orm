@@ -144,7 +144,6 @@ public class BatchImpl implements Batch {
 					);
 				}
 				finally {
-					// todo (mutation) : is this needed?
 					jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails(), session );
 				}
 			} );

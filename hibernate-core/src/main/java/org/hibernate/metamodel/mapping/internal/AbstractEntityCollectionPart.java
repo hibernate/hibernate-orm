@@ -221,8 +221,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			NavigablePath fetchablePath,
 			FromClauseAccess fromClauseAccess,
 			DomainResultCreationState creationState) {
-
-		// todo (mutation) : account for `@MapKey( name = "someManyToOne" )`
 		return collectionTableGroup.getIndexTableGroup();
 	}
 

@@ -116,8 +116,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TableGroupJoinProducer
-	//		todo (mutation) : this is only needed for `AbstractEntityCollectionPart#generateFetch`
-	//			to create the map-key join
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {

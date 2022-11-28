@@ -6,12 +6,12 @@
  */
 package org.hibernate.service;
 
-import org.hibernate.HibernateException;
+import org.hibernate.service.spi.ServiceException;
 
 /**
  * @author Andrea Boriero
  */
-public class NullServiceException extends HibernateException {
+public class NullServiceException extends ServiceException {
 	public final Class serviceRole;
 
 	public NullServiceException(Class serviceRole) {

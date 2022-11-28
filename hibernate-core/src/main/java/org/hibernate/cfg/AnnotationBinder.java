@@ -55,8 +55,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -1309,7 +1307,7 @@ public final class AnnotationBinder {
 		final RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
 		propertyBinder.setColumns( columns );
 		final Property property = propertyBinder.makePropertyValueAndBind();
-		setVersionInformation( annotatedProperty, propertyBinder );
+		propertyBinder.getBasicValueBinder().setVersion( true );
 		rootClass.setVersion( property );
 
 		//If version is on a mapped superclass, update the mapping
@@ -1795,15 +1793,6 @@ public final class AnnotationBinder {
 
 	private static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
-	}
-
-	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
-		propertyBinder.getBasicValueBinder().setVersion( true );
-		if ( property.isAnnotationPresent( Source.class ) ) {
-			final Source source = property.getAnnotation( Source.class );
-			propertyBinder.getBasicValueBinder()
-					.setTimestampVersionType( source.value() == SourceType.DB ? "dbtimestamp" : "timestamp" );
-		}
 	}
 
 	private static void processId(

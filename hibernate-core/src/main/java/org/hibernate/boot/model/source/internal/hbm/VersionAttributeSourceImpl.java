@@ -8,6 +8,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.List;
 
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampSourceEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -152,6 +153,11 @@ class VersionAttributeSourceImpl
 	@Override
 	public GenerationTiming getGenerationTiming() {
 		return versionElement.getGenerated();
+	}
+
+	@Override
+	public String getSource() {
+		return JaxbHbmTimestampSourceEnum.VM.value();
 	}
 
 	@Override

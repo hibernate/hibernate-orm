@@ -14,7 +14,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
-import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -58,7 +57,7 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	@Test
 	public void testTimestampSourceIsDB() throws Exception {
-		assertTimestampSource( DBTimestamped.class, DbTimestampType.INSTANCE );
+		assertTimestampSource( DBTimestamped.class, StandardBasicTypes.TIMESTAMP );
 	}
 
 	private void assertTimestampSource(Class<?> clazz, BasicTypeReference<?> typeReference) throws Exception {

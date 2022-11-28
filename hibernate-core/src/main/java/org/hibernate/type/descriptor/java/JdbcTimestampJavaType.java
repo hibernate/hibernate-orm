@@ -8,6 +8,8 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -126,6 +128,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return value;
 		}
 
+		if ( LocalDateTime.class.isAssignableFrom( type ) ) {
+			final Instant instant = value.toInstant();
+			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
+		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
@@ -162,6 +169,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 		if ( value instanceof Date ) {
 			return new Timestamp( ( (Date) value ).getTime() );
+		}
+
+		if ( value instanceof LocalDateTime ) {
+			return Timestamp.valueOf( (LocalDateTime) value );
 		}
 
 		if ( value instanceof Long ) {

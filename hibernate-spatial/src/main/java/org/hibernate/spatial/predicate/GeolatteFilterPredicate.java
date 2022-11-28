@@ -19,8 +19,10 @@ import org.geolatte.geom.crs.CoordinateReferenceSystem;
 
 /**
  * {@link JTSFilterPredicate}, but for geolatte-geom.
+ *
+ * @deprecated Use {@link org.hibernate.spatial.criteria.GeolatteSpatialCriteriaBuilder GeolatteSpatialCriteriaBuilder} instead
  */
-//TODO update class to H6
+@Deprecated(since = "6.2")
 public class GeolatteFilterPredicate {
 
 	private final Expression<? extends Geometry> geometry;

@@ -21,10 +21,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -44,6 +46,8 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSubQuery;
@@ -85,7 +89,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -187,6 +190,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Character> characterType;
+	private final transient Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions;
 
 	public SqmCriteriaNodeBuilder(
 			String uuid,
@@ -203,6 +207,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		this.domainModelAccess = domainModelAccess;
 		this.serviceRegistry = serviceRegistry;
 		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
+		// load registered criteria builder extensions
+		this.extensions = new HashMap<>();
+		for (CriteriaBuilderExtension extension : ServiceLoader.load( CriteriaBuilderExtension.class ) ) {
+			HibernateCriteriaBuilder builder = extension.extend( this );
+			extensions.put(extension.getRegistrationKey(), builder);
+		}
 	}
 
 	@Override
@@ -428,6 +438,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			predicates.add( wrap( expression ) );
 		}
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
+	}
+
+	@Override
+	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
+		return (T) extensions.get( clazz );
 	}
 
 	@Override

@@ -28,7 +28,9 @@ import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
  * A factory for spatial JPA Criteria API {@link Predicate}s.
  *
  * @author Daniel Shuy
+ * @deprecated Use {@link org.hibernate.spatial.criteria.JTSSpatialCriteriaBuilder JTSSpatialCriteriaBuilder} instead
  */
+@Deprecated(since = "6.2")
 public class JTSSpatialPredicates {
 
 	protected JTSSpatialPredicates() {

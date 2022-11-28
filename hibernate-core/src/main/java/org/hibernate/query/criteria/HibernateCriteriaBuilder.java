@@ -51,6 +51,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@SuppressWarnings("unchecked")
 	JpaPredicate wrap(Expression<Boolean>... expressions);
 
+	<T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Criteria creation

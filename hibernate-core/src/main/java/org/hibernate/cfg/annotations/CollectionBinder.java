@@ -2238,7 +2238,7 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 		if ( AnnotatedClassType.EMBEDDABLE == classType || compositeUserType != null ) {
-			holder.prepare(property);
+			holder.prepare( property, true );
 
 			EntityBinder entityBinder = new EntityBinder();
 			PersistentClass owner = collValue.getOwner();
@@ -2295,7 +2295,7 @@ public abstract class CollectionBinder {
 			}
 		}
 		else {
-			holder.prepare(property);
+			holder.prepare( property, false );
 
 			final BasicValueBinder elementBinder =
 					new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext);

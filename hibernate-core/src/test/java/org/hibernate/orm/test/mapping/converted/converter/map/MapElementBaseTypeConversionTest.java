@@ -67,15 +67,8 @@ public class MapElementBaseTypeConversionTest {
 		private Integer id;
 
 		@ElementCollection(fetch = FetchType.EAGER)
-		@Convert(converter = MyStringConverter.class)
+		@Convert(converter = MyStringConverter.class) // note omitted attributeName
 		private final Map<String, String> colors = new HashMap<>();
-
-		public Customer() {
-		}
-
-		public Customer(Integer id) {
-			this.id = id;
-		}
 
 		public Map<String, String> getColors() {
 			return colors;

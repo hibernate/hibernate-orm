@@ -81,7 +81,12 @@ Here is an example of a custom load event listener:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example]
+include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example-part1]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example-part2]
 ----
 ====
 

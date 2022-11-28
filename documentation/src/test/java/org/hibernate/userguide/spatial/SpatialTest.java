@@ -9,9 +9,8 @@ package org.hibernate.userguide.spatial;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.spatial.dialect.postgis.PostgisDialect;
-import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -31,10 +30,10 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgisPG95Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
-    private GeometryFactory geometryFactory = new GeometryFactory();
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {

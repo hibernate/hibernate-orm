@@ -929,14 +929,6 @@ include::{docTestsDir}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-
 ----
 ====
 
-The associated `TimestampEpochType` looks as follows:
-
-----
-include::{docTestsDir}/type/TimestampEpochType.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
-----
-
-The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
-But, without the `@MapKeyType` Hibernate annotation, it would not be possible to customize the `Map` key type.
 
 [[collections-map-key-class]]
 ===== Maps having an interface type as the key

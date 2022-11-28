@@ -234,12 +234,12 @@ public class EntityUpdateAction extends EntityAction {
 				// this entity defines property generation, so process those generated
 				// values...
 				persister.processUpdateGeneratedProperties( id, instance, state, session );
-				if ( persister.isVersionPropertyGenerated() ) {
-					nextVersion = Versioning.getVersion( state, persister);
-				}
 			}
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
+			if ( persister.isVersionPropertyGenerated() ) {
+				nextVersion = Versioning.getVersion( state, persister );
+			}
 			entry.postUpdate( instance, state, nextVersion );
 		}
 

@@ -6,16 +6,14 @@
  */
 package org.hibernate.userguide.locking;
 
-import java.util.Date;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
-
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
+
+import java.time.LocalDateTime;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
@@ -47,6 +45,24 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull(person.getVersion());
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
 		});
+		sleep();
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
+			person.setFirstName("Jane");
+		});
+		sleep();
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
+			person.setFirstName("John");
+		});
+	}
+
+	private static void sleep() {
+		try {
+			Thread.sleep(300);
+		}
+		catch (InterruptedException ignored) {
+		}
 	}
 
 	//tag::locking-optimistic-version-timestamp-source-mapping-example[]
@@ -60,9 +76,8 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String lastName;
 
-		@Version
-		@Source(value = SourceType.DB)
-		private Date version;
+		@Version @CurrentTimestamp
+		private LocalDateTime version;
 	//end::locking-optimistic-version-timestamp-source-mapping-example[]
 
 		public Long getId() {
@@ -89,11 +104,8 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 			this.lastName = lastName;
 		}
 
-		public Date getVersion() {
+		public LocalDateTime getVersion() {
 			return version;
 		}
-
-		//tag::locking-optimistic-version-timestamp-source-mapping-example[]
 	}
-	//end::locking-optimistic-version-timestamp-source-mapping-example[]
 }

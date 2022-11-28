@@ -127,9 +127,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object instance = getInstance();
 			persister.processInsertGeneratedProperties( getId(), instance, getState(), getSession() );
 			if ( persister.isVersionPropertyGenerated() ) {
-				version = Versioning.getVersion( getState(), persister);
+				version = Versioning.getVersion( getState(), persister );
 			}
 			entry.postUpdate( instance, getState(), version );
+		}
+		else if ( persister.isVersionPropertyGenerated() ) {
+			version = Versioning.getVersion( getState(), persister );
+			entry.postInsert( version );
 		}
 	}
 

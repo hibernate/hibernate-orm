@@ -6,12 +6,16 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Value generation implementation for {@link UpdateTimestamp}.
  *
  * @author Gunnar Morling
+ *
+ * @see org.hibernate.annotations.CurrentTimestampGeneration
  */
 public class UpdateTimestampGeneration implements AnnotationValueGeneration<UpdateTimestamp> {
 
@@ -19,7 +23,9 @@ public class UpdateTimestampGeneration implements AnnotationValueGeneration<Upda
 
 	@Override
 	public void initialize(UpdateTimestamp annotation, Class<?> propertyType) {
-		generator = TimestampGenerators.get(propertyType);
+		if ( annotation.source() == SourceType.VM ) {
+			generator = TimestampGenerators.get( propertyType );
+		}
 	}
 
 	@Override
@@ -39,6 +45,11 @@ public class UpdateTimestampGeneration implements AnnotationValueGeneration<Upda
 
 	@Override
 	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
+		return "current_timestamp";
+	}
+
+	@Override
+	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
+		return dialect.currentTimestamp();
 	}
 }

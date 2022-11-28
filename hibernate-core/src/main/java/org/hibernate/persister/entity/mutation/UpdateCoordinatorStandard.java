@@ -198,8 +198,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			final boolean[] propertyLaziness = entityPersister().getPropertyLaziness();
 			for ( int i = 0; i < propertyLaziness.length; i++ ) {
-				// add also all the non lazy properties because dynamic update is false
-				if ( propertyLaziness[i] == false ) {
+				// add also all the non-lazy properties because dynamic update is false
+				if ( !propertyLaziness[i] ) {
 					attributeUpdateability[i] = true;
 				}
 			}

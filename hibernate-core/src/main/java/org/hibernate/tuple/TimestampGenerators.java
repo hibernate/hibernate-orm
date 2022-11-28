@@ -31,7 +31,7 @@ import org.hibernate.HibernateException;
  *
  * @author Gunnar Morling
  */
-/* package */ final class TimestampGenerators {
+public final class TimestampGenerators {
 
 	private static final Map<Class<?>, ValueGenerator<?>> generators;
 

@@ -68,6 +68,7 @@ import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
@@ -577,9 +578,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addReferenceEntry(
 			final Object entity,
 			final Status status) {
-
-		((ManagedEntity)entity).$$_hibernate_getEntityEntry().setStatus( status );
-		entityEntryContext.addEntityEntry( entity, ((ManagedEntity)entity).$$_hibernate_getEntityEntry() );
+		final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+		entityEntry.setStatus( status );
+		entityEntryContext.addEntityEntry( entity, entityEntry );
 
 		setHasNonReadOnlyEnties( status );
 	}

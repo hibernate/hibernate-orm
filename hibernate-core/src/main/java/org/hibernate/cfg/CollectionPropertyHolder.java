@@ -76,6 +76,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	private void buildAttributeConversionInfoMaps(
 			XProperty collectionProperty,
+			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
 		if ( collectionProperty == null ) {
@@ -86,7 +87,13 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		{
 			final Convert convertAnnotation = collectionProperty.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
-				applyLocalConvert( convertAnnotation, collectionProperty, elementAttributeConversionInfoMap, keyAttributeConversionInfoMap );
+				applyLocalConvert(
+						convertAnnotation,
+						collectionProperty,
+						isComposite,
+						elementAttributeConversionInfoMap,
+						keyAttributeConversionInfoMap
+				);
 			}
 		}
 
@@ -97,6 +104,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 					applyLocalConvert(
 							convertAnnotation,
 							collectionProperty,
+							isComposite,
 							elementAttributeConversionInfoMap,
 							keyAttributeConversionInfoMap
 					);
@@ -108,14 +116,15 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private void applyLocalConvert(
 			Convert convertAnnotation,
 			XProperty collectionProperty,
+			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
 
-		// IMPL NOTE : the rules here are quite more lenient than what JPA says.  For example, JPA says
-		// that @Convert on a Map always needs to specify attributeName of key/value (or prefixed with
-		// key./value. for embedded paths).  However, we try to see if conversion of either is disabled
-		// for whatever reason.  For example, if the Map is annotated with @Enumerated the elements cannot
-		// be converted so any @Convert likely meant the key, so we apply it to the key
+		// IMPL NOTE : the rules here are quite more lenient than what JPA says.  For example, JPA says that @Convert
+		// on a Map of basic types should default to "value" but it should explicitly specify attributeName of "key"
+		// (or prefixed with "key." for embedded paths) to be applied on the key.  However, we try to see if conversion
+		// of either is disabled for whatever reason.  For example, if the Map is annotated with @Enumerated the
+		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
 
 		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		if ( collection.isMap() ) {
@@ -130,10 +139,15 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
 			// the @Convert did not name an attribute...
 			if ( canElementBeConverted && canKeyBeConverted ) {
-				throw new IllegalStateException(
-						"@Convert placed on Map attribute [" + collection.getRole()
-								+ "] must define attributeName of 'key' or 'value'"
-				);
+				if ( !isComposite ) {
+					// if element is of basic type default to "value"
+					elementAttributeConversionInfoMap.put( "", info );
+				}
+				else {
+					throw new IllegalStateException(
+							"@Convert placed on Map attribute [" + collection.getRole()
+									+ "] of non-basic types must define attributeName of 'key' or 'value'" );
+				}
 			}
 			else if ( canKeyBeConverted ) {
 				keyAttributeConversionInfoMap.put( "", info );
@@ -325,7 +339,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	boolean prepared;
 
-	public void prepare(XProperty collectionProperty) {
+	public void prepare(XProperty collectionProperty, boolean isComposite) {
 		// fugly
 		if ( prepared ) {
 			return;
@@ -377,7 +391,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// Is it valid to reference a collection attribute in a @Convert attached to the owner (entity) by path?
 		// if so we should pass in 'clazzToProcess' also
 		if ( canKeyBeConverted || canElementBeConverted ) {
-			buildAttributeConversionInfoMaps( collectionProperty, elementAttributeConversionInfoMap, keyAttributeConversionInfoMap );
+			buildAttributeConversionInfoMaps(
+					collectionProperty,
+					isComposite,
+					elementAttributeConversionInfoMap,
+					keyAttributeConversionInfoMap
+			);
 		}
 	}
 

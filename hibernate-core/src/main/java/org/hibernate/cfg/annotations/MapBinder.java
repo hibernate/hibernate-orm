@@ -48,6 +48,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -262,7 +263,7 @@ public class MapBinder extends CollectionBinder {
 				// 'holder' is the CollectionPropertyHolder.
 				// 'property' is the collection XProperty
 				propertyHolder.startingProperty( property );
-				holder.prepare( property );
+				holder.prepare( property, !( collection.getKey().getType() instanceof BasicType ) );
 
 				PersistentClass owner = mapValue.getOwner();
 				AccessType accessType;

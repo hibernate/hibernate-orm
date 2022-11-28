@@ -13,6 +13,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.locationtech.jts.geom.Coordinate;
@@ -31,6 +32,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
+@Ignore
 public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
     private final GeometryFactory geometryFactory = new GeometryFactory();

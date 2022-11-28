@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
@@ -20,6 +21,7 @@ import org.hibernate.tuple.ValueGenerator;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class CurrentTimestampGeneration implements AnnotationValueGeneration<CurrentTimestamp> {
 	private GenerationTiming timing;
 	private ValueGenerator<?> generator;

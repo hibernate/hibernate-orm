@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -40,6 +41,7 @@ import static org.hibernate.tuple.GenerationTiming.ALWAYS;
  * @deprecated because {@link Source} is generated, though this implementation is instructive
  */
 @Deprecated(since = "6.2")
+@Internal
 public class SourceGeneration implements AnnotationValueGeneration<Source>, ValueGenerator<Object> {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(

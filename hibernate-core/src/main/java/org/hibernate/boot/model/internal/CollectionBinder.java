@@ -2131,15 +2131,17 @@ public abstract class CollectionBinder {
 				propertyHolder,
 				buildingContext
 		);
-		holder.prepare( property );
 
 		final Class<? extends CompositeUserType<?>> compositeUserType =
 				resolveCompositeUserType( property, elementClass, buildingContext );
-		if ( classType == EMBEDDABLE || compositeUserType != null ) {
+		boolean isComposite = classType == EMBEDDABLE || compositeUserType != null;
+		holder.prepare( property, isComposite );
+
+		if ( isComposite ) {
 			handleCompositeCollectionElement( hqlOrderBy, elementClass, holder, compositeUserType );
 		}
 		else {
-			handleCollectionElement(  elementType, hqlOrderBy, elementClass, holder );
+			handleCollectionElement( elementType, hqlOrderBy, elementClass, holder );
 		}
 	}
 

@@ -46,6 +46,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Deprecated(since = "6.2") @Remove
 @Target({ METHOD, FIELD })
 @Retention(RUNTIME)
+@ValueGenerationType(generatedBy = SourceGeneration.class)
 public @interface Source {
 	/**
 	 * The source of timestamps. By default, the {@linkplain

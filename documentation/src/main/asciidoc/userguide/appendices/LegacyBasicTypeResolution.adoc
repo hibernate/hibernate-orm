@@ -47,7 +47,6 @@ in <<basic-custom-type>>.
 |BIG_INTEGER |NUMERIC |java.math.BigInteger |big_integer, java.math.BigInteger
 |BIG_DECIMAL |NUMERIC |java.math.BigDecimal |big_decimal, java.math.bigDecimal
 |TIMESTAMP |TIMESTAMP |java.util.Date |timestamp, java.sql.Timestamp, java.util.Date
-//|DbTimestampType |TIMESTAMP |java.util.Date |dbtimestamp
 |TIME |TIME |java.util.Date |time, java.sql.Time
 |DATE |DATE |java.util.Date |date, java.sql.Date
 |CALENDAR |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar, java.util.GregorianCalendar

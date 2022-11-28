@@ -43,11 +43,7 @@ class TimestampAttributeSourceImpl
 			JaxbHbmTimestampAttributeType timestampElement) {
 		super( mappingDocument );
 		this.timestampElement = timestampElement;
-		this.typeSource = new HibernateTypeSourceImpl(
-				"db".equals( timestampElement.getSource().value() )
-						? "dbtimestamp"
-						: "timestamp"
-		);
+		this.typeSource = new HibernateTypeSourceImpl("timestamp");
 
 		final RelationalValueSource columnSource = RelationalValueSourceHelper.buildColumnSource(
 				mappingDocument,
@@ -148,6 +144,10 @@ class TimestampAttributeSourceImpl
 	@Override
 	public GenerationTiming getGenerationTiming() {
 		return timestampElement.getGenerated();
+	}
+
+	public String getSource() {
+		return timestampElement.getSource().value();
 	}
 
 	@Override

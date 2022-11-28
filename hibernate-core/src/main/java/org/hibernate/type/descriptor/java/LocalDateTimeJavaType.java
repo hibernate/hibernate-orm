@@ -149,8 +149,8 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Date) {
-			final Timestamp ts = (Timestamp) value;
-			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
+			final Date ts = (Date) value;
+			final Instant instant = ts.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 

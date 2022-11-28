@@ -76,8 +76,8 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select sysdate";
+	public String currentTimestamp() {
+		return "current_timestamp";
 	}
 
 	@Override

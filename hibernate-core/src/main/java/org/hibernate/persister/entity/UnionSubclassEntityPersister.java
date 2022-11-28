@@ -109,15 +109,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
-
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
-		if ( getGenerator() instanceof IdentityGenerator ) {
-			throw new MappingException(
-					"Cannot use identity column key generation with <union-subclass> mapping for: " +
-							getEntityName()
-			);
-		}
+		validateGenerator();
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
@@ -244,6 +238,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );
+	}
+
+	protected void validateGenerator() {
+		if ( getGenerator() instanceof IdentityGenerator ) {
+			throw new MappingException( "Cannot use identity column key generation with <union-subclass> mapping for: " + getEntityName()
+			);
+		}
 	}
 
 	@Override

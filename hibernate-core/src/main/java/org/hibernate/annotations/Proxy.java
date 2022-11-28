@@ -14,10 +14,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Allows the proxy class of an entity class to be explicitly specified.
- * This annotation is almost never useful.
+ *
+ * @deprecated This annotation is almost never useful.
  *
  * @author Emmanuel Bernard
  */
+@Deprecated(since = "6.2")
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface Proxy {

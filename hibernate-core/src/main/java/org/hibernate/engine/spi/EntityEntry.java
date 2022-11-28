@@ -49,6 +49,8 @@ public interface EntityEntry {
 
 	Object getVersion();
 
+	void postInsert(Object version);
+
 	EntityPersister getPersister();
 
 	/**

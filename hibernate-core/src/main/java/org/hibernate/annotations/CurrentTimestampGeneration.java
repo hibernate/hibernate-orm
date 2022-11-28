@@ -6,13 +6,15 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.TimestampGenerators;
 import org.hibernate.tuple.ValueGenerator;
 
 /**
- * Value generation strategy for using the database `current_timestamp` function to generate
- * the values
+ * Value generation strategy using the database {@code current_timestamp}
+ * function or the JVM current instant.
  *
  * @see CurrentTimestamp
  *
@@ -20,10 +22,15 @@ import org.hibernate.tuple.ValueGenerator;
  */
 public class CurrentTimestampGeneration implements AnnotationValueGeneration<CurrentTimestamp> {
 	private GenerationTiming timing;
+	private ValueGenerator<?> generator;
 
 	@Override
 	public void initialize(CurrentTimestamp annotation, Class<?> propertyType) {
-		this.timing = annotation.timing();
+		if ( annotation.source() == SourceType.VM ) {
+			// ValueGenerator is only used for in-VM generation
+			generator = TimestampGenerators.get( propertyType );
+		}
+		timing = annotation.timing();
 	}
 
 	@Override
@@ -33,8 +40,7 @@ public class CurrentTimestampGeneration implements AnnotationValueGeneration<Cur
 
 	@Override
 	public ValueGenerator<?> getValueGenerator() {
-		// ValueGenerator is only used for in-VM generations
-		return null;
+		return generator;
 	}
 
 	@Override
@@ -45,5 +51,10 @@ public class CurrentTimestampGeneration implements AnnotationValueGeneration<Cur
 	@Override
 	public String getDatabaseGeneratedReferencedColumnValue() {
 		return "current_timestamp";
+	}
+
+	@Override
+	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
+		return dialect.currentTimestamp();
 	}
 }

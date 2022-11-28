@@ -9,23 +9,24 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import org.hibernate.Remove;
 import org.hibernate.type.descriptor.java.DbTimestampJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 /**
- * {@code dbtimestamp}: A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}.
- * It maps to the database's current timestamp, rather than the jvm's
- * current timestamp.
- * <p>
- * Note: May/may-not cause issues on dialects which do not properly support
- * a true notion of timestamp (Oracle < 8, for example, where only its DATE
- * datatype is supported).  Depends on the frequency of DML operations...
+ * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP}
+ * and {@link Timestamp}. Maps to the SQL {@code current_timestamp},
+ * rather than the JVM system datetime.
  *
  * @author Steve Ebersole
+ *
  * @deprecated Use {@link org.hibernate.tuple.ValueGeneration} instead
  */
-@Deprecated
+// Note: May/may not cause issues on dialects which do not properly support
+//       a true notion of timestamp (Oracle < 8, for example, where only its
+//       DATE datatype is supported). Depends on the frequency of DML operations.
+@Deprecated(since = "6.0") @Remove
 public class DbTimestampType extends AbstractSingleColumnStandardBasicType<Date> {
 
 	public static final DbTimestampType INSTANCE = new DbTimestampType();

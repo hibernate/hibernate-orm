@@ -45,6 +45,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
+
 	protected final Object id;
 	protected Object[] loadedState;
 	protected Object version;
@@ -98,13 +99,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		if ( status != Status.READ_ONLY ) {
 			this.loadedState = loadedState;
 		}
-		this.id=id;
-		this.rowId=rowId;
+		this.id = id;
+		this.rowId = rowId;
 		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
-		this.version=version;
+		this.version = version;
 		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
-		this.persister=persister;
+		this.persister = persister;
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -218,6 +219,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@Override
 	public Object getVersion() {
 		return version;
+	}
+
+	@Override
+	public void postInsert(Object version) {
+		this.version = version;
 	}
 
 	@Override

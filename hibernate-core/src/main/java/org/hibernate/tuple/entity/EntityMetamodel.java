@@ -826,8 +826,13 @@ public class EntityMetamodel implements Serializable {
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
 	}
 
-	public boolean isVersionGenerated() {
+	public boolean isVersionGeneratedByDatabase() {
 		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ versionPropertyIndex ];
+		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
+	}
+
+	public boolean isVersionGeneratedInMemory() {
+		final InMemoryValueGenerationStrategy strategy = inMemoryValueGenerationStrategies[ versionPropertyIndex ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
 	}
 

@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Comparator;
 
+import org.hibernate.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -32,7 +33,7 @@ import jakarta.persistence.TemporalType;
  * @author Christian Beikov
  * @deprecated Use {@link org.hibernate.tuple.ValueGeneration} instead
  */
-@Deprecated
+@Deprecated(since="6.0") @Remove
 public class DbTimestampJavaType<T> implements VersionJavaType<T>, TemporalJavaType<T> {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(

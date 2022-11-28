@@ -56,6 +56,7 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Source;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -1800,7 +1801,8 @@ public final class AnnotationBinder {
 		propertyBinder.getBasicValueBinder().setVersion( true );
 		if ( property.isAnnotationPresent( Source.class ) ) {
 			final Source source = property.getAnnotation( Source.class );
-			propertyBinder.getBasicValueBinder().setTimestampVersionType( source.value().typeName() );
+			propertyBinder.getBasicValueBinder()
+					.setTimestampVersionType( source.value() == SourceType.DB ? "dbtimestamp" : "timestamp" );
 		}
 	}
 

@@ -136,11 +136,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeEntity( key );
 			if ( persister.hasCollections() ) {
-				new EvictVisitor(source, object).process(object, persister );
+				new EvictVisitor( source, object ).process( object, persister );
 			}
 		}
 
-		evictEntity(object, persister, id, source);
+		evictEntity( object, persister, id, source);
 		evictCachedCollections( persister, id, source);
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
@@ -157,7 +157,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// we need to grab the version value from the entity, otherwise
 				// we have issues with generated-version entities that may have
 				// multiple actions queued during the same flush
-				previousVersion = persister.getVersion(object);
+				previousVersion = persister.getVersion( object );
 			}
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
@@ -166,7 +166,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem(source, ck, previousVersion );
+			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
 			cache.remove( source, ck );
 			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 		}

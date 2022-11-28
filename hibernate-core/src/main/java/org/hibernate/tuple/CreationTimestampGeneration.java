@@ -7,11 +7,15 @@
 package org.hibernate.tuple;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Value generation implementation for {@link CreationTimestamp}.
  *
  * @author Gunnar Morling
+ *
+ * @see org.hibernate.annotations.CurrentTimestampGeneration
  */
 public class CreationTimestampGeneration implements AnnotationValueGeneration<CreationTimestamp> {
 
@@ -19,7 +23,9 @@ public class CreationTimestampGeneration implements AnnotationValueGeneration<Cr
 
 	@Override
 	public void initialize(CreationTimestamp annotation, Class<?> propertyType) {
-		generator = TimestampGenerators.get(propertyType);
+		if ( annotation.source() == SourceType.VM ) {
+			generator = TimestampGenerators.get( propertyType );
+		}
 	}
 
 	@Override
@@ -39,6 +45,11 @@ public class CreationTimestampGeneration implements AnnotationValueGeneration<Cr
 
 	@Override
 	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
+		return "current_timestamp";
+	}
+
+	@Override
+	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
+		return dialect.currentTimestamp();
 	}
 }

@@ -11,6 +11,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 ext {
         db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
         dbHost = System.getProperty( 'dbHost', 'localhost' )
+        dbService = System.getProperty( 'dbService', '' )
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',
@@ -134,6 +135,18 @@ ext {
                         'jdbc.user'  : 'SYSTEM',
                         'jdbc.pass'  : 'Oracle18',
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE',
+                        'connection.init_sql' : ''
+                ],
+                oracle_cloud_autonomous_tls : [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'Oracle_19_Password',
+                        // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                        //
+                        // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                        // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                        'jdbc.url'   : 'jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=' + dbHost + '.oraclecloud.com))(connect_data=(service_name=' + dbService + '_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))',
                         'connection.init_sql' : ''
                 ],
                 mssql : [

@@ -79,4 +79,15 @@ public interface ManagedEntity extends Managed {
 	 * @param next The next entry
 	 */
 	void $$_hibernate_setNextManagedEntity(ManagedEntity next);
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default ManagedEntity asManagedEntity() {
+		return this;
+	}
+
 }

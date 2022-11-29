@@ -10,16 +10,20 @@ import java.lang.annotation.Annotation;
 
 
 /**
- * A {@link ValueGeneration} based on a custom Java generator annotation type.
+ * A {@link ValueGenerationStrategy} based on a custom Java generator annotation type.
+ * Every instance must implement either {@link InMemoryValueGenerationStrategy} or
+ * {@link InDatabaseValueGenerationStrategy}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *
  * @see org.hibernate.annotations.ValueGenerationType
  *
  * @author Gunnar Morling
+ * @author Gavin King
+ *
+ * @since 6.2
  */
-public interface AnnotationValueGeneration<A extends Annotation>
-		extends ValueGeneration, AnnotationValueGenerationStrategy<A> {
+public interface AnnotationValueGenerationStrategy<A extends Annotation> extends ValueGenerationStrategy {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *
@@ -27,25 +31,10 @@ public interface AnnotationValueGeneration<A extends Annotation>
 	 *                     annotation's attribute values and store them in fields.
 	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
 	 *                     the type to determine the right {@link ValueGenerator} to be applied.
+	 * @param entityName the name of the entity to which the annotated property belongs
+	 * @param propertyName the name of the annotated property
 	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
 	 *                                          an implementation can't create a value for the given property type.
 	 */
-	void initialize(A annotation, Class<?> propertyType);
-
-	/**
-	 * Initializes this generation strategy for the given annotation instance.
-	 *
-	 * @param annotation an instance of the strategy's annotation type. Typically, implementations will retrieve the
-	 * annotation's attribute values and store them in fields.
-	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
-	 * the type to determine the right {@link ValueGenerator} to be applied.
-	 * @param entityName the name of the entity to which the annotated property belongs
-	 * @param propertyName the name of the annotated property
-	 *
-	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
-	 * an implementation can't create a value for the given property type.
-	 */
-	default void initialize(A annotation, Class<?> propertyType, String entityName, String propertyName) {
-		initialize( annotation, propertyType );
-	}
+	void initialize(A annotation, Class<?> propertyType, String entityName, String propertyName);
 }

@@ -19,8 +19,9 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.tuple.AnnotationValueGeneration;
+import org.hibernate.tuple.AnnotationValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -86,11 +87,12 @@ public class GeneratedUuidTests {
 	//end::mapping-generated-custom-ex2[]
 
 	//tag::mapping-generated-custom-ex3[]
-	public static class UuidValueGeneration implements AnnotationValueGeneration<GeneratedUuidValue>, ValueGenerator<UUID> {
+	public static class UuidValueGeneration
+			implements AnnotationValueGenerationStrategy<GeneratedUuidValue>, InMemoryValueGenerationStrategy, ValueGenerator<UUID> {
 		private GenerationTiming timing;
 
 		@Override
-		public void initialize(GeneratedUuidValue annotation, Class<?> propertyType) {
+		public void initialize(GeneratedUuidValue annotation, Class<?> propertyType, String entityName, String propertyName) {
 			timing = annotation.timing();
 		}
 
@@ -102,16 +104,6 @@ public class GeneratedUuidTests {
 		@Override
 		public ValueGenerator<?> getValueGenerator() {
 			return this;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			return false;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return null;
 		}
 
 		@Override

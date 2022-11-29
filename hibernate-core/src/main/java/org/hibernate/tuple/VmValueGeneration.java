@@ -13,21 +13,20 @@ import org.hibernate.annotations.GeneratorType;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * A {@link AnnotationValueGeneration} which allows to specify the {@link ValueGenerator} to be used to determine the
- * value of the annotated property.
+ * An {@link AnnotationValueGeneration} which delegates to a {@link ValueGenerator}.
  *
  * @author Gunnar Morling
  */
-public class VmValueGeneration implements AnnotationValueGeneration<GeneratorType> {
+public class VmValueGeneration
+		implements AnnotationValueGenerationStrategy<GeneratorType>, InMemoryValueGenerationStrategy {
 
 	private GenerationTiming generationTiming;
 	private Constructor<? extends ValueGenerator<?>> constructor;
 
 	@Override
-	public void initialize(GeneratorType annotation, Class<?> propertyType) {
-		Class<? extends ValueGenerator<?>> generatorType = annotation.type();
-		constructor = ReflectHelper.getDefaultConstructor( generatorType );
-		this.generationTiming = annotation.when().getEquivalent();
+	public void initialize(GeneratorType annotation, Class<?> propertyType, String entityName, String propertyName) {
+		constructor = ReflectHelper.getDefaultConstructor( annotation.type() );
+		generationTiming = annotation.when().getEquivalent();
 	}
 
 	@Override
@@ -43,15 +42,5 @@ public class VmValueGeneration implements AnnotationValueGeneration<GeneratorTyp
 		catch (Exception e) {
 			throw new HibernateException( "Couldn't instantiate value generator", e );
 		}
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
-		return false;
-	}
-
-	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
 	}
 }

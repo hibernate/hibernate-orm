@@ -12,6 +12,8 @@ package org.hibernate.tuple;
  * or property value.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.2
  */
 public interface InMemoryValueGenerationStrategy extends ValueGenerationStrategy {
 

@@ -7,18 +7,17 @@
 package org.hibernate.tuple;
 
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.dialect.Dialect;
 
 /**
- * For {@link GeneratedColumn}
+ * For {@link GeneratedColumn}.
  *
  * @author Gavin King
  */
-public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration<GeneratedColumn> {
+public class GeneratedAlwaysValueGeneration
+		implements InDatabaseValueGenerationStrategy {
 
 	public GeneratedAlwaysValueGeneration() {}
-
-	@Override
-	public void initialize(GeneratedColumn annotation, Class<?> propertyType) {}
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
@@ -26,18 +25,17 @@ public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		// database generated values do not have a value generator
-		return null;
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
+	public boolean writePropertyValue() {
 		return false;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
+	public boolean referenceColumnsInSql() {
+		return false;
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
 		return null;
 	}
 }

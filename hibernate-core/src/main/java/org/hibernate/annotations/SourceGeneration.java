@@ -13,8 +13,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tuple.AnnotationValueGeneration;
+import org.hibernate.tuple.AnnotationValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.TimestampGenerators;
 import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
@@ -42,7 +43,8 @@ import static org.hibernate.tuple.GenerationTiming.ALWAYS;
  */
 @Deprecated(since = "6.2")
 @Internal
-public class SourceGeneration implements AnnotationValueGeneration<Source>, ValueGenerator<Object> {
+public class SourceGeneration
+		implements AnnotationValueGenerationStrategy<Source>, InMemoryValueGenerationStrategy, ValueGenerator<Object> {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -53,6 +55,10 @@ public class SourceGeneration implements AnnotationValueGeneration<Source>, Valu
 	private ValueGenerator<?> valueGenerator;
 
 	@Override
+	public void initialize(Source annotation, Class<?> propertyType, String entityName, String propertyName) {
+		initialize( annotation, propertyType );
+	}
+
 	public void initialize(Source annotation, Class<?> propertyType) {
 		this.propertyType = propertyType;
 		switch ( annotation.value() ) {
@@ -75,16 +81,6 @@ public class SourceGeneration implements AnnotationValueGeneration<Source>, Valu
 	@Override
 	public ValueGenerator<?> getValueGenerator() {
 		return valueGenerator;
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
-		return true;
-	}
-
-	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
 	}
 
 	@Override

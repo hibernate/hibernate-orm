@@ -16,6 +16,8 @@ import org.hibernate.dialect.Dialect;
  * {@code select}.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.2
  */
 public interface InDatabaseValueGenerationStrategy extends ValueGenerationStrategy {
 

@@ -7,6 +7,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.dialect.Dialect;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
@@ -16,11 +17,12 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class GeneratedValueGeneration implements AnnotationValueGeneration<Generated> {
+public class GeneratedValueGeneration
+		implements AnnotationValueGenerationStrategy<Generated>, InDatabaseValueGenerationStrategy {
 
 	private GenerationTiming timing;
 	private boolean writable;
-	private String sql;
+	private String[] sql;
 
 	public GeneratedValueGeneration() {
 	}
@@ -30,9 +32,9 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 	}
 
 	@Override
-	public void initialize(Generated annotation, Class<?> propertyType) {
+	public void initialize(Generated annotation, Class<?> propertyType, String entityName, String propertyName) {
 		timing = annotation.value().getEquivalent();
-		sql = isEmpty( annotation.sql() ) ? null : annotation.sql();
+		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
 		writable = annotation.writable() || sql != null;
 	}
 
@@ -42,19 +44,18 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		// database generated values do not have a value generator
-		return null;
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
+	public boolean referenceColumnsInSql() {
 		return writable;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
+	public String[] getReferencedColumnValues(Dialect dialect) {
 		return sql;
+	}
+
+	@Override
+	public boolean writePropertyValue() {
+		return writable && sql==null;
 	}
 }
 

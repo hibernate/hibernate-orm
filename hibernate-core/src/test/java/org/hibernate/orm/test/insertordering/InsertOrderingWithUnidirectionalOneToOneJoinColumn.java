@@ -52,8 +52,8 @@ public class InsertOrderingWithUnidirectionalOneToOneJoinColumn extends BaseInse
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Person (name, id) values (?, ?)" ),
-				new Batch( "insert into Address (street, id) values (?, ?)" )
+				new Batch( "insert into Person (name,id) values (?,?)" ),
+				new Batch( "insert into Address (street,id) values (?,?)" )
 		);
 
 		sessionFactoryScope().inTransaction( session -> {

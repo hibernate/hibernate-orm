@@ -50,8 +50,8 @@ public class InsertOrderingWithBidirectionalMapsIdOneToOne extends BaseInsertOrd
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Address (street, ID) values (?, ?)", 2 ),
-				new Batch( "insert into Person (name, address_ID) values (?, ?)", 2 )
+				new Batch( "insert into Address (street,ID) values (?,?)", 2 ),
+				new Batch( "insert into Person (name,address_ID) values (?,?)", 2 )
 		);
 	}
 

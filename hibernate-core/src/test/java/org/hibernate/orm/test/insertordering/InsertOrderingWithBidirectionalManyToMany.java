@@ -57,9 +57,9 @@ public class InsertOrderingWithBidirectionalManyToMany extends BaseInsertOrderin
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Address (street, ID) values (?, ?)", 2 ),
-				new Batch( "insert into Person (name, ID) values (?, ?)", 4 ),
-				new Batch( "insert into Person_Address (persons_ID, addresses_ID) values (?, ?)", 6 )
+				new Batch( "insert into Address (street,ID) values (?,?)", 2 ),
+				new Batch( "insert into Person (name,ID) values (?,?)", 4 ),
+				new Batch( "insert into Person_Address (persons_ID,addresses_ID) values (?,?)", 6 )
 		);
 	}
 

@@ -115,7 +115,7 @@ public class BatchOptimisticLockingTest extends
 			}
 			else {
 				assertEquals(
-						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?, version=? where id=? and version=?",
+						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?",
 						expected.getMessage()
 				);
 			}

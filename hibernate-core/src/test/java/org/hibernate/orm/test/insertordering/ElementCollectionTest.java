@@ -49,8 +49,8 @@ public class ElementCollectionTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into TASK (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into TASK_CATEGORY (TASK_ID, categories) values (?, ?)", 2 )
+				new Batch( "insert into TASK (name,id) values (?,?)", 2 ),
+				new Batch( "insert into TASK_CATEGORY (TASK_ID,categories) values (?,?)", 2 )
 		);
 	}
 

@@ -109,7 +109,7 @@ public class SessionJdbcBatchTest
 			session.close();
 		}
 
-		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name, id) values (?, ?)" );
+		PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( "insert into Event (name,id) values (?,?)" );
 		verify(preparedStatement, times( 5 )).addBatch();
 		verify(preparedStatement, times( 2 )).executeBatch();
 

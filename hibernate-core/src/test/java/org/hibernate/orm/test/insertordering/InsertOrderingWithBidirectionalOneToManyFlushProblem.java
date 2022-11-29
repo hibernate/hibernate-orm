@@ -74,9 +74,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)" ),
-				new Batch( "insert into MiddleEntity (name, top_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity (middle_id, name, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into TopEntity (name,id) values (?,?)" ),
+				new Batch( "insert into MiddleEntity (name,top_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id,name,id) values (?,?,?)", 2 )
 		);
 	}
 
@@ -132,10 +132,10 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into MiddleEntity (name, top_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity (middle_id, name, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity2 (middle_id, name, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into TopEntity (name,id) values (?,?)", 2 ),
+				new Batch( "insert into MiddleEntity (name,top_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id,name,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity2 (middle_id,name,id) values (?,?,?)", 2 )
 		);
 	}
 

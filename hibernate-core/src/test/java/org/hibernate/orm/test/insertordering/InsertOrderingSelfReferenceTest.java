@@ -69,9 +69,9 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Placeholder (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "INPUT" ) + ", ?)" ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "OUTPUT" ) + ", ?)", 3 )
+				new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
+				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ),
+				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)", 3 )
 		);
 	}
 

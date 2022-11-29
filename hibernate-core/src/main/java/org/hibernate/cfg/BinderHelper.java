@@ -788,6 +788,9 @@ public class BinderHelper {
 					|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
+				if ( identifierGeneratorStrategy.equals( "assigned" ) ) {
+					id.setNullValue( "undefined" );
+				}
 			}
 			//checkIfMatchingGenerator(definition, generatorType, generatorName);
 			parameters.putAll( definition.getParameters() );

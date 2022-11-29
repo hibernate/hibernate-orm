@@ -9,17 +9,22 @@ package org.hibernate.persister.entity.mutation;
 import java.util.List;
 
 import org.hibernate.Internal;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.MutationGroup;
+import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 
 /**
  * Base support for coordinating mutations against an entity
@@ -84,5 +89,21 @@ public abstract class AbstractMutationCoordinator {
 		);
 	}
 
-
+	void handleValueGeneration(
+			AttributeMapping attributeMapping,
+			MutationGroupBuilder mutationGroupBuilder,
+			InDatabaseValueGenerationStrategy valueGeneration) {
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final boolean writePropertyValue = valueGeneration.writePropertyValue();
+		final String[] columnValues = writePropertyValue ? null : valueGeneration.getReferencedColumnValues( dialect );
+		attributeMapping.forEachSelectable( (j, mapping) -> {
+			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );
+			tableUpdateBuilder.addValueColumn(
+					mapping.getSelectionExpression(),
+					writePropertyValue ? "?" : columnValues[j],
+					mapping.getJdbcMapping()
+			);
+		} );
+	}
 }

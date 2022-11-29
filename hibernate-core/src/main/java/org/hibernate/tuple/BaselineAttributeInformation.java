@@ -16,7 +16,7 @@ public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;
-	private final ValueGeneration valueGenerationStrategy;
+	private final ValueGenerationStrategy valueGenerationStrategy;
 	private final boolean nullable;
 	private final boolean dirtyCheckable;
 	private final boolean versionable;
@@ -28,7 +28,7 @@ public class BaselineAttributeInformation {
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGeneration valueGenerationStrategy,
+			ValueGenerationStrategy valueGenerationStrategy,
 			boolean nullable,
 			boolean dirtyCheckable,
 			boolean versionable,
@@ -57,7 +57,7 @@ public class BaselineAttributeInformation {
 		return updateable;
 	}
 
-	public ValueGeneration getValueGenerationStrategy() {
+	public ValueGenerationStrategy getValueGenerationStrategy() {
 		return valueGenerationStrategy;
 	}
 
@@ -89,7 +89,7 @@ public class BaselineAttributeInformation {
 		private boolean lazy;
 		private boolean insertable;
 		private boolean updateable;
-		private ValueGeneration valueGenerationStrategy;
+		private ValueGenerationStrategy valueGenerationStrategy;
 		private boolean nullable;
 		private boolean dirtyCheckable;
 		private boolean versionable;
@@ -111,7 +111,7 @@ public class BaselineAttributeInformation {
 			return this;
 		}
 
-		public Builder setValueGenerationStrategy(ValueGeneration valueGenerationStrategy) {
+		public Builder setValueGenerationStrategy(ValueGenerationStrategy valueGenerationStrategy) {
 			this.valueGenerationStrategy = valueGenerationStrategy;
 			return this;
 		}

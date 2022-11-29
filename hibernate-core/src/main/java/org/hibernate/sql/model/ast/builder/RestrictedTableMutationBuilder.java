@@ -13,8 +13,10 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
- * Specialized TableMutationBuilder implementation for building mutations
- * which define a where-clause
+ * Specialized {@link TableMutationBuilder} implementation for building mutations
+ * which have a {@code where} clause.
+ *
+ * Common operations of {@link TableUpdateBuilder} and {@link TableDeleteBuilder}.
  *
  * @author Steve Ebersole
  */

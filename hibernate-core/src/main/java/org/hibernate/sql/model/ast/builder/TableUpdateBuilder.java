@@ -6,28 +6,18 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
+ * {@link TableMutationBuilder} implementation for {@code update} statements.
+ *
  * @author Steve Ebersole
  */
 public interface TableUpdateBuilder<O extends MutationOperation>
-		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>> {
-
-	/**
-	 * Add a column as part of the values list
-	 */
-	default void addValueColumn(SelectableMapping selectableMapping) {
-		addValueColumn(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
-	}
+		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>, ColumnValuesTableMutationBuilder {
 
 	/**
 	 * Convenience form of {@link #addValueColumn(SelectableMapping)} matching the
@@ -41,27 +31,6 @@ public interface TableUpdateBuilder<O extends MutationOperation>
 	default void addValueColumn(@SuppressWarnings("unused") int dummy, SelectableMapping selectableMapping) {
 		addValueColumn( selectableMapping );
 	}
-
-	/**
-	 * Add a column as part of the values list
-	 */
-	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
-
-	/**
-	 * Add a key column
-	 */
-	default void addKeyColumn(SelectableMapping selectableMapping) {
-		addKeyColumn(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
-	}
-
-	/**
-	 * Add a key column
-	 */
-	void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping);
 
 	void setWhere(String fragment);
 }

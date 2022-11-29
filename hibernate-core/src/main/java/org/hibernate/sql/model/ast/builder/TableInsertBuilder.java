@@ -6,45 +6,13 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.ast.TableInsert;
 
 /**
- * TableMutationBuilder implementation for insert statements
+ * {@link TableMutationBuilder} implementation for {@code insert} statements.
  *
  * @author Steve Ebersole
  */
-public interface TableInsertBuilder extends TableMutationBuilder<TableInsert> {
-	/**
-	 * Add a column as part of the values list
-	 */
-	default void addValueColumn(SelectableMapping selectableMapping) {
-		addValueColumn(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
-	}
+public interface TableInsertBuilder extends TableMutationBuilder<TableInsert>, ColumnValuesTableMutationBuilder {
 
-	/**
-	 * Add a column as part of the values list
-	 */
-	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
-
-	/**
-	 * Add a key column
-	 */
-	default void addKeyColumn(SelectableMapping selectableMapping) {
-		addKeyColumn(
-				selectableMapping.getSelectionExpression(),
-				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
-		);
-	}
-
-	/**
-	 * Add a key column
-	 */
-	void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping);
 }

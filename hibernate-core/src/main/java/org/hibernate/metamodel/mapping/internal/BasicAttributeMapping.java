@@ -36,7 +36,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -87,7 +87,7 @@ public class BasicAttributeMapping
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			ValueGenerationStrategy valueGeneration) {
 		super(
 				attributeName,
 				stateArrayPosition,
@@ -126,7 +126,7 @@ public class BasicAttributeMapping
 			ManagedMappingType declaringType,
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration,
+			ValueGenerationStrategy valueGeneration,
 			boolean insertable,
 			boolean updateable,
 			SelectableMapping selectableMapping) {

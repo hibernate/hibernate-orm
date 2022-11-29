@@ -14,7 +14,6 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -35,7 +34,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -51,8 +49,9 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.ALL;
@@ -213,10 +212,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		final InclusionChecker updateabilityChecker = (position, attribute) -> {
-			final ValueGeneration valueGeneration = attribute.getValueGeneration();
-			if ( valueGeneration.getGenerationTiming().includesUpdate()
-					&& valueGeneration.getValueGenerator() == null
-					&& valueGeneration.referenceColumnInSql() ) {
+			if ( isValueGenerationInSql( attribute.getValueGeneration() ) ) {
 				return true;
 			}
 
@@ -253,8 +249,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			if ( optimisticLockStyle == VERSION ) {
 				return versionMapping != null
-						&& versionMapping.getVersionAttribute() == attribute
-						;
+						&& versionMapping.getVersionAttribute() == attribute;
 //						&& updateableAttributeIndexes[position];
 			}
 
@@ -311,6 +306,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					session
 			);
 		}
+	}
+
+	private static boolean isValueGenerationInSql(ValueGenerationStrategy valueGeneration) {
+		return valueGeneration.getGenerationTiming().includesUpdate()
+				&& valueGeneration.generatedByDatabase()
+				&& ( (InDatabaseValueGenerationStrategy) valueGeneration ).referenceColumnsInSql();
 	}
 
 	/**
@@ -657,16 +658,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				}
 
 				final IncludedAttributeAnalysis attributeAnalysis = (IncludedAttributeAnalysis) attributeAnalysisRef;
-				final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
 
 				if ( attributeAnalysis.includeInSet() ) {
 					// apply the new values
 					final boolean includeInSet;
 
-					if ( valueGeneration.getGenerationTiming().includesUpdate()
-							&& valueGeneration.getValueGenerator() == null
-							&& valueGeneration.referenceColumnInSql()
-							&& valueGeneration.getDatabaseGeneratedReferencedColumnValue() != null ) {
+					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					if ( isValueGenerationInSql( valueGeneration )
+							&& !( (InDatabaseValueGenerationStrategy) valueGeneration ).writePropertyValue() ) {
 						// we applied `#getDatabaseGeneratedReferencedColumnValue` earlier
 						includeInSet = false;
 					}
@@ -881,7 +880,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
 		final boolean[] versionability = entityPersister().getPropertyVersionability();
 		final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
-		final Dialect dialect = factory().getJdbcServices().getDialect();
 
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -898,21 +896,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( attributeAnalysis.includeInSet() ) {
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
 
-					final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
-					if ( valueGeneration.getGenerationTiming().includesUpdate()
-							&& valueGeneration.getValueGenerator() == null
-							&& valueGeneration.referenceColumnInSql() ) {
-						// value-generation is only valid for basic attributes
-						final BasicAttributeMapping basicAttributeMapping = (BasicAttributeMapping) attributeMapping;
-						final String databaseGeneratedValue = valueGeneration.getDatabaseGeneratedReferencedColumnValue(
-								dialect
-						);
-						tableUpdateBuilder.addValueColumn(
-								basicAttributeMapping.getSelectionExpression(),
-								databaseGeneratedValue == null
-										? "?"
-										: databaseGeneratedValue,
-								basicAttributeMapping.getJdbcMapping()
+					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					if ( isValueGenerationInSql( valueGeneration ) ) {
+						handleValueGeneration(
+								attributeMapping,
+								updateGroupBuilder,
+								(InDatabaseValueGenerationStrategy) valueGeneration
 						);
 					}
 					else if ( versionMapping != null
@@ -1013,7 +1002,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 		} );
 	}
-
 
 	/**
 	 * Contains the aggregated analysis of the update values to determine
@@ -1344,10 +1332,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				(index,attribute) -> {
-					final ValueGeneration valueGeneration = attribute.getValueGeneration();
-					if ( valueGeneration.getGenerationTiming().includesUpdate()
-							&& valueGeneration.getValueGenerator() == null
-							&& valueGeneration.referenceColumnInSql() ) {
+					if ( isValueGenerationInSql( attribute.getValueGeneration() ) ) {
 						return true;
 					}
 

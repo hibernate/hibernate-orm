@@ -256,9 +256,10 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
@@ -2758,17 +2759,19 @@ public abstract class AbstractEntityPersister
 						hasColumns = true;
 					}
 					else {
-						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
+						final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
 						if ( valueGeneration.getGenerationTiming().includesUpdate()
-								&& valueGeneration.generatedByDatabase()
-								&& valueGeneration.referenceColumnInSql() ) {
-							final Dialect dialect = getFactory().getJdbcServices().getDialect();
-							update.addColumns(
-									getPropertyColumnNames( index ),
-									SINGLE_TRUE,
-									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) }
-							);
-							hasColumns = true;
+								&& valueGeneration.generatedByDatabase() ) {
+							final InDatabaseValueGenerationStrategy generation = (InDatabaseValueGenerationStrategy) valueGeneration;
+							if ( generation.referenceColumnsInSql() ) {
+								final Dialect dialect = getFactory().getJdbcServices().getDialect();
+								update.addColumns(
+										getPropertyColumnNames(index),
+										SINGLE_TRUE,
+										generation.getReferencedColumnValues(dialect)
+								);
+								hasColumns = true;
+							}
 						}
 					}
 				}

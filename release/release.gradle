@@ -145,6 +145,7 @@ dependencies {
     javadocClasspath libs.jackson
     javadocClasspath gradleApi()
     javadocClasspath libs.jacksonXml
+    javadocClasspath dbLibs.oracle
 }
 
 

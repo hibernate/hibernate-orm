@@ -4436,8 +4436,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				? pluralAttributeMapping.getIndexDescriptor()
 				: pluralAttributeMapping.getElementDescriptor();
 		final ModelPart modelPart;
-		if ( collectionPart instanceof EntityAssociationMapping ) {
-			modelPart = ( (EntityAssociationMapping) collectionPart ).getKeyTargetMatchPart();
+		if ( collectionPart instanceof OneToManyCollectionPart ) {
+			final OneToManyCollectionPart toManyPart = (OneToManyCollectionPart) collectionPart;
+			modelPart = toManyPart.getAssociatedEntityMappingType().getIdentifierMapping();
+//				modelPart = pluralAttributeMapping.getKeyDescriptor().getTargetPart();
+		}
+		else if ( collectionPart instanceof ManyToManyCollectionPart ) {
+			modelPart = ( (ManyToManyCollectionPart) collectionPart ).getKeyTargetMatchPart();
 		}
 		else {
 			modelPart = collectionPart;

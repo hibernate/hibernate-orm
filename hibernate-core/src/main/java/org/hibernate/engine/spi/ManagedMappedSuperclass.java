@@ -12,4 +12,15 @@ package org.hibernate.engine.spi;
  * @author Luis Barreiro
  */
 public interface ManagedMappedSuperclass extends Managed {
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default ManagedMappedSuperclass asManagedMappedSuperclass() {
+		return this;
+	}
+
 }

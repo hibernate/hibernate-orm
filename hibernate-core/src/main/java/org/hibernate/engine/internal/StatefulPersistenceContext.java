@@ -261,7 +261,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private static void processEntityOnClear(final Object entity) {
-		//type-cache-pollution agent: always check for EnhancedEntity type first.
+		//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
 		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, StatefulPersistenceContext::unsetSession, null );
 	}
 

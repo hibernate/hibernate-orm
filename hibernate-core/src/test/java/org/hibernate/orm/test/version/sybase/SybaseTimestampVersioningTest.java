@@ -22,8 +22,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -46,7 +44,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLocking() throws Throwable {
+	public void testLocking() {
 		// First, create the needed row...
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -66,8 +64,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 			s2 = sessionFactory().openSession();
 			t2 = s2.beginTransaction();
 
-			User user1 = ( User ) s1.get( User.class, steve.getId() );
-			User user2 = ( User ) s2.get( User.class, steve.getId() );
+			User user1 = s1.get( User.class, steve.getId() );
+			User user2 = s2.get( User.class, steve.getId() );
 
 			user1.setUsername( "se" );
 			t1.commit();
@@ -131,7 +129,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testCollectionVersion() throws Exception {
+	public void testCollectionVersion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		User steve = new User( "steve" );
@@ -143,35 +141,53 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 		byte[] steveTimestamp = steve.getTimestamp();
 
+		sleep();
+
 		s = openSession();
 		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		admin = ( Group ) s.get( Group.class, admin.getId() );
+		steve = s.get( User.class, steve.getId() );
+		admin = s.get( Group.class, admin.getId() );
 		steve.getGroups().add( admin );
 		admin.getUsers().add( steve );
 		t.commit();
 		s.close();
 
-		assertFalse(
-				"owner version not incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
-		);
+		// Hibernate used to increment the version here,
+		// when the collections changed, but now doesn't
+		// that's OK, because the only reason this worked
+		// in H5 was due to a bug (it used to go and ask
+		// for getdate() from the database, even though
+		// it wasn't planning on doing anything with it,
+		// and then issue a spurious 'update' statement)
+//		assertFalse(
+//				"owner version not incremented",
+//				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
+//		);
 
 		steveTimestamp = steve.getTimestamp();
 
+		sleep();
+
 		s = openSession();
 		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
+		steve = s.get( User.class, steve.getId() );
 		steve.getGroups().clear();
 		t.commit();
 		s.close();
 
-		assertFalse(
-				"owner version not incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
-		);
+		// Hibernate used to increment the version here,
+		// when the collections changed, but now doesn't
+		// that's OK, because the only reason this worked
+		// in H5 was due to a bug (it used to go and ask
+		// for getdate() from the database, even though
+		// it wasn't planning on doing anything with it,
+		// and then issue a spurious 'update' statement)
+// 		assertFalse(
+//				"owner version not incremented",
+//				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
+//		);
+
+		sleep();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -196,32 +212,36 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 
 		byte[] steveTimestamp = steve.getTimestamp();
 
+		sleep();
+
 		s = openSession();
 		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		perm = ( Permission ) s.get( Permission.class, perm.getId() );
+		steve = s.get( User.class, steve.getId() );
+		perm = s.get( Permission.class, perm.getId() );
 		steve.getPermissions().add( perm );
 		t.commit();
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
+				"owner version was incremented",
+				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
 		);
+
+		sleep();
 
 		s = openSession();
 		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
+		steve = s.get( User.class, steve.getId() );
 		steve.getPermissions().clear();
 		t.commit();
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
+				"owner version was incremented",
+				PrimitiveByteArrayJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() )
 		);
+
+		sleep();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -229,6 +249,13 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.delete( s.load( Permission.class, perm.getId() ) );
 		t.commit();
 		s.close();
+	}
+
+	private static void sleep() {
+		try {
+			Thread.sleep(200);
+		} catch (InterruptedException ignored) {
+		}
 	}
 
 	@Test
@@ -260,7 +287,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 			s = openSession();
 			s.getTransaction().begin();
 			user.setUsername( "n" + i );
-			user = (User) s.merge( user );
+			user = s.merge( user );
 			s.getTransaction().commit();
 			s.close();
 

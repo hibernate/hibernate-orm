@@ -42,7 +42,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGeneration valueGenerationStrategy,
+			ValueGenerationStrategy valueGenerationStrategy,
 			boolean nullable,
 			boolean checkable,
 			boolean versionable,

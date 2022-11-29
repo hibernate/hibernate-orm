@@ -40,13 +40,13 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -458,28 +458,25 @@ public class EntityMetamodel implements Serializable {
 	private static GenerationStrategyPair buildGenerationStrategyPair(
 			final SessionFactoryImplementor sessionFactory,
 			final Property mappingProperty) {
-		final ValueGeneration valueGeneration = mappingProperty.getValueGenerationStrategy();
+		final ValueGenerationStrategy valueGeneration = mappingProperty.getValueGenerationStrategy();
 		if ( valueGeneration != null && valueGeneration.getGenerationTiming() != GenerationTiming.NEVER ) {
 			// the property is generated in full. build the generation strategy pair.
 			if ( !valueGeneration.generatedByDatabase() ) {
 				// in-memory generation
 				return new GenerationStrategyPair(
-						FullInMemoryValueGenerationStrategy.create( valueGeneration )
+						FullInMemoryValueGenerationStrategy.create( (InMemoryValueGenerationStrategy) valueGeneration )
 				);
 			}
 			else {
 				// in-db generation
-				return new GenerationStrategyPair(
-						create(
-								sessionFactory,
-								mappingProperty,
-								valueGeneration
-						)
-				);
+				return new GenerationStrategyPair( (InDatabaseValueGenerationStrategy) valueGeneration );
 			}
 		}
 		else if ( mappingProperty.getValue() instanceof Component ) {
-			final CompositeGenerationStrategyPairBuilder builder = new CompositeGenerationStrategyPairBuilder( mappingProperty );
+			final CompositeGenerationStrategyPairBuilder builder = new CompositeGenerationStrategyPairBuilder(
+					mappingProperty,
+					sessionFactory.getJdbcServices().getDialect()
+			);
 			interpretPartialCompositeValueGeneration( sessionFactory, (Component) mappingProperty.getValue(), builder );
 			return builder.buildPair();
 		}
@@ -498,36 +495,6 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	public static InDatabaseValueGenerationStrategyImpl create(
-			SessionFactoryImplementor factory,
-			Property mappingProperty,
-			ValueGeneration valueGeneration) {
-		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan( factory );
-		final Dialect dialect = factory.getJdbcServices().getDialect();
-		if ( numberOfMappedColumns == 1 ) {
-			return new InDatabaseValueGenerationStrategyImpl(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.referenceColumnInSql(),
-					new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) }
-
-			);
-		}
-		else {
-			if ( valueGeneration.getDatabaseGeneratedReferencedColumnValue(dialect) != null ) {
-				LOG.debugf(
-						"Value generator specified column value in reference to multi-column attribute [%s -> %s]; ignoring",
-						mappingProperty.getPersistentClass(),
-						mappingProperty.getName()
-				);
-			}
-			return new InDatabaseValueGenerationStrategyImpl(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.referenceColumnInSql(),
-					new String[numberOfMappedColumns]
-			);
-		}
-	}
-
 	public static class GenerationStrategyPair {
 		private final InMemoryValueGenerationStrategy inMemoryStrategy;
 		private final InDatabaseValueGenerationStrategy inDatabaseStrategy;
@@ -540,7 +507,7 @@ public class EntityMetamodel implements Serializable {
 			this( inMemoryStrategy, NoInDatabaseValueGenerationStrategy.INSTANCE );
 		}
 
-		public GenerationStrategyPair(InDatabaseValueGenerationStrategyImpl inDatabaseStrategy) {
+		public GenerationStrategyPair(InDatabaseValueGenerationStrategy inDatabaseStrategy) {
 			this( NoInMemoryValueGenerationStrategy.INSTANCE, inDatabaseStrategy );
 		}
 
@@ -583,14 +550,16 @@ public class EntityMetamodel implements Serializable {
 
 	private static class CompositeGenerationStrategyPairBuilder {
 		private final Property mappingProperty;
+		private final Dialect dialect;
 
 		private boolean hadInMemoryGeneration;
 		private boolean hadInDatabaseGeneration;
 
 		private List<InDatabaseValueGenerationStrategy> inDatabaseStrategies;
 
-		public CompositeGenerationStrategyPairBuilder(Property mappingProperty) {
+		public CompositeGenerationStrategyPairBuilder(Property mappingProperty, Dialect dialect) {
 			this.mappingProperty = mappingProperty;
+			this.dialect = dialect;
 		}
 
 		public void addPair(GenerationStrategyPair generationStrategyPair) {
@@ -675,8 +644,8 @@ public class EntityMetamodel implements Serializable {
 						// override base-line value
 						referenceColumns = true;
 					}
-					if ( subStrategy.getReferencedColumnValues() != null ) {
-						if ( subStrategy.getReferencedColumnValues().length != property.getColumnSpan() ) {
+					if ( subStrategy.getReferencedColumnValues(dialect) != null ) {
+						if ( subStrategy.getReferencedColumnValues(dialect).length != property.getColumnSpan() ) {
 							throw new ValueGenerationStrategyException(
 									"Internal error : mismatch between number of collected 'referenced column values'" +
 											" and number of columns for composite attribute : " + mappingProperty.getName() +
@@ -684,7 +653,7 @@ public class EntityMetamodel implements Serializable {
 							);
 						}
 						System.arraycopy(
-								subStrategy.getReferencedColumnValues(),
+								subStrategy.getReferencedColumnValues(dialect),
 								0,
 								columnValues,
 								columnIndex,
@@ -730,7 +699,7 @@ public class EntityMetamodel implements Serializable {
 			this.generator = generator;
 		}
 
-		public static FullInMemoryValueGenerationStrategy create(ValueGeneration valueGeneration) {
+		public static FullInMemoryValueGenerationStrategy create(InMemoryValueGenerationStrategy valueGeneration) {
 			return new FullInMemoryValueGenerationStrategy(
 					valueGeneration.getGenerationTiming(),
 					valueGeneration.getValueGenerator()
@@ -765,8 +734,13 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public String[] getReferencedColumnValues() {
+		public String[] getReferencedColumnValues(Dialect dialect) {
 			return null;
+		}
+
+		@Override
+		public boolean writePropertyValue() {
+			return true;
 		}
 	}
 
@@ -795,8 +769,13 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public String[] getReferencedColumnValues() {
+		public String[] getReferencedColumnValues(Dialect dialect) {
 			return referencedColumnValues;
+		}
+
+		@Override
+		public boolean writePropertyValue() {
+			return false;
 		}
 	}
 

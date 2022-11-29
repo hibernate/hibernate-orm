@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerationStrategy;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
-	private final ValueGeneration valueGeneration;
+	private final ValueGenerationStrategy valueGeneration;
 
 	public AbstractSingularAttributeMapping(
 			String name,
@@ -32,7 +32,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			ValueGenerationStrategy valueGeneration) {
 		super( name, attributeMetadataAccess, mappedFetchOptions, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.valueGeneration = valueGeneration != null
@@ -48,7 +48,7 @@ public abstract class AbstractSingularAttributeMapping
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			ValueGenerationStrategy valueGeneration) {
 		super( name, attributeMetadataAccess, fetchTiming, fetchStyle, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.valueGeneration = valueGeneration != null
@@ -62,7 +62,7 @@ public abstract class AbstractSingularAttributeMapping
 	}
 
 	@Override
-	public ValueGeneration getValueGeneration() {
+	public ValueGenerationStrategy getValueGeneration() {
 		return valueGeneration;
 	}
 }

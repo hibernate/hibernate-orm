@@ -40,8 +40,10 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
@@ -383,19 +385,17 @@ public class PropertyBinder {
 		}
 	}
 
-	private ValueGeneration determineValueGenerationStrategy(XProperty property) {
-		ValueGeneration valueGeneration = getValueGenerationFromAnnotations( property );
-
+	private ValueGenerationStrategy determineValueGenerationStrategy(XProperty property) {
+		ValueGenerationStrategy valueGeneration = getValueGenerationFromAnnotations( property );
 		if ( valueGeneration == null ) {
 			return NoValueGeneration.INSTANCE;
 		}
-
-		if ( !valueGeneration.writePropertyValue() ) {
+		if ( valueGeneration instanceof InDatabaseValueGenerationStrategy) {
 			// if we have an in-db generator, mark it as not insertable nor updatable
-			insertable = false;
-			updatable = false;
+			final boolean writable = ( (InDatabaseValueGenerationStrategy) valueGeneration ).writePropertyValue();
+			insertable = writable;
+			updatable = writable;
 		}
-
 		return valueGeneration;
 	}
 

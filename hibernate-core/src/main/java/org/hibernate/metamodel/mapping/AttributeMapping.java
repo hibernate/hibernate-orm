@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
@@ -70,7 +70,7 @@ public interface AttributeMapping
 	 *
 	 * @apiNote Only relevant for non-id attributes
 	 */
-	ValueGeneration getValueGeneration();
+	ValueGenerationStrategy getValueGeneration();
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {

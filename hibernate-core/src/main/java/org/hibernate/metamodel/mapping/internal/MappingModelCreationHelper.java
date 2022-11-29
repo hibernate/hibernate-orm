@@ -88,7 +88,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
@@ -266,7 +265,6 @@ public class MappingModelCreationHelper {
 			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
 		}
-		final ValueGeneration valueGeneration = bootProperty.getValueGenerationStrategy();
 
 		return new BasicAttributeMapping(
 				attrName,
@@ -290,7 +288,7 @@ public class MappingModelCreationHelper {
 				attrType,
 				declaringType,
 				propertyAccess,
-				valueGeneration
+				bootProperty.getValueGenerationStrategy()
 		);
 	}
 

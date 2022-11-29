@@ -10,6 +10,8 @@ import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 
 /**
+ * {@link TableMutationBuilder} implementation for {@code delete} statements.
+ *
  * @author Steve Ebersole
  */
 public interface TableDeleteBuilder extends RestrictedTableMutationBuilder<JdbcDeleteMutation, TableDelete> {

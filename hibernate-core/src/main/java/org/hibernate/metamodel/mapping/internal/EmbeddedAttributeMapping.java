@@ -54,7 +54,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerationStrategy;
 
 /**
  * @author Steve Ebersole
@@ -80,7 +80,7 @@ public class EmbeddedAttributeMapping
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			ValueGenerationStrategy valueGeneration) {
 		this(
 			name,
 			navigableRole,
@@ -109,7 +109,7 @@ public class EmbeddedAttributeMapping
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			ValueGenerationStrategy valueGeneration) {
 		super(
 				name,
 				stateArrayPosition,

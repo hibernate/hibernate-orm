@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -24,7 +23,6 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -33,8 +31,9 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -135,14 +134,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	private Object doStaticInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
 		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 
-		final TableInclusionChecker tableInclusionChecker = (tableMapping) -> {
-			if ( tableMapping.isOptional() ) {
-				return insertValuesAnalysis.hasNonNullBindings( tableMapping );
-			}
-
-			return true;
-		};
-
+		final TableInclusionChecker tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
 
 		final MutationExecutorService mutationExecutorService = session.getSessionFactory()
 				.getServiceRegistry()
@@ -278,13 +270,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 
-		final TableInclusionChecker tableInclusionChecker = (tableMapping) -> {
-			if ( tableMapping.isOptional() ) {
-				return insertValuesAnalysis.hasNonNullBindings( tableMapping );
-			}
-
-			return true;
-		};
+		final TableInclusionChecker tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
 
 		decomposeForInsert( mutationExecutor, id, values, insertGroup, insertability, tableInclusionChecker, session );
 
@@ -308,6 +294,10 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		finally {
 			mutationExecutor.release();
 		}
+	}
+
+	private static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
+		return (tableMapping) -> !tableMapping.isOptional() || insertValuesAnalysis.hasNonNullBindings( tableMapping );
 	}
 
 
@@ -387,8 +377,6 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			MutationGroupBuilder insertGroupBuilder,
 			boolean[] attributeInclusions) {
 		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
-		//noinspection resource
-		final Dialect dialect = factory().getJdbcServices().getDialect();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -402,18 +390,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
 
 				if ( !attributeInclusions[ attributeIndex ] ) {
-					final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
-					if ( valueGeneration.getGenerationTiming().includesInsert()
-							&& valueGeneration.getValueGenerator() == null
-							&& valueGeneration.referenceColumnInSql() ) {
-						// value-generation is only valid for basic attributes
-						final BasicAttributeMapping basicAttributeMapping = (BasicAttributeMapping) attributeMapping;
-						final String tableNameForMutation = entityPersister().physicalTableNameForMutation( basicAttributeMapping );
-						final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
-						tableInsertBuilder.addValueColumn(
-								basicAttributeMapping.getSelectionExpression(),
-								valueGeneration.getDatabaseGeneratedReferencedColumnValue( dialect ),
-								basicAttributeMapping.getJdbcMapping()
+					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					if ( isValueGenerationInSql( valueGeneration ) ) {
+						handleValueGeneration(
+								attributeMapping,
+								insertGroupBuilder,
+								(InDatabaseValueGenerationStrategy) valueGeneration
 						);
 					}
 					continue;
@@ -453,5 +435,11 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				tableMapping.getKeyMapping().forEachKeyColumn( tableInsertBuilder::addKeyColumn );
 			}
 		} );
+	}
+
+	private static boolean isValueGenerationInSql(ValueGenerationStrategy valueGeneration) {
+		return valueGeneration.getGenerationTiming().includesInsert()
+				&& valueGeneration.generatedByDatabase()
+				&& ( (InDatabaseValueGenerationStrategy) valueGeneration ).referenceColumnsInSql();
 	}
 }

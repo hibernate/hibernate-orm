@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerationStrategy;
 
 /**
  * @author Christian Beikov
@@ -35,7 +35,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess, ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess,
+			ValueGenerationStrategy valueGeneration) {
 		super(
 				name,
 				navigableRole,
@@ -63,7 +64,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess, ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess,
+			ValueGenerationStrategy valueGeneration) {
 		super(
 				name,
 				navigableRole,

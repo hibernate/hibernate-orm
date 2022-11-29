@@ -13,17 +13,66 @@ import java.lang.annotation.Target;
 
 import org.hibernate.id.IdentifierGenerator;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * Meta-annotation used to mark another annotation as providing configuration
- * for a custom {@link IdentifierGenerator}.
+ * for a custom {@link IdentifierGenerator}. This is the best way to work with
+ * customized identifier generation in Hibernate.
+ * <p>
+ * For example, if we have a custom identifier generator:
+ * <pre>{@code
+ * public class CustomSequenceGenerator implements IdentifierGenerator {
+ *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
+ *                                    CustomIdGeneratorCreationContext context) {
+ *         ...
+ *     }
+ *     ...
+ * }
+ * }</pre>
+ * Then we may also define an annotation which associates this generator with
+ * an entity and supplies configuration parameters:
+ * <pre>{@code
+ * @IdGeneratorType(CustomSequenceGenerator.class)
+ * @Retention(RUNTIME) @Target({METHOD,FIELD})
+ * public @interface CustomSequence {
+ *     String name();
+ *     int startWith() default 1;
+ *     int incrementBy() default 50;
+ * }
+ * }</pre>
+ * and we may use it as follows:
+ * <pre>{@code
+ * @Id @CustomSequence(name = "mysequence", startWith = 0)
+ * private Integer id;
+ * }</pre>
+ * We did not use the JPA-defined {@link jakarta.persistence.GeneratedValue}
+ * here, since that API is designed around the use of stringly-typed names.
+ * The {@code @CustomSequence} annotation itself implies that {@code id} is
+ * a generated value.
+ * <p>
+ * For a more complete example, see the annotation {@link UuidGenerator} and
+ * the corresponding generator class {@link org.hibernate.id.uuid.UuidGenerator}.
+ * <p>
+ * A {@code @IdGeneratorType} annotation must have retention policy
+ * {@link RetentionPolicy#RUNTIME}.
  *
  * @since 6.0
  */
-@Target( value = ElementType.ANNOTATION_TYPE )
-@Retention( RetentionPolicy.RUNTIME )
+@Target(ANNOTATION_TYPE)
+@Retention(RUNTIME)
 public @interface IdGeneratorType {
 	/**
-	 * The {@link IdentifierGenerator} being configured
+	 * A class that implements {@link IdentifierGenerator} and has a
+	 * constructor with the signature:
+	 * <pre>{@code
+	 * public GeneratorType(AnnotationType config, Member idMember,
+	 *                      CustomIdGeneratorCreationContext creationContext)
+	 * }</pre>
+	 * where {@code GeneratorType} is the class that implements
+	 * {@code IdentifierGenerator}, and {@code AnnotationType} is the
+	 * annotation type to which this annotation was applied.
 	 */
 	Class<? extends IdentifierGenerator> value();
 }

@@ -130,7 +130,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	}
 
 	protected static int getPropertyIndex(EntityInitializer entityInitializer, String propertyName) {
-		return entityInitializer.getConcreteDescriptor().getPropertyIndex( propertyName );
+		return entityInitializer.getConcreteDescriptor().findAttributeMapping( propertyName ).getStateArrayPosition();
 	}
 
 	@Override

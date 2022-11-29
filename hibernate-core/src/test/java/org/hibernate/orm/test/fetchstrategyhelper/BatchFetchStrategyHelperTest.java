@@ -8,24 +8,24 @@ package org.hibernate.orm.test.fetchstrategyhelper;
 
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
-import org.junit.Test;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertSame;
 
@@ -175,7 +175,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
         OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
-		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
+		int index = entityPersister.getPropertyIndex( path );
 		return  entityPersister.getFetchMode( index );
 	}
 
@@ -183,7 +183,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
         OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
-		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
+		int index = entityPersister.getPropertyIndex( path );
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );
 	}
 

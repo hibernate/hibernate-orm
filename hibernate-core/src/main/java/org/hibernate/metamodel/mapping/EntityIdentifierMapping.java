@@ -19,12 +19,23 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @see jakarta.persistence.EmbeddedId
  */
 public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
+
 	String ROLE_LOCAL_NAME = "{id}";
 
 	@Override
 	default String getPartName() {
 		return ROLE_LOCAL_NAME;
 	}
+
+	/**
+	 * @see Nature
+	 */
+	Nature getNature();
+
+	/**
+	 * The name of the attribute defining the id, if one
+	 */
+	String getAttributeName();
 
 	/**
 	 * The strategy for distinguishing between detached and transient
@@ -89,4 +100,22 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	Object instantiate();
+
+	enum Nature {
+		/**
+		 * Single column id
+		 */
+		SIMPLE,
+
+		/**
+		 * @see jakarta.persistence.EmbeddedId
+		 */
+		COMPOSITE,
+
+		/**
+		 * Composite identifier defined with multiple {@link jakarta.persistence.Id}
+		 * mappings.  Often used in conjunction with an {@link jakarta.persistence.IdClass}
+		 */
+		VIRTUAL
+	}
 }

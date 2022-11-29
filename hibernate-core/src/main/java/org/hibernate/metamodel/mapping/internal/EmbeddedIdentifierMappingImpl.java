@@ -10,8 +10,8 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -51,6 +51,11 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COMPOSITE;
 	}
 
 	@Override

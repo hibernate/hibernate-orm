@@ -11,17 +11,14 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * @author Christian Beikov
@@ -44,6 +41,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				(EmbeddableValuedModelPart) delegate
 		);
 		this.delegate = delegate;
+	}
+
+	@Override
+	public Nature getNature() {
+		return delegate.getNature();
 	}
 
 	@Override

@@ -34,6 +34,11 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 	}
 
 	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
+	}
+
+	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return delegate.getUnsavedStrategy();
 	}

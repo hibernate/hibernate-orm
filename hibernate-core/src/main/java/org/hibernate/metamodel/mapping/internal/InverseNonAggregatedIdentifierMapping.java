@@ -93,6 +93,11 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	}
 
 	@Override
+	public Nature getNature() {
+		return Nature.VIRTUAL;
+	}
+
+	@Override
 	public EmbeddableMappingType getPartMappingType() {
 		return (EmbeddableMappingType) super.getPartMappingType();
 	}

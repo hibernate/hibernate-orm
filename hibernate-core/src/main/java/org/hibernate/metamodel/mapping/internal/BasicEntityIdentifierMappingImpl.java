@@ -133,6 +133,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
+	}
+
+	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return unsavedStrategy;
 	}

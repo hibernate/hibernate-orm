@@ -41,7 +41,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -62,9 +61,9 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
-import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
@@ -734,7 +733,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				final AssociationType associationType = (AssociationType) propertyType;
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
-					final int index = ( (UniqueKeyLoadable) concreteDescriptor ).getPropertyIndex( ukName );
+					final int index = concreteDescriptor.findAttributeMapping( ukName ).getStateArrayPosition();
 					final Type type = concreteDescriptor.getPropertyTypes()[index];
 
 					// polymorphism not really handled completely correctly,

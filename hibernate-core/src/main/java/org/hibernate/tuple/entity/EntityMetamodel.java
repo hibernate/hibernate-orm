@@ -66,7 +66,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class EntityMetamodel implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
 
-	private static final int NO_VERSION_INDX = -66;
+	public static final int NO_VERSION_INDX = -66;
 
 	private final SessionFactoryImplementor sessionFactory;
 

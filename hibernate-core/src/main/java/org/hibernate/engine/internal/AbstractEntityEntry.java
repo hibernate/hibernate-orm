@@ -28,8 +28,8 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -311,7 +311,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		else {
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final AttributeMapping attributeMapping = persister.findAttributeMapping( propertyName );
+			final int propertyIndex = attributeMapping.getStateArrayPosition();
 			return loadedState[propertyIndex];
 		}
 	}
@@ -323,7 +324,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			assert propertyName != null;
 			assert loadedState != null;
 
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final int propertyIndex = persister.findAttributeMapping( propertyName ).getStateArrayPosition();
 			loadedState[propertyIndex] = collection;
 		}
 	}

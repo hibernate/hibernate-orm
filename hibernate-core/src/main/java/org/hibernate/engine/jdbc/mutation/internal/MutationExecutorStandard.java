@@ -188,7 +188,6 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 	@Override
 	public void release() {
 		nonBatchedStatementGroup.release();
-		// todo (mutation) :implement
 	}
 
 	@Override

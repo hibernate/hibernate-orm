@@ -8,14 +8,9 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Supplier;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -60,25 +55,13 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 	private final PreparedStatementDetails identityInsertStatementDetails;
 
 	/**
-	 * The batched statements
-	 */
-	private final Batch batch;
-
-	/**
 	 * Any non-batched JDBC statements
 	 */
-	private final PreparedStatementGroup nonBatchedStatementGroup;
+	private final PreparedStatementGroup secondaryTablesStatementGroup;
 
 	private final JdbcValueBindingsImpl valueBindings;
 
-	private enum StatementLocation { IDENTITY, BATCHED, NON_BATCHED }
-	private final Map<String, StatementLocation> statementLocationMap = new HashMap<>();
-
-	public MutationExecutorPostInsert(
-			MutationOperationGroup mutationOperationGroup,
-			Supplier<BatchKey> batchKeySupplier,
-			int batchSize,
-			SharedSessionContractImplementor session) {
+	public MutationExecutorPostInsert(MutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
 		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
@@ -92,12 +75,8 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 				identityInsertOperation,
 				session
 		);
-		statementLocationMap.put( mutationTarget.getIdentifierTableName(), StatementLocation.IDENTITY );
 
-		final BatchKey batchKey = batchKeySupplier.get();
-
-		List<PreparableMutationOperation> batchedJdbcMutations = null;
-		List<PreparableMutationOperation> nonBatchedJdbcMutations = null;
+		List<PreparableMutationOperation> secondaryTableMutations = null;
 
 		final List<MutationOperation> operations = mutationOperationGroup.getOperations();
 		for ( int i = 0; i < operations.size(); i++ ) {
@@ -112,48 +91,17 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 			assert ! (operation instanceof SelfExecutingUpdateOperation );
 
 			final PreparableMutationOperation preparableMutationOperation = (PreparableMutationOperation) operation;
-			if ( preparableMutationOperation.canBeBatched( batchKey, batchSize ) ) {
-				if ( batchedJdbcMutations == null ) {
-					batchedJdbcMutations = new ArrayList<>();
-				}
-				batchedJdbcMutations.add( preparableMutationOperation );
-				statementLocationMap.put( operation.getTableDetails().getTableName(), StatementLocation.BATCHED );
+			if ( secondaryTableMutations == null ) {
+				secondaryTableMutations = new ArrayList<>();
 			}
-			else {
-				if ( nonBatchedJdbcMutations == null ) {
-					nonBatchedJdbcMutations = new ArrayList<>();
-				}
-				nonBatchedJdbcMutations.add( preparableMutationOperation );
-				statementLocationMap.put( operation.getTableDetails().getTableName(), StatementLocation.NON_BATCHED );
-			}
+			secondaryTableMutations.add( preparableMutationOperation );
 		}
 
-		// todo (mutation) : consider creating single PreparedStatementGroup for all
-		//		batched and non-batched statements.  we then need a way to know whether a
-		//		statement is batched or not.  `PreparedStatementDetails#isBatched`?
 
-		if ( batchedJdbcMutations == null || batchedJdbcMutations.isEmpty() ) {
-			this.batch = null;
-		}
-		else {
-			final List<PreparableMutationOperation> batchedMutationsRef = batchedJdbcMutations;
-			this.batch = session.getJdbcCoordinator().getBatch2(
-					batchKey,
-					batchSize,
-					() -> ModelMutationHelper.toPreparedStatementGroup(
-							MutationType.INSERT,
-							mutationTarget,
-							batchedMutationsRef,
-							session
-					)
-			);
-			assert batch != null;
-		}
-
-		this.nonBatchedStatementGroup = ModelMutationHelper.toPreparedStatementGroup(
+		this.secondaryTablesStatementGroup = ModelMutationHelper.toPreparedStatementGroup(
 				MutationType.INSERT,
 				mutationTarget,
-				nonBatchedJdbcMutations,
+				secondaryTableMutations,
 				session
 		);
 	}
@@ -174,27 +122,11 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 
 	@Override
 	public PreparedStatementDetails getPreparedStatementDetails(String tableName) {
-		final StatementLocation statementLocation = statementLocationMap.get( tableName );
-		if ( statementLocation == null ) {
-			return null;
-		}
-
-		if ( statementLocation == StatementLocation.IDENTITY ) {
-			assert mutationTarget.getIdentifierTableName().equals( tableName );
+		if ( mutationTarget.getIdentifierTableName().equals( tableName ) ) {
 			return identityInsertStatementDetails;
 		}
 
-		if ( statementLocation == StatementLocation.BATCHED ) {
-			assert batch != null;
-			return batch.getStatementGroup().getPreparedStatementDetails( tableName );
-		}
-
-		if ( statementLocation == StatementLocation.NON_BATCHED ) {
-			assert nonBatchedStatementGroup != null;
-			return nonBatchedStatementGroup.getPreparedStatementDetails( tableName );
-		}
-
-		return null;
+		return secondaryTablesStatementGroup.getPreparedStatementDetails( tableName );
 	}
 
 	@Override
@@ -215,19 +147,8 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 			);
 		}
 
-		if ( nonBatchedStatementGroup != null ) {
-			nonBatchedStatementGroup.forEachStatement( (tableName, statementDetails) -> executeWithId(
-					id,
-					tableName,
-					statementDetails,
-					inclusionChecker,
-					resultChecker,
-					session
-			) );
-		}
-
-		if ( batch != null ) {
-			batch.getStatementGroup().forEachStatement( (tableName, statementDetails) -> executeWithId(
+		if ( secondaryTablesStatementGroup != null ) {
+			secondaryTablesStatementGroup.forEachStatement( (tableName, statementDetails) -> executeWithId(
 					id,
 					tableName,
 					statementDetails,
@@ -301,7 +222,7 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 
 	@Override
 	public void release() {
-		nonBatchedStatementGroup.release();
+		secondaryTablesStatementGroup.release();
 	}
 
 	@Override

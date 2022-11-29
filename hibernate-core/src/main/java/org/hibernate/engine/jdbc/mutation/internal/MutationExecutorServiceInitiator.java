@@ -69,6 +69,6 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 	}
 
 	private MutationExecutorService createStandardService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		return new StandardMutationExecutorService( configurationValues, registry );
+		return new StandardMutationExecutorService( configurationValues );
 	}
 }

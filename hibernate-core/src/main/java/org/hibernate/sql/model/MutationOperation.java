@@ -77,7 +77,11 @@ public interface MutationOperation {
 	TableMapping getTableDetails();
 
 	/**
-	 * Find the JDBC parameter to be used for the specified column
+	 * Find the JDBC parameter to be used for the specified column.
+	 *
+	 * @return The descriptor, or null if none match.
+	 *
+	 * @see #getJdbcValueDescriptor
 	 */
 	JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage);
 

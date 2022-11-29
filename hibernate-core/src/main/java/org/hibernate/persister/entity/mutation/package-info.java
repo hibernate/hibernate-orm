@@ -6,12 +6,12 @@
  */
 
 /**
- * Package defining support for performing mutation SQL (INSERT, UPDATE,
- * DELETE) against an entity or collection
+ * Defines support for performing mutation operations originating
+ * from persistence-context events
  *
  * @author Steve Ebersole
  */
 @Incubating
-package org.hibernate.engine.jdbc.mutation;
+package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.Incubating;

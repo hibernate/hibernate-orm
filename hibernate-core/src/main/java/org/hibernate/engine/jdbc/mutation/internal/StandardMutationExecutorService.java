@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationTarget;
@@ -35,7 +34,7 @@ import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 public class StandardMutationExecutorService implements MutationExecutorService {
 	private final int globalBatchSize;
 
-	public StandardMutationExecutorService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public StandardMutationExecutorService(Map<String, Object> configurationValues) {
 		this( ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, 1 ) );
 	}
 
@@ -66,7 +65,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 			assert mutationTarget instanceof EntityMappingType;
 
 			if ( numberOfOperations > 1 ) {
-				return new MutationExecutorPostInsert( operationGroup, batchKeySupplier, batchSizeToUse, session );
+				return new MutationExecutorPostInsert( operationGroup, session );
 			}
 
 			return new MutationExecutorPostInsertSingleTable( operationGroup, session );

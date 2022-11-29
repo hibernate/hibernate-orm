@@ -51,12 +51,6 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 			Supplier<PreparedStatement> jdbcStatementCreator,
 			Expectation expectation,
 			JdbcServices jdbcServices) {
-
-		// todo (mutation) : have `parameterDescriptors` be passed in.
-		//		- these descriptors being only available relative solely
-		//		to a preparable operation, rather than more widely scoped to
-		//		the `MutationOperation`, causes problems for self-executing operations
-
 		this.mutatingTableDetails = tableMutation.getTableDetails();
 		this.sql = sql;
 		this.jdbcStatementCreator = jdbcStatementCreator;

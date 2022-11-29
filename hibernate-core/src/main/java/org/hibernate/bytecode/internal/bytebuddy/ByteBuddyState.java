@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
 import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
 import static net.bytebuddy.matcher.ElementMatchers.isVirtual;
@@ -26,6 +27,7 @@ import java.util.function.Function;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.ProxyConfiguration;

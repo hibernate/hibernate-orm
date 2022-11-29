@@ -6,6 +6,10 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.anyOf;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 import java.io.Serializable;
@@ -19,6 +23,15 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
+import org.hibernate.engine.spi.CompositeOwner;
+import org.hibernate.engine.spi.CompositeTracker;
+import org.hibernate.engine.spi.Managed;
+import org.hibernate.engine.spi.ManagedComposite;
+import org.hibernate.engine.spi.ManagedEntity;
+import org.hibernate.engine.spi.ManagedMappedSuperclass;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -33,6 +46,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
+import net.bytebuddy.implementation.DefaultMethodCall;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.pool.TypePool;
 
@@ -92,7 +106,25 @@ public class ByteBuddyProxyHelper implements Serializable {
 						.intercept( SuperMethodCall.INSTANCE )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
-						.intercept( helpers.getInterceptorFieldAccessor() );
+						.intercept( helpers.getInterceptorFieldAccessor() )
+				.ignoreAlso( isDeclaredBy( ManagedEntity.class ).and( named( "asManagedEntity" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedEntity" ) ) )
+				.ignoreAlso( isDeclaredBy( PersistentAttributeInterceptable.class ).and( named( "asPersistentAttributeInterceptable" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asPersistentAttributeInterceptable" ) ) )
+				.ignoreAlso( isDeclaredBy( SelfDirtinessTracker.class ).and( named( "asSelfDirtinessTracker" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asSelfDirtinessTracker" ) ) )
+				.ignoreAlso( isDeclaredBy( Managed.class ).and( named( "asManaged" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManaged" ) ) )
+				.ignoreAlso( isDeclaredBy( ManagedComposite.class ).and( named( "asManagedComposite" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedComposite" ) ) )
+				.ignoreAlso( isDeclaredBy( ManagedMappedSuperclass.class ).and( named( "asManagedMappedSuperclass" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedMappedSuperclass" ) ) )
+				.ignoreAlso( isDeclaredBy( CompositeOwner.class ).and( named( "asCompositeOwner" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asCompositeOwner" ) ) )
+				.ignoreAlso( isDeclaredBy( CompositeTracker.class ).and( named( "asCompositeTracker" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asCompositeTracker" ) ) )
+				.ignoreAlso( isDeclaredBy( HibernateProxy.class ).and( named( "asHibernateProxy" ) ) )
+				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asHibernateProxy" ) ) );
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {
@@ -114,7 +146,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 					serializableProxy.getPersistentClass(),
 					serializableProxy.getInterfaces()
 			);
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
+			final HibernateProxy proxy = asHibernateProxy( proxyClass.newInstance() );
 			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
 			return proxy;
 		}

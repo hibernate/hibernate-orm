@@ -294,7 +294,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						LOG.trace( "Entity proxy found in session cache" );
 					}
 
-					if ( LOG.isDebugEnabled() && ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
+					if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 						LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 					}
 
@@ -384,11 +384,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadType options,
 			final PersistenceContext persistenceContext,
 			final Object proxy) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Entity proxy found in session cache" );
-		}
+		LOG.trace( "Entity proxy found in session cache" );
 
-		LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+		LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -610,8 +608,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		//		persister/loader/initializer sensitive to this fact - possibly
 		//		passing LoadType along
 
-		if ( entity instanceof HibernateProxy ) {
-			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			entity = lazyInitializer.getImplementation();
 		}
 
 		final StatisticsImplementor statistics = event.getSession().getFactory().getStatistics();

@@ -161,6 +161,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
@@ -533,8 +534,9 @@ public class SessionImpl
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
 
-		if ( object instanceof HibernateProxy ) {
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation( this );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
 				return LockMode.NONE;
 			}
@@ -1051,8 +1053,9 @@ public class SessionImpl
 			event.setResult( null );
 			loadEvent = event;
 		}
-		if ( result instanceof HibernateProxy ) {
-			return ( (HibernateProxy) result ).getHibernateLazyInitializer().getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( result );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getImplementation();
 		}
 		return result;
 	}
@@ -1516,12 +1519,12 @@ public class SessionImpl
 	public Object getIdentifier(Object object) throws HibernateException {
 		checkOpen();
 		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.getSession() != this ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.getSession() != this ) {
 				throw new TransientObjectException( "The proxy was not associated with this session" );
 			}
-			return li.getInternalIdentifier();
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry( object );
@@ -1549,7 +1552,13 @@ public class SessionImpl
 	}
 
 	private Object getProxyIdentifier(Object proxy) {
-		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
+		}
+		else {
+			throw new HibernateException( "Argument was not an HibernateProxy, which is a requirement for this method" );
+		}
 	}
 
 	@Override
@@ -1562,23 +1571,23 @@ public class SessionImpl
 		}
 
 		try {
-			if ( object instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
+				if ( lazyInitializer.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
 					//the underlying instance will be "contained"
-					return li.getSession() == this;
+					return lazyInitializer.getSession() == this;
 				}
 				else {
 					//if it is initialized, see if the underlying
 					//instance is contained, since we need to
 					//account for the fact that it might have been
 					//evicted
-					object = li.getImplementation();
+					object = lazyInitializer.getImplementation();
 				}
 			}
 
@@ -1589,7 +1598,7 @@ public class SessionImpl
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
-				if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
+				if ( ! ( isHibernateProxy( object ) ) && persistenceContext.getEntry( object ) == null ) {
 					// check if it is even an entity -> if not throw an exception (per JPA)
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
@@ -1640,11 +1649,11 @@ public class SessionImpl
 				}
 			}
 
-			if ( object instanceof HibernateProxy ) {
+			final LazyInitializer li = HibernateProxy.extractLazyInitializer( object );
+			if ( li != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
@@ -1713,14 +1722,14 @@ public class SessionImpl
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
-			if ( initializer.isUninitialized() ) {
-				return initializer.getEntityName();
+			if ( lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getEntityName();
 			}
-			object = initializer.getImplementation();
+			object = lazyInitializer.getImplementation();
 		}
 		EntityEntry entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
@@ -1735,11 +1744,12 @@ public class SessionImpl
 	public String getEntityName(Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
 			if ( !persistenceContext.containsProxy( object ) ) {
 				throw new TransientObjectException( "proxy was not associated with the session" );
 			}
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
+			object = lazyInitializer.getImplementation();
 		}
 
 		EntityEntry entry = persistenceContext.getEntry( object );
@@ -1752,9 +1762,9 @@ public class SessionImpl
 	@Override @SuppressWarnings("unchecked")
 	public <T> T getReference(T object) {
 		checkOpen();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			return (T) getReference( initializer.getPersistentClass(), initializer.getIdentifier() );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getIdentifier() );
 		}
 		else {
 			EntityPersister persister = getEntityPersister( null, object );

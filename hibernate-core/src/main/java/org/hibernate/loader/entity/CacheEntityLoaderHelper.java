@@ -431,7 +431,7 @@ public class CacheEntityLoaderHelper {
 		if ( proxy != null ) {
 			// there is already a proxy for this impl
 			// only set the status to read-only if the proxy is read-only
-			isReadOnly = ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isReadOnly();
+			isReadOnly = HibernateProxy.extractLazyInitializer( proxy ).isReadOnly();
 		}
 		else {
 			isReadOnly = source.isDefaultReadOnly();

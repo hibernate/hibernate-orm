@@ -20,6 +20,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * Algorithms related to foreign key constraint transparency
  *
@@ -195,17 +197,17 @@ public final class ForeignKeys {
 				return false;
 			}
 
-			if ( object instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
 				// if its an uninitialized proxy it can't be transient
-				final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.getImplementation( session ) == null ) {
+				if ( lazyInitializer.getImplementation( session ) == null ) {
 					return false;
 					// ie. we never have to null out a reference to
 					// an uninitialized proxy
 				}
 				else {
 					//unwrap it
-					object = li.getImplementation( session );
+					object = lazyInitializer.getImplementation( session );
 				}
 			}
 
@@ -247,7 +249,7 @@ public final class ForeignKeys {
 	 */
 	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
+		if ( isHibernateProxy( entity ) ) {
 			return true;
 		}
 

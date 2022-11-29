@@ -64,17 +64,17 @@ public class DefaultPersistEventListener
 		final Object object = event.getObject();
 
 		final Object entity;
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
-				if ( li.getSession() == source ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				if ( lazyInitializer.getSession() == source ) {
 					return; //NOTE EARLY EXIT!
 				}
 				else {
 					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
 				}
 			}
-			entity = li.getImplementation();
+			entity = lazyInitializer.getImplementation();
 		}
 		else {
 			entity = object;

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -216,8 +217,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 
 		final boolean unwrapProxy = toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading;
-		if ( entityInstance instanceof HibernateProxy ) {
-			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+		if ( lazyInitializer != null ) {
+			lazyInitializer.setUnwrap( unwrapProxy );
 		}
 		isInitialized = true;
 	}

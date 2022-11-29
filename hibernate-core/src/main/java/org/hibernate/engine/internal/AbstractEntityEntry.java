@@ -34,6 +34,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
@@ -340,9 +341,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames();
 				}
 			}
-			else if ( entity instanceof HibernateProxy ) {
-				uninitializedProxy = ( (HibernateProxy) entity ).getHibernateLazyInitializer()
-						.isUninitialized();
+			else if ( isHibernateProxy( entity ) ) {
+				uninitializedProxy = HibernateProxy.extractLazyInitializer( entity ).isUninitialized();
 			}
 			// we never have to check an uninitialized proxy
 			return uninitializedProxy || !persister.hasCollections()

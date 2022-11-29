@@ -31,6 +31,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Defines the default listener used by Hibernate for handling save-update
@@ -56,8 +57,9 @@ public class DefaultSaveOrUpdateEventListener
 		if ( requestedId != null ) {
 			//assign the requested id to the proxy, *before*
 			//reassociating the proxy
-			if ( object instanceof HibernateProxy ) {
-				( (HibernateProxy) object ).getHibernateLazyInitializer().setIdentifier( requestedId );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
+				lazyInitializer.setIdentifier( requestedId );
 			}
 		}
 

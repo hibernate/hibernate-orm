@@ -7355,7 +7355,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * and <code>&ge;</code> operators.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) < ('Steve', 'Ebersole') ...".
+	 * "... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...".
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax with relational comparison operators; false otherwise.

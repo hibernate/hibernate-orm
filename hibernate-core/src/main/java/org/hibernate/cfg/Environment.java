@@ -48,6 +48,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * <li>any instance of {@link Properties} passed to {@link Configuration#addProperties}.
  * </ul>
  * <table>
+ * <caption>Configuration properties</caption>
  * <tr><td><b>Property</b></td><td><b>Interpretation</b></td></tr>
  * <tr>
  *   <td>{@value #DIALECT}</td>
@@ -74,6 +75,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
+ * <tr>
  *   <td>{@value #POOL_SIZE}</td>
  *   <td>the maximum size of the connection pool (only when using
  *     {@link java.sql.DriverManager})

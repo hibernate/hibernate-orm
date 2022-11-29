@@ -172,7 +172,7 @@ public enum SpatialFunction {
 	/**
 	 * The filter function
 	 * <p>
-	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&&" operator of PostGIS.
+	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&amp;&amp;" operator of PostGIS.
 	 */
 	filter( "filter" ),
 

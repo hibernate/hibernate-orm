@@ -61,7 +61,7 @@ public interface SpatialRelation {
 	/**
 	 * The bounding box of the first geometry intersects the bounding box of the second
 	 * <p>
-	 * <p>This relation is not defined in OGC 99-049, it corresponds to the Postgis '&&' operator.</p>
+	 * <p>This relation is not defined in OGC 99-049, it corresponds to the Postgis '&amp;&amp;' operator.</p>
 	 */
 	public static int FILTER = 8;
 

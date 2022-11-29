@@ -596,7 +596,7 @@ public class PostgreSQLDialect extends Dialect {
 	 *     stype = uuid,
 	 *     combinefunc = min,
 	 *     parallel = safe,
-	 *     sortop = operator (<)
+	 *     sortop = operator (&lt;)
 	 *     );
 	 *
 	 * create or replace function max(uuid, uuid)
@@ -614,7 +614,7 @@ public class PostgreSQLDialect extends Dialect {
 	 *     stype = uuid,
 	 *     combinefunc = max,
 	 *     parallel = safe,
-	 *     sortop = operator (>)
+	 *     sortop = operator (&gt;)
 	 *     );
 	 * </code>
 	 */

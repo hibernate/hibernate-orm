@@ -30,7 +30,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
  * example #3 - insert simple entity (Person)
  * 		(1) MutationOperation(INSERT, person)
  *
- * example #4 - insert entity (Person) w/ secondary *non-optional* table & IDENTITY id column
+ * example #4 - insert entity (Person) w/ secondary *non-optional* table &amp; IDENTITY id column
  * 		(1) MutationOperation(INSERT, person)
  * 		(2) MutationOperation(INSERT, person_supp)
  *

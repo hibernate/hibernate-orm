@@ -27,10 +27,10 @@ public interface SelectableConsumer {
 	/**
 	 * Simple form of visitation over a number of columns by name, using
 	 * a separate {@link SelectableMappings} as a base for additional details.
-	 * <p/>
+	 * <p>
 	 * Intended for use in visiting table keys, where we know JdbcMappings, etc.
 	 * from the identifier.
-	 * <p/>
+	 * <p>
 	 * The expectation here is for the following details to be available:<ul>
 	 *     <li>{@link SelectableMapping#getContainingTableExpression()}</li>
 	 *     <li>{@link SelectableMapping#getSelectionExpression()} (the column name)</li>

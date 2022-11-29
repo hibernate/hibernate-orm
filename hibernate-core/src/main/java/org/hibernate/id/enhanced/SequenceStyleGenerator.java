@@ -45,8 +45,8 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
  * <p>
- * General configuration parameters:
  * <table>
+ * <caption>General configuration parameters</caption>
  * 	 <tr>
  *     <td><b>NAME</b></td>
  *     <td><b>DEFAULT</b></td>
@@ -81,6 +81,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * <p>
  * Configuration parameters used specifically when the underlying structure is a table:
  * <table>
+ * <caption>Table configuration parameters</caption>
  * 	 <tr>
  *     <td><b>NAME</b></td>
  *     <td><b>DEFAULT</b></td>

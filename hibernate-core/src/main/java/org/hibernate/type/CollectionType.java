@@ -91,8 +91,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		while ( elems.hasNext() ) {
 			Object element = elems.next();
 			// worrying about proxies is perhaps a little bit of overkill here...
-			if ( element instanceof HibernateProxy ) {
-				LazyInitializer li = ( (HibernateProxy) element ).getHibernateLazyInitializer();
+			final LazyInitializer li = HibernateProxy.extractLazyInitializer( element );
+			if ( li != null ) {
 				if ( !li.isUninitialized() ) {
 					element = li.getImplementation();
 				}

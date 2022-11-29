@@ -49,9 +49,9 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
-		if ( object instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			final Object id = li.getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
@@ -59,18 +59,18 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EntityPersister persister = source.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
-					.getEntityDescriptor( li.getEntityName() );
+					.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
-			if ( !li.isUninitialized() ) {
+			if ( !lazyInitializer.isUninitialized() ) {
 				final Object entity = persistenceContext.removeEntity( key );
 				if ( entity != null ) {
 					EntityEntry e = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, e.getPersister(), event.getSession() );
 				}
 			}
-			li.unsetSession();
+			lazyInitializer.unsetSession();
 		}
 		else {
 			EntityEntry e = persistenceContext.getEntry( object );

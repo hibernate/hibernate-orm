@@ -20,6 +20,9 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}
  * mapping that contains an entity association where the {@code @IdClass} stores the primary key of the
@@ -130,8 +133,8 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy proxy = (HibernateProxy) obj;
+			if ( isHibernateProxy( obj ) ) {
+				final HibernateProxy proxy = asHibernateProxy( obj );
 				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getInternalIdentifier() );
 			}
 			else {

@@ -31,6 +31,9 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Steve Ebersole
  */
@@ -210,8 +213,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			return;
 		}
 
-		if ( result instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) result;
+		if ( isHibernateProxy( result ) ) {
+			final HibernateProxy hibernateProxy = asHibernateProxy( result );
 			final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
 			if ( initializer.isUninitialized() ) {
 				initializer.initialize();

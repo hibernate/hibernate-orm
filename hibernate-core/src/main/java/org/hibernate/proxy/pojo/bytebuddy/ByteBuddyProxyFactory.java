@@ -13,6 +13,7 @@ import java.security.PrivilegedAction;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -105,7 +106,12 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			public HibernateProxy run() {
 
 				try {
-					return (HibernateProxy) proxyClass.getConstructor().newInstance();
+					PrimeAmongSecondarySupertypes instance = (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
+					final HibernateProxy hibernateProxy = instance.asHibernateProxy();
+					if ( hibernateProxy == null ) {
+						throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
+					}
+					return hibernateProxy;
 				}
 				catch (NoSuchMethodException e) {
 					String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );

@@ -841,10 +841,10 @@ public class ActionQueue {
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
-		if ( rescuedEntity instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) rescuedEntity ).getHibernateLazyInitializer();
-			if ( !initializer.isUninitialized() ) {
-				rescuedEntity = initializer.getImplementation( session );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( rescuedEntity );
+		if ( lazyInitializer != null ) {
+			if ( !lazyInitializer.isUninitialized() ) {
+				rescuedEntity = lazyInitializer.getImplementation( session );
 			}
 		}
 		if ( deletions != null ) {

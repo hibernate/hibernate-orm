@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -387,8 +388,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( targetObject == null ) {
 			return null;
 		}
-		if ( refersToPrimaryKey && targetObject instanceof HibernateProxy ) {
-			return ( (HibernateProxy) targetObject ).getHibernateLazyInitializer().getIdentifier();
+		if ( refersToPrimaryKey ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
+			if ( lazyInitializer != null ) {
+				return lazyInitializer.getIdentifier();
+			}
 		}
 		final ModelPart modelPart;
 		if ( nature == Nature.KEY ) {

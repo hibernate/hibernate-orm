@@ -129,6 +129,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 
 /**
  * Concrete implementation of the {@code SessionFactory} interface. Has the following
@@ -687,8 +690,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( object );
+		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
 			if ( initializer.isUninitialized() ) {
@@ -1060,8 +1063,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		Class<?> clazz;
-		if (bindValue instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) bindValue;
+		if ( isHibernateProxy( bindValue ) ) {
+			HibernateProxy proxy = asHibernateProxy( bindValue );
 			LazyInitializer li = proxy.getHibernateLazyInitializer();
 			clazz = li.getPersistentClass();
 		}

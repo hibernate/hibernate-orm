@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 import org.jboss.logging.Logger;
 
@@ -69,8 +70,9 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			throw new IllegalArgumentException( "Passed entity cannot be null" );
 		}
 
-		if ( entity instanceof HibernateProxy ) {
-			return ((HibernateProxy) entity).getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else if ( isManagedEntity( entity ) ) {
 			EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();

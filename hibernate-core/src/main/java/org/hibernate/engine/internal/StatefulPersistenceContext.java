@@ -68,8 +68,10 @@ import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
@@ -225,7 +227,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( proxiesByKey != null ) {
 			proxiesByKey.forEach( (k,o) -> {
 				if ( o != null) {
-					((HibernateProxy) o).getHibernateLazyInitializer().unsetSession();
+					HibernateProxy.extractLazyInitializer( o ).unsetSession();
 				}
 			} );
 		}
@@ -596,8 +598,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( ! Hibernate.isInitialized( value ) ) {
 
 			// could be a proxy....
-			if ( value instanceof HibernateProxy ) {
-				final HibernateProxy proxy = (HibernateProxy) value;
+			if ( isHibernateProxy( value ) ) {
+				final HibernateProxy proxy = asHibernateProxy( value );
 				final LazyInitializer li = proxy.getHibernateLazyInitializer();
 				reassociateProxy( li, proxy );
 				return true;
@@ -620,9 +622,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void reassociateProxy(Object value, Object id) throws MappingException {
-		if ( value instanceof HibernateProxy ) {
+		if ( isHibernateProxy( value ) ) {
 			LOG.debugf( "Setting proxy identifier: %s", id );
-			final HibernateProxy proxy = (HibernateProxy) value;
+			final HibernateProxy proxy = asHibernateProxy( value );
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
 			li.setIdentifier( id );
 			reassociateProxy( li, proxy );
@@ -650,8 +652,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxy(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof HibernateProxy ) {
-			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
+		if ( isHibernateProxy( maybeProxy ) ) {
+			final HibernateProxy proxy = asHibernateProxy( maybeProxy );
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
 			if ( li.isUninitialized() ) {
 				throw new PersistentObjectException(
@@ -668,8 +670,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object unproxyAndReassociate(Object maybeProxy) throws HibernateException {
-		if ( maybeProxy instanceof HibernateProxy ) {
-			final HibernateProxy proxy = (HibernateProxy) maybeProxy;
+		if ( isHibernateProxy( maybeProxy ) ) {
+			final HibernateProxy proxy = asHibernateProxy( maybeProxy );
 			final LazyInitializer li = proxy.getHibernateLazyInitializer();
 			reassociateProxy( li, proxy );
 			//initialize + unwrap the object and return it
@@ -718,7 +720,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// Similarly, if the original HibernateProxy is initialized, there
 			// is again no point in creating a proxy.  Just return the impl
-			final HibernateProxy originalHibernateProxy = (HibernateProxy) proxy;
+			final HibernateProxy originalHibernateProxy = asHibernateProxy( proxy );
 			if ( !originalHibernateProxy.getHibernateLazyInitializer().isUninitialized() ) {
 				final Object impl = originalHibernateProxy.getHibernateLazyInitializer().getImplementation();
 				// can we return it?
@@ -730,7 +732,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 
 			// Otherwise, create the narrowed proxy
-			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxy( key.getIdentifier(), session );
+			final HibernateProxy narrowedProxy = asHibernateProxy( persister.createProxy( key.getIdentifier(), session ) );
 
 			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
 			final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();
@@ -740,7 +742,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		else {
 			if ( object != null ) {
-				final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+				final LazyInitializer li = asHibernateProxy( proxy ).getHibernateLazyInitializer();
 				li.setImplementation( object );
 			}
 			return proxy;
@@ -1312,8 +1314,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( mergeMap != null ) {
 			for ( Object o : mergeMap.entrySet() ) {
 				final Entry<?,?> mergeMapEntry = (Entry<?,?>) o;
-				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
-					final HibernateProxy proxy = (HibernateProxy) mergeMapEntry.getKey();
+				if ( isHibernateProxy( mergeMapEntry.getKey() ) ) {
+					final HibernateProxy proxy = asHibernateProxy( mergeMapEntry.getKey() );
 					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
 						boolean found = isFoundInParent(
 								propertyName,
@@ -1476,8 +1478,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			throw new AssertionFailure( "object must be non-null." );
 		}
 		boolean isReadOnly;
-		if ( entityOrProxy instanceof HibernateProxy ) {
-			isReadOnly = ( (HibernateProxy) entityOrProxy ).getHibernateLazyInitializer().isReadOnly();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityOrProxy );
+		if ( lazyInitializer != null ) {
+			isReadOnly = lazyInitializer.isReadOnly();
 		}
 		else {
 			final EntityEntry ee =  getEntry( entityOrProxy );
@@ -1497,8 +1500,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( isReadOnly( object ) == readOnly ) {
 			return;
 		}
-		if ( object instanceof HibernateProxy ) {
-			final HibernateProxy proxy = (HibernateProxy) object;
+		if ( isHibernateProxy( object ) ) {
+			final HibernateProxy proxy = asHibernateProxy( object );
 			setProxyReadOnly( proxy, readOnly );
 			if ( Hibernate.isInitialized( proxy ) ) {
 				setEntityReadOnly(
@@ -1512,8 +1515,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			// PersistenceContext.proxyFor( entity ) returns entity if there is no proxy for that entity
 			// so need to check the return value to be sure it is really a proxy
 			final Object maybeProxy = getSession().getPersistenceContextInternal().proxyFor( object );
-			if ( maybeProxy instanceof HibernateProxy ) {
-				setProxyReadOnly( (HibernateProxy) maybeProxy, readOnly );
+			if ( isHibernateProxy( maybeProxy ) ) {
+				setProxyReadOnly( asHibernateProxy( maybeProxy ), readOnly );
 			}
 		}
 	}
@@ -1684,7 +1687,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 
 			int count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			final boolean traceEnabled = LOG.isTraceEnabled();
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
 			rtn.entitiesByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
@@ -1693,7 +1697,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			if ( count != 0 ) {
@@ -1704,26 +1708,27 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] proxiesByKey entries" );
 			}
 			for ( int i = 0; i < count; i++ ) {
 				final EntityKey ek = EntityKey.deserialize( ois, sfi );
 				final Object proxy = ois.readObject();
-				if ( proxy instanceof HibernateProxy ) {
-					( (HibernateProxy) proxy ).getHibernateLazyInitializer().setSession( session );
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxy );
+				if ( lazyInitializer != null ) {
+					lazyInitializer.setSession( session );
 					rtn.getOrInitializeProxiesByKey().put( ek, proxy );
 				}
 				else {
 					// otherwise, the proxy was pruned during the serialization process
-					if ( LOG.isTraceEnabled() ) {
+					if ( traceEnabled ) {
 						LOG.trace( "Encountered pruned proxy" );
 					}
 				}
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
 			rtn.entitySnapshotsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
@@ -1734,7 +1739,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.entityEntryContext = EntityEntryContext.deserialize( ois, rtn );
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
 			rtn.collectionsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
@@ -1746,7 +1751,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
 			for ( int i = 0; i < count; i++ ) {
@@ -1757,7 +1762,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
 			if ( count != 0 ) {
@@ -1768,7 +1773,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
 			}
 			rtn.nullifiableEntityKeys = new HashSet<>();

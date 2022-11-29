@@ -20,6 +20,9 @@ import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * Base class for all Envers event listeners
  *
@@ -92,8 +95,8 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		String toEntityName;
 		Object id;
 
-		if ( value instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) value;
+		if ( isHibernateProxy( value ) ) {
+			final HibernateProxy hibernateProxy = asHibernateProxy( value );
 			id = hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
 			// We've got to initialize the object from the proxy to later read its state.
 			value = EntityTools.getTargetFromProxy( session.getFactory(), hibernateProxy );

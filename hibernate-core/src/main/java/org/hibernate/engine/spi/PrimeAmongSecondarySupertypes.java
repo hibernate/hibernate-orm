@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.engine.internal.ManagedTypeHelper;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * For a full explanation of the purpose of this interface
@@ -50,6 +51,10 @@ public interface PrimeAmongSecondarySupertypes {
 	}
 
 	default CompositeTracker asCompositeTracker() {
+		return null;
+	}
+
+	default HibernateProxy asHibernateProxy() {
 		return null;
 	}
 

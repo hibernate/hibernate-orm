@@ -15,6 +15,9 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * An implementation of an identifier mapper for a single basic attribute property.
  *
@@ -77,8 +80,8 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return null;
 		}
 
-		if ( data instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) data;
+		if ( isHibernateProxy( data ) ) {
+			final HibernateProxy hibernateProxy = asHibernateProxy( data );
 			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
@@ -99,8 +102,8 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) obj;
+			if ( isHibernateProxy( obj ) ) {
+				final HibernateProxy hibernateProxy = asHibernateProxy( obj );
 				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier() );
 			}
 			else {

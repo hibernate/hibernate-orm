@@ -41,7 +41,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 					// output: [top1]
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					MiddleEntity middle1 = new MiddleEntity();
 
@@ -96,7 +96,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 					clearBatches();
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					MiddleEntity middle1 = new MiddleEntity();
 

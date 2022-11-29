@@ -24,7 +24,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -320,8 +324,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		final Object id;
-		if ( x instanceof HibernateProxy ) {
-			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( x );
+		if ( lazyInitializer != null ) {
+			id = lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			final Class<?> mappedClass = persister.getMappedClass();
@@ -349,9 +354,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		final Class<?> mappedClass = persister.getMappedClass();
 		Object xid;
-		if ( x instanceof HibernateProxy ) {
-			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
-					.getInternalIdentifier();
+		final LazyInitializer lazyInitializerX = HibernateProxy.extractLazyInitializer( x );
+		if ( lazyInitializerX != null ) {
+			xid = lazyInitializerX.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
@@ -364,9 +369,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		Object yid;
-		if ( y instanceof HibernateProxy ) {
-			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer()
-					.getInternalIdentifier();
+		final LazyInitializer lazyInitializerY = HibernateProxy.extractLazyInitializer( y );
+		if ( lazyInitializerY != null ) {
+			yid = lazyInitializerY.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
@@ -505,8 +510,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		if ( persister.hasIdentifierProperty() ) {
 			final Object id;
-			if ( value instanceof HibernateProxy ) {
-				HibernateProxy proxy = (HibernateProxy) value;
+			if ( isHibernateProxy( value ) ) {
+				HibernateProxy proxy = asHibernateProxy( value );
 				id = proxy.getHibernateLazyInitializer().getInternalIdentifier();
 			}
 			else {
@@ -652,9 +657,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				isNullable()
 		);
 
-		if ( proxyOrEntity instanceof HibernateProxy ) {
-			( (HibernateProxy) proxyOrEntity ).getHibernateLazyInitializer()
-					.setUnwrap( isProxyUnwrapEnabled );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxyOrEntity );
+		if ( lazyInitializer != null ) {
+			lazyInitializer.setUnwrap( isProxyUnwrapEnabled );
 		}
 
 		return proxyOrEntity;

@@ -15,6 +15,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
@@ -31,8 +34,8 @@ public abstract class EntityTools {
 			return null;
 		}
 
-		if ( obj instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) obj;
+		if ( isHibernateProxy( obj ) ) {
+			final HibernateProxy hibernateProxy = asHibernateProxy( obj );
 			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
 		}
 

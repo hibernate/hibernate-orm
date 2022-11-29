@@ -328,7 +328,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						if ( LOG.isTraceEnabled() ) {
 							LOG.trace( "Entity proxy found in session cache" );
 						}
-						if ( LOG.isDebugEnabled() && ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
+						if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
@@ -387,8 +387,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		PersistenceContext persistenceContext = getPersistenceContext();
 		if ( association instanceof HibernateProxy ) {
-			LazyInitializer initializer =
-					((HibernateProxy) association).getHibernateLazyInitializer();
+			final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( association );
 			if ( initializer.isUninitialized() ) {
 				String entityName = initializer.getEntityName();
 				Object id = initializer.getIdentifier();
@@ -479,8 +478,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			object = lazyInitializer.getImplementation();
 		}
 		return guessEntityName( object );
 	}

@@ -103,14 +103,14 @@ public class DefaultMergeEventListener
 		// NOTE : `original` is the value being merged
 		if ( original != null ) {
 			final EventSource source = event.getSession();
-			if ( original instanceof HibernateProxy ) {
-				LazyInitializer li = ( (HibernateProxy) original ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( original );
+			if ( lazyInitializer != null ) {
+				if ( lazyInitializer.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
-					event.setResult( source.load( li.getEntityName(), li.getInternalIdentifier() ) );
+					event.setResult( source.load( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
 				}
 				else {
-					doMerge( event, copiedAlready, li.getImplementation() );
+					doMerge( event, copiedAlready, lazyInitializer.getImplementation() );
 				}
 			}
 			else if ( isPersistentAttributeInterceptable( original ) ) {

@@ -24,6 +24,7 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -196,7 +197,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		if ( compositeInstance != NULL_MARKER ) {
 			notifyResolutionListeners( compositeInstance );
 
-			if ( compositeInstance instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+			if ( lazyInitializer != null ) {
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
@@ -215,7 +217,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 							.getInstantiator()
 							.instantiate( this, sessionFactory);
 					stateInjected = true;
-					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+					lazyInitializer.setImplementation( target );
 				}
 			}
 			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {

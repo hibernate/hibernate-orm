@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -168,9 +169,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 						);
 					}
 
-					if ( entityInstance instanceof HibernateProxy ) {
-						( (HibernateProxy) entityInstance ).getHibernateLazyInitializer()
-								.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
+					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+					if ( lazyInitializer != null ) {
+						lazyInitializer.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
 					}
 				}
 			}

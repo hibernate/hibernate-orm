@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -298,11 +296,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// existing proxy associated with the PC - and if so, use it
 			final Object proxy = persistenceContext.getProxy( keyToLoad );
 			if ( proxy != null ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Entity proxy found in session cache" );
-				}
-				if ( LOG.isDebugEnabled()
-						&& ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
+				LOG.trace( "Entity proxy found in session cache" );
+				if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 				}
 				return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
@@ -378,7 +373,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
-		final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+		LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -601,8 +596,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		//		persister/loader/initializer sensitive to this fact - possibly
 		//		passing LoadType along
 
-		if ( entity instanceof HibernateProxy ) {
-			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			entity = lazyInitializer.getImplementation();
 		}
 
 		final StatisticsImplementor statistics = event.getSession().getFactory().getStatistics();

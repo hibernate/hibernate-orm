@@ -200,8 +200,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 			if ( loaded != null ) {
 				final EntityEntry entry;
-				if ( loaded instanceof HibernateProxy ) {
-					LazyInitializer lazyInitializer = ( (HibernateProxy) loaded ).getHibernateLazyInitializer();
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
+				if ( lazyInitializer != null ) {
 					entry = persistenceContext.getEntry( lazyInitializer.getImplementation() );
 				}
 				else {

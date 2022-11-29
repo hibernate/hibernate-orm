@@ -146,10 +146,9 @@ public class StandardIdentifierGeneratorFactory
 					AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
 					"supply a org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration Java service"
 			);
-			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider = serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
-					IdentifierGeneratorStrategyProvider.class,
-					providerSetting
-			);
+			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
+					serviceRegistry.getService( StrategySelector.class )
+							.resolveStrategy( IdentifierGeneratorStrategyProvider.class, providerSetting );
 			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
 				register( entry.getKey(), (Class) entry.getValue() );
 			}
@@ -238,20 +237,21 @@ public class StandardIdentifierGeneratorFactory
 		if ( "hilo".equals( strategy ) ) {
 			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
-		String resolvedStrategy = "native".equals( strategy )
+		final String resolvedStrategy = "native".equals( strategy )
 				? getDialect().getNativeIdentifierGeneratorStrategy()
 				: strategy;
 
-		Class generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
-		try {
-			if ( generatorClass == null ) {
-				final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-				generatorClass = cls.classForName( resolvedStrategy );
+		Class<? extends IdentifierGenerator> generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
+		if ( generatorClass == null ) {
+			try {
+				return serviceRegistry.getService( ClassLoaderService.class ).classForName( resolvedStrategy );
+			}
+			catch ( ClassLoadingException e ) {
+				throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 			}
 		}
-		catch ( ClassLoadingException e ) {
-			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
+		else {
+			return generatorClass;
 		}
-		return generatorClass;
 	}
 }

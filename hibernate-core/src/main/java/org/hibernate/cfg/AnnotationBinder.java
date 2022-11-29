@@ -481,7 +481,10 @@ public final class AnnotationBinder {
 		else if ( generatorAnnotation instanceof GenericGenerator ) {
 			final GenericGenerator genericGenerator = (GenericGenerator) generatorAnnotation;
 			definitionBuilder.setName( genericGenerator.name() );
-			definitionBuilder.setStrategy( genericGenerator.strategy() );
+			final String strategy = genericGenerator.type().equals(IdentifierGenerator.class)
+					? genericGenerator.strategy()
+					: genericGenerator.type().getName();
+			definitionBuilder.setStrategy(strategy);
 			for ( Parameter parameter : genericGenerator.parameters() ) {
 				definitionBuilder.addParam( parameter.name(), parameter.value() );
 			}

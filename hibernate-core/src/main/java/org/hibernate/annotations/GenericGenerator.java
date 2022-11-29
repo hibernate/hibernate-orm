@@ -76,6 +76,8 @@ public @interface GenericGenerator {
 	/**
 	 * The type of identifier generator, a class implementing
 	 * {@link org.hibernate.id.IdentifierGenerator}.
+	 *
+	 * @since 6.2
 	 */
 	Class<? extends IdentifierGenerator> type() default IdentifierGenerator.class;
 	/**
@@ -84,7 +86,10 @@ public @interface GenericGenerator {
 	 * <li>a built-in Hibernate id generator, or
 	 * <li>a custom class implementing {@link org.hibernate.id.IdentifierGenerator}.
 	 * </ul>
+	 *
+	 * @deprecated use {@link #type()} for typesafety
 	 */
+	@Deprecated(since="6.2")
 	String strategy() default "native";
 	/**
 	 * Parameters to be passed to {@link org.hibernate.id.IdentifierGenerator#configure}

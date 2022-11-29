@@ -224,8 +224,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return null;
 	}
 
-	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder, EnhancerImpl.EnhancementStatus es) {
-		builder = es.applySuperInterfaceOptimisations(builder);
+	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
 		boolean compositeOwner = false;
 
 		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer
@@ -295,7 +294,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
-			builder = applyExtended( builder, es );
+			builder = applyExtended( builder );
 		}
 
 		return builder;
@@ -344,7 +343,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 	}
 
-	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder, EnhancerImpl.EnhancementStatus es) {
+	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder) {
 		AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper enhancer = new FieldAccessEnhancer( managedCtClass, enhancementContext, classPool );
 		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, enhancer ) );
 	}

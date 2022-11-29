@@ -7642,33 +7642,41 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( tableInsert.getMutatingTable().getTableName() );
 		registerAffectedTable( tableInsert.getMutatingTable().getTableName() );
 
-		sqlBuffer.append( " (" );
-
-		tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-
-			if ( columnPosition < tableInsert.getNumberOfValueBindings() - 1 ) {
-				sqlBuffer.append( ", " );
-			}
-		} );
-
-		getCurrentClauseStack().push( Clause.VALUES );
-		try {
-			sqlBuffer.append( ") values (" );
-
+		sqlBuffer.append( ' ' );
+		if ( tableInsert.getNumberOfValueBindings() == 0 ) {
+			sqlBuffer.append( dialect.getNoColumnsInsertString() );
+		}
+		else {
 			tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-				columnValueBinding.getValueExpression().accept( this );
-
-				if ( columnPosition < tableInsert.getNumberOfValueBindings() - 1 ) {
-					sqlBuffer.append( ", " );
+				if ( columnPosition == 0 ) {
+					sqlBuffer.append( '(' );
 				}
+				else {
+					sqlBuffer.append( ',' );
+				}
+				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 			} );
-		}
-		finally {
-			getCurrentClauseStack().pop();
-		}
 
-		sqlBuffer.append( ")" );
+			getCurrentClauseStack().push( Clause.VALUES );
+			try {
+				sqlBuffer.append( ") values " );
+
+				tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+					if ( columnPosition == 0 ) {
+						sqlBuffer.append( '(' );
+					}
+					else {
+						sqlBuffer.append( ',' );
+					}
+					columnValueBinding.getValueExpression().accept( this );
+				} );
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+
+			sqlBuffer.append( ")" );
+		}
 	}
 
 	@Override
@@ -7692,15 +7700,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			getCurrentClauseStack().push( Clause.SET );
 			try {
-				sqlBuffer.append( " set " );
-				tableUpdate.forEachValueBinding( (position, columnValueBinding) -> {
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( "=" );
-					columnValueBinding.getValueExpression().accept( this );
-
-					if ( position < tableUpdate.getNumberOfValueBindings() - 1 ) {
-						sqlBuffer.append( ", " );
+				sqlBuffer.append( " set" );
+				tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+					if ( columnPosition == 0 ) {
+						sqlBuffer.append( ' ' );
 					}
+					else {
+						sqlBuffer.append( ',' );
+					}
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					sqlBuffer.append( '=' );
+					columnValueBinding.getValueExpression().accept( this );
 				} );
 			}
 			finally {
@@ -7709,20 +7719,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			getCurrentClauseStack().push( Clause.WHERE );
 			try {
-				sqlBuffer.append( " where " );
+				sqlBuffer.append( " where" );
 				tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( "=" );
-					columnValueBinding.getValueExpression().accept( this );
-
-					if ( position < tableUpdate.getNumberOfKeyBindings() - 1 ) {
+					if ( position == 0 ) {
+						sqlBuffer.append( ' ' );
+					}
+					else {
 						sqlBuffer.append( " and " );
 					}
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					sqlBuffer.append( '=' );
+					columnValueBinding.getValueExpression().accept( this );
 				} );
 
 				if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
-					sqlBuffer.append( " and " );
 					tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
+						sqlBuffer.append( " and " );
 						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 						if ( columnValueBinding.getValueExpression() == null ) {
 							sqlBuffer.append( " is null" );
@@ -7730,10 +7742,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						else {
 							sqlBuffer.append( "=" );
 							columnValueBinding.getValueExpression().accept( this );
-						}
-
-						if ( position < tableUpdate.getNumberOfOptimisticLockBindings() - 1 ) {
-							sqlBuffer.append( " and " );
 						}
 					} );
 				}

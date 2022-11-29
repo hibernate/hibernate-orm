@@ -65,8 +65,8 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		if ( jdbcMapping.getJdbcType().isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindings == null ) {
 				lobValueBindings = new ArrayList<>();
-				lobValueBindings.add( valueBinding );
 			}
+			lobValueBindings.add( valueBinding );
 		}
 		else {
 			valueBindings.add( valueBinding );

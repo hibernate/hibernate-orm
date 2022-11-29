@@ -66,8 +66,8 @@ public abstract class AbstractTableInsertBuilder
 		if ( jdbcMapping.getJdbcType().isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindingList == null ) {
 				lobValueBindingList = new ArrayList<>();
-				lobValueBindingList.add( valueBinding );
 			}
+			lobValueBindingList.add( valueBinding );
 		}
 		else {
 			valueBindingList.add( valueBinding );

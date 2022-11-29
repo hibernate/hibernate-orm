@@ -36,6 +36,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -346,6 +347,7 @@ public class BasicAttributeMapping
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		if ( fetchTiming == FetchTiming.DELAYED
+				&& !( fetchParent instanceof EmbeddableResultGraphNode )
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			valuesArrayPosition = -1;
 		}

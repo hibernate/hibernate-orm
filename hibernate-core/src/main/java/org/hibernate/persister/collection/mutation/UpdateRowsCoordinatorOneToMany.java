@@ -41,9 +41,6 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 
 	@Override
 	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		// todo (mutation) : an alternative is to allow "filters" for the delete and insert coordinators
-		//		to limit the rows to delete/insert based on `PersistentCollection#needsUpdating`
-
 		if ( rowMutationOperations.hasDeleteRow() ) {
 			deleteRows( key, collection, session );
 		}

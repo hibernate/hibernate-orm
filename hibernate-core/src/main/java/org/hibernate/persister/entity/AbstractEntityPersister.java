@@ -3195,8 +3195,6 @@ public abstract class AbstractEntityPersister
 					: substituteBrackets( customSQLUpdate[j] );
 		}
 
-		// todo (mutation) : `tableHasColumns` is only used from a now-deprecated method we
-		//  	no longer use internally. See `#getTableHasColumns`
 		tableHasColumns = new boolean[joinSpan];
 		for ( int j = 0; j < joinSpan; j++ ) {
 			final String tableName = getTableName( j );

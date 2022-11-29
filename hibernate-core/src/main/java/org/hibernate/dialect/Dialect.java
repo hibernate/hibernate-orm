@@ -2266,7 +2266,11 @@ public abstract class Dialect implements ConversionContext {
 	 * This is not possible on some databases.
 	 *
 	 * @return The appropriate empty values clause.
+	 *
+	 * @deprecated Override {@link org.hibernate.sql.ast.spi.AbstractSqlAstTranslator#renderInsertIntoNoColumns}
+	 * on the {@link #getSqlAstTranslatorFactory() translator} returned by this dialect
 	 */
+	@Deprecated( since = "6" )
 	public String getNoColumnsInsertString() {
 		return "values ( )";
 	}

@@ -35,42 +35,35 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	@Override
 	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void addNullOptimisticLockRestriction(SelectableMapping column) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void addWhereFragment(String fragment) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 
 	@Override
 	public void setWhere(String fragment) {
 		// nothing to do
-		// todo (mutation) : should this be an exception?
 	}
 }

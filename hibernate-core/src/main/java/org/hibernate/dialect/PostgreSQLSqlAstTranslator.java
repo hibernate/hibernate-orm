@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A SQL AST translator for PostgreSQL.
@@ -33,6 +34,13 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	public PostgreSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
+	}
+
 
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {

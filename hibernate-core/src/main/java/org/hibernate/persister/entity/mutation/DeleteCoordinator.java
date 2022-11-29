@@ -57,13 +57,6 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		return staticOperationGroup;
 	}
 
-	public MutationOperationGroup getNoVersionDeleteGroup() {
-		if ( noVersionDeleteGroup == null ) {
-			generateOperationGroup( null, false, null );
-		}
-		return noVersionDeleteGroup;
-	}
-
 	@SuppressWarnings("unused")
 	public BasicBatchKey getBatchKey() {
 		return batchKey;
@@ -102,16 +95,6 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 				.getFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class );
-
-
-		// todo (mutation) : here is where we need to hook in the MutationExecutor and consider "caching".  a few options:
-		//		1) cache stuff on the coordinators and somehow pass access to that to the executor
-		//		2) create a "cache" delegate
-
-		// PreparedStatementGroup -
-		//		- previously was "all inclusive".  we expected all to be batched or none to be batched
-		//		- now we have a mix
-
 
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,

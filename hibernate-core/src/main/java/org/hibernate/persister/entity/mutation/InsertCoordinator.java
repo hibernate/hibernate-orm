@@ -81,10 +81,6 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	 * @param session The originating context
 	 *
 	 * @return The id
-	 *
-	 * todo (mutation) : Allow passing an id value here even with post-insert id generation strategies;
-	 * 		this is a long-standing request.  It would simply trigger a dynamically built insert which
-	 * 		binds the id value rather than allowing the database to generate it
 	 */
 	public Object coordinateInsert(
 			Object id,
@@ -131,10 +127,6 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			} );
 		}
 
-		public List<TableMapping> getTablesWithNonNullValues() {
-			return tablesWithNonNullValues;
-		}
-
 		public boolean hasNonNullBindings(TableMapping tableMapping) {
 			return tablesWithNonNullValues.contains( tableMapping );
 		}
@@ -145,9 +137,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		final TableInclusionChecker tableInclusionChecker = (tableMapping) -> {
 			if ( tableMapping.isOptional() ) {
-				if ( !insertValuesAnalysis.hasNonNullBindings( tableMapping ) ) {
-					return false;
-				}
+				return insertValuesAnalysis.hasNonNullBindings( tableMapping );
 			}
 
 			return true;
@@ -250,12 +240,6 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		mutationGroup.forEachOperation( (position, jdbcOperation) -> {
 			final EntityTableMapping tableDetails = (EntityTableMapping) jdbcOperation.getTableDetails();
-
-// todo (mutation) : this did not work at some point, but seems logical.  worth tracking down?
-//		this
-//			if ( !tableInclusionChecker.include( tableDetails ) ) {
-//				return;
-//			}
 
 			final String tableName = tableDetails.getTableName();
 
@@ -403,6 +387,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			MutationGroupBuilder insertGroupBuilder,
 			boolean[] attributeInclusions) {
 		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		//noinspection resource
 		final Dialect dialect = factory().getJdbcServices().getDialect();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {

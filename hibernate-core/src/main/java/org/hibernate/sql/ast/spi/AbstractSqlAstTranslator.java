@@ -7637,46 +7637,59 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void renderInsertInto(TableInsertStandard tableInsert) {
+		if ( tableInsert.getNumberOfValueBindings() == 0 ) {
+			renderInsertIntoNoColumns( tableInsert );
+			return;
+		}
+
+		renderIntoIntoAndTable( tableInsert );
+
+		tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+			if ( columnPosition == 0 ) {
+				sqlBuffer.append( '(' );
+			}
+			else {
+				sqlBuffer.append( ',' );
+			}
+			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+		} );
+
+		getCurrentClauseStack().push( Clause.VALUES );
+		try {
+			sqlBuffer.append( ") values (" );
+
+			tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				if ( columnPosition > 0 ) {
+					sqlBuffer.append( ',' );
+				}
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+
+		sqlBuffer.append( ")" );
+	}
+
+	/**
+	 * Renders the `insert into <table name> ` portion of an insert
+	 */
+	protected void renderIntoIntoAndTable(TableInsertStandard tableInsert) {
 		sqlBuffer.append( "insert into " );
 
 		appendSql( tableInsert.getMutatingTable().getTableName() );
 		registerAffectedTable( tableInsert.getMutatingTable().getTableName() );
 
 		sqlBuffer.append( ' ' );
-		if ( tableInsert.getNumberOfValueBindings() == 0 ) {
-			sqlBuffer.append( dialect.getNoColumnsInsertString() );
-		}
-		else {
-			tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-				if ( columnPosition == 0 ) {
-					sqlBuffer.append( '(' );
-				}
-				else {
-					sqlBuffer.append( ',' );
-				}
-				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-			} );
+	}
 
-			getCurrentClauseStack().push( Clause.VALUES );
-			try {
-				sqlBuffer.append( ") values " );
-
-				tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-					if ( columnPosition == 0 ) {
-						sqlBuffer.append( '(' );
-					}
-					else {
-						sqlBuffer.append( ',' );
-					}
-					columnValueBinding.getValueExpression().accept( this );
-				} );
-			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
-
-			sqlBuffer.append( ")" );
-		}
+	/**
+	 * Handle rendering an insert with no columns (eye roll)
+	 */
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		sqlBuffer.append( dialect.getNoColumnsInsertString() );
 	}
 
 	@Override

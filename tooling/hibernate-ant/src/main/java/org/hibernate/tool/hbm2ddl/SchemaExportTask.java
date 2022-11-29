@@ -92,7 +92,7 @@ public class SchemaExportTask extends MatchingTask {
 	}
 
 	/**
-	 * Set a <literal>.cfg.xml</literal> file, which will be
+	 * Set a {@code .cfg.xml} file, which will be
 	 * loaded as a resource, from the classpath
 	 * @param configurationFile the path to the resource
 	 */

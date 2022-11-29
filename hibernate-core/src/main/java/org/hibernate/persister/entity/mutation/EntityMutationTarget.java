@@ -35,7 +35,7 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 
 	/**
 	 * Whether this target defines any potentially skippable tables.
-	 * </p>
+	 * <p>
 	 * A table is considered potentially skippable if it is defined
 	 * as inverse or as optional.
 	 *

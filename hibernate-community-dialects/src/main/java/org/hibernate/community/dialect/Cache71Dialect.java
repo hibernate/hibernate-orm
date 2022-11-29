@@ -61,6 +61,7 @@ package org.hibernate.community.dialect;
  * "name=value" pairs:
  * <p>
  * <table border="">
+ * <caption>Properties</caption>
  * <tr>
  * <th>Property Name</th>
  * <th>Property Value</th>

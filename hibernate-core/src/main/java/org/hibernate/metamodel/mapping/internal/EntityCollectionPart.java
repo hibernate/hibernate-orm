@@ -61,12 +61,12 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 
 	/**
 	 * Perform any delayed initialization.
-	 * <p/>
+	 * <p>
 	 * The initialization is considered successful if the result is {@code true}.  It is
 	 * considered unsuccessful if the result is {@code false} or an exception is thrown.
 	 * Unsuccessful initializations are generally retried "later", to allow waiting for
 	 * model-parts being available e.g.
-	 * <p/>
+	 * <p>
 	 * If the exception is something that will just never succeed, consider throwing
 	 * an exception with the {@link NonTransientException} marker to allow the creation
 	 * process to stop immediately

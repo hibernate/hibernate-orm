@@ -4418,7 +4418,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The SchemaManagementTool to use if none explicitly specified.
-	 * <p/>
+	 * <p>
 	 * Allows Dialects to override how schema tooling works by default
 	 */
 	@Incubating

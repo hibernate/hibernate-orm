@@ -413,7 +413,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
@@ -431,7 +431,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.

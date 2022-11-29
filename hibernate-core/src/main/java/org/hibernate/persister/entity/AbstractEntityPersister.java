@@ -6054,7 +6054,7 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Decide which tables need to be updated.
-	 * <p/>
+	 * <p>
 	 * The return here is an array of boolean values with each index corresponding
 	 * to a given table in the scope of this persister.
 	 *

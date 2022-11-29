@@ -8,7 +8,7 @@
 /**
  * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
  *
- * <h3 id="basic-value-mapping">Basic value mapping</h3>
+ * <h2 id="basic-value-mapping">Basic value mapping</h2>
  *
  * Hibernate supports 2 approaches to defining a mapping strategy for basic values:<ul>
  *     <li>

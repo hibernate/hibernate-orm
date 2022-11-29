@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 
 /**
  * Conceptually models a batch.
- * <p/>
+ * <p>
  * Unlike in JDBC, here we add the ability to batch together multiple statements at a time.  In the underlying
  * JDBC this correlates to multiple {@link PreparedStatement} objects (one for each DML string) maintained within the
  * batch.

@@ -13,10 +13,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Coordinates the logical insertion of collection entries which are not yet persistent.
- * <p/>
+ * <p>
  * Insertions are determined by {@linkplain EntryFilter filtering} the entries obtained
  * from {@link PersistentCollection#entries(CollectionPersister)}.
- * <p/>
+ * <p>
  * A "logical" insertion because the actual SQL used may be an UPDATE in the case of
  * one-to-many mappings to set the foreign-key
  * 

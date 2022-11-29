@@ -40,7 +40,7 @@ public interface PreparedStatementDetails {
 
 	/**
 	 * The {@link PreparedStatement} generated from the SQL.
-	 * <p/>
+	 * <p>
 	 * Unlike {@link #getStatement()}, this method will attempt to create the PreparedStatement
 	 */
 	PreparedStatement resolveStatement();

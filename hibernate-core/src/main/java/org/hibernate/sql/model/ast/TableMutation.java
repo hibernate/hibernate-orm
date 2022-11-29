@@ -19,9 +19,9 @@ import org.hibernate.sql.model.ValuesAnalysis;
 /**
  * Describes the mutation of a model table (mapped by an entity or collection)
  * triggered from flush.
- * <p/>
+ * <p>
  * Modeled as a SQL AST and processed via {@link org.hibernate.sql.ast.SqlAstTranslator}
- * <p/>
+ * <p>
  * Acts as a factory for {@link org.hibernate.sql.model.MutationOperation} instances,
  * which are the forms used to "perform" the mutation using JDBC.
  *

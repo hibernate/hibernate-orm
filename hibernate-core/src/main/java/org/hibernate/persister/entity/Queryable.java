@@ -116,7 +116,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * The alias used for any filter conditions (mapped where-fragments or
 	 * enabled-filters).
-	 * </p>
+	 * <p>
 	 * This may or may not be different from the root alias depending upon the
 	 * inheritance mapping strategy.
 	 *

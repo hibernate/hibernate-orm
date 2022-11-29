@@ -74,8 +74,8 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to change that to
  * instead default to using a row for each entity name.
  * <p>
- * Configuration parameters:
  * <table>
+ * <caption>Configuration parameters</caption>
  * 	 <tr>
  *     <td><b>NAME</b></td>
  *     <td><b>DEFAULT</b></td>

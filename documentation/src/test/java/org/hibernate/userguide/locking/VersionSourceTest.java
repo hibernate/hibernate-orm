@@ -10,30 +10,29 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+
 
 import java.time.LocalDateTime;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
-public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
+@DomainModel( annotatedClasses = VersionSourceTest.Person.class )
+@SessionFactory
+public class VersionSourceTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::locking-optimistic-version-timestamp-source-persist-example[]
 			Person person = new Person();
 			person.setId(1L);
@@ -46,12 +45,12 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
 		});
 		sleep();
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.setFirstName("Jane");
 		});
 		sleep();
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.setFirstName("John");
 		});

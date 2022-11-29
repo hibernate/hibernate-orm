@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.sql.Types;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,6 +28,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Nathan Xu
@@ -42,7 +44,8 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
 		this.rowIdType = declaringType.getEntityPersister().getFactory().getTypeConfiguration()
-				.getBasicTypeForJavaType( Object.class );
+				.getBasicTypeRegistry()
+				.resolve( Object.class, Types.ROWID );
 	}
 
 	@Override

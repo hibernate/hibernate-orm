@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -880,6 +881,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
 		final boolean[] versionability = entityPersister().getPropertyVersionability();
 		final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
+		final Dialect dialect = factory().getJdbcServices().getDialect();
 
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -902,16 +904,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							&& valueGeneration.referenceColumnInSql() ) {
 						// value-generation is only valid for basic attributes
 						final BasicAttributeMapping basicAttributeMapping = (BasicAttributeMapping) attributeMapping;
-						final String columnValue = valueGeneration.getDatabaseGeneratedReferencedColumnValue() == null
-								? "?"
-								: valueGeneration.getDatabaseGeneratedReferencedColumnValue();
-						if ( columnValue != null ) {
-							tableUpdateBuilder.addValueColumn(
-									basicAttributeMapping.getSelectionExpression(),
-									columnValue,
-									basicAttributeMapping.getJdbcMapping()
-							);
-						}
+						final String databaseGeneratedValue = valueGeneration.getDatabaseGeneratedReferencedColumnValue(
+								dialect
+						);
+						tableUpdateBuilder.addValueColumn(
+								basicAttributeMapping.getSelectionExpression(),
+								databaseGeneratedValue == null
+										? "?"
+										: databaseGeneratedValue,
+								basicAttributeMapping.getJdbcMapping()
+						);
 					}
 					else if ( versionMapping != null
 							&& versionMapping.getVersionAttribute() == attributeMapping ) {
@@ -1377,7 +1379,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// next, iterate each attribute and build the SET and WHERE clauses
 		applyTableUpdateDetails(
 				// row-id
-				null,
+				"", // pass anything here to generate the row id restriction if possible
 				// the "collector"
 				updateGroupBuilder,
 				// oldValues

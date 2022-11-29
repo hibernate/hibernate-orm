@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -402,6 +403,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			MutationGroupBuilder insertGroupBuilder,
 			boolean[] attributeInclusions) {
 		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		final Dialect dialect = factory().getJdbcServices().getDialect();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -425,7 +427,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 						final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
 						tableInsertBuilder.addValueColumn(
 								basicAttributeMapping.getSelectionExpression(),
-								valueGeneration.getDatabaseGeneratedReferencedColumnValue(),
+								valueGeneration.getDatabaseGeneratedReferencedColumnValue( dialect ),
 								basicAttributeMapping.getJdbcMapping()
 						);
 					}

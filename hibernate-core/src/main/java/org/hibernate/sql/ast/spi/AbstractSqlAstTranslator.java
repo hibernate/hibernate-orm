@@ -7673,7 +7673,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Renders the `insert into <table name> ` portion of an insert
+	 * Renders the {@code insert into <table name>} portion of an insert
 	 */
 	protected void renderIntoIntoAndTable(TableInsertStandard tableInsert) {
 		sqlBuffer.append( "insert into " );

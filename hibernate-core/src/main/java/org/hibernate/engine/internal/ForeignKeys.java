@@ -21,6 +21,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * Algorithms related to foreign key constraint transparency
  *
@@ -198,20 +200,20 @@ public final class ForeignKeys {
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-			if ( object instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
 				// if it's an uninitialized proxy it can only be
 				// transient if we did an unloaded-delete on the
 				// proxy itself, in which case there is no entry
 				// for it, but its key has already been registered
 				// as nullifiable
-				final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				Object entity = li.getImplementation( session );
+				Object entity = lazyInitializer.getImplementation( session );
 				if ( entity == null ) {
 					return persistenceContext.containsDeletedUnloadedEntityKey(
 							session.generateEntityKey(
-									li.getIdentifier(),
+									lazyInitializer.getIdentifier(),
 									session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
-											.getEntityDescriptor( li.getEntityName() )
+											.getEntityDescriptor( lazyInitializer.getEntityName() )
 							)
 					);
 				}
@@ -255,7 +257,7 @@ public final class ForeignKeys {
 	 * @return {@code true} if the given entity is not transient (meaning it is either detached/persistent)
 	 */
 	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
-		return entity instanceof HibernateProxy
+		return isHibernateProxy( entity )
 			|| session.getPersistenceContextInternal().isEntryFor( entity )
 			// todo : shouldn't assumed be reversed here?
 			|| !isTransient( entityName, entity, assumed, session );

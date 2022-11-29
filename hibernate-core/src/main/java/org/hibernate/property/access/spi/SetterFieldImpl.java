@@ -15,6 +15,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Field-based implementation of Setter
@@ -68,8 +69,9 @@ public class SetterFieldImpl implements Setter {
 			}
 			else {
 				final String valueType;
-				if ( value instanceof HibernateProxy ) {
-					valueType = ( (HibernateProxy) value ).getHibernateLazyInitializer().getEntityName();
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+				if ( lazyInitializer != null ) {
+					valueType = lazyInitializer.getEntityName();
 				}
 				else {
 					valueType = value.getClass().getTypeName();

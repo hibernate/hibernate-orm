@@ -62,15 +62,15 @@ public class DefaultPersistEventListener
 	 */
 	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
 		final Object object = event.getObject();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
-				if ( li.getSession() != event.getSession() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				if ( lazyInitializer.getSession() != event.getSession() ) {
 					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
 				}
 			}
 			else {
-				persist( event, createCache, li.getImplementation() );
+				persist( event, createCache, lazyInitializer.getImplementation() );
 			}
 		}
 		else {

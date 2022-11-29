@@ -155,12 +155,12 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 		// this code is largely copied from Session's bestGuessEntityName
 		Object entity = object;
-		if ( entity instanceof HibernateProxy ) {
-			final LazyInitializer initializer = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( initializer.isUninitialized() ) {
-				entityName = initializer.getEntityName();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				entityName = lazyInitializer.getEntityName();
 			}
-			entity = initializer.getImplementation();
+			entity = lazyInitializer.getImplementation();
 		}
 
 		if ( entityName == null ) {

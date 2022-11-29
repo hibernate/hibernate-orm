@@ -28,6 +28,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -275,12 +276,13 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				initializer.resolveInstance( rowProcessingState );
 			}
 			final Object initializedInstance = initializer.getInitializedInstance();
-			if ( initializedInstance instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
+			if ( lazyInitializer != null ) {
 				if ( initializedInstance.getClass().isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 					return initializedInstance;
 				}
 				initializer.initializeInstance( rowProcessingState );
-				return ( (HibernateProxy) initializedInstance ).getHibernateLazyInitializer().getImplementation();
+				return lazyInitializer.getImplementation();
 			}
 			return initializedInstance;
 		}

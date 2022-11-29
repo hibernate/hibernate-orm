@@ -80,8 +80,9 @@ public final class PersistenceUtilHelper {
 	 * @return The appropriate LoadState (see above)
 	 */
 	public static LoadState isLoaded(Object reference) {
-		if ( reference instanceof HibernateProxy ) {
-			final boolean isInitialized = !( (HibernateProxy) reference ).getHibernateLazyInitializer().isUninitialized();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( reference );
+		if ( lazyInitializer != null ) {
+			final boolean isInitialized = !lazyInitializer.isUninitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( isPersistentAttributeInterceptable( reference ) ) {
@@ -118,15 +119,15 @@ public final class PersistenceUtilHelper {
 	 */
 	public static LoadState isLoadedWithoutReference(Object entity, String attributeName, MetadataCache cache) {
 		boolean sureFromUs = false;
-		if ( entity instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
 				return LoadState.NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
-				entity = li.getImplementation();
+				entity = lazyInitializer.getImplementation();
 			}
 			sureFromUs = true;
 		}
@@ -200,15 +201,15 @@ public final class PersistenceUtilHelper {
 	 * @return The LoadState
 	 */
 	public static LoadState isLoadedWithReference(Object entity, String attributeName, MetadataCache cache) {
-		if ( entity instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
 				return LoadState.NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
-				entity = li.getImplementation();
+				entity = lazyInitializer.getImplementation();
 			}
 		}
 

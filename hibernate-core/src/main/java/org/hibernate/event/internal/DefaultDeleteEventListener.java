@@ -98,14 +98,13 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 	private boolean optimizeUnloadedDelete(DeleteEvent event) {
 		final Object object = event.getObject();
-		if ( object instanceof HibernateProxy ) {
-			HibernateProxy proxy = (HibernateProxy) object;
-			LazyInitializer initializer = proxy.getHibernateLazyInitializer();
-			if ( initializer.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				final EventSource source = event.getSession();
 				final EntityPersister persister = source.getFactory().getMappingMetamodel()
-						.findEntityDescriptor( initializer.getEntityName() );
-				final Object id = initializer.getIdentifier();
+						.findEntityDescriptor( lazyInitializer.getEntityName() );
+				final Object id = lazyInitializer.getIdentifier();
 				final EntityKey key = source.generateEntityKey( id, persister );
 				final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 				if ( !persistenceContext.containsEntity( key )

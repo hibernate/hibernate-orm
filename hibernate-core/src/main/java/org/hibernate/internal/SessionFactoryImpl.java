@@ -697,8 +697,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( object );
+		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
 			if ( initializer.isUninitialized() ) {
@@ -1081,10 +1081,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		Class<?> clazz;
-		if (bindValue instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) bindValue;
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			clazz = li.getPersistentClass();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( bindValue );
+		if ( lazyInitializer != null ) {
+			clazz = lazyInitializer.getPersistentClass();
 		}
 		else {
 			clazz = bindValue.getClass();

@@ -648,9 +648,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		if ( entityInstance instanceof HibernateProxy ) {
-			LazyInitializer hibernateLazyInitializer = ( (HibernateProxy) entityInstance ).getHibernateLazyInitializer();
-
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+		if ( lazyInitializer != null ) {
 			Object instance = persistenceContext.getEntity( entityKey );
 			if ( instance == null ) {
 				instance = resolveInstance(
@@ -662,7 +661,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			}
 
-			hibernateLazyInitializer.setImplementation( instance );
+			lazyInitializer.setImplementation( instance );
 			entityInstanceForNotify = instance;
 		}
 		else {
@@ -865,10 +864,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			isReallyReadOnly = true;
 		}
 		else {
-			if ( entityInstance instanceof HibernateProxy) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+			if ( lazyInitializer != null ) {
 				// there is already a proxy for this impl
 				// only set the status to read-only if the proxy is read-only
-				isReallyReadOnly = 	( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().isReadOnly();
+				isReallyReadOnly = 	lazyInitializer.isReadOnly();
 			}
 		}
 		if ( isReallyReadOnly ) {

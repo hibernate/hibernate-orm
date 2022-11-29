@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -16,11 +17,34 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Generator annotation describing any kind of Hibernate generator in a
- * generic (de-typed) manner.
+ * Defines a named identifier generator, an instance of the interface
+ * {@link org.hibernate.id.IdentifierGenerator}. A named generator may be
+ * associated with an entity class by:
+ * <ul>
+ * <li>defining a named generator using this annotation, then
+ * <li>annotating the identifier property of the entity with the JPA-defined
+ *     {@link jakarta.persistence.GeneratedValue @GeneratedValue} annotation,
+ *     and
+ * <li>using {@link jakarta.persistence.GeneratedValue#generator() generator}
+ *     to specify the {@link #name()} of the generator defined using this
+ *     annotation.
+ * </ul>
+ * For example, if we define a generator using:
+ * <pre>{@code
+ * @GenericGenerator(name = "custom-generator",
+ *                   strategy = "org.hibernate.eg.CustomStringGenerator")
+ * }</pre>
+ * Then we may make use of it by annotating an identifier field as follows:
+ * <pre>{@code
+ * @Id @GeneratedValue(generator = "custom-generator")
+ * private String id;
+ * }</pre>
  * <p>
- * For a more type-safe way to specify generators in annotations, see
- * {@link IdGeneratorType}
+ * The disadvantage of this approach is the use of stringly-typed names. An
+ * alternative, completely typesafe, way to declare a generator and associate
+ * it with an entity is provided by the {@link IdGeneratorType} meta-annotation.
+ *
+ * @see jakarta.persistence.GeneratedValue
  *
  * @author Emmanuel Bernard
  */
@@ -29,15 +53,24 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(GenericGenerators.class)
 public @interface GenericGenerator {
 	/**
-	 * unique generator name.
+	 * The name of the identifier generator. This is the name that may be specified by
+	 * the {@link jakarta.persistence.GeneratedValue#generator() generator} member of
+	 * the {@code @GeneratedValue} annotation.
+	 *
+	 * @see jakarta.persistence.GeneratedValue#generator
 	 */
 	String name();
 	/**
-	 * Generator strategy either a predefined Hibernate strategy or a fully qualified class name.
+	 * The type of identifier generator, either:
+	 * <ul>
+ *     <li>the name of a built-in Hibernate id generator, or
+	 * <li>a custom class implementing {@link org.hibernate.id.IdentifierGenerator}.
+	 * </ul>
 	 */
 	String strategy();
 	/**
-	 * Optional generator parameters.
+	 * Parameters to be passed to {@link org.hibernate.id.IdentifierGenerator#configure}
+	 * when the identifier generator is instantiated.
 	 */
 	Parameter[] parameters() default {};
 }

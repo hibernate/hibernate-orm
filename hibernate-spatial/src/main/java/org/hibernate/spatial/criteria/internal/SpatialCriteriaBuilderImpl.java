@@ -36,7 +36,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate eq(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_EQUALS.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_EQUALS.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate within(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_WITHIN.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_WITHIN.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate contains(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_CONTAINS.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_CONTAINS.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate crosses(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_CROSSES.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_CROSSES.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate disjoint(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_DISJOINT.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_DISJOINT.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate intersects(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_INTERSECTS.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_INTERSECTS.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate overlaps(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_OVERLAPS.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_OVERLAPS.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 
 	@Override
 	public Predicate touches(Expression<? extends T> geometry1, Expression<? extends T> geometry2) {
-		return isTrue( function( ST_TOUCHES.name(), boolean.class, geometry1, geometry2 ) );
+		return equal( function( ST_TOUCHES.name(), boolean.class, geometry1, geometry2 ), true );
 	}
 
 	@Override
@@ -119,7 +119,10 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 			Expression<? extends T> geometry1,
 			Expression<? extends T> geometry2,
 			Expression<Double> distance) {
-		return isTrue( function( SpatialFunction.dwithin.toString(), boolean.class, geometry1, geometry2, distance ) );
+		return equal(
+				function( SpatialFunction.dwithin.toString(), boolean.class, geometry1, geometry2, distance ),
+				true
+		);
 	}
 
 	@Override
@@ -151,12 +154,12 @@ public abstract class SpatialCriteriaBuilderImpl<T> extends HibernateCriteriaBui
 	}
 
 	@Override
-	public Predicate isEmpty(CriteriaBuilder criteriaBuilder, Expression<? extends T> geometry) {
-		return isTrue( function( SpatialFunction.isempty.toString(), boolean.class, geometry ) );
+	public Predicate isGeometryEmpty(Expression<? extends T> geometry) {
+		return equal( function( SpatialFunction.isempty.toString(), boolean.class, geometry ), true );
 	}
 
 	@Override
-	public Predicate isNotEmpty(CriteriaBuilder criteriaBuilder, Expression<? extends T> geometry) {
-		return isEmpty( criteriaBuilder, geometry ).not();
+	public Predicate isGeometryNotEmpty(Expression<? extends T> geometry) {
+		return isGeometryEmpty( geometry ).not();
 	}
 }

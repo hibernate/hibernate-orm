@@ -82,58 +82,26 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	protected final boolean processNext(RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().next() ) {
-							return false;
-						}
-
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (next) ResultSet position", e );
-					}
-				}
-		);
+		return advance( advanceNext() );
 	}
 
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().previous() ) {
-							return false;
-						}
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (previous) ResultSet position", e );
-					}
-				}
-		);
+		return advance( advancePrevious() );
 	}
 
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().relative( numberOfRows ) ) {
-							return false;
-						}
+		return advance( scrollRows( numberOfRows ) );
+	}
 
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
-					}
-				}
-		);
+	private boolean scrollRows(final int numberOfRows) {
+		try {
+			return resultSetAccess.getResultSet().relative( numberOfRows );
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
+		}
 	}
 
 	@Override
@@ -148,21 +116,16 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().absolute( position ) ) {
-							return false;
-						}
+		return advance( advanceToPosition( position ) );
+	}
 
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
-					}
-				}
-		);
+	private boolean advanceToPosition(final int position) {
+		try {
+			return resultSetAccess.getResultSet().absolute( position );
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (scroll) ResultSet position", e );
+		}
 	}
 
 	@Override
@@ -198,21 +161,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	public boolean first(RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().first() ) {
-							return false;
-						}
-
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (first) ResultSet position", e );
-					}
-				}
-		);
+		return advance( advanceToFirst() );
 	}
 
 	@Override
@@ -248,30 +197,46 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	public boolean last(RowProcessingState rowProcessingState) {
-		return advance(
-				() -> {
-					try {
-						//noinspection RedundantIfStatement
-						if ( ! resultSetAccess.getResultSet().last() ) {
-							return false;
-						}
-
-						return true;
-					}
-					catch (SQLException e) {
-						throw makeExecutionException( "Error advancing (last) ResultSet position", e );
-					}
-				}
-		);
+		return advance( advanceToLast() );
 	}
 
-	@FunctionalInterface
-	private interface Advancer {
-		boolean advance();
+	private boolean advanceNext() {
+		try {
+			return resultSetAccess.getResultSet().next();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (next) ResultSet position", e );
+		}
 	}
 
-	private boolean advance(Advancer advancer) {
-		final boolean hasResult = advancer.advance();
+	private boolean advanceToLast() {
+		try {
+			return resultSetAccess.getResultSet().last();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (last) ResultSet position", e );
+		}
+	}
+
+	private boolean advanceToFirst() {
+		try {
+			return resultSetAccess.getResultSet().first();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (first) ResultSet position", e );
+		}
+	}
+
+	private boolean advancePrevious() {
+		try {
+			return resultSetAccess.getResultSet().previous();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error advancing (previous) ResultSet position", e );
+		}
+	}
+
+	private boolean advance(final boolean hasResult) {
 		if ( ! hasResult ) {
 			return false;
 		}

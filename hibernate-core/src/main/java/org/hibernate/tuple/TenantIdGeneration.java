@@ -19,7 +19,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Gavin King
  */
-public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, ValueGenerator<Object> {
+public class TenantIdGeneration
+		implements AnnotationValueGenerationStrategy<TenantId>, InMemoryValueGenerationStrategy, ValueGenerator<Object> {
 
 	private String entityName;
 	private String propertyName;
@@ -30,11 +31,6 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 		this.entityName = entityName;
 		this.propertyName = propertyName;
 		this.propertyType = propertyType;
-	}
-
-	@Override
-	public void initialize(TenantId annotation, Class<?> propertyType) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -78,15 +74,5 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 	@Override
 	public Object generateValue(Session session, Object owner) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean referenceColumnInSql() {
-		return false;
-	}
-
-	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
 	}
 }

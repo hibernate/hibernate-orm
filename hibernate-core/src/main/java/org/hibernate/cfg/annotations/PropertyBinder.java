@@ -40,8 +40,8 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.tuple.AnnotationValueGenerationStrategy;
 import org.hibernate.tuple.ValueGenerationStrategy;
-import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
@@ -402,10 +402,10 @@ public class PropertyBinder {
 	/**
 	 * Returns the value generation strategy for the given property, if any.
 	 */
-	private ValueGeneration getValueGenerationFromAnnotations(XProperty property) {
-		AnnotationValueGeneration<?> valueGeneration = null;
+	private ValueGenerationStrategy getValueGenerationFromAnnotations(XProperty property) {
+		ValueGenerationStrategy valueGeneration = null;
 		for ( Annotation annotation : property.getAnnotations() ) {
-			AnnotationValueGeneration<?> candidate = getValueGenerationFromAnnotation( property, annotation );
+			final ValueGenerationStrategy candidate = getValueGenerationFromAnnotation( property, annotation );
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -423,16 +423,16 @@ public class PropertyBinder {
 	 * In case the given annotation is a value generator annotation, the corresponding value generation strategy to be
 	 * applied to the given property is returned, {@code null} otherwise.
 	 */
-	private <A extends Annotation> AnnotationValueGeneration<A> getValueGenerationFromAnnotation(
+	private ValueGenerationStrategy getValueGenerationFromAnnotation(
 			XProperty property,
-			A annotation) {
+			Annotation annotation) {
 		final ValueGenerationType generatorAnnotation = annotation.annotationType().getAnnotation( ValueGenerationType.class );
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
 
-		final Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
-		final AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration( annotation, generationType, property );
+		final ValueGenerationStrategy valueGeneration =
+				instantiateAndInitializeValueGeneration( annotation, generatorAnnotation.generatedBy(), property );
 
 		if ( annotation.annotationType() == Generated.class && property.isAnnotationPresent(Version.class) ) {
 			switch ( valueGeneration.getGenerationTiming() ) {
@@ -456,23 +456,26 @@ public class PropertyBinder {
 	 * Instantiates the given generator annotation type, initializing it with the given instance of the corresponding
 	 * generator annotation and the property's type.
 	 */
-	private <A extends Annotation> AnnotationValueGeneration<A> instantiateAndInitializeValueGeneration(
+	private <A extends Annotation> ValueGenerationStrategy instantiateAndInitializeValueGeneration(
 			A annotation,
-			Class<? extends AnnotationValueGeneration<?>> generationType,
+			Class<? extends ValueGenerationStrategy> generationType,
 			XProperty property) {
 
 		try {
-			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be a
-			// programming error of the generation type developer and thus should show up during testing, we don't
-			// check this explicitly; If required, this could be done e.g. using ClassMate
-			@SuppressWarnings( "unchecked" )
-			AnnotationValueGeneration<A> valueGeneration = (AnnotationValueGeneration<A>) generationType.newInstance();
-			valueGeneration.initialize(
-					annotation,
-					buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() ),
-					entityBinder.getPersistentClass().getEntityName(),
-					property.getName()
-			);
+			final ValueGenerationStrategy valueGeneration = generationType.newInstance();
+			if ( valueGeneration instanceof AnnotationValueGenerationStrategy ) {
+				// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
+				// a programming error of the generation type developer and thus should show up during testing, we don't
+				// check this explicitly; If required, this could be done e.g. using ClassMate
+				@SuppressWarnings("unchecked")
+				final AnnotationValueGenerationStrategy<A> generation = (AnnotationValueGenerationStrategy<A>) valueGeneration;
+				generation.initialize(
+						annotation,
+						buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() ),
+						entityBinder.getPersistentClass().getEntityName(),
+						property.getName()
+				);
+			}
 
 			return valueGeneration;
 		}

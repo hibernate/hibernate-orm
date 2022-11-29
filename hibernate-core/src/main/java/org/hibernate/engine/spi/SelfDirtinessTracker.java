@@ -18,7 +18,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface SelfDirtinessTracker {
+public interface SelfDirtinessTracker extends PrimeAmongSecondarySupertypes {
 	/**
 	 * Have any of the entity's persistent attributes changed?
 	 *
@@ -53,4 +53,15 @@ public interface SelfDirtinessTracker {
 	 * Get access to the CollectionTracker
 	 */
 	CollectionTracker $$_hibernate_getCollectionTracker();
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default SelfDirtinessTracker asSelfDirtinessTracker() {
+		return this;
+	}
+
 }

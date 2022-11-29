@@ -38,7 +38,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
 				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
 				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
-			//type-cache-pollution agent: always check for EnhancedEntity type first.
+			//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
 			if ( isManagedType( containerClass ) ) {
 				// PROPERTY (BASIC) and MIXED are not valid for bytecode enhanced entities...
 				return PropertyAccessStrategyEnhancedImpl.INSTANCE;

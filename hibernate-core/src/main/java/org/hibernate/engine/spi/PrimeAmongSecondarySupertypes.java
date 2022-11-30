@@ -45,4 +45,12 @@ public interface PrimeAmongSecondarySupertypes {
 		return null;
 	}
 
+	default CompositeOwner asCompositeOwner() {
+		return null;
+	}
+
+	default CompositeTracker asCompositeTracker() {
+		return null;
+	}
+
 }

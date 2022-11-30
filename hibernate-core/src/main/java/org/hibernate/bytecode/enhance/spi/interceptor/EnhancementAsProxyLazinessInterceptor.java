@@ -22,6 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
 
 /**
@@ -280,7 +281,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 
 			if ( inLineDirtyChecking ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
+				asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attributeName );
 			}
 		}
 		else {
@@ -293,7 +294,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 			writtenFieldNames.add( attributeName );
 
-			( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
+			asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attributeName );
 		}
 
 		return newValue;

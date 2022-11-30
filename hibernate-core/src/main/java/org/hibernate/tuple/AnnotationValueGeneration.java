@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
  * @author Gunnar Morling
  */
 public interface AnnotationValueGeneration<A extends Annotation>
-		extends ValueGeneration, AnnotationGenerator<A> {
+		extends ValueGeneration, AnnotationBasedGenerator<A> {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *

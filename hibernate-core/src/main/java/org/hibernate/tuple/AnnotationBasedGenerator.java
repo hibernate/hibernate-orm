@@ -27,7 +27,7 @@ import java.lang.reflect.Member;
  *
  * @since 6.2
  */
-public interface AnnotationGenerator<A extends Annotation> extends Generator {
+public interface AnnotationBasedGenerator<A extends Annotation> extends Generator {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *

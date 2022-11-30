@@ -10,7 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.AnnotationGenerator;
+import org.hibernate.tuple.AnnotationBasedGenerator;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
@@ -57,7 +57,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  * A generator annotation may have members, which are used to configure the
  * generation strategy, when the strategy instance in initialized via
- * {@link AnnotationGenerator#initialize}.
+ * {@link AnnotationBasedGenerator#initialize}.
  * <p>
  * There are several excellent examples of the use of this machinery right
  * here in this package. {@link TenantId} and its corresponding generator
@@ -69,7 +69,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see Generator
  * @see InMemoryGenerator
  * @see InDatabaseGenerator
- * @see AnnotationGenerator
+ * @see AnnotationBasedGenerator
  *
  * @author Gunnar Morling
  */
@@ -81,7 +81,7 @@ public @interface ValueGenerationType {
 	 * <p>
 	 * If the generator annotation has members used to configure the
 	 * generation strategy instance, the strategy should implement
-	 * {@link AnnotationGenerator}.
+	 * {@link AnnotationBasedGenerator}.
 	 */
 	Class<? extends Generator> generatedBy();
 }

@@ -23,7 +23,6 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
-	private final Generator valueGeneration;
 
 	public AbstractSingularAttributeMapping(
 			String name,
@@ -31,13 +30,9 @@ public abstract class AbstractSingularAttributeMapping
 			AttributeMetadataAccess attributeMetadataAccess,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			Generator valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super( name, attributeMetadataAccess, mappedFetchOptions, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.valueGeneration = valueGeneration != null
-				? valueGeneration
-				: NoValueGeneration.INSTANCE;
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -47,13 +42,9 @@ public abstract class AbstractSingularAttributeMapping
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			Generator valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super( name, attributeMetadataAccess, fetchTiming, fetchStyle, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.valueGeneration = valueGeneration != null
-				? valueGeneration
-				: NoValueGeneration.INSTANCE;
 	}
 
 	@Override
@@ -62,7 +53,7 @@ public abstract class AbstractSingularAttributeMapping
 	}
 
 	@Override
-	public Generator getValueGeneration() {
-		return valueGeneration;
+	public Generator getGenerator() {
+		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
 	}
 }

@@ -80,7 +80,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 						keyDeclaringType,
 						keyModelPart,
 						keyPropertyAccess,
-						NoValueGeneration.INSTANCE,
 						insertable,
 						updateable,
 						keySelectableMapping
@@ -146,7 +145,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 						keyDeclaringType,
 						targetModelPart,
 						valueAccess,
-						NoValueGeneration.INSTANCE,
 						keySelectableMapping.isInsertable(),
 						keySelectableMapping.isUpdateable(),
 						keySelectableMapping

@@ -16,19 +16,16 @@ public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;
-	private final Generator generator;
 	private final boolean nullable;
 	private final boolean dirtyCheckable;
 	private final boolean versionable;
 	private final CascadeStyle cascadeStyle;
 	private final FetchMode fetchMode;
-	private boolean checkable;
 
 	public BaselineAttributeInformation(
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			Generator generator,
 			boolean nullable,
 			boolean dirtyCheckable,
 			boolean versionable,
@@ -37,7 +34,6 @@ public class BaselineAttributeInformation {
 		this.lazy = lazy;
 		this.insertable = insertable;
 		this.updateable = updateable;
-		this.generator = generator;
 		this.nullable = nullable;
 		this.dirtyCheckable = dirtyCheckable;
 		this.versionable = versionable;
@@ -55,10 +51,6 @@ public class BaselineAttributeInformation {
 
 	public boolean isUpdateable() {
 		return updateable;
-	}
-
-	public Generator getValueGenerationStrategy() {
-		return generator;
 	}
 
 	public boolean isNullable() {
@@ -81,15 +73,10 @@ public class BaselineAttributeInformation {
 		return fetchMode;
 	}
 
-	public boolean isCheckable() {
-		return checkable;
-	}
-
 	public static class Builder {
 		private boolean lazy;
 		private boolean insertable;
 		private boolean updateable;
-		private Generator generator;
 		private boolean nullable;
 		private boolean dirtyCheckable;
 		private boolean versionable;
@@ -108,11 +95,6 @@ public class BaselineAttributeInformation {
 
 		public Builder setUpdateable(boolean updateable) {
 			this.updateable = updateable;
-			return this;
-		}
-
-		public Builder setValueGenerationStrategy(Generator generator) {
-			this.generator = generator;
 			return this;
 		}
 
@@ -146,7 +128,6 @@ public class BaselineAttributeInformation {
 					lazy,
 					insertable,
 					updateable,
-					generator,
 					nullable,
 					dirtyCheckable,
 					versionable,

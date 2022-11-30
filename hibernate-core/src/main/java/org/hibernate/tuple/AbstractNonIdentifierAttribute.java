@@ -69,11 +69,6 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	}
 
 	@Override
-	public Generator getValueGenerationStrategy() {
-		return attributeInformation.getValueGenerationStrategy();
-	}
-
-	@Override
 	public boolean isNullable() {
 		return attributeInformation.isNullable();
 	}

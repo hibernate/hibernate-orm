@@ -876,4 +876,16 @@ public final class ReflectHelper {
 		}
 		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
 	}
+
+	public static Class<?> getPropertyType(Member member) {
+		if (member instanceof Field) {
+			return ( (Field) member ).getType();
+		}
+		else if (member instanceof Method) {
+			return ( (Method) member ).getReturnType();
+		}
+		else {
+			throw new AssertionFailure("member should have been a method or field");
+		}
+	}
 }

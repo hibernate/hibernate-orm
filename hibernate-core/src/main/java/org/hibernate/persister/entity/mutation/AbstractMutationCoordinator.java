@@ -92,10 +92,10 @@ public abstract class AbstractMutationCoordinator {
 	void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
-			InDatabaseGenerator valueGeneration) {
+			InDatabaseGenerator generator) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		final boolean writePropertyValue = valueGeneration.writePropertyValue();
-		final String[] columnValues = writePropertyValue ? null : valueGeneration.getReferencedColumnValues( dialect );
+		final boolean writePropertyValue = generator.writePropertyValue();
+		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
 			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
 			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );

@@ -7,12 +7,16 @@
 package org.hibernate.tuple;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
 
 
 /**
  * A {@link Generator} based on a custom Java generator annotation type.
  * Every instance must implement either {@link InMemoryGenerator} or
- * {@link InDatabaseGenerator}.
+ * {@link InDatabaseGenerator}. Implementing this interface is just a
+ * slightly more typesafe alternative to providing a constructor with
+ * the same signature as the method
+ * {@link #initialize(Annotation, Member, GeneratorCreationContext)}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *
@@ -27,14 +31,12 @@ public interface AnnotationGenerator<A extends Annotation> extends Generator {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *
-	 * @param annotation   an instance of the strategy's annotation type. Typically, implementations will retrieve the
-	 *                     annotation's attribute values and store them in fields.
-	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
-	 *                     the type to determine the right {@link ValueGenerator} to be applied.
-	 * @param entityName the name of the entity to which the annotated property belongs
-	 * @param propertyName the name of the annotated property
+	 * @param annotation an instance of the strategy's annotation type. Typically, implementations will retrieve the
+	 *                   annotation's attribute values and store them in fields.
+	 * @param member the Java member annotated with the generator annotation.
+	 * @param context a {@link GeneratorCreationContext}
 	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
 	 *                                          an implementation can't create a value for the given property type.
 	 */
-	void initialize(A annotation, Class<?> propertyType, String entityName, String propertyName);
+	void initialize(A annotation, Member member, GeneratorCreationContext context);
 }

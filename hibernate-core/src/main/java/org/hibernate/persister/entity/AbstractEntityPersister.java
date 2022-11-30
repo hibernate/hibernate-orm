@@ -2766,16 +2766,17 @@ public abstract class AbstractEntityPersister
 						hasColumns = true;
 					}
 					else {
-						final Generator valueGeneration = attributeMapping.getValueGeneration();
-						if ( valueGeneration.getGenerationTiming().includesUpdate()
-								&& valueGeneration.generatedByDatabase() ) {
-							final InDatabaseGenerator generation = (InDatabaseGenerator) valueGeneration;
-							if ( generation.referenceColumnsInSql() ) {
+						final Generator generator = attributeMapping.getGenerator();
+						if ( generator!=null
+								&& generator.getGenerationTiming().includesUpdate()
+								&& generator.generatedByDatabase() ) {
+							final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
+							if ( databaseGenerator.referenceColumnsInSql() ) {
 								final Dialect dialect = getFactory().getJdbcServices().getDialect();
 								update.addColumns(
 										getPropertyColumnNames(index),
 										SINGLE_TRUE,
-										generation.getReferencedColumnValues(dialect)
+										databaseGenerator.getReferencedColumnValues(dialect)
 								);
 								hasColumns = true;
 							}

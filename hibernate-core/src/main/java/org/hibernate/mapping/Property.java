@@ -27,7 +27,6 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.Generator;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -45,7 +44,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
-	private Generator generator;
+	private GeneratorCreator generator;
 	private String propertyAccessorName;
 	private PropertyAccessStrategy propertyAccessStrategy;
 	private boolean lazy;
@@ -216,11 +215,11 @@ public class Property implements Serializable, MetaAttributable {
 		return insertable && value.hasAnyInsertableColumns();
 	}
 
-	public Generator getValueGenerationStrategy() {
+	public GeneratorCreator getValueGenerationStrategy() {
 		return generator;
 	}
 
-	public void setValueGenerationStrategy(Generator generator) {
+	public void setValueGenerationStrategy(GeneratorCreator generator) {
 		this.generator = generator;
 	}
 
@@ -441,7 +440,7 @@ public class Property implements Serializable, MetaAttributable {
 	public void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
 	}
-	
+
 	public Property copy() {
 		final Property prop = new Property();
 		prop.setName( getName() );

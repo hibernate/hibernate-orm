@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -36,7 +37,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.tuple.Generator;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -86,8 +86,7 @@ public class BasicAttributeMapping
 			boolean updateable,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			Generator valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				attributeName,
 				stateArrayPosition,
@@ -95,8 +94,7 @@ public class BasicAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
@@ -126,7 +124,6 @@ public class BasicAttributeMapping
 			ManagedMappingType declaringType,
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
-			Generator valueGeneration,
 			boolean insertable,
 			boolean updateable,
 			SelectableMapping selectableMapping) {
@@ -168,8 +165,7 @@ public class BasicAttributeMapping
 				updateable,
 				original.getJdbcMapping(),
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 	}
 

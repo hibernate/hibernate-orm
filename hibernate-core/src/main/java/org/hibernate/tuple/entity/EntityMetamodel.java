@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
@@ -29,19 +30,21 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
@@ -100,8 +103,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasInsertGeneratedValues;
 	private final boolean hasUpdateGeneratedValues;
 
-	private final InMemoryGenerator[] inMemoryValueGenerationStrategies;
-	private final InDatabaseGenerator[] inDatabaseValueGenerationStrategies;
+	private final Generator[] generators;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final Map<String, Integer> propertyIndexes = new HashMap<>();
@@ -211,8 +213,7 @@ public class EntityMetamodel implements Serializable {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		this.inMemoryValueGenerationStrategies = new InMemoryGenerator[propertySpan];
-		this.inDatabaseValueGenerationStrategies = new InDatabaseGenerator[propertySpan];
+		this.generators = new Generator[propertySpan];
 
 		boolean foundPreInsertGeneratedValues = false;
 		boolean foundPreUpdateGeneratedValues = false;
@@ -300,42 +301,44 @@ public class EntityMetamodel implements Serializable {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			GenerationStrategyPair pair = buildGenerationStrategyPair( sessionFactory, prop );
-			inMemoryValueGenerationStrategies[i] = pair.getInMemoryStrategy();
-			inDatabaseValueGenerationStrategies[i] = pair.getInDatabaseStrategy();
-
-			if ( pair.getInMemoryStrategy() != null
-					&& !pair.getInMemoryStrategy().generatedByDatabase() ) {
-				final GenerationTiming timing = pair.getInMemoryStrategy().getGenerationTiming();
+			final Generator generator = buildGenerator( persistentClass, prop, creationContext );
+			generators[i] = generator;
+			if ( generator != null ) {
+				if ( generatedWithNoParameter( generator ) ) {
+					propertyInsertability[i] = false;
+					propertyUpdateability[i] = false;
+				}
 				// we have some level of generation indicated
-				switch ( timing ) {
+				switch ( generator.getGenerationTiming() ) {
 					case INSERT:
-						foundPreInsertGeneratedValues = true;
+						if ( generator.generatedByDatabase() ) {
+							foundPostInsertGeneratedValues = true;
+						}
+						else {
+							foundPreInsertGeneratedValues = true;
+						}
 						break;
 					case UPDATE:
-						foundPreUpdateGeneratedValues = true;
+						if ( generator.generatedByDatabase() ) {
+							foundPostUpdateGeneratedValues = true;
+						}
+						else {
+							foundPreUpdateGeneratedValues = true;
+						}
 						break;
 					case ALWAYS:
-						foundPreInsertGeneratedValues = true;
-						foundPreUpdateGeneratedValues = true;
+						if ( generator.generatedByDatabase() ) {
+							foundPostInsertGeneratedValues = true;
+							foundPostUpdateGeneratedValues = true;
+						}
+						else {
+							foundPreInsertGeneratedValues = true;
+							foundPreUpdateGeneratedValues = true;
+						}
 						break;
 				}
 			}
-			if (  pair.getInDatabaseStrategy() != null
-					&& pair.getInDatabaseStrategy().generatedByDatabase() ) {
-				switch ( pair.getInDatabaseStrategy().getGenerationTiming() ) {
-					case INSERT:
-						foundPostInsertGeneratedValues = true;
-						break;
-					case UPDATE:
-						foundPostUpdateGeneratedValues = true;
-						break;
-					case ALWAYS:
-						foundPostInsertGeneratedValues = true;
-						foundPostUpdateGeneratedValues = true;
-						break;
-				}
-			}
+
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			if ( attribute.isLazy() ) {
@@ -452,89 +455,79 @@ public class EntityMetamodel implements Serializable {
 		entityNameByInheritanceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
-	private static GenerationStrategyPair buildGenerationStrategyPair(
-			final SessionFactoryImplementor sessionFactory,
-			final Property mappingProperty) {
-		final Generator valueGeneration = mappingProperty.getValueGenerationStrategy();
-		if ( valueGeneration != null && valueGeneration.getGenerationTiming() != GenerationTiming.NEVER ) {
-			// the property is generated in full. build the generation strategy pair.
-			if ( !valueGeneration.generatedByDatabase() ) {
-				// in-memory generation
-				return new GenerationStrategyPair( (InMemoryGenerator) valueGeneration );
-			}
-			else {
-				// in-db generation
-				return new GenerationStrategyPair( (InDatabaseGenerator) valueGeneration );
-			}
-		}
-		else if ( mappingProperty.getValue() instanceof Component ) {
-			final CompositeGenerationStrategyPairBuilder builder = new CompositeGenerationStrategyPairBuilder(
-					mappingProperty,
-					sessionFactory.getJdbcServices().getDialect()
-			);
-			interpretPartialCompositeValueGeneration( sessionFactory, (Component) mappingProperty.getValue(), builder );
-			return builder.buildPair();
-		}
-
-		return NO_GEN_PAIR;
+	private static boolean generatedWithNoParameter(Generator generator) {
+		return generator.generatedByDatabase()
+			&& !((InDatabaseGenerator) generator).writePropertyValue();
 	}
 
-	private static final GenerationStrategyPair NO_GEN_PAIR = new GenerationStrategyPair();
-
-	private static void interpretPartialCompositeValueGeneration(
-			SessionFactoryImplementor sessionFactory,
-			Component composite,
-			CompositeGenerationStrategyPairBuilder builder) {
-		for ( Property property : composite.getProperties() ) {
-			builder.addPair( buildGenerationStrategyPair( sessionFactory, property ) );
+	private static Generator buildGenerator(
+			final PersistentClass persistentClass,
+			final Property mappingProperty,
+			final RuntimeModelCreationContext context) {
+		final GeneratorCreator generatorCreator = mappingProperty.getValueGenerationStrategy();
+		if ( generatorCreator != null ) {
+			final Generator generator = createGenerator( persistentClass, mappingProperty, context, generatorCreator );
+			if ( generator.getGenerationTiming().isNotNever() ) {
+				return generator;
+			}
 		}
+		if ( mappingProperty.getValue() instanceof Component ) {
+			Dialect dialect = context.getSessionFactory().getJdbcServices().getDialect();
+			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
+			final Component component = (Component) mappingProperty.getValue();
+			for ( Property property : component.getProperties() ) {
+				builder.addPair( createGenerator( null, property, context, property.getValueGenerationStrategy() ) );
+			}
+			return builder.build();
+		}
+		return null;
 	}
 
-	public static class GenerationStrategyPair {
-		private final InMemoryGenerator inMemoryStrategy;
-		private final InDatabaseGenerator inDatabaseStrategy;
-
-		public GenerationStrategyPair() {
-			this( NoInMemoryGenerator.INSTANCE, NoInDatabaseGenerator.INSTANCE );
+	private static Generator createGenerator(
+			PersistentClass persistentClass,
+			Property mappingProperty,
+			RuntimeModelCreationContext context,
+			GeneratorCreator generatorCreator) {
+		if ( generatorCreator == null ) {
+			return null;
 		}
+		return generatorCreator.createGenerator(
+				new GeneratorCreationContext() {
+					@Override
+					public Database getDatabase() {
+						return context.getMetadata().getDatabase();
+					}
 
-		public GenerationStrategyPair(InMemoryGenerator inMemoryStrategy) {
-			this( inMemoryStrategy, NoInDatabaseGenerator.INSTANCE );
-		}
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return context.getBootstrapContext().getServiceRegistry();
+					}
 
-		public GenerationStrategyPair(InDatabaseGenerator inDatabaseStrategy) {
-			this( NoInMemoryGenerator.INSTANCE, inDatabaseStrategy );
-		}
+					@Override
+					public String getDefaultCatalog() {
+						return context.getSessionFactory().getSessionFactoryOptions().getDefaultCatalog();
+					}
 
-		public GenerationStrategyPair(
-				InMemoryGenerator inMemoryStrategy,
-				InDatabaseGenerator inDatabaseStrategy) {
-			// perform some normalization.  Also check that only one (if any) strategy is specified
-			if ( inMemoryStrategy == null ) {
-				inMemoryStrategy = NoInMemoryGenerator.INSTANCE;
-			}
-			if ( inDatabaseStrategy == null ) {
-				inDatabaseStrategy = NoInDatabaseGenerator.INSTANCE;
-			}
+					@Override
+					public String getDefaultSchema() {
+						return context.getSessionFactory().getSessionFactoryOptions().getDefaultSchema();
+					}
 
-			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER
-					&& inDatabaseStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
-				throw new ValueGenerationStrategyException(
-						"in-memory and in-database value generation are mutually exclusive"
-				);
-			}
+					@Override
+					public PersistentClass getPersistentClass() {
+						return persistentClass;
+					}
 
-			this.inMemoryStrategy = inMemoryStrategy;
-			this.inDatabaseStrategy = inDatabaseStrategy;
-		}
+					@Override
+					public Property getProperty() {
+						return mappingProperty;
+					}
+				}
+		);
+	}
 
-		public InMemoryGenerator getInMemoryStrategy() {
-			return inMemoryStrategy;
-		}
-
-		public InDatabaseGenerator getInDatabaseStrategy() {
-			return inDatabaseStrategy;
-		}
+	public Generator[] getGenerators() {
+		return generators;
 	}
 
 	public static class ValueGenerationStrategyException extends HibernateException {
@@ -543,7 +536,7 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class CompositeGenerationStrategyPairBuilder {
+	private static class CompositeGeneratorBuilder {
 		private final Property mappingProperty;
 		private final Dialect dialect;
 
@@ -552,18 +545,28 @@ public class EntityMetamodel implements Serializable {
 
 		private List<InDatabaseGenerator> inDatabaseStrategies;
 
-		public CompositeGenerationStrategyPairBuilder(Property mappingProperty, Dialect dialect) {
+		public CompositeGeneratorBuilder(Property mappingProperty, Dialect dialect) {
 			this.mappingProperty = mappingProperty;
 			this.dialect = dialect;
 		}
 
-		public void addPair(GenerationStrategyPair generationStrategyPair) {
-			add( generationStrategyPair.getInMemoryStrategy() );
-			add( generationStrategyPair.getInDatabaseStrategy() );
+		public void addPair(Generator generator) {
+			if ( generator != null ) {
+				if ( generator.generatedByDatabase() ) {
+					if ( generator instanceof InDatabaseGenerator ) {
+						add( (InDatabaseGenerator) generator );
+					}
+				}
+				else {
+					if ( generator instanceof InMemoryGenerator ) {
+						add( (InMemoryGenerator) generator );
+					}
+				}
+			}
 		}
 
 		private void add(InMemoryGenerator inMemoryStrategy) {
-			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
+			if ( inMemoryStrategy.getGenerationTiming().isNotNever() ) {
 				hadInMemoryGeneration = true;
 			}
 		}
@@ -574,12 +577,12 @@ public class EntityMetamodel implements Serializable {
 			}
 			inDatabaseStrategies.add( inDatabaseStrategy );
 
-			if ( inDatabaseStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
+			if ( inDatabaseStrategy.getGenerationTiming().isNotNever() ) {
 				hadInDatabaseGeneration = true;
 			}
 		}
 
-		public GenerationStrategyPair buildPair() {
+		public Generator build() {
 			if ( hadInMemoryGeneration && hadInDatabaseGeneration ) {
 				throw new ValueGenerationStrategyException(
 						"Composite attribute [" + mappingProperty.getName() + "] contained both in-memory"
@@ -593,7 +596,7 @@ public class EntityMetamodel implements Serializable {
 			else if ( hadInDatabaseGeneration ) {
 				final Component composite = (Component) mappingProperty.getValue();
 
-				// we need the numbers to match up so we can properly handle 'referenced sql column values'
+				// we need the numbers to match up so that we can properly handle 'referenced sql column values'
 				if ( inDatabaseStrategies.size() != composite.getPropertySpan() ) {
 					throw new ValueGenerationStrategyException(
 							"Internal error : mismatch between number of collected in-db generation strategies" +
@@ -658,57 +661,20 @@ public class EntityMetamodel implements Serializable {
 				}
 
 				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
-				return new GenerationStrategyPair(
-						new InDatabaseGeneratorImpl( timing, referenceColumns, columnValues )
-				);
+				return new InDatabaseGeneratorImpl( timing, referenceColumns, columnValues );
 			}
 			else {
-				return NO_GEN_PAIR;
+				return new Generator() {
+					@Override
+					public GenerationTiming getGenerationTiming() {
+						return GenerationTiming.NEVER;
+					}
+					@Override
+					public boolean generatedByDatabase() {
+						return false;
+					}
+				};
 			}
-		}
-	}
-
-	private static class NoInMemoryGenerator implements InMemoryGenerator {
-		/**
-		 * Singleton access
-		 */
-		public static final NoInMemoryGenerator INSTANCE = new NoInMemoryGenerator();
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return GenerationTiming.NEVER;
-		}
-
-		@Override
-		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
-			return null;
-		}
-	}
-
-	private static class NoInDatabaseGenerator implements InDatabaseGenerator {
-		/**
-		 * Singleton access
-		 */
-		public static final NoInDatabaseGenerator INSTANCE = new NoInDatabaseGenerator();
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return GenerationTiming.NEVER;
-		}
-
-		@Override
-		public boolean referenceColumnsInSql() {
-			return true;
-		}
-
-		@Override
-		public String[] getReferencedColumnValues(Dialect dialect) {
-			return null;
-		}
-
-		@Override
-		public boolean writePropertyValue() {
-			return true;
 		}
 	}
 
@@ -769,18 +735,18 @@ public class EntityMetamodel implements Serializable {
 		// Assumptions:
 		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
-		final InDatabaseGenerator strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
-		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
+		final Generator strategy = generators[ naturalIdPropertyNumbers[0] ];
+		return strategy != null && strategy.getGenerationTiming().isNotNever();
 	}
 
 	public boolean isVersionGeneratedByDatabase() {
-		final InDatabaseGenerator strategy = inDatabaseValueGenerationStrategies[ versionPropertyIndex ];
-		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
+		final Generator strategy = generators[ versionPropertyIndex ];
+		return strategy != null && strategy.getGenerationTiming().isNotNever() && strategy.generatedByDatabase();
 	}
 
 	public boolean isVersionGeneratedInMemory() {
-		final InMemoryGenerator strategy = inMemoryValueGenerationStrategies[ versionPropertyIndex ];
-		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
+		final Generator strategy = generators[ versionPropertyIndex ];
+		return strategy != null && strategy.getGenerationTiming().isNotNever() && !strategy.generatedByDatabase();
 	}
 
 	public int[] getNaturalIdentifierProperties() {
@@ -1054,16 +1020,8 @@ public class EntityMetamodel implements Serializable {
 		return hasUpdateGeneratedValues;
 	}
 
-	public InMemoryGenerator[] getInMemoryValueGenerationStrategies() {
-		return inMemoryValueGenerationStrategies;
-	}
-
-	public InDatabaseGenerator[] getInDatabaseValueGenerationStrategies() {
-		return inDatabaseValueGenerationStrategies;
-	}
-
 	/**
-	 * Whether or not this class can be lazy (ie intercepted)
+	 * Whether this class can be lazy (ie intercepted)
 	 */
 	public boolean isInstrumented() {
 		return bytecodeEnhancementMetadata.isEnhancedForLazyLoading();

@@ -21,26 +21,18 @@ import org.hibernate.tuple.InMemoryGenerator;
 @Incubating
 public interface GeneratedValueResolver {
 	static GeneratedValueResolver from(
-			Generator valueGeneration,
+			Generator generator,
 			GenerationTiming requestedTiming,
 			int dbSelectionPosition) {
-		assert requestedTiming != GenerationTiming.NEVER;
+		assert requestedTiming.isNotNever();
 
-		if ( valueGeneration == null || !valueGeneration.getGenerationTiming().includes( requestedTiming ) ) {
+		if ( generator == null || !generator.getGenerationTiming().includes( requestedTiming ) ) {
 			return NoGeneratedValueResolver.INSTANCE;
 		}
-		// todo (6.x) : incorporate `org.hibernate.tuple.InDatabaseValueGenerationStrategy`
-		// 		and `org.hibernate.tuple.InMemoryValueGenerationStrategy` from `EntityMetamodel`.
-		//		this requires unification of the read and write (insert/update) aspects of
-		//		value generation which we'll circle back to as we convert write operations to
-		//		use the "runtime mapping" (`org.hibernate.metamodel.mapping`) model
-		else if ( valueGeneration.generatedByDatabase() ) {
-			// in-db generation (column-default, function, etc)
-			return new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition );
-		}
 		else {
-			InMemoryGenerator generation = (InMemoryGenerator) valueGeneration;
-			return new InMemoryGeneratedValueResolver( generation, requestedTiming );
+			return generator.generatedByDatabase()
+					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
+					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
 		}
 	}
 

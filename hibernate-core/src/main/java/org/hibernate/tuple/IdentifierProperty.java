@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;

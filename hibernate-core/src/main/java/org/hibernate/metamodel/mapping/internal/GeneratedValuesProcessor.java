@@ -35,7 +35,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.tuple.Generator;
 
 /**
  * @author Steve Ebersole
@@ -59,43 +59,9 @@ public class GeneratedValuesProcessor {
 		// NOTE: we only care about db-generated values here. in-memory generation
 		// is applied before the insert/update happens.
 
-		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
-		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report GenerationTiming.NEVER
-		//  even if they have attributes that would need generation
-		final InDatabaseGenerator[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
-				.getEntityMetamodel()
-				.getInDatabaseValueGenerationStrategies();
-		entityDescriptor.visitAttributeMappings( mapping -> {
-			final InDatabaseGenerator inDatabaseValueGenerationStrategy =
-					inDatabaseValueGenerationStrategies[ mapping.getStateArrayPosition() ];
-			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
-				return;
-			}
-			final GeneratedValueResolver generatedValueResolver = new InDatabaseGeneratedValueResolver(
-					timing,
-					generatedValuesToSelect.size()
-			);
-//			if ( attr.getValueGeneration().getGenerationTiming() == GenerationTiming.NEVER ) {
-//				return;
-//			}
-//
-//			final GeneratedValueResolver generatedValueResolver = GeneratedValueResolver.from(
-//					attr.getValueGeneration(),
-//					timing,
-//					generatedValuesToSelect.size()
-//			);
-//
-//			//noinspection RedundantClassCall
-//			if ( ! InDatabaseGeneratedValueResolver.class.isInstance( generatedValueResolver ) ) {
-//				// again, we only care about in in-db generations here
-//				return;
-//			}
-
-			// this attribute is generated for the timing we are processing...
-			valueDescriptors.add( new GeneratedValueDescriptor( generatedValueResolver, mapping ) );
-			generatedValuesToSelect.add( mapping );
-		});
-
+		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report
+		//             GenerationTiming.NEVER even if they have attributes that would need generation
+		final List<AttributeMapping> generatedValuesToSelect = getGeneratedValues( entityDescriptor, timing );
 		if ( generatedValuesToSelect.isEmpty() ) {
 			selectStatement = null;
 		}
@@ -112,6 +78,25 @@ public class GeneratedValuesProcessor {
 					sessionFactory
 			);
 		}
+	}
+
+	private List<AttributeMapping> getGeneratedValues(EntityMappingType entityDescriptor, GenerationTiming timing) {
+		final Generator[] generators = entityDescriptor.getEntityPersister().getEntityMetamodel().getGenerators();
+		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
+		entityDescriptor.visitAttributeMappings( mapping -> {
+			final Generator generator = generators[ mapping.getStateArrayPosition() ];
+			if ( generator != null
+					&& generator.generatedByDatabase()
+					&& generator.getGenerationTiming().isNotNever() ) {
+				// this attribute is generated for the timing we are processing...
+				valueDescriptors.add( new GeneratedValueDescriptor(
+						new InDatabaseGeneratedValueResolver( timing, generatedValuesToSelect.size() ),
+						mapping
+				) );
+				generatedValuesToSelect.add( mapping );
+			}
+		} );
+		return generatedValuesToSelect;
 	}
 
 	public void processGeneratedValues(Object entity, Object id, Object[] state, SharedSessionContractImplementor session) {

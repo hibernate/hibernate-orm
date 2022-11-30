@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.Remove;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -38,7 +39,6 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.usertype.CompositeUserType;
@@ -53,7 +53,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
-	private final Generator[] propertyValueGenerationStrategies;
 	private final boolean[] propertyNullability;
 	private final int[] originalPropertyOrder;
 	protected final int propertySpan;
@@ -76,7 +75,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		this.originalPropertyOrder = originalPropertyOrder;
 		this.propertyNames = new String[propertySpan];
 		this.propertyTypes = new Type[propertySpan];
-		this.propertyValueGenerationStrategies = new ValueGeneration[propertySpan];
 		this.propertyNullability = new boolean[propertySpan];
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
@@ -93,7 +91,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			if ( !prop.isNullable() ) {
 				hasNotNullProperty = true;
 			}
-			this.propertyValueGenerationStrategies[i] = prop.getValueGenerationStrategy();
 			i++;
 		}
 
@@ -438,8 +435,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return propertyTypes;
 	}
 
+	@Deprecated(since = "6.2") @Remove
 	public Generator[] getPropertyValueGenerationStrategies() {
-		return propertyValueGenerationStrategies;
+		return null;
 	}
 
 	@Override

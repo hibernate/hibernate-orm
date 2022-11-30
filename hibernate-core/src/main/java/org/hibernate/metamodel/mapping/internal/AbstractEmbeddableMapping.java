@@ -156,7 +156,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						declaringType,
 						original,
 						original.getPropertyAccess(),
-						original.getValueGeneration(),
 						selectableMapping.isInsertable(),
 						selectableMapping.isUpdateable(),
 						selectableMapping

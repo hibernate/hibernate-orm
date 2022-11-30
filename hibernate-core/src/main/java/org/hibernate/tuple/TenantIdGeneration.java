@@ -14,23 +14,25 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import java.lang.reflect.Member;
+
+import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
+
 /**
  * Value generation implementation for {@link TenantId}.
  *
  * @author Gavin King
  */
-public class TenantIdGeneration
-		implements AnnotationGenerator<TenantId>, InMemoryGenerator {
+public class TenantIdGeneration implements InMemoryGenerator {
 
-	private String entityName;
-	private String propertyName;
-	private Class<?> propertyType;
+	private final String entityName;
+	private final String propertyName;
+	private final Class<?> propertyType;
 
-	@Override
-	public void initialize(TenantId annotation, Class<?> propertyType, String entityName, String propertyName) {
-		this.entityName = entityName;
-		this.propertyName = propertyName;
-		this.propertyType = propertyType;
+	public TenantIdGeneration(TenantId annotation, Member member, GeneratorCreationContext context) {
+		entityName = context.getPersistentClass().getEntityName();
+		propertyName = context.getProperty().getName();
+		propertyType = getPropertyType( member );
 	}
 
 	@Override

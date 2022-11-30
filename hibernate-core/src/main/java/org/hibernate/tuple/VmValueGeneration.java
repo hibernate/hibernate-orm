@@ -12,7 +12,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ReflectHelper;
+
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * An {@link AnnotationValueGeneration} which delegates to a {@link ValueGenerator}.
@@ -20,14 +21,13 @@ import org.hibernate.internal.util.ReflectHelper;
  * @author Gunnar Morling
  */
 public class VmValueGeneration
-		implements AnnotationGenerator<GeneratorType>, InMemoryGenerator {
+		implements InMemoryGenerator {
 
-	private GenerationTiming generationTiming;
-	ValueGenerator<?> generator;
+	private final GenerationTiming generationTiming;
+	private final ValueGenerator<?> generator;
 
-	@Override
-	public void initialize(GeneratorType annotation, Class<?> propertyType, String entityName, String propertyName) {
-		Constructor<? extends ValueGenerator<?>> constructor = ReflectHelper.getDefaultConstructor(annotation.type());
+	public VmValueGeneration(GeneratorType annotation) {
+		Constructor<? extends ValueGenerator<?>> constructor = getDefaultConstructor( annotation.type() );
 		try {
 			generator = constructor.newInstance();
 		}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.internal;
 
+import org.hibernate.engine.spi.CompositeOwner;
+import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -128,6 +130,29 @@ public final class ManagedTypeHelper {
 		return false;
 	}
 
+	/**
+	 * @param entity
+	 * @return true if and only if the entity implements {@see CompositeOwner}
+	 */
+	public static boolean isCompositeOwner(final Object entity) {
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			return t.asCompositeOwner() != null;
+		}
+		return false;
+	}
+
+	/**
+	 * @param entity
+	 * @return true if and only if the entity implements {@see CompositeTracker}
+	 */
+	public static boolean isCompositeTracker(final Object entity) {
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			return t.asCompositeTracker() != null;
+		}
+		return false;
+	}
 
 	/**
 	 * Helper to execute an action on an entity, but exclusively if it's implementing the {@see PersistentAttributeInterceptable}
@@ -246,6 +271,43 @@ public final class ManagedTypeHelper {
 			}
 		}
 		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to ManagedEntity" );
+	}
+
+	/**
+	 * Cast the object to CompositeTracker
+	 * (using this is highly preferrable over a direct cast)
+	 * @param entity the entity to cast
+	 * @return the same instance after casting
+	 * @throws ClassCastException if it's not of the right type
+	 */
+	public static CompositeTracker asCompositeTracker(final Object entity) {
+		Objects.requireNonNull( entity );
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			final CompositeTracker e = t.asCompositeTracker();
+			if ( e != null ) {
+				return e;
+			}
+		}
+		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to CompositeTracker" );
+	}
+	/**
+	 * Cast the object to CompositeOwner
+	 * (using this is highly preferrable over a direct cast)
+	 * @param entity the entity to cast
+	 * @return the same instance after casting
+	 * @throws ClassCastException if it's not of the right type
+	 */
+	public static CompositeOwner asCompositeOwner(final Object entity) {
+		Objects.requireNonNull( entity );
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			final CompositeOwner e = t.asCompositeOwner();
+			if ( e != null ) {
+				return e;
+			}
+		}
+		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to CompositeOwner" );
 	}
 
 	/**

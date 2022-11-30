@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -47,7 +48,6 @@ import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
-import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -304,28 +304,25 @@ public class EntityMetamodel implements Serializable {
 			inMemoryValueGenerationStrategies[i] = pair.getInMemoryStrategy();
 			inDatabaseValueGenerationStrategies[i] = pair.getInDatabaseStrategy();
 
-			if ( pair.getInMemoryStrategy() != null ) {
+			if ( pair.getInMemoryStrategy() != null
+					&& !pair.getInMemoryStrategy().generatedByDatabase() ) {
 				final GenerationTiming timing = pair.getInMemoryStrategy().getGenerationTiming();
-				if ( timing != GenerationTiming.NEVER ) {
-					final ValueGenerator<?> generator = pair.getInMemoryStrategy().getValueGenerator();
-					if ( generator != null ) {
-						// we have some level of generation indicated
-						switch ( timing ) {
-							case INSERT:
-								foundPreInsertGeneratedValues = true;
-								break;
-							case UPDATE:
-								foundPreUpdateGeneratedValues = true;
-								break;
-							case ALWAYS:
-								foundPreInsertGeneratedValues = true;
-								foundPreUpdateGeneratedValues = true;
-								break;
-						}
-					}
+				// we have some level of generation indicated
+				switch ( timing ) {
+					case INSERT:
+						foundPreInsertGeneratedValues = true;
+						break;
+					case UPDATE:
+						foundPreUpdateGeneratedValues = true;
+						break;
+					case ALWAYS:
+						foundPreInsertGeneratedValues = true;
+						foundPreUpdateGeneratedValues = true;
+						break;
 				}
 			}
-			if (  pair.getInDatabaseStrategy() != null ) {
+			if (  pair.getInDatabaseStrategy() != null
+					&& pair.getInDatabaseStrategy().generatedByDatabase() ) {
 				switch ( pair.getInDatabaseStrategy().getGenerationTiming() ) {
 					case INSERT:
 						foundPostInsertGeneratedValues = true;
@@ -463,9 +460,7 @@ public class EntityMetamodel implements Serializable {
 			// the property is generated in full. build the generation strategy pair.
 			if ( !valueGeneration.generatedByDatabase() ) {
 				// in-memory generation
-				return new GenerationStrategyPair(
-						FullInMemoryValueGenerationStrategy.create( (InMemoryValueGenerationStrategy) valueGeneration )
-				);
+				return new GenerationStrategyPair( (InMemoryValueGenerationStrategy) valueGeneration );
 			}
 			else {
 				// in-db generation
@@ -503,7 +498,7 @@ public class EntityMetamodel implements Serializable {
 			this( NoInMemoryValueGenerationStrategy.INSTANCE, NoInDatabaseValueGenerationStrategy.INSTANCE );
 		}
 
-		public GenerationStrategyPair(FullInMemoryValueGenerationStrategy inMemoryStrategy) {
+		public GenerationStrategyPair(InMemoryValueGenerationStrategy inMemoryStrategy) {
 			this( inMemoryStrategy, NoInDatabaseValueGenerationStrategy.INSTANCE );
 		}
 
@@ -685,35 +680,8 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public ValueGenerator<?> getValueGenerator() {
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
 			return null;
-		}
-	}
-
-	private static class FullInMemoryValueGenerationStrategy implements InMemoryValueGenerationStrategy {
-		private final GenerationTiming timing;
-		private final ValueGenerator<?> generator;
-
-		private FullInMemoryValueGenerationStrategy(GenerationTiming timing, ValueGenerator<?> generator) {
-			this.timing = timing;
-			this.generator = generator;
-		}
-
-		public static FullInMemoryValueGenerationStrategy create(InMemoryValueGenerationStrategy valueGeneration) {
-			return new FullInMemoryValueGenerationStrategy(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.getValueGenerator()
-			);
-		}
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
-		}
-
-		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return generator;
 		}
 	}
 

@@ -79,8 +79,8 @@ public class SourceGeneration
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		return valueGenerator;
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		return valueGenerator.generateValue( (Session) session, owner, currentValue );
 	}
 
 	@Override

@@ -34,6 +34,6 @@ public interface ValueGenerator<T> {
 	 * @return The generated value
 	 */
 	default T generateValue(Session session, Object owner, Object currentValue) {
-		return generateValue(session, owner);
+		return generateValue( session, owner );
 	}
 }

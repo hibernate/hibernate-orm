@@ -7,7 +7,6 @@
 package org.hibernate.id;
 
 import java.util.Properties;
-import jakarta.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -16,19 +15,23 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.type.Type;
+
+import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * The general contract between a class that generates unique
- * identifiers and the {@code Session}. It is not intended that
- * this interface ever be exposed to the application. It <b>is</b>
- * intended that users implement this interface to provide
- * custom identifier generation strategies.
+ * identifiers and the {@link org.hibernate.Session}. It is not
+ * intended that this interface ever be exposed to the application.
+ * It <em>is</em> intended that users implement this interface to
+ * provide custom identifier generation strategies.
  * <p>
  * Implementors should provide a public default constructor.
  * <p>
- * Implementations that accept configuration parameters should
- * also implement {@code Configurable}.
+ * Implementations that accept configuration parameters should also
+ * implement {@link Configurable}.
  * <p>
  * Implementors <em>must</em> be thread-safe
  *
@@ -36,7 +39,7 @@ import org.hibernate.type.Type;
  *
  * @see PersistentIdentifierGenerator
  */
-public interface IdentifierGenerator extends Configurable, ExportableProducer {
+public interface IdentifierGenerator extends InMemoryValueGenerationStrategy, ExportableProducer, Configurable {
 	/**
 	 * The configuration parameter holding the entity name
 	 */
@@ -48,8 +51,11 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	String JPA_ENTITY_NAME = "jpa_entity_name";
 
 	/**
-	 * Used as a key to pass the name used as {@link GeneratedValue#generator()} to  the
-	 * {@link IdentifierGenerator} as it is configured.
+	 * The configuration parameter holding the name of this
+	 * identifier generator.
+	 *
+	 * @see org.hibernate.annotations.GenericGenerator#name()
+	 * @see jakarta.persistence.GeneratedValue#generator().
 	 */
 	String GENERATOR_NAME = "GENERATOR_NAME";
 
@@ -62,7 +68,8 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	 * Configure this instance, given the value of parameters
 	 * specified by the user as {@code &lt;param&gt;} elements.
 	 * <p>
-	 * This method is called just once, following instantiation, and before {@link #registerExportables(Database)}.
+	 * This method is called just once, following instantiation,
+	 * and before {@link #registerExportables(Database)}.
 	 *
 	 * @param type The id property type descriptor
 	 * @param params param values, keyed by parameter name
@@ -70,13 +77,15 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	 * @throws MappingException If configuration fails.
 	 */
 	@Override
-	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
 	}
 
 	/**
-	 * Register database objects used by this identifier generator, e.g. sequences, tables, etc.
+	 * Register database objects used by this identifier generator,
+	 * for example, a sequence or tables.
 	 * <p>
-	 * This method is called just once, after {@link #configure(Type, Properties, ServiceRegistry)}.
+	 * This method is called just once, after
+	 * {@link #configure(Type, Properties, ServiceRegistry)}.
 	 *
 	 * @param database The database instance
 	 */
@@ -85,9 +94,12 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	}
 
 	/**
-	 * Initializes this instance, in particular pre-generates SQL as necessary.
+	 * Initializes this instance, in particular pre-generates
+	 * SQL as necessary.
 	 * <p>
-	 * This method is called after {@link #registerExportables(Database)}, before first use.
+	 * This method is called after
+	 * {@link #registerExportables(Database)},
+	 * and before first use.
 	 *
 	 * @param context A context to help generate SQL strings
 	 */
@@ -104,13 +116,26 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	 *
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
-	Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
+	Object generate(SharedSessionContractImplementor session, Object object);
+
+	@Override
+	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		return generate( session, owner );
+	}
+
+	@Override
+	default GenerationTiming getGenerationTiming() {
+		return INSERT;
+	}
 
 	/**
 	 * Check if JDBC batch inserts are supported.
 	 *
 	 * @return JDBC batch inserts are supported.
+	 *
+	 * @deprecated this method is no longer called
 	 */
+	@Deprecated(since="6.2")
 	default boolean supportsJdbcBatchInserts() {
 		return true;
 	}

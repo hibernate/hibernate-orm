@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Internal;
-import org.hibernate.Session;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -104,7 +103,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			final InMemoryValueGenerationStrategy[] strategies = entityMetamodel.getInMemoryValueGenerationStrategies();
 			for ( int i = 0; i < strategies.length; i++ ) {
 				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
-					values[i] = strategies[i].getValueGenerator().generateValue( (Session) session, entity, values[i] );
+					values[i] = strategies[i].generate( session, entity, values[i] );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}

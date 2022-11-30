@@ -30,11 +30,20 @@ public class TableUpdateCustomSql
 	public TableUpdateCustomSql(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
-			List<ColumnValueParameter> parameters,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
-		super( mutatingTable, mutationTarget, parameters, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
+		super( mutatingTable, mutationTarget, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
+	}
+
+	public TableUpdateCustomSql(
+			MutatingTableReference mutatingTable,
+			MutationTarget<?> mutationTarget,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			List<ColumnValueParameter> parameters) {
+		super( mutatingTable, mutationTarget, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
@@ -21,18 +22,20 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.internal.TableUpsert;
 
 /**
+ * Standard TableUpdateBuilder implementation
+ *
  * @author Steve Ebersole
  */
 public class TableUpdateBuilderStandard<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
 	public TableUpdateBuilderStandard(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableMapping, sessionFactory );
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableReference, sessionFactory );
@@ -50,7 +53,6 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
-					getParameters(),
 					valueBindings,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings()
@@ -63,18 +65,22 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 					getMutationTarget(),
 					valueBindings,
 					getKeyRestrictionBindings(),
-					getOptimisticLockBindings(),
-					getParameters()
+					getOptimisticLockBindings()
 			);
 		}
 
 		return (RestrictedTableMutation<O>) new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),
-				getParameters(),
 				valueBindings,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings()
 		);
+	}
+
+	@Override
+	protected void handleParameterCreation(ColumnValueParameter parameter) {
+		// nothing to do for updates... each TableUpdate impl collects
+		// the parameters from the bindings in a specific order
 	}
 }

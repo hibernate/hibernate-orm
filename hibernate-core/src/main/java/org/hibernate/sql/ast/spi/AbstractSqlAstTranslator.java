@@ -178,6 +178,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
@@ -615,6 +616,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		this.limitParameter = limitParameter;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <R> R interpretExpression(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
 		if ( expression instanceof Literal ) {
 			return (R) ( (Literal) expression ).getLiteralValue();
@@ -766,6 +768,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 
+			//noinspection unchecked
 			return (T) jdbcOperation;
 		}
 		finally {
@@ -902,6 +905,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				int startPosition,
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
+			//noinspection unchecked
 			getJdbcMapping().getJdbcValueBinder().bind(
 					statement,
 					executionContext.getQueryOptions().getLimit().getFirstRow(),
@@ -923,6 +927,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				int startPosition,
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
+			//noinspection unchecked
 			getJdbcMapping().getJdbcValueBinder().bind(
 					statement,
 					executionContext.getQueryOptions().getLimit().getMaxRows(),
@@ -1288,7 +1293,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private enum LockKind {
 		NONE,
 		SHARE,
-		UPDATE;
+		UPDATE
 	}
 
 	protected String getForUpdate() {
@@ -1625,12 +1630,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( cte.getCteTable().getCteColumns() == null ) {
 			final List<String> columnExpressions = new ArrayList<>();
 			cte.getCteTable().getTableGroupProducer().visitSubParts(
-					modelPart -> {
-						modelPart.forEachSelectable(
-								0,
-								(index, mapping) -> columnExpressions.add( mapping.getSelectionExpression() )
-						);
-					},
+					modelPart -> modelPart.forEachSelectable(
+							0,
+							(index, mapping) -> columnExpressions.add( mapping.getSelectionExpression() )
+					),
 					null
 			);
 			for ( String columnExpression : columnExpressions ) {
@@ -4013,6 +4016,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
 							}
 							final Number bindValue = (Number) binding.getBindValue();
+							//noinspection unchecked
 							offsetParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
 									statement,
 									bindValue.intValue() + offsetValue,
@@ -4092,6 +4096,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				offsetValue = dynamicOffset.intValue() + staticOffset;
 				dynamicOffset = null;
 			}
+			//noinspection unchecked
 			fetchParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
 					statement,
 					bindValue.intValue() + offsetValue,
@@ -5062,7 +5067,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert literal.getExpressionType().getJdbcTypeCount() == 1;
 
 		final JdbcMapping jdbcMapping = literal.getJdbcMapping();
-		final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
+		final JdbcLiteralFormatter<Object> literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
@@ -6510,7 +6515,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
 			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
-			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
+			//noinspection unchecked
+			final JdbcLiteralFormatter<Object> literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 			if ( literalFormatter == null ) {
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}
@@ -7685,7 +7691,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Handle rendering an insert with no columns (eye roll)
+	 * Handle rendering an insert with no columns
 	 */
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		renderIntoIntoAndTable( tableInsert );
@@ -7697,10 +7703,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableInsert.getCustomSql() );
 
-		tableInsert.getParameters().forEach( (parameter) -> {
-			parameterBinders.add( parameter.getParameterBinder() );
-			jdbcParameters.addParameter( parameter );
-		} );
+		tableInsert.forEachParameter( this::applyParameter );
 	}
 
 	@Override
@@ -7777,10 +7780,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableUpdate.getCustomSql() );
 
-		tableUpdate.getParameters().forEach( (parameter) -> {
-			parameterBinders.add( parameter.getParameterBinder() );
-			jdbcParameters.addParameter( parameter );
-		} );
+		tableUpdate.forEachParameter( this::applyParameter );
 	}
 
 	@Override
@@ -7838,10 +7838,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableDelete.getCustomSql() );
 
-		tableDelete.getParameters().forEach( (parameter) -> {
-			parameterBinders.add( parameter.getParameterBinder() );
-			jdbcParameters.addParameter( parameter );
-		} );
+		tableDelete.forEachParameter( this::applyParameter );
+	}
+
+	protected void applyParameter(ColumnValueParameter parameter) {
+		assert parameter != null;
+		parameterBinders.add( parameter.getParameterBinder() );
+		jdbcParameters.addParameter( parameter );
 	}
 
 	@Override

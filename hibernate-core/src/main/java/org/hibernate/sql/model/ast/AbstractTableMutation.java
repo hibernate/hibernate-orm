@@ -8,6 +8,7 @@ package org.hibernate.sql.model.ast;
 
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -75,7 +76,21 @@ public abstract class AbstractTableMutation<O extends MutationOperation>
 		return parameters;
 	}
 
-	protected <T> void forEachThing(List<T> list, BiConsumer<Integer,T> action) {
+	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+		if ( parameters == null ) {
+			return;
+		}
+
+		for ( int i = 0; i < parameters.size(); i++ ) {
+			consumer.accept( parameters.get( i ) );
+		}
+	}
+
+	protected static  <T> void forEachThing(List<T> list, BiConsumer<Integer,T> action) {
+		if ( list == null ) {
+			return;
+		}
+
 		for ( int i = 0; i < list.size(); i++ ) {
 			action.accept( i, list.get( i ) );
 		}

@@ -8,6 +8,7 @@ package org.hibernate.sql.model.internal;
 
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
@@ -25,6 +26,8 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
 
+import static org.hibernate.sql.model.ast.AbstractTableUpdate.collectParameters;
+
 /**
  * @apiNote Implements {@link TableUpdate} because it is fundamentally an update
  *
@@ -40,16 +43,14 @@ public class TableUpsert
 			MutationTarget<?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
-			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
+			List<ColumnValueBinding> optLockRestrictionBindings) {
 		this(
 				mutatingTable,
 				mutationTarget,
 				"upsert for " + mutationTarget.getRolePath(),
 				valueBindings,
 				keyRestrictionBindings,
-				optLockRestrictionBindings,
-				parameters
+				optLockRestrictionBindings
 		);
 	}
 
@@ -59,9 +60,15 @@ public class TableUpsert
 			String comment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
-			List<ColumnValueBinding> optLockRestrictionBindings,
-			List<ColumnValueParameter> parameters) {
-		super( mutatingTable, mutationTarget, comment, keyRestrictionBindings, optLockRestrictionBindings, parameters );
+			List<ColumnValueBinding> optLockRestrictionBindings) {
+		super(
+				mutatingTable,
+				mutationTarget,
+				comment,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				collectParameters( valueBindings, keyRestrictionBindings, optLockRestrictionBindings )
+		);
 		this.valueBindings = valueBindings;
 	}
 
@@ -88,6 +95,20 @@ public class TableUpsert
 	@Override
 	public Expectation getExpectation() {
 		return getMutatingTable().getTableMapping().getUpdateDetails().getExpectation();
+	}
+
+	@Override
+	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
+			final ColumnValueParameter parameter = binding.getValueExpression().getParameter();
+			if ( parameter != null ) {
+				consumer.accept( parameter );
+			}
+		};
+
+		forEachThing( getValueBindings(), intermediateConsumer );
+		forEachThing( getKeyBindings(), intermediateConsumer );
+		forEachThing( getOptimisticLockBindings(), intermediateConsumer );
 	}
 
 	public List<ColumnValueBinding> getValueBindings() {

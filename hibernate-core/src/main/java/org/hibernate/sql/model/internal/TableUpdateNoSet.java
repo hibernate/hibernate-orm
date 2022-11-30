@@ -9,6 +9,7 @@ package org.hibernate.sql.model.internal;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -18,6 +19,7 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.AbstractRestrictedTableMutation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -83,5 +85,9 @@ public class TableUpdateNoSet
 
 	@Override
 	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
+	}
+
+	@Override
+	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
 	}
 }

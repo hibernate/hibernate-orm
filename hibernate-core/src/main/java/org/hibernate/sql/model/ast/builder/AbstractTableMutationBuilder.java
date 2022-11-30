@@ -36,9 +36,6 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 
 	private final MutatingTableReference mutatingTable;
 
-	private final List<ColumnValueParameter> parameters = new ArrayList<>();
-
-
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
 			MutationTarget<?> mutationTarget,
@@ -74,10 +71,6 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 
 	protected JdbcServices getJdbcServices() {
 		return sessionFactory.getJdbcServices();
-	}
-
-	protected List<ColumnValueParameter> getParameters() {
-		return parameters;
 	}
 
 	protected void addColumn(
@@ -116,7 +109,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		final ColumnValueParameter parameter;
 		if ( columnWriteFragment.contains( "?" ) ) {
 			parameter = new ColumnValueParameter( columnReference, parameterUsage );
-			parameters.add( parameter );
+			handleParameterCreation( parameter );
 		}
 		else {
 			parameter = null;
@@ -124,6 +117,8 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 
 		return new ColumnValueBinding( columnReference, new ColumnWriteFragment( columnWriteFragment, parameter, jdbcMapping ) );
 	}
+
+	protected abstract void handleParameterCreation(ColumnValueParameter parameter);
 
 	@SafeVarargs
 	protected final <T> List<T> combine(List<T> list1, List<T>... additionalLists) {

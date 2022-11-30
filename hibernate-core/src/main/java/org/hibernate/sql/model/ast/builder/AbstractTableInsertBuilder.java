@@ -15,6 +15,7 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableInsert;
 
@@ -30,15 +31,17 @@ public abstract class AbstractTableInsertBuilder
 	private final List<ColumnValueBinding> valueBindingList = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindingList;
 
+	private final List<ColumnValueParameter> parameters = new ArrayList<>();
+
 	public AbstractTableInsertBuilder(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, table, sessionFactory );
 	}
 
 	public AbstractTableInsertBuilder(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, tableReference, sessionFactory );
@@ -54,6 +57,10 @@ public abstract class AbstractTableInsertBuilder
 
 	protected List<ColumnValueBinding> getLobValueBindingList() {
 		return lobValueBindingList;
+	}
+
+	protected List<ColumnValueParameter> getParameters() {
+		return parameters;
 	}
 
 	@Override
@@ -80,5 +87,10 @@ public abstract class AbstractTableInsertBuilder
 			String columnWriteFragment,
 			JdbcMapping jdbcMapping) {
 		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindingList );
+	}
+
+	@Override
+	protected void handleParameterCreation(ColumnValueParameter parameter) {
+		parameters.add( parameter );
 	}
 }

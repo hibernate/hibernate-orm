@@ -6,11 +6,15 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
@@ -28,15 +32,17 @@ public class TableDeleteBuilderStandard
 		implements TableDeleteBuilder {
 	private final boolean isCustomSql;
 
+	private final List<ColumnValueParameter> parameters = new ArrayList<>();
+
 	public TableDeleteBuilderStandard(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		this( mutationTarget, new MutatingTableReference( table ), sessionFactory );
 	}
 
 	public TableDeleteBuilderStandard(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.DELETE, mutationTarget, tableReference, sessionFactory );
@@ -83,5 +89,14 @@ public class TableDeleteBuilderStandard
 				getOptimisticLockBindings(),
 				getParameters()
 		);
+	}
+
+	protected List<ColumnValueParameter> getParameters() {
+		return parameters;
+	}
+
+	@Override
+	protected void handleParameterCreation(ColumnValueParameter parameter) {
+		parameters.add( parameter );
 	}
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -390,10 +389,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return new TableUpdateStandard(
 				tableReference,
 				this,
-				parameters,
 				valueBindings,
 				keyRestrictionBindings,
-				Collections.emptyList(),
+				null,
+				parameters,
 				sqlWhereString
 		);
 	}

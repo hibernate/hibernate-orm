@@ -18,8 +18,11 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.TableUpdate;
 
 /**
+ * Base support for TableUpdateBuilder implementations
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
@@ -30,27 +33,44 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	private List<ColumnValueBinding> lobValueBindings;
 
 	public AbstractTableUpdateBuilder(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableMapping, sessionFactory );
 	}
 
 	public AbstractTableUpdateBuilder(
-			MutationTarget mutationTarget,
+			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableReference, sessionFactory );
 	}
 
+	/**
+	 * The bindings for each key restriction (WHERE clause).
+	 *
+	 * @see TableUpdate#getKeyBindings
+	 */
 	protected List<ColumnValueBinding> getKeyBindings() {
 		return keyBindings;
 	}
 
+	/**
+	 * The (non-LOB) bindings for each column being updated (SET clause)
+	 *
+	 * @see TableUpdate#getValueBindings
+	 */
 	protected List<ColumnValueBinding> getValueBindings() {
 		return valueBindings;
 	}
 
+	/**
+	 * @apiNote The distinction with {@link #getValueBindings} is to help
+	 * in cases e.g. where a dialect needs to order all LOB bindings after
+	 * all non-LOB bindings
+	 *
+	 * @see TableUpdate#getValueBindings
+	 */
 	protected List<ColumnValueBinding> getLobValueBindings() {
 		return lobValueBindings;
 	}

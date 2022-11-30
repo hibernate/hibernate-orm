@@ -40,9 +40,7 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 
 	@Override
 	public void forEachKeyBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
-		for ( int i = 0; i < keyRestrictionBindings.size(); i++ ) {
-			consumer.accept( i, keyRestrictionBindings.get( i ) );
-		}
+		forEachThing( keyRestrictionBindings, consumer );
 	}
 
 	@Override
@@ -52,8 +50,6 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 
 	@Override
 	public void forEachOptimisticLockBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
-		for ( int i = 0; i < optLockRestrictionBindings.size(); i++ ) {
-			consumer.accept( i, optLockRestrictionBindings.get( i ) );
-		}
+		forEachThing( optLockRestrictionBindings, consumer );
 	}
 }

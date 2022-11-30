@@ -6,8 +6,10 @@
  */
 package org.hibernate.sql.model.ast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -17,6 +19,8 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 
 /**
+ * Base support for TableUpdate implementations
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractTableUpdate<O extends MutationOperation>
@@ -27,31 +31,60 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	public AbstractTableUpdate(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
-			List<ColumnValueParameter> parameters,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
-		this(
+		super(
 				mutatingTable,
 				mutationTarget,
-				"update for " + mutationTarget.getRolePath(),
-				parameters,
-				valueBindings,
+				"update for " + mutationTarget.getNavigableRole(),
 				keyRestrictionBindings,
-				optLockRestrictionBindings
+				optLockRestrictionBindings,
+				collectParameters( valueBindings, keyRestrictionBindings, optLockRestrictionBindings )
 		);
+
+		this.valueBindings = valueBindings;
 	}
 
-	public AbstractTableUpdate(
-			MutatingTableReference mutatingTable,
+	public <T> AbstractTableUpdate(
+			MutatingTableReference tableReference,
 			MutationTarget<?> mutationTarget,
-			String sqlComment,
-			List<ColumnValueParameter> parameters,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			List<ColumnValueParameter> parameters) {
+		super(
+				tableReference,
+				mutationTarget,
+				"update for " + mutationTarget.getNavigableRole(),
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				parameters
+		);
+		this.valueBindings = valueBindings;
+	}
+
+	public static List<ColumnValueParameter> collectParameters(
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
-		super( mutatingTable, mutationTarget, sqlComment, keyRestrictionBindings, optLockRestrictionBindings, parameters );
-		this.valueBindings = valueBindings;
+		final List<ColumnValueParameter> params = new ArrayList<>();
+
+		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
+			final ColumnWriteFragment valueExpression = binding.getValueExpression();
+			if ( valueExpression != null ) {
+				final ColumnValueParameter parameter = valueExpression.getParameter();
+				if ( parameter != null ) {
+					params.add( parameter );
+				}
+			}
+		};
+
+		forEachThing( valueBindings, intermediateConsumer );
+		forEachThing( keyRestrictionBindings, intermediateConsumer );
+		forEachThing( optLockRestrictionBindings, intermediateConsumer );
+
+		return params;
 	}
 
 	@Override
@@ -72,6 +105,20 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	@Override
 	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 		forEachThing( valueBindings, consumer );
+	}
+
+	@Override
+	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+		final BiConsumer<Integer,ColumnValueBinding> intermediateConsumer = (index, binding) -> {
+			final ColumnValueParameter parameter = binding.getValueExpression().getParameter();
+			if ( parameter != null ) {
+				consumer.accept( parameter );
+			}
+		};
+
+		forEachThing( getValueBindings(), intermediateConsumer );
+		forEachThing( getKeyBindings(), intermediateConsumer );
+		forEachThing( getOptimisticLockBindings(), intermediateConsumer );
 	}
 
 	@Override

@@ -140,8 +140,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				}
 			}
 			else {
-				// there are some non-null values for the table - we need to update or insert the values
+				// there are some non-null values for the table - we need to update or insert the values.
 
+				// first, try the update and see if any row was affected
 				final boolean wasUpdated;
 				if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
 					// either
@@ -302,10 +303,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private boolean performUpdate(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef(
-				"#performUpdate(%s)",
-				tableMapping.getTableName()
-		);
+		MODEL_MUTATION_LOGGER.tracef( "#performUpdate(%s)", tableMapping.getTableName() );
 
 		final TableUpdate<JdbcMutationOperation> tableUpdate;
 		if ( tableMapping.getUpdateDetails() != null
@@ -313,20 +311,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			tableUpdate = new TableUpdateCustomSql(
 					new MutatingTableReference( tableMapping ),
 					mutationTarget,
-					parameters,
 					valueBindings,
 					keyBindings,
-					optimisticLockBindings
+					optimisticLockBindings,
+					parameters
 			);
 		}
 		else {
 			tableUpdate = new TableUpdateStandard(
 					new MutatingTableReference( tableMapping ),
 					mutationTarget,
-					parameters,
 					valueBindings,
 					keyBindings,
-					optimisticLockBindings
+					optimisticLockBindings,
+					parameters
 			);
 		}
 

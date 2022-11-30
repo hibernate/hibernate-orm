@@ -5,7 +5,6 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = CustomSqlTest.Custom.class)
 public class CustomSqlTest {
     @Test
-    @FailureExpected( reason = "Change in expected order of columns in UPDATE SET clause causes problems with `@SQLUpdate`" )
     public void testCustomSql(SessionFactoryScope scope) {
         Custom c = new Custom();
         c.name = "name";

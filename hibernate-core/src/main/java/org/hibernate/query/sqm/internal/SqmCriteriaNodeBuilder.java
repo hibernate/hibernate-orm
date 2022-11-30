@@ -43,32 +43,34 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
-import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SortOrder;
-import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
+import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -89,7 +91,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -102,9 +103,12 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
@@ -123,6 +127,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
+import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -2558,5 +2563,149 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Window functions
+
+	@Override
+	public SqmWindow createWindow() {
+		return new SqmWindow( this );
+	}
+
+	@Override
+	public <T> SqmExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args) {
+		// todo marco : some functions (`rank` and `percent_rank`) are not registered as window functions
+		//  but as ordered set-aggregate functions, but they can serve both purposes
+		//  getting an error when calling generateWindowSqmExpression
+		//  (@see CommonFunctionFactory#hypotheticalOrderedSetAggregates)
+		SqmExpression<T> function = getFunctionDescriptor( name ).generateSqmExpression(
+				expressionList(args),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+		return new SqmOver<>( function, (SqmWindow) window );
+	}
+
+	@Override
+	public SqmExpression<Long> rowNumber(JpaWindow window) {
+		return windowFunction( "row_number", Long.class, window );
+	}
+
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> firstValue(Expression<T> argument, JpaWindow window) {
+		return (SqmExpression<T>) windowFunction( "first_value", argument.getJavaType(), window, argument );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> lastValue(Expression<T> argument, JpaWindow window) {
+		return (SqmExpression<T>) windowFunction( "last_value", argument.getJavaType(), window, argument );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window) {
+		return (SqmExpression<T>) windowFunction( "nth_value", argument.getJavaType(), window, argument, n );
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaWindow window) {
+		return windowFunction( "rank", Long.class, window );
+	}
+
+	@Override
+	public SqmExpression<Long> denseRank(JpaWindow window) {
+		return windowFunction( "dense_rank", Long.class, window );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(JpaWindow window) {
+		return windowFunction( "percent_rank", Double.class, window );
+	}
+
+	@Override
+	public SqmExpression<Double> cumeDist(JpaWindow window) {
+		return windowFunction( "cume_dist", Double.class, window );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Ordered set-aggregate functions
+
+	@Override
+	public <T> SqmExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<?>... args) {
+		// todo marco : we could also pass a Window (?)
+		//  set aggregate function support OVER clauses
+		//  eg. https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions110.htm
+		SqmOrderByClause withinGroupClause = new SqmOrderByClause();
+		if ( order != null ) {
+			withinGroupClause.addSortSpecification( (SqmSortSpecification) order );
+		}
+		SqmPredicate sqmFilter = filter != null ? (SqmPredicate) filter : null;
+		return getFunctionDescriptor( name ).generateOrderedSetAggregateSqmExpression(
+				expressionList( args ),
+				sqmFilter,
+				withinGroupClause,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			Expression<?>... args) {
+		return functionWithinGroup( name, type, order, null, args );
+	}
+
+	@Override
+	public SqmExpression<String> listagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<String> argument,
+			Expression<String> separator) {
+		return functionWithinGroup( "listagg", String.class, order, filter, argument, separator );
+	}
+
+	@Override
+	public SqmExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return functionWithinGroup( "mode", argument.getJavaType(), order, filter, argument );
+	}
+
+	@Override
+	public SqmExpression<Integer> percentileCont(
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<? extends Number> argument) {
+		return functionWithinGroup( "percentile_cont", Integer.class, order, filter, argument );
+	}
+
+	@Override
+	public SqmExpression<Integer> percentileDisc(
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<? extends Number> argument) {
+		return functionWithinGroup( "percentile_disc", Integer.class, order, filter, argument );
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
+		return functionWithinGroup( "rank", Long.class, order, filter, argument );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
+		return functionWithinGroup( "percent_rank", Double.class, order, filter, argument );
 	}
 }

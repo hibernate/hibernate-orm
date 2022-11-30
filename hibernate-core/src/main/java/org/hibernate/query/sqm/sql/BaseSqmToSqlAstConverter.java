@@ -5609,24 +5609,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitOver(SqmOver<?> over) {
 		currentClauseStack.push( Clause.OVER );
 		final Expression expression = (Expression) over.getExpression().accept( this );
-		final List<Expression> partitions = new ArrayList<>(over.getPartitions().size());
-		for ( SqmExpression<?> partition : over.getPartitions() ) {
+
+		final List<Expression> partitions = new ArrayList<>(over.getWindow().getPartitions().size());
+		for ( SqmExpression<?> partition : over.getWindow().getPartitions() ) {
 			partitions.add( (Expression) partition.accept( this ) );
 		}
-		final List<SortSpecification> orderList = new ArrayList<>( over.getOrderList().size() );
-		for ( SqmSortSpecification sortSpecification : over.getOrderList() ) {
+		final List<SortSpecification> orderList = new ArrayList<>( over.getWindow().getOrderList().size() );
+		for ( SqmSortSpecification sortSpecification : over.getWindow().getOrderList() ) {
 			orderList.add( visitSortSpecification( sortSpecification ) );
 		}
 		final Over<Object> overExpression = new Over<>(
 				expression,
 				partitions,
 				orderList,
-				over.getMode(),
-				over.getStartKind(),
-				over.getStartExpression() == null ? null : (Expression) over.getStartExpression().accept( this ),
-				over.getEndKind(),
-				over.getEndExpression() == null ? null : (Expression) over.getEndExpression().accept( this ),
-				over.getExclusion()
+				over.getWindow().getMode(),
+				over.getWindow().getStartKind(),
+				over.getWindow().getStartExpression() == null ?
+						null :
+						(Expression) over.getWindow().getStartExpression().accept( this ),
+				over.getWindow().getEndKind(),
+				over.getWindow().getEndExpression() == null ?
+						null :
+						(Expression) over.getWindow().getEndExpression().accept( this ),
+				over.getWindow().getExclusion()
 		);
 		currentClauseStack.pop();
 		return overExpression;

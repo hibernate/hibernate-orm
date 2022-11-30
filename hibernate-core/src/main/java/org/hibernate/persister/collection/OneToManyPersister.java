@@ -389,6 +389,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return new TableUpdateStandard(
 				tableReference,
 				this,
+				"one-shot delete for " + getRolePath(),
 				valueBindings,
 				keyRestrictionBindings,
 				null,

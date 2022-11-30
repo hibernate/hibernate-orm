@@ -31,13 +31,14 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	public AbstractTableUpdate(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
 		super(
 				mutatingTable,
 				mutationTarget,
-				"update for " + mutationTarget.getNavigableRole(),
+				sqlComment,
 				keyRestrictionBindings,
 				optLockRestrictionBindings,
 				collectParameters( valueBindings, keyRestrictionBindings, optLockRestrictionBindings )
@@ -49,6 +50,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	public <T> AbstractTableUpdate(
 			MutatingTableReference tableReference,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
@@ -56,7 +58,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 		super(
 				tableReference,
 				mutationTarget,
-				"update for " + mutationTarget.getNavigableRole(),
+				sqlComment,
 				keyRestrictionBindings,
 				optLockRestrictionBindings,
 				parameters

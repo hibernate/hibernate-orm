@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -49,9 +50,9 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.ALL;
@@ -100,6 +101,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	public final boolean isModifiableEntity(EntityEntry entry) {
 		return ( entry == null ? entityPersister().isMutable() : entry.isModifiableEntity() );
+	}
+
+	@Override
+	public void forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			Object nextVersion,
+			SharedSessionContractImplementor session) {
+		if ( versionUpdateGroup == null ) {
+			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+		}
+		doVersionUpdate( null, id, nextVersion, currentVersion, session );
 	}
 
 	@Override
@@ -606,6 +619,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		try {
+			//noinspection SuspiciousMethodCalls
 			mutationExecutor.execute(
 					entity,
 					valuesAnalysis,
@@ -799,6 +813,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					entity,
 					valuesAnalysis,
 					(tableMapping) -> {
+						//noinspection SuspiciousMethodCalls
 						if ( tableMapping.isOptional()
 								&& !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping ) ) {
 							// the table is optional, and we have null values for all of its columns
@@ -806,7 +821,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							return false;
 						}
 
-						//noinspection RedundantIfStatement
+						//noinspection SuspiciousMethodCalls,RedundantIfStatement
 						if ( !valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) ) {
 							// nothing changed
 							return false;
@@ -842,6 +857,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final RestrictedTableMutationBuilder<?,?> tableUpdateBuilder;
 
 			final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
+			//noinspection SuspiciousMethodCalls
 			if ( ! valuesAnalysis.tablesNeedingUpdate.contains( tableReference.getTableMapping() ) ) {
 				// this table does not need updating
 				tableUpdateBuilder = new TableUpdateBuilderSkipped( tableReference );
@@ -1371,26 +1387,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				valuesAnalysis,
 				(position, attribute) -> valuesAnalysis.getAttributeAnalyses().get( position ).isDirty(),
-//				// optimistic locking (restriction) checker
-//				(position, attribute) -> {
-//					final OptimisticLockStyle optimisticLockStyle = entityPersister()
-//							.getEntityMetamodel()
-//							.getOptimisticLockStyle();
-//
-//					if ( optimisticLockStyle == ALL ) {
-//						return true;
-//					}
-//
-//					if ( optimisticLockStyle == VERSION ) {
-//						final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-//						if ( versionMapping == null ) {
-//							return false;
-//						}
-//						return attribute == versionMapping.getVersionAttribute();
-//					}
-//
-//					return false;
-//				},
 				// session
 				null
 		);
@@ -1406,11 +1402,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 
+		if ( entityPersister().getSuperMappingType() != null ) {
+			return null;
+		}
+
 		final TableUpdateBuilderStandard updateBuilder = new TableUpdateBuilderStandard(
 				entityPersister(),
 				entityPersister().getIdentifierTableMapping(),
 				factory()
 		);
+
+		updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
 		updateBuilder.addValueColumn( versionMapping );
 
@@ -1439,10 +1441,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	@FunctionalInterface
 	private interface InclusionChecker {
 		boolean include(int position, SingularAttributeMapping attribute);
-
-		default boolean reject(int position, SingularAttributeMapping attribute) {
-			return !include( position, attribute );
-		}
 	}
 
 	@FunctionalInterface

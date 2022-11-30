@@ -1785,6 +1785,7 @@ public abstract class AbstractCollectionPersister
 		return (RestrictedTableMutation) new TableDeleteStandard(
 				tableReference,
 				this,
+				"one-shot delete for " + getRolePath(),
 				keyRestrictionBindings,
 				Collections.emptyList(),
 				parameters

@@ -21,18 +21,15 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
  * @author Steve Ebersole
  */
 public class TableInsertStandard extends AbstractTableInsert {
-	private final boolean returnGeneratedKeys;
 	private final List<ColumnReference> returningColumns;
 
 	public TableInsertStandard(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
-			boolean returnGeneratedKeys,
 			List<ColumnReference> returningColumns,
 			List<ColumnValueParameter> parameters) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );
-		this.returnGeneratedKeys = returnGeneratedKeys;
 		this.returningColumns = returningColumns;
 	}
 

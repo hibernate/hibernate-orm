@@ -256,10 +256,10 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.ValueGenerationStrategy;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.tuple.ValueGenerationStrategy;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
@@ -1934,6 +1934,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( superMappingType != null ) {
+			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+
 		if ( !isVersioned() ) {
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
 		}
@@ -1944,6 +1948,7 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 
 		}
+
 		final EntityVersionMapping versionMapping = getVersionMapping();
 		final Object nextVersion = getVersionJavaType().next(
 				currentVersion,
@@ -1960,36 +1965,38 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		// todo : cache this sql...
-		String versionIncrementString = generateVersionIncrementUpdateString();
-		PreparedStatement st;
-		try {
-			st = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( versionIncrementString, false );
-			try {
-				getVersionType().nullSafeSet( st, nextVersion, 1, session );
-				getIdentifierType().nullSafeSet( st, id, 2, session );
-				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
-				int rows = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
-				if ( rows != 1 ) {
-					throw new StaleObjectStateException( getEntityName(), id );
-				}
-			}
-			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-		catch (SQLException sqle) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not retrieve version: " +
-							MessageHelper.infoString( this, id, getFactory() ),
-					getVersionSelectString()
-			);
-		}
+		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
+
+//		// todo : cache this sql...
+//		String versionIncrementString = generateVersionIncrementUpdateString();
+//		PreparedStatement st;
+//		try {
+//			st = session
+//					.getJdbcCoordinator()
+//					.getStatementPreparer()
+//					.prepareStatement( versionIncrementString, false );
+//			try {
+//				getVersionType().nullSafeSet( st, nextVersion, 1, session );
+//				getIdentifierType().nullSafeSet( st, id, 2, session );
+//				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
+//				int rows = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+//				if ( rows != 1 ) {
+//					throw new StaleObjectStateException( getEntityName(), id );
+//				}
+//			}
+//			finally {
+//				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+//				session.getJdbcCoordinator().afterStatementExecution();
+//			}
+//		}
+//		catch (SQLException sqle) {
+//			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+//					sqle,
+//					"could not retrieve version: " +
+//							MessageHelper.infoString( this, id, getFactory() ),
+//					getVersionSelectString()
+//			);
+//		}
 
 		return nextVersion;
 	}

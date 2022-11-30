@@ -32,11 +32,14 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	private final List<ColumnValueBinding> valueBindings = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindings;
 
+	private String sqlComment;
+
 	public AbstractTableUpdateBuilder(
 			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableMapping, sessionFactory );
+		this.sqlComment = "update for " + mutationTarget.getRolePath();
 	}
 
 	public AbstractTableUpdateBuilder(
@@ -44,6 +47,14 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableReference, sessionFactory );
+	}
+
+	public String getSqlComment() {
+		return sqlComment;
+	}
+
+	public void setSqlComment(String sqlComment) {
+		this.sqlComment = sqlComment;
 	}
 
 	/**

@@ -28,10 +28,11 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 	public TableDeleteCustomSql(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
-		super( mutatingTable, mutationTarget, keyRestrictionBindings, optLockRestrictionBindings, parameters );
+		super( mutatingTable, mutationTarget, sqlComment, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 	}
 
 	@Override

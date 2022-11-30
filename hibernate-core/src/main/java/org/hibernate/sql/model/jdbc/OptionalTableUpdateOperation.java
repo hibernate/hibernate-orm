@@ -271,6 +271,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			tableDelete = new TableDeleteCustomSql(
 					new MutatingTableReference( tableMapping ),
 					getMutationTarget(),
+					"upsert delete for " + mutationTarget.getRolePath(),
 					keyBindings,
 					optimisticLockBindings,
 					parameters
@@ -280,6 +281,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			tableDelete = new TableDeleteStandard(
 					new MutatingTableReference( tableMapping ),
 					getMutationTarget(),
+					"upsert delete for " + mutationTarget.getRolePath(),
 					keyBindings,
 					optimisticLockBindings,
 					parameters
@@ -311,6 +313,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			tableUpdate = new TableUpdateCustomSql(
 					new MutatingTableReference( tableMapping ),
 					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
 					valueBindings,
 					keyBindings,
 					optimisticLockBindings,
@@ -321,6 +324,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			tableUpdate = new TableUpdateStandard(
 					new MutatingTableReference( tableMapping ),
 					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
 					valueBindings,
 					keyBindings,
 					optimisticLockBindings,
@@ -427,7 +431,6 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					new MutatingTableReference( tableMapping ),
 					getMutationTarget(),
 					CollectionHelper.combine( valueBindings, keyBindings ),
-					false,
 					Collections.emptyList(),
 					parameters
 			);

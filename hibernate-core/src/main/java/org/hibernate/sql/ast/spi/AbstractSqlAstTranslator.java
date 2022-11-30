@@ -7643,6 +7643,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void renderInsertInto(TableInsertStandard tableInsert) {
+		applySqlComment( tableInsert.getMutationComment() );
+
 		if ( tableInsert.getNumberOfValueBindings() == 0 ) {
 			renderInsertIntoNoColumns( tableInsert );
 			return;
@@ -7710,6 +7712,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
 		getCurrentClauseStack().push( Clause.UPDATE );
 		try {
+			applySqlComment( tableUpdate.getMutationComment() );
+
 			sqlBuffer.append( "update " );
 			appendSql( tableUpdate.getMutatingTable().getTableName() );
 			registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
@@ -7775,6 +7779,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	private void applySqlComment(String comment) {
+		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
+			if ( comment != null ) {
+				appendSql( "/* " );
+				appendSql( Dialect.escapeComment( comment ) );
+				appendSql( " */" );
+			}
+		}
+	}
+
 	@Override
 	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
 		assert sqlBuffer.toString().isEmpty();
@@ -7787,6 +7801,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
 		getCurrentClauseStack().push( Clause.DELETE );
 		try {
+			applySqlComment( tableDelete.getMutationComment() );
+
 			sqlBuffer.append( "delete from " );
 			appendSql( tableDelete.getMutatingTable().getTableName() );
 			registerAffectedTable( tableDelete.getMutatingTable().getTableName() );

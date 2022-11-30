@@ -27,6 +27,7 @@ import org.hibernate.sql.model.internal.TableUpsert;
  * @author Steve Ebersole
  */
 public class TableUpdateBuilderStandard<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
+
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
@@ -53,6 +54,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
+					getSqlComment(),
 					valueBindings,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings()
@@ -72,6 +74,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 		return (RestrictedTableMutation<O>) new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),
+				getSqlComment(),
 				valueBindings,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings()

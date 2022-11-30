@@ -33,11 +33,14 @@ public abstract class AbstractTableInsertBuilder
 
 	private final List<ColumnValueParameter> parameters = new ArrayList<>();
 
+	private String sqlComment;
+
 	public AbstractTableInsertBuilder(
 			MutationTarget<?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, table, sessionFactory );
+		this.sqlComment = "insert for " + mutationTarget.getRolePath();
 	}
 
 	public AbstractTableInsertBuilder(
@@ -45,6 +48,15 @@ public abstract class AbstractTableInsertBuilder
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, tableReference, sessionFactory );
+		this.sqlComment = "insert for " + mutationTarget.getRolePath();
+	}
+
+	public String getSqlComment() {
+		return sqlComment;
+	}
+
+	public void setSqlComment(String sqlComment) {
+		this.sqlComment = sqlComment;
 	}
 
 	protected List<ColumnValueBinding> getKeyBindingList() {

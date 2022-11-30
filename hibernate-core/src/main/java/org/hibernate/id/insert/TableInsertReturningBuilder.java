@@ -38,7 +38,6 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 				getMutatingTable(),
 				getMutationTarget(),
 				combine( getValueBindingList(), getKeyBindingList(), getLobValueBindingList() ),
-				true,
 				Collections.singletonList( new ColumnReference( getMutatingTable(), identifierMapping ) ),
 				getParameters()
 		);

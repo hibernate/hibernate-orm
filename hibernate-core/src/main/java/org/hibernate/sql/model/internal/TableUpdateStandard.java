@@ -25,38 +25,41 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 	public TableUpdateStandard(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
-		super( mutatingTable, mutationTarget, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
+		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
 		this.whereFragment = null;
 	}
 
 	public TableUpdateStandard(
 			MutatingTableReference tableReference,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
-		this( tableReference, mutationTarget, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters, null );
+		this( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters, null );
 	}
 
 	public TableUpdateStandard(
 			MutatingTableReference tableReference,
 			MutationTarget<?> mutationTarget,
+			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters,
 			String whereFragment) {
-		super( tableReference, mutationTarget, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
+		super( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 		this.whereFragment = whereFragment;
 	}
 
 	@Override
 	public boolean isCustomSql() {
-		return true;
+		return false;
 	}
 
 	@Override

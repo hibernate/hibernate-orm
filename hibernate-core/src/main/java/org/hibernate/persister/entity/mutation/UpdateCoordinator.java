@@ -31,4 +31,10 @@ public interface UpdateCoordinator {
 			int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session);
+
+	void forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			Object nextVersion,
+			SharedSessionContractImplementor session);
 }

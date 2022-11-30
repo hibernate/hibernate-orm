@@ -34,6 +34,8 @@ public class TableDeleteBuilderStandard
 
 	private final List<ColumnValueParameter> parameters = new ArrayList<>();
 
+	private String sqlComment;
+
 	public TableDeleteBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping table,
@@ -48,6 +50,15 @@ public class TableDeleteBuilderStandard
 		super( MutationType.DELETE, mutationTarget, tableReference, sessionFactory );
 
 		this.isCustomSql = tableReference.getTableMapping().getDeleteDetails().getCustomSql() != null;
+		this.sqlComment = "delete for " + mutationTarget.getRolePath();
+	}
+
+	public String getSqlComment() {
+		return sqlComment;
+	}
+
+	public void setSqlComment(String sqlComment) {
+		this.sqlComment = sqlComment;
 	}
 
 	@Override
@@ -76,6 +87,7 @@ public class TableDeleteBuilderStandard
 			return new TableDeleteCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
+					sqlComment,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings(),
 					getParameters()
@@ -85,6 +97,7 @@ public class TableDeleteBuilderStandard
 		return new TableDeleteStandard(
 				getMutatingTable(),
 				getMutationTarget(),
+				sqlComment,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings(),
 				getParameters()

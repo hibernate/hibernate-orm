@@ -31,4 +31,9 @@ public class UpdateCoordinatorNoOp implements UpdateCoordinator {
 	public void coordinateUpdate(Object entity, Object id, Object rowId, Object[] values, Object oldVersion, Object[] incomingOldValues, int[] dirtyAttributeIndexes, boolean hasDirtyCollection, SharedSessionContractImplementor session) {
 		// nothing to do
 	}
+
+	@Override
+	public void forceVersionIncrement(Object id, Object currentVersion, Object nextVersion, SharedSessionContractImplementor session) {
+		// nothing to do
+	}
 }

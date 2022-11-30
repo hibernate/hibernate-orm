@@ -8,10 +8,10 @@ package org.hibernate.tuple;
 
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
-import org.hibernate.Session;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Gavin King
  */
 public class TenantIdGeneration
-		implements AnnotationValueGenerationStrategy<TenantId>, InMemoryValueGenerationStrategy, ValueGenerator<Object> {
+		implements AnnotationValueGenerationStrategy<TenantId>, InMemoryValueGenerationStrategy {
 
 	private String entityName;
 	private String propertyName;
@@ -39,13 +39,8 @@ public class TenantIdGeneration
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		return this;
-	}
-
-	@Override
-	public Object generateValue(Session session, Object owner, Object currentValue) {
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) session.getSessionFactory();
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		JavaType<Object> descriptor = sessionFactory.getTypeConfiguration().getJavaTypeRegistry()
 				.findDescriptor(propertyType);
 		if ( descriptor==null ) {
@@ -69,10 +64,5 @@ public class TenantIdGeneration
 			}
 		}
 		return tenantId == null ? null : descriptor.fromString(tenantId); //convert to the model type
-	}
-
-	@Override
-	public Object generateValue(Session session, Object owner) {
-		throw new UnsupportedOperationException();
 	}
 }

@@ -9,7 +9,9 @@ package org.hibernate.tuple;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.annotations.GeneratorType;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
@@ -21,11 +23,17 @@ public class VmValueGeneration
 		implements AnnotationValueGenerationStrategy<GeneratorType>, InMemoryValueGenerationStrategy {
 
 	private GenerationTiming generationTiming;
-	private Constructor<? extends ValueGenerator<?>> constructor;
+	ValueGenerator<?> generator;
 
 	@Override
 	public void initialize(GeneratorType annotation, Class<?> propertyType, String entityName, String propertyName) {
-		constructor = ReflectHelper.getDefaultConstructor( annotation.type() );
+		Constructor<? extends ValueGenerator<?>> constructor = ReflectHelper.getDefaultConstructor(annotation.type());
+		try {
+			generator = constructor.newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Couldn't instantiate value generator", e );
+		}
 		generationTiming = annotation.when().getEquivalent();
 	}
 
@@ -35,12 +43,7 @@ public class VmValueGeneration
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		try {
-			return constructor.newInstance();
-		}
-		catch (Exception e) {
-			throw new HibernateException( "Couldn't instantiate value generator", e );
-		}
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		return generator.generateValue( (Session) session, owner, currentValue );
 	}
 }

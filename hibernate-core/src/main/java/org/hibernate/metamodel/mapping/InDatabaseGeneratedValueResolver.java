@@ -32,7 +32,7 @@ public class InDatabaseGeneratedValueResolver implements GeneratedValueResolver 
 	}
 
 	@Override
-	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session) {
+	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {
 		return row[resultPosition];
 	}
 }

@@ -26,7 +26,7 @@ public class NoGeneratedValueResolver implements GeneratedValueResolver {
 	}
 
 	@Override
-	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session) {
+	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {
 		throw new UnsupportedMappingException( "NoGeneratedValueResolver does not support generated values" );
 	}
 }

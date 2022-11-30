@@ -19,10 +19,10 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.AnnotationValueGenerationStrategy;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
-import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -66,9 +66,7 @@ public class GeneratedUuidTests {
 		assertThat( merged ).isNotNull();
 
 		// lastly, make sure we can load it..
-		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( GeneratedUuidEntity.class, 1 );
-		} );
+		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> session.get( GeneratedUuidEntity.class, 1 ));
 
 		assertThat( loaded ).isNotNull();
 
@@ -88,7 +86,7 @@ public class GeneratedUuidTests {
 
 	//tag::mapping-generated-custom-ex3[]
 	public static class UuidValueGeneration
-			implements AnnotationValueGenerationStrategy<GeneratedUuidValue>, InMemoryValueGenerationStrategy, ValueGenerator<UUID> {
+			implements AnnotationValueGenerationStrategy<GeneratedUuidValue>, InMemoryValueGenerationStrategy {
 		private GenerationTiming timing;
 
 		@Override
@@ -102,12 +100,7 @@ public class GeneratedUuidTests {
 		}
 
 		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return this;
-		}
-
-		@Override
-		public UUID generateValue(Session session, Object owner) {
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
 			return UUID.randomUUID();
 		}
 	}

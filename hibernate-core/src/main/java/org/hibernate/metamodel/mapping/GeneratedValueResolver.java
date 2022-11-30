@@ -40,10 +40,10 @@ public interface GeneratedValueResolver {
 		}
 		else {
 			InMemoryValueGenerationStrategy generation = (InMemoryValueGenerationStrategy) valueGeneration;
-			return new InMemoryGeneratedValueResolver( generation.getValueGenerator(), requestedTiming );
+			return new InMemoryGeneratedValueResolver( generation, requestedTiming );
 		}
 	}
 
 	GenerationTiming getGenerationTiming();
-	Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session);
+	Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue);
 }

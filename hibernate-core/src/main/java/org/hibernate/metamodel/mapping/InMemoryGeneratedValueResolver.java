@@ -7,10 +7,9 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Internal;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 
 /**
  * GeneratedValueResolver impl for in-memory generation
@@ -20,9 +19,9 @@ import org.hibernate.tuple.ValueGenerator;
 @Internal
 public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
 	private final GenerationTiming generationTiming;
-	private final ValueGenerator valueGenerator;
+	private final InMemoryValueGenerationStrategy valueGenerator;
 
-	public InMemoryGeneratedValueResolver(ValueGenerator valueGenerator, GenerationTiming generationTiming) {
+	public InMemoryGeneratedValueResolver(InMemoryValueGenerationStrategy valueGenerator, GenerationTiming generationTiming) {
 		this.valueGenerator = valueGenerator;
 		this.generationTiming = generationTiming;
 	}
@@ -33,7 +32,7 @@ public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
 	}
 
 	@Override
-	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session) {
-		return valueGenerator.generateValue( (Session) session, entity );
+	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {
+		return valueGenerator.generate( session, entity, currentValue );
 	}
 }

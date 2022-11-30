@@ -9,7 +9,6 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
@@ -17,8 +16,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that

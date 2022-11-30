@@ -14,7 +14,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.Session;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -427,10 +426,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			for ( int i = 0; i < valueGenerationStrategies.length; i++ ) {
 				if ( valueGenerationStrategies[i] != null
 						&& valueGenerationStrategies[i].getGenerationTiming().includesUpdate() ) {
-					newValues[i] = valueGenerationStrategies[i].getValueGenerator().generateValue(
-							(Session) session,
-							object
-					);
+					newValues[i] = valueGenerationStrategies[i].generate( session, object, newValues[i] );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}

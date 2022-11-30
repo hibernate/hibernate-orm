@@ -29,6 +29,11 @@ public class TableDeleteStandard extends AbstractTableDelete {
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return false;
+	}
+
+	@Override
 	public boolean isCallable() {
 		return false;
 	}

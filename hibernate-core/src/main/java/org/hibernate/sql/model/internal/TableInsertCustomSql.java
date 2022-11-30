@@ -38,6 +38,11 @@ public class TableInsertCustomSql extends AbstractTableInsert implements CustomS
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return true;
+	}
+
+	@Override
 	public String getCustomSql() {
 		return getMutatingTable().getTableMapping().getInsertDetails().getCustomSql();
 	}

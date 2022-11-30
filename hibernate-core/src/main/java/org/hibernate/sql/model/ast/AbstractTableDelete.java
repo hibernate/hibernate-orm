@@ -46,6 +46,11 @@ public abstract class AbstractTableDelete extends AbstractRestrictedTableMutatio
 	}
 
 	@Override
+	protected String getLoggableName() {
+		return "TableDelete";
+	}
+
+	@Override
 	public Expectation getExpectation() {
 		return getMutatingTable().getTableMapping().getDeleteDetails().getExpectation();
 	}

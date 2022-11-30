@@ -66,6 +66,16 @@ public class TableUpsert
 	}
 
 	@Override
+	protected String getLoggableName() {
+		return "TableUpsert";
+	}
+
+	@Override
+	public boolean isCustomSql() {
+		return false;
+	}
+
+	@Override
 	public EntityMutationTarget getMutationTarget() {
 		return (EntityMutationTarget) super.getMutationTarget();
 	}

@@ -38,6 +38,11 @@ public class TableUpdateCustomSql
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return true;
+	}
+
+	@Override
 	public String getCustomSql() {
 		return getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql();
 	}

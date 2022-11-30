@@ -44,6 +44,16 @@ public class TableUpdateNoSet
 	}
 
 	@Override
+	protected String getLoggableName() {
+		return "TableUpdateNoSet";
+	}
+
+	@Override
+	public boolean isCustomSql() {
+		return false;
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 	}
 

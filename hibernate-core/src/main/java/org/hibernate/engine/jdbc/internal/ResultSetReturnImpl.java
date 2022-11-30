@@ -188,6 +188,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 
 	@Override
 	public int executeUpdate(PreparedStatement statement) {
+		assert statement != null;
+
 		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();

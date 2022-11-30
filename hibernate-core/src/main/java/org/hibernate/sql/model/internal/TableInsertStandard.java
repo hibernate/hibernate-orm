@@ -37,6 +37,11 @@ public class TableInsertStandard extends AbstractTableInsert {
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return false;
+	}
+
+	@Override
 	public List<ColumnReference> getReturningColumns() {
 		return returningColumns;
 	}

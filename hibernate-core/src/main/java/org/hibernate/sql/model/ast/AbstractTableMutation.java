@@ -45,6 +45,18 @@ public abstract class AbstractTableMutation<O extends MutationOperation>
 	}
 
 	@Override
+	public String toString() {
+		final String type = isCustomSql() ? "custom-sql" : "generated";
+		return getLoggableName() + "(" + getMutationTarget().getRolePath() + " : " + type + ")";
+	}
+
+	public boolean isCustomSql() {
+		return this instanceof CustomSqlMutation;
+	}
+
+	protected abstract String getLoggableName();
+
+	@Override
 	public MutatingTableReference getMutatingTable() {
 		return mutatingTable;
 	}

@@ -35,6 +35,11 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return true;
+	}
+
+	@Override
 	public String getCustomSql() {
 		return getMutatingTable().getTableMapping().getDeleteDetails().getCustomSql();
 	}

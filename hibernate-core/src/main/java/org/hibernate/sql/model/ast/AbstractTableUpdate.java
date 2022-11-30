@@ -55,6 +55,11 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 	}
 
 	@Override
+	protected String getLoggableName() {
+		return "TableUpdate";
+	}
+
+	@Override
 	public Expectation getExpectation() {
 		return getMutatingTable().getTableMapping().getUpdateDetails().getExpectation();
 	}

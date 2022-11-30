@@ -45,6 +45,11 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 	}
 
 	@Override
+	public boolean isCustomSql() {
+		return true;
+	}
+
+	@Override
 	public boolean isCallable() {
 		return false;
 	}

@@ -75,7 +75,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		jdbcServices.getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
 		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
 
-		final PreparedStatement insertStatement = insertStatementDetails.getStatement();
+		final PreparedStatement insertStatement = insertStatementDetails.resolveStatement();
 		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
 
 		// the insert is complete, select the generated id...

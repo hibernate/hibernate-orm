@@ -46,6 +46,11 @@ public abstract class AbstractTableInsert extends AbstractTableMutation<JdbcInse
 	}
 
 	@Override
+	protected String getLoggableName() {
+		return "TableInsert";
+	}
+
+	@Override
 	public Expectation getExpectation() {
 		return getMutatingTable().getTableMapping().getInsertDetails().getExpectation();
 	}

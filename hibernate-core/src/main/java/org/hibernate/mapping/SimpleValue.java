@@ -363,11 +363,9 @@ public abstract class SimpleValue implements KeyValue {
 	private IdentifierGenerator identifierGenerator;
 
 	/**
-	 * Returns the cached identifierGenerator.
-	 *
-	 * @return IdentifierGenerator null if
-	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
-	 * completed.
+	 * Returns the cached {@link IdentifierGenerator}, or null if
+	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)}
+	 * was never completed.
 	 *
 	 * @deprecated not used and no longer supported.
 	 */
@@ -433,6 +431,16 @@ public abstract class SimpleValue implements KeyValue {
 				@Override
 				public RootClass getRootClass() {
 					return rootClass;
+				}
+
+				@Override
+				public PersistentClass getPersistentClass() {
+					return rootClass;
+				}
+
+				@Override
+				public Property getProperty() {
+					return rootClass.getIdentifierProperty();
 				}
 			};
 
@@ -761,14 +769,7 @@ public abstract class SimpleValue implements KeyValue {
 			if ( className == null ) {
 				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
-			typeName = ReflectHelper.reflectedPropertyClass(
-					className,
-					propertyName,
-					getMetadata()
-							.getMetadataBuildingOptions()
-							.getServiceRegistry()
-							.getService( ClassLoaderService.class )
-			).getName();
+			typeName = getClass( className, propertyName ).getName();
 			// todo : to fully support isNationalized here we need to do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
@@ -778,6 +779,17 @@ public abstract class SimpleValue implements KeyValue {
 
 		// we had an AttributeConverter...
 		type = buildAttributeConverterTypeAdapter();
+	}
+
+	private Class<?> getClass(String className, String propertyName) {
+		return ReflectHelper.reflectedPropertyClass(
+				className,
+				propertyName,
+				getMetadata()
+						.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService(ClassLoaderService.class)
+		);
 	}
 
 	/**

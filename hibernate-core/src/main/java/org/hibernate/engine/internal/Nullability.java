@@ -14,8 +14,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -74,7 +73,7 @@ public final class Nullability {
 			/*
 			  * Algorithm
 			  * Check for any level one nullability breaks
-			  * Look at non null components to
+			  * Look at non-null components to
 			  *   recursively check next level of nullability breaks
 			  * Look at Collections containing components to
 			  *   recursively check next level of nullability breaks
@@ -82,7 +81,7 @@ public final class Nullability {
 			  *
 			  * In the previous implementation, not-null stuffs where checked
 			  * filtering by level one only updatable
-			  * or insertable columns. So setting a sub component as update="false"
+			  * or insertable columns. So setting a subcomponent as update="false"
 			  * has no effect on not-null check if the main component had good checkability
 			  * In this implementation, we keep this feature.
 			  * However, I never see any documentation mentioning that, but it's for
@@ -94,14 +93,13 @@ public final class Nullability {
 					? persister.getPropertyInsertability()
 					: persister.getPropertyUpdateability();
 			final Type[] propertyTypes = persister.getPropertyTypes();
-			final InMemoryGenerator[] inMemoryValueGenerationStrategies =
-					persister.getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			final Generator[] generators = persister.getEntityMetamodel().getGenerators();
 
 			for ( int i = 0; i < values.length; i++ ) {
 
-				if ( checkability[i] &&
-						values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-						GenerationTiming.NEVER == inMemoryValueGenerationStrategies[i].getGenerationTiming() ) {
+				if ( checkability[i]
+						&& values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+						&& !generated( generators[i] ) ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
 						//check basic level one nullability
@@ -128,6 +126,10 @@ public final class Nullability {
 
 			}
 		}
+	}
+
+	private static boolean generated(Generator generator) {
+		return generator != null && generator.getGenerationTiming().isNotNever();
 	}
 
 	/**

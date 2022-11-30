@@ -100,10 +100,13 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	protected void preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
 		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
-			final InMemoryGenerator[] strategies = entityMetamodel.getInMemoryValueGenerationStrategies();
-			for ( int i = 0; i < strategies.length; i++ ) {
-				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
-					values[i] = strategies[i].generate( session, entity, values[i] );
+			final Generator[] generators = entityMetamodel.getGenerators();
+			for ( int i = 0; i < generators.length; i++ ) {
+				Generator generator = generators[i];
+				if ( generator != null
+						&& !generator.generatedByDatabase()
+						&& generator.getGenerationTiming().includesInsert() ) {
+					values[i] = ( (InMemoryGenerator) generator).generate( session, entity, values[i] );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}
@@ -389,13 +392,9 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
 
 				if ( !attributeInclusions[ attributeIndex ] ) {
-					final Generator valueGeneration = attributeMapping.getValueGeneration();
-					if ( isValueGenerationInSql( valueGeneration ) ) {
-						handleValueGeneration(
-								attributeMapping,
-								insertGroupBuilder,
-								(InDatabaseGenerator) valueGeneration
-						);
+					final Generator generator = attributeMapping.getGenerator();
+					if ( isValueGenerationInSql( generator ) ) {
+						handleValueGeneration( attributeMapping, insertGroupBuilder, (InDatabaseGenerator) generator );
 					}
 					continue;
 				}
@@ -436,9 +435,10 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static boolean isValueGenerationInSql(Generator valueGeneration) {
-		return valueGeneration.getGenerationTiming().includesInsert()
-				&& valueGeneration.generatedByDatabase()
-				&& ( (InDatabaseGenerator) valueGeneration ).referenceColumnsInSql();
+	private static boolean isValueGenerationInSql(Generator generator) {
+		return generator != null
+			&& generator.getGenerationTiming().includesInsert()
+			&& generator.generatedByDatabase()
+			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql();
 	}
 }

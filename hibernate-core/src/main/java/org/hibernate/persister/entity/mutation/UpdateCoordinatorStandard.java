@@ -223,13 +223,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 		}
 
-		final InclusionChecker updateabilityChecker = (position, attribute) -> {
-			if ( isValueGenerationInSql( attribute.getValueGeneration() ) ) {
-				return true;
-			}
-
-			return attributeUpdateability[ position ];
-		};
+		final InclusionChecker updateabilityChecker =
+				(position, attribute) -> isValueGenerationInSql( attribute.getGenerator() ) || attributeUpdateability[ position ];
 
 		final InclusionChecker dirtinessChecker = (position, attribute) -> {
 			if ( !attributeUpdateability[ position ] ) {
@@ -320,10 +315,19 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private static boolean isValueGenerationInSql(Generator valueGeneration) {
-		return valueGeneration.getGenerationTiming().includesUpdate()
-				&& valueGeneration.generatedByDatabase()
-				&& ( (InDatabaseGenerator) valueGeneration ).referenceColumnsInSql();
+	private boolean isValueGenerationInSql(Generator generator) {
+		return generator != null
+			&& generator.getGenerationTiming().includesUpdate()
+			&& generator.generatedByDatabase()
+			&& ((InDatabaseGenerator) generator).referenceColumnsInSql();
+	}
+
+	private boolean isValueGenerationInSqlNoWrite(Generator generator) {
+		return generator != null
+			&& generator.getGenerationTiming().includesUpdate()
+			&& generator.generatedByDatabase()
+			&& ((InDatabaseGenerator) generator).referenceColumnsInSql()
+			&& !((InDatabaseGenerator) generator).writePropertyValue();
 	}
 
 	/**
@@ -415,18 +419,20 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] newValues,
 			SharedSessionContractImplementor session) {
 		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		if ( ! entityMetamodel.hasPreUpdateGeneratedValues() ) {
+		if ( !entityMetamodel.hasPreUpdateGeneratedValues() ) {
 			return EMPTY_INT_ARRAY;
 		}
 
-		final InMemoryGenerator[] valueGenerationStrategies = entityMetamodel.getInMemoryValueGenerationStrategies();
-		if ( valueGenerationStrategies.length != 0 ) {
-			final int[] fieldsPreUpdateNeeded = new int[valueGenerationStrategies.length];
+		final Generator[] generators = entityMetamodel.getGenerators();
+		if ( generators.length != 0 ) {
+			final int[] fieldsPreUpdateNeeded = new int[generators.length];
 			int count = 0;
-			for ( int i = 0; i < valueGenerationStrategies.length; i++ ) {
-				if ( valueGenerationStrategies[i] != null
-						&& valueGenerationStrategies[i].getGenerationTiming().includesUpdate() ) {
-					newValues[i] = valueGenerationStrategies[i].generate( session, object, newValues[i] );
+			for ( int i = 0; i < generators.length; i++ ) {
+				Generator generator = generators[i];
+				if ( generator != null
+						&& !generator.generatedByDatabase()
+						&& generator.getGenerationTiming().includesUpdate() ) {
+					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i] );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}
@@ -673,9 +679,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// apply the new values
 					final boolean includeInSet;
 
-					final Generator valueGeneration = attributeMapping.getValueGeneration();
-					if ( isValueGenerationInSql( valueGeneration )
-							&& !( (InDatabaseGenerator) valueGeneration ).writePropertyValue() ) {
+					if ( isValueGenerationInSqlNoWrite( attributeMapping.getGenerator() ) ) {
 						// we applied `#getDatabaseGeneratedReferencedColumnValue` earlier
 						includeInSet = false;
 					}
@@ -908,13 +912,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( attributeAnalysis.includeInSet() ) {
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
 
-					final Generator valueGeneration = attributeMapping.getValueGeneration();
-					if ( isValueGenerationInSql( valueGeneration ) ) {
-						handleValueGeneration(
-								attributeMapping,
-								updateGroupBuilder,
-								(InDatabaseGenerator) valueGeneration
-						);
+					final Generator generator = attributeMapping.getGenerator();
+					if ( isValueGenerationInSql( generator ) ) {
+						handleValueGeneration( attributeMapping, updateGroupBuilder, (InDatabaseGenerator) generator );
 					}
 					else if ( versionMapping != null
 							&& versionMapping.getVersionAttribute() == attributeMapping ) {
@@ -1343,13 +1343,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				null,
-				(index,attribute) -> {
-					if ( isValueGenerationInSql( attribute.getValueGeneration() ) ) {
-						return true;
-					}
-
-					return entityPersister().getPropertyUpdateability()[index];
-				},
+				(index,attribute) -> isValueGenerationInSql( attribute.getGenerator() )
+						|| entityPersister().getPropertyUpdateability()[index],
 				(index,attribute) -> {
 					final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
 					if ( optimisticLockStyle.isAll() ) {

@@ -6,7 +6,12 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.AssertionFailure;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
 
 /**
@@ -32,20 +37,19 @@ public interface AnnotationValueGeneration<A extends Annotation>
 	 */
 	void initialize(A annotation, Class<?> propertyType);
 
-	/**
-	 * Initializes this generation strategy for the given annotation instance.
-	 *
-	 * @param annotation an instance of the strategy's annotation type. Typically, implementations will retrieve the
-	 * annotation's attribute values and store them in fields.
-	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
-	 * the type to determine the right {@link ValueGenerator} to be applied.
-	 * @param entityName the name of the entity to which the annotated property belongs
-	 * @param propertyName the name of the annotated property
-	 *
-	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
-	 * an implementation can't create a value for the given property type.
-	 */
-	default void initialize(A annotation, Class<?> propertyType, String entityName, String propertyName) {
-		initialize( annotation, propertyType );
+	default void initialize(A annotation, Member member, GeneratorCreationContext context) {
+		initialize( annotation, getPropertyType( member ) );
+	}
+
+	private static Class<?> getPropertyType(Member member) {
+		if (member instanceof Field) {
+			return ((Field) member).getType();
+		}
+		else if (member instanceof Method) {
+			return ((Method) member).getReturnType();
+		}
+		else {
+			throw new AssertionFailure("member should have been a method or field");
+		}
 	}
 }

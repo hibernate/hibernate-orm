@@ -14,7 +14,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.AttributeBinderType;
-import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
@@ -29,9 +29,13 @@ import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -43,13 +47,13 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationGenerator;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.AttributeBinder;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.util.Map;
 
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
@@ -322,7 +326,7 @@ public class PropertyBinder {
 		if ( this.property != null ) {
 			if ( entityBinder != null ) {
 				handleNaturalId( property );
-				property.setValueGenerationStrategy( determineValueGenerationStrategy( this.property ) );
+				property.setValueGenerationStrategy( getValueGenerationFromAnnotations( this.property ) );
 			}
 			// HHH-4635 -- needed for dialect-specific property ordering
 			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
@@ -379,143 +383,137 @@ public class PropertyBinder {
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Id'" );
 			}
 			if ( property.isAnnotationPresent(EmbeddedId.class) ) {
-				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}
 		}
 	}
 
-	private Generator determineValueGenerationStrategy(XProperty property) {
-		Generator valueGeneration = getValueGenerationFromAnnotations( property );
-		if ( valueGeneration == null ) {
-			return NoValueGeneration.INSTANCE;
-		}
-		if ( valueGeneration instanceof InDatabaseGenerator) {
-			// if we have an in-db generator, mark it as not insertable nor updatable
-			final boolean writable = ( (InDatabaseGenerator) valueGeneration ).writePropertyValue();
-			insertable = writable;
-			updatable = writable;
-		}
-		return valueGeneration;
-	}
-
 	/**
 	 * Returns the value generation strategy for the given property, if any.
 	 */
-	private Generator getValueGenerationFromAnnotations(XProperty property) {
-		Generator valueGeneration = null;
+	private GeneratorCreator getValueGenerationFromAnnotations(XProperty property) {
+		GeneratorCreator creator = null;
 		for ( Annotation annotation : property.getAnnotations() ) {
-			final Generator candidate = getValueGenerationFromAnnotation( property, annotation );
+			final GeneratorCreator candidate = generatorCreator( property, annotation );
 			if ( candidate != null ) {
-				if ( valueGeneration != null ) {
+				if ( creator != null ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 							+ "' has multiple '@ValueGenerationType' annotations" );
 				}
 				else {
-					valueGeneration = candidate;
+					creator = candidate;
 				}
 			}
 		}
-		return valueGeneration;
+		return creator;
 	}
 
 	/**
 	 * In case the given annotation is a value generator annotation, the corresponding value generation strategy to be
 	 * applied to the given property is returned, {@code null} otherwise.
-	 */
-	private Generator getValueGenerationFromAnnotation(
-			XProperty property,
-			Annotation annotation) {
-		final ValueGenerationType generatorAnnotation = annotation.annotationType().getAnnotation( ValueGenerationType.class );
-		if ( generatorAnnotation == null ) {
-			return null;
-		}
-
-		final Generator valueGeneration =
-				instantiateAndInitializeValueGeneration( annotation, generatorAnnotation.generatedBy(), property );
-
-		if ( annotation.annotationType() == Generated.class && property.isAnnotationPresent(Version.class) ) {
-			switch ( valueGeneration.getGenerationTiming() ) {
-				case INSERT:
-					throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
-							+ "' is annotated '@Generated(INSERT)' and '@Version' (use '@Generated(ALWAYS)' instead)"
-
-					);
-				case UPDATE:
-					throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
-							+ "' is annotated '@Generated(UPDATE)' and '@Version' (use '@Generated(ALWAYS)' instead)"
-
-					);
-			}
-		}
-
-		return valueGeneration;
-	}
-
-	/**
 	 * Instantiates the given generator annotation type, initializing it with the given instance of the corresponding
 	 * generator annotation and the property's type.
 	 */
-	private <A extends Annotation> Generator instantiateAndInitializeValueGeneration(
-			A annotation,
-			Class<? extends Generator> generationType,
-			XProperty property) {
+	private <A extends Annotation> GeneratorCreator generatorCreator(XProperty property, A annotation) {
+		final Member member = HCANNHelper.getUnderlyingMember( property );
+		final Class<? extends Annotation> annotationType = annotation.annotationType();
+		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
+		if ( generatorAnnotation == null ) {
+			return null;
+		}
+		return creationContext -> {
+			final Generator generator =
+					instantiateGenerator(
+							annotation,
+							member,
+							annotationType,
+							creationContext,
+							GeneratorCreationContext.class,
+							generatorAnnotation.generatedBy()
+					);
+			callInitialize( annotation, member, creationContext, generator );
+			checkVersionGenerationAlways( property, generator );
+			return generator;
+		};
+	}
 
+	public static IdentifierGeneratorCreator identifierGeneratorCreator(XProperty idProperty, Annotation annotation) {
+		final Member member = HCANNHelper.getUnderlyingMember( idProperty );
+		final Class<? extends Annotation> annotationType = annotation.annotationType();
+		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
+		assert idGeneratorType != null;
+		return creationContext -> {
+			final IdentifierGenerator generator =
+					instantiateGenerator(
+							annotation,
+							member,
+							annotationType,
+							creationContext,
+							CustomIdGeneratorCreationContext.class,
+							idGeneratorType.value()
+					);
+			callInitialize( annotation, member, creationContext, generator );
+			return generator;
+		};
+	}
+
+	private static <C, G extends Generator> G instantiateGenerator(
+			Annotation annotation,
+			Member member,
+			Class<? extends Annotation> annotationType,
+			C creationContext,
+			Class<C> contextClass,
+			Class<? extends G> generatorClass) {
 		try {
-			final Generator valueGeneration = generationType.newInstance();
-			if ( valueGeneration instanceof AnnotationGenerator) {
-				// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
-				// a programming error of the generation type developer and thus should show up during testing, we don't
-				// check this explicitly; If required, this could be done e.g. using ClassMate
-				@SuppressWarnings("unchecked")
-				final AnnotationGenerator<A> generation = (AnnotationGenerator<A>) valueGeneration;
-				generation.initialize(
-						annotation,
-						buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() ),
-						entityBinder.getPersistentClass().getEntityName(),
-						property.getName()
-				);
+			try {
+				return generatorClass
+						.getConstructor( annotationType, Member.class, contextClass )
+						.newInstance( annotation, member, creationContext);
 			}
-
-			return valueGeneration;
+			catch (NoSuchMethodException ignore) {
+				try {
+					return generatorClass
+							.getConstructor( annotationType )
+							.newInstance( annotation );
+				}
+				catch (NoSuchMethodException i) {
+					return generatorClass.newInstance();
+				}
+			}
 		}
-		catch (HibernateException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			throw new AnnotationException(
-					"Exception occurred during processing of generator annotation: " + qualify(
-							holder.getPath(),
-							name
-					), e
+		catch (InvocationTargetException|InstantiationException|IllegalAccessException e) {
+			throw new HibernateException(
+					"Could not instantiate generator of type '" + generatorClass.getName() + "'",
+					e
 			);
 		}
 	}
 
-	private static class NoValueGeneration implements ValueGeneration {
-		/**
-		 * Singleton access
-		 */
-		public static final NoValueGeneration INSTANCE = new NoValueGeneration();
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return GenerationTiming.NEVER;
+	private static <A extends Annotation> void callInitialize(
+			A annotation,
+			Member member,
+			GeneratorCreationContext creationContext,
+			Generator generator) {
+		if ( generator instanceof AnnotationGenerator) {
+			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
+			// a programming error of the generation type developer and thus should show up during testing, we don't
+			// check this explicitly; If required, this could be done e.g. using ClassMate
+			@SuppressWarnings("unchecked")
+			final AnnotationGenerator<A> generation = (AnnotationGenerator<A>) generator;
+			generation.initialize( annotation, member, creationContext );
 		}
+	}
 
-		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return null;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			return true;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return null;
+	private void checkVersionGenerationAlways(XProperty property, Generator generator) {
+		if ( property.isAnnotationPresent(Version.class) ) {
+			final GenerationTiming timing = generator.getGenerationTiming();
+			if ( timing != GenerationTiming.ALWAYS ) {
+				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+						+ "' is annotated '@Version' but has a value generator with timing " + timing.name()
+						+ " (the value generation timing must be ALWAYS)"
+				);
+			}
 		}
 	}
 

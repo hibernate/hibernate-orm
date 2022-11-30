@@ -84,12 +84,10 @@ public class GeneratedUuidTests {
 	//end::mapping-generated-custom-ex2[]
 
 	//tag::mapping-generated-custom-ex3[]
-	public static class UuidValueGeneration
-			implements AnnotationGenerator<GeneratedUuidValue>, InMemoryGenerator {
-		private GenerationTiming timing;
+	public static class UuidValueGeneration implements InMemoryGenerator {
+		private final GenerationTiming timing;
 
-		@Override
-		public void initialize(GeneratedUuidValue annotation, Class<?> propertyType, String entityName, String propertyName) {
+		public UuidValueGeneration(GeneratedUuidValue annotation) {
 			timing = annotation.timing();
 		}
 

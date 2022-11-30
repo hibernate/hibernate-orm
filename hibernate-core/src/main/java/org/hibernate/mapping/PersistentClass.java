@@ -46,7 +46,17 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
+	/**
+	 * The magic value of {@link jakarta.persistence.DiscriminatorValue#value}
+	 * which indicates that the subclass is distinguished by a null value of the
+	 * discriminator column.
+	 */
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
+	/**
+	 * The magic value of {@link jakarta.persistence.DiscriminatorValue#value}
+	 * which indicates that the subclass is distinguished by any non-null value
+	 * of the discriminator column.
+	 */
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
 	private final MetadataBuildingContext metadataBuildingContext;

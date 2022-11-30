@@ -1001,31 +1001,13 @@ public class ModelBinder {
 				context -> implicitNamingStrategy.determineBasicColumnName( versionAttributeSource )
 		);
 
-		Property prop = new Property();
-		prop.setValue( versionValue );
+		Property property = new Property();
+		property.setValue( versionValue );
 		bindProperty(
 				sourceDocument,
 				versionAttributeSource,
-				prop
+				property
 		);
-
-		// for version properties marked as being generated, make sure they are "always"
-		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
-		// but just to make sure...
-		if ( prop.getValueGenerationStrategy() != null ) {
-			switch ( prop.getValueGenerationStrategy().getGenerationTiming() ) {
-				case INSERT:
-					throw new MappingException(
-							"'generated' attribute cannot be 'insert' for version/timestamp property",
-							sourceDocument.getOrigin()
-					);
-				case UPDATE:
-					throw new MappingException(
-							"'generated' attribute cannot be 'update' for version/timestamp property",
-							sourceDocument.getOrigin()
-					);
-			}
-		}
 
 		if ( versionAttributeSource.getUnsavedValue() != null ) {
 			versionValue.setNullValue( versionAttributeSource.getUnsavedValue() );
@@ -1034,14 +1016,13 @@ public class ModelBinder {
 			versionValue.setNullValue( "undefined" );
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
-			SourceGeneration generation = new SourceGeneration();
-			generation.initialize( DB_SOURCE, prop.getType().getReturnedClass() );
-			prop.setValueGenerationStrategy( generation );
+			property.setValueGenerationStrategy(
+					context -> new SourceGeneration( DB_SOURCE, property.getType().getReturnedClass() ) );
 		}
 
-		rootEntityDescriptor.setVersion( prop );
-		rootEntityDescriptor.setDeclaredVersion( prop );
-		rootEntityDescriptor.addProperty( prop );
+		rootEntityDescriptor.setVersion( property );
+		rootEntityDescriptor.setDeclaredVersion( property );
+		rootEntityDescriptor.addProperty( property );
 	}
 
 	private void bindEntityDiscriminator(
@@ -2557,30 +2538,39 @@ public class ModelBinder {
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
 			final GenerationTiming generationTiming = singularAttributeSource.getGenerationTiming();
-			if ( generationTiming != null && generationTiming != GenerationTiming.NEVER ) {
-				// we had generation specified...
-				//   	HBM only supports "database generated values"
-				property.setValueGenerationStrategy( new GeneratedValueGeneration( generationTiming ) );
-
-				// generated properties can *never* be insertable...
-				if ( property.isInsertable() && generationTiming.includesInsert() ) {
-					log.debugf(
-							"Property [%s] specified %s generation, setting insertable to false : %s",
-							propertySource.getName(),
-							generationTiming.name(),
+			if ( generationTiming != null ) {
+				if ( (generationTiming == GenerationTiming.INSERT || generationTiming == GenerationTiming.UPDATE)
+						&& property.getValue() instanceof SimpleValue
+						&& ((SimpleValue) property.getValue()).isVersion() ) {
+					// this is enforced by DTD, but just make sure
+					throw new MappingException(
+							"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
 							mappingDocument.getOrigin()
 					);
-					property.setInsertable( false );
 				}
+				if ( generationTiming.isNotNever() ) {
+					property.setValueGenerationStrategy( context -> new GeneratedValueGeneration( generationTiming ) );
 
-				// properties generated on update can never be updatable...
-				if ( property.isUpdateable() && generationTiming.includesUpdate() ) {
-					log.debugf(
-							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
-							propertySource.getName(),
-							mappingDocument.getOrigin()
-					);
-					property.setUpdateable( false );
+					// generated properties can *never* be insertable...
+					if ( property.isInsertable() && generationTiming.includesInsert() ) {
+						log.debugf(
+								"Property [%s] specified %s generation, setting insertable to false : %s",
+								propertySource.getName(),
+								generationTiming.name(),
+								mappingDocument.getOrigin()
+						);
+						property.setInsertable( false );
+					}
+
+					// properties generated on update can never be updatable...
+					if ( property.isUpdateable() && generationTiming.includesUpdate() ) {
+						log.debugf(
+								"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+								propertySource.getName(),
+								mappingDocument.getOrigin()
+						);
+						property.setUpdateable( false );
+					}
 				}
 			}
 		}

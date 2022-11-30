@@ -287,8 +287,7 @@ public class MappingModelCreationHelper {
 				updateable,
 				attrType,
 				declaringType,
-				propertyAccess,
-				bootProperty.getValueGenerationStrategy()
+				propertyAccess
 		);
 	}
 
@@ -333,8 +332,7 @@ public class MappingModelCreationHelper {
 								FetchStyle.JOIN,
 								attributeMappingType,
 								declaringType,
-								propertyAccess,
-								bootProperty.getValueGenerationStrategy()
+								propertyAccess
 						);
 					}
 					else {
@@ -349,8 +347,7 @@ public class MappingModelCreationHelper {
 								FetchStyle.JOIN,
 								attributeMappingType,
 								declaringType,
-								propertyAccess,
-								bootProperty.getValueGenerationStrategy()
+								propertyAccess
 						);
 					}
 				},

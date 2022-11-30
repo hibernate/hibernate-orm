@@ -70,7 +70,7 @@ public interface AttributeMapping
 	 *
 	 * @apiNote Only relevant for non-id attributes
 	 */
-	Generator getValueGeneration();
+	Generator getGenerator();
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {

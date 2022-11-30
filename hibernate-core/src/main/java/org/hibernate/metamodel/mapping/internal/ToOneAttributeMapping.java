@@ -201,9 +201,7 @@ public class ToOneAttributeMapping
 				adjustFetchTiming( mappedFetchTiming, bootValue ),
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				// can never be a generated value
-				NoValueGeneration.INSTANCE
+				propertyAccess
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
@@ -551,8 +549,7 @@ public class ToOneAttributeMapping
 				original.getAttributeMetadataAccess(),
 				original,
 				declaringType,
-				original.getPropertyAccess(),
-				original.getValueGeneration()
+				original.getPropertyAccess()
 		);
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;
@@ -1404,7 +1401,7 @@ public class ToOneAttributeMapping
 			return bidirectionalAttributeName != null && (
 					!( entityMappingType.getIdentifierMapping() instanceof SingleAttributeIdentifierMapping )
 							|| !targetKeyPropertyNames.contains(
-							( (SingleAttributeIdentifierMapping) entityMappingType.getIdentifierMapping() ).getAttributeName()
+							entityMappingType.getIdentifierMapping().getAttributeName()
 					)
 			);
 		}

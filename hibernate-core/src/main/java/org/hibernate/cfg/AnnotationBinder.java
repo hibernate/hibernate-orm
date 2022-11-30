@@ -7,8 +7,6 @@
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -19,7 +17,6 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.Cascade;
@@ -72,14 +69,12 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
-import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.mapping.Any;
@@ -157,6 +152,7 @@ import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntit
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
+import static org.hibernate.cfg.annotations.PropertyBinder.identifierGeneratorCreator;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.Constraint.hashedName;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
@@ -1812,7 +1808,7 @@ public final class AnnotationBinder {
 		final XProperty idProperty = inferredData.getProperty();
 		final Annotation generatorAnnotation = findContainingAnnotation( idProperty, IdGeneratorType.class );
 		if ( generatorAnnotation != null ) {
-			setCustomCreator( idValue, idProperty, generatorAnnotation );
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, generatorAnnotation ) );
 		}
 		else {
 			final XClass entityClass = inferredData.getClassOrElement();
@@ -1825,33 +1821,6 @@ public final class AnnotationBinder {
 				);
 			}
 		}
-	}
-
-	private static void setCustomCreator(SimpleValue idValue, XProperty idProperty, Annotation generatorAnnotation) {
-		final Member underlyingMember = HCANNHelper.getUnderlyingMember( idProperty );
-		final Class<? extends Annotation> annotationType = generatorAnnotation.annotationType();
-		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
-		assert idGeneratorType != null;
-		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final Class<? extends IdentifierGenerator> generatorClass = idGeneratorType.value();
-			try {
-				return generatorClass
-						.getConstructor( annotationType, Member.class, CustomIdGeneratorCreationContext.class )
-						.newInstance( generatorAnnotation, underlyingMember, creationContext );
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException(
-						"Unable to find appropriate constructor for @IdGeneratorType handling : " + generatorClass.getName(),
-						e
-				);
-			}
-			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-				throw new HibernateException(
-						"Unable to invoke constructor for @IdGeneratorType handling : " + generatorClass.getName(),
-						e
-				);
-			}
-		} );
 	}
 
 	private static void createIdGenerator(

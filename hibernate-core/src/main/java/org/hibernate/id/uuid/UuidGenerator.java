@@ -6,9 +6,7 @@
  */
 package org.hibernate.id.uuid;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
@@ -19,6 +17,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
+import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
  * UUID-based IdentifierGenerator
@@ -44,13 +43,7 @@ public class UuidGenerator implements StandardGenerator {
 			generator = StandardRandomStrategy.INSTANCE;
 		}
 
-		final Class<?> propertyType;
-		if ( idMember instanceof Method ) {
-			propertyType = ( (Method) idMember ).getReturnType();
-		}
-		else {
-			propertyType = ( (Field) idMember ).getType();
-		}
+		final Class<?> propertyType = getPropertyType( idMember );
 
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
 			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;

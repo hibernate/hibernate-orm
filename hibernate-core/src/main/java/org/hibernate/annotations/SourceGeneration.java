@@ -13,13 +13,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tuple.AnnotationGenerator;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.TimestampGenerators;
 import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
 
+import java.lang.reflect.Member;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,22 +45,21 @@ import static org.hibernate.tuple.GenerationTiming.ALWAYS;
 @Deprecated(since = "6.2")
 @Internal
 public class SourceGeneration
-		implements AnnotationGenerator<Source>, InMemoryGenerator, ValueGenerator<Object> {
+		implements InMemoryGenerator, ValueGenerator<Object> {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			SourceGeneration.class.getName()
 	);
 
-	private Class<?> propertyType;
-	private ValueGenerator<?> valueGenerator;
+	private final Class<?> propertyType;
+	private final ValueGenerator<?> valueGenerator;
 
-	@Override
-	public void initialize(Source annotation, Class<?> propertyType, String entityName, String propertyName) {
-		initialize( annotation, propertyType );
+	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
+		this( annotation, context.getProperty().getType().getReturnedClass() );
 	}
 
-	public void initialize(Source annotation, Class<?> propertyType) {
+	public SourceGeneration(Source annotation, Class<?> propertyType) {
 		this.propertyType = propertyType;
 		switch ( annotation.value() ) {
 			case DB:

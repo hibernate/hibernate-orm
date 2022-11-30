@@ -68,7 +68,7 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.Generator;
 
 import org.jboss.logging.Logger;
 
@@ -325,9 +325,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public ValueGeneration getValueGeneration() {
+	public Generator getGenerator() {
 		// can never be a generated value
-		return NoValueGeneration.INSTANCE;
+		return null;
 	}
 
 	@Override

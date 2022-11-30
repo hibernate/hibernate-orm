@@ -54,7 +54,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.tuple.Generator;
 
 /**
  * @author Steve Ebersole
@@ -79,8 +78,7 @@ public class EmbeddedAttributeMapping
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			Generator valueGeneration) {
+			PropertyAccess propertyAccess) {
 		this(
 			name,
 			navigableRole,
@@ -92,8 +90,7 @@ public class EmbeddedAttributeMapping
 			mappedFetchStyle,
 			embeddableMappingType,
 			declaringType,
-			propertyAccess,
-			valueGeneration
+			propertyAccess
 		);
 	}
 
@@ -108,8 +105,7 @@ public class EmbeddedAttributeMapping
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			Generator valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				name,
 				stateArrayPosition,
@@ -117,8 +113,7 @@ public class EmbeddedAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 
@@ -145,8 +140,7 @@ public class EmbeddedAttributeMapping
 				keyDeclaringType,
 				inverseModelPart instanceof PropertyBasedMapping ?
 						( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess() :
-						null,
-				null
+						null
 		);
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );

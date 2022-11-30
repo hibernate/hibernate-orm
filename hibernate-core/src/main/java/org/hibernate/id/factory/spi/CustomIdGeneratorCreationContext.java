@@ -7,19 +7,12 @@
 package org.hibernate.id.factory.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GeneratorCreationContext;
 
 @Incubating
-public interface CustomIdGeneratorCreationContext {
+public interface CustomIdGeneratorCreationContext extends GeneratorCreationContext {
 	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
-	Database getDatabase();
-	ServiceRegistry getServiceRegistry();
-
-	String getDefaultCatalog();
-	String getDefaultSchema();
-
 	RootClass getRootClass();
 }

@@ -95,7 +95,6 @@ public final class PropertyFactory {
 						.setLazy( lazy )
 						.setInsertable( property.isInsertable() )
 						.setUpdateable( property.isUpdateable() )
-						.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 						.setNullable( property.isOptional() )
 						.setDirtyCheckable( property.isUpdateable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
@@ -166,7 +165,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -186,7 +184,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -208,7 +205,6 @@ public final class PropertyFactory {
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
 								.setUpdateable( property.isUpdateable() )
-								.setValueGenerationStrategy( property.getValueGenerationStrategy() )
 								.setNullable( property.isOptional() )
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
@@ -269,7 +265,6 @@ public final class PropertyFactory {
 				false,
 				property.isInsertable(),
 				property.isUpdateable(),
-				property.getValueGenerationStrategy(),
 				property.isOptional(),
 				alwaysDirtyCheck || property.isUpdateable(),
 				property.isOptimisticLocked(),

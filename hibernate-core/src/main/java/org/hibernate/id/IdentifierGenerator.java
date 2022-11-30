@@ -55,7 +55,7 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * identifier generator.
 	 *
 	 * @see org.hibernate.annotations.GenericGenerator#name()
-	 * @see jakarta.persistence.GeneratedValue#generator().
+	 * @see jakarta.persistence.GeneratedValue#generator()
 	 */
 	String GENERATOR_NAME = "GENERATOR_NAME";
 

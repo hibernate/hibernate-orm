@@ -114,8 +114,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				FetchStyle.JOIN,
 				this,
 				identifiedEntityMapping,
-				propertyAccess,
-				null
+				propertyAccess
 		);
 
 		final CompositeType idClassType = (CompositeType) idClassSource.getType();

@@ -88,7 +88,7 @@ public enum GenerationTiming {
 
 		@Override
 		public boolean includes(GenerationTiming timing) {
-			return timing != NEVER;
+			return timing.isNotNever();
 		}
 	};
 
@@ -100,6 +100,10 @@ public enum GenerationTiming {
 	 * Does value generation happen for SQL {@code UPDATE} statements?
 	 */
 	public abstract boolean includesUpdate();
+
+	public boolean isNotNever() {
+		return this != NEVER;
+	}
 
 	public abstract boolean includes(GenerationTiming timing);
 

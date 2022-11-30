@@ -9,6 +9,8 @@ package org.hibernate.tuple;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.Dialect;
 
+import java.lang.reflect.Member;
+
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -17,8 +19,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class GeneratedValueGeneration
-		implements AnnotationGenerator<Generated>, InDatabaseGenerator {
+public class GeneratedValueGeneration implements InDatabaseGenerator {
 
 	private GenerationTiming timing;
 	private boolean writable;
@@ -31,8 +32,7 @@ public class GeneratedValueGeneration
 		this.timing = timing;
 	}
 
-	@Override
-	public void initialize(Generated annotation, Class<?> propertyType, String entityName, String propertyName) {
+	public GeneratedValueGeneration(Generated annotation) {
 		timing = annotation.value().getEquivalent();
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
 		writable = annotation.writable() || sql != null;

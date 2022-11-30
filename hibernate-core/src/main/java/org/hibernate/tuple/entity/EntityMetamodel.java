@@ -41,11 +41,11 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.tuple.ValueGenerationStrategy;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.type.AssociationType;
@@ -100,8 +100,8 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasInsertGeneratedValues;
 	private final boolean hasUpdateGeneratedValues;
 
-	private final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies;
-	private final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies;
+	private final InMemoryGenerator[] inMemoryValueGenerationStrategies;
+	private final InDatabaseGenerator[] inDatabaseValueGenerationStrategies;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final Map<String, Integer> propertyIndexes = new HashMap<>();
@@ -211,8 +211,8 @@ public class EntityMetamodel implements Serializable {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		this.inMemoryValueGenerationStrategies = new InMemoryValueGenerationStrategy[propertySpan];
-		this.inDatabaseValueGenerationStrategies = new InDatabaseValueGenerationStrategy[propertySpan];
+		this.inMemoryValueGenerationStrategies = new InMemoryGenerator[propertySpan];
+		this.inDatabaseValueGenerationStrategies = new InDatabaseGenerator[propertySpan];
 
 		boolean foundPreInsertGeneratedValues = false;
 		boolean foundPreUpdateGeneratedValues = false;
@@ -455,16 +455,16 @@ public class EntityMetamodel implements Serializable {
 	private static GenerationStrategyPair buildGenerationStrategyPair(
 			final SessionFactoryImplementor sessionFactory,
 			final Property mappingProperty) {
-		final ValueGenerationStrategy valueGeneration = mappingProperty.getValueGenerationStrategy();
+		final Generator valueGeneration = mappingProperty.getValueGenerationStrategy();
 		if ( valueGeneration != null && valueGeneration.getGenerationTiming() != GenerationTiming.NEVER ) {
 			// the property is generated in full. build the generation strategy pair.
 			if ( !valueGeneration.generatedByDatabase() ) {
 				// in-memory generation
-				return new GenerationStrategyPair( (InMemoryValueGenerationStrategy) valueGeneration );
+				return new GenerationStrategyPair( (InMemoryGenerator) valueGeneration );
 			}
 			else {
 				// in-db generation
-				return new GenerationStrategyPair( (InDatabaseValueGenerationStrategy) valueGeneration );
+				return new GenerationStrategyPair( (InDatabaseGenerator) valueGeneration );
 			}
 		}
 		else if ( mappingProperty.getValue() instanceof Component ) {
@@ -491,30 +491,30 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public static class GenerationStrategyPair {
-		private final InMemoryValueGenerationStrategy inMemoryStrategy;
-		private final InDatabaseValueGenerationStrategy inDatabaseStrategy;
+		private final InMemoryGenerator inMemoryStrategy;
+		private final InDatabaseGenerator inDatabaseStrategy;
 
 		public GenerationStrategyPair() {
-			this( NoInMemoryValueGenerationStrategy.INSTANCE, NoInDatabaseValueGenerationStrategy.INSTANCE );
+			this( NoInMemoryGenerator.INSTANCE, NoInDatabaseGenerator.INSTANCE );
 		}
 
-		public GenerationStrategyPair(InMemoryValueGenerationStrategy inMemoryStrategy) {
-			this( inMemoryStrategy, NoInDatabaseValueGenerationStrategy.INSTANCE );
+		public GenerationStrategyPair(InMemoryGenerator inMemoryStrategy) {
+			this( inMemoryStrategy, NoInDatabaseGenerator.INSTANCE );
 		}
 
-		public GenerationStrategyPair(InDatabaseValueGenerationStrategy inDatabaseStrategy) {
-			this( NoInMemoryValueGenerationStrategy.INSTANCE, inDatabaseStrategy );
+		public GenerationStrategyPair(InDatabaseGenerator inDatabaseStrategy) {
+			this( NoInMemoryGenerator.INSTANCE, inDatabaseStrategy );
 		}
 
 		public GenerationStrategyPair(
-				InMemoryValueGenerationStrategy inMemoryStrategy,
-				InDatabaseValueGenerationStrategy inDatabaseStrategy) {
+				InMemoryGenerator inMemoryStrategy,
+				InDatabaseGenerator inDatabaseStrategy) {
 			// perform some normalization.  Also check that only one (if any) strategy is specified
 			if ( inMemoryStrategy == null ) {
-				inMemoryStrategy = NoInMemoryValueGenerationStrategy.INSTANCE;
+				inMemoryStrategy = NoInMemoryGenerator.INSTANCE;
 			}
 			if ( inDatabaseStrategy == null ) {
-				inDatabaseStrategy = NoInDatabaseValueGenerationStrategy.INSTANCE;
+				inDatabaseStrategy = NoInDatabaseGenerator.INSTANCE;
 			}
 
 			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER
@@ -528,11 +528,11 @@ public class EntityMetamodel implements Serializable {
 			this.inDatabaseStrategy = inDatabaseStrategy;
 		}
 
-		public InMemoryValueGenerationStrategy getInMemoryStrategy() {
+		public InMemoryGenerator getInMemoryStrategy() {
 			return inMemoryStrategy;
 		}
 
-		public InDatabaseValueGenerationStrategy getInDatabaseStrategy() {
+		public InDatabaseGenerator getInDatabaseStrategy() {
 			return inDatabaseStrategy;
 		}
 	}
@@ -550,7 +550,7 @@ public class EntityMetamodel implements Serializable {
 		private boolean hadInMemoryGeneration;
 		private boolean hadInDatabaseGeneration;
 
-		private List<InDatabaseValueGenerationStrategy> inDatabaseStrategies;
+		private List<InDatabaseGenerator> inDatabaseStrategies;
 
 		public CompositeGenerationStrategyPairBuilder(Property mappingProperty, Dialect dialect) {
 			this.mappingProperty = mappingProperty;
@@ -562,13 +562,13 @@ public class EntityMetamodel implements Serializable {
 			add( generationStrategyPair.getInDatabaseStrategy() );
 		}
 
-		private void add(InMemoryValueGenerationStrategy inMemoryStrategy) {
+		private void add(InMemoryGenerator inMemoryStrategy) {
 			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
 				hadInMemoryGeneration = true;
 			}
 		}
 
-		private void add(InDatabaseValueGenerationStrategy inDatabaseStrategy) {
+		private void add(InDatabaseGenerator inDatabaseStrategy) {
 			if ( inDatabaseStrategies == null ) {
 				inDatabaseStrategies = new ArrayList<>();
 			}
@@ -611,7 +611,7 @@ public class EntityMetamodel implements Serializable {
 				int columnIndex = 0;
 				for ( Property property : composite.getProperties() ) {
 					propertyIndex++;
-					final InDatabaseValueGenerationStrategy subStrategy = inDatabaseStrategies.get( propertyIndex );
+					final InDatabaseGenerator subStrategy = inDatabaseStrategies.get( propertyIndex );
 					switch ( subStrategy.getGenerationTiming() ) {
 						case INSERT:
 							switch ( timing ) {
@@ -659,7 +659,7 @@ public class EntityMetamodel implements Serializable {
 
 				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
 				return new GenerationStrategyPair(
-						new InDatabaseValueGenerationStrategyImpl( timing, referenceColumns, columnValues )
+						new InDatabaseGeneratorImpl( timing, referenceColumns, columnValues )
 				);
 			}
 			else {
@@ -668,11 +668,11 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class NoInMemoryValueGenerationStrategy implements InMemoryValueGenerationStrategy {
+	private static class NoInMemoryGenerator implements InMemoryGenerator {
 		/**
 		 * Singleton access
 		 */
-		public static final NoInMemoryValueGenerationStrategy INSTANCE = new NoInMemoryValueGenerationStrategy();
+		public static final NoInMemoryGenerator INSTANCE = new NoInMemoryGenerator();
 
 		@Override
 		public GenerationTiming getGenerationTiming() {
@@ -685,11 +685,11 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class NoInDatabaseValueGenerationStrategy implements InDatabaseValueGenerationStrategy {
+	private static class NoInDatabaseGenerator implements InDatabaseGenerator {
 		/**
 		 * Singleton access
 		 */
-		public static final NoInDatabaseValueGenerationStrategy INSTANCE = new NoInDatabaseValueGenerationStrategy();
+		public static final NoInDatabaseGenerator INSTANCE = new NoInDatabaseGenerator();
 
 		@Override
 		public GenerationTiming getGenerationTiming() {
@@ -712,12 +712,12 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class InDatabaseValueGenerationStrategyImpl implements InDatabaseValueGenerationStrategy {
+	private static class InDatabaseGeneratorImpl implements InDatabaseGenerator {
 		private final GenerationTiming timing;
 		private final boolean referenceColumnInSql;
 		private final String[] referencedColumnValues;
 
-		private InDatabaseValueGenerationStrategyImpl(
+		private InDatabaseGeneratorImpl(
 				GenerationTiming timing,
 				boolean referenceColumnInSql,
 				String[] referencedColumnValues) {
@@ -769,17 +769,17 @@ public class EntityMetamodel implements Serializable {
 		// Assumptions:
 		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
-		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
+		final InDatabaseGenerator strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
 	}
 
 	public boolean isVersionGeneratedByDatabase() {
-		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ versionPropertyIndex ];
+		final InDatabaseGenerator strategy = inDatabaseValueGenerationStrategies[ versionPropertyIndex ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
 	}
 
 	public boolean isVersionGeneratedInMemory() {
-		final InMemoryValueGenerationStrategy strategy = inMemoryValueGenerationStrategies[ versionPropertyIndex ];
+		final InMemoryGenerator strategy = inMemoryValueGenerationStrategies[ versionPropertyIndex ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
 	}
 
@@ -1054,11 +1054,11 @@ public class EntityMetamodel implements Serializable {
 		return hasUpdateGeneratedValues;
 	}
 
-	public InMemoryValueGenerationStrategy[] getInMemoryValueGenerationStrategies() {
+	public InMemoryGenerator[] getInMemoryValueGenerationStrategies() {
 		return inMemoryValueGenerationStrategies;
 	}
 
-	public InDatabaseValueGenerationStrategy[] getInDatabaseValueGenerationStrategies() {
+	public InDatabaseGenerator[] getInDatabaseValueGenerationStrategies() {
 		return inDatabaseValueGenerationStrategies;
 	}
 

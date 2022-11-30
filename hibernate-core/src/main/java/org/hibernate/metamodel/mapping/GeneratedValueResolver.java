@@ -9,9 +9,9 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.NoGeneratedValueResolver;
-import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 
 /**
  * Generalized contract covering an attribute's generation handling
@@ -21,7 +21,7 @@ import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 @Incubating
 public interface GeneratedValueResolver {
 	static GeneratedValueResolver from(
-			ValueGenerationStrategy valueGeneration,
+			Generator valueGeneration,
 			GenerationTiming requestedTiming,
 			int dbSelectionPosition) {
 		assert requestedTiming != GenerationTiming.NEVER;
@@ -39,7 +39,7 @@ public interface GeneratedValueResolver {
 			return new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition );
 		}
 		else {
-			InMemoryValueGenerationStrategy generation = (InMemoryValueGenerationStrategy) valueGeneration;
+			InMemoryGenerator generation = (InMemoryGenerator) valueGeneration;
 			return new InMemoryGeneratedValueResolver( generation, requestedTiming );
 		}
 	}

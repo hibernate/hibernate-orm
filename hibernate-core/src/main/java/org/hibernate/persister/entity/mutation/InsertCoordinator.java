@@ -30,9 +30,9 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.tuple.ValueGenerationStrategy;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -100,7 +100,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	protected void preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
 		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
-			final InMemoryValueGenerationStrategy[] strategies = entityMetamodel.getInMemoryValueGenerationStrategies();
+			final InMemoryGenerator[] strategies = entityMetamodel.getInMemoryValueGenerationStrategies();
 			for ( int i = 0; i < strategies.length; i++ ) {
 				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
 					values[i] = strategies[i].generate( session, entity, values[i] );
@@ -389,12 +389,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
 
 				if ( !attributeInclusions[ attributeIndex ] ) {
-					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					final Generator valueGeneration = attributeMapping.getValueGeneration();
 					if ( isValueGenerationInSql( valueGeneration ) ) {
 						handleValueGeneration(
 								attributeMapping,
 								insertGroupBuilder,
-								(InDatabaseValueGenerationStrategy) valueGeneration
+								(InDatabaseGenerator) valueGeneration
 						);
 					}
 					continue;
@@ -436,9 +436,9 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static boolean isValueGenerationInSql(ValueGenerationStrategy valueGeneration) {
+	private static boolean isValueGenerationInSql(Generator valueGeneration) {
 		return valueGeneration.getGenerationTiming().includesInsert()
 				&& valueGeneration.generatedByDatabase()
-				&& ( (InDatabaseValueGenerationStrategy) valueGeneration ).referenceColumnsInSql();
+				&& ( (InDatabaseGenerator) valueGeneration ).referenceColumnsInSql();
 	}
 }

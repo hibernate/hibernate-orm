@@ -19,7 +19,7 @@ public interface NonIdentifierAttribute extends Attribute {
 
 	boolean isUpdateable();
 
-	ValueGenerationStrategy getValueGenerationStrategy();
+	Generator getValueGenerationStrategy();
 
 	boolean isNullable();
 

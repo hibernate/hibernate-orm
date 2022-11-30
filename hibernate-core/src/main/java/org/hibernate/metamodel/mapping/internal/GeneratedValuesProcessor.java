@@ -35,7 +35,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseGenerator;
 
 /**
  * @author Steve Ebersole
@@ -62,11 +62,11 @@ public class GeneratedValuesProcessor {
 		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
 		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report GenerationTiming.NEVER
 		//  even if they have attributes that would need generation
-		final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
+		final InDatabaseGenerator[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
 				.getEntityMetamodel()
 				.getInDatabaseValueGenerationStrategies();
 		entityDescriptor.visitAttributeMappings( mapping -> {
-			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy =
+			final InDatabaseGenerator inDatabaseValueGenerationStrategy =
 					inDatabaseValueGenerationStrategies[ mapping.getStateArrayPosition() ];
 			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
 				return;

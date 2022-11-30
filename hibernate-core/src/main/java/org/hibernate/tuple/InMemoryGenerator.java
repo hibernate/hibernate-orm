@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @since 6.2
  */
-public interface InMemoryValueGenerationStrategy extends ValueGenerationStrategy {
+public interface InMemoryGenerator extends Generator {
 	/**
 	 * Generate a value.
 	 *

@@ -18,7 +18,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Gunnar Morling
  */
 public class GeneratedValueGeneration
-		implements AnnotationValueGenerationStrategy<Generated>, InDatabaseValueGenerationStrategy {
+		implements AnnotationGenerator<Generated>, InDatabaseGenerator {
 
 	private GenerationTiming timing;
 	private boolean writable;

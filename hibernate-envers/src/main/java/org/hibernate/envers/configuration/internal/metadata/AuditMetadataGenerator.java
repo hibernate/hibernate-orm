@@ -33,7 +33,7 @@ import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.GeneratedValueGeneration;
 
 import org.jboss.logging.Logger;
@@ -119,7 +119,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private boolean isPropertyInsertable(Property property) {
 		if ( !property.isInsertable() ) {
-			final ValueGenerationStrategy generation = property.getValueGenerationStrategy();
+			final Generator generation = property.getValueGenerationStrategy();
 			if ( generation instanceof GeneratedValueGeneration ) {
 				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
 				if ( valueGeneration.getGenerationTiming().includesInsert() ) {

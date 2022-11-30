@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -94,7 +94,7 @@ public final class Nullability {
 					? persister.getPropertyInsertability()
 					: persister.getPropertyUpdateability();
 			final Type[] propertyTypes = persister.getPropertyTypes();
-			final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies =
+			final InMemoryGenerator[] inMemoryValueGenerationStrategies =
 					persister.getEntityMetamodel().getInMemoryValueGenerationStrategies();
 
 			for ( int i = 0; i < values.length; i++ ) {

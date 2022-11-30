@@ -16,7 +16,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 
 import static org.hibernate.tuple.GenerationTiming.INSERT;
@@ -39,7 +39,7 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  *
  * @see PersistentIdentifierGenerator
  */
-public interface IdentifierGenerator extends InMemoryValueGenerationStrategy, ExportableProducer, Configurable {
+public interface IdentifierGenerator extends InMemoryGenerator, ExportableProducer, Configurable {
 	/**
 	 * The configuration parameter holding the entity name
 	 */

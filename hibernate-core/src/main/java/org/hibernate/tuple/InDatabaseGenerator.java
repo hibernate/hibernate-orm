@@ -19,7 +19,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @since 6.2
  */
-public interface InDatabaseValueGenerationStrategy extends ValueGenerationStrategy {
+public interface InDatabaseGenerator extends Generator {
 
 	/**
 	 * Determines if the columns whose values are generated are included in the column list of

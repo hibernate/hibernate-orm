@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Gavin King
  */
 public class TenantIdGeneration
-		implements AnnotationValueGenerationStrategy<TenantId>, InMemoryValueGenerationStrategy {
+		implements AnnotationGenerator<TenantId>, InMemoryGenerator {
 
 	private String entityName;
 	private String propertyName;

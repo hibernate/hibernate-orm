@@ -69,7 +69,7 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	}
 
 	@Override
-	public ValueGenerationStrategy getValueGenerationStrategy() {
+	public Generator getValueGenerationStrategy() {
 		return attributeInformation.getValueGenerationStrategy();
 	}
 

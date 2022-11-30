@@ -29,7 +29,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 	 * @param lazy Should this property be handled lazily?
 	 * @param insertable Is this property an insertable value?
 	 * @param updateable Is this property an updateable value?
-	 * @param valueGenerationStrategy How (if) values for this attribute are generated
+	 * @param generator How (if) values for this attribute are generated
 	 * @param nullable Is this property a nullable value?
 	 * @param checkable Is this property a checkable value?
 	 * @param versionable Is this property a versionable value?
@@ -42,7 +42,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGenerationStrategy valueGenerationStrategy,
+			Generator generator,
 			boolean nullable,
 			boolean checkable,
 			boolean versionable,
@@ -58,7 +58,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 						.setLazy( lazy )
 						.setInsertable( insertable )
 						.setUpdateable( updateable )
-						.setValueGenerationStrategy( valueGenerationStrategy )
+						.setValueGenerationStrategy(generator)
 						.setNullable( nullable )
 						.setDirtyCheckable( checkable )
 						.setVersionable( versionable )

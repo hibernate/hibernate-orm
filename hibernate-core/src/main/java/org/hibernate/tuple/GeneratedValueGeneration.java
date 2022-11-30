@@ -33,7 +33,9 @@ public class GeneratedValueGeneration implements InDatabaseGenerator {
 	}
 
 	public GeneratedValueGeneration(Generated annotation) {
-		timing = annotation.value().getEquivalent();
+		timing = annotation.timing().isAlways()
+				? annotation.value().getEquivalent()
+				: annotation.timing();
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
 		writable = annotation.writable() || sql != null;
 	}

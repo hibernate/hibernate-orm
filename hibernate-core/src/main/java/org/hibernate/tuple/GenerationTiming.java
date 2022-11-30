@@ -105,6 +105,10 @@ public enum GenerationTiming {
 		return this != NEVER;
 	}
 
+	public boolean isAlways() {
+		return this == ALWAYS;
+	}
+
 	public abstract boolean includes(GenerationTiming timing);
 
 	public static GenerationTiming parseFromName(String name) {

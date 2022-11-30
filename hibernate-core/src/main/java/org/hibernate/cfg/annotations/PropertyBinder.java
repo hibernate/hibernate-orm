@@ -508,7 +508,7 @@ public class PropertyBinder {
 	private void checkVersionGenerationAlways(XProperty property, Generator generator) {
 		if ( property.isAnnotationPresent(Version.class) ) {
 			final GenerationTiming timing = generator.getGenerationTiming();
-			if ( timing != GenerationTiming.ALWAYS ) {
+			if ( !timing.isAlways() ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@Version' but has a value generator with timing " + timing.name()
 						+ " (the value generation timing must be ALWAYS)"

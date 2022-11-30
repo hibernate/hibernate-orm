@@ -35,8 +35,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A custom SQL update statement might assign a value to a mapped column as it
  * is written. In this case, the corresponding property of the entity remains
  * unassigned after the update is executed unless
- * {@link Generated @Generated(ALWAYS)} is specified, forcing Hibernate to
- * reread the state of the entity after each update.
+ * {@link Generated @Generated} is specified, forcing Hibernate to reread the
+ * state of the entity after each update.
  * <p>
  * Similarly, a custom update statement might transform a mapped column value
  * as it is written. In this case, the state of the entity held in memory

@@ -25,7 +25,7 @@ import java.io.Serializable;
  * </ul>
  * If an implementation of {@code ValueGenerationStrategy} may be associated with an entity
  * via a {@linkplain org.hibernate.annotations.ValueGenerationType custom annotation}, it
- * should implement {@link AnnotationGenerator}.
+ * should implement {@link AnnotationBasedGenerator}.
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.Generated

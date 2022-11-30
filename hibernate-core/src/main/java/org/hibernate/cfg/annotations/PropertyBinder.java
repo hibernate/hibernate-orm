@@ -44,7 +44,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.tuple.AnnotationGenerator;
+import org.hibernate.tuple.AnnotationBasedGenerator;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GeneratorCreationContext;
@@ -495,12 +495,12 @@ public class PropertyBinder {
 			Member member,
 			GeneratorCreationContext creationContext,
 			Generator generator) {
-		if ( generator instanceof AnnotationGenerator) {
+		if ( generator instanceof AnnotationBasedGenerator) {
 			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
 			// a programming error of the generation type developer and thus should show up during testing, we don't
 			// check this explicitly; If required, this could be done e.g. using ClassMate
 			@SuppressWarnings("unchecked")
-			final AnnotationGenerator<A> generation = (AnnotationGenerator<A>) generator;
+			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
 			generation.initialize( annotation, member, creationContext );
 		}
 	}

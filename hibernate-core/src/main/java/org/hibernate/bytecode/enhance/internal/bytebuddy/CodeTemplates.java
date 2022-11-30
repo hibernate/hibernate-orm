@@ -37,6 +37,8 @@ import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
 import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
 import net.bytebuddy.jar.asm.Opcodes;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeTracker;
+
 class CodeTemplates {
 
 	static class SetOwner {
@@ -319,14 +321,14 @@ class CodeTemplates {
 		@Advice.OnMethodEnter
 		static void enter(@FieldName String fieldName, @FieldValue Object field) {
 			if ( field != null ) {
-				( (CompositeTracker) field ).$$_hibernate_clearOwner( fieldName );
+				asCompositeTracker( field ).$$_hibernate_clearOwner( fieldName );
 			}
 		}
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This CompositeOwner self, @FieldName String fieldName, @FieldValue Object field) {
 			if ( field != null ) {
-				( (CompositeTracker) field ).$$_hibernate_setOwner( fieldName, self );
+				asCompositeTracker( field ).$$_hibernate_setOwner( fieldName, self );
 			}
 			self.$$_hibernate_trackChange( fieldName );
 		}

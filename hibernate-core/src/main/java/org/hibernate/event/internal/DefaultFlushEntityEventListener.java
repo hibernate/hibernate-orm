@@ -17,6 +17,7 @@ import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -497,10 +498,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		);
 
 		if ( dirtyProperties == null ) {
-			if ( entity instanceof SelfDirtinessTracker ) {
-				boolean hasDirtyAttributes = ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
+			if ( isSelfDirtinessTracker( entity ) ) {
+				final SelfDirtinessTracker tracker = asSelfDirtinessTracker( entity );
+				boolean hasDirtyAttributes = tracker.$$_hibernate_hasDirtyAttributes();
 				if ( hasDirtyAttributes || persister.hasMutableProperties() ) {
-					String[] dirtyAttributes = ((SelfDirtinessTracker) entity).$$_hibernate_getDirtyAttributes();
+					String[] dirtyAttributes = tracker.$$_hibernate_getDirtyAttributes();
 					dirtyProperties = persister.resolveDirtyAttributeIndexes(
 							values,
 							loadedState,

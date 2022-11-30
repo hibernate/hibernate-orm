@@ -9,9 +9,15 @@ package org.hibernate.engine.spi;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CompositeOwner {
+public interface CompositeOwner extends PrimeAmongSecondarySupertypes {
 	/**
 	 * @param attributeName to be added to the dirty list
 	 */
 	void $$_hibernate_trackChange(String attributeName);
+
+	@Override
+	default CompositeOwner asCompositeOwner() {
+		return this;
+	}
+
 }

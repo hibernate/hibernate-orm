@@ -9,9 +9,15 @@ package org.hibernate.engine.spi;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CompositeTracker {
+public interface CompositeTracker extends PrimeAmongSecondarySupertypes {
 
 	void $$_hibernate_setOwner(String name, CompositeOwner tracker);
 
 	void $$_hibernate_clearOwner(String name);
+
+	@Override
+	default CompositeTracker asCompositeTracker() {
+		return this;
+	}
+
 }

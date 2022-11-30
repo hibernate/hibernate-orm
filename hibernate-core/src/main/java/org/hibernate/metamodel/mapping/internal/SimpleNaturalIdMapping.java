@@ -110,7 +110,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return;
 		}
 
-		if ( naturalIdValue.getClass().isArray() ) {
+		if ( naturalIdValue.getClass().isArray() && !naturalIdValue.getClass().getComponentType().isPrimitive() ) {
 			// be flexible
 			final Object[] values = (Object[]) naturalIdValue;
 			if ( values.length == 1 ) {

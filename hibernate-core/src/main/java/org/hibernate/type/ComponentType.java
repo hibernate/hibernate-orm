@@ -35,7 +35,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
@@ -53,7 +53,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
-	private final ValueGenerationStrategy[] propertyValueGenerationStrategies;
+	private final Generator[] propertyValueGenerationStrategies;
 	private final boolean[] propertyNullability;
 	private final int[] originalPropertyOrder;
 	protected final int propertySpan;
@@ -438,7 +438,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return propertyTypes;
 	}
 
-	public ValueGenerationStrategy[] getPropertyValueGenerationStrategies() {
+	public Generator[] getPropertyValueGenerationStrategies() {
 		return propertyValueGenerationStrategies;
 	}
 

@@ -13,9 +13,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tuple.AnnotationValueGenerationStrategy;
+import org.hibernate.tuple.AnnotationGenerator;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.TimestampGenerators;
 import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
@@ -44,7 +44,7 @@ import static org.hibernate.tuple.GenerationTiming.ALWAYS;
 @Deprecated(since = "6.2")
 @Internal
 public class SourceGeneration
-		implements AnnotationValueGenerationStrategy<Source>, InMemoryValueGenerationStrategy, ValueGenerator<Object> {
+		implements AnnotationGenerator<Source>, InMemoryGenerator, ValueGenerator<Object> {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,

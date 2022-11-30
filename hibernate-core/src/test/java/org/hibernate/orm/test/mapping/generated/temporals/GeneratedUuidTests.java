@@ -17,12 +17,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tuple.AnnotationValueGenerationStrategy;
+import org.hibernate.tuple.AnnotationGenerator;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -86,7 +85,7 @@ public class GeneratedUuidTests {
 
 	//tag::mapping-generated-custom-ex3[]
 	public static class UuidValueGeneration
-			implements AnnotationValueGenerationStrategy<GeneratedUuidValue>, InMemoryValueGenerationStrategy {
+			implements AnnotationGenerator<GeneratedUuidValue>, InMemoryGenerator {
 		private GenerationTiming timing;
 
 		@Override

@@ -15,7 +15,7 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  */
 public class GeneratedAlwaysValueGeneration
-		implements InDatabaseValueGenerationStrategy {
+		implements InDatabaseGenerator {
 
 	public GeneratedAlwaysValueGeneration() {}
 

@@ -10,9 +10,9 @@ import java.lang.annotation.Annotation;
 
 
 /**
- * A {@link ValueGenerationStrategy} based on a custom Java generator annotation type.
- * Every instance must implement either {@link InMemoryValueGenerationStrategy} or
- * {@link InDatabaseValueGenerationStrategy}.
+ * A {@link Generator} based on a custom Java generator annotation type.
+ * Every instance must implement either {@link InMemoryGenerator} or
+ * {@link InDatabaseGenerator}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *
@@ -23,7 +23,7 @@ import java.lang.annotation.Annotation;
  *
  * @since 6.2
  */
-public interface AnnotationValueGenerationStrategy<A extends Annotation> extends ValueGenerationStrategy {
+public interface AnnotationGenerator<A extends Annotation> extends Generator {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *

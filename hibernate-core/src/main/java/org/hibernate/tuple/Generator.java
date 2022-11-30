@@ -11,7 +11,7 @@ import java.io.Serializable;
 /**
  * Describes the generation of values of a certain field or property of an entity. A generated
  * value might be generated in Java, or by the database. Every instance must implement either
- * {@link InMemoryValueGenerationStrategy} or {@link InDatabaseValueGenerationStrategy}
+ * {@link InMemoryGenerator} or {@link InDatabaseGenerator}
  * depending on whether values are generated in Java code, or by the database.
  * <ul>
  * <li>Java value generation is the responsibility of an associated {@link ValueGenerator}.
@@ -25,7 +25,7 @@ import java.io.Serializable;
  * </ul>
  * If an implementation of {@code ValueGenerationStrategy} may be associated with an entity
  * via a {@linkplain org.hibernate.annotations.ValueGenerationType custom annotation}, it
- * should implement {@link AnnotationValueGenerationStrategy}.
+ * should implement {@link AnnotationGenerator}.
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.Generated
@@ -36,7 +36,7 @@ import java.io.Serializable;
  *
  * @since 6.2
  */
-public interface ValueGenerationStrategy extends Serializable {
+public interface Generator extends Serializable {
 	/**
 	 * Specifies that the property value is generated:
 	 * <ul>

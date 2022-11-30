@@ -24,7 +24,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
+import org.hibernate.tuple.InDatabaseGenerator;
 
 /**
  * Base support for coordinating mutations against an entity
@@ -92,7 +92,7 @@ public abstract class AbstractMutationCoordinator {
 	void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
-			InDatabaseValueGenerationStrategy valueGeneration) {
+			InDatabaseGenerator valueGeneration) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final boolean writePropertyValue = valueGeneration.writePropertyValue();
 		final String[] columnValues = writePropertyValue ? null : valueGeneration.getReferencedColumnValues( dialect );

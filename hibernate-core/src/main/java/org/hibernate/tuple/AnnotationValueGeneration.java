@@ -19,7 +19,7 @@ import java.lang.annotation.Annotation;
  * @author Gunnar Morling
  */
 public interface AnnotationValueGeneration<A extends Annotation>
-		extends ValueGeneration, AnnotationValueGenerationStrategy<A> {
+		extends ValueGeneration, AnnotationGenerator<A> {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *

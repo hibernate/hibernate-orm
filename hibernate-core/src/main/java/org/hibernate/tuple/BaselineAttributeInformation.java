@@ -16,7 +16,7 @@ public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;
-	private final ValueGenerationStrategy valueGenerationStrategy;
+	private final Generator generator;
 	private final boolean nullable;
 	private final boolean dirtyCheckable;
 	private final boolean versionable;
@@ -28,7 +28,7 @@ public class BaselineAttributeInformation {
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGenerationStrategy valueGenerationStrategy,
+			Generator generator,
 			boolean nullable,
 			boolean dirtyCheckable,
 			boolean versionable,
@@ -37,7 +37,7 @@ public class BaselineAttributeInformation {
 		this.lazy = lazy;
 		this.insertable = insertable;
 		this.updateable = updateable;
-		this.valueGenerationStrategy = valueGenerationStrategy;
+		this.generator = generator;
 		this.nullable = nullable;
 		this.dirtyCheckable = dirtyCheckable;
 		this.versionable = versionable;
@@ -57,8 +57,8 @@ public class BaselineAttributeInformation {
 		return updateable;
 	}
 
-	public ValueGenerationStrategy getValueGenerationStrategy() {
-		return valueGenerationStrategy;
+	public Generator getValueGenerationStrategy() {
+		return generator;
 	}
 
 	public boolean isNullable() {
@@ -89,7 +89,7 @@ public class BaselineAttributeInformation {
 		private boolean lazy;
 		private boolean insertable;
 		private boolean updateable;
-		private ValueGenerationStrategy valueGenerationStrategy;
+		private Generator generator;
 		private boolean nullable;
 		private boolean dirtyCheckable;
 		private boolean versionable;
@@ -111,8 +111,8 @@ public class BaselineAttributeInformation {
 			return this;
 		}
 
-		public Builder setValueGenerationStrategy(ValueGenerationStrategy valueGenerationStrategy) {
-			this.valueGenerationStrategy = valueGenerationStrategy;
+		public Builder setValueGenerationStrategy(Generator generator) {
+			this.generator = generator;
 			return this;
 		}
 
@@ -146,7 +146,7 @@ public class BaselineAttributeInformation {
 					lazy,
 					insertable,
 					updateable,
-					valueGenerationStrategy,
+					generator,
 					nullable,
 					dirtyCheckable,
 					versionable,

@@ -49,9 +49,9 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
-import org.hibernate.tuple.ValueGenerationStrategy;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.ALL;
@@ -320,10 +320,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private static boolean isValueGenerationInSql(ValueGenerationStrategy valueGeneration) {
+	private static boolean isValueGenerationInSql(Generator valueGeneration) {
 		return valueGeneration.getGenerationTiming().includesUpdate()
 				&& valueGeneration.generatedByDatabase()
-				&& ( (InDatabaseValueGenerationStrategy) valueGeneration ).referenceColumnsInSql();
+				&& ( (InDatabaseGenerator) valueGeneration ).referenceColumnsInSql();
 	}
 
 	/**
@@ -419,7 +419,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return EMPTY_INT_ARRAY;
 		}
 
-		final InMemoryValueGenerationStrategy[] valueGenerationStrategies = entityMetamodel.getInMemoryValueGenerationStrategies();
+		final InMemoryGenerator[] valueGenerationStrategies = entityMetamodel.getInMemoryValueGenerationStrategies();
 		if ( valueGenerationStrategies.length != 0 ) {
 			final int[] fieldsPreUpdateNeeded = new int[valueGenerationStrategies.length];
 			int count = 0;
@@ -673,9 +673,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// apply the new values
 					final boolean includeInSet;
 
-					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					final Generator valueGeneration = attributeMapping.getValueGeneration();
 					if ( isValueGenerationInSql( valueGeneration )
-							&& !( (InDatabaseValueGenerationStrategy) valueGeneration ).writePropertyValue() ) {
+							&& !( (InDatabaseGenerator) valueGeneration ).writePropertyValue() ) {
 						// we applied `#getDatabaseGeneratedReferencedColumnValue` earlier
 						includeInSet = false;
 					}
@@ -908,12 +908,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( attributeAnalysis.includeInSet() ) {
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
 
-					final ValueGenerationStrategy valueGeneration = attributeMapping.getValueGeneration();
+					final Generator valueGeneration = attributeMapping.getValueGeneration();
 					if ( isValueGenerationInSql( valueGeneration ) ) {
 						handleValueGeneration(
 								attributeMapping,
 								updateGroupBuilder,
-								(InDatabaseValueGenerationStrategy) valueGeneration
+								(InDatabaseGenerator) valueGeneration
 						);
 					}
 					else if ( versionMapping != null

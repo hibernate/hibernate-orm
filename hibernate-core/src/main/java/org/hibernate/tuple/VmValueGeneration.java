@@ -20,7 +20,7 @@ import org.hibernate.internal.util.ReflectHelper;
  * @author Gunnar Morling
  */
 public class VmValueGeneration
-		implements AnnotationValueGenerationStrategy<GeneratorType>, InMemoryValueGenerationStrategy {
+		implements AnnotationGenerator<GeneratorType>, InMemoryGenerator {
 
 	private GenerationTiming generationTiming;
 	ValueGenerator<?> generator;

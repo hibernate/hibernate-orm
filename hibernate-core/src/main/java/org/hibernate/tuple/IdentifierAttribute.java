@@ -16,7 +16,10 @@ public interface IdentifierAttribute extends Attribute {
 
 	boolean isEmbedded();
 
+	@Deprecated
 	IdentifierGenerator getIdentifierGenerator();
+
+	InMemoryGenerator getGenerator();
 
 	boolean isIdentifierAssignedByInsert();
 

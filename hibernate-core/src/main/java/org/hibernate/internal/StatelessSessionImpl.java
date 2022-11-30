@@ -93,7 +93,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifierGenerator().generate( this, entity );
+		Object id = persister.getGenerator().generate( this, entity, null );
 		Object[] state = persister.getValues( entity );
 		if ( persister.isVersioned() ) {
 			boolean substitute = Versioning.seedVersion(

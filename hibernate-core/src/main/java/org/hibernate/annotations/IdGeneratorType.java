@@ -11,6 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.tuple.InMemoryGenerator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -63,8 +64,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface IdGeneratorType {
 	/**
-	 * A class that implements {@link IdentifierGenerator} and has a
-	 * constructor with the signature:
+	 * A class that implements {@link InMemoryGenerator} and has a constructor
+	 * with the signature:
 	 * <pre>{@code
 	 * public GeneratorType(AnnotationType config, Member idMember,
 	 *                      CustomIdGeneratorCreationContext creationContext)
@@ -73,5 +74,5 @@ public @interface IdGeneratorType {
 	 * {@code IdentifierGenerator}, and {@code AnnotationType} is the
 	 * annotation type to which this annotation was applied.
 	 */
-	Class<? extends IdentifierGenerator> value();
+	Class<? extends InMemoryGenerator> value();
 }

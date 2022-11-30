@@ -124,6 +124,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -183,7 +184,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private volatile DelayedDropAction delayedDropAction;
 
 	// todo : move to MetamodelImpl
-	private final transient Map<String,IdentifierGenerator> identifierGenerators;
+	private final transient Map<String, InMemoryGenerator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
@@ -293,12 +294,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
 			bootMetamodel.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-				final IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+				final InMemoryGenerator generator = model.getIdentifier().createGenerator(
 						bootstrapContext.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
 						(RootClass) model
 				);
-				generator.initialize( sqlStringGenerationContext );
+				if ( generator instanceof IdentifierGenerator ) {
+					( (IdentifierGenerator) generator ).initialize( sqlStringGenerationContext );
+				}
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
 			bootMetamodel.validate();
@@ -985,8 +988,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return unmodifiableSet( fetchProfiles.keySet() );
 	}
 
+	@Deprecated
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return identifierGenerators.get(rootEntityName);
+		return (IdentifierGenerator) getGenerator( rootEntityName );
+	}
+
+	@Deprecated
+	public InMemoryGenerator getGenerator(String rootEntityName) {
+		return identifierGenerators.get( rootEntityName );
 	}
 
 	private boolean canAccessTransactionManager() {

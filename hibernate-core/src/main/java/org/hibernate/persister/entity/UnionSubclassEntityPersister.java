@@ -112,7 +112,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
-		if ( getIdentifierGenerator() instanceof IdentityGenerator ) {
+		if ( getGenerator() instanceof IdentityGenerator ) {
 			throw new MappingException(
 					"Cannot use identity column key generation with <union-subclass> mapping for: " +
 							getEntityName()

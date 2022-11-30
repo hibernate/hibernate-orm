@@ -23,7 +23,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -74,6 +73,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.ValueBinder;
 
 /**
@@ -301,7 +301,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				true
 		);
 
-		final IdentifierGenerator identifierGenerator = entityDescriptor.getEntityPersister().getIdentifierGenerator();
+		final InMemoryGenerator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( ( assignments == null || assignments.isEmpty() )
 				&& !( identifierGenerator instanceof PostInsertIdentifierGenerator )
@@ -507,10 +507,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							rootIdentity,
 							new JdbcParameterBindingImpl(
 									identifierMapping.getJdbcMapping(),
-									identifierGenerator.generate(
-											executionContext.getSession(),
-											null
-									)
+									identifierGenerator.generate( executionContext.getSession(), null, null )
 							)
 					);
 					jdbcServices.getJdbcMutationExecutor().execute(
@@ -654,7 +651,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		}
 	}
 
-	private boolean needsIdentifierGeneration(IdentifierGenerator identifierGenerator) {
+	private boolean needsIdentifierGeneration(InMemoryGenerator identifierGenerator) {
 		if ( !( identifierGenerator instanceof OptimizableGenerator ) ) {
 			return false;
 		}
@@ -721,7 +718,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		}
 		final String targetKeyColumnName = keyColumns[0];
 		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
-		final IdentifierGenerator identifierGenerator = entityPersister.getIdentifierGenerator();
+		final InMemoryGenerator identifierGenerator = entityPersister.getGenerator();
 		final boolean needsKeyInsert;
 		if ( identifierGenerator instanceof PostInsertIdentifierGenerator ) {
 			needsKeyInsert = true;

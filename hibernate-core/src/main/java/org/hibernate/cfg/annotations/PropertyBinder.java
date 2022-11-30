@@ -21,6 +21,7 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumns;
@@ -37,6 +38,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -49,6 +51,7 @@ import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
@@ -168,6 +171,38 @@ public class PropertyBinder {
 		this.declaringClassSet = true;
 	}
 
+	private boolean isToOneValue(Value value) {
+		return value instanceof ToOne;
+	}
+
+	public void setProperty(XProperty property) {
+		this.property = property;
+	}
+
+	public void setReturnedClass(XClass returnedClass) {
+		this.returnedClass = returnedClass;
+	}
+
+	public BasicValueBinder getBasicValueBinder() {
+		return basicValueBinder;
+	}
+
+	public Value getValue() {
+		return value;
+	}
+
+	public void setId(boolean id) {
+		this.isId = id;
+	}
+
+	public boolean isId() {
+		return isId;
+	}
+
+	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		this.inheritanceStatePerClass = inheritanceStatePerClass;
+	}
+
 	private void validateBind() {
 		if ( property.isAnnotationPresent( Immutable.class ) ) {
 			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -243,7 +278,8 @@ public class PropertyBinder {
 		if ( isId ) {
 			final RootClass rootClass = (RootClass) holder.getPersistentClass();
 			//if an xToMany, it has to be wrapped today.
-			//FIXME this poses a problem as the PK is the class instead of the associated class which is not really compliant with the spec
+			//FIXME this poses a problem as the PK is the class instead of the
+			//      associated class which is not really compliant with the spec
 			if ( isXToMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
 				Component identifier = (Component) rootClass.getIdentifier();
 				if (identifier == null) {
@@ -270,7 +306,7 @@ public class PropertyBinder {
 				}
 				else {
 					rootClass.setIdentifierProperty( prop );
-					final org.hibernate.mapping.MappedSuperclass superclass = getMappedSuperclassOrNull(
+					final MappedSuperclass superclass = getMappedSuperclassOrNull(
 							declaringClass,
 							inheritanceStatePerClass,
 							buildingContext
@@ -343,7 +379,7 @@ public class PropertyBinder {
 	}
 
 	private void handleNaturalId(Property prop) {
-		NaturalId naturalId = property.getAnnotation(NaturalId.class);
+		final NaturalId naturalId = property.getAnnotation(NaturalId.class);
 		if ( naturalId != null ) {
 			if ( !entityBinder.isRootEntity() ) {
 				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -415,13 +451,14 @@ public class PropertyBinder {
 	 * Instantiates the given generator annotation type, initializing it with the given instance of the corresponding
 	 * generator annotation and the property's type.
 	 */
-	private <A extends Annotation> GeneratorCreator generatorCreator(XProperty property, A annotation) {
+	public static GeneratorCreator generatorCreator(XProperty property, Annotation annotation) {
 		final Member member = HCANNHelper.getUnderlyingMember( property );
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
 		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
+		checkGeneratorType( generatorAnnotation.generatedBy() );
 		return creationContext -> {
 			final Generator generator =
 					instantiateGenerator(
@@ -438,13 +475,27 @@ public class PropertyBinder {
 		};
 	}
 
+	private static void checkGeneratorType(Class<? extends Generator> generatorClass) {
+		// we don't yet support the additional "fancy" operations of
+		// IdentifierGenerator with regular generators, though this
+		// would be extremely easy to add if anyone asks for it
+		if ( IdentifierGenerator.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException("Generator class '" + generatorClass.getName()
+					+ "' implements 'IdentifierGenerator' and may not be used with '@ValueGenerationType'");
+		}
+		if ( ExportableProducer.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException("Generator class '" + generatorClass.getName()
+					+ "' implements 'ExportableProducer' and may not be used with '@ValueGenerationType'");
+		}
+	}
+
 	public static IdentifierGeneratorCreator identifierGeneratorCreator(XProperty idProperty, Annotation annotation) {
 		final Member member = HCANNHelper.getUnderlyingMember( idProperty );
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorType != null;
 		return creationContext -> {
-			final IdentifierGenerator generator =
+			final InMemoryGenerator generator =
 					instantiateGenerator(
 							annotation,
 							member,
@@ -505,11 +556,11 @@ public class PropertyBinder {
 		}
 	}
 
-	private void checkVersionGenerationAlways(XProperty property, Generator generator) {
+	private static void checkVersionGenerationAlways(XProperty property, Generator generator) {
 		if ( property.isAnnotationPresent(Version.class) ) {
 			final GenerationTiming timing = generator.getGenerationTiming();
 			if ( !timing.isAlways() ) {
-				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
+				throw new AnnotationException("Property '" + property.getName()
 						+ "' is annotated '@Version' but has a value generator with timing " + timing.name()
 						+ " (the value generation timing must be ALWAYS)"
 				);
@@ -517,35 +568,4 @@ public class PropertyBinder {
 		}
 	}
 
-	private boolean isToOneValue(Value value) {
-		return value instanceof ToOne;
-	}
-
-	public void setProperty(XProperty property) {
-		this.property = property;
-	}
-
-	public void setReturnedClass(XClass returnedClass) {
-		this.returnedClass = returnedClass;
-	}
-
-	public BasicValueBinder getBasicValueBinder() {
-		return basicValueBinder;
-	}
-
-	public Value getValue() {
-		return value;
-	}
-
-	public void setId(boolean id) {
-		this.isId = id;
-	}
-
-	public boolean isId() {
-		return isId;
-	}
-
-	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		this.inheritanceStatePerClass = inheritanceStatePerClass;
-	}
 }

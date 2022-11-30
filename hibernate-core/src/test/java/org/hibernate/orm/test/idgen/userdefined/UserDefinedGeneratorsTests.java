@@ -39,7 +39,6 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 

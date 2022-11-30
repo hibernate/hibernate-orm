@@ -21,7 +21,6 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
@@ -95,6 +94,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -273,7 +273,7 @@ public class CteInsertHandler implements InsertHandler {
 									rowNumberColumn
 							);
 						}
-						if ( !assignsId && entityDescriptor.getIdentifierGenerator() instanceof PostInsertIdentifierGenerator ) {
+						if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
 							querySpec.getSelectClause().addSqlSelection(
 									new SqlSelectionImpl(
 											1,
@@ -337,7 +337,7 @@ public class CteInsertHandler implements InsertHandler {
 		processingStateStack.push( oldState );
 		sqmConverter.pruneTableGroupJoins();
 
-		if ( !assignsId && entityDescriptor.getIdentifierGenerator() instanceof PostInsertIdentifierGenerator ) {
+		if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
 			// Add the row number to the assignments
 			final CteColumn rowNumberColumn = cteTable.getCteColumns()
 					.get( cteTable.getCteColumns().size() - 1 );
@@ -389,7 +389,7 @@ public class CteInsertHandler implements InsertHandler {
 			);
 			final CteColumn idColumn = fullEntityCteTable.getCteColumns().get( 0 );
 			final BasicValuedMapping idType = (BasicValuedMapping) idColumn.getJdbcMapping();
-			final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getIdentifierGenerator() ).getOptimizer();
+			final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getGenerator() ).getOptimizer();
 			final BasicValuedMapping integerType = (BasicValuedMapping) rowNumberColumn.getJdbcMapping();
 			final Expression rowNumberMinusOneModuloIncrement = new BinaryArithmeticExpression(
 					new BinaryArithmeticExpression(
@@ -428,7 +428,7 @@ public class CteInsertHandler implements InsertHandler {
 								rowNumberColumnReference
 						)
 				);
-				final String fragment = ( (BulkInsertionCapableIdentifierGenerator) entityDescriptor.getIdentifierGenerator() )
+				final String fragment = ( (BulkInsertionCapableIdentifierGenerator) entityDescriptor.getGenerator() )
 						.determineBulkInsertionIdentifierGenerationSelectFragment(
 								sessionFactory.getSqlStringGenerationContext()
 						);
@@ -581,7 +581,7 @@ public class CteInsertHandler implements InsertHandler {
 				statement.addCteStatement( entityCte );
 			}
 		}
-		else if ( !assignsId && entityDescriptor.getIdentifierGenerator() instanceof PostInsertIdentifierGenerator ) {
+		else if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
 			final String baseTableName = "base_" + entityCteTable.getTableExpression();
 			final CteStatement baseEntityCte = new CteStatement(
 					entityCteTable.withName( baseTableName ),
@@ -775,7 +775,7 @@ public class CteInsertHandler implements InsertHandler {
 				true
 		);
 
-		final IdentifierGenerator identifierGenerator = entityDescriptor.getEntityPersister().getIdentifierGenerator();
+		final InMemoryGenerator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 		final List<Map.Entry<List<CteColumn>, Assignment>> tableAssignments = assignmentsByTable.get( rootTableReference );
 		if ( ( tableAssignments == null || tableAssignments.isEmpty() ) && !( identifierGenerator instanceof PostInsertIdentifierGenerator ) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );

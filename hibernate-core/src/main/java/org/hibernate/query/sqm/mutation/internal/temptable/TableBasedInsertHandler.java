@@ -20,7 +20,6 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -53,6 +52,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 
 import org.jboss.logging.Logger;
@@ -201,8 +201,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 									new Assignment( columnReference, columnReference )
 							);
 						}
-						else if ( entityDescriptor.getIdentifierGenerator() instanceof OptimizableGenerator ) {
-							final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getIdentifierGenerator() ).getOptimizer();
+						else if ( entityDescriptor.getGenerator() instanceof OptimizableGenerator ) {
+							final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getGenerator() ).getOptimizer();
 							if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
 								if ( !sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions() ) {
 									return;
@@ -254,7 +254,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		}
 		else {
 			// Add the row number column if there is one
-			final IdentifierGenerator generator = entityDescriptor.getIdentifierGenerator();
+			final InMemoryGenerator generator = entityDescriptor.getGenerator();
 			final BasicType<?> rowNumberType;
 			if ( generator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();

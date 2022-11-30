@@ -36,9 +36,9 @@ public class BasicForcedTableSequenceTest {
         final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
+		assertThat( persister.getGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
-		final SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
 		assertThat( generator.getDatabaseStructure(), instanceOf( TableStructure.class ) );
 		assertThat( generator.getOptimizer(), instanceOf( NoopOptimizer.class ) );
 

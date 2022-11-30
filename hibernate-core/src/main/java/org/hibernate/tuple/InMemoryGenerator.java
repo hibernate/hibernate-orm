@@ -9,9 +9,16 @@ package org.hibernate.tuple;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Java value generation is the responsibility of an associated {@link ValueGenerator}.
- * In this case, the generated value is written to the database just like any other field
- * or property value.
+ * A generator that is called to produce a value just before a row is written to the database.
+ * The {@link #generate} method may execute arbitrary Java code, it may even, in principle,
+ * access the database via JDBC. But however it is produced, the generated value is sent to the
+ * database via a parameter of a JDBC prepared statement, just like any other field or property
+ * value.
+ * <p>
+ * Any {@link InMemoryGenerator} may be used to produce {@linkplain jakarta.persistence.Id
+ * identifiers}. The built-in identifier generators all implement the older extension point
+ * {@link org.hibernate.id.IdentifierGenerator}, which is a subtype of this interface, but that
+ * is no longer a requirement for custom id generators.
  *
  * @author Steve Ebersole
  *

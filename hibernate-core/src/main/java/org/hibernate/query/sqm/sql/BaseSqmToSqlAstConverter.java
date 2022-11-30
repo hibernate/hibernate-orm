@@ -44,7 +44,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
@@ -384,6 +383,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
@@ -1225,18 +1225,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EntityPersister entityDescriptor, TableGroup rootTableGroup) {
 		final List<SqmPath<?>> targetPaths = sqmStatement.getInsertionTargetPaths();
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		IdentifierGenerator identifierGenerator = entityDescriptor.getIdentifierGenerator();
 		Expression versionExpression = null;
 		Expression discriminatorExpression = null;
 		BasicEntityIdentifierMapping identifierMapping = null;
 		// We use the id property name to null the identifier generator variable if the target paths contain the id
 		final String identifierPropertyName;
-		if ( identifierGenerator != null ) {
-			identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
-		}
-		else {
-			identifierPropertyName = null;
-		}
+		InMemoryGenerator identifierGenerator = entityDescriptor.getGenerator();
+		identifierPropertyName = identifierGenerator != null ? entityDescriptor.getIdentifierPropertyName() : null;
 		final String versionAttributeName;
 		boolean needsVersionInsert;
 		if ( entityDescriptor.isVersioned() ) {
@@ -1351,7 +1346,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public static class AdditionalInsertValues {
 		private final Expression versionExpression;
 		private final Expression discriminatorExpression;
-		private final IdentifierGenerator identifierGenerator;
+		private final InMemoryGenerator identifierGenerator;
 		private final BasicEntityIdentifierMapping identifierMapping;
 		private Expression identifierGeneratorParameter;
 		private SqlSelection versionSelection;
@@ -1361,7 +1356,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		public AdditionalInsertValues(
 				Expression versionExpression,
 				Expression discriminatorExpression,
-				IdentifierGenerator identifierGenerator,
+				InMemoryGenerator identifierGenerator,
 				BasicEntityIdentifierMapping identifierMapping) {
 			this.versionExpression = versionExpression;
 			this.discriminatorExpression = discriminatorExpression;
@@ -1453,9 +1448,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static class IdGeneratorParameter extends AbstractJdbcParameter {
 
-		private final IdentifierGenerator generator;
+		private final InMemoryGenerator generator;
 
-		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, IdentifierGenerator generator) {
+		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, InMemoryGenerator generator) {
 			super( identifierMapping.getJdbcMapping() );
 			this.generator = generator;
 		}
@@ -1468,7 +1463,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				ExecutionContext executionContext) throws SQLException {
 			getJdbcMapping().getJdbcValueBinder().bind(
 					statement,
-					generator.generate( executionContext.getSession(), null ),
+					generator.generate( executionContext.getSession(), null, null ),
 					startPosition,
 					executionContext.getSession()
 			);

@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.tuple.InMemoryGenerator;
 
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -74,12 +74,11 @@ public @interface GenericGenerator {
 	 */
 	String name();
 	/**
-	 * The type of identifier generator, a class implementing
-	 * {@link org.hibernate.id.IdentifierGenerator}.
+	 * The type of identifier generator, a class implementing {@link InMemoryGenerator}.
 	 *
 	 * @since 6.2
 	 */
-	Class<? extends IdentifierGenerator> type() default IdentifierGenerator.class;
+	Class<? extends InMemoryGenerator> type() default InMemoryGenerator.class;
 	/**
 	 * The type of identifier generator, the name of either:
 	 * <ul>

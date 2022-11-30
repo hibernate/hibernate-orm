@@ -18,7 +18,6 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
@@ -42,6 +41,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -253,8 +253,7 @@ public class TemporaryTable implements Exportable, Contributable {
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final IdentifierGenerator identifierGenerator = entityDescriptor.getEntityPersister()
-							.getIdentifierGenerator();
+					final InMemoryGenerator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 					final boolean identityColumn = identifierGenerator instanceof PostInsertIdentifierGenerator;
 					final boolean hasOptimizer;
 					if ( identityColumn ) {

@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -120,9 +121,16 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Get the identifier generator for the hierarchy
+	 * 
+	 * @deprecated use {@link #getGenerator(String)}
 	 */
+	@Deprecated(since = "6.2")
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
 
+	/**
+	 * Get the identifier generator for the hierarchy
+	 */
+	InMemoryGenerator getGenerator(String rootEntityName);
 
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 

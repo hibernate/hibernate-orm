@@ -46,6 +46,7 @@ import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -102,6 +103,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -2314,13 +2316,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
+			final InMemoryGenerator generator = identifierValueBinding.createIdentifierGenerator(
 					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
 					entityBinding
 			);
 
-			ig.registerExportables( getDatabase() );
+			if ( generator instanceof ExportableProducer ) {
+				( (ExportableProducer) generator ).registerExportables( getDatabase() );
+			}
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed

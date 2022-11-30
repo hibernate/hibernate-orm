@@ -37,7 +37,7 @@ public class OptionalSecondaryTableBatchTest {
 	@Test
 	public void testManaged(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final List<Company> companies = session.createQuery( "from Company", Company.class ).list();
+			final List<Company> companies = session.createQuery( "from Company order by id", Company.class ).list();
 			for ( int i = 0 ; i < companies.size() ; i++ ) {
 				final Company company = companies.get( i );
 				company.taxNumber = 2 * i;
@@ -46,7 +46,7 @@ public class OptionalSecondaryTableBatchTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final List<Company> companies = session.createQuery( "from Company", Company.class ).list();
+			final List<Company> companies = session.createQuery( "from Company order by id", Company.class ).list();
 			for ( int i = 0 ; i < companies.size() ; i++ ) {
 				assertThat( companies.get( i ).taxNumber ).isEqualTo( 2 * i );
 			}

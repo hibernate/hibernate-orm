@@ -11,18 +11,22 @@ import java.lang.reflect.Member;
 
 
 /**
- * A {@link Generator} based on a custom Java generator annotation type.
- * Every instance must implement either {@link InMemoryGenerator} or
- * {@link InDatabaseGenerator}. Implementing this interface is just a
- * slightly more typesafe alternative to providing a constructor with
- * the same signature as the method
- * {@link #initialize(Annotation, Member, GeneratorCreationContext)}.
+ * A {@link Generator} which receives parameters from a custom
+ * {@linkplain org.hibernate.annotations.ValueGenerationType generator annotation} or
+ * {@linkplain org.hibernate.annotations.IdGeneratorType id generator annotation}.
+ * <p>
+ * Implementing this interface is the same as providing a constructor with the same
+ * signature as the {@link #initialize} method. But implementing this interface is
+ * slightly more typesafe.
+ * <p>
+ * Every instance of this class must implement either {@link InMemoryGenerator} or
+ * {@link InDatabaseGenerator}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *
  * @see org.hibernate.annotations.ValueGenerationType
+ * @see org.hibernate.annotations.IdGeneratorType
  *
- * @author Gunnar Morling
  * @author Gavin King
  *
  * @since 6.2
@@ -31,8 +35,9 @@ public interface AnnotationBasedGenerator<A extends Annotation> extends Generato
 	/**
 	 * Initializes this generation strategy for the given annotation instance.
 	 *
-	 * @param annotation an instance of the strategy's annotation type. Typically, implementations will retrieve the
-	 *                   annotation's attribute values and store them in fields.
+	 * @param annotation an instance of the strategy's annotation type. Typically,
+	 *                   implementations will retrieve the annotation's attribute
+	 *                   values and store them in fields.
 	 * @param member the Java member annotated with the generator annotation.
 	 * @param context a {@link GeneratorCreationContext}
 	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if

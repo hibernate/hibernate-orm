@@ -111,7 +111,7 @@ public abstract class AbstractSaveEventListener<C>
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Object generatedId = persister.getIdentifierGenerator().generate( source, entity );
+		Object generatedId = persister.getGenerator().generate( source, entity, null );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
 		}
@@ -127,7 +127,7 @@ public abstract class AbstractSaveEventListener<C>
 				LOG.debugf(
 						"Generated identifier: %s, using strategy: %s",
 						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getIdentifierGenerator().getClass().getName()
+						persister.getGenerator().getClass().getName()
 				);
 			}
 			return performSave( entity, generatedId, persister, false, context, source, true );

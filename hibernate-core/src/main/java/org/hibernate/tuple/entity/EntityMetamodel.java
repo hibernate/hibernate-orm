@@ -158,7 +158,7 @@ public class EntityMetamodel implements Serializable {
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
 				persistentClass,
-				sessionFactory.getIdentifierGenerator( rootName )
+				sessionFactory.getGenerator( rootName )
 		);
 
 		versioned = persistentClass.isVersioned();

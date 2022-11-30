@@ -40,9 +40,9 @@ public class BasicSequenceTest {
         final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
+		assertThat( persister.getGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
 
 		final int count = 5;
 
@@ -71,9 +71,9 @@ public class BasicSequenceTest {
         final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(overriddenEntityName);
-		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
+		assertThat( persister.getGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
 		assertEquals( "ID_SEQ_BSC_ENTITY" + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX,
 				generator.getDatabaseStructure().getPhysicalName().render() );
 

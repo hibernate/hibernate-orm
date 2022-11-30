@@ -259,6 +259,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -3936,9 +3937,14 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {
 		return entityMetamodel.getIdentifierProperty().getIdentifierGenerator();
+	}
+
+	@Override
+	public InMemoryGenerator getGenerator() {
+		return entityMetamodel.getIdentifierProperty().getGenerator();
 	}
 
 	@Override
@@ -4821,9 +4827,9 @@ public abstract class AbstractEntityPersister
 			sqmMultiTableMutationStrategy = null;
 		}
 
-		if ( !needsMultiTableInsert && getIdentifierGenerator() instanceof BulkInsertionCapableIdentifierGenerator ) {
-			if ( getIdentifierGenerator() instanceof OptimizableGenerator ) {
-				final Optimizer optimizer = ( (OptimizableGenerator) getIdentifierGenerator() ).getOptimizer();
+		if ( !needsMultiTableInsert && getGenerator() instanceof BulkInsertionCapableIdentifierGenerator ) {
+			if ( getGenerator() instanceof OptimizableGenerator ) {
+				final Optimizer optimizer = ( (OptimizableGenerator) getGenerator() ).getOptimizer();
 				needsMultiTableInsert = optimizer != null && optimizer.getIncrementSize() > 1;
 			}
 		}

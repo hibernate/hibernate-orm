@@ -11,7 +11,6 @@ import java.lang.annotation.Repeatable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,8 +40,6 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -74,10 +71,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -777,7 +770,7 @@ public class BinderHelper {
 
 		if ( !isEmptyAnnotationValue( generatorName ) ) {
 			//we have a named generator
-			final IdentifierGeneratorDefinition definition = getIdentifierGenerator(
+			final IdentifierGeneratorDefinition definition = makeIdentifierGeneratorDefinition(
 					generatorName,
 					property,
 					localGenerators,
@@ -823,7 +816,7 @@ public class BinderHelper {
 		makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifiers );
 	}
 
-	private static IdentifierGeneratorDefinition getIdentifierGenerator(
+	private static IdentifierGeneratorDefinition makeIdentifierGeneratorDefinition(
 			String name,
 			XProperty idXProperty,
 			Map<String, IdentifierGeneratorDefinition> localGenerators,
@@ -843,174 +836,21 @@ public class BinderHelper {
 
 		log.debugf( "Could not resolve explicit IdentifierGeneratorDefinition - using implicit interpretation (%s)", name );
 
-		// If we were unable to locate an actual matching named generator assume a sequence/table of the given name.
-		//		this really needs access to the `jakarta.persistence.GenerationType` to work completely properly
-		//
-		// 		(the crux of HHH-12122)
-
-		// temporarily, in lieu of having access to GenerationType, assume the EnhancedSequenceGenerator
-		//		for the purpose of testing the feasibility of the approach
-
-		final GeneratedValue generatedValueAnn = idXProperty.getAnnotation( GeneratedValue.class );
-		if ( generatedValueAnn == null ) {
+		final GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
+		if ( generatedValue == null ) {
 			// this should really never happen, but it's easy to protect against it...
 			return new IdentifierGeneratorDefinition( "assigned", "assigned" );
 		}
 
-		final IdGeneratorStrategyInterpreter generationInterpreter =
-				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter();
-
-		final GenerationType generationType = interpretGenerationType( generatedValueAnn );
-
-		if ( generationType == null || generationType == GenerationType.SEQUENCE ) {
-			// NOTE : `null` will ultimately be interpreted as "hibernate_sequence"
-			log.debugf( "Building implicit sequence-based IdentifierGeneratorDefinition (%s)", name );
-			final IdentifierGeneratorDefinition.Builder builder = new IdentifierGeneratorDefinition.Builder();
-			generationInterpreter.interpretSequenceGenerator(
-					new SequenceGenerator() {
-						@Override
-						public String name() {
-							return name;
-						}
-
-						@Override
-						public String sequenceName() {
-							return "";
-						}
-
-						@Override
-						public String catalog() {
-							return "";
-						}
-
-						@Override
-						public String schema() {
-							return "";
-						}
-
-						@Override
-						public int initialValue() {
-							return 1;
-						}
-
-						@Override
-						public int allocationSize() {
-							return 50;
-						}
-
-						@Override
-						public Class<? extends Annotation> annotationType() {
-							return SequenceGenerator.class;
-						}
-					},
-					builder
-			);
-
-			return builder.build();
-		}
-		else if ( generationType == GenerationType.TABLE ) {
-			// NOTE : `null` will ultimately be interpreted as "hibernate_sequence"
-			log.debugf( "Building implicit table-based IdentifierGeneratorDefinition (%s)", name );
-			final IdentifierGeneratorDefinition.Builder builder = new IdentifierGeneratorDefinition.Builder();
-			generationInterpreter.interpretTableGenerator(
-					new TableGenerator() {
-						@Override
-						public String name() {
-							return name;
-						}
-
-						@Override
-						public String table() {
-							return "";
-						}
-
-						@Override
-						public int initialValue() {
-							return 0;
-						}
-
-						@Override
-						public int allocationSize() {
-							return 50;
-						}
-
-						@Override
-						public String catalog() {
-							return "";
-						}
-
-						@Override
-						public String schema() {
-							return "";
-						}
-
-						@Override
-						public String pkColumnName() {
-							return "";
-						}
-
-						@Override
-						public String valueColumnName() {
-							return "";
-						}
-
-						@Override
-						public String pkColumnValue() {
-							return "";
-						}
-
-						@Override
-						public UniqueConstraint[] uniqueConstraints() {
-							return new UniqueConstraint[0];
-						}
-
-						@Override
-						public Index[] indexes() {
-							return new Index[0];
-						}
-
-						@Override
-						public Class<? extends Annotation> annotationType() {
-							return TableGenerator.class;
-						}
-					},
-					builder
-			);
-
-			return builder.build();
-		}
-
-
-		// really AUTO and IDENTITY work the same in this respect, aside from the actual strategy name
-		final String strategyName;
-		if ( generationType == GenerationType.IDENTITY ) {
-			strategyName = "identity";
-		}
-		else {
-			strategyName = generationInterpreter.determineGeneratorName(
-					generationType,
-					new GeneratorNameDeterminationContext() {
-						@Override
-						public Class<?> getIdType() {
-							return buildingContext
-									.getBootstrapContext()
-									.getReflectionManager()
-									.toClass( idXProperty.getType() );
-						}
-
-						@Override
-						public String getGeneratedValueGeneratorName() {
-							return generatedValueAnn.generator();
-						}
-					}
-			);
-		}
-
-		log.debugf( "Building implicit generic IdentifierGeneratorDefinition (%s) : %s", name, strategyName );
-		return new IdentifierGeneratorDefinition(
+		return IdentifierGeneratorDefinition.createImplicit(
 				name,
-				strategyName,
-				Collections.singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+				buildingContext
+						.getBootstrapContext()
+						.getReflectionManager()
+						.toClass( idXProperty.getType() ),
+				generatedValue.generator(),
+				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter(),
+				interpretGenerationType( generatedValue )
 		);
 	}
 

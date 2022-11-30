@@ -34,17 +34,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -54,6 +47,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -66,6 +60,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -104,6 +100,10 @@ public abstract class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
+	private IdentifierGeneratorCreator customIdGeneratorCreator;
+	private GeneratorCreator customGeneratorCreator;
+	private InMemoryGenerator generator;
+
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
 		this.metadata = buildingContext.getMetadataCollector();
@@ -136,7 +136,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
-		this.identifierGenerator = original.identifierGenerator;
+		this.generator = original.generator;
 	}
 
 	public MetadataBuildingContext getBuildingContext() {
@@ -359,9 +359,6 @@ public abstract class SimpleValue implements KeyValue {
 		getTable().createUniqueKey( getConstraintColumns() );
 	}
 
-	private IdentifierGeneratorCreator customIdGeneratorCreator;
-	private IdentifierGenerator identifierGenerator;
-
 	/**
 	 * Returns the cached {@link IdentifierGenerator}, or null if
 	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)}
@@ -371,7 +368,7 @@ public abstract class SimpleValue implements KeyValue {
 	 */
 	@Deprecated(since = "6.0")
 	public IdentifierGenerator getIdentifierGenerator() {
-		return identifierGenerator;
+		return (IdentifierGenerator) generator;
 	}
 
 	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
@@ -382,171 +379,41 @@ public abstract class SimpleValue implements KeyValue {
 		return customIdGeneratorCreator;
 	}
 
-	@Override
-	public IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
-		return createIdentifierGenerator( identifierGeneratorFactory, dialect, null, null, rootClass );
+	public GeneratorCreator getCustomGeneratorCreator() {
+		return customGeneratorCreator;
+	}
+
+	public void setCustomGeneratorCreator(GeneratorCreator customGeneratorCreator) {
+		this.customGeneratorCreator = customGeneratorCreator;
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(
+	public InMemoryGenerator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect, 
-			String defaultCatalog, 
-			String defaultSchema, 
+			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		if ( identifierGenerator != null ) {
-			return identifierGenerator;
+		if ( generator != null ) {
+			return generator;
 		}
 
 		if ( customIdGeneratorCreator != null ) {
-			final CustomIdGeneratorCreationContext creationContext = new CustomIdGeneratorCreationContext() {
-				@Override
-				public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-					return identifierGeneratorFactory;
-				}
-
-				@Override
-				public Database getDatabase() {
-					return buildingContext.getMetadataCollector().getDatabase();
-				}
-
-				@Override
-				public ServiceRegistry getServiceRegistry() {
-					return buildingContext.getBootstrapContext().getServiceRegistry();
-				}
-
-				@Override
-				public String getDefaultCatalog() {
-					return defaultCatalog;
-				}
-
-				@Override
-				public String getDefaultSchema() {
-					return defaultSchema;
-				}
-
-				@Override
-				public RootClass getRootClass() {
-					return rootClass;
-				}
-
-				@Override
-				public PersistentClass getPersistentClass() {
-					return rootClass;
-				}
-
-				@Override
-				public Property getProperty() {
-					return rootClass.getIdentifierProperty();
-				}
-			};
-
-			identifierGenerator = customIdGeneratorCreator.createGenerator( creationContext );
-			return identifierGenerator;
-		}
-
-		final Properties params = new Properties();
-
-		// This is for backwards compatibility only;
-		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
-		// null, and defaults are handled later.
-		if ( defaultSchema != null ) {
-			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
-		}
-
-		if ( defaultCatalog != null ) {
-			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
-		}
-
-		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.getService( ConfigurationService.class );
-
-		final String idNamingStrategy = cs.getSetting(
-				AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-				StandardConverters.STRING,
-				null
-		);
-
-		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
-				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
-			params.setProperty( OptimizableGenerator.INCREMENT_PARAM, "1" );
-		}
-		else {
-			params.setProperty(
-					OptimizableGenerator.INCREMENT_PARAM,
-					String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE )
+			generator = customIdGeneratorCreator.createGenerator(
+					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
 			);
+			return generator;
 		}
-		//init the table here instead of earlier, so that we can get a quoted table name
-		//TODO: would it be better to simply pass the qualified table name, instead of
-		//      splitting it up into schema/catalog/table names
-		final String tableName = getTable().getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
-
-		//pass the column name (a generated id almost always has a single column)
-		final String columnName = ( (Column) getSelectables().get(0) ).getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
-
-		//pass the entity-name, if not a collection-id
-		if ( rootClass != null ) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-			// The table name is not really a good default for subselect entities, so use the JPA entity name which is short
-			if ( getTable().isSubselect() ) {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, rootClass.getJpaEntityName() );
-			}
-			else {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, getTable().getName() );
-			}
-
-			final StringBuilder tables = new StringBuilder();
-			final Iterator<Table> itr = rootClass.getIdentityTables().iterator();
-			while ( itr.hasNext() ) {
-				final Table table = itr.next();
-				tables.append( table.getQuotedName( dialect ) );
-				if ( itr.hasNext() ) {
-					tables.append( ", " );
-				}
-			}
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
-		}
-		else {
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
-		}
-
-		if ( identifierGeneratorParameters != null ) {
-			params.putAll(identifierGeneratorParameters);
-		}
-
-		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-
-		params.put(
-				IdentifierGenerator.CONTRIBUTOR_NAME,
-				buildingContext.getCurrentContributorName()
-		);
-
-		if ( cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) != null ) {
-			params.put(
-					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
+		else if ( customGeneratorCreator != null ) {
+			// we may as well allow this, so you don't have to annotate generator
+			// annotations twice, with @IdGeneratorType and @ValueGenerationType
+			//TODO: this typecast is ugly ... throw a better exception at least
+			generator = (InMemoryGenerator) customGeneratorCreator.createGenerator(
+					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
 			);
+			return generator;
 		}
 
-		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
-				identifierGeneratorStrategy,
-				getType(),
-				params
-		);
-
-		return identifierGenerator;
+		generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+		return generator;
 	}
 
 	public boolean isUpdateable() {
@@ -1183,6 +1050,60 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Long[] getColumnLengths() {
 			return columnLengths;
+		}
+	}
+
+	private class IdGeneratorCreationContext implements CustomIdGeneratorCreationContext {
+		private final IdentifierGeneratorFactory identifierGeneratorFactory;
+		private final String defaultCatalog;
+		private final String defaultSchema;
+		private final RootClass rootClass;
+
+		public IdGeneratorCreationContext(IdentifierGeneratorFactory identifierGeneratorFactory, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+			this.identifierGeneratorFactory = identifierGeneratorFactory;
+			this.defaultCatalog = defaultCatalog;
+			this.defaultSchema = defaultSchema;
+			this.rootClass = rootClass;
+		}
+
+		@Override
+		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+			return identifierGeneratorFactory;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return buildingContext.getMetadataCollector().getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return buildingContext.getBootstrapContext().getServiceRegistry();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return defaultCatalog;
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return defaultSchema;
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return rootClass;
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return rootClass;
+		}
+
+		@Override
+		public Property getProperty() {
+			return rootClass.getIdentifierProperty();
 		}
 	}
 }

@@ -128,6 +128,7 @@ import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -225,7 +226,7 @@ public abstract class AbstractCollectionPersister
 	protected final SqlExceptionHelper sqlExceptionHelper;
 	private final SessionFactoryImplementor factory;
 	private final EntityPersister ownerPersister;
-	private final IdentifierGenerator identifierGenerator;
+	private final InMemoryGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
@@ -509,12 +510,14 @@ public abstract class AbstractCollectionPersister
 			Column col = idColl.getIdentifier().getColumns().get(0);
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
-			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
+			identifierGenerator = idColl.getIdentifier().createGenerator(
 					creationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
 					factory.getJdbcServices().getDialect(),
 					null
 			);
-			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
+			if ( identifierGenerator instanceof IdentifierGenerator ) {
+				( (IdentifierGenerator) identifierGenerator ).initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
+			}
 		}
 		else {
 			identifierType = null;
@@ -1139,8 +1142,13 @@ public abstract class AbstractCollectionPersister
 		return ownerPersister;
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGenerator getIdentifierGenerator() {
+		return (IdentifierGenerator) identifierGenerator;
+	}
+
+	@Override
+	public InMemoryGenerator getGenerator() {
 		return identifierGenerator;
 	}
 

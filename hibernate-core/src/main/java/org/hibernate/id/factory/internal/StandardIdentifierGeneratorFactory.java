@@ -52,7 +52,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
 
 /**
- * Basic {@code templated} support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
+ * Basic implementation of {@link org.hibernate.id.factory.IdentifierGeneratorFactory}.
  *
  * @author Steve Ebersole
  */

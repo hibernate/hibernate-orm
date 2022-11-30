@@ -22,18 +22,31 @@ import org.hibernate.type.Type;
 import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
- * The general contract between a class that generates unique
- * identifiers and the {@link org.hibernate.Session}. It is not
- * intended that this interface ever be exposed to the application.
- * It <em>is</em> intended that users implement this interface to
- * provide custom identifier generation strategies.
+ * A classic extension point from the very earliest days of Hibernate,
+ * this interface is now no longer the only way to generate identifiers.
+ * Any {@link InMemoryGenerator} may now be used.
  * <p>
- * Implementors should provide a public default constructor.
+ * This interface extends {@code InMemoryGenerator} with some additional
+ * machinery for {@linkplain #configure configuration}, and for caching
+ * {@link #initialize(SqlStringGenerationContext) generated SQL}.
  * <p>
- * Implementations that accept configuration parameters should also
- * implement {@link Configurable}.
+ * Any identifier generator, including a generator which directly implements
+ * {@code InMemoryGenerator}, may also implement {@link ExportableProducer}.
+ * For the sake of convenience, {@code PersistentIdentifierGenerator} extends
+ * {@code ExportableProducer}, in case the implementation needs to export
+ * objects to the database as part of the process of schema export.
  * <p>
- * Implementors <em>must</em> be thread-safe
+ * The {@link #configure(Type, Properties, ServiceRegistry)} method accepts
+ * a properties object containing named values. These include:
+ * <ul>
+ * <li>several "standard" parameters with keys defined as static members of
+ *     this interface: {@value #ENTITY_NAME}, {@value #JPA_ENTITY_NAME},
+ *     {@value #GENERATOR_NAME}, {@value #CONTRIBUTOR_NAME}, along with
+ * <li>additional parameters supplied by Hibernate to its built-in generators,
+ *     depending on the generator class, and, possibly,
+ * <li>{@linkplain org.hibernate.annotations.Parameter parameters} specified
+ *     using {@link org.hibernate.annotations.GenericGenerator#parameters()}.
+ * </ul>
  *
  * @author Gavin King
  *

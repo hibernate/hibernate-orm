@@ -11,7 +11,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -44,7 +43,7 @@ public final class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierAttribute(
 			PersistentClass mappedEntity,
-			IdentifierGenerator generator) {
+			InMemoryGenerator generator) {
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
 

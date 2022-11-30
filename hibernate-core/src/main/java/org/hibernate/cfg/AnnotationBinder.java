@@ -53,6 +53,7 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -91,6 +92,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -152,6 +154,7 @@ import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntit
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
+import static org.hibernate.cfg.annotations.PropertyBinder.generatorCreator;
 import static org.hibernate.cfg.annotations.PropertyBinder.identifierGeneratorCreator;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.Constraint.hashedName;
@@ -477,10 +480,10 @@ public final class AnnotationBinder {
 		else if ( generatorAnnotation instanceof GenericGenerator ) {
 			final GenericGenerator genericGenerator = (GenericGenerator) generatorAnnotation;
 			definitionBuilder.setName( genericGenerator.name() );
-			final String strategy = genericGenerator.type().equals(IdentifierGenerator.class)
+			final String strategy = genericGenerator.type().equals(InMemoryGenerator.class)
 					? genericGenerator.strategy()
 					: genericGenerator.type().getName();
-			definitionBuilder.setStrategy(strategy);
+			definitionBuilder.setStrategy( strategy );
 			for ( Parameter parameter : genericGenerator.parameters() ) {
 				definitionBuilder.addParam( parameter.name(), parameter.value() );
 			}
@@ -1806,9 +1809,14 @@ public final class AnnotationBinder {
 					+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 		}
 		final XProperty idProperty = inferredData.getProperty();
-		final Annotation generatorAnnotation = findContainingAnnotation( idProperty, IdGeneratorType.class );
-		if ( generatorAnnotation != null ) {
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, generatorAnnotation ) );
+		final Annotation idGeneratorAnnotation = findContainingAnnotation( idProperty, IdGeneratorType.class );
+		final Annotation generatorAnnotation = findContainingAnnotation( idProperty, ValueGenerationType.class );
+		//TODO: validate that we don't have too many generator annotations and throw
+		if ( idGeneratorAnnotation != null ) {
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, idGeneratorAnnotation ) );
+		}
+		else if ( generatorAnnotation != null ) {
+			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );
 		}
 		else {
 			final XClass entityClass = inferredData.getClassOrElement();

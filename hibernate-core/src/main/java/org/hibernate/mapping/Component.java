@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -33,6 +34,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
@@ -70,7 +72,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private transient List<Column> cachedColumns;
 
-	private transient IdentifierGenerator builtIdentifierGenerator;
+	private transient InMemoryGenerator builtIdentifierGenerator;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -412,34 +414,30 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(
+	public InMemoryGenerator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
 			RootClass rootClass) throws MappingException {
 		if ( builtIdentifierGenerator == null ) {
 			builtIdentifierGenerator = buildIdentifierGenerator(
 					identifierGeneratorFactory,
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					rootClass
 			);
 		}
 		return builtIdentifierGenerator;
 	}
 
-	private IdentifierGenerator buildIdentifierGenerator(
+	private InMemoryGenerator buildIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
 			RootClass rootClass) throws MappingException {
 		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
-			return super.createIdentifierGenerator(
-					identifierGeneratorFactory, dialect, defaultCatalog, defaultSchema, rootClass
+			return super.createGenerator(
+					identifierGeneratorFactory,
+					dialect,
+					rootClass
 			);
 		}
 
@@ -469,25 +467,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 
-				if ( DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
-					continue;
+					generator.addGeneratedValuePlan(
+							new ValueGenerationPlan(
+									value.createGenerator( identifierGeneratorFactory, dialect, rootClass ),
+									injector( property, attributeDeclarer )
+							)
+					);
 				}
-
-				final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
-						identifierGeneratorFactory,
-						dialect,
-						defaultCatalog,
-						defaultSchema,
-						rootClass
-				);
-				generator.addGeneratedValuePlan(
-						new ValueGenerationPlan(
-								valueGenerator,
-								injector( property, attributeDeclarer )
-						)
-				);
 			}
 		}
 		return generator;
@@ -523,11 +512,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final IdentifierGenerator subGenerator;
+		private final InMemoryGenerator subGenerator;
 		private final Setter injector;
 
 		public ValueGenerationPlan(
-				IdentifierGenerator subGenerator,
+				InMemoryGenerator subGenerator,
 				Setter injector) {
 			this.subGenerator = subGenerator;
 			this.injector = injector;
@@ -535,18 +524,21 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			final Object generatedValue = subGenerator.generate( session, incomingObject );
-			injector.set( injectionContext, generatedValue );
+			injector.set( injectionContext, subGenerator.generate( session, incomingObject, null ) );
 		}
 
 		@Override
 		public void registerExportables(Database database) {
-			subGenerator.registerExportables( database );
+			if ( subGenerator instanceof ExportableProducer ) {
+				( (ExportableProducer) subGenerator ).registerExportables( database );
+			}
 		}
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			subGenerator.initialize( context );
+			if ( subGenerator instanceof IdentifierGenerator ) {
+				( (IdentifierGenerator) subGenerator ).initialize( context );
+			}
 		}
 	}
 

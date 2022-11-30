@@ -122,7 +122,7 @@ public class DefaultPersistEventListener
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			final EntityPersister persister = source.getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityName );
-			if ( persister.getIdentifierGenerator() instanceof ForeignGenerator ) {
+			if ( persister.getGenerator() instanceof ForeignGenerator ) {
 				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}

@@ -7,10 +7,20 @@
 package org.hibernate.boot.model;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Index;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
+import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import static java.util.Collections.emptyMap;
@@ -72,6 +82,171 @@ public class IdentifierGeneratorDefinition implements Serializable {
 	 */
 	public Map<String, String> getParameters() {
 		return parameters;
+	}
+
+	@Internal
+	public static IdentifierGeneratorDefinition createImplicit(
+			String name,
+			Class<?> idType,
+			String generatorName,
+			IdGeneratorStrategyInterpreter generationInterpreter,
+			GenerationType generationType) {
+		// If we were unable to locate an actual matching named generator assume
+		// a sequence/table of the given name, make one based on GenerationType.
+
+		if ( generationType == null) {
+			return buildSequenceGeneratorDefinition( name, generationInterpreter );
+		}
+
+		final String strategyName;
+		switch ( generationType ) {
+			case SEQUENCE:
+				return buildSequenceGeneratorDefinition( name, generationInterpreter );
+			case TABLE:
+				return buildTableGeneratorDefinition( name, generationInterpreter );
+			// really AUTO and IDENTITY work the same in this respect, aside from the actual strategy name
+			case IDENTITY:
+				strategyName = "identity";
+				break;
+			case AUTO:
+				strategyName = generationInterpreter.determineGeneratorName(
+						generationType,
+						new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
+							@Override
+							public Class<?> getIdType() {
+								return idType;
+							}
+							@Override
+							public String getGeneratedValueGeneratorName() {
+								return generatorName;
+							}
+						}
+				);
+				break;
+			default:
+				throw new AssertionFailure( "unknown generator type: " + generationType );
+		}
+
+		return new IdentifierGeneratorDefinition(
+				name,
+				strategyName,
+				Collections.singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+		);
+	}
+
+	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+		final Builder builder = new Builder();
+		generationInterpreter.interpretTableGenerator(
+				new TableGenerator() {
+					@Override
+					public String name() {
+						return name;
+					}
+
+					@Override
+					public String table() {
+						return "";
+					}
+
+					@Override
+					public int initialValue() {
+						return 0;
+					}
+
+					@Override
+					public int allocationSize() {
+						return 50;
+					}
+
+					@Override
+					public String catalog() {
+						return "";
+					}
+
+					@Override
+					public String schema() {
+						return "";
+					}
+
+					@Override
+					public String pkColumnName() {
+						return "";
+					}
+
+					@Override
+					public String valueColumnName() {
+						return "";
+					}
+
+					@Override
+					public String pkColumnValue() {
+						return "";
+					}
+
+					@Override
+					public UniqueConstraint[] uniqueConstraints() {
+						return new UniqueConstraint[0];
+					}
+
+					@Override
+					public Index[] indexes() {
+						return new Index[0];
+					}
+
+					@Override
+					public Class<? extends Annotation> annotationType() {
+						return TableGenerator.class;
+					}
+				},
+				builder
+		);
+
+		return builder.build();
+	}
+
+	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+		final Builder builder = new Builder();
+		generationInterpreter.interpretSequenceGenerator(
+				new SequenceGenerator() {
+					@Override
+					public String name() {
+						return name;
+					}
+
+					@Override
+					public String sequenceName() {
+						return "";
+					}
+
+					@Override
+					public String catalog() {
+						return "";
+					}
+
+					@Override
+					public String schema() {
+						return "";
+					}
+
+					@Override
+					public int initialValue() {
+						return 1;
+					}
+
+					@Override
+					public int allocationSize() {
+						return 50;
+					}
+
+					@Override
+					public Class<? extends Annotation> annotationType() {
+						return SequenceGenerator.class;
+					}
+				},
+				builder
+		);
+
+		return builder.build();
 	}
 
 	@Override

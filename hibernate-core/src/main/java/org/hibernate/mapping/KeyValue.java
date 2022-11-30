@@ -6,10 +6,10 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.tuple.InMemoryGenerator;
 
 /**
  * A mapping model {@link Value} which may be treated as an identifying key of a
@@ -21,23 +21,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
  */
 public interface KeyValue extends Value {
 
-	/**
-	 * @deprecated Use {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, RootClass)}
-	 * instead.
-	 */
-	@Deprecated
-	IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
-			RootClass rootClass) throws MappingException;
-
-	IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException;
-
 	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
 	
 	ForeignKey createForeignKeyOfEntity(String entityName);
@@ -47,4 +30,34 @@ public interface KeyValue extends Value {
 	String getNullValue();
 	
 	boolean isUpdateable();
+
+	InMemoryGenerator createGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass);
+
+	/**
+	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 */
+	@Deprecated
+	default IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) {
+		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+	}
+
+	/**
+	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 */
+	@Deprecated
+	default IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass) {
+		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+	}
+
 }

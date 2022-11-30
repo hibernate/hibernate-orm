@@ -11,11 +11,15 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * A value generator that can adapt to both Java value generation and database value
- * generation.
+ * A value generator that can adapt to both Java value generation and database value generation.
+ * <p>
+ * This is an older API that predates {@link Generator}. It's often cleaner to implement either
+ * {@link InMemoryGenerator} or {@link InDatabaseGenerator} directly.
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @see AnnotationValueGeneration
  */
 public interface ValueGeneration extends InMemoryGenerator, InDatabaseGenerator {
 	/**

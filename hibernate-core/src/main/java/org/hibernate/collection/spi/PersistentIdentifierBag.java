@@ -368,7 +368,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
-				final Object id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				final Object id = persister.getGenerator().generate( getSession(), entry, null );
 				identifiers.put( loc, id );
 			}
 		}

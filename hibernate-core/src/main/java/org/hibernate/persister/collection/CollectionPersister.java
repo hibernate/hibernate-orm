@@ -33,6 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -231,8 +232,18 @@ public interface CollectionPersister extends Restrictable {
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
+	 *
+	 * @deprecated use {@link #getGenerator()}
 	 */
+	@Deprecated
 	IdentifierGenerator getIdentifierGenerator();
+
+	/**
+	 * Get the surrogate key generation strategy (optional operation)
+	 */
+	default InMemoryGenerator getGenerator() {
+		return getIdentifierGenerator();
+	}
 
 	/**
 	 * Get the type of the surrogate key

@@ -63,6 +63,7 @@ import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -258,6 +259,8 @@ public interface SemanticQueryWalker<T> {
 	T visitStar(SqmStar sqmStar);
 
 	T visitOver(SqmOver<?> over);
+
+	T visitWindow(SqmWindow widow);
 
 	T visitOverflow(SqmOverflow<?> sqmOverflow);
 

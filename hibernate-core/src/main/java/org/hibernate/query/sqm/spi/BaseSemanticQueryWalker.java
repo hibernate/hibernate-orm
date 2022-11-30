@@ -69,6 +69,7 @@ import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -704,19 +705,25 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitOver(SqmOver<?> over) {
 		over.getExpression().accept( this );
-		for ( SqmExpression<?> partition : over.getPartitions() ) {
+		over.getWindow().accept( this );
+		return over;
+	}
+
+	@Override
+	public Object visitWindow(SqmWindow window) {
+		for ( SqmExpression<?> partition : window.getPartitions() ) {
 			partition.accept( this );
 		}
-		for ( SqmSortSpecification sqmSortSpecification : over.getOrderList() ) {
+		for ( SqmSortSpecification sqmSortSpecification : window.getOrderList() ) {
 			visitSortSpecification( sqmSortSpecification );
 		}
-		if ( over.getStartExpression() != null ) {
-			over.getStartExpression().accept( this );
+		if ( window.getStartExpression() != null ) {
+			window.getStartExpression().accept( this );
 		}
-		if ( over.getEndExpression() != null ) {
-			over.getEndExpression().accept( this );
+		if ( window.getEndExpression() != null ) {
+			window.getEndExpression().accept( this );
 		}
-		return over;
+		return window;
 	}
 
 	@Override

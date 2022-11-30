@@ -110,7 +110,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return;
 		}
 
-		if ( naturalIdValue.getClass().isArray() ) {
+		final Class<?> naturalIdValueClass = naturalIdValue.getClass();
+		if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 			// be flexible
 			final Object[] values = (Object[]) naturalIdValue;
 			if ( values.length == 1 ) {
@@ -124,7 +125,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 							Locale.ROOT,
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
-							naturalIdValue.getClass().getName(),
+							naturalIdValueClass.getName(),
 							getJavaType().getJavaType().getTypeName()
 					)
 			);

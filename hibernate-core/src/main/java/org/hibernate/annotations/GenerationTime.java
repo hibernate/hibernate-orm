@@ -15,7 +15,10 @@ import org.hibernate.tuple.GenerationTiming;
  * @author Emmanuel Bernard
  *
  * @see Generated
+ *
+ * @deprecated use {@link GenerationTiming}
  */
+@Deprecated(since = "6.2")
 public enum GenerationTime {
 	/**
 	 * Indicates the value is never generated.

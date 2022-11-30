@@ -34,7 +34,9 @@ public class VmValueGeneration
 		catch (Exception e) {
 			throw new HibernateException( "Couldn't instantiate value generator", e );
 		}
-		generationTiming = annotation.when().getEquivalent();
+		generationTiming = annotation.timing().isAlways()
+				? annotation.when().getEquivalent()
+				: annotation.timing();
 	}
 
 	@Override

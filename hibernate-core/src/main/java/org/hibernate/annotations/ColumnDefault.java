@@ -20,8 +20,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <ul>
  *     <li>{@code DynamicInsert}, to let the database fill in the value of
  *         a null entity attribute, or
- *     <li>{@code @Generated(INSERT)}, to populate an entity attribute with
- *         the defaulted value of a database column.
+ *     <li>{@code @Generated(timing=INSERT)}, to populate an entity attribute
+ *         with the defaulted value of a database column.
  * </ul>
  * If {@link Generated} is not used, a {@code default} value can state held
  * in memory to lose synchronization with the database.

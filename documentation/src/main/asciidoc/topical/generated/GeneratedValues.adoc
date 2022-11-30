@@ -30,9 +30,9 @@ To mark an attribute as generated, applications used `@Generated`:
 @Entity
 public class Document {
     ...
-    @Generated(INSERT)
+    @Generated(timing=INSERT)
     private Date created;
-    @Generated(ALWAYS)
+    @Generated
     private Date lastModified;
 }
 ----

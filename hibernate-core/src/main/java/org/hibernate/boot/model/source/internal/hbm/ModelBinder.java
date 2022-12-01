@@ -161,6 +161,7 @@ import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -804,13 +805,11 @@ public class ModelBinder {
 		if ( StringHelper.isNotEmpty( unsavedValue ) ) {
 			identifierValue.setNullValue( unsavedValue );
 		}
+		else if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
+			identifierValue.setNullValue( "undefined" );
+		}
 		else {
-			if ( "assigned".equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
-				identifierValue.setNullValue( "undefined" );
-			}
-			else {
-				identifierValue.setNullValue( null );
-			}
+			identifierValue.setNullValue( null );
 		}
 	}
 

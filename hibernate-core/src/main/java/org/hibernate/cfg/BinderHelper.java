@@ -76,6 +76,7 @@ import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotati
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -362,19 +363,18 @@ public class BinderHelper {
 			final Component copy = new Component( context, component );
 			copy.setComponentClassName( component.getComponentClassName() );
 			copy.setEmbedded( component.isEmbedded() );
-			for ( Property property1 : component.getProperties()) {
-				copy.addProperty( cloneProperty(ownerEntity, context, property1) );
+			for ( Property subproperty : component.getProperties() ) {
+				copy.addProperty( cloneProperty( ownerEntity, context, subproperty ) );
 			}
 			copy.sortProperties();
 			final Property result = new SyntheticProperty();
-			result.setName(property.getName());
-			result.setPersistentClass(ownerEntity);
+			result.setName( property.getName() );
+			result.setPersistentClass( ownerEntity );
 			result.setUpdateable( false );
 			result.setInsertable( false );
 			result.setValue(copy);
-			final Property clone = result;
-			clone.setPropertyAccessorName( property.getPropertyAccessorName() );
-			return clone;
+			result.setPropertyAccessorName( property.getPropertyAccessorName() );
+			return result;
 		}
 		else {
 			final Property clone = shallowCopy( property );
@@ -792,7 +792,7 @@ public class BinderHelper {
 			//checkIfMatchingGenerator(definition, generatorType, generatorName);
 			parameters.putAll( definition.getParameters() );
 		}
-		if ( "assigned".equals( generatorType ) ) {
+		if ( DEFAULT_ID_GEN_STRATEGY.equals( generatorType ) ) {
 			id.setNullValue( "undefined" );
 		}
 		id.setIdentifierGeneratorParameters( parameters );
@@ -839,7 +839,7 @@ public class BinderHelper {
 		final GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
 		if ( generatedValue == null ) {
 			// this should really never happen, but it's easy to protect against it...
-			return new IdentifierGeneratorDefinition( "assigned", "assigned" );
+			return new IdentifierGeneratorDefinition( DEFAULT_ID_GEN_STRATEGY, DEFAULT_ID_GEN_STRATEGY );
 		}
 
 		return IdentifierGeneratorDefinition.createImplicit(

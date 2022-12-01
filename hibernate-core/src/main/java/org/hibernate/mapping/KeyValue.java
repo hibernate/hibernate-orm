@@ -21,8 +21,6 @@ import org.hibernate.tuple.InMemoryGenerator;
  */
 public interface KeyValue extends Value {
 
-	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
-	
 	ForeignKey createForeignKeyOfEntity(String entityName);
 	
 	boolean isCascadeDeleteEnabled();
@@ -39,7 +37,7 @@ public interface KeyValue extends Value {
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
 	 */
-	@Deprecated
+	@Deprecated(since="6.2")
 	default IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
@@ -52,12 +50,18 @@ public interface KeyValue extends Value {
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
 	 */
-	@Deprecated
+	@Deprecated(since="6.2")
 	default IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) {
 		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
 	}
+
+	/**
+	 * We need to add {@code Column.isIdentity()}.
+	 */
+	@Deprecated(since="6.2")
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
 
 }

@@ -61,8 +61,12 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
 					&& table.getIdentifierValue() != null
-					&& table.getIdentifierValue().isIdentityColumn( ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getIdentifierGeneratorFactory(), dialect );
-			// this is the much better form moving forward as we move to metamodel
+					&& table.getIdentifierValue().isIdentityColumn(
+							( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+									.getIdentifierGeneratorFactory(),
+							dialect
+					);
+			// TODO: this is the much better form moving forward as we move to metamodel
 			//boolean isPrimaryKeyIdentity = hasPrimaryKey
 			//				&& table.getPrimaryKey().getColumnSpan() == 1
 			//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();

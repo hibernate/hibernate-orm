@@ -13,6 +13,7 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
@@ -51,6 +52,7 @@ import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.jboss.logging.Logger;
 
@@ -62,6 +64,7 @@ import java.util.Map;
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * @author Emmanuel Bernard
@@ -445,6 +448,25 @@ public class PropertyBinder {
 		return creator;
 	}
 
+	private static void checkGeneratorType(Class<? extends Generator> generatorClass) {
+		if ( !InMemoryGenerator.class.isAssignableFrom( generatorClass )
+				&& !InDatabaseGenerator.class.isAssignableFrom( generatorClass ) ) {
+			throw new MappingException("Generator class '" + generatorClass.getName()
+					+ "' must implement either 'InMemoryGenerator' or 'InDatabaseGenerator'");
+		}
+		// we don't yet support the additional "fancy" operations of
+		// IdentifierGenerator with regular generators, though this
+		// would be extremely easy to add if anyone asks for it
+		if ( IdentifierGenerator.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException("Generator class '" + generatorClass.getName()
+					+ "' implements 'IdentifierGenerator' and may not be used with '@ValueGenerationType'");
+		}
+		if ( ExportableProducer.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException("Generator class '" + generatorClass.getName()
+					+ "' implements 'ExportableProducer' and may not be used with '@ValueGenerationType'");
+		}
+	}
+
 	/**
 	 * In case the given annotation is a value generator annotation, the corresponding value generation strategy to be
 	 * applied to the given property is returned, {@code null} otherwise.
@@ -475,20 +497,6 @@ public class PropertyBinder {
 		};
 	}
 
-	private static void checkGeneratorType(Class<? extends Generator> generatorClass) {
-		// we don't yet support the additional "fancy" operations of
-		// IdentifierGenerator with regular generators, though this
-		// would be extremely easy to add if anyone asks for it
-		if ( IdentifierGenerator.class.isAssignableFrom( generatorClass ) ) {
-			throw new AnnotationException("Generator class '" + generatorClass.getName()
-					+ "' implements 'IdentifierGenerator' and may not be used with '@ValueGenerationType'");
-		}
-		if ( ExportableProducer.class.isAssignableFrom( generatorClass ) ) {
-			throw new AnnotationException("Generator class '" + generatorClass.getName()
-					+ "' implements 'ExportableProducer' and may not be used with '@ValueGenerationType'");
-		}
-	}
-
 	public static IdentifierGeneratorCreator identifierGeneratorCreator(XProperty idProperty, Annotation annotation) {
 		final Member member = HCANNHelper.getUnderlyingMember( idProperty );
 		final Class<? extends Annotation> annotationType = annotation.annotationType();
@@ -505,6 +513,7 @@ public class PropertyBinder {
 							idGeneratorType.value()
 					);
 			callInitialize( annotation, member, creationContext, generator );
+			checkIdGeneratorTiming( annotationType, generator );
 			return generator;
 		};
 	}
@@ -568,4 +577,12 @@ public class PropertyBinder {
 		}
 	}
 
+	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, InMemoryGenerator generator) {
+		GenerationTiming timing = generator.getGenerationTiming();
+		if ( timing != INSERT ) {
+			throw new MappingException( "Annotation '" + annotationType
+					+ "' is annotated 'IdGeneratorType' but the given 'InMemoryGenerator' has timing " + timing
+					+ " (an id generator must having timing INSERT)");
+		}
+	}
 }

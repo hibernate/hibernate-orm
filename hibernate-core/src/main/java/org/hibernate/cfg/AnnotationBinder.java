@@ -1815,7 +1815,9 @@ public final class AnnotationBinder {
 			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, idGeneratorAnnotation ) );
 		}
 		else if ( generatorAnnotation != null ) {
-			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );
+//			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );
+			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
+					+ "' is annotated '" + generatorAnnotation.annotationType() + "' which is not an '@IdGeneratorType'" );
 		}
 		else {
 			final XClass entityClass = inferredData.getClassOrElement();

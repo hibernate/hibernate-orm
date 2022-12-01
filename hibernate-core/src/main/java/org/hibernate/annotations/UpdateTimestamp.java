@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.UpdateTimestampGeneration;
+import org.hibernate.tuple.CurrentTimestampGeneration;
 
 /**
  * Specifies that the annotated field of property is a generated <em>update timestamp.</em>
@@ -28,7 +28,7 @@ import org.hibernate.tuple.UpdateTimestampGeneration;
  *
  * @author Gunnar Morling
  */
-@ValueGenerationType(generatedBy = UpdateTimestampGeneration.class)
+@ValueGenerationType(generatedBy = CurrentTimestampGeneration.class)
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface UpdateTimestamp {

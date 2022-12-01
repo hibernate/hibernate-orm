@@ -19,7 +19,7 @@ import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceGeneration;
+import org.hibernate.tuple.SourceGeneration;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;

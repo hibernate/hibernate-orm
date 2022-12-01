@@ -28,7 +28,6 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
-import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
@@ -75,11 +74,12 @@ public class DefaultMergeEventListener
 	 *
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( event.getSession().getFactory() );
-		final MergeContext mergeContext = new MergeContext( event.getSession(), entityCopyObserver );
+		final EventSource session = event.getSession();
+		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( session );
+		final MergeContext mergeContext = new MergeContext( session, entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );
-			entityCopyObserver.topLevelMergeComplete( event.getSession() );
+			entityCopyObserver.topLevelMergeComplete( session );
 		}
 		finally {
 			entityCopyObserver.clear();
@@ -87,10 +87,8 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private EntityCopyObserver createEntityCopyObserver(SessionFactoryImplementor sessionFactory) {
-		return sessionFactory.getServiceRegistry()
-				.getService( EntityCopyObserverFactory.class )
-				.createEntityCopyObserver();
+	private EntityCopyObserver createEntityCopyObserver(final EventSource session) {
+		return session.getFactory().getFastSessionServices().entityCopyObserverFactory.createEntityCopyObserver();
 	}
 
 	/**

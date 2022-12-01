@@ -70,7 +70,7 @@ public class CacheEntityLoaderHelper {
 			EntityKey keyToLoad,
 			LoadEventListener.LoadType options,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			EventSource session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
 
 		if ( old != null ) {

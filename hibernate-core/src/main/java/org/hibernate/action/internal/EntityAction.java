@@ -33,7 +33,7 @@ public abstract class EntityAction
 	private final Object id;
 
 	private transient Object instance;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private transient EntityPersister persister;
 
 	private transient boolean veto;
@@ -47,7 +47,7 @@ public abstract class EntityAction
 	 * @param persister The entity persister
 	 */
 	protected EntityAction(
-			SharedSessionContractImplementor session,
+			EventSource session,
 			Object id,
 			Object instance,
 			EntityPersister persister) {
@@ -123,7 +123,7 @@ public abstract class EntityAction
 	 *
 	 * @return The session from which this action originated.
 	 */
-	public final SharedSessionContractImplementor getSession() {
+	public final EventSource getSession() {
 		return session;
 	}
 
@@ -167,7 +167,7 @@ public abstract class EntityAction
 	 * @param session The session being deserialized
 	 */
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -181,7 +181,7 @@ public abstract class EntityAction
 	}
 
 	protected EventSource eventSource() {
-		return (EventSource) getSession();
+		return getSession();
 	}
 
 	/**

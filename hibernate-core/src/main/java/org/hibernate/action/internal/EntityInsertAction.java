@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
@@ -54,7 +55,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object version,
 			final EntityPersister persister,
 			final boolean isVersionIncrementDisabled,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		super( id, state, instance, isVersionIncrementDisabled, persister, session );
 		this.version = version;
 	}

@@ -42,6 +42,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -704,7 +705,7 @@ public class HSQLLegacyDialect extends Dialect {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+		public void lock(Object id, Object version, Object object, int timeout, EventSource session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();

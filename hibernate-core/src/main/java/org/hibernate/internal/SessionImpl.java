@@ -1814,6 +1814,11 @@ public class SessionImpl
 	}
 
 	@Override
+	public EventSource asEventSource() {
+		return this;
+	}
+
+	@Override
 	public boolean isDefaultReadOnly() {
 		return persistenceContext.isDefaultReadOnly();
 	}

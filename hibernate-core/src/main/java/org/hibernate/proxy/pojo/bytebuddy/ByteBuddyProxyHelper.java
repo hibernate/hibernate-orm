@@ -95,7 +95,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(TypeDefinition persistentClass,
 			Collection<? extends TypeDefinition> interfaces) {
 		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
-		return byteBuddy -> byteBuddy
+		return byteBuddy -> helpers.appendIgnoreAlsoAtEnd( byteBuddy
 				.ignore( helpers.getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) ) )
 				.subclass( interfaces.size() == 1 ? persistentClass : TypeDescription.OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
@@ -107,24 +107,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
 						.intercept( helpers.getInterceptorFieldAccessor() )
-				.ignoreAlso( isDeclaredBy( ManagedEntity.class ).and( named( "asManagedEntity" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedEntity" ) ) )
-				.ignoreAlso( isDeclaredBy( PersistentAttributeInterceptable.class ).and( named( "asPersistentAttributeInterceptable" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asPersistentAttributeInterceptable" ) ) )
-				.ignoreAlso( isDeclaredBy( SelfDirtinessTracker.class ).and( named( "asSelfDirtinessTracker" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asSelfDirtinessTracker" ) ) )
-				.ignoreAlso( isDeclaredBy( Managed.class ).and( named( "asManaged" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManaged" ) ) )
-				.ignoreAlso( isDeclaredBy( ManagedComposite.class ).and( named( "asManagedComposite" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedComposite" ) ) )
-				.ignoreAlso( isDeclaredBy( ManagedMappedSuperclass.class ).and( named( "asManagedMappedSuperclass" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asManagedMappedSuperclass" ) ) )
-				.ignoreAlso( isDeclaredBy( CompositeOwner.class ).and( named( "asCompositeOwner" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asCompositeOwner" ) ) )
-				.ignoreAlso( isDeclaredBy( CompositeTracker.class ).and( named( "asCompositeTracker" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asCompositeTracker" ) ) )
-				.ignoreAlso( isDeclaredBy( HibernateProxy.class ).and( named( "asHibernateProxy" ) ) )
-				.ignoreAlso( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( "asHibernateProxy" ) ) );
+		);
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {

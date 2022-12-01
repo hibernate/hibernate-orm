@@ -78,7 +78,6 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -2316,7 +2315,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final InMemoryGenerator generator = identifierValueBinding.createIdentifierGenerator(
+			final InMemoryGenerator generator = identifierValueBinding.createGenerator(
 					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
 					entityBinding

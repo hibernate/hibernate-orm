@@ -39,8 +39,8 @@ public class Assigned implements StandardGenerator {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		entityName = params.getProperty( ENTITY_NAME );
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");
 		}

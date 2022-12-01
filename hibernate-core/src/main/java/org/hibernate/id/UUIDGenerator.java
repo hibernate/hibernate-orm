@@ -51,13 +51,13 @@ public class UUIDGenerator implements StandardGenerator {
 	private UUIDJavaType.ValueTransformer valueTransformer;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		// check first for an explicit strategy instance
-		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
+		strategy = (UUIDGenerationStrategy) parameters.get( UUID_GEN_STRATEGY );
 
 		if ( strategy == null ) {
 			// next check for an explicit strategy class
-			final String strategyClassName = params.getProperty( UUID_GEN_STRATEGY_CLASS );
+			final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
 					final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );

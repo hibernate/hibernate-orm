@@ -74,7 +74,8 @@ public @interface GenericGenerator {
 	 */
 	String name();
 	/**
-	 * The type of identifier generator, a class implementing {@link InMemoryGenerator}.
+	 * The type of identifier generator, a class implementing {@link InMemoryGenerator}
+	 * or, more commonly, {@link org.hibernate.id.IdentifierGenerator}.
 	 *
 	 * @since 6.2
 	 */
@@ -83,7 +84,8 @@ public @interface GenericGenerator {
 	 * The type of identifier generator, the name of either:
 	 * <ul>
 	 * <li>a built-in Hibernate id generator, or
-	 * <li>a custom class implementing {@link org.hibernate.id.IdentifierGenerator}.
+	 * <li>a custom class implementing {@link InMemoryGenerator}, or, more commonly,
+	 *     {@link org.hibernate.id.IdentifierGenerator}.
 	 * </ul>
 	 *
 	 * @deprecated use {@link #type()} for typesafety

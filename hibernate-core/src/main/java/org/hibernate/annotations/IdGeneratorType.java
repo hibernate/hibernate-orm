@@ -10,7 +10,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -18,12 +17,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Meta-annotation used to mark another annotation as providing configuration
- * for a custom {@link IdentifierGenerator}. This is the best way to work with
- * customized identifier generation in Hibernate.
+ * for a custom {@linkplain InMemoryGenerator identifier generator}. This is
+ * the best way to work with customized identifier generation in Hibernate.
  * <p>
  * For example, if we have a custom identifier generator:
  * <pre>{@code
- * public class CustomSequenceGenerator implements IdentifierGenerator {
+ * public class CustomSequenceGenerator implements InMemoryGenerator {
  *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
  *                                    CustomIdGeneratorCreationContext context) {
  *         ...

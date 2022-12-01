@@ -180,21 +180,21 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
-		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
+		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, parameters, false );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment, serviceRegistry );
+		final QualifiedName sequenceName = determineSequenceName(parameters, dialect, jdbcEnvironment, serviceRegistry );
 
-		final int initialValue = determineInitialValue( params );
-		int incrementSize = determineIncrementSize( params );
+		final int initialValue = determineInitialValue(parameters);
+		int incrementSize = determineIncrementSize(parameters);
 
-		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
+		final String optimizationStrategy = determineOptimizationStrategy(parameters, incrementSize );
 
 		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
 
@@ -242,7 +242,7 @@ public class SequenceStyleGenerator
 
 		this.databaseStructure = buildDatabaseStructure(
 				type,
-				params,
+				parameters,
 				jdbcEnvironment,
 				forceTableUse,
 				sequenceName,
@@ -253,7 +253,7 @@ public class SequenceStyleGenerator
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
+				ConfigurationHelper.getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		this.databaseStructure.configure( optimizer );
 	}

@@ -44,8 +44,8 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		sep = ConfigurationHelper.getString( "separator", params, "" );
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		sep = ConfigurationHelper.getString( "separator", parameters, "" );
 	}
 
 	@Override

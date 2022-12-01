@@ -326,29 +326,29 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		storeLastUsedValue = serviceRegistry.getService( ConfigurationService.class )
 				.getSetting( AvailableSettings.TABLE_GENERATOR_STORE_LAST_USED, StandardConverters.BOOLEAN, true );
 		identifierType = type;
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
-		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment, serviceRegistry );
-		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );
-		valueColumnName = determineValueColumnName( params, jdbcEnvironment );
+		qualifiedTableName = determineGeneratorTableName(parameters, jdbcEnvironment, serviceRegistry );
+		segmentColumnName = determineSegmentColumnName(parameters, jdbcEnvironment );
+		valueColumnName = determineValueColumnName(parameters, jdbcEnvironment );
 
-		segmentValue = determineSegmentValue( params );
+		segmentValue = determineSegmentValue(parameters);
 
-		segmentValueLength = determineSegmentColumnSize( params );
-		initialValue = determineInitialValue( params );
-		incrementSize = determineIncrementSize( params );
+		segmentValueLength = determineSegmentColumnSize(parameters);
+		initialValue = determineInitialValue(parameters);
+		incrementSize = determineIncrementSize(parameters);
 
 		final String optimizationStrategy = ConfigurationHelper.getString(
 				OPT_PARAM,
-				params,
-				OptimizerFactory.determineImplicitOptimizerName( incrementSize, params )
+				parameters,
+				OptimizerFactory.determineImplicitOptimizerName( incrementSize, parameters)
 		);
-		int optimizerInitialValue = ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 );
+		int optimizerInitialValue = ConfigurationHelper.getInt( INITIAL_PARAM, parameters, -1 );
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
@@ -356,7 +356,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				optimizerInitialValue
 		);
 
-		contributor = params.getProperty( CONTRIBUTOR_NAME );
+		contributor = parameters.getProperty( CONTRIBUTOR_NAME );
 		if ( contributor == null ) {
 			contributor = "orm";
 		}

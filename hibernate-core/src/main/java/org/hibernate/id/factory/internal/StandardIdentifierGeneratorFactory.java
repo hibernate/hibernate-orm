@@ -7,7 +7,6 @@
 package org.hibernate.id.factory.internal;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +17,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -41,22 +39,24 @@ import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.cfg.AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER;
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
 
 /**
- * Basic implementation of {@link org.hibernate.id.factory.IdentifierGeneratorFactory}.
+ * Basic implementation of {@link org.hibernate.id.factory.IdentifierGeneratorFactory},
+ * responsible for instantiating the predefined built-in id generators, and generators
+ * declared using {@link org.hibernate.annotations.GenericGenerator}.
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( { "deprecation" ,"rawtypes" } )
 public class StandardIdentifierGeneratorFactory
 		implements IdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
 
@@ -77,23 +77,32 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	/**
-	 * Constructs a new factory, explicitly controlling whether to use
-	 * CDI or not
+	 * Constructs a new factory, explicitly controlling whether to use CDI or not
 	 */
 	public StandardIdentifierGeneratorFactory(ServiceRegistry serviceRegistry, boolean ignoreBeanContainer) {
 		this.serviceRegistry = serviceRegistry;
+		beanContainer = getBeanContainer( serviceRegistry, ignoreBeanContainer );
+		registerJpaGenerators();
+		logOverrides();
+		registerPredefinedGenerators();
+		registerUsingLegacyContributor();
+	}
 
-		if ( ignoreBeanContainer ) {
+	private static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry, boolean ignoreBeanContainer) {
+		if (ignoreBeanContainer) {
 			ID_GEN_FAC_LOGGER.debug( "Ignoring CDI for resolving IdentifierGenerator instances as extended or delayed CDI support was enabled" );
-			this.beanContainer = null;
+			return null;
 		}
 		else {
-			this.beanContainer = serviceRegistry.getService( ManagedBeanRegistry.class ).getBeanContainer();
+			final BeanContainer beanContainer = serviceRegistry.getService( ManagedBeanRegistry.class ).getBeanContainer();
 			if ( beanContainer == null ) {
 				ID_GEN_FAC_LOGGER.debug( "Resolving IdentifierGenerator instances will not use CDI as it was not configured" );
 			}
+			return beanContainer;
 		}
+	}
 
+	private void registerJpaGenerators() {
 		generatorTypeStrategyMap.put( GenerationType.AUTO, AutoGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.SEQUENCE, SequenceGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.TABLE, TableGenerationTypeStrategy.INSTANCE );
@@ -101,30 +110,31 @@ public class StandardIdentifierGeneratorFactory
 		try {
 			generatorTypeStrategyMap.put( GenerationType.valueOf( "UUID" ), UUIDGenerationTypeStrategy.INSTANCE );
 		}
-		catch (IllegalArgumentException ex) {
-			// Ignore
+		catch (IllegalArgumentException ignore) {
 		}
+	}
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		final Collection<GenerationTypeStrategyRegistration> generationTypeStrategyRegistrations = classLoaderService.loadJavaServices( GenerationTypeStrategyRegistration.class );
-		generationTypeStrategyRegistrations.forEach( (registration) -> registration.registerStrategies(
-				(generationType, generationTypeStrategy) -> {
-					final GenerationTypeStrategy previous = generatorTypeStrategyMap.put(
-							generationType,
-							generationTypeStrategy
-					);
-					if ( previous != null ) {
-						ID_GEN_FAC_LOGGER.debugf(
-								"GenerationTypeStrategyRegistration [%s] overrode previous registration for GenerationType#%s : %s",
-								registration,
-								generationType.name(),
-								previous
-						);
-					}
-				},
-				serviceRegistry
-		) );
+	private void logOverrides() {
+		serviceRegistry.getService( ClassLoaderService.class )
+				.loadJavaServices( GenerationTypeStrategyRegistration.class )
+				.forEach( (registration) -> registration.registerStrategies(
+						(generationType, generationTypeStrategy) -> {
+							final GenerationTypeStrategy previous =
+									generatorTypeStrategyMap.put( generationType, generationTypeStrategy );
+							if ( previous != null ) {
+								ID_GEN_FAC_LOGGER.debugf(
+										"GenerationTypeStrategyRegistration [%s] overrode previous registration for GenerationType#%s : %s",
+										registration,
+										generationType.name(),
+										previous
+								);
+							}
+						},
+						serviceRegistry
+				) );
+	}
 
+	private void registerPredefinedGenerators() {
 		register( "uuid2", UUIDGenerator.class );
 		// can be done with UuidGenerator + strategy
 		register( "guid", GUIDGenerator.class );
@@ -138,26 +148,30 @@ public class StandardIdentifierGeneratorFactory
 		register( "foreign", ForeignGenerator.class );
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );
+	}
 
+	private void registerUsingLegacyContributor() {
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
-		final Object providerSetting = configService.getSettings().get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+		final Object providerSetting = configService.getSettings().get( IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
 		if ( providerSetting != null ) {
 			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting2(
-					AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
+					IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
 					"supply a org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration Java service"
 			);
 			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
 					serviceRegistry.getService( StrategySelector.class )
 							.resolveStrategy( IdentifierGeneratorStrategyProvider.class, providerSetting );
 			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
-				register( entry.getKey(), (Class) entry.getValue() );
+				@SuppressWarnings({"rawtypes", "unchecked"})
+				Class<? extends IdentifierGenerator> generatorClass = (Class) entry.getValue();
+				register( entry.getKey(), generatorClass );
 			}
 		}
 	}
 
 	private void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
 		ID_GEN_FAC_LOGGER.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
-		final Class previous = legacyGeneratorClassNameMap.put( strategy, generatorClass );
+		final Class<?> previous = legacyGeneratorClassNameMap.put( strategy, generatorClass );
 		if ( previous != null && ID_GEN_FAC_LOGGER.isDebugEnabled() ) {
 			ID_GEN_FAC_LOGGER.debugf( "    - overriding [%s]", previous.getName() );
 		}
@@ -185,7 +199,7 @@ public class StandardIdentifierGeneratorFactory
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Dialect getDialect() {
 		if ( dialect == null ) {
 			dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
@@ -194,30 +208,28 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
+	public InMemoryGenerator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
 		try {
-			final Class<? extends IdentifierGenerator> clazz = getIdentifierGeneratorClass( strategy );
-			final IdentifierGenerator identifierGenerator;
-
+			final Class<? extends InMemoryGenerator> clazz = getIdentifierGeneratorClass( strategy );
+			final InMemoryGenerator identifierGenerator;
 			if ( beanContainer == null
 					|| StandardGenerator.class.isAssignableFrom( clazz )
 					|| legacyGeneratorClassNameMap.containsKey( strategy ) ) {
 				identifierGenerator = clazz.newInstance();
 			}
 			else {
-				final ContainedBean<? extends IdentifierGenerator> generatorBean = beanContainer.getBean(
-						clazz,
-						this,
-						FallbackBeanInstanceProducer.INSTANCE
-				);
-				identifierGenerator = generatorBean.getBeanInstance();
+				identifierGenerator =
+						beanContainer.getBean( clazz, this, FallbackBeanInstanceProducer.INSTANCE )
+								.getBeanInstance();
 			}
 
-			identifierGenerator.configure( type, config, serviceRegistry );
+			if ( identifierGenerator instanceof IdentifierGenerator ) {
+				( (IdentifierGenerator) identifierGenerator ).configure( type, parameters, serviceRegistry );
+			}
 			return identifierGenerator;
 		}
 		catch ( Exception e ) {
-			final String entityName = config.getProperty( IdentifierGenerator.ENTITY_NAME );
+			final String entityName = parameters.getProperty( IdentifierGenerator.ENTITY_NAME );
 			throw new MappingException( String.format( "Could not instantiate id generator [entity-name=%s]", entityName ), e );
 		}
 	}
@@ -233,7 +245,7 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	@Override
-	public Class<? extends IdentifierGenerator> getIdentifierGeneratorClass(String strategy) {
+	public Class<? extends InMemoryGenerator> getIdentifierGeneratorClass(String strategy) {
 		if ( "hilo".equals( strategy ) ) {
 			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
@@ -242,16 +254,24 @@ public class StandardIdentifierGeneratorFactory
 				: strategy;
 
 		Class<? extends IdentifierGenerator> generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
-		if ( generatorClass == null ) {
+		if ( generatorClass != null ) {
+			return generatorClass;
+		}
+		else {
 			try {
-				return serviceRegistry.getService( ClassLoaderService.class ).classForName( resolvedStrategy );
+				Class<? extends InMemoryGenerator> clazz =
+						serviceRegistry.getService( ClassLoaderService.class )
+								.classForName( resolvedStrategy );
+				if ( !InMemoryGenerator.class.isAssignableFrom( clazz ) ) {
+					// in principle, this shouldn't happen, since @GenericGenerator
+					// constrains the type to subtypes of InMemoryGenerator
+					throw new MappingException( clazz.getName() + " does not implement 'InMemoryGenerator'" );
+				}
+				return clazz;
 			}
 			catch ( ClassLoadingException e ) {
 				throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 			}
-		}
-		else {
-			return generatorClass;
 		}
 	}
 }

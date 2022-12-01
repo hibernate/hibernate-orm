@@ -20,8 +20,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Meta-annotation used to mark another annotation as providing configuration
- * for a custom {@linkplain Generator value generation strategy}.
- * This is the best way to work with customized value generation in Hibernate.
+ * for a custom {@linkplain Generator value generation strategy}. This is the
+ * best way to work with customized value generation in Hibernate.
  * <p>
  * For example, if we have a custom value generator:
  * <pre>{@code

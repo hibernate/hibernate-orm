@@ -48,6 +48,7 @@ import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 
@@ -398,7 +399,7 @@ public class DefaultMergeEventListener
 			Object managed,
 			EntityPersister persister,
 			EventSource source) {
-		if ( managed instanceof HibernateProxy ) {
+		if ( isHibernateProxy( managed ) ) {
 			return source.getPersistenceContextInternal().unproxy( managed );
 		}
 

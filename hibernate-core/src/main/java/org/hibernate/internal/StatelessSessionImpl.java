@@ -38,6 +38,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import jakarta.transaction.SystemException;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
@@ -386,8 +387,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void fetch(Object association) {
 		checkOpen();
 		PersistenceContext persistenceContext = getPersistenceContext();
-		if ( association instanceof HibernateProxy ) {
-			final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( association );
+		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( association );
+		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
 				String entityName = initializer.getEntityName();
 				Object id = initializer.getIdentifier();

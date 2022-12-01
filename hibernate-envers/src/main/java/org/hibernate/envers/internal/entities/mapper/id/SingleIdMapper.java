@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
@@ -80,9 +81,9 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return null;
 		}
 
-		if ( isHibernateProxy( data ) ) {
-			final HibernateProxy hibernateProxy = asHibernateProxy( data );
-			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			return getValueFromObject( propertyData, data );
@@ -102,9 +103,9 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( isHibernateProxy( obj ) ) {
-				final HibernateProxy hibernateProxy = asHibernateProxy( obj );
-				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier() );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				data.put( propertyData.getName(), lazyInitializer.getInternalIdentifier() );
 			}
 			else {
 				final Object value = getValueFromObject( propertyData, obj );

@@ -29,6 +29,8 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Steve Ebersole
  */
@@ -372,7 +374,7 @@ public class CascadingActions {
 				Object child = persister.getValue( parent, propertyIndex );
 				if ( child != null
 						&& !isInManagedState( child, session )
-						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
+						&& !( isHibernateProxy( child ) ) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 					final String childEntityName =
 							((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
 					if ( ForeignKeys.isTransient(childEntityName, child, null, session) ) {

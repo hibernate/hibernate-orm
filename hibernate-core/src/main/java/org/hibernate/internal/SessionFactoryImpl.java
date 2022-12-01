@@ -1063,10 +1063,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		Class<?> clazz;
-		if ( isHibernateProxy( bindValue ) ) {
-			HibernateProxy proxy = asHibernateProxy( bindValue );
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			clazz = li.getPersistentClass();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( bindValue );
+		if ( lazyInitializer != null ) {
+			clazz = lazyInitializer.getPersistentClass();
 		}
 		else {
 			clazz = bindValue.getClass();

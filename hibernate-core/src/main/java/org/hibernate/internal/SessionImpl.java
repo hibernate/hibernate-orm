@@ -1542,22 +1542,13 @@ public class SessionImpl
 	@Override
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpenOrWaitingForAutoClose();
-		if ( object instanceof HibernateProxy ) {
-			return getProxyIdentifier( object );
-		}
-		else {
-			EntityEntry entry = persistenceContext.getEntry( object );
-			return entry != null ? entry.getId() : null;
-		}
-	}
-
-	private Object getProxyIdentifier(Object proxy) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxy );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
-			throw new HibernateException( "Argument was not an HibernateProxy, which is a requirement for this method" );
+			EntityEntry entry = persistenceContext.getEntry( object );
+			return entry != null ? entry.getId() : null;
 		}
 	}
 
@@ -1598,7 +1589,7 @@ public class SessionImpl
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
-				if ( ! ( isHibernateProxy( object ) ) && persistenceContext.getEntry( object ) == null ) {
+				if ( ! ( lazyInitializer != null ) && persistenceContext.getEntry( object ) == null ) {
 					// check if it is even an entity -> if not throw an exception (per JPA)
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
@@ -1637,7 +1628,8 @@ public class SessionImpl
 		}
 
 		try {
-			if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
+			final LazyInitializer li = HibernateProxy.extractLazyInitializer( object );
+			if ( ! ( li != null ) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
 					getFactory().getRuntimeMetamodels()
@@ -1649,7 +1641,6 @@ public class SessionImpl
 				}
 			}
 
-			final LazyInitializer li = HibernateProxy.extractLazyInitializer( object );
 			if ( li != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's

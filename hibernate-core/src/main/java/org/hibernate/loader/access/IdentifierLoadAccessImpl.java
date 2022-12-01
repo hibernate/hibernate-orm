@@ -213,11 +213,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			return;
 		}
 
-		if ( isHibernateProxy( result ) ) {
-			final HibernateProxy hibernateProxy = asHibernateProxy( result );
-			final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-			if ( initializer.isUninitialized() ) {
-				initializer.initialize();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( result );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				lazyInitializer.initialize();
 			}
 		}
 		else {

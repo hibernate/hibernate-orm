@@ -7,6 +7,7 @@
 package org.hibernate.bytecode.internal.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.anyOf;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isFinalizer;
 import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
 import static net.bytebuddy.matcher.ElementMatchers.isVirtual;
@@ -14,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import static org.hibernate.bytecode.spi.ClassLoadingStrategyHelper.resolveClassLoadingStrategy;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -22,6 +24,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
@@ -280,6 +284,7 @@ public final class ByteBuddyState {
 		private final ElementMatcher<? super MethodDescription> groovyGetMetaClassFilter;
 		private final ElementMatcher<? super MethodDescription> virtualNotFinalizerFilter;
 		private final ElementMatcher<? super MethodDescription> proxyNonInterceptedMethodFilter;
+		private final List<ElementMatcher<? super MethodDescription>> toFullyIgnore = new ArrayList<>();
 		private final MethodDelegation delegateToInterceptorDispatcherMethodDelegation;
 		private final FieldAccessor.PropertyConfigurable interceptorFieldAccessor;
 
@@ -292,6 +297,14 @@ public final class ByteBuddyState {
 					// those need to be executed on the actual entity.
 					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX ) ) )
 					.and( not( nameStartsWith( EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX ) ) );
+
+			// Populate the toFullyIgnore list
+			for ( Method m : PrimeAmongSecondarySupertypes.class.getMethods() ) {
+				//We need to ignore both the match of each default method on PrimeAmongSecondarySupertypes
+				toFullyIgnore.add( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( m.getName() ) ).and( takesNoArguments() ) );
+				//And the override in the interface it belong to - which we happen to have in the return type
+				toFullyIgnore.add( isDeclaredBy( m.getReturnType() ).and( named( m.getName() ) ).and( takesNoArguments() ) );
+			}
 
 			PrivilegedAction<MethodDelegation> delegateToInterceptorDispatcherMethodDelegationPrivilegedAction =
 					new PrivilegedAction<MethodDelegation>() {
@@ -339,6 +352,13 @@ public final class ByteBuddyState {
 
 		public FieldAccessor.PropertyConfigurable getInterceptorFieldAccessor() {
 			return interceptorFieldAccessor;
+		}
+
+		public DynamicType.Builder<?> appendIgnoreAlsoAtEnd(DynamicType.Builder<?> builder) {
+			for ( ElementMatcher<? super MethodDescription> m : toFullyIgnore ) {
+				builder = builder.ignoreAlso( m );
+			}
+			return builder;
 		}
 	}
 

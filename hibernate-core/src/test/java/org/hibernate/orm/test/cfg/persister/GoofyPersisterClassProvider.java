@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -357,16 +358,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+		public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
 		}
 
 		@Override

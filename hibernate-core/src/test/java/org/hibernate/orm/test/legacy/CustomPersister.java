@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -398,7 +399,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 
@@ -448,28 +449,29 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityPersister#lock(Object, Object, Object, LockMode, EventSource)
 	 */
+	@Override
 	public void lock(
 			Object id,
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session
+			EventSource session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * @see EntityPersister#lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityPersister#lock(Object, Object, Object, LockMode, EventSource)
 	 */
 	public void lock(
 			Object id,
 			Object version,
 			Object object,
 			LockMode lockMode,
-			SharedSessionContractImplementor session
+			EventSource session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();

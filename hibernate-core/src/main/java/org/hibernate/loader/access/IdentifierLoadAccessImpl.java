@@ -124,7 +124,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected T doGetReference(Object id) {
 		final SessionImplementor session = context.getSession();
-		final EventSource eventSource = (EventSource) session;
+		final EventSource eventSource = session.asEventSource();
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
@@ -169,7 +169,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected final T doLoad(Object id) {
 		final SessionImplementor session = context.getSession();
-		final EventSource eventSource = (EventSource) session;
+		final EventSource eventSource = session.asEventSource();
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();

@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -55,7 +56,7 @@ public class EntityDeleteAction extends EntityAction {
 			final Object instance,
 			final EntityPersister persister,
 			final boolean isCascadeDeleteEnabled,
-			final SessionImplementor session) {
+			final EventSource session) {
 		super( session, id, instance, persister );
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
@@ -79,7 +80,7 @@ public class EntityDeleteAction extends EntityAction {
 	 * @param persister The entity persister
 	 * @param session The session
 	 */
-	public EntityDeleteAction(final Object id, final EntityPersister persister, final SessionImplementor session) {
+	public EntityDeleteAction(final Object id, final EntityPersister persister, final EventSource session) {
 		super( session, id, null, persister );
 		version = null;
 		isCascadeDeleteEnabled = false;

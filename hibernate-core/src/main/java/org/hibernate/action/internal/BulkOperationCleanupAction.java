@@ -164,7 +164,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public static void schedule(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
 		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
-			( (EventSource) session ).getActionQueue().addAction( action );
+			session.asEventSource().getActionQueue().addAction( action );
 		}
 		else {
 			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
@@ -174,7 +174,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public static void schedule(SharedSessionContractImplementor session, Set<String> affectedQueryables) {
 		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
-			( (EventSource) session ).getActionQueue().addAction( action );
+			session.asEventSource().getActionQueue().addAction( action );
 		}
 		else {
 			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
@@ -302,7 +302,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		// nop
 	}
 }

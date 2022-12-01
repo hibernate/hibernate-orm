@@ -30,7 +30,7 @@ import org.hibernate.pretty.MessageHelper;
 public abstract class CollectionAction implements Executable, Serializable, Comparable<CollectionAction> {
 
 	private transient CollectionPersister persister;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private final PersistentCollection<?> collection;
 
 	private final Object key;
@@ -40,7 +40,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			final CollectionPersister persister,
 			final PersistentCollection<?> collection,
 			final Object key,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
@@ -57,7 +57,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	 *
 	 * @param session The session being deserialized
 	 */
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -122,7 +122,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return finalKey;
 	}
 
-	protected final SharedSessionContractImplementor getSession() {
+	protected final EventSource getSession() {
 		return session;
 	}
 
@@ -185,7 +185,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	protected EventSource eventSource() {
-		return (EventSource) getSession();
+		return getSession();
 	}
 
 	/**

@@ -21,6 +21,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.ExecutableList;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.AfterEach;
@@ -97,7 +98,7 @@ public class NonSortedExecutableListTest {
 		}
 
 		@Override
-		public void afterDeserialize(SharedSessionContractImplementor session) {
+		public void afterDeserialize(EventSource session) {
 			this.afterDeserializeCalled = true;
 		}
 

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.action.spi.Executable;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
@@ -345,7 +346,7 @@ public class ExecutableList<E extends Executable & Comparable<? super E> & Seria
 	 * 
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
-	public void afterDeserialize(SessionImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		for ( E e : executables ) {
 			e.afterDeserialize( session );
 		}

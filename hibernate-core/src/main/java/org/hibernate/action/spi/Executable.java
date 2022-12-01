@@ -9,7 +9,7 @@ package org.hibernate.action.spi;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * An operation which may be scheduled for later execution.  Usually, the operation is a database
@@ -59,7 +59,7 @@ public interface Executable {
 	/**
 	 * Reconnect to session after deserialization
 	 *
-	 * @param session The session being deserialized
+	 * @param session The session being deserialized; must be an EventSource
 	 */
-	void afterDeserialize(SharedSessionContractImplementor session);
+	void afterDeserialize(EventSource session);
 }

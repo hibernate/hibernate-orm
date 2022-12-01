@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -43,7 +44,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, collection, id, session );
 		if ( collection == null ) {
 			throw new AssertionFailure("collection == null");
@@ -73,7 +74,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, null, id, session );
 		if ( affectedOwner == null ) {
 			throw new AssertionFailure("affectedOwner == null");
@@ -93,7 +94,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	public CollectionRemoveAction(
 			final CollectionPersister persister,
 			final Object id,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		super( persister, null, id, session );
 		emptySnapshot = false;
 		affectedOwner = null;

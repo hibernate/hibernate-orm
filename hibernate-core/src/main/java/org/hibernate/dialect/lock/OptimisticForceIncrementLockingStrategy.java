@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
@@ -42,13 +41,13 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit.
-		( (EventSource) session ).getActionQueue().registerProcess( new EntityIncrementVersionProcess( object ) );
+		session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

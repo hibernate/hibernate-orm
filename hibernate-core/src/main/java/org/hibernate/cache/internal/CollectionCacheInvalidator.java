@@ -196,7 +196,7 @@ public class CollectionCacheInvalidator
 				CollectionPersister persister,
 				PersistentCollection<?> collection,
 				Object key,
-				SharedSessionContractImplementor session) {
+				EventSource session) {
 			super( persister, collection, key, session );
 		}
 
@@ -208,7 +208,6 @@ public class CollectionCacheInvalidator
 			beforeExecutions();
 			return getAfterTransactionCompletionProcess();
 		}
-
-
 	}
+
 }

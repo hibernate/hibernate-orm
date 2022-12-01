@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
@@ -76,7 +77,7 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance,
 			final Object rowId,
 			final EntityPersister persister,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.previousState = previousState;

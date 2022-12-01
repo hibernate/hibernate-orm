@@ -592,7 +592,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// We have to query the second level cache if reference cache entries are used
 		if ( instance == null && entityDescriptor.canUseReferenceCacheEntries() ) {
 			instance = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					(EventSource) rowProcessingState.getSession(),
+					rowProcessingState.getSession().asEventSource(),
 					null,
 					lockMode,
 					entityDescriptor,

@@ -16,7 +16,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
@@ -52,7 +52,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {

@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -585,6 +586,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public boolean isEventSource() {
 		return false;
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		throw new HibernateException( "Illegal Cast to EventSource - guard by invoking isEventSource() first" );
 	}
 
 	public boolean isDefaultReadOnly() {

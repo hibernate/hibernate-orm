@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
@@ -295,7 +296,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public static UnresolvedEntityInsertActions deserialize(
 			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+			EventSource session) throws IOException, ClassNotFoundException {
 
 		final UnresolvedEntityInsertActions rtn = new UnresolvedEntityInsertActions();
 

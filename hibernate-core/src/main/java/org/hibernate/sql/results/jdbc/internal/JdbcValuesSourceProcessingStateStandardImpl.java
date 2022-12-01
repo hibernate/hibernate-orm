@@ -63,9 +63,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		this.processingOptions = processingOptions;
 		this.loadingEntityEntryConsumer = loadingEntityEntryListener;
 
-		if ( executionContext.getSession() instanceof EventSource ) {
-			preLoadEvent = new PreLoadEvent( (EventSource) executionContext.getSession() );
-			postLoadEvent = new PostLoadEvent( (EventSource) executionContext.getSession() );
+		if ( executionContext.getSession().isEventSource() ) {
+			final EventSource eventSource = executionContext.getSession().asEventSource();
+			preLoadEvent = new PreLoadEvent( eventSource );
+			postLoadEvent = new PostLoadEvent( eventSource );
 		}
 		else {
 			preLoadEvent = null;

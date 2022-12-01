@@ -2241,7 +2241,7 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockMode lockMode,
-			SharedSessionContractImplementor session) throws HibernateException {
+			EventSource session) throws HibernateException {
 		getLocker( lockMode ).lock( id, version, object, LockOptions.WAIT_FOREVER, session );
 	}
 
@@ -2251,7 +2251,7 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session) throws HibernateException {
+			EventSource session) throws HibernateException {
 		getLocker( lockOptions.getLockMode() ).lock( id, version, object, lockOptions.getTimeOut(), session );
 	}
 
@@ -4423,8 +4423,8 @@ public abstract class AbstractEntityPersister
 			final Object identifier = entityKey.getIdentifier();
 
 			Object loaded = null;
-			if ( canReadFromCache && session instanceof EventSource ) {
-				LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource) session, false );
+			if ( canReadFromCache && session.isEventSource() ) {
+				LoadEvent loadEvent = new LoadEvent( identifier, entity, session.asEventSource(), false );
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
@@ -4474,7 +4474,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 		return multiIdEntityLoader.load( ids, loadOptions, session );
 	}
 

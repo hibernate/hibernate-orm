@@ -38,6 +38,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.spi.DeleteContext;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
@@ -278,6 +279,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isEventSource() {
 		return delegate.isEventSource();
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		return delegate.asEventSource();
 	}
 
 	@Override

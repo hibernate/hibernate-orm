@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -52,7 +53,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object instance,
 			boolean isVersionIncrementDisabled,
 			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.isVersionIncrementDisabled = isVersionIncrementDisabled;
@@ -177,7 +178,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	protected abstract EntityKey getEntityKey();
 
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		super.afterDeserialize( session );
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException

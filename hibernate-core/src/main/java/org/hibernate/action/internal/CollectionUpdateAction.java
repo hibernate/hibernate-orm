@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
@@ -37,7 +38,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, collection, id, session );
 		this.emptySnapshot = emptySnapshot;
 	}

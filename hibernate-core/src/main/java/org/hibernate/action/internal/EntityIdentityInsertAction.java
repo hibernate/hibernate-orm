@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
@@ -49,7 +50,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			Object instance,
 			EntityPersister persister,
 			boolean isVersionIncrementDisabled,
-			SharedSessionContractImplementor session,
+			EventSource session,
 			boolean isDelayed) {
 		super(
 				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),

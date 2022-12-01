@@ -9,10 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.ast.internal.LoaderHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to perform a
@@ -21,7 +18,6 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
-	private static final Logger log = CoreLogging.logger( AbstractLockUpgradeEventListener.class );
 
 	/**
 	 * Performs a pessimistic lock upgrade on a given entity, if needed.

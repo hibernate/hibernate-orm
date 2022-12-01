@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
@@ -517,17 +518,17 @@ public interface EntityPersister
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
+	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
+	void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
+	void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session);
 
 	/**
 	 * Persist an instance

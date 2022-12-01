@@ -80,7 +80,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 	}
 
 	@Override
-	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
+	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
 		assert ids != null;
 
 		if ( loadOptions.isOrderReturnEnabled() ) {
@@ -93,7 +93,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 	private List<T> performOrderedMultiLoad(
 			Object[] ids,
-			SharedSessionContractImplementor session,
+			EventSource session,
 			MultiIdLoadOptions loadOptions) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "#performOrderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
@@ -141,7 +141,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session,
+						session,
 						getReadOnlyFromLoadQueryInfluencers(session)
 				);
 
@@ -343,7 +343,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 	private List<T> performUnorderedMultiLoad(
 			Object[] ids,
-			SharedSessionContractImplementor session,
+			EventSource session,
 			MultiIdLoadOptions loadOptions) {
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
@@ -382,7 +382,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session,
+						session,
 						getReadOnlyFromLoadQueryInfluencers( session )
 				);
 

@@ -11,6 +11,7 @@ import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -35,7 +36,7 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			final PersistentCollection<?> collection,
 			final CollectionPersister persister,
 			final Object id,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		super( persister, collection, id, session );
 	}
 

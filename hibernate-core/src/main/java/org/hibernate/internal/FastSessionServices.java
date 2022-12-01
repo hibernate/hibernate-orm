@@ -33,6 +33,7 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEventListener;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -164,6 +165,9 @@ public final class FastSessionServices {
 	final LockOptions defaultLockOptions;
 	final int defaultJdbcBatchSize;
 
+	//This one needs to be public unfortunately:
+	public final EntityCopyObserverFactory entityCopyObserverFactory;
+
 	//Private fields:
 	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
@@ -232,6 +236,7 @@ public final class FastSessionServices {
 		this.classLoaderService = sr.getService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = sr.getService( JdbcServices.class );
+		this.entityCopyObserverFactory = sr.getService( EntityCopyObserverFactory.class );
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sf, transactionCoordinatorBuilder );
 

@@ -35,9 +35,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.collection.spi.LazyInitializable;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
@@ -128,8 +126,9 @@ public final class Hibernate {
 			return;
 		}
 
-		if ( isHibernateProxy( proxy ) ) {
-			asHibernateProxy( proxy ).getHibernateLazyInitializer().initialize();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			lazyInitializer.initialize();
 		}
 		else if ( proxy instanceof LazyInitializable ) {
 			( (LazyInitializable) proxy ).forceInitialization();
@@ -319,10 +318,9 @@ public final class Hibernate {
 	 * uninitialized proxy that is not associated with an open session.
      */
 	public static Object unproxy(Object proxy) {
-		if ( isHibernateProxy( proxy ) ) {
-			HibernateProxy hibernateProxy = asHibernateProxy( proxy );
-			LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-			return initializer.getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getImplementation();
 		}
 		else {
 			return proxy;

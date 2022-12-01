@@ -5,6 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
+import org.hibernate.Remove;
+
 import java.io.Serializable;
 import java.util.Properties;
 
@@ -13,7 +16,10 @@ import java.util.Properties;
  * Useful to keep named generator in annotations
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated this class is no longer used
  */
+@Deprecated(since = "6.2") @Remove
 public class IdGenerator implements Serializable {
 	private String name;
 	private String identifierGeneratorStrategy;

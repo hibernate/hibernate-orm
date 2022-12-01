@@ -59,6 +59,13 @@ public class SuperTypesEnhancementTest {
 
 	@ParameterizedTest
 	@MethodSource("superTypeMethods")
+	public void testAllsubInterfacesExtendTheSingleparent(Method m) {
+		final Class<?> returnType = m.getReturnType();
+		Assert.assertTrue( PrimeAmongSecondarySupertypes.class.isAssignableFrom( returnType ) );
+	}
+
+	@ParameterizedTest
+	@MethodSource("superTypeMethods")
 	public void testSubInterfaceOverrides(Method m) throws NoSuchMethodException {
 		final Class<?> returnType = m.getReturnType();
 		final Method subMethod = returnType.getMethod( m.getName(), m.getParameterTypes() );
@@ -66,18 +73,8 @@ public class SuperTypesEnhancementTest {
 		Assert.assertNotNull( subMethod.isDefault() );
 	}
 
-	@ParameterizedTest
-	@MethodSource("interfaces")
-	public void testAllProxyGeneration(Class<?> secondarySuper) {
-		ProxyFactory enhancer = createProxyFactory( SampleClass.class, secondarySuper );
-		final Object proxy = enhancer.getProxy( Integer.valueOf( 1 ), null );
-		Assert.assertTrue( secondarySuper.isAssignableFrom( proxy.getClass() ) );
-		PrimeAmongSecondarySupertypes casted = (PrimeAmongSecondarySupertypes) proxy;
-		testForLIE( (SampleClass) proxy );
-	}
-
 	@Test
-	public void testGeneratedHibernateProxy() {
+	public void testHibernateProxyGeneration() {
 		ProxyFactory enhancer = createProxyFactory( SampleClass.class, HibernateProxy.class );
 		final Object proxy = enhancer.getProxy( Integer.valueOf( 1 ), null );
 		Assert.assertTrue( HibernateProxy.class.isAssignableFrom( proxy.getClass() ) );

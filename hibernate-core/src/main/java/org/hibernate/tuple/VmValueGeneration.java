@@ -9,6 +9,7 @@ package org.hibernate.tuple;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,11 +18,15 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * An {@link AnnotationValueGeneration} which delegates to a {@link ValueGenerator}.
+ * Underlies the {@link GeneratorType} annotation.
  *
  * @author Gunnar Morling
+ *
+ * @deprecated since {@link GeneratorType} is deprecated
  */
-public class VmValueGeneration
-		implements InMemoryGenerator {
+@Internal
+@Deprecated(since = "6.2")
+public class VmValueGeneration implements InMemoryGenerator {
 
 	private final GenerationTiming generationTiming;
 	private final ValueGenerator<?> generator;

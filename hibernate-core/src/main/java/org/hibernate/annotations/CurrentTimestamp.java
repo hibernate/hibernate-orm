@@ -9,6 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.tuple.CurrentTimestampGeneration;
 import org.hibernate.tuple.GenerationTiming;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -50,12 +51,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link java.time.YearMonth}, or
  * {@link java.time.ZonedDateTime}.
  *
- * @see CurrentTimestampGeneration
- *
- * @author Steve Ebersole
- *
  * @see UpdateTimestamp
  * @see CreationTimestamp
+ * @see CurrentTimestampGeneration
+ *
+ * @since 6.0
+ *
+ * @author Steve Ebersole
  */
 @ValueGenerationType(generatedBy = CurrentTimestampGeneration.class)
 @Retention(RUNTIME)

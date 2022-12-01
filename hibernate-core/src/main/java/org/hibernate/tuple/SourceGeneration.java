@@ -4,20 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.annotations;
+package org.hibernate.tuple;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.Session;
+import org.hibernate.annotations.Source;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.GeneratorCreationContext;
-import org.hibernate.tuple.InMemoryGenerator;
-import org.hibernate.tuple.TimestampGenerators;
-import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.reflect.Member;
@@ -40,12 +36,11 @@ import static org.hibernate.tuple.GenerationTiming.ALWAYS;
  *
  * @author Gavin King
  *
- * @deprecated because {@link Source} is generated, though this implementation is instructive
+ * @deprecated because {@link Source} is deprecated, though this implementation is instructive
  */
 @Deprecated(since = "6.2")
 @Internal
-public class SourceGeneration
-		implements InMemoryGenerator, ValueGenerator<Object> {
+public class SourceGeneration implements InMemoryGenerator, ValueGenerator<Object> {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,

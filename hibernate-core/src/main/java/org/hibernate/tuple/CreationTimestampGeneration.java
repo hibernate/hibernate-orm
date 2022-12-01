@@ -6,17 +6,21 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Value generation implementation for {@link CreationTimestamp}.
+ * Value generation implementation for {@link CreationTimestamp}, no longer used.
  *
  * @author Gunnar Morling
  *
- * @see org.hibernate.annotations.CurrentTimestampGeneration
+ * @deprecated use {@link CurrentTimestampGeneration}
  */
+@Internal
+@Deprecated(since = "6.2") @Remove
 public class CreationTimestampGeneration implements AnnotationValueGeneration<CreationTimestamp> {
 
 	private ValueGenerator<?> generator;

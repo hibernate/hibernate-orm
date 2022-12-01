@@ -21,7 +21,7 @@ import static org.hibernate.annotations.UuidGenerator.Style.TIME;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
- * UUID-based IdentifierGenerator
+ * Generates {@link UUID}s.
  *
  * @see org.hibernate.annotations.UuidGenerator
  */

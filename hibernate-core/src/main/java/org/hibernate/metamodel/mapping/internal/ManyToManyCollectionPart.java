@@ -9,17 +9,20 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Locale;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -32,6 +35,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
+import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.spi.NavigablePath;
@@ -222,16 +226,17 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				null
 		);
 
-		lazyTableGroup.setTableGroupInitializerCallback(
-				tableGroup -> join.applyPredicate(
-						foreignKey.generateJoinPredicate(
-								tableGroup.getPrimaryTableReference(),
-								collectionTableGroup.resolveTableReference( foreignKey.getKeyTable() ),
-								sqlExpressionResolver,
-								creationContext
-						)
-				)
-		);
+		lazyTableGroup.setTableGroupInitializerCallback( (partTableGroup) -> {
+			// `partTableGroup` is the association table group
+			join.applyPredicate(
+					foreignKey.generateJoinPredicate(
+							partTableGroup.getPrimaryTableReference(),
+							collectionTableGroup.resolveTableReference( foreignKey.getKeyTable() ),
+							sqlExpressionResolver,
+							creationContext
+					)
+			);
+		} );
 
 		return join;
 	}
@@ -341,13 +346,38 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
 			final ModelPart mappedByPart = resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(), getAssociatedEntityMappingType(), collectionDescriptor );
-			if ( mappedByPart instanceof Association ) {
-				final Association toOne = (Association) mappedByPart;
-				if ( toOne.getForeignKeyDescriptor() == null ) {
-					// key is not yet ready, we need to wait
-					return false;
-				}
-				foreignKey = toOne.getForeignKeyDescriptor();
+			if ( mappedByPart instanceof ToOneAttributeMapping ) {
+				////////////////////////////////////////////////
+				// E.g.
+				//
+				// @Entity
+				// class Book {
+				// 	...
+				// 	@ManyToOne(fetch = FetchType.LAZY)
+				// 	@JoinTable(name = "author_book",
+				// 	            joinColumns = @JoinColumn(name = "book_id"),
+				// 	            inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
+				// 	private Author author;
+				// }
+				//
+				// @Entity
+				// class Author {
+				// 	...
+				// 	@OneToMany(mappedBy = "author")
+				// 	private List<Book> books;
+				// }
+
+				// create the foreign-key from the join-table (author_book) to the part table (Book) :
+				//		`author_book.book_id -> Book.id`
+
+				final ManyToOne elementDescriptor = (ManyToOne) bootCollectionDescriptor.getElement();
+				assert elementDescriptor.isReferenceToPrimaryKey();
+
+				final String collectionTableName = ( (BasicCollectionPersister) collectionDescriptor ).getTableName();
+
+				foreignKey = createJoinTablePartForeignKey( collectionTableName, elementDescriptor, creationProcess );
+
+				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
 				final PluralAttributeMapping manyToManyInverse = (PluralAttributeMapping) mappedByPart;
@@ -387,6 +417,58 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		return true;
+	}
+
+	private ForeignKeyDescriptor createJoinTablePartForeignKey(
+			String collectionTableName,
+			ManyToOne elementDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		final EntityIdentifierMapping identifierMapping = getAssociatedEntityMappingType().getIdentifierMapping();
+		if ( identifierMapping.getNature() == EntityIdentifierMapping.Nature.SIMPLE ) {
+			final BasicEntityIdentifierMapping basicIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
+
+			assert elementDescriptor.getColumns().size() == 1;
+			final Column keyColumn = elementDescriptor.getColumns().get( 0 );
+
+			// collectionTableName.keyColumnName -> targetTableName.targetColumnName
+
+			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
+					collectionTableName,
+					keyColumn,
+					basicIdMapping.getJdbcMapping(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
+					true,
+					false,
+					creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
+					creationProcess.getSqmFunctionRegistry()
+			);
+
+			final BasicAttributeMapping keyModelPart = BasicAttributeMapping.withSelectableMapping(
+					getAssociatedEntityMappingType(),
+					basicIdMapping,
+					basicIdMapping.getPropertyAccess(),
+					NoValueGeneration.INSTANCE,
+					true,
+					false,
+					keySelectableMapping
+			);
+
+			return new SimpleForeignKeyDescriptor(
+					// the key
+					keyModelPart,
+					// the target
+					basicIdMapping,
+					// refers to primary key
+					true,
+					// has a constraint
+					true,
+					// do not swap the sides
+					false
+			);
+		}
+		else {
+			throw new NotYetImplementedFor6Exception( getClass() );
+		}
 	}
 
 	private static ModelPart resolveNamedTargetPart(

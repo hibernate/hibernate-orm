@@ -18,7 +18,6 @@ import org.hibernate.envers.NotAudited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -101,7 +100,6 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-15393", message = "Work for HHH-15393 (write-paths) causes a failure" )
 	// tests that Author has 3 books.
 	public void testAuthorState() {
 		EntityManager entityManager = getEntityManager();

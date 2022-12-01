@@ -17,7 +17,6 @@ import org.hibernate.envers.NotAudited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -100,7 +99,6 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-15393", message = "Work for HHH-15393 (write-paths) causes a failure" )
 	// tests that Author has 3 books.
 	public void testAuthorState() {
 		EntityManager entityManager = getEntityManager();
@@ -258,7 +256,8 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinTable(name = "author_book",
-				joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
+				joinColumns = @JoinColumn(name = "book_id"),
+				inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
 		@NotAudited
 		private Author author;
 

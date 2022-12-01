@@ -46,8 +46,6 @@ import org.hibernate.usertype.UserVersionType;
  * @author Gavin King
  * @author Steve Ebersole
  */
-// todo (6.0) : ^^ this introduces a problem in code that relies on `instanceof` checks
-// 		           against any of these interfaces when the wrapped type does not
 public class CustomType<J>
 		extends AbstractType
 		implements ConvertedBasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {

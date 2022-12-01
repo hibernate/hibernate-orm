@@ -15,9 +15,12 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
+
+import static java.sql.Statement.NO_GENERATED_KEYS;
 
 /**
  * Abstract InsertGeneratedIdentifierDelegate implementation where the
@@ -40,10 +43,8 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 */
 	protected abstract String getSelectSQL();
 
-	protected void bindParameters(
-			Object entity,
-			PreparedStatement ps,
-			SharedSessionContractImplementor session) throws SQLException {
+	protected void bindParameters(Object entity, PreparedStatement ps, SharedSessionContractImplementor session)
+			throws SQLException {
 	}
 
 	/**
@@ -51,16 +52,13 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 * from execution of {@link #getSelectSQL()}.
 	 *
 	 */
-	protected abstract Object extractGeneratedValue(
-			Object entity,
-			ResultSet rs,
-			SharedSessionContractImplementor session) throws SQLException;
+	protected abstract Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
+			throws SQLException;
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
-		return statementPreparer.prepareStatement( insertSql, PreparedStatement.NO_GENERATED_KEYS );
+		final MutationStatementPreparer statementPreparer = session.getJdbcCoordinator().getMutationStatementPreparer();
+		return statementPreparer.prepareStatement( insertSql, NO_GENERATED_KEYS );
 	}
 
 	@Override
@@ -81,10 +79,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		// the insert is complete, select the generated id...
 
 		final String idSelectSql = getSelectSQL();
-		final PreparedStatement idSelect = jdbcCoordinator
-				.getStatementPreparer()
-				.prepareStatement( idSelectSql );
-
+		final PreparedStatement idSelect = jdbcCoordinator.getStatementPreparer().prepareStatement( idSelectSql );
 		try {
 			bindParameters( entity, idSelect, session );
 
@@ -118,12 +113,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			String insertSQL,
 			SharedSessionContractImplementor session,
 			Binder binder) {
+		StatementPreparer statementPreparer = session.getJdbcCoordinator().getStatementPreparer();
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
+			PreparedStatement insert = statementPreparer.prepareStatement( insertSQL, NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
 				session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
@@ -145,10 +138,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( selectSQL, false );
+			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
 				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );

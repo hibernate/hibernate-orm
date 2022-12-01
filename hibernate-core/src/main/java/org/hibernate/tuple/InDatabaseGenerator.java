@@ -15,7 +15,7 @@ import org.hibernate.dialect.Dialect;
  * statement. In this case, the generated value is retrieved from the database using a SQL
  * {@code select}.
  * <p>
- * Implementations should override {@link #referenceColumnsInSql()},
+ * Implementations should override {@link #referenceColumnsInSql(Dialect)},
  * {@link #writePropertyValue()}, and {@link #getReferencedColumnValues(Dialect)} as needed
  * in order to achieve the desired behavior.
  *
@@ -39,7 +39,7 @@ public interface InDatabaseGenerator extends Generator {
 	 *
 	 * @return {@code true} if the column is included in the column list of the SQL statement.
 	 */
-	boolean referenceColumnsInSql();
+	boolean referenceColumnsInSql(Dialect dialect);
 
 	/**
 	 * Determines if the property values are written to JDBC as the argument of a JDBC {@code ?}
@@ -49,8 +49,8 @@ public interface InDatabaseGenerator extends Generator {
 
 	/**
 	 * A SQL expression indicating how to calculate the generated values when the mapped columns
-	 * are {@linkplain #referenceColumnsInSql() included in the SQL statement}. The SQL expressions
-	 * might be:
+	 * are {@linkplain #referenceColumnsInSql(Dialect) included in the SQL statement}. The SQL
+	 * expressions might be:
 	 * <ul>
 	 * <li>function calls like {@code current_timestamp} or {@code nextval('mysequence')}, or
 	 * <li>syntactic markers like {@code default}.

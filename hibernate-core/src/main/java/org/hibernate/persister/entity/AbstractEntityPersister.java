@@ -2773,8 +2773,8 @@ public abstract class AbstractEntityPersister
 								&& generator.getGenerationTiming().includesUpdate()
 								&& generator.generatedByDatabase() ) {
 							final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
-							if ( databaseGenerator.referenceColumnsInSql() ) {
-								final Dialect dialect = getFactory().getJdbcServices().getDialect();
+							final Dialect dialect = getFactory().getJdbcServices().getDialect();
+							if ( databaseGenerator.referenceColumnsInSql(dialect) ) {
 								update.addColumns(
 										getPropertyColumnNames(index),
 										SINGLE_TRUE,
@@ -3179,7 +3179,7 @@ public abstract class AbstractEntityPersister
 
 	private void doLateInit() {
 		if ( isIdentifierAssignedByInsert() ) {
-			final PostInsertIdentifierGenerator idGenerator = (PostInsertIdentifierGenerator) getIdentifierGenerator();
+			final PostInsertIdentifierGenerator idGenerator = (PostInsertIdentifierGenerator) getGenerator();
 			identityDelegate = idGenerator.getInsertGeneratedIdentifierDelegate(
 					this,
 					getFactory().getJdbcServices().getDialect(),
@@ -3944,7 +3944,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public InMemoryGenerator getGenerator() {
+	public Generator getGenerator() {
 		return entityMetamodel.getIdentifierProperty().getGenerator();
 	}
 
@@ -4344,7 +4344,7 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) {
+		if ( entityMetamodel.getIdentifierProperty().getGenerator() instanceof Assigned ) {
 			return;
 		}
 

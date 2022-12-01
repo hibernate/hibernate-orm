@@ -28,12 +28,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -72,7 +74,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private transient List<Column> cachedColumns;
 
-	private transient InMemoryGenerator builtIdentifierGenerator;
+	private transient Generator builtIdentifierGenerator;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -414,7 +416,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public InMemoryGenerator createGenerator(
+	public Generator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
@@ -428,7 +430,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return builtIdentifierGenerator;
 	}
 
-	private InMemoryGenerator buildIdentifierGenerator(
+	private Generator buildIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
@@ -470,11 +472,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
-					generator.addGeneratedValuePlan(
-							new ValueGenerationPlan(
-									value.createGenerator( identifierGeneratorFactory, dialect, rootClass ),
-									injector( property, attributeDeclarer )
-							)
+					Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
+					generator.addGeneratedValuePlan( new ValueGenerationPlan(
+							subgenerator,
+							injector( property, attributeDeclarer ) )
 					);
 				}
 			}
@@ -512,11 +513,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final InMemoryGenerator subGenerator;
+		private final Generator subGenerator;
 		private final Setter injector;
 
 		public ValueGenerationPlan(
-				InMemoryGenerator subGenerator,
+				Generator subGenerator,
 				Setter injector) {
 			this.subGenerator = subGenerator;
 			this.injector = injector;
@@ -524,7 +525,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			injector.set( injectionContext, subGenerator.generate( session, incomingObject, null ) );
+			if ( !subGenerator.generatedByDatabase() ) {
+				Object generatedId = ( (InMemoryGenerator) subGenerator ).generate( session, incomingObject, null );
+				injector.set( injectionContext, generatedId );
+			}
+			else {
+				injector.set( injectionContext, IdentifierGeneratorHelper.POST_INSERT_INDICATOR );
+			}
 		}
 
 		@Override

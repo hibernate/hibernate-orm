@@ -47,7 +47,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -101,8 +101,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Type type;
 
 	private IdentifierGeneratorCreator customIdGeneratorCreator;
-	private GeneratorCreator customGeneratorCreator;
-	private InMemoryGenerator generator;
+	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -379,41 +378,24 @@ public abstract class SimpleValue implements KeyValue {
 		return customIdGeneratorCreator;
 	}
 
-	public GeneratorCreator getCustomGeneratorCreator() {
-		return customGeneratorCreator;
-	}
-
-	public void setCustomGeneratorCreator(GeneratorCreator customGeneratorCreator) {
-		this.customGeneratorCreator = customGeneratorCreator;
-	}
-
 	@Override
-	public InMemoryGenerator createGenerator(
+	public Generator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
 		if ( generator != null ) {
 			return generator;
 		}
-
-		if ( customIdGeneratorCreator != null ) {
+		else if ( customIdGeneratorCreator != null ) {
 			generator = customIdGeneratorCreator.createGenerator(
 					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
 			);
 			return generator;
 		}
-		else if ( customGeneratorCreator != null ) {
-			// we may as well allow this, so you don't have to annotate generator
-			// annotations twice, with @IdGeneratorType and @ValueGenerationType
-			//TODO: this typecast is ugly ... throw a better exception at least
-			generator = (InMemoryGenerator) customGeneratorCreator.createGenerator(
-					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
-			);
+		else {
+			generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
 			return generator;
 		}
-
-		generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
-		return generator;
 	}
 
 	public boolean isUpdateable() {

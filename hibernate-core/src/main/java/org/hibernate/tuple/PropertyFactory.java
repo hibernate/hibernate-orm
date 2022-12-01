@@ -43,7 +43,7 @@ public final class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierAttribute(
 			PersistentClass mappedEntity,
-			InMemoryGenerator generator) {
+			Generator generator) {
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
 

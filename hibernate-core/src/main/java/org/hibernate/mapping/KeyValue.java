@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 
 /**
@@ -29,7 +30,7 @@ public interface KeyValue extends Value {
 	
 	boolean isUpdateable();
 
-	InMemoryGenerator createGenerator(
+	Generator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass);

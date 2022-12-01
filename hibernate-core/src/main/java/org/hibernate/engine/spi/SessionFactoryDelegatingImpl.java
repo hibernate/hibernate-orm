@@ -46,7 +46,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -185,7 +185,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public InMemoryGenerator getGenerator(String rootEntityName) {
+	public Generator getGenerator(String rootEntityName) {
 		return delegate.getGenerator( rootEntityName );
 	}
 

@@ -19,7 +19,7 @@ public interface IdentifierAttribute extends Attribute {
 	@Deprecated
 	IdentifierGenerator getIdentifierGenerator();
 
-	InMemoryGenerator getGenerator();
+	Generator getGenerator();
 
 	boolean isIdentifierAssignedByInsert();
 

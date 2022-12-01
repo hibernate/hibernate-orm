@@ -100,7 +100,7 @@ public interface ValueGeneration extends InMemoryGenerator, InDatabaseGenerator 
 	}
 
 	@Override
-	default boolean referenceColumnsInSql() {
+	default boolean referenceColumnsInSql(Dialect dialect) {
 		return referenceColumnInSql();
 	}
 
@@ -131,6 +131,6 @@ public interface ValueGeneration extends InMemoryGenerator, InDatabaseGenerator 
 	default boolean writePropertyValue() {
 		return !generatedByDatabase() // value generated in memory and then written as normal
 			// current value of property of entity instance written completely as normal
-			|| referenceColumnsInSql() && getDatabaseGeneratedReferencedColumnValue()==null;
+			|| referenceColumnInSql() && getDatabaseGeneratedReferencedColumnValue()==null;
 	}
 }

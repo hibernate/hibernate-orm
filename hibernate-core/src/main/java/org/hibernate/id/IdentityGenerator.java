@@ -42,5 +42,4 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			return new BasicSelectingDelegate( persister, dialect );
 		}
 	}
-
 }

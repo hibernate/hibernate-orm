@@ -643,7 +643,7 @@ public class EntityMetamodel implements Serializable {
 						case ALWAYS:
 							timing = GenerationTiming.ALWAYS;
 					}
-					if ( subStrategy.referenceColumnsInSql() ) {
+					if ( subStrategy.referenceColumnsInSql(dialect) ) {
 						// override base-line value
 						referenceColumns = true;
 					}
@@ -703,7 +703,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public boolean referenceColumnsInSql() {
+		public boolean referenceColumnsInSql(Dialect dialect) {
 			return referenceColumnInSql;
 		}
 

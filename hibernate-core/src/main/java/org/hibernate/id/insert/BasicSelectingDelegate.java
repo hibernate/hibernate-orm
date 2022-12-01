@@ -66,10 +66,8 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	}
 
 	@Override
-	protected Object extractGeneratedValue(
-			Object entity,
-			ResultSet rs,
-			SharedSessionContractImplementor session) throws SQLException {
+	protected Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
+			throws SQLException {
 		return IdentifierGeneratorHelper.getGeneratedIdentity(
 				rs,
 				persister.getNavigableRole(),

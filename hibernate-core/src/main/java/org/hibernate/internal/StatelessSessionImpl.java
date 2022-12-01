@@ -28,12 +28,13 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
@@ -94,25 +95,27 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
-		EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getGenerator().generate( this, entity, null );
-		Object[] state = persister.getValues( entity );
-		if ( persister.isVersioned() ) {
-			boolean substitute = Versioning.seedVersion(
-					state,
-					persister.getVersionProperty(),
-					persister.getVersionMapping(),
-					this
-			);
-			if ( substitute ) {
-				persister.setValues( entity, state );
+		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final Object id;
+		final Object[] state = persister.getValues( entity );
+		Generator generator = persister.getGenerator();
+		if ( !generator.generatedByDatabase() ) {
+			id = ( (InMemoryGenerator) generator).generate( this, entity, null );
+			if ( persister.isVersioned() ) {
+				boolean substitute = Versioning.seedVersion(
+						state,
+						persister.getVersionProperty(),
+						persister.getVersionMapping(),
+						this
+				);
+				if ( substitute ) {
+					persister.setValues( entity, state );
+				}
 			}
-		}
-		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			id = persister.insert( state, entity, this );
+			persister.insert( id, state, entity, this );
 		}
 		else {
-			persister.insert( id, state, entity, this );
+			id = persister.insert( state, entity, this );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;

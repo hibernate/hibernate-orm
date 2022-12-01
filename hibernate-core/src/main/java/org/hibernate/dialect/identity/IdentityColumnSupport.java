@@ -112,6 +112,15 @@ public interface IdentityColumnSupport {
 	String getIdentityInsertString();
 
 	/**
+	 * Is there a keyword used to insert a generated value into an identity column.
+	 *
+	 * @return {@code true} if the dialect does not support inserts that specify no column values.
+	 */
+	default boolean hasIdentityInsertKeyword() {
+		return getIdentityInsertString() != null;
+	}
+
+	/**
 	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
 	 *
 	 * @param persister The persister

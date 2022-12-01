@@ -51,10 +51,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
-	public final Object performInsert(
-			String insertSql,
-			SharedSessionContractImplementor session,
-			Binder binder) {
+	public final Object performInsert(String insertSql, SharedSessionContractImplementor session, Binder binder) {
 		try {
 			// prepare and execute the insert
 			PreparedStatement insert = prepareStatement( insertSql, session );

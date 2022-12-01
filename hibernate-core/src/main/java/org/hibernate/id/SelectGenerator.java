@@ -42,8 +42,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		uniqueKeyPropertyName = params.getProperty( "key" );
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		uniqueKeyPropertyName = parameters.getProperty( "key" );
 	}
 
 	@Override

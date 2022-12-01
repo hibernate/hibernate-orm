@@ -59,7 +59,7 @@ public interface KeyValue extends Value {
 	}
 
 	/**
-	 * We need to add {@code Column.isIdentity()}.
+	 * @deprecated We need to add {@code Column.isIdentity()}
 	 */
 	@Deprecated(since="6.2")
 	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);

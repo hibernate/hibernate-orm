@@ -71,31 +71,31 @@ public class IncrementGenerator implements StandardGenerator {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ObjectNameNormalizer normalizer =
-				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+				(ObjectNameNormalizer) parameters.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
-		column = params.getProperty( "column" );
+		column = parameters.getProperty( "column" );
 		if ( column == null ) {
-			column = params.getProperty( PersistentIdentifierGenerator.PK );
+			column = parameters.getProperty( PersistentIdentifierGenerator.PK );
 		}
 		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
 
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		final String schema = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
+				parameters.getProperty( PersistentIdentifierGenerator.SCHEMA )
 		);
 		final String catalog = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.CATALOG )
+				parameters.getProperty( PersistentIdentifierGenerator.CATALOG )
 		);
 
-		String tableList = params.getProperty( "tables" );
+		String tableList = parameters.getProperty( "tables" );
 		if ( tableList == null ) {
-			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
+			tableList = parameters.getProperty( PersistentIdentifierGenerator.TABLES );
 		}
 		physicalTableNames = new ArrayList<>();
 		for ( String tableName : StringHelper.split( ", ", tableList ) ) {

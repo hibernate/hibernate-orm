@@ -70,9 +70,9 @@ public class ForeignGenerator implements StandardGenerator {
 
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		propertyName = params.getProperty( "property" );
-		entityName = params.getProperty( ENTITY_NAME );
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		propertyName = parameters.getProperty( "property" );
+		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {
 			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
 		}

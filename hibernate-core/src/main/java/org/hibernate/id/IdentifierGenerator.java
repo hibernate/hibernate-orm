@@ -28,7 +28,7 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  * <p>
  * This interface extends {@code InMemoryGenerator} with some additional
  * machinery for {@linkplain #configure configuration}, and for caching
- * {@link #initialize(SqlStringGenerationContext) generated SQL}.
+ * {@linkplain #initialize(SqlStringGenerationContext) generated SQL}.
  * <p>
  * Any identifier generator, including a generator which directly implements
  * {@code InMemoryGenerator}, may also implement {@link ExportableProducer}.
@@ -42,11 +42,15 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  * <li>several "standard" parameters with keys defined as static members of
  *     this interface: {@value #ENTITY_NAME}, {@value #JPA_ENTITY_NAME},
  *     {@value #GENERATOR_NAME}, {@value #CONTRIBUTOR_NAME}, along with
- * <li>additional parameters supplied by Hibernate to its built-in generators,
- *     depending on the generator class, and, possibly,
+ * <li>additional hardcoded parameters supplied by Hibernate to its built-in
+ *     generators, depending on the generator class, and, possibly,
  * <li>{@linkplain org.hibernate.annotations.Parameter parameters} specified
  *     using {@link org.hibernate.annotations.GenericGenerator#parameters()}.
  * </ul>
+ * Instances of {@code IdentifierGenerator} are usually created and configured
+ * by the {@link org.hibernate.id.factory.IdentifierGeneratorFactory} service.
+ * It is not usually correct to use an {@code IdentifierGenerator} with the
+ * {@link org.hibernate.annotations.IdGeneratorType} meta-annotation.
  *
  * @author Gavin King
  *
@@ -85,12 +89,12 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * and before {@link #registerExportables(Database)}.
 	 *
 	 * @param type The id property type descriptor
-	 * @param params param values, keyed by parameter name
+	 * @param parameters param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
 	 * @throws MappingException If configuration fails.
 	 */
 	@Override
-	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
 	}
 
 	/**

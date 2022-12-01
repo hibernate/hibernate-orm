@@ -12,7 +12,8 @@ import java.util.UUID;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
-import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
@@ -24,7 +25,7 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
  *
  * @see org.hibernate.annotations.UuidGenerator
  */
-public class UuidGenerator implements StandardGenerator {
+public class UuidGenerator implements InMemoryGenerator {
 	interface ValueGenerator {
 		UUID generateUuid(SharedSessionContractImplementor session);
 	}
@@ -59,7 +60,13 @@ public class UuidGenerator implements StandardGenerator {
 		}
 	}
 
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	@Override
+	public GenerationTiming getGenerationTiming() {
+		return GenerationTiming.INSERT;
+	}
+
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
 		return valueTransformer.transform( generator.generateUuid( session ) );
 	}
 }

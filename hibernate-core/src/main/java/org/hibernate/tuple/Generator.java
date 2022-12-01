@@ -26,8 +26,10 @@ import java.io.Serializable;
  *	   statement. In this case, the generated value is retrieved from the database using a SQL
  *	   {@code select}.
  * </ul>
- * A generator may receive parameters from {@linkplain org.hibernate.annotations.ValueGenerationType
- * an annotation}. The generator may either:
+ * Generically, a generator may be integrated with the program using the meta-annotation
+ * {@link org.hibernate.annotations.ValueGenerationType}, which associates the generator with
+ * a Java annotation type, called the <em>generator annotation</em>. A generator may receive
+ * parameters from its generator annotation. The generator may either:
  * <ul>
  * <li>implement {@link AnnotationBasedGenerator}, and receive the annotation as an argument to
  *     {@link AnnotationBasedGenerator#initialize},
@@ -35,14 +37,10 @@ import java.io.Serializable;
  * <li>declare a constructor which accepts just the annotation instance, or
  * <li>declare a only default constructor, in which case it will not receive parameters.
  * </ul>
- * On the other hand, there is some special machinery for configuring the much older interface
- * {@link org.hibernate.id.IdentifierGenerator}. But this machinery is only available for
- * identifier generation.
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.IdGeneratorType
  * @see org.hibernate.annotations.Generated
- * @see org.hibernate.annotations.GeneratorType
  *
  * @author Steve Ebersole
  * @author Gavin King

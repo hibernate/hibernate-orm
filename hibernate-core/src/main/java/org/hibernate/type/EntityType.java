@@ -510,9 +510,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		if ( persister.hasIdentifierProperty() ) {
 			final Object id;
-			if ( isHibernateProxy( value ) ) {
-				HibernateProxy proxy = asHibernateProxy( value );
-				id = proxy.getHibernateLazyInitializer().getInternalIdentifier();
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+			if ( lazyInitializer != null ) {
+				id = lazyInitializer.getInternalIdentifier();
 			}
 			else {
 				id = persister.getIdentifier( value, null );

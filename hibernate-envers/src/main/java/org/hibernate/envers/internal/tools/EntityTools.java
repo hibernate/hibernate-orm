@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
@@ -34,27 +35,27 @@ public abstract class EntityTools {
 			return null;
 		}
 
-		if ( isHibernateProxy( obj ) ) {
-			final HibernateProxy hibernateProxy = asHibernateProxy( obj );
-			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 
 		return session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 	}
 
-	public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
-		if ( !proxy.getHibernateLazyInitializer().isUninitialized() || activeProxySession( proxy ) ) {
-			return proxy.getHibernateLazyInitializer().getImplementation();
+	public static Object getTargetFromProxy(final SessionFactoryImplementor sessionFactoryImplementor, final LazyInitializer lazyInitializer) {
+		if ( !lazyInitializer.isUninitialized() || activeProxySession( lazyInitializer ) ) {
+			return lazyInitializer.getImplementation();
 		}
 
-		final SharedSessionContractImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
+		final SharedSessionContractImplementor sessionImplementor = lazyInitializer.getSession();
 		final Session tempSession = sessionImplementor == null
 				? sessionFactoryImplementor.openTemporarySession()
 				: sessionImplementor.getFactory().openTemporarySession();
 		try {
 			return tempSession.get(
-					proxy.getHibernateLazyInitializer().getEntityName(),
-					proxy.getHibernateLazyInitializer().getInternalIdentifier()
+					lazyInitializer.getEntityName(),
+					lazyInitializer.getInternalIdentifier()
 			);
 		}
 		finally {
@@ -62,8 +63,8 @@ public abstract class EntityTools {
 		}
 	}
 
-	private static boolean activeProxySession(HibernateProxy proxy) {
-		final Session session = (Session) proxy.getHibernateLazyInitializer().getSession();
+	private static boolean activeProxySession(final LazyInitializer lazyInitializer) {
+		final Session session = (Session) lazyInitializer.getSession();
 		return session != null && session.isOpen() && session.isConnected();
 	}
 

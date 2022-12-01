@@ -447,7 +447,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					getAssociatedEntityMappingType(),
 					basicIdMapping,
 					basicIdMapping.getPropertyAccess(),
-					NoValueGeneration.INSTANCE,
 					true,
 					false,
 					keySelectableMapping

@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -43,7 +44,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -61,7 +62,7 @@ public class StandardIdentifierGeneratorFactory
 		implements IdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
 
 	private final ConcurrentHashMap<GenerationType, GenerationTypeStrategy> generatorTypeStrategyMap = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Class<? extends IdentifierGenerator>> legacyGeneratorClassNameMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Class<? extends Generator>> legacyGeneratorClassNameMap = new ConcurrentHashMap<>();
 
 	private final ServiceRegistry serviceRegistry;
 	private final BeanContainer beanContainer;
@@ -169,7 +170,7 @@ public class StandardIdentifierGeneratorFactory
 		}
 	}
 
-	private void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
+	private void register(String strategy, Class<? extends Generator> generatorClass) {
 		ID_GEN_FAC_LOGGER.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class<?> previous = legacyGeneratorClassNameMap.put( strategy, generatorClass );
 		if ( previous != null && ID_GEN_FAC_LOGGER.isDebugEnabled() ) {
@@ -208,10 +209,10 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	@Override
-	public InMemoryGenerator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
+	public Generator createIdentifierGenerator(String strategy, Type type, Properties parameters) {
 		try {
-			final Class<? extends InMemoryGenerator> clazz = getIdentifierGeneratorClass( strategy );
-			final InMemoryGenerator identifierGenerator;
+			final Class<? extends Generator> clazz = getIdentifierGeneratorClass( strategy );
+			final Generator identifierGenerator;
 			if ( beanContainer == null
 					|| StandardGenerator.class.isAssignableFrom( clazz )
 					|| legacyGeneratorClassNameMap.containsKey( strategy ) ) {
@@ -223,8 +224,8 @@ public class StandardIdentifierGeneratorFactory
 								.getBeanInstance();
 			}
 
-			if ( identifierGenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) identifierGenerator ).configure( type, parameters, serviceRegistry );
+			if ( identifierGenerator instanceof Configurable ) {
+				( (Configurable) identifierGenerator ).configure( type, parameters, serviceRegistry );
 			}
 			return identifierGenerator;
 		}
@@ -245,7 +246,7 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	@Override
-	public Class<? extends InMemoryGenerator> getIdentifierGeneratorClass(String strategy) {
+	public Class<? extends Generator> getIdentifierGeneratorClass(String strategy) {
 		if ( "hilo".equals( strategy ) ) {
 			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
 		}
@@ -253,18 +254,18 @@ public class StandardIdentifierGeneratorFactory
 				? getDialect().getNativeIdentifierGeneratorStrategy()
 				: strategy;
 
-		Class<? extends IdentifierGenerator> generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
+		Class<? extends Generator> generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
 		if ( generatorClass != null ) {
 			return generatorClass;
 		}
 		else {
 			try {
-				Class<? extends InMemoryGenerator> clazz =
+				Class<? extends Generator> clazz =
 						serviceRegistry.getService( ClassLoaderService.class )
 								.classForName( resolvedStrategy );
-				if ( !InMemoryGenerator.class.isAssignableFrom( clazz ) ) {
+				if ( !Generator.class.isAssignableFrom( clazz ) ) {
 					// in principle, this shouldn't happen, since @GenericGenerator
-					// constrains the type to subtypes of InMemoryGenerator
+					// constrains the type to subtypes of Generator
 					throw new MappingException( clazz.getName() + " does not implement 'InMemoryGenerator'" );
 				}
 				return clazz;

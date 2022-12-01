@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Internal;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -106,7 +107,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				if ( generator != null
 						&& !generator.generatedByDatabase()
 						&& generator.getGenerationTiming().includesInsert() ) {
-					values[i] = ( (InMemoryGenerator) generator).generate( session, entity, values[i] );
+					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i] );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}
@@ -393,7 +394,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 				if ( !attributeInclusions[ attributeIndex ] ) {
 					final Generator generator = attributeMapping.getGenerator();
-					if ( isValueGenerationInSql( generator ) ) {
+					if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect()) ) {
 						handleValueGeneration( attributeMapping, insertGroupBuilder, (InDatabaseGenerator) generator );
 					}
 					continue;
@@ -435,10 +436,10 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static boolean isValueGenerationInSql(Generator generator) {
+	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.getGenerationTiming().includesInsert()
 			&& generator.generatedByDatabase()
-			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql();
+			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql(dialect);
 	}
 }

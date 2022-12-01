@@ -15,7 +15,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -23,6 +22,8 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+
+import static java.sql.Statement.NO_GENERATED_KEYS;
 
 /**
  * Delegate for dealing with IDENTITY columns where the dialect supports returning
@@ -97,10 +98,6 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
-		final MutationStatementPreparer statementPreparer = session
-				.getJdbcCoordinator()
-				.getMutationStatementPreparer();
-
-		return statementPreparer.prepareStatement( insertSql, PreparedStatement.NO_GENERATED_KEYS );
+		return session.getJdbcCoordinator().getMutationStatementPreparer().prepareStatement( insertSql, NO_GENERATED_KEYS );
 	}
 }

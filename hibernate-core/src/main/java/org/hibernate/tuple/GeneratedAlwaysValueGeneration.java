@@ -30,7 +30,7 @@ public class GeneratedAlwaysValueGeneration
 	}
 
 	@Override
-	public boolean referenceColumnsInSql() {
+	public boolean referenceColumnsInSql(Dialect dialect) {
 		return false;
 	}
 

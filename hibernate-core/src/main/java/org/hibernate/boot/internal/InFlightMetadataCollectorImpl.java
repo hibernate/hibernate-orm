@@ -102,7 +102,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -2315,7 +2315,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final InMemoryGenerator generator = identifierValueBinding.createGenerator(
+			final Generator generator = identifierValueBinding.createGenerator(
 					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
 					entityBinding

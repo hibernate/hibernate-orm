@@ -91,18 +91,15 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 
 		private final String idSelectString;
 
-		public SelectGeneratorDelegate(
-				PostInsertIdentityPersister persister,
-				Dialect dialect,
-				String configuredPropertyName) {
+		public SelectGeneratorDelegate(PostInsertIdentityPersister persister, Dialect dialect, String propertyName) {
 			super( persister );
 
 			this.persister = persister;
 			this.dialect = dialect;
-			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, configuredPropertyName );
+			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, propertyName );
 
-			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
+			idSelectString = persister.getSelectByUniqueKeyString(this.uniqueKeyPropertyName);
+			uniqueKeyType = persister.getPropertyType(this.uniqueKeyPropertyName);
 			idType = (BasicType<?>) persister.getIdentifierType();
 		}
 
@@ -116,37 +113,28 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
-		public TableInsertBuilder createTableInsertBuilder(BasicEntityIdentifierMapping identifierMapping, Expectation expectation, SessionFactoryImplementor sessionFactory) {
-			return new TableInsertBuilderStandard(
-					persister,
-					persister.getIdentifierTableMapping(),
-					sessionFactory
-			);
+		public TableInsertBuilder createTableInsertBuilder(
+				BasicEntityIdentifierMapping identifierMapping,
+				Expectation expectation,
+				SessionFactoryImplementor sessionFactory) {
+			return new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), sessionFactory );
 		}
 
-		protected void bindParameters(
-				Object entity, PreparedStatement ps, SharedSessionContractImplementor session) throws SQLException {
+		protected void bindParameters(Object entity, PreparedStatement ps, SharedSessionContractImplementor session)
+				throws SQLException {
 			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
 			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 
 		@Override
-		protected Object extractGeneratedValue(
-				Object entity,
-				ResultSet rs,
-				SharedSessionContractImplementor session) throws SQLException {
+		protected Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
+				throws SQLException {
 			if ( !rs.next() ) {
-				throw new IdentifierGenerationException(
-						"the inserted row could not be located by the unique key: " +
-								uniqueKeyPropertyName
-				);
+				throw new IdentifierGenerationException( "the inserted row could not be located by the unique key: "
+						+ uniqueKeyPropertyName );
 			}
 
-			return idType.getJdbcValueExtractor().extract(
-					rs,
-					1,
-					session
-			);
+			return idType.getJdbcValueExtractor().extract( rs, 1, session );
 		}
 	}
 }

@@ -34,6 +34,8 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -110,27 +112,30 @@ public abstract class AbstractSaveEventListener<C>
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
-		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Object generatedId = persister.getGenerator().generate( source, entity, null );
-		if ( generatedId == null ) {
-			throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
-		}
-		else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
-			return source.getIdentifier( entity );
-		}
-		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
+		final EntityPersister persister = source.getEntityPersister( entityName, entity );
+		Generator generator = persister.getGenerator();
+		if ( !generator.generatedByDatabase() ) {
+			Object generatedId = ( (InMemoryGenerator) generator ).generate( source, entity, null );
+			if ( generatedId == null ) {
+				throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
+			}
+			else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
+				return source.getIdentifier( entity );
+			}
+			else {
+				// TODO: define toString()s for generators
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf(
+							"Generated identifier: %s, using strategy: %s",
+							persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
+							generator.getClass().getName()
+					);
+				}
+				return performSave( entity, generatedId, persister, false, context, source, true );
+			}
 		}
 		else {
-			// TODO: define toString()s for generators
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Generated identifier: %s, using strategy: %s",
-						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getGenerator().getClass().getName()
-				);
-			}
-			return performSave( entity, generatedId, persister, false, context, source, true );
+			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
 		}
 	}
 

@@ -46,7 +46,7 @@ public class GeneratedValueGeneration implements InDatabaseGenerator {
 	}
 
 	@Override
-	public boolean referenceColumnsInSql() {
+	public boolean referenceColumnsInSql(Dialect dialect) {
 		return writable;
 	}
 

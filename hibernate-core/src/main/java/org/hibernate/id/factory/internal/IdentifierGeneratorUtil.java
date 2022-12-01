@@ -20,13 +20,13 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 
 import java.util.Properties;
 
 public class IdentifierGeneratorUtil {
 
-	public static InMemoryGenerator createLegacyIdentifierGenerator(
+	public static Generator createLegacyIdentifierGenerator(
 			SimpleValue simpleValue,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,

@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -200,8 +201,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 		}
 
+
 		final InclusionChecker updateabilityChecker =
-				(position, attribute) -> isValueGenerationInSql( attribute.getGenerator() ) || attributeUpdateability[ position ];
+				(position, attribute) -> isValueGenerationInSql( attribute.getGenerator(), dialect() )
+						|| attributeUpdateability[ position ];
 
 		final InclusionChecker dirtinessChecker = (position, attribute) -> {
 			if ( !attributeUpdateability[ position ] ) {
@@ -332,18 +335,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return false;
 	}
 
-	private boolean isValueGenerationInSql(Generator generator) {
+	private boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.getGenerationTiming().includesUpdate()
 			&& generator.generatedByDatabase()
-			&& ((InDatabaseGenerator) generator).referenceColumnsInSql();
+			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect);
 	}
 
-	private boolean isValueGenerationInSqlNoWrite(Generator generator) {
+	private boolean isValueGenerationInSqlNoWrite(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.getGenerationTiming().includesUpdate()
 			&& generator.generatedByDatabase()
-			&& ((InDatabaseGenerator) generator).referenceColumnsInSql()
+			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect)
 			&& !((InDatabaseGenerator) generator).writePropertyValue();
 	}
 
@@ -696,7 +699,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// apply the new values
 					final boolean includeInSet;
 
-					if ( isValueGenerationInSqlNoWrite( attributeMapping.getGenerator() ) ) {
+					if ( isValueGenerationInSqlNoWrite( attributeMapping.getGenerator(), dialect() ) ) {
 						// we applied `#getDatabaseGeneratedReferencedColumnValue` earlier
 						includeInSet = false;
 					}
@@ -930,7 +933,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
 
 					final Generator generator = attributeMapping.getGenerator();
-					if ( isValueGenerationInSql( generator ) ) {
+					if ( isValueGenerationInSql( generator, dialect() ) ) {
 						handleValueGeneration( attributeMapping, updateGroupBuilder, (InDatabaseGenerator) generator );
 					}
 					else if ( versionMapping != null
@@ -1360,7 +1363,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				null,
-				(index,attribute) -> isValueGenerationInSql( attribute.getGenerator() )
+				(index,attribute) -> isValueGenerationInSql( attribute.getGenerator(), dialect() )
 						|| entityPersister().getPropertyUpdateability()[index],
 				(index,attribute) -> {
 					final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();

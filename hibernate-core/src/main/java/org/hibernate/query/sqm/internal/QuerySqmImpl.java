@@ -107,6 +107,7 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -838,7 +839,7 @@ public class QuerySqmImpl<R>
 
 		boolean useMultiTableInsert = entityDescriptor.isMultiTable();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
-			final InMemoryGenerator identifierGenerator = entityDescriptor.getGenerator();
+			final Generator identifierGenerator = entityDescriptor.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
 					&& identifierGenerator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();

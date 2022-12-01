@@ -94,7 +94,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -273,7 +273,7 @@ public class CteInsertHandler implements InsertHandler {
 									rowNumberColumn
 							);
 						}
-						if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
+						if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
 							querySpec.getSelectClause().addSqlSelection(
 									new SqlSelectionImpl(
 											1,
@@ -337,7 +337,7 @@ public class CteInsertHandler implements InsertHandler {
 		processingStateStack.push( oldState );
 		sqmConverter.pruneTableGroupJoins();
 
-		if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
+		if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
 			// Add the row number to the assignments
 			final CteColumn rowNumberColumn = cteTable.getCteColumns()
 					.get( cteTable.getCteColumns().size() - 1 );
@@ -581,7 +581,7 @@ public class CteInsertHandler implements InsertHandler {
 				statement.addCteStatement( entityCte );
 			}
 		}
-		else if ( !assignsId && entityDescriptor.getGenerator() instanceof PostInsertIdentifierGenerator ) {
+		else if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
 			final String baseTableName = "base_" + entityCteTable.getTableExpression();
 			final CteStatement baseEntityCte = new CteStatement(
 					entityCteTable.withName( baseTableName ),
@@ -775,9 +775,10 @@ public class CteInsertHandler implements InsertHandler {
 				true
 		);
 
-		final InMemoryGenerator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
+		final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 		final List<Map.Entry<List<CteColumn>, Assignment>> tableAssignments = assignmentsByTable.get( rootTableReference );
-		if ( ( tableAssignments == null || tableAssignments.isEmpty() ) && !( identifierGenerator instanceof PostInsertIdentifierGenerator ) ) {
+		if ( ( tableAssignments == null || tableAssignments.isEmpty() )
+				&& !( identifierGenerator.generatedByDatabase() ) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
@@ -805,7 +806,7 @@ public class CteInsertHandler implements InsertHandler {
 			final QuerySpec insertSelectSpec = new QuerySpec( true );
 			CteStatement finalCteStatement = null;
 			final CteTable dmlResultCte;
-			if ( i == 0 && !assignsId && identifierGenerator instanceof PostInsertIdentifierGenerator ) {
+			if ( i == 0 && !assignsId && identifierGenerator.generatedByDatabase() ) {
 				// Special handling for identity generation
 				final String cteTableName = getCteTableName( tableExpression, "base_" );
 				if ( statement.getCteStatement( cteTableName ) != null ) {
@@ -1074,7 +1075,7 @@ public class CteInsertHandler implements InsertHandler {
 			if ( finalCteStatement != null ) {
 				statement.addCteStatement( finalCteStatement );
 			}
-			if ( i == 0 && !assignsId && identifierGenerator instanceof PostInsertIdentifierGenerator ) {
+			if ( i == 0 && !assignsId && identifierGenerator.generatedByDatabase() ) {
 				// Special handling for identity generation
 				statement.addCteStatement( queryCte );
 			}

@@ -14,7 +14,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -50,7 +50,7 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * Create an {@link IdentifierGenerator} based on the given details.
 	 */
 	@Incubating
-	InMemoryGenerator createIdentifierGenerator(
+	Generator createIdentifierGenerator(
 			GenerationType generationType,
 			String generatedValueGeneratorName,
 			String generatorName,
@@ -71,7 +71,7 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * instead
 	 */
 	@Deprecated(since = "6.0")
-	InMemoryGenerator createIdentifierGenerator(String strategy, Type type, Properties parameters);
+	Generator createIdentifierGenerator(String strategy, Type type, Properties parameters);
 
 	/**
 	 * Retrieve the class that will be used as the {@link IdentifierGenerator} for the given strategy.
@@ -83,7 +83,7 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 */
 	@Deprecated(since = "6.0")
-	Class<? extends InMemoryGenerator> getIdentifierGeneratorClass(String strategy);
+	Class<? extends Generator> getIdentifierGeneratorClass(String strategy);
 
 	/**
 	 * Get the dialect.

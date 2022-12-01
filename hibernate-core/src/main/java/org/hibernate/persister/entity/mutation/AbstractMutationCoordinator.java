@@ -51,6 +51,11 @@ public abstract class AbstractMutationCoordinator {
 		return factory;
 	}
 
+	protected Dialect dialect() {
+		return factory().getJdbcServices().getDialect();
+	}
+
+
 	protected MutationOperationGroup createOperationGroup(ValuesAnalysis valuesAnalysis, MutationGroup mutationGroup) {
 		if ( mutationGroup.getNumberOfTableMutations() == 0 ) {
 			return new MutationOperationGroupNone( mutationGroup.getMutationType(), mutationGroup.getMutationTarget() );

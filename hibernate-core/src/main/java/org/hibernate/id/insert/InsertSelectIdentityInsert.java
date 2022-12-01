@@ -28,6 +28,7 @@ public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 	}
 
 	public String toStatementString() {
-		return getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( identityColumnName, super.toStatementString() );
+		return getDialect().getIdentityColumnSupport()
+				.appendIdentitySelectToInsert( identityColumnName, super.toStatementString() );
 	}
 }

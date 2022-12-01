@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -253,8 +254,8 @@ public class TemporaryTable implements Exportable, Contributable {
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final InMemoryGenerator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
-					final boolean identityColumn = identifierGenerator instanceof PostInsertIdentifierGenerator;
+					final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
+					final boolean identityColumn = identifierGenerator.generatedByDatabase();
 					final boolean hasOptimizer;
 					if ( identityColumn ) {
 						hasOptimizer = false;

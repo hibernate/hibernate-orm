@@ -20,7 +20,7 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 
 	private final boolean virtual;
 	private final boolean embedded;
-	private final InMemoryGenerator identifierGenerator;
+	private final Generator identifierGenerator;
 	private final boolean identifierAssignedByInsert;
 	private final boolean hasIdentifierMapper;
 
@@ -38,13 +38,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			String name,
 			Type type,
 			boolean embedded,
-			InMemoryGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( name, type );
 		this.virtual = false;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = false;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedByDatabase();
 	}
 
 	/**
@@ -59,13 +59,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			Type type,
 			boolean embedded,
 			boolean hasIdentifierMapper,
-			InMemoryGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( null, type );
 		this.virtual = true;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedByDatabase();
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	}
 
 	@Override
-	public InMemoryGenerator getGenerator() {
+	public Generator getGenerator() {
 		return identifierGenerator;
 	}
 

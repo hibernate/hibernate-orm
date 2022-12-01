@@ -8,20 +8,28 @@ package org.hibernate.id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InDatabaseGenerator;
+
+import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * @author Gavin King
  */
-public interface PostInsertIdentifierGenerator extends StandardGenerator {
+public interface PostInsertIdentifierGenerator extends InDatabaseGenerator, Configurable {
 	InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect,
 			boolean isGetGeneratedKeysEnabled) throws HibernateException;
 
 	@Override
-	default boolean supportsJdbcBatchInserts() {
+	default GenerationTiming getGenerationTiming() {
+		return INSERT;
+	}
+
+	@Override
+	default boolean writePropertyValue() {
 		return false;
 	}
 }

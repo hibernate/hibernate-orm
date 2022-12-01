@@ -47,7 +47,7 @@ import org.hibernate.type.Type;
 public class IncrementGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
-	private Class returnClass;
+	private Class<?> returnClass;
 	private String column;
 	private List<QualifiedTableName> physicalTableNames;
 	private String sql;
@@ -106,27 +106,27 @@ public class IncrementGenerator implements StandardGenerator {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		StringBuilder buf = new StringBuilder();
+		StringBuilder union = new StringBuilder();
 		for ( int i = 0; i < physicalTableNames.size(); i++ ) {
 			final String tableName = context.format( physicalTableNames.get( i ) );
 			if ( physicalTableNames.size() > 1 ) {
-				buf.append( "select max(" ).append( column ).append( ") as mx from " );
+				union.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
-			buf.append( tableName );
+			union.append( tableName );
 			if ( i < physicalTableNames.size() - 1 ) {
-				buf.append( " union " );
+				union.append( " union " );
 			}
 		}
 		String maxColumn;
 		if ( physicalTableNames.size() > 1 ) {
-			buf.insert( 0, "( " ).append( " ) ids_" );
+			union.insert( 0, "( " ).append( " ) ids_" );
 			maxColumn = "ids_.mx";
 		}
 		else {
 			maxColumn = column;
 		}
 
-		sql = "select max(" + maxColumn + ") from " + buf.toString();
+		sql = "select max(" + maxColumn + ") from " + union;
 	}
 
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {

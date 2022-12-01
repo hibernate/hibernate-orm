@@ -128,6 +128,7 @@ import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -510,14 +511,7 @@ public abstract class AbstractCollectionPersister
 			Column col = idColl.getIdentifier().getColumns().get(0);
 			identifierColumnName = col.getQuotedName( dialect );
 			identifierColumnAlias = col.getAlias( dialect );
-			identifierGenerator = idColl.getIdentifier().createGenerator(
-					creationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
-					factory.getJdbcServices().getDialect(),
-					null
-			);
-			if ( identifierGenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) identifierGenerator ).initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
-			}
+			identifierGenerator = createGenerator( creationContext, idColl );
 		}
 		else {
 			identifierType = null;
@@ -627,6 +621,21 @@ public abstract class AbstractCollectionPersister
 		}
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
+	}
+
+	private InMemoryGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
+		final Generator generator = collection.getIdentifier().createGenerator(
+				context.getBootstrapContext().getIdentifierGeneratorFactory(),
+				factory.getJdbcServices().getDialect(),
+				null
+		);
+		if ( generator.generatedByDatabase() ) {
+			throw new MappingException("must be an InMemoryGenerator"); //TODO fix message
+		}
+		if ( generator instanceof IdentifierGenerator ) {
+			( (IdentifierGenerator) generator ).initialize( context.getSessionFactory().getSqlStringGenerationContext() );
+		}
+		return (InMemoryGenerator) generator;
 	}
 
 	@Override

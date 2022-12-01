@@ -52,6 +52,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 
@@ -254,7 +255,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		}
 		else {
 			// Add the row number column if there is one
-			final InMemoryGenerator generator = entityDescriptor.getGenerator();
+			final Generator generator = entityDescriptor.getGenerator();
 			final BasicType<?> rowNumberType;
 			if ( generator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();

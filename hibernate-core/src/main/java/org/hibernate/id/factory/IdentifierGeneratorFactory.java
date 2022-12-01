@@ -24,15 +24,6 @@ import jakarta.persistence.GenerationType;
  */
 public interface IdentifierGeneratorFactory extends Service {
 	/**
-	 * Get the dialect.
-	 * @deprecated should be removed
-	 *
-	 * @return the dialect
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	Dialect getDialect();
-
-	/**
 	 * Create an IdentifierGenerator based on the given details
 	 */
 	IdentifierGenerator createIdentifierGenerator(
@@ -68,5 +59,14 @@ public interface IdentifierGeneratorFactory extends Service {
 	 * {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 */
 	@Deprecated(since = "6.0")
-	Class getIdentifierGeneratorClass(String strategy);
+	Class<?> getIdentifierGeneratorClass(String strategy);
+
+	/**
+	 * Get the dialect.
+	 * @deprecated should be removed
+	 *
+	 * @return the dialect
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	Dialect getDialect();
 }

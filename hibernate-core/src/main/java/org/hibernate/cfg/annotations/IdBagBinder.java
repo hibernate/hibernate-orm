@@ -106,16 +106,13 @@ public class IdBagBinder extends BagBinder {
 
 		final String namedGenerator = collectionIdAnn.generator();
 
-		if ( "identity".equals( namedGenerator ) ) {
-			throw new MappingException( "IDENTITY generation not supported for CollectionId" );
-		}
-
-		if ( "assigned".equals( namedGenerator ) ) {
-			throw new MappingException( "Assigned generation not supported for CollectionId" );
-		}
-
-		if ( "native".equals( namedGenerator ) ) {
-			throw new MappingException( "Native generation not supported for CollectionId" );
+		switch (namedGenerator) {
+			case "identity":
+				throw new MappingException("IDENTITY generation not supported for CollectionId");
+			case "assigned":
+				throw new MappingException("Assigned generation not supported for CollectionId");
+			case "native":
+				throw new MappingException("Native generation not supported for CollectionId");
 		}
 
 		final String generatorName;

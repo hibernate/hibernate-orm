@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * Delegate for defining how to handle the various types of
  * {@link GenerationType} possibilities.
  *
- * @apiNote no GenerationType indicates `hbm.xml` mapping
+ * @apiNote no GenerationType indicates {@code hbm.xml} mapping
  */
 public interface GenerationTypeStrategy {
 	IdentifierGenerator createIdentifierGenerator(

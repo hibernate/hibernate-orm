@@ -75,7 +75,6 @@ import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.mapping.Any;
@@ -1872,10 +1871,10 @@ public final class AnnotationBinder {
 			GeneratedValue generatedValue) {
 		if ( isComponent ) {
 			//a component must not have any generator
-			return "assigned";
+			return DEFAULT_ID_GEN_STRATEGY;
 		}
 		else {
-			return generatedValue == null ? "assigned" : generatorType( generatedValue, entityXClass, context );
+			return generatedValue == null ? DEFAULT_ID_GEN_STRATEGY : generatorType( generatedValue, entityXClass, context );
 		}
 	}
 

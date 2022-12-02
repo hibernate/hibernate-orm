@@ -20,11 +20,11 @@ With 6.0, Hibernate ORM has moved to expect Java 11 as its baseline version.
 6.0 moves from Java Persistence as defined by the Java EE specs to
 Jakarta Persistence as defined by the Jakarta EE spec.  The most immediate
 impact of this change is that applications would need to be updated to use
-the Jakarata Persistence classes (`jakarta.persistence.*`) instead of the Java
+the Jakarata Persistence classes (`jakarta.persistence.\*`) instead of the Java
 Persistence ones (`javax.persistence.*`).
 
-The Jakarta spec also renames the JPA settings (again, from `javax.persistence.*` to
-'jakarta.persistence.*') and defines a new set of XSD namespaces for `orm.xml` and
+The Jakarta spec also renames the JPA settings (again, from `javax.persistence.\*` to
+`jakarta.persistence.*`) and defines a new set of XSD namespaces for `orm.xml` and
 `persistence.xml` files.
 
 Jakarta provides a https://github.com/eclipse/transformer[transformer]

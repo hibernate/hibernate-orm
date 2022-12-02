@@ -4059,7 +4059,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) subPart;
 		final ForeignKeyDescriptor fkDescriptor = toOneMapping.getForeignKeyDescriptor();
-		final TableReference tableReference = tableGroup.resolveTableReference( fkDescriptor.getTable( toOneMapping.getSideNature() ) );
+		final TableReference tableReference = tableGroup.resolveTableReference( toOneMapping.getContainingTableExpression() );
 
 		final ModelPart fkKeyPart = fkDescriptor.getPart( toOneMapping.getSideNature() );
 		if ( fkKeyPart instanceof BasicValuedModelPart ) {

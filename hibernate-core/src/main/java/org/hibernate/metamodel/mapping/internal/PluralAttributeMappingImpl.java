@@ -894,6 +894,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getKeyDescriptor().getKeyTable();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		int span = elementDescriptor.getJdbcTypeCount();
 		if ( indexDescriptor != null ) {

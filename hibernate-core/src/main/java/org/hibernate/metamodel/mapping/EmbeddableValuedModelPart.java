@@ -87,14 +87,6 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	}
 
 	/**
-	 * The main table expression (table name or subselect) that usually contains
-	 * most of the columns to which this embedded is mapped.
-	 *
-	 * @apiNote Hibernate has historically required a composite to be mapped to the same table.
-	 */
-	String getContainingTableExpression();
-
-	/**
 	 * @see org.hibernate.annotations.Parent
 	 */
 	default PropertyAccess getParentInjectionAttributePropertyAccess() {

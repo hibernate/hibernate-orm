@@ -196,6 +196,11 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getDiscriminatorPart().getContainingTableExpression();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}

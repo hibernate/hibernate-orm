@@ -2009,6 +2009,16 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			return foreignKeyDescriptor.getKeyTable();
+		}
+		else {
+			return foreignKeyDescriptor.getTargetTable();
+		}
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return foreignKeyDescriptor.getJdbcTypeCount();
 	}

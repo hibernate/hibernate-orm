@@ -99,7 +99,7 @@ public class TenantIdTest implements SessionFactoryProducer {
             fail("should have thrown");
         }
         catch (Throwable e) {
-            assertTrue( e.getCause() instanceof PropertyValueException );
+            assertTrue( e instanceof PropertyValueException );
         }
     }
 

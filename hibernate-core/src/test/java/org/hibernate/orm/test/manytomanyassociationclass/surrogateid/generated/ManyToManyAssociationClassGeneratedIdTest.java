@@ -55,7 +55,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (Exception e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						assertTyping( ConstraintViolationException.class, e );
 					}
 				}
 		);
@@ -84,7 +84,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (PersistenceException e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						assertTyping( ConstraintViolationException.class, e );
 					}
 				}
 		);
@@ -113,7 +113,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 					catch (PersistenceException e) {
 						session.getTransaction().rollback();
 						// expected
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						assertTyping( ConstraintViolationException.class, e );
 					}
 				}
 		);

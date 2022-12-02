@@ -12,16 +12,15 @@ import java.sql.SQLException;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Abstract InsertGeneratedIdentifierDelegate implementation where the
- * underlying strategy causes the generated identifier to be returned as an
- * effect of performing the insert statement.  Thus, there is no need for an
- * additional sql statement to determine the generated identifier.
+ * Abstract {@link InsertGeneratedIdentifierDelegate} implementation where
+ * the underlying strategy causes the generated identifier to be returned as
+ * an effect of performing the insert statement.  Thus, there is no need for
+ * an additional sql statement to determine the generated identifier.
  *
  * @author Steve Ebersole
  */
@@ -38,16 +37,9 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			JdbcValueBindings valueBindings,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final SqlStatementLogger sqlStatementLogger = session.getJdbcServices().getSqlStatementLogger();
-
-		sqlStatementLogger.logStatement( insertStatementDetails.getSqlString() );
+		session.getJdbcServices().getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
 		valueBindings.beforeStatement( insertStatementDetails, session );
-
-		return executeAndExtract(
-				insertStatementDetails.getSqlString(),
-				insertStatementDetails.getStatement(),
-				session
-		);
+		return executeAndExtract( insertStatementDetails.getSqlString(), insertStatementDetails.getStatement(), session );
 	}
 
 	@Override

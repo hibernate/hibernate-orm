@@ -23,7 +23,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SelectGeneratorDelegate extends AbstractSelectingDelegate {
+/**
+ * Uses a unique key of the inserted entity to locate the newly inserted row.
+ */
+public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 	private final PostInsertIdentityPersister persister;
 	private final Dialect dialect;
 
@@ -33,15 +36,15 @@ public class SelectGeneratorDelegate extends AbstractSelectingDelegate {
 
 	private final String idSelectString;
 
-	public SelectGeneratorDelegate(PostInsertIdentityPersister persister, Dialect dialect, String uniqueKeyPropertyName) {
+	public UniqueKeySelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect, String uniqueKeyPropertyName) {
 		super( persister );
 
 		this.persister = persister;
 		this.dialect = dialect;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 
-		idSelectString = persister.getSelectByUniqueKeyString(this.uniqueKeyPropertyName);
-		uniqueKeyType = persister.getPropertyType(this.uniqueKeyPropertyName);
+		idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
+		uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
 		idType = (BasicType<?>) persister.getIdentifierType();
 	}
 
@@ -68,12 +71,12 @@ public class SelectGeneratorDelegate extends AbstractSelectingDelegate {
 	}
 
 	@Override
-	protected Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
+	protected Object extractGeneratedValue(Object entity, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException {
-		if ( !rs.next() ) {
+		if ( !resultSet.next() ) {
 			throw new IdentifierGenerationException("the inserted row could not be located by the unique key: "
 					+ uniqueKeyPropertyName);
 		}
-		return idType.getJdbcValueExtractor().extract( rs, 1, session );
+		return idType.getJdbcValueExtractor().extract( resultSet, 1, session );
 	}
 }

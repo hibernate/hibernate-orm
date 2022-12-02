@@ -17,17 +17,18 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.tuple.InDatabaseGenerator;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
+import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 
 /**
- * Delegate for dealing with IDENTITY columns where the dialect supports returning
- * the generated IDENTITY value directly from the insert statement.
+ * Delegate for dealing with {@code IDENTITY} columns where the dialect supports
+ * returning the generated {@code IDENTITY} value directly from the insert statement.
  *
  * @see org.hibernate.id.IdentityGenerator
  * @see IdentityColumnSupport#supportsInsertSelectIdentity()
@@ -45,7 +46,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	@Override
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
-		insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[ 0 ] );
+		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
 		return insert;
 	}
 
@@ -65,13 +66,13 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
-		final ResultSet rs = jdbcCoordinator.getResultSetReturn().execute( insertStatement );
+		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( insertStatement );
 
 		try {
-			return IdentifierGeneratorHelper.getGeneratedIdentity(
-					rs,
+			return getGeneratedIdentity(
+					resultSet,
 					persister.getNavigableRole(),
-					persister.getRootTableKeyColumnNames()[ 0 ],
+					DelegateHelper.getKeyColumnName( persister ),
 					persister.getIdentifierType(),
 					jdbcServices.getJdbcEnvironment().getDialect()
 			);
@@ -84,10 +85,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			);
 		}
 		finally {
-			jdbcCoordinator
-					.getLogicalConnection()
-					.getResourceRegistry()
-					.release( rs, insertStatement );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, insertStatement );
 		}
 	}
 

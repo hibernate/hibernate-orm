@@ -11,24 +11,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.tuple.InDatabaseGenerator;
+
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
+import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 
 /**
- * Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
+ * Delegate for dealing with {@code IDENTITY} columns using the JDBC3 method
+ * {@link PreparedStatement#getGeneratedKeys()}.
  *
  * @author Andrea Boriero
  */
@@ -45,7 +49,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	@Override
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
-		insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
+		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
 		return insert;
 	}
 
@@ -53,16 +57,20 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	public TableInsertBuilder createTableInsertBuilder(
 			BasicEntityIdentifierMapping identifierMapping,
 			Expectation expectation,
-			SessionFactoryImplementor sessionFactory) {
-		final TableInsertBuilder builder = new TableInsertBuilderStandard(
-				persister,
-				persister.getIdentifierTableMapping(),
-				sessionFactory
-		);
+			SessionFactoryImplementor factory) {
+		final TableInsertBuilder builder =
+				new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), factory );
 
-		final String value = dialect.getIdentityColumnSupport().getIdentityInsertString();
-		if ( value != null ) {
-			builder.addKeyColumn( persister.getRootTableKeyColumnNames()[0], value, identifierMapping.getJdbcMapping() );
+		final InDatabaseGenerator generator = (InDatabaseGenerator) persister.getGenerator();
+		if ( generator.referenceColumnsInSql( dialect ) ) {
+			final String[] columnNames = persister.getRootTableKeyColumnNames();
+			final String[] columnValues = generator.getReferencedColumnValues( dialect );
+			if ( columnValues.length != columnNames.length ) {
+				throw new MappingException("wrong number of generated columns");
+			}
+			for ( int i = 0; i < columnValues.length; i++ ) {
+				builder.addKeyColumn( columnNames[i], columnValues[i], identifierMapping.getJdbcMapping() );
+			}
 		}
 
 		return builder;
@@ -70,14 +78,9 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
-		return statementPreparer.prepareStatement(
-				insertSql,
-				PreparedStatement.RETURN_GENERATED_KEYS
-		);
+		return session.getJdbcCoordinator().getMutationStatementPreparer()
+				.prepareStatement( insertSql, RETURN_GENERATED_KEYS );
 	}
-
 
 	@Override
 	public Object performInsert(
@@ -99,12 +102,12 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
 
 			try {
-				final ResultSet rs = insertStatement.getGeneratedKeys();
+				final ResultSet resultSet = insertStatement.getGeneratedKeys();
 				try {
-					return IdentifierGeneratorHelper.getGeneratedIdentity(
-							rs,
+					return getGeneratedIdentity(
+							resultSet,
 							persister.getNavigableRole(),
-							persister.getRootTableKeyColumnNames()[ 0 ],
+							DelegateHelper.getKeyColumnName( persister ),
 							persister.getIdentifierType(),
 							jdbcServices.getJdbcEnvironment().getDialect()
 					);
@@ -121,11 +124,11 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 					);
 				}
 				finally {
-					if ( rs != null ) {
+					if ( resultSet != null ) {
 						jdbcCoordinator
 								.getLogicalConnection()
 								.getResourceRegistry()
-								.release( rs, insertStatement );
+								.release( resultSet, insertStatement );
 					}
 				}
 			}
@@ -153,12 +156,12 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
 
 		try {
-			final ResultSet rs = insertStatement.getGeneratedKeys();
+			final ResultSet resultSet = insertStatement.getGeneratedKeys();
 			try {
-				return IdentifierGeneratorHelper.getGeneratedIdentity(
-						rs,
+				return getGeneratedIdentity(
+						resultSet,
 						persister.getNavigableRole(),
-						persister.getRootTableKeyColumnNames()[0],
+						DelegateHelper.getKeyColumnName( persister ),
 						persister.getIdentifierType(),
 						jdbcServices.getJdbcEnvironment().getDialect()
 				);
@@ -171,11 +174,8 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				);
 			}
 			finally {
-				if ( rs != null ) {
-					jdbcCoordinator
-							.getLogicalConnection()
-							.getResourceRegistry()
-							.release( rs, insertStatement );
+				if ( resultSet != null ) {
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, insertStatement );
 				}
 			}
 		}

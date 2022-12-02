@@ -97,9 +97,8 @@ import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.id.insert.SelectGeneratorDelegate;
+import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -2886,7 +2885,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
 		Dialect dialect = getFactory().getJdbcServices().getDialect();
-		return new SelectGeneratorDelegate( this, dialect, uniqueKeyPropertyName );
+		return new UniqueKeySelectingDelegate( this, dialect, uniqueKeyPropertyName );
 	}
 
 	@Override

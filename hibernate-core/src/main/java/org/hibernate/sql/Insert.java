@@ -13,6 +13,8 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.tuple.InDatabaseGenerator;
 
 /**
  * An SQL {@code INSERT} statement
@@ -89,9 +91,22 @@ public class Insert {
 	}
 
 	public Insert addIdentityColumn(String columnName) {
-		String value = dialect.getIdentityColumnSupport().getIdentityInsertString();
-		if ( value != null ) {
-			addColumn( columnName, value );
+		final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
+		if ( identityColumnSupport.hasIdentityInsertKeyword() ) {
+			addColumn( columnName, identityColumnSupport.getIdentityInsertString() );
+		}
+		return this;
+	}
+
+	public Insert addGeneratedColumns(String[] columnNames, InDatabaseGenerator generator) {
+		if ( generator.referenceColumnsInSql( dialect ) ) {
+			String[] columnValues = generator.getReferencedColumnValues( dialect );
+			if ( columnNames.length != columnValues.length ) {
+				throw new MappingException("wrong number of generated columns"); //TODO!
+			}
+			for ( int i = 0; i < columnNames.length; i++ ) {
+				addColumn( columnNames[i], columnValues[i] );
+			}
 		}
 		return this;
 	}

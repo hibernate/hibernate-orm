@@ -14,7 +14,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
@@ -90,7 +89,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return this;
 	}
 

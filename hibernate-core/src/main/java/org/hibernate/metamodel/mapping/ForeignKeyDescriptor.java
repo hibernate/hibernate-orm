@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
+public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart {
 
 	enum Nature {
 		KEY,
@@ -59,9 +59,9 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		}
 	}
 
-	ModelPart getKeyPart();
+	ValuedModelPart getKeyPart();
 
-	ModelPart getTargetPart();
+	ValuedModelPart getTargetPart();
 
 	default ModelPart getPart(Nature nature) {
 		if ( nature == Nature.KEY ) {

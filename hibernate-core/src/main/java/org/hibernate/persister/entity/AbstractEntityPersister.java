@@ -98,11 +98,11 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
+import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -258,9 +258,9 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -3331,6 +3331,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	/**
+	 * Builds the EntityTableMapping descriptors for the tables mapped by this entity.
+	 *
+	 * @see #visitMutabilityOrderedTables
+	 */
 	protected EntityTableMapping[] buildTableMappings() {
 		final LinkedHashMap<String, TableMappingBuilder> tableBuilderMap = new LinkedHashMap<>();
 
@@ -3400,10 +3405,28 @@ public abstract class AbstractEntityPersister
 		return list;
 	}
 
+	/**
+	 * Visit details about each table for this entity, using "mutability ordering" -
+	 * when inserting rows, the order we go through the tables to avoid foreign-key
+	 * problems amongst the entity's group of tables.
+	 *
+	 * Used while {@linkplain #buildTableMappings building} the {@linkplain EntityTableMapping table-mapping}
+	 * descriptors for each table.
+	 *
+	 * @see #forEachMutableTable
+	 * @see #forEachMutableTableReverse
+	 */
 	protected abstract void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer);
 
+	/**
+	 * Consumer for processing table details.  Used while {@linkplain #buildTableMappings() building}
+	 * the {@link EntityTableMapping} descriptors.
+	 */
 	interface MutabilityOrderedTableConsumer {
-		void consume(String tableExpression, int relativePosition, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
+		void consume(
+				String tableExpression,
+				int relativePosition,
+				Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
 	}
 
 	private void collectAttributesIndexesForTable(int naturalTableIndex, Consumer<Integer> indexConsumer) {

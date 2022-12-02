@@ -403,6 +403,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return 1;
+	}
+
+	@Override
 	public JavaType<?> getJavaType() {
 		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}

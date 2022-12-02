@@ -27,8 +27,13 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @see jakarta.persistence.EmbeddedId
  * @see jakarta.persistence.Embeddable
  */
-public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
+public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
 	EmbeddableMappingType getEmbeddableTypeDescriptor();
+
+	@Override
+	default EmbeddableMappingType getMappedType() {
+		return getEmbeddableTypeDescriptor();
+	}
 
 	@Override
 	default int getJdbcTypeCount() {

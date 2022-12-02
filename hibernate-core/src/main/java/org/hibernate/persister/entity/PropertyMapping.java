@@ -7,6 +7,7 @@
 package org.hibernate.persister.entity;
 
 import org.hibernate.QueryException;
+import org.hibernate.Remove;
 import org.hibernate.persister.collection.CompositeElementPropertyMapping;
 import org.hibernate.type.Type;
 
@@ -21,14 +22,11 @@ import org.hibernate.type.Type;
  * of how Hibernate originally understood composites (embeddables) internally.  That is in the process of changing
  * as Hibernate has added {@link CompositeElementPropertyMapping}
  *
- * todo (6.0) : move to {@link org.hibernate.persister.spi} - that is its more logical home.  AFAIK this
- * 		has never been documented as a public API
- *
- * todo (6.0) : re-word these Javadocs
- *
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Deprecated(since = "6", forRemoval = true)
+@Remove
 public interface PropertyMapping {
 
 //	/**

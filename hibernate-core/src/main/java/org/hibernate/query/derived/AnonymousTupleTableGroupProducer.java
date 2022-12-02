@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.derived;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -45,7 +43,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -298,6 +295,14 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		return modelParts.get( name );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		int i = 0;
+		for ( Map.Entry<String, ModelPart> entry : modelParts.entrySet() ) {
+			consumer.accept( i++, entry.getValue() );
+		}
 	}
 
 	@Override

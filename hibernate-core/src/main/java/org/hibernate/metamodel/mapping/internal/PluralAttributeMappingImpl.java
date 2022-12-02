@@ -31,8 +31,9 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.Queryable;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -844,8 +845,8 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( elementDescriptor instanceof Queryable ) {
-			final ModelPart subPart = ( (Queryable) elementDescriptor ).findSubPart( name, null );
+		if ( elementDescriptor instanceof ModelPartContainer ) {
+			final ModelPart subPart = ( (ModelPartContainer) elementDescriptor ).findSubPart( name, null );
 			if ( subPart != null ) {
 				return subPart;
 			}
@@ -863,6 +864,20 @@ public class PluralAttributeMappingImpl
 		}
 
 		return null;
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, elementDescriptor );
+
+		int position = 1;
+		if ( indexDescriptor != null ) {
+			consumer.accept( position++, indexDescriptor );
+		}
+
+		if ( identifierDescriptor != null ) {
+			consumer.accept( position+1, identifierDescriptor );
+		}
 	}
 
 	@Override
@@ -894,21 +909,23 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getKeyDescriptor().getKeyTable();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
-		int span = elementDescriptor.getJdbcTypeCount();
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.getJdbcTypeCount();
-		}
-		return span;
+		return 0;
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return null;
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		int span = elementDescriptor.forEachJdbcType( offset, action );
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.forEachJdbcType( offset + span, action );
-		}
-		return span;
+		return 0;
 	}
 
 	@Override

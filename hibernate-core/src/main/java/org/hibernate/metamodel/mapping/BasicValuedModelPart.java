@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.List;
+
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -16,10 +18,37 @@ import org.hibernate.sql.results.graph.Fetchable;
  *
  * @author Steve Ebersole
  */
-public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fetchable, SelectableMapping {
+public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPart, Fetchable, SelectableMapping {
 
 	@Override
 	default MappingType getPartMappingType() {
 		return this::getJavaType;
+	}
+
+	@Override
+	default int getJdbcTypeCount() {
+		return 1;
+	}
+
+	@Override
+	default List<JdbcMapping> getJdbcMappings() {
+		return BasicValuedMapping.super.getJdbcMappings();
+	}
+
+	@Override
+	default SelectableMapping getSelectable(int columnIndex) {
+		return this;
+	}
+
+	@Override
+	default int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return getJdbcTypeCount();
+	}
+
+	@Override
+	default int forEachSelectable(SelectableConsumer consumer) {
+		consumer.accept( 0, this );
+		return getJdbcTypeCount();
 	}
 }

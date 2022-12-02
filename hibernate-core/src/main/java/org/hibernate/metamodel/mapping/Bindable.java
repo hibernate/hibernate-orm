@@ -26,6 +26,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * The number of JDBC mappings
 	 */
+	@Override
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
 	}
@@ -33,6 +34,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * The list of JDBC mappings
 	 */
+	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
@@ -44,6 +46,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 *
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
 	 */
+	@Override
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		return forEachJdbcType( 0, action );
 	}

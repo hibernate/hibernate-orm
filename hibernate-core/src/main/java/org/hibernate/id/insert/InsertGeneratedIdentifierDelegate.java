@@ -48,11 +48,6 @@ public interface InsertGeneratedIdentifierDelegate {
 			Object entity,
 			SharedSessionContractImplementor session);
 
-
-
-
-
-
 	/**
 	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode
 	 * of handling generated key values.

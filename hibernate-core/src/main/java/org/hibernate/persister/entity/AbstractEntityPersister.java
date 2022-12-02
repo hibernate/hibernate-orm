@@ -99,8 +99,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.insert.SelectGeneratorDelegate;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -259,7 +262,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -2868,6 +2870,25 @@ public abstract class AbstractEntityPersister
 		return getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled();
 	}
 
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate() {
+		Dialect dialect = getFactory().getJdbcServices().getDialect();
+		if ( useGetGeneratedKeys() ) {
+			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate(this, dialect );
+		}
+		else if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+			return new InsertReturningDelegate(this, dialect );
+		}
+		else {
+			return new BasicSelectingDelegate(this, dialect );
+		}
+	}
+
+	@Override
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
+		Dialect dialect = getFactory().getJdbcServices().getDialect();
+		return new SelectGeneratorDelegate( this, dialect, uniqueKeyPropertyName );
+	}
+
 	@Override
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
@@ -3179,12 +3200,11 @@ public abstract class AbstractEntityPersister
 
 	private void doLateInit() {
 		if ( isIdentifierAssignedByInsert() ) {
-			final PostInsertIdentifierGenerator idGenerator = (PostInsertIdentifierGenerator) getGenerator();
-			identityDelegate = idGenerator.getInsertGeneratedIdentifierDelegate(
-					this,
-					getFactory().getJdbcServices().getDialect(),
-					useGetGeneratedKeys()
-			);
+			final InDatabaseGenerator generator = (InDatabaseGenerator) getGenerator();
+			final String uniqueKeyPropertyName = generator.getUniqueKeyPropertyName(this);
+			identityDelegate = uniqueKeyPropertyName == null
+					? getGeneratedIdentifierDelegate()
+					: getGeneratedIdentifierDelegateForProperty( uniqueKeyPropertyName );
 		}
 
 		tableMappings = buildTableMappings();

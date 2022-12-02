@@ -6,11 +6,13 @@
  */
 package org.hibernate.id;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.type.Type;
+
+import java.util.Properties;
 
 import static org.hibernate.tuple.GenerationTiming.INSERT;
 
@@ -18,10 +20,6 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  * @author Gavin King
  */
 public interface PostInsertIdentifierGenerator extends InDatabaseGenerator, Configurable {
-	InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect,
-			boolean isGetGeneratedKeysEnabled) throws HibernateException;
 
 	@Override
 	default GenerationTiming getGenerationTiming() {
@@ -32,4 +30,18 @@ public interface PostInsertIdentifierGenerator extends InDatabaseGenerator, Conf
 	default boolean writePropertyValue() {
 		return false;
 	}
+
+	@Override
+	default boolean referenceColumnsInSql(Dialect dialect) {
+		return dialect.getIdentityColumnSupport().hasIdentityInsertKeyword();
+	}
+
+	@Override
+	default String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { dialect.getIdentityColumnSupport().getIdentityInsertString() };
+	}
+
+	@Override
+	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {}
+
 }

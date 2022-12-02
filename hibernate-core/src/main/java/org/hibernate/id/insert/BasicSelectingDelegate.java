@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -19,6 +20,8 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 
 /**
  * Delegate for dealing with IDENTITY columns where the dialect requires an
@@ -37,7 +40,7 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	@Override
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
-		insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[ 0 ] );
+		insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 		return insert;
 	}
 
@@ -45,16 +48,17 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	public TableInsertBuilder createTableInsertBuilder(
 			BasicEntityIdentifierMapping identifierMapping,
 			Expectation expectation,
-			SessionFactoryImplementor sessionFactory) {
-		final TableInsertBuilder builder = new TableInsertBuilderStandard(
-				persister,
-				persister.getIdentifierTableMapping(),
-				sessionFactory
-		);
+			SessionFactoryImplementor factory) {
+		final TableInsertBuilder builder =
+				new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), factory );
 
-		final String value = dialect.getIdentityColumnSupport().getIdentityInsertString();
-		if ( value != null ) {
-			builder.addKeyColumn( identifierMapping.getSelectionExpression(), value, identifierMapping.getJdbcMapping() );
+		IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
+		if ( identityColumnSupport.hasIdentityInsertKeyword() ) {
+			builder.addKeyColumn(
+					identifierMapping.getSelectionExpression(),
+					identityColumnSupport.getIdentityInsertString(),
+					identifierMapping.getJdbcMapping()
+			);
 		}
 
 		return builder;
@@ -68,10 +72,10 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	@Override
 	protected Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
 			throws SQLException {
-		return IdentifierGeneratorHelper.getGeneratedIdentity(
+		return getGeneratedIdentity(
 				rs,
 				persister.getNavigableRole(),
-				persister.getRootTableKeyColumnNames()[ 0 ],
+				persister.getRootTableKeyColumnNames()[0],
 				persister.getIdentifierType(),
 				session.getJdbcServices().getJdbcEnvironment().getDialect()
 		);

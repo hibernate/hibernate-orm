@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
@@ -1001,6 +1002,14 @@ public interface EntityPersister
 	}
 
 	boolean canUseReferenceCacheEntries();
+
+	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate() {
+		return null;
+	}
+
+	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
+		return null;
+	}
 
 	/**
 	 * The property name of the "special" identifier property in HQL

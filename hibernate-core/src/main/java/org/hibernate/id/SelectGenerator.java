@@ -6,58 +6,39 @@
  */
 package org.hibernate.id;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
-import org.hibernate.Internal;
-import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.insert.AbstractSelectingDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 /**
- * A generator that selects the just inserted row to determine the identifier
- * value assigned by the database. The correct row is located using a unique
- * key.
- * <p>
- * One mapping parameter is required: key (unless a natural-id is defined in the mapping).
+ * A generator that {@code select}s the just-inserted row to determine the identifier
+ * value assigned by the database. The correct row is located using a unique key of
+ * the entity, either:
+ * <ul>
+ * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
+ * <li>a property specified using the parameter named {@code "key"}.
+ * </ul>
+ * The second approach is provided for backward compatibility with older versions of
+ * Hibernate.
+ *
+ * @see org.hibernate.annotations.NaturalId
  *
  * @author Gavin King
  */
-public class SelectGenerator extends AbstractPostInsertGenerator {
+public class SelectGenerator implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
 		uniqueKeyPropertyName = parameters.getProperty( "key" );
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect,
-			boolean isGetGeneratedKeysEnabled) throws HibernateException {
-		return new SelectGeneratorDelegate( persister, dialect, uniqueKeyPropertyName );
-	}
-
-	@Internal
-	public static String determineNameOfPropertyToUse(PostInsertIdentityPersister persister, String supplied) {
-		if ( supplied != null ) {
-			return supplied;
+	public String getUniqueKeyPropertyName(EntityPersister persister) {
+		if ( uniqueKeyPropertyName != null ) {
+			return uniqueKeyPropertyName;
 		}
 		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
 		if ( naturalIdPropertyIndices == null ) {
@@ -79,62 +60,5 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 			);
 		}
 		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
-	}
-
-	private static class SelectGeneratorDelegate extends AbstractSelectingDelegate {
-		private final PostInsertIdentityPersister persister;
-		private final Dialect dialect;
-
-		private final String uniqueKeyPropertyName;
-		private final Type uniqueKeyType;
-		private final BasicType<?> idType;
-
-		private final String idSelectString;
-
-		public SelectGeneratorDelegate(PostInsertIdentityPersister persister, Dialect dialect, String propertyName) {
-			super( persister );
-
-			this.persister = persister;
-			this.dialect = dialect;
-			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, propertyName );
-
-			idSelectString = persister.getSelectByUniqueKeyString(this.uniqueKeyPropertyName);
-			uniqueKeyType = persister.getPropertyType(this.uniqueKeyPropertyName);
-			idType = (BasicType<?>) persister.getIdentifierType();
-		}
-
-		protected String getSelectSQL() {
-			return idSelectString;
-		}
-
-		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-			return new IdentifierGeneratingInsert( dialect );
-		}
-
-		@Override
-		public TableInsertBuilder createTableInsertBuilder(
-				BasicEntityIdentifierMapping identifierMapping,
-				Expectation expectation,
-				SessionFactoryImplementor sessionFactory) {
-			return new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), sessionFactory );
-		}
-
-		protected void bindParameters(Object entity, PreparedStatement ps, SharedSessionContractImplementor session)
-				throws SQLException {
-			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
-			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
-		}
-
-		@Override
-		protected Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
-				throws SQLException {
-			if ( !rs.next() ) {
-				throw new IdentifierGenerationException( "the inserted row could not be located by the unique key: "
-						+ uniqueKeyPropertyName );
-			}
-
-			return idType.getJdbcValueExtractor().extract( rs, 1, session );
-		}
 	}
 }

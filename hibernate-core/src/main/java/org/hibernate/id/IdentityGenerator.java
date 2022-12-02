@@ -6,40 +6,20 @@
  */
 package org.hibernate.id;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.InsertReturningDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A generator for use with ANSI-SQL IDENTITY columns used as the primary key.
  * The IdentityGenerator for autoincrement/identity key generation.
  * <p>
- * Indicates to the {@code Session} that identity (ie. identity/autoincrement
+ * Indicates to the {@code Session} that identity (i.e. identity/autoincrement
  * column) key generation should be used.
  *
  * @implNote Most of the functionality of this generator is delegated to
- * 		{@link InsertGeneratedIdentifierDelegate} (see
- * 		{@link #getInsertGeneratedIdentifierDelegate}).
+ * 		     {@link InsertGeneratedIdentifierDelegate}.
  *
  * @author Christoph Sturm
  */
-public class IdentityGenerator extends AbstractPostInsertGenerator {
-
-	@Override
-	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect,
-			boolean useGetGeneratedKeys) throws HibernateException {
-		if ( useGetGeneratedKeys ) {
-			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
-		}
-		else if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
-			return new InsertReturningDelegate( persister, dialect );
-		}
-		else {
-			return new BasicSelectingDelegate( persister, dialect );
-		}
-	}
+public class IdentityGenerator implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 }

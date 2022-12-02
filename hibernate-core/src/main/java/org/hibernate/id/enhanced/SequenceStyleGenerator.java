@@ -547,7 +547,8 @@ public class SequenceStyleGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
-		return context.getDialect().getSequenceSupport().getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
+		return context.getDialect().getSequenceSupport()
+				.getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
 	}
 
 	/**

@@ -57,8 +57,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
-		final MutationStatementPreparer statementPreparer = session.getJdbcCoordinator().getMutationStatementPreparer();
-		return statementPreparer.prepareStatement( insertSql, NO_GENERATED_KEYS );
+		return session.getJdbcCoordinator().getMutationStatementPreparer().prepareStatement( insertSql, NO_GENERATED_KEYS );
 	}
 
 	@Override
@@ -73,8 +72,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		jdbcServices.getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
 		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
 
-		final PreparedStatement insertStatement = insertStatementDetails.resolveStatement();
-		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
+		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatementDetails.resolveStatement() );
 
 		// the insert is complete, select the generated id...
 
@@ -109,21 +107,19 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
-	public final Object performInsert(
-			String insertSQL,
-			SharedSessionContractImplementor session,
-			Binder binder) {
-		StatementPreparer statementPreparer = session.getJdbcCoordinator().getStatementPreparer();
+	public final Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder) {
+		JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		StatementPreparer statementPreparer = jdbcCoordinator.getStatementPreparer();
 		try {
 			// prepare and execute the insert
 			PreparedStatement insert = statementPreparer.prepareStatement( insertSQL, NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
-				session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
+				jdbcCoordinator.getResultSetReturn().executeUpdate( insert );
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( insert );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {
@@ -141,17 +137,17 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( idSelect );
 				try {
 					return extractGeneratedValue( binder.getEntity(), rs, session );
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, idSelect );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, idSelect );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( idSelect );
-				session.getJdbcCoordinator().afterStatementExecution();
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( idSelect );
+				jdbcCoordinator.afterStatementExecution();
 			}
 
 		}
@@ -159,7 +155,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not retrieve generated id after insert: " + MessageHelper.infoString( persister ),
-					insertSQL
+					selectSQL
 			);
 		}
 	}

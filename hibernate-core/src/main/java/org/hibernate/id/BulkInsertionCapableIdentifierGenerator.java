@@ -33,5 +33,7 @@ public interface BulkInsertionCapableIdentifierGenerator extends Generator {
 	 *
 	 * @return The identifier value generation fragment (SQL).  {@code null} indicates that no fragment is needed.
 	 */
-	String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context);
+	default String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return null;
+	}
 }

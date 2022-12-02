@@ -15,7 +15,10 @@ import java.sql.ResultSet;
  * numeric types handled by {@link IdentifierGeneratorHelper}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated this interface is unnecessary and no longer used
  */
+@Deprecated(since = "6.2")
 public interface ResultSetIdentifierConsumer {
 	/**
 	 * Given a result set, consume/extract the necessary values and construct an

@@ -6,22 +6,16 @@
  */
 package org.hibernate.id.insert;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.tuple.InDatabaseGenerator;
-
-import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 
 /**
  * Delegate for dealing with {@code IDENTITY} columns where the dialect requires an
@@ -37,7 +31,7 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 		this.dialect = dialect;
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
@@ -70,17 +64,5 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	@Override
 	protected String getSelectSQL() {
 		return persister.getIdentitySelectString();
-	}
-
-	@Override
-	protected Object extractGeneratedValue(Object entity, ResultSet resultSet, SharedSessionContractImplementor session)
-			throws SQLException {
-		return getGeneratedIdentity(
-				resultSet,
-				persister.getNavigableRole(),
-				DelegateHelper.getKeyColumnName( persister ),
-				persister.getIdentifierType(),
-				session.getJdbcServices().getJdbcEnvironment().getDialect()
-		);
 	}
 }

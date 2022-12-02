@@ -6,10 +6,8 @@
  */
 package org.hibernate.id.factory.spi;
 
-import org.hibernate.id.IdentifierGenerator;
-
 /**
- * Marker interface for Hibernate-provided generator impls
+ * Marker interface for Hibernate-provided implementations of {@link org.hibernate.tuple.Generator}.
  */
-public interface StandardGenerator extends IdentifierGenerator {
+public interface StandardGenerator {
 }

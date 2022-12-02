@@ -6,6 +6,7 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -21,5 +22,6 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Christoph Sturm
  */
-public class IdentityGenerator implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+public class IdentityGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
 }

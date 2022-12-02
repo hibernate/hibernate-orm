@@ -41,7 +41,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * {@link org.hibernate.annotations.UuidGenerator} instead
  */
 @Deprecated(since = "6.0")
-public class UUIDGenerator implements StandardGenerator {
+public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
@@ -61,12 +61,12 @@ public class UUIDGenerator implements StandardGenerator {
 			if ( strategyClassName != null ) {
 				try {
 					final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-					final Class strategyClass = cls.classForName( strategyClassName );
+					final Class<?> strategyClass = cls.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
-					catch ( Exception ignore ) {
-						LOG.unableToInstantiateUuidGenerationStrategy(ignore);
+					catch ( Exception e ) {
+						LOG.unableToInstantiateUuidGenerationStrategy(e);
 					}
 				}
 				catch ( ClassLoadingException ignore ) {

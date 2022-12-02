@@ -48,7 +48,7 @@ import org.hibernate.id.factory.spi.StandardGenerator;
  * @author Steve Ebersole
  */
 public class CompositeNestedGeneratedValueGenerator
-		implements StandardGenerator, IdentifierGeneratorAggregator, Serializable {
+		implements IdentifierGenerator, StandardGenerator, IdentifierGeneratorAggregator, Serializable {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
@@ -91,7 +91,7 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List<GenerationPlan> generationPlans = new ArrayList<>();
+	private final List<GenerationPlan> generationPlans = new ArrayList<>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -105,9 +105,8 @@ public class CompositeNestedGeneratedValueGenerator
 	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		final Object context = generationContextLocator.locateGenerationContext( session, object );
 
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
-			plan.execute( session, object, context );
+		for ( GenerationPlan generationPlan : generationPlans ) {
+			generationPlan.execute( session, object, context );
 		}
 
 		return context;
@@ -115,14 +114,14 @@ public class CompositeNestedGeneratedValueGenerator
 
 	@Override
 	public void registerExportables(Database database) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.registerExportables( database );
 		}
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.initialize( context );
 		}
 	}

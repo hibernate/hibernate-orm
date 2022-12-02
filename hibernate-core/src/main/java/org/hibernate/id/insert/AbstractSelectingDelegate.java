@@ -20,6 +20,7 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
+import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 
 /**
  * Abstract {@link InsertGeneratedIdentifierDelegate} implementation where
@@ -47,12 +48,12 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	/**
-	 * Extract the generated key value from the given result set
-	 * from execution of {@link #getSelectSQL()}.
-	 *
+	 * Extract the generated key value from the given result set after execution of {@link #getSelectSQL()}.
 	 */
-	protected abstract Object extractGeneratedValue(Object entity, ResultSet rs, SharedSessionContractImplementor session)
-			throws SQLException;
+	protected Object extractGeneratedValue(ResultSet resultSet, SharedSessionContractImplementor session)
+			throws SQLException {
+		return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
+	}
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
@@ -82,7 +83,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 			try {
-				return extractGeneratedValue( entity, resultSet, session );
+				return extractGeneratedValue( resultSet, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -136,12 +137,12 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( idSelect );
+				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect );
 				try {
-					return extractGeneratedValue( binder.getEntity(), rs, session );
+					return extractGeneratedValue( resultSet, session );
 				}
 				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, idSelect );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );
 				}
 			}
 			finally {

@@ -14,7 +14,7 @@ import org.hibernate.id.factory.spi.StandardGenerator;
 /**
  * Commonality between sequence-based and table-based generators
  */
-public interface OptimizableGenerator extends StandardGenerator, ExportableProducer {
+public interface OptimizableGenerator extends IdentifierGenerator, StandardGenerator, ExportableProducer {
 	/**
 	 * If an explicit sequence/table name is not configured,
 	 */
@@ -42,9 +42,7 @@ public interface OptimizableGenerator extends StandardGenerator, ExportableProdu
 
 	/**
 	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or naming
-	 * a {@link StandardOptimizerDescriptor} by name
-	 *
-	 * NOTE : has precedence over {@link #INCREMENT_PARAM}
+	 * a {@link StandardOptimizerDescriptor} by name.  Takes precedence over {@link #INCREMENT_PARAM}.
 	 */
 	String OPT_PARAM = "optimizer";
 

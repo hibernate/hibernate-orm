@@ -54,7 +54,10 @@ public interface InsertGeneratedIdentifierDelegate {
 	 *
 	 * @param context A context to help generate SQL strings
 	 * @return The insert object.
+	 *
+	 * @deprecated this is no longer called
 	 */
+	@Deprecated(since = "6.2")
 	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
 
 	/**

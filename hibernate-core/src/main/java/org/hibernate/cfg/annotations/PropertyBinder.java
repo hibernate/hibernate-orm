@@ -448,12 +448,15 @@ public class PropertyBinder {
 		return creator;
 	}
 
-	private static void checkGeneratorType(Class<? extends Generator> generatorClass) {
+	private static void checkGeneratorClass(Class<? extends Generator> generatorClass) {
 		if ( !InMemoryGenerator.class.isAssignableFrom( generatorClass )
 				&& !InDatabaseGenerator.class.isAssignableFrom( generatorClass ) ) {
 			throw new MappingException("Generator class '" + generatorClass.getName()
 					+ "' must implement either 'InMemoryGenerator' or 'InDatabaseGenerator'");
 		}
+	}
+
+	private static void checkGeneratorInterfaces(Class<? extends Generator> generatorClass) {
 		// we don't yet support the additional "fancy" operations of
 		// IdentifierGenerator with regular generators, though this
 		// would be extremely easy to add if anyone asks for it
@@ -480,7 +483,9 @@ public class PropertyBinder {
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
-		checkGeneratorType( generatorAnnotation.generatedBy() );
+		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
+		checkGeneratorClass( generatorClass );
+		checkGeneratorInterfaces( generatorClass );
 		return creationContext -> {
 			final Generator generator =
 					instantiateGenerator(
@@ -489,7 +494,7 @@ public class PropertyBinder {
 							annotationType,
 							creationContext,
 							GeneratorCreationContext.class,
-							generatorAnnotation.generatedBy()
+							generatorClass
 					);
 			callInitialize( annotation, member, creationContext, generator );
 			checkVersionGenerationAlways( property, generator );
@@ -503,6 +508,8 @@ public class PropertyBinder {
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorType != null;
 		return creationContext -> {
+			final Class<? extends Generator> generatorClass = idGeneratorType.value();
+			checkGeneratorClass( generatorClass );
 			final Generator generator =
 					instantiateGenerator(
 							annotation,
@@ -510,7 +517,7 @@ public class PropertyBinder {
 							annotationType,
 							creationContext,
 							CustomIdGeneratorCreationContext.class,
-							idGeneratorType.value()
+							generatorClass
 					);
 			callInitialize( annotation, member, creationContext, generator );
 			checkIdGeneratorTiming( annotationType, generator );

@@ -64,6 +64,27 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private final boolean hasConstraint;
 
 	public EmbeddedForeignKeyDescriptor(
+			String keyTable,
+			SelectableMappings keySelectableMappings,
+			EmbeddableValuedModelPart keyMappingType,
+			String targetTable,
+			SelectableMappings targetSelectableMappings,
+			EmbeddableValuedModelPart targetMappingType,
+			boolean hasConstraint,
+			MappingModelCreationProcess creationProcess) {
+		this(
+				keyMappingType,
+				targetMappingType,
+				keyTable,
+				keySelectableMappings,
+				targetTable,
+				targetSelectableMappings,
+				hasConstraint,
+				creationProcess
+		);
+	}
+
+	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart keyMappingType,
 			EmbeddableValuedModelPart targetMappingType,
 			String keyTable,

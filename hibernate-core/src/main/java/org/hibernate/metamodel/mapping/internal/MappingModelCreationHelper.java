@@ -1225,7 +1225,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
+	public static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
 		final ComponentType componentType;
 		final boolean sorted;
 		if ( bootValueMapping instanceof Collection ) {

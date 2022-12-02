@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,6 +23,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -53,6 +54,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.EntityType;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyOrder;
 
 /**
  * Entity-valued collection-part mapped through a join table.  Models both <ul>
@@ -375,8 +378,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 				final String collectionTableName = ( (BasicCollectionPersister) collectionDescriptor ).getTableName();
 
-				foreignKey = createJoinTablePartForeignKey( collectionTableName, elementDescriptor, creationProcess );
+				// this fk will refer to the associated entity's id.  if that id is not ready yet, delay this creation
+				if ( getAssociatedEntityMappingType().getIdentifierMapping() == null ) {
+					return false;
+				}
 
+				foreignKey = createJoinTablePartForeignKey( collectionTableName, elementDescriptor, creationProcess );
 				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
@@ -421,21 +428,28 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 	private ForeignKeyDescriptor createJoinTablePartForeignKey(
 			String collectionTableName,
-			ManyToOne elementDescriptor,
+			ManyToOne elementBootDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final EntityIdentifierMapping identifierMapping = getAssociatedEntityMappingType().getIdentifierMapping();
-		if ( identifierMapping.getNature() == EntityIdentifierMapping.Nature.SIMPLE ) {
-			final BasicEntityIdentifierMapping basicIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
+		final EntityMappingType associatedEntityMapping = getAssociatedEntityMappingType();
+		final EntityIdentifierMapping associatedIdMapping = associatedEntityMapping.getIdentifierMapping();
+		assert associatedIdMapping != null;
 
-			assert elementDescriptor.getColumns().size() == 1;
-			final Column keyColumn = elementDescriptor.getColumns().get( 0 );
+		// NOTE : `elementBootDescriptor` describes the key side of the fk
+		// NOTE : `associatedIdMapping` is the target side model-part
 
-			// collectionTableName.keyColumnName -> targetTableName.targetColumnName
+		// we have the fk target model-part and selectables via the associated entity's id mapping
+		// and need to create the inverse (key) selectable-mappings and composite model-part
+
+		if ( associatedIdMapping.getNature() == EntityIdentifierMapping.Nature.SIMPLE ) {
+			final BasicEntityIdentifierMapping targetModelPart = (BasicEntityIdentifierMapping) associatedIdMapping;
+
+			assert elementBootDescriptor.getColumns().size() == 1;
+			final Column keyColumn = elementBootDescriptor.getColumns().get( 0 );
 
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					collectionTableName,
 					keyColumn,
-					basicIdMapping.getJdbcMapping(),
+					targetModelPart.getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					true,
 					false,
@@ -444,9 +458,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			);
 
 			final BasicAttributeMapping keyModelPart = BasicAttributeMapping.withSelectableMapping(
-					getAssociatedEntityMappingType(),
-					basicIdMapping,
-					basicIdMapping.getPropertyAccess(),
+					associatedEntityMapping,
+					targetModelPart,
+					targetModelPart.getPropertyAccess(),
 					true,
 					false,
 					keySelectableMapping
@@ -456,17 +470,45 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					// the key
 					keyModelPart,
 					// the target
-					basicIdMapping,
+					targetModelPart,
 					// refers to primary key
 					true,
-					// has a constraint
-					true,
+					!elementBootDescriptor.isNullable(),
 					// do not swap the sides
 					false
 			);
 		}
 		else {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			final CompositeIdentifierMapping targetModelPart = (CompositeIdentifierMapping) associatedIdMapping;
+
+			final SelectableMappings keySelectableMappings = SelectableMappingsImpl.from(
+					collectionTableName,
+					elementBootDescriptor,
+					getPropertyOrder( elementBootDescriptor, creationProcess ),
+					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getTypeConfiguration(),
+					elementBootDescriptor.getColumnInsertability(),
+					elementBootDescriptor.getColumnUpdateability(),
+					creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
+					creationProcess.getSqmFunctionRegistry()
+			);
+
+			return new EmbeddedForeignKeyDescriptor(
+					collectionTableName,
+					keySelectableMappings,
+					createInverseModelPart(
+							targetModelPart,
+							associatedEntityMapping,
+							this,
+							keySelectableMappings,
+							creationProcess
+					),
+					targetModelPart.getContainingTableExpression(),
+					targetModelPart.getPartMappingType(),
+					targetModelPart,
+					!elementBootDescriptor.isNullable(),
+					creationProcess
+			);
 		}
 	}
 

@@ -108,3 +108,36 @@ See link:https://hibernate.atlassian.net/browse/HHH-15641[HHH-15641] for details
 
 The global property `hibernate.bytecode.use_reflection_optimizer` switched the default value to `true`
 and the setting is now deprecated for removal without replacement. See link:https://hibernate.atlassian.net/browse/HHH-15631[HHH-15631] for details.
+
+=== Changes in Integration contracts (SPIs)
+
+SPI is a category of interfaces that we strive to maintain with more stability than internal APIs, but which might change from minor to minor
+upgrades as the project needs a bit of flexibility.
+
+These are not considered public API so should not affect end-user (application developer's) code but such changes might break integration
+with other libraries which integrate with Hibernate ORM.
+
+During the development of Hibernate ORM 6.2 the following SPIs have seen some modifications:
+
+==== EntityPersister#lock
+
+Changed from `EntityPersister#lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)` to `EntityPersister#lock(Object, Object, Object, LockMode, EventSource)`.
+This should be trivial to fix as `EventSource` and `SharedSessionContractImplementor` are both contracts of the `SessionImpl`; to help transition we recommend using
+the methods `isEventSource` and `asEventSource`, available on the `SharedSessionContractImplementor`contract.
+
+N.B. method `asEventSource` will throw an exception for non-compatible type; but because of previous restrictions all invocations to `lock` actually had to be compatible:
+this is now made cleared with the signature change.
+
+==== EntityPersister#multiLoad
+
+The same change was applieed to `multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions)`,
+now migrated to `multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions)`
+
+The same conversion can be safely applied.
+
+==== Executable#afterDeserialize
+
+As in the previous two cases, the parameter now accepts `EventSource` instead of `SharedSessionContractImplementor`.
+
+The same conversion can be safely applied.
+

@@ -1050,6 +1050,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create a {@code listagg} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
+	 * @param argument values to join
+	 * @param separator the separator used to join the values
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #listagg(JpaOrder, JpaPredicate, Expression, Expression) listagg
+	 */
+	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator);
+
+	/**
+	 * Create a {@code listagg} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
 	 * @param argument values to join
 	 * @param separator the separator used to join the values
@@ -1068,6 +1081,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create a {@code mode} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
+	 * @param argument argument to the function
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #mode(JpaOrder, JpaPredicate, Expression) mode
+	 */
+	JpaExpression<?> mode(JpaOrder order, Expression<?> argument);
+
+	/**
+	 * Create a {@code mode} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
 	 * @param argument argument to the function
 	 *
@@ -1076,6 +1101,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #functionWithinGroup
 	 */
 	JpaExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+
+	/**
+	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param argument argument to the function
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #percentileCont(JpaOrder, JpaPredicate, Expression) percentileCont
+	 */
+	JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument);
 
 	/**
 	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
@@ -1094,6 +1131,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
+	 * @param argument argument to the function
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #percentileDisc(JpaOrder, JpaPredicate, Expression) percentileDisc
+	 */
+	JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument);
+
+	/**
+	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
 	 * @param argument argument to the function
 	 *
@@ -1107,6 +1156,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create a {@code rank} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
+	 * @param argument argument to the function
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #rank(JpaOrder, JpaPredicate, Expression) rank
+	 */
+	JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument);
+
+	/**
+	 * Create a {@code rank} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
 	 * @param argument argument to the function
 	 *
@@ -1115,6 +1176,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #functionWithinGroup
 	 */
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument);
+
+	/**
+	 * Create a {@code percent_rank} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param argument argument to the function
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #percentRank(JpaOrder, JpaPredicate, Expression) percentRank
+	 */
+	JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument);
 
 	/**
 	 * Create a {@code percent_rank} ordered set-aggregate function expression.

@@ -2670,6 +2670,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator) {
+		return listagg( order, null, argument, separator );
+	}
+
+	@Override
 	public SqmExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -2679,8 +2684,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public JpaExpression<?> mode(JpaOrder order, Expression<?> argument) {
+		return mode( order, null, argument );
+	}
+
+	@Override
 	public SqmExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
 		return functionWithinGroup( "mode", argument.getJavaType(), order, filter, argument );
+	}
+
+	@Override
+	public JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument) {
+		return percentileCont( order, null, argument );
 	}
 
 	@Override
@@ -2692,6 +2707,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument) {
+		return percentileDisc( order, null, argument );
+	}
+
+	@Override
 	public SqmExpression<Integer> percentileDisc(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -2700,8 +2720,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument) {
+		return rank( order, null, argument );
+	}
+
+	@Override
 	public SqmExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
 		return functionWithinGroup( "rank", Long.class, order, filter, argument );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument) {
+		return percentRank( order, null, argument );
 	}
 
 	@Override

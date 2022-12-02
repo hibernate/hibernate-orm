@@ -1322,6 +1322,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator) {
+		return criteriaBuilder.listagg( order, argument, separator );
+	}
+
+	@Override
 	public JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -1331,8 +1336,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<?> mode(JpaOrder order, Expression<?> argument) {
+		return criteriaBuilder.mode( order, argument );
+	}
+
+	@Override
 	public JpaExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
 		return criteriaBuilder.mode( order, filter, argument );
+	}
+
+	@Override
+	public JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument) {
+		return criteriaBuilder.percentileCont( order, argument );
 	}
 
 	@Override
@@ -1344,6 +1359,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument) {
+		return criteriaBuilder.percentileDisc( order, argument );
+	}
+
+	@Override
 	public JpaExpression<Integer> percentileDisc(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -1352,8 +1372,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument) {
+		return criteriaBuilder.rank( order, argument );
+	}
+
+	@Override
 	public JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
 		return criteriaBuilder.rank( order, filter, argument );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument) {
+		return criteriaBuilder.percentRank( order, argument );
 	}
 
 	@Override

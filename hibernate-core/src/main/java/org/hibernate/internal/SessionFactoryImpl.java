@@ -34,7 +34,6 @@ import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;

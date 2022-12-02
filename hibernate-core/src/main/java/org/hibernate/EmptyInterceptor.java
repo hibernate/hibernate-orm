@@ -20,10 +20,7 @@ import org.hibernate.type.Type;
  */
 @Deprecated(since = "6.0")
 public class EmptyInterceptor implements Interceptor, Serializable {
-	/**
-	 * The singleton reference.
-	 */
-	public static final Interceptor INSTANCE = new EmptyInterceptor();
 
 	protected EmptyInterceptor() {}
+
 }

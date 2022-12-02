@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -51,6 +50,7 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;

@@ -7,7 +7,6 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
@@ -35,6 +34,7 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;

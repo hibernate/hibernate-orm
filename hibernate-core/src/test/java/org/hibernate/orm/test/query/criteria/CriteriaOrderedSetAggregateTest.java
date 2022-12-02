@@ -26,9 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -109,7 +107,7 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<String> cr = cb.createQuery( String.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<String> function = cb.listagg( null, null, root.get( "theString" ), cb.literal( "," ) );
+			JpaExpression<String> function = cb.listagg( null, root.get( "theString" ), cb.literal( "," ) );
 
 			cr.select( function );
 			List<String> elements = Arrays.asList( session.createQuery( cr ).getSingleResult().split( "," ) );
@@ -130,7 +128,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 			JpaExpression<String> function = cb.listagg(
 					cb.desc( root.get( "id" ) ),
-					null,
 					root.get( "theString" ),
 					cb.literal( "," )
 			);
@@ -172,7 +169,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 			JpaExpression<String> function = cb.listagg(
 					cb.desc( root.get( "id" ), true ),
-					null,
 					root.get( "theString" ),
 					cb.literal( "," )
 			);
@@ -193,7 +189,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 			JpaExpression<Integer> function = cb.percentileDisc(
 					cb.asc( root.get( "theInt" ) ),
-					null,
 					cb.literal( 0.5 )
 			);
 
@@ -211,7 +206,7 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<Double> cr = cb.createQuery( Double.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<Double> function = cb.percentRank( cb.asc( root.get( "theInt" ) ), null, cb.literal( 5 ) );
+			JpaExpression<Double> function = cb.percentRank( cb.asc( root.get( "theInt" ) ), cb.literal( 5 ) );
 
 			cr.select( function );
 			Double result = session.createQuery( cr ).getSingleResult();
@@ -227,7 +222,7 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<Long> cr = cb.createQuery( Long.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<Long> function = cb.rank( cb.asc( root.get( "theInt" ) ), null, cb.literal( 5 ) );
+			JpaExpression<Long> function = cb.rank( cb.asc( root.get( "theInt" ) ), cb.literal( 5 ) );
 
 			cr.select( function );
 			Long result = session.createQuery( cr ).getSingleResult();
@@ -244,7 +239,7 @@ public class CriteriaOrderedSetAggregateTest {
 			Root<EntityOfBasics> root1 = cr.from( EntityOfBasics.class );
 			Root<EntityOfBasics> root2 = cr.from( EntityOfBasics.class );
 
-			JpaExpression<Long> function = cb.rank( cb.asc( root1.get( "theInt" ) ), null, cb.literal( 5 ) );
+			JpaExpression<Long> function = cb.rank( cb.asc( root1.get( "theInt" ) ), cb.literal( 5 ) );
 
 			cr.multiselect( root2.get( "id" ), function )
 					.groupBy( root2.get( "id" ) ).having( cb.gt( root2.get( "id" ), cb.literal( 1 ) ) )

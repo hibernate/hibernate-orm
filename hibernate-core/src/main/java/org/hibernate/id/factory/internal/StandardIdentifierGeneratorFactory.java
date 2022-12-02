@@ -266,7 +266,7 @@ public class StandardIdentifierGeneratorFactory
 				if ( !Generator.class.isAssignableFrom( clazz ) ) {
 					// in principle, this shouldn't happen, since @GenericGenerator
 					// constrains the type to subtypes of Generator
-					throw new MappingException( clazz.getName() + " does not implement 'InMemoryGenerator'" );
+					throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
 				}
 				return clazz;
 			}

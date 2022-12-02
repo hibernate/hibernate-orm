@@ -503,7 +503,7 @@ public class PropertyBinder {
 		final IdGeneratorType idGeneratorType = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorType != null;
 		return creationContext -> {
-			final InMemoryGenerator generator =
+			final Generator generator =
 					instantiateGenerator(
 							annotation,
 							member,
@@ -577,7 +577,7 @@ public class PropertyBinder {
 		}
 	}
 
-	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, InMemoryGenerator generator) {
+	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, Generator generator) {
 		GenerationTiming timing = generator.getGenerationTiming();
 		if ( timing != INSERT ) {
 			throw new MappingException( "Annotation '" + annotationType

@@ -19,6 +19,11 @@ import org.hibernate.persister.entity.EntityPersister;
  * Implementations should override {@link #referenceColumnsInSql(Dialect)},
  * {@link #writePropertyValue()}, and {@link #getReferencedColumnValues(Dialect)} as needed
  * in order to achieve the desired behavior.
+ * <p>
+ * In implementation of this interface does not specify how the generated value is retrieved
+ * from the database after it is generated, this being the responsibility of the coordinating
+ * code in {@link org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor} or in an
+ * implementation of {@link org.hibernate.id.insert.InsertGeneratedIdentifierDelegate}.
  *
  * @author Steve Ebersole
  *
@@ -63,6 +68,17 @@ public interface InDatabaseGenerator extends Generator {
 	 */
 	String[] getReferencedColumnValues(Dialect dialect);
 
+	/**
+	 * The name of a property of the entity which may be used to locate the just-{@code insert}ed
+	 * row containing the generated value. Of course, the columns mapped by this property should
+	 * form a unique key of the entity.
+	 * <p>
+	 * This is ignored by {@link org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor},
+	 * which handles multiple generators at once. This method arguably breaks the separation of
+	 * concerns between the generator and the coordinating code.
+	 *
+	 * @see org.hibernate.id.SelectGenerator
+	 */
 	default String getUniqueKeyPropertyName(EntityPersister persister) {
 		return null;
 	}

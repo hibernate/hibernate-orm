@@ -23,8 +23,9 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * A classic extension point from the very earliest days of Hibernate,
- * this interface is now no longer the only way to generate identifiers.
- * Any {@link InMemoryGenerator} may now be used.
+ * this interface is no longer the only way to generate identifiers. Any
+ * {@link InMemoryGenerator} with timing {@link GenerationTiming#INSERT}
+ * may now be used.
  * <p>
  * This interface extends {@code InMemoryGenerator} with some additional
  * machinery for {@linkplain #configure configuration}, and for caching
@@ -54,6 +55,7 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  *
  * @author Gavin King
  *
+ * @see PostInsertIdentifierGenerator
  * @see PersistentIdentifierGenerator
  */
 public interface IdentifierGenerator extends InMemoryGenerator, ExportableProducer, Configurable {
@@ -94,8 +96,7 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * @throws MappingException If configuration fails.
 	 */
 	@Override
-	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
-	}
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 
 	/**
 	 * Register database objects used by this identifier generator,
@@ -107,8 +108,7 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * @param database The database instance
 	 */
 	@Override
-	default void registerExportables(Database database) {
-	}
+	default void registerExportables(Database database) {}
 
 	/**
 	 * Initializes this instance, in particular pre-generates
@@ -120,8 +120,7 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 *
 	 * @param context A context to help generate SQL strings
 	 */
-	default void initialize(SqlStringGenerationContext context) {
-	}
+	default void initialize(SqlStringGenerationContext context) {}
 
 	/**
 	 * Generate a new identifier.
@@ -135,11 +134,19 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 */
 	Object generate(SharedSessionContractImplementor session, Object object);
 
+	/**
+	 * Generate a value.
+	 * <p>
+	 * The {@code currentValue} is usually null for id generation.
+	 */
 	@Override
 	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
 		return generate( session, owner );
 	}
 
+	/**
+	 * @return {@link GenerationTiming#INSERT}
+	 */
 	@Override
 	default GenerationTiming getGenerationTiming() {
 		return INSERT;

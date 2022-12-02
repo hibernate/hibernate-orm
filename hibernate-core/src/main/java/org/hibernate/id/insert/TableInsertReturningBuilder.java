@@ -33,7 +33,8 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 
 	@Override
 	public TableInsert buildMutation() {
-		final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) getMutationTarget().getIdentifierMapping();
+		final BasicEntityIdentifierMapping identifierMapping =
+				(BasicEntityIdentifierMapping) getMutationTarget().getIdentifierMapping();
 		return new TableInsertStandard(
 				getMutatingTable(),
 				getMutationTarget(),

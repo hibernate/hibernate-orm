@@ -12,7 +12,6 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Objects;
@@ -36,8 +35,8 @@ public final class IdentifierGeneratorHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
-	 * continued generated id checking.  Currently this is only used in the case of the
+	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
+	 * short-circuit any continued generated id checking.  Currently, this is only used in the case of the
 	 * {@linkplain ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
 	 */
@@ -49,8 +48,8 @@ public final class IdentifierGeneratorHelper {
 	};
 
 	/**
-	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's identifier will
-	 * be generated as part of the database insertion.
+	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's
+	 * identifier will be generated as part of the database insertion.
 	 */
 	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
 		@Override
@@ -63,7 +62,7 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Get the generated identifier when using identity columns
 	 *
-	 * @param rs The result set from which to extract the generated identity.
+	 * @param resultSet The result set from which to extract the generated identity.
 	 * @param identityColumn The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
 	 * @param dialect The current database dialect.
@@ -74,16 +73,16 @@ public final class IdentifierGeneratorHelper {
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
 	public static Object getGeneratedIdentity(
-			ResultSet rs,
+			ResultSet resultSet,
 			NavigableRole insertionTargetRole,
 			String identityColumn,
 			Type type,
 			Dialect dialect) throws SQLException {
-		if ( !rs.next() ) {
+		if ( !resultSet.next() ) {
 			throw new HibernateException( "The database returned no natively generated identity value : " + insertionTargetRole.getFullPath() );
 		}
 
-		final Object id = get( rs, insertionTargetRole, identityColumn, type, dialect );
+		final Object id = get( resultSet, insertionTargetRole, identityColumn, type, dialect );
 		LOG.debugf( "Natively generated identity (%s) : %s", insertionTargetRole.getFullPath(), id );
 		return id;
 	}
@@ -92,7 +91,7 @@ public final class IdentifierGeneratorHelper {
 	 * Extract the value from the result set (which is assumed to already have been positioned to the appropriate row)
 	 * and wrp it in the appropriate Java numeric type.
 	 *
-	 * @param rs The result set from which to extract the value.
+	 * @param resultSet The result set from which to extract the value.
 	 * @param identifier The name of the identifier column
 	 * @param type The expected type of the value.
 	 * @param dialect The current database dialect.
@@ -103,52 +102,44 @@ public final class IdentifierGeneratorHelper {
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
 	public static Object get(
-			ResultSet rs,
+			ResultSet resultSet,
 			NavigableRole insertionTargetRole,
 			String identifier,
 			Type type,
 			Dialect dialect)
 			throws SQLException, IdentifierGenerationException {
 		if ( type instanceof ResultSetIdentifierConsumer ) {
-			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
+			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( resultSet );
 		}
 		if ( type instanceof CustomType ) {
 			final CustomType<?> customType = (CustomType<?>) type;
-			if (customType.getUserType() instanceof ResultSetIdentifierConsumer) {
-				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
+			if ( customType.getUserType() instanceof ResultSetIdentifierConsumer ) {
+				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( resultSet );
 			}
 		}
-		ResultSetMetaData resultSetMetaData;
-		int columnCount = 1;
-		try {
-			resultSetMetaData = rs.getMetaData();
-			columnCount = resultSetMetaData.getColumnCount();
-		}
-		catch (Exception e) {
-			//Oracle driver will throw NPE
-		}
 
+		int columnCount = getColumnCount( resultSet );
 		final Class<?> clazz = type.getReturnedClass();
 		if ( columnCount == 1 ) {
 			if ( clazz == Long.class ) {
-				return rs.getLong( 1 );
+				return resultSet.getLong( 1 );
 			}
 			else if ( clazz == Integer.class ) {
-				return rs.getInt( 1 );
+				return resultSet.getInt( 1 );
 			}
 			else if ( clazz == Short.class ) {
-				return rs.getShort( 1 );
+				return resultSet.getShort( 1 );
 			}
 			else if ( clazz == String.class ) {
-				return rs.getString( 1 );
+				return resultSet.getString( 1 );
 			}
 			else if ( clazz == BigInteger.class ) {
-				return rs.getBigDecimal( 1 )
+				return resultSet.getBigDecimal( 1 )
 						.setScale( 0, RoundingMode.UNNECESSARY )
 						.toBigInteger();
 			}
 			else if ( clazz == BigDecimal.class ) {
-				return rs.getBigDecimal( 1 )
+				return resultSet.getBigDecimal( 1 )
 						.setScale( 0, RoundingMode.UNNECESSARY );
 			}
 			else {
@@ -165,21 +156,20 @@ public final class IdentifierGeneratorHelper {
 		}
 		else {
 			try {
-				return extractIdentifier( rs, identifier, type, clazz );
+				return extractIdentifier( resultSet, identifier, type, clazz );
 			}
 			catch (SQLException e) {
 				if ( StringHelper.isQuoted( identifier, dialect ) ) {
-					return extractIdentifier( rs, StringHelper.unquote( identifier, dialect ), type, clazz );
+					return extractIdentifier( resultSet, StringHelper.unquote( identifier, dialect ), type, clazz );
 				}
 				throw e;
 			}
 		}
 	}
 
-	private static int getColumnCount(ResultSet rs) {
+	private static int getColumnCount(ResultSet resultSet) {
 		try {
-			final ResultSetMetaData resultSetMetaData = rs.getMetaData();
-			return resultSetMetaData.getColumnCount();
+			return resultSet.getMetaData().getColumnCount();
 		}
 		catch (Exception e) {
 			//Oracle driver will throw NPE
@@ -723,6 +713,8 @@ public final class IdentifierGeneratorHelper {
 			return Objects.hashCode( value );
 		}
 	}
+
+
 
 	/**
 	 * Disallow instantiation of IdentifierGeneratorHelper.

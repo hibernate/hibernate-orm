@@ -14,7 +14,6 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -23,9 +22,9 @@ import org.hibernate.pretty.MessageHelper;
 import static java.sql.Statement.NO_GENERATED_KEYS;
 
 /**
- * Abstract InsertGeneratedIdentifierDelegate implementation where the
- * underlying strategy requires a subsequent select after the insert
- * to determine the generated identifier.
+ * Abstract {@link InsertGeneratedIdentifierDelegate} implementation where
+ * the underlying strategy requires a subsequent {@code select} after the
+ * {@code insert} to determine the generated identifier.
  *
  * @author Steve Ebersole
  */
@@ -81,9 +80,9 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		try {
 			bindParameters( entity, idSelect, session );
 
-			final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
+			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
 			try {
-				return extractGeneratedValue( entity, rs, session );
+				return extractGeneratedValue( entity, resultSet, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(

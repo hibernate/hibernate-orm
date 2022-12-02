@@ -36,6 +36,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -74,6 +75,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.ValueBinder;
 
@@ -302,7 +304,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				true
 		);
 
-		final Generator generator = entityDescriptor.getEntityPersister().getGenerator();
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final Generator generator = entityPersister.getGenerator();
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( ( assignments == null || assignments.isEmpty() )
 				&& !generator.generatedByDatabase()
@@ -556,13 +559,11 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				.translate( null, executionContext.getQueryOptions() );
 
 		if ( generator.generatedByDatabase() ) {
-			final PostInsertIdentifierGenerator postInsertGenerator = (PostInsertIdentifierGenerator) generator;
-			final boolean generatedKeysEnabled = sessionFactory.getSessionFactoryOptions().isGetGeneratedKeysEnabled();
-			final InsertGeneratedIdentifierDelegate identifierDelegate = postInsertGenerator.getInsertGeneratedIdentifierDelegate(
-					(PostInsertIdentityPersister) entityDescriptor.getEntityPersister(),
-					jdbcServices.getDialect(),
-					generatedKeysEnabled
-			);
+			final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
+			final String uniqueKeyPropertyName = databaseGenerator.getUniqueKeyPropertyName( entityPersister );
+			final InsertGeneratedIdentifierDelegate identifierDelegate = uniqueKeyPropertyName == null
+					? entityPersister.getGeneratedIdentifierDelegate()
+					: entityPersister.getGeneratedIdentifierDelegateForProperty( uniqueKeyPropertyName );
 			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
 			final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 			final ValueBinder jdbcValueBinder = identifierMapping.getJdbcMapping().getJdbcValueBinder();

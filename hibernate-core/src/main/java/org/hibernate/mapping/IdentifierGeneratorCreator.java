@@ -7,9 +7,9 @@
 package org.hibernate.mapping;
 
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.tuple.Generator;
 
 @FunctionalInterface
 public interface IdentifierGeneratorCreator {
-	InMemoryGenerator createGenerator(CustomIdGeneratorCreationContext context);
+	Generator createGenerator(CustomIdGeneratorCreationContext context);
 }

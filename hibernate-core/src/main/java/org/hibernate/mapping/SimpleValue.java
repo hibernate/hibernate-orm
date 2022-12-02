@@ -668,12 +668,11 @@ public abstract class SimpleValue implements KeyValue {
 	 * </ul>
 	 *
 	 * @return The built AttributeConverter -> Type adapter
-	 *
-	 * @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specify-able separately
-	 * then we can "play them against each other" in terms of determining proper typing
-	 *
-	 * @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter; see note below about caching
 	 */
+	// @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specifiable separately
+	//         then we can "play them against each other" in terms of determining proper typing
+	// @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter;
+	//         see note below about caching
 	private Type buildAttributeConverterTypeAdapter() {
 		// todo : validate the number of columns present here?
 		return buildAttributeConverterTypeAdapter( attributeConverterDescriptor.createJpaAttributeConverter(
@@ -767,7 +766,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeParameters = parameterMap;
 	}
 
-	public void setTypeParameters(Map<String, ? extends Object> parameters) {
+	public void setTypeParameters(Map<String, ?> parameters) {
 		if ( parameters != null ) {
 			Properties properties = new Properties();
 			properties.putAll( parameters );

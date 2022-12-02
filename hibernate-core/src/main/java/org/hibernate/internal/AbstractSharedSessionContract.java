@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;

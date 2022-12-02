@@ -18,7 +18,6 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * This is a helper to encapsulate an optimal strategy to execute type checks
@@ -168,6 +167,17 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
+	 * This interface has been introduced to mitigate <a href="https://bugs.openjdk.org/browse/JDK-8180450">JDK-8180450</a>.<br>
+	 * Sadly, using  {@code BiConsumer} will trigger a type pollution issue because of generics type-erasure:
+	 * {@code BiConsumer}'s actual parameters types on the lambda implemention's
+	 * {@link BiConsumer#accept} are stealthy enforced via {@code checkcast}, messing up with type check cached data.
+	 */
+	@FunctionalInterface
+	public interface PersistentAttributeInterceptableAction<T> {
+		void accept(PersistentAttributeInterceptable interceptable, T optionalParam);
+	}
+
+	/**
 	 * Helper to execute an action on an entity, but exclusively if it's implementing the {@see PersistentAttributeInterceptable}
 	 * interface. Otherwise no action is performed.
 	 *
@@ -178,7 +188,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static <T> void processIfPersistentAttributeInterceptable(
 			final Object entity,
-			final BiConsumer<PersistentAttributeInterceptable, T> action,
+			final PersistentAttributeInterceptableAction<T> action,
 			final T optionalParam) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
 			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
@@ -196,7 +206,7 @@ public final class ManagedTypeHelper {
 	 * @param entity
 	 * @param action
 	 */
-	public static void processIfSelfDirtinessTracker(final Object entity, final Consumer<SelfDirtinessTracker> action) {
+	public static void processIfSelfDirtinessTracker(final Object entity, final SelfDirtinessTrackerConsumer action) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
 			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
 			final SelfDirtinessTracker e = t.asSelfDirtinessTracker();
@@ -204,6 +214,13 @@ public final class ManagedTypeHelper {
 				action.accept( e );
 			}
 		}
+	}
+
+	 // Not using Consumer<SelfDirtinessTracker> because of JDK-8180450:
+	 // use a custom functional interface with explicit type.
+	@FunctionalInterface
+	public interface SelfDirtinessTrackerConsumer {
+		void accept(SelfDirtinessTracker tracker);
 	}
 
 	/**
@@ -218,7 +235,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static <T> void processIfSelfDirtinessTracker(
 			final Object entity,
-			final BiConsumer<SelfDirtinessTracker, T> action,
+			final SelfDirtinessTrackerAction<T> action,
 			final T optionalParam) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
 			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
@@ -227,6 +244,13 @@ public final class ManagedTypeHelper {
 				action.accept( e, optionalParam );
 			}
 		}
+	}
+
+	// Not using BiConsumer<SelfDirtinessTracker, T> because of JDK-8180450:
+	// use a custom functional interface with explicit type.
+	@FunctionalInterface
+	public interface SelfDirtinessTrackerAction<T> {
+		void accept(SelfDirtinessTracker tracker, T optionalParam);
 	}
 
 	/**
@@ -304,6 +328,7 @@ public final class ManagedTypeHelper {
 		}
 		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to CompositeTracker" );
 	}
+
 	/**
 	 * Cast the object to CompositeOwner
 	 * (using this is highly preferrable over a direct cast)

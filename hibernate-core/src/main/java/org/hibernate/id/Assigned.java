@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class Assigned implements StandardGenerator {
+public class Assigned implements IdentifierGenerator, StandardGenerator {
 	private String entityName;
 
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
@@ -34,7 +34,6 @@ public class Assigned implements StandardGenerator {
 					"ids for this class must be manually assigned before calling save(): " + entityName
 			);
 		}
-		
 		return id;
 	}
 

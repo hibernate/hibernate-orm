@@ -6,24 +6,25 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.type.descriptor.WrapperOptions;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Locale;
 import java.util.Objects;
-
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -58,151 +59,53 @@ public final class IdentifierGeneratorHelper {
 		}
 	};
 
-
 	/**
 	 * Get the generated identifier when using identity columns
 	 *
-	 * @param resultSet The result set from which to extract the generated identity.
-	 * @param identityColumn The name of the identifier column
-	 * @param type The expected type mapping for the identity value.
-	 * @param dialect The current database dialect.
-	 *
+	 * @param path           The {@link NavigableRole#getFullPath()}
+	 * @param resultSet      The result set from which to extract the generated identity
+	 * @param wrapperOptions The session
 	 * @return The generated identity value
-	 *
-	 * @throws SQLException Can be thrown while accessing the result set
+	 * @throws SQLException       Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
 	public static Object getGeneratedIdentity(
+			String path,
 			ResultSet resultSet,
-			NavigableRole insertionTargetRole,
-			String identityColumn,
-			Type type,
-			Dialect dialect) throws SQLException {
+			PostInsertIdentityPersister persister,
+			WrapperOptions wrapperOptions) throws SQLException {
 		if ( !resultSet.next() ) {
-			throw new HibernateException( "The database returned no natively generated identity value : " + insertionTargetRole.getFullPath() );
+			throw new HibernateException( "The database returned no natively generated identity value : " + path );
 		}
 
-		final Object id = get( resultSet, insertionTargetRole, identityColumn, type, dialect );
-		LOG.debugf( "Natively generated identity (%s) : %s", insertionTargetRole.getFullPath(), id );
+		JdbcMapping identifierType = ( (SqlTypedMapping) persister.getIdentifierMapping() ).getJdbcMapping();
+		Object id = identifierType.getJdbcValueExtractor()
+				.extract( resultSet, columnIndex( resultSet, persister ), wrapperOptions );
+		LOG.debugf( "Natively generated identity (%s) : %s", path, id );
 		return id;
 	}
 
-	/**
-	 * Extract the value from the result set (which is assumed to already have been positioned to the appropriate row)
-	 * and wrp it in the appropriate Java numeric type.
-	 *
-	 * @param resultSet The result set from which to extract the value.
-	 * @param identifier The name of the identifier column
-	 * @param type The expected type of the value.
-	 * @param dialect The current database dialect.
-	 *
-	 * @return The extracted value.
-	 *
-	 * @throws SQLException Indicates problems access the result set
-	 * @throws IdentifierGenerationException Indicates an unknown type.
-	 */
-	public static Object get(
-			ResultSet resultSet,
-			NavigableRole insertionTargetRole,
-			String identifier,
-			Type type,
-			Dialect dialect)
-			throws SQLException, IdentifierGenerationException {
-		if ( type instanceof ResultSetIdentifierConsumer ) {
-			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( resultSet );
-		}
-		if ( type instanceof CustomType ) {
-			final CustomType<?> customType = (CustomType<?>) type;
-			if ( customType.getUserType() instanceof ResultSetIdentifierConsumer ) {
-				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( resultSet );
-			}
-		}
-
-		int columnCount = getColumnCount( resultSet );
-		final Class<?> clazz = type.getReturnedClass();
-		if ( columnCount == 1 ) {
-			if ( clazz == Long.class ) {
-				return resultSet.getLong( 1 );
-			}
-			else if ( clazz == Integer.class ) {
-				return resultSet.getInt( 1 );
-			}
-			else if ( clazz == Short.class ) {
-				return resultSet.getShort( 1 );
-			}
-			else if ( clazz == String.class ) {
-				return resultSet.getString( 1 );
-			}
-			else if ( clazz == BigInteger.class ) {
-				return resultSet.getBigDecimal( 1 )
-						.setScale( 0, RoundingMode.UNNECESSARY )
-						.toBigInteger();
-			}
-			else if ( clazz == BigDecimal.class ) {
-				return resultSet.getBigDecimal( 1 )
-						.setScale( 0, RoundingMode.UNNECESSARY );
-			}
-			else {
-				throw new IdentifierGenerationException(
-						String.format(
-								Locale.ROOT,
-								"Unrecognized id type (%s - %s) for extraction - %s",
-								type.getName(),
-								clazz.getName(),
-								insertionTargetRole.getFullPath()
-						)
-				);
-			}
-		}
-		else {
-			try {
-				return extractIdentifier( resultSet, identifier, type, clazz );
-			}
-			catch (SQLException e) {
-				if ( StringHelper.isQuoted( identifier, dialect ) ) {
-					return extractIdentifier( resultSet, StringHelper.unquote( identifier, dialect ), type, clazz );
-				}
-				throw e;
-			}
-		}
-	}
-
-	private static int getColumnCount(ResultSet resultSet) {
+	private static int columnIndex(ResultSet resultSet, PostInsertIdentityPersister persister) {
 		try {
-			return resultSet.getMetaData().getColumnCount();
+			ResultSetMetaData metaData = resultSet.getMetaData();
+			String keyColumnName = persister.getRootTableKeyColumnNames()[0];
+			Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+			for ( int i = 1 ; i<=metaData.getColumnCount(); i++ ) {
+				if ( equal( keyColumnName, metaData.getColumnName(i), dialect ) ) {
+					return i;
+				}
+			}
 		}
-		catch (Exception e) {
-			//Oracle driver will throw NPE
+		catch (SQLException e) {
+			LOG.debugf( "Could not determine column index from JDBC metadatda", e );
 		}
-
 		return 1;
 	}
 
-	private static Object extractIdentifier(ResultSet rs, String identifier, Type type, Class<?> clazz)
-			throws SQLException {
-		if ( clazz == Long.class ) {
-			return rs.getLong( identifier );
-		}
-		else if ( clazz == Integer.class ) {
-			return rs.getInt( identifier );
-		}
-		else if ( clazz == Short.class ) {
-			return rs.getShort( identifier );
-		}
-		else if ( clazz == String.class ) {
-			return rs.getString( identifier );
-		}
-		else if ( clazz == BigInteger.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
-		}
-		else if ( clazz == BigDecimal.class ) {
-			return rs.getBigDecimal( identifier ).setScale( 0, RoundingMode.UNNECESSARY );
-		}
-		else {
-			throw new IdentifierGenerationException(
-					"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
-			);
-		}
+	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
+		return alias.equals( keyColumnName )
+			|| StringHelper.isQuoted( keyColumnName, dialect )
+				&& alias.equals( StringHelper.unquote( keyColumnName, dialect ) );
 	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
@@ -713,8 +616,6 @@ public final class IdentifierGeneratorHelper {
 			return Objects.hashCode( value );
 		}
 	}
-
-
 
 	/**
 	 * Disallow instantiation of IdentifierGeneratorHelper.

@@ -46,7 +46,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		this.dialect = dialect;
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
@@ -104,13 +104,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			try {
 				final ResultSet resultSet = insertStatement.getGeneratedKeys();
 				try {
-					return getGeneratedIdentity(
-							resultSet,
-							persister.getNavigableRole(),
-							DelegateHelper.getKeyColumnName( persister ),
-							persister.getIdentifierType(),
-							jdbcServices.getJdbcEnvironment().getDialect()
-					);
+					return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
 				}
 				catch (SQLException e) {
 					throw jdbcServices.getSqlExceptionHelper().convert(
@@ -158,13 +152,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		try {
 			final ResultSet resultSet = insertStatement.getGeneratedKeys();
 			try {
-				return getGeneratedIdentity(
-						resultSet,
-						persister.getNavigableRole(),
-						DelegateHelper.getKeyColumnName( persister ),
-						persister.getIdentifierType(),
-						jdbcServices.getJdbcEnvironment().getDialect()
-				);
+				return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(

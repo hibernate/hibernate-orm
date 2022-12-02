@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -27,7 +28,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class SelectGenerator implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+public class SelectGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override

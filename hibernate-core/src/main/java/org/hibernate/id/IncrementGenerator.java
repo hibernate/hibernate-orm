@@ -15,7 +15,6 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -44,7 +43,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class IncrementGenerator implements StandardGenerator {
+public class IncrementGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	private Class<?> returnClass;

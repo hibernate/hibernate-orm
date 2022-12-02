@@ -43,7 +43,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 		this.dialect = dialect;
 	}
 
-	@Override
+	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
 		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
@@ -67,15 +67,8 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
 		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( insertStatement );
-
 		try {
-			return getGeneratedIdentity(
-					resultSet,
-					persister.getNavigableRole(),
-					DelegateHelper.getKeyColumnName( persister ),
-					persister.getIdentifierType(),
-					jdbcServices.getJdbcEnvironment().getDialect()
-			);
+			return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

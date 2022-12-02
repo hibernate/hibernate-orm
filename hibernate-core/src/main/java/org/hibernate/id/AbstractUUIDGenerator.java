@@ -19,7 +19,7 @@ import org.hibernate.internal.util.BytesHelper;
  * @see UUIDHexGenerator
  * @author Gavin King
  */
-public abstract class AbstractUUIDGenerator implements StandardGenerator {
+public abstract class AbstractUUIDGenerator implements IdentifierGenerator, StandardGenerator {
 
 	private static final int IP;
 	static {

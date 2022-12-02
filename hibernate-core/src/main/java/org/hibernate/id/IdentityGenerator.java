@@ -6,22 +6,29 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.InDatabaseGenerator;
 
 /**
- * A generator for use with ANSI-SQL IDENTITY columns used as the primary key.
- * The IdentityGenerator for autoincrement/identity key generation.
+ * An {@link InDatabaseGenerator} that handles {@code IDENTITY}/"autoincrement" columns
+ * on those databases which support them.
  * <p>
- * Indicates to the {@code Session} that identity (i.e. identity/autoincrement
- * column) key generation should be used.
- *
- * @implNote Most of the functionality of this generator is delegated to
- * 		     {@link InsertGeneratedIdentifierDelegate}.
+ * Delegates to the {@link org.hibernate.dialect.identity.IdentityColumnSupport} provided
+ * by the {@linkplain Dialect#getIdentityColumnSupport() dialect}.
  *
  * @author Christoph Sturm
  */
 public class IdentityGenerator
 		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return dialect.getIdentityColumnSupport().hasIdentityInsertKeyword();
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { dialect.getIdentityColumnSupport().getIdentityInsertString() };
+	}
+
 }

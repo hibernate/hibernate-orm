@@ -8,28 +8,30 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
-import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * A generator that {@code select}s the just-inserted row to determine the identifier
- * value assigned by the database. The correct row is located using a unique key of
- * the entity, either:
+ * A generator that {@code select}s the just-{@code insert}ed row to determine the
+ * {@code IDENTITY} column value assigned by the database. The correct row is located
+ * using a unique key of the entity, either:
  * <ul>
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
  * <li>a property specified using the parameter named {@code "key"}.
  * </ul>
  * The second approach is provided for backward compatibility with older versions of
  * Hibernate.
+ * <p>
+ * Arguably, this class breaks the natural separation of responsibility between the
+ * {@linkplain org.hibernate.tuple.InDatabaseGenerator generator} and the coordinating
+ * code, since it's role is to specify how the generated value is <em>retrieved</em>.
  *
  * @see org.hibernate.annotations.NaturalId
  *
  * @author Gavin King
  */
-public class SelectGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+public class SelectGenerator extends IdentityGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override

@@ -168,6 +168,17 @@ public final class ManagedTypeHelper {
 	}
 
 	/**
+	 * This interface has been introduced to mitigate <a href="https://bugs.openjdk.org/browse/JDK-8180450">JDK-8180450</a>.<br>
+	 * Sadly, using  {@code BiConsumer} cause a type pollution issue, because
+	 * of generics type-erasure: {@code BiConsumer}'s actual parameters types on the lambda implemention's
+	 * {@link BiConsumer#accept} are stealthy enforced via {@code checkcast}, messing up with type check cached data.
+	 */
+	@FunctionalInterface
+	public interface PersistentAttributeInterceptableAction<T> {
+		public void accept(PersistentAttributeInterceptable interceptable, T optionalParam);
+	}
+
+	/**
 	 * Helper to execute an action on an entity, but exclusively if it's implementing the {@see PersistentAttributeInterceptable}
 	 * interface. Otherwise no action is performed.
 	 *
@@ -178,7 +189,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static <T> void processIfPersistentAttributeInterceptable(
 			final Object entity,
-			final BiConsumer<PersistentAttributeInterceptable, T> action,
+			final PersistentAttributeInterceptableAction<T> action,
 			final T optionalParam) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
 			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;

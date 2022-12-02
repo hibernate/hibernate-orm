@@ -127,31 +127,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
-			// see if this is a simple version update
-			boolean isSimpleVersionUpdate = false;
-			Object newVersion = null;
-
-			if ( incomingDirtyAttributeIndexes != null ) {
-				if ( incomingDirtyAttributeIndexes.length == 1
-						&& versionMapping.getVersionAttribute() == entityPersister().getAttributeMapping( incomingDirtyAttributeIndexes[0] ) ) {
-					// special case of only the version attribute itself as dirty
-					isSimpleVersionUpdate = true;
-					newVersion = values[incomingDirtyAttributeIndexes[0]];
-				}
-				else if ( incomingDirtyAttributeIndexes.length == 0 && oldVersion != null ) {
-					isSimpleVersionUpdate = !versionMapping.areEqual(
-							values[ versionMapping.getVersionAttribute().getStateArrayPosition() ],
-							oldVersion,
-							session
-					);
-					newVersion = values[versionMapping.getVersionAttribute().getStateArrayPosition()];
-				}
-			}
-
-			if ( isSimpleVersionUpdate ) {
-				// we have just the version being updated - use the special handling
-				assert newVersion != null;
-				doVersionUpdate( entity, id, newVersion, oldVersion, session );
+			final boolean isForcedVersionIncrement = handlePotentialImplicitForcedVersionIncrement( entity, id, values, oldVersion, incomingDirtyAttributeIndexes, session, versionMapping );
+			if ( isForcedVersionIncrement ) {
 				return;
 			}
 		}
@@ -313,6 +290,46 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					session
 			);
 		}
+	}
+
+	private boolean handlePotentialImplicitForcedVersionIncrement(
+			Object entity,
+			Object id,
+			Object[] values,
+			Object oldVersion,
+			int[] incomingDirtyAttributeIndexes,
+			SharedSessionContractImplementor session,
+			EntityVersionMapping versionMapping) {
+		// handle case where the only value being updated is the version.
+		// we handle this case specially from `#coordinateUpdate` to leverage
+		// `#doVersionUpdate`
+		boolean isSimpleVersionUpdate = false;
+		Object newVersion = null;
+
+		if ( incomingDirtyAttributeIndexes != null ) {
+			if ( incomingDirtyAttributeIndexes.length == 1
+					&& versionMapping.getVersionAttribute() == entityPersister().getAttributeMapping( incomingDirtyAttributeIndexes[0] ) ) {
+				// special case of only the version attribute itself as dirty
+				isSimpleVersionUpdate = true;
+				newVersion = values[ incomingDirtyAttributeIndexes[0]];
+			}
+			else if ( incomingDirtyAttributeIndexes.length == 0 && oldVersion != null ) {
+				isSimpleVersionUpdate = !versionMapping.areEqual(
+						values[ versionMapping.getVersionAttribute().getStateArrayPosition() ],
+						oldVersion,
+						session
+				);
+				newVersion = values[ versionMapping.getVersionAttribute().getStateArrayPosition()];
+			}
+		}
+
+		if ( isSimpleVersionUpdate ) {
+			// we have just the version being updated - use the special handling
+			assert newVersion != null;
+			doVersionUpdate( entity, id, newVersion, oldVersion, session );
+			return true;
+		}
+		return false;
 	}
 
 	private boolean isValueGenerationInSql(Generator generator) {

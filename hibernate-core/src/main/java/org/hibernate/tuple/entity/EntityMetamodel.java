@@ -39,15 +39,16 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.GeneratorCreationContext;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
@@ -65,7 +66,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * Centralizes metamodel information about an entity.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Replaced by {@link EntityMappingType}.  EntityMetamodel
+ * was a first attempt at what has become {@link EntityMappingType}
  */
+@Deprecated( since = "6", forRemoval = true )
 public class EntityMetamodel implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
 

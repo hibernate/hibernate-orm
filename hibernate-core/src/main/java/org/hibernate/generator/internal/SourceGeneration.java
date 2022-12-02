@@ -108,8 +108,8 @@ public class SourceGeneration implements InMemoryGenerator {
 		try {
 			statement = prepareStatement( coordinator, timestampSelectString, callable );
 			Timestamp ts = callable
-					? extractCalledResult( statement, coordinator )
-					: extractResult( statement, coordinator );
+					? extractCalledResult( statement, coordinator, timestampSelectString )
+					: extractResult( statement, coordinator, timestampSelectString );
 			logResult( ts );
 			return ts;
 		}
@@ -135,16 +135,18 @@ public class SourceGeneration implements InMemoryGenerator {
 		return coordinator.getStatementPreparer().prepareStatement( timestampSelectString, callable );
 	}
 
-	private static Timestamp extractResult(PreparedStatement statement, JdbcCoordinator coordinator) throws SQLException {
-		ResultSet resultSet = coordinator.getResultSetReturn().extract( statement );
+	private static Timestamp extractResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
+			throws SQLException {
+		ResultSet resultSet = coordinator.getResultSetReturn().extract( statement, sql );
 		resultSet.next();
 		return resultSet.getTimestamp( 1 );
 	}
 
-	private static Timestamp extractCalledResult(PreparedStatement statement, JdbcCoordinator coordinator) throws SQLException {
+	private static Timestamp extractCalledResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
+			throws SQLException {
 		CallableStatement callable = (CallableStatement) statement;
 		callable.registerOutParameter( 1, TIMESTAMP );
-		coordinator.getResultSetReturn().execute( callable );
+		coordinator.getResultSetReturn().execute( callable, sql );
 		return callable.getTimestamp( 1 );
 	}
 

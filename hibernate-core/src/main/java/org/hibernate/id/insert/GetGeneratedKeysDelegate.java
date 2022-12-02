@@ -99,7 +99,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
 
 		try {
-			jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
+			jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, insertSql );
 
 			try {
 				final ResultSet resultSet = insertStatement.getGeneratedKeys();
@@ -147,7 +147,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
-		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement );
+		jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, insertSql );
 
 		try {
 			final ResultSet resultSet = insertStatement.getGeneratedKeys();

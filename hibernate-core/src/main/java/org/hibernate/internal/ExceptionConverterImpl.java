@@ -152,9 +152,8 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new IllegalStateException( exception );
 		}
 		else {
-			final PersistenceException converted = new PersistenceException( exception.getMessage(), exception );
-			rollbackIfNecessary( converted );
-			return converted;
+			rollbackIfNecessary( exception );
+			return exception;
 		}
 	}
 

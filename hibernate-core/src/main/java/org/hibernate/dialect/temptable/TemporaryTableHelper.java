@@ -160,7 +160,7 @@ public class TemporaryTableHelper {
 				ps.setString( 1, sessionUid );
 			}
 
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps, sql );
 		}
 		catch( Throwable t ) {
 			log.unableToCleanupTemporaryIdTable(t);

@@ -79,30 +79,31 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			SharedSessionContractImplementor session) {
 		final BindingGroup bindingGroup = bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
 		if ( bindingGroup == null ) {
-			return;
+			statementDetails.resolveStatement();
 		}
-
-		bindingGroup.forEachBinding( (binding) -> {
-			try {
-				binding.getValueBinder().bind(
-						statementDetails.resolveStatement(),
-						binding.getValue(),
-						binding.getPosition(),
-						session
-				);
-			}
-			catch (SQLException e) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						String.format(
-								Locale.ROOT,
-								"Unable to bind parameter #%s - %s",
-								binding.getPosition(),
-								binding.getValue()
-						)
-				);
-			}
-		} );
+		else {
+			bindingGroup.forEachBinding( (binding) -> {
+				try {
+					binding.getValueBinder().bind(
+							statementDetails.resolveStatement(),
+							binding.getValue(),
+							binding.getPosition(),
+							session
+					);
+				}
+				catch (SQLException e) {
+					throw session.getJdbcServices().getSqlExceptionHelper().convert(
+							e,
+							String.format(
+									Locale.ROOT,
+									"Unable to bind parameter #%s - %s",
+									binding.getPosition(),
+									binding.getValue()
+							)
+					);
+				}
+			} );
+		}
 	}
 
 	@Override

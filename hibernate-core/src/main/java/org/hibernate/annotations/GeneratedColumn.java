@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.tuple.GeneratedAlwaysValueGeneration;
+import org.hibernate.generator.internal.GeneratedAlwaysGeneration;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -29,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
-@ValueGenerationType(generatedBy = GeneratedAlwaysValueGeneration.class)
+@ValueGenerationType(generatedBy = GeneratedAlwaysGeneration.class)
 public @interface GeneratedColumn {
 	/**
 	 * The expression to include in the generated DDL.

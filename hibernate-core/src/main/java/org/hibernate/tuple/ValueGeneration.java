@@ -9,6 +9,9 @@ package org.hibernate.tuple;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 
 /**
  * A value generator that can adapt to both Java value generation and database value generation.

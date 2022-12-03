@@ -6,8 +6,10 @@
  */
 package org.hibernate.id.factory.spi;
 
+import org.hibernate.generator.Generator;
+
 /**
- * Marker interface for Hibernate-provided implementations of {@link org.hibernate.tuple.Generator}.
+ * Marker interface for Hibernate-provided implementations of {@link Generator}.
  */
 public interface StandardGenerator {
 }

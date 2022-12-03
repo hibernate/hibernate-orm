@@ -8,7 +8,7 @@ package org.hibernate.id;
 
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.type.Type;
 
 import java.util.Properties;

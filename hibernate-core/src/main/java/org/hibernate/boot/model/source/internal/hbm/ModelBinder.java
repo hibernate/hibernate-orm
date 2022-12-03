@@ -19,7 +19,7 @@ import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.Source;
-import org.hibernate.tuple.SourceGeneration;
+import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -149,7 +149,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.generator.internal.GeneratedGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
@@ -2548,7 +2548,7 @@ public class ModelBinder {
 					);
 				}
 				if ( timing != GenerationTiming.NEVER ) {
-					property.setValueGeneratorCreator( context -> new GeneratedValueGeneration( timing.getEquivalent() ) );
+					property.setValueGeneratorCreator( context -> new GeneratedGeneration( timing.getEquivalent() ) );
 
 					// generated properties can *never* be insertable...
 					if ( property.isInsertable() && timing.includesInsert() ) {

@@ -91,7 +91,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -153,7 +153,6 @@ import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntit
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
-import static org.hibernate.cfg.annotations.PropertyBinder.generatorCreator;
 import static org.hibernate.cfg.annotations.PropertyBinder.identifierGeneratorCreator;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.Constraint.hashedName;

@@ -86,4 +86,10 @@ public interface AttributeMapping
 		//noinspection unchecked,rawtypes
 		return ( (JavaType) getJavaType() ).getComparator().compare( value1, value2 );
 	}
+
+	@Override //Overrides multiple interfaces!
+	default AttributeMapping asAttributeMapping() {
+		return this;
+	}
+
 }

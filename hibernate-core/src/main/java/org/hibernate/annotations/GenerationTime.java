@@ -23,7 +23,10 @@ import java.util.EnumSet;
  *
  * @see Generated
  * @see CurrentTimestamp
+ *
+ * @deprecated use {@link EventType} and {@link EventTypeSets} instead
  */
+@Deprecated(since = "6.2")
 public enum GenerationTime {
 	/**
 	 * Indicates that a value is never generated.

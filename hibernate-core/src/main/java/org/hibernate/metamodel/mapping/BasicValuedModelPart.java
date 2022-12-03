@@ -36,6 +36,11 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 	}
 
 	@Override
+	default SelectableMapping getSelectable(int columnIndex) {
+		return this;
+	}
+
+	@Override
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {
 		consumer.accept( offset, this );
 		return getJdbcTypeCount();

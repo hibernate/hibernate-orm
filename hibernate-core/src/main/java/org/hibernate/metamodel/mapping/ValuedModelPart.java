@@ -16,15 +16,11 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface ValuedModelPart extends ModelPart, ValueMapping {
+public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMappings {
 	/**
 	 * The table which contains the columns mapped by this value
 	 */
 	String getContainingTableExpression();
-
-	// todo (ValuedModelPart) : consider moving `#getContainingTableExpression` to `SelectableMappings`
-	//		depends if we ever use this to group selectable-mappings from different tables.
-
 
 	@Override
 	default int getJdbcTypeCount() {

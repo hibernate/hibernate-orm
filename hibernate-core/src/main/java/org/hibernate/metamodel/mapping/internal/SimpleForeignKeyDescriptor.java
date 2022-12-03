@@ -525,6 +525,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return keySide.getModelPart();
+	}
+
+	@Override
 	public boolean isFormula() {
 		return keySide.getModelPart().isFormula();
 	}

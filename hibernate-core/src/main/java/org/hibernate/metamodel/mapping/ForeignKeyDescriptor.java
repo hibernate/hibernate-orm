@@ -111,6 +111,9 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
+	@Override
+	SelectableMapping getSelectable(int columnIndex);
+
 	/**
 	 * Visits the FK "referring" columns
 	 */

@@ -33,6 +33,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Queryable;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -900,20 +901,17 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public int getJdbcTypeCount() {
-		int span = elementDescriptor.getJdbcTypeCount();
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.getJdbcTypeCount();
-		}
-		return span;
+		return 0;
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return null;
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		int span = elementDescriptor.forEachJdbcType( offset, action );
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.forEachJdbcType( offset + span, action );
-		}
-		return span;
+		return 0;
 	}
 
 	@Override

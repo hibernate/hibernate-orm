@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -103,9 +104,18 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getContainingTableExpression();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getSelectable( columnIndex );
+	}
+
+	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getKeyPart().forEachSelectable( offset, consumer );
-//		return super.forEachSelectable( offset, consumer );
 	}
 
 	@Override

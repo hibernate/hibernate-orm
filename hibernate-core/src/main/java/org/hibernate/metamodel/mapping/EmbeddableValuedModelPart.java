@@ -61,6 +61,11 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	}
 
 	@Override
+	default SelectableMapping getSelectable(int columnIndex) {
+		return getEmbeddableTypeDescriptor().getSelectable( columnIndex );
+	}
+
+	@Override
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
 	}

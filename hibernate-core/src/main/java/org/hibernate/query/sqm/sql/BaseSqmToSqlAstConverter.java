@@ -5641,8 +5641,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( type instanceof SqmExpressible) {
 					adjustedTimestampType = (SqmExpressible<?>) type;
 				}
-				else if (type instanceof AttributeMapping ) {
-					adjustedTimestampType = (SqmExpressible<?>) ( (AttributeMapping) type ).getMappedType();
+				else if (type instanceof ValueMapping ) {
+					adjustedTimestampType = (SqmExpressible<?>) ( (ValueMapping) type ).getMappedType();
 				}
 				else {
 					// else we know it has not been transformed

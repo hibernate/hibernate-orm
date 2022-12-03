@@ -248,7 +248,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
 					assert parentInitializer.isCollectionInitializer();
 					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
-					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
+					final EntityPersister entityPersister = (EntityPersister) fetchable.asAttributeMapping().getMappedType();
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
 					final Object key = collectionKey.getKey();
 					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()

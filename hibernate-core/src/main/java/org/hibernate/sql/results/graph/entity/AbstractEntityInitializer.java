@@ -52,6 +52,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -178,7 +179,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final int size = entityDescriptor.getNumberOfFetchables();
 		for ( int i = 0; i < size; i++ ) {
-			final AttributeMapping attributeMapping = (AttributeMapping) entityDescriptor.getFetchable( i );
+			final Fetchable fetchable = entityDescriptor.getFetchable( i );
+			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
 			// todo (6.0) : somehow we need to track whether all state is loaded/resolved
 			//		note that lazy proxies or uninitialized collections count against
 			//		that in the affirmative

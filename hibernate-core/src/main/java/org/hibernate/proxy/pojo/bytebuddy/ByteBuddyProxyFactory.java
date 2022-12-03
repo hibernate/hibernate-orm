@@ -89,29 +89,38 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 
+		final HibernateProxy proxy = getHibernateProxy();
+		( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
 
-			final HibernateProxy proxy = getHibernateProxy();
-			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
-
-			return proxy;
+		return proxy;
 
 	}
 
-	private HibernateProxy getHibernateProxy()
+	private HibernateProxy getHibernateProxy() {
+		final PrimeAmongSecondarySupertypes internal = getHibernateProxyInternal();
+		final HibernateProxy hibernateProxy = internal.asHibernateProxy();
+		if ( hibernateProxy == null ) {
+			throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
+		}
+		return hibernateProxy;
+	}
+
+	/**
+	 * This technically returns a HibernateProxy, but declaring that type as the return
+	 * type for the privileged action triggers an implicit case of type pollution.
+	 * We therefore declare it as PrimeAmongSecondarySupertypes, and require the
+	 * invoker to perform the narrowing
+	 */
+	private PrimeAmongSecondarySupertypes getHibernateProxyInternal()
 			throws HibernateException {
 
-		final PrivilegedAction<HibernateProxy> action = new PrivilegedAction<HibernateProxy>() {
+		final PrivilegedAction<PrimeAmongSecondarySupertypes> action = new PrivilegedAction<PrimeAmongSecondarySupertypes>() {
 
 			@Override
-			public HibernateProxy run() {
+			public PrimeAmongSecondarySupertypes run() {
 
 				try {
-					PrimeAmongSecondarySupertypes instance = (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
-					final HibernateProxy hibernateProxy = instance.asHibernateProxy();
-					if ( hibernateProxy == null ) {
-						throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
-					}
-					return hibernateProxy;
+					return (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
 				}
 				catch (NoSuchMethodException e) {
 					String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
@@ -127,6 +136,6 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			}
 		};
 		return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
-
 	}
+
 }

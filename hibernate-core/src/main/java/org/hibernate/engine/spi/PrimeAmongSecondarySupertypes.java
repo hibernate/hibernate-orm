@@ -8,6 +8,7 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.ProxyConfiguration;
 
 /**
  * For a full explanation of the purpose of this interface
@@ -55,6 +56,10 @@ public interface PrimeAmongSecondarySupertypes {
 	}
 
 	default HibernateProxy asHibernateProxy() {
+		return null;
+	}
+
+	default ProxyConfiguration asProxyConfiguration() {
 		return null;
 	}
 

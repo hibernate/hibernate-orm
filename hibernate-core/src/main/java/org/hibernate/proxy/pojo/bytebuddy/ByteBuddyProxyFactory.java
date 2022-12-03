@@ -89,11 +89,13 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 
-		final HibernateProxy proxy = getHibernateProxy();
-		( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
-
-		return proxy;
-
+		final HibernateProxy instance = getHibernateProxy();
+		final ProxyConfiguration proxyConfiguration = instance.asProxyConfiguration();
+		if ( proxyConfiguration == null ) {
+			throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
+		}
+		proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
+		return instance;
 	}
 
 	private HibernateProxy getHibernateProxy() {

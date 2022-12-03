@@ -16,7 +16,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.Type;
 
 /**

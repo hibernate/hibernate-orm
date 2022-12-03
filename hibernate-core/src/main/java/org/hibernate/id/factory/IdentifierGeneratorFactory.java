@@ -14,7 +14,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -39,7 +39,7 @@ import jakarta.persistence.GenerationType;
  * method {@link IdentifierGenerator#configure(Type, Properties, ServiceRegistry)}.
  * <p>
  * This is part of an older mechanism for instantiating and configuring id generators
- * which predates the existence of {@link org.hibernate.tuple.Generator} and the
+ * which predates the existence of {@link Generator} and the
  * {@link org.hibernate.annotations.IdGeneratorType @IdGeneratorType} meta-annotation.
  *
  * @author Steve Ebersole

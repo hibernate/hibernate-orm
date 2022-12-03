@@ -4,17 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.tuple;
+package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Internal;
+import org.hibernate.Session;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.tuple.TimestampGenerators;
+import org.hibernate.tuple.ValueGenerator;
 
 import java.lang.reflect.Member;
 
@@ -38,8 +44,7 @@ import static org.hibernate.annotations.GenerationTime.INSERT_OR_UPDATE;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@Internal
-public class CurrentTimestampGeneration implements ValueGeneration {
+public class CurrentTimestampGeneration implements InMemoryGenerator, InDatabaseGenerator {
 	private final GenerationTime timing;
 	private final ValueGenerator<?> generator;
 
@@ -71,27 +76,37 @@ public class CurrentTimestampGeneration implements ValueGeneration {
 	}
 
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return timing.getEquivalent();
+	public boolean generatedByDatabase() {
+		return generator == null;
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		return generator;
+	public boolean generatedOnInsert() {
+		return timing.includesInsert();
 	}
 
 	@Override
-	public boolean referenceColumnInSql() {
+	public boolean generatedOnUpdate() {
+		return timing.includesUpdate();
+	}
+
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		return generator.generateValue( (Session) session, owner, currentValue );
+	}
+
+	@Override
+	public boolean writePropertyValue() {
+		return false;
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
 		return true;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return "current_timestamp";
-	}
-
-	@Override
-	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
-		return dialect.currentTimestamp();
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { dialect.currentTimestamp() };
 	}
 }

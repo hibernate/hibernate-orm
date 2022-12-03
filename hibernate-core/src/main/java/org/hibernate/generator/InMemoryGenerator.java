@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.tuple;
+package org.hibernate.generator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.tuple.GenerationTiming;
 
 /**
  * A generator that is called to produce a value just before a row is written to the database.

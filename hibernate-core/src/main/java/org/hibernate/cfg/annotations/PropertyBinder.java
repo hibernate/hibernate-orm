@@ -46,13 +46,12 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.tuple.AnnotationBasedGenerator;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.AttributeBinder;
-import org.hibernate.tuple.GeneratorCreationContext;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.binder.AttributeBinder;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
@@ -63,7 +62,6 @@ import java.util.Map;
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * @author Emmanuel Bernard
@@ -243,9 +241,9 @@ public class PropertyBinder {
 	private void callAttributeBinders(Property prop) {
 		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class);
 		if ( containingAnnotation != null ) {
-			final AttributeBinderType binderAnn = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
+			final AttributeBinderType binderType = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
 			try {
-				final AttributeBinder binder = binderAnn.binder().newInstance();
+				final AttributeBinder binder = binderType.binder().newInstance();
 				binder.bind( containingAnnotation, buildingContext, entityBinder.getPersistentClass(), prop );
 			}
 			catch (Exception e) {

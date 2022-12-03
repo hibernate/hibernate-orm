@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.tuple.AttributeAccessorBinder;
+import org.hibernate.binder.internal.AttributeAccessorBinder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

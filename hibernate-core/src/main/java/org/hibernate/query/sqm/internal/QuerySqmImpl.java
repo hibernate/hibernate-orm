@@ -107,8 +107,7 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;

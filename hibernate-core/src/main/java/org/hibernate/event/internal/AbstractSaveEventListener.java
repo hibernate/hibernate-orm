@@ -34,8 +34,8 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 

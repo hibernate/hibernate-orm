@@ -14,11 +14,12 @@ import org.hibernate.Session;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.InMemoryGenerator;
 
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
- * An {@link AnnotationValueGeneration} which delegates to a {@link ValueGenerator}.
+ * An {@link InMemoryGenerator} which delegates to a {@link ValueGenerator}.
  * Underlies the {@link GeneratorType} annotation.
  *
  * @author Gunnar Morling

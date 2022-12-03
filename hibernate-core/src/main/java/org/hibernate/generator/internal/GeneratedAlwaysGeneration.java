@@ -4,20 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.tuple;
+package org.hibernate.generator.internal;
 
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.InDatabaseGenerator;
 
 /**
  * For {@link GeneratedColumn}.
  *
  * @author Gavin King
  */
-public class GeneratedAlwaysValueGeneration
-		implements InDatabaseGenerator {
+public class GeneratedAlwaysGeneration implements InDatabaseGenerator {
 
-	public GeneratedAlwaysValueGeneration() {}
+	public GeneratedAlwaysGeneration() {}
 
 	@Override
 	public boolean generatedOnUpdate() {

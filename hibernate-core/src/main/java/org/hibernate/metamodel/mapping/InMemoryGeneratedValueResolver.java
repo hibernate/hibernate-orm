@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 
 /**
  * GeneratedValueResolver impl for in-memory generation

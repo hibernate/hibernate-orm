@@ -93,7 +93,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;

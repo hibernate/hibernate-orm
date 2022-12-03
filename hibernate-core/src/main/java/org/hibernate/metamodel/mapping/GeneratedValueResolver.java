@@ -8,10 +8,6 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.internal.NoGeneratedValueResolver;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
 
 /**
  * Generalized contract covering an attribute's generation handling

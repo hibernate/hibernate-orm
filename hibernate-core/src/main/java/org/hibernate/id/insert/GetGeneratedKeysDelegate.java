@@ -25,7 +25,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;

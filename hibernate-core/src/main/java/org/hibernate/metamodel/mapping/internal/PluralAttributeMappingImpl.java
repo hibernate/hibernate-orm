@@ -69,7 +69,7 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 
 import org.jboss.logging.Logger;
 

@@ -97,6 +97,10 @@ public interface ModelPart extends MappingModelExpressible {
 		return 0;
 	}
 
+	default AttributeMapping asAttributeMapping() {
+		return null;
+	}
+
 	@FunctionalInterface
 	interface JdbcValueConsumer {
 		void consume(Object value, SelectableMapping jdbcValueMapping);

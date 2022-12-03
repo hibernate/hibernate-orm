@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 
@@ -66,5 +67,9 @@ public interface Fetchable extends ModelPart {
 	 */
 	default boolean incrementFetchDepth(){
 		return false;
+	}
+
+	default AttributeMapping asAttributeMapping() {
+		return null;
 	}
 }

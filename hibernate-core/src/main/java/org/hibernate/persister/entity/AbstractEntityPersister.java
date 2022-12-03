@@ -1859,14 +1859,17 @@ public abstract class AbstractEntityPersister
 		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
 			return true;
 		}
-		else if ( fetchable instanceof AttributeMapping ) {
-			final int propertyNumber = ( (AttributeMapping) fetchable ).getStateArrayPosition();
+		else {
+			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
+			if ( attributeMapping != null ) {
+				final int propertyNumber = attributeMapping.getStateArrayPosition();
 //				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
 //				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
-			return propertySelectable[propertyNumber];
-		}
-		else {
-			return true;
+				return propertySelectable[propertyNumber];
+			}
+			else {
+				return true;
+			}
 		}
 	}
 
@@ -4187,7 +4190,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				for ( int i = 0; i < staticFetchableList.size(); i++ ) {
-					final AttributeMapping attribute = (AttributeMapping) staticFetchableList.get( i );
+					final AttributeMapping attribute = staticFetchableList.get( i ).asAttributeMapping();
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
 						final Setter setter = attribute.getPropertyAccess().getSetter();
@@ -4574,7 +4577,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void setPropertyValue(Object object, String propertyName, Object value) {
-		final AttributeMapping attributeMapping = (AttributeMapping) findSubPart( propertyName, this );
+		final AttributeMapping attributeMapping = findSubPart( propertyName, this ).asAttributeMapping();
 		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this );
 		attributeMetadata.getPropertyAccess().getSetter().set( object, value );
 	}
@@ -5690,11 +5693,11 @@ public abstract class AbstractEntityPersister
 													"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
 													name,
 													getJavaType().getJavaType().getTypeName(),
-													( (AttributeMapping) attribute ).getDeclaringType()
+													attribute.asAttributeMapping().getDeclaringType()
 															.getJavaType()
 															.getJavaType()
 															.getTypeName(),
-													( (AttributeMapping) subDefinedAttribute ).getDeclaringType()
+													subDefinedAttribute.asAttributeMapping().getDeclaringType()
 															.getJavaType()
 															.getJavaType()
 															.getTypeName()

@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -370,10 +371,12 @@ public abstract class SimpleValue implements KeyValue {
 		return (IdentifierGenerator) generator;
 	}
 
+	@Internal
 	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
 	}
 
+	@Internal
 	public IdentifierGeneratorCreator getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
 	}

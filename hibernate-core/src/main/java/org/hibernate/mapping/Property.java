@@ -14,19 +14,24 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.Generator;
+import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -44,7 +49,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
-	private GeneratorCreator generator;
+	private GeneratorCreator generatorCreator;
 	private String propertyAccessorName;
 	private PropertyAccessStrategy propertyAccessStrategy;
 	private boolean lazy;
@@ -215,12 +220,14 @@ public class Property implements Serializable, MetaAttributable {
 		return insertable && value.hasAnyInsertableColumns();
 	}
 
-	public GeneratorCreator getValueGenerationStrategy() {
-		return generator;
+	@Internal
+	public GeneratorCreator getValueGeneratorCreator() {
+		return generatorCreator;
 	}
 
-	public void setValueGenerationStrategy(GeneratorCreator generator) {
-		this.generator = generator;
+	@Internal
+	public void setValueGeneratorCreator(GeneratorCreator generator) {
+		this.generatorCreator = generator;
 	}
 
 	public void setUpdateable(boolean mutable) {
@@ -284,12 +291,12 @@ public class Property implements Serializable, MetaAttributable {
 
 	/**
 	 * Is this property lazy in the "bytecode" sense?
-	 *
+	 * <p>
 	 * Lazy here means whether we should push *something* to the entity
 	 * instance for this field in its "base fetch group".  Mainly it affects
 	 * whether we should list this property's columns in the SQL select
 	 * for the owning entity when we load its "base fetch group".
-	 *
+	 * <p>
 	 * The "something" we push varies based on the nature (basic, etc) of
 	 * the property.
 	 *
@@ -441,6 +448,11 @@ public class Property implements Serializable, MetaAttributable {
 		this.returnedClassName = returnedClassName;
 	}
 
+	public Generator createGenerator(RuntimeModelCreationContext context) {
+		return generatorCreator == null ? null :
+				generatorCreator.createGenerator( new PropertyGeneratorCreationContext( context ) );
+	}
+
 	public Property copy() {
 		final Property prop = new Property();
 		prop.setName( getName() );
@@ -450,7 +462,7 @@ public class Property implements Serializable, MetaAttributable {
 		prop.setInsertable( isInsertable() );
 		prop.setSelectable( isSelectable() );
 		prop.setOptimisticLocked( isOptimisticLocked() );
-		prop.setValueGenerationStrategy( getValueGenerationStrategy() );
+		prop.setValueGeneratorCreator( getValueGeneratorCreator() );
 		prop.setPropertyAccessorName( getPropertyAccessorName() );
 		prop.setPropertyAccessStrategy( getPropertyAccessStrategy() );
 		prop.setLazy( isLazy() );
@@ -463,5 +475,43 @@ public class Property implements Serializable, MetaAttributable {
 		prop.addCallbackDefinitions( getCallbackDefinitions() );
 		prop.setReturnedClassName( getReturnedClassName() );
 		return prop;
+	}
+
+	private class PropertyGeneratorCreationContext implements GeneratorCreationContext {
+		private final RuntimeModelCreationContext context;
+
+		public PropertyGeneratorCreationContext(RuntimeModelCreationContext context) {
+			this.context = context;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return context.getMetadata().getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return context.getBootstrapContext().getServiceRegistry();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return context.getSessionFactory().getSessionFactoryOptions().getDefaultCatalog();
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return context.getSessionFactory().getSessionFactoryOptions().getDefaultSchema();
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return persistentClass;
+		}
+
+		@Override
+		public Property getProperty() {
+			return Property.this;
+		}
 	}
 }

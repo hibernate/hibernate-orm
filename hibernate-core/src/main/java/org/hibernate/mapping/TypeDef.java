@@ -5,12 +5,17 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+import org.hibernate.Remove;
+
 import java.io.Serializable;
 import java.util.Properties;
 
 /**
  * Placeholder for typedef information
+ *
+ * @deprecated no longer used
  */
+@Deprecated @Remove
 public class TypeDef implements Serializable {
 
 	private String typeClass;

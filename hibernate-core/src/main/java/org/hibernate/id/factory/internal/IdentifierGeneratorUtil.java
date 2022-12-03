@@ -39,11 +39,11 @@ public class IdentifierGeneratorUtil {
 		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
 		// null, and defaults are handled later.
 		if ( defaultSchema != null ) {
-			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
+			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema );
 		}
 
 		if ( defaultCatalog != null ) {
-			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog);
+			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
 		}
 
 		// default initial value and allocation size per-JPA defaults

@@ -530,7 +530,7 @@ public class MapBinder extends CollectionBinder {
 		for ( Property property : component.getProperties() ) {
 			final Property newProperty = new Property();
 			newProperty.setCascade( property.getCascade() );
-			newProperty.setValueGenerationStrategy( property.getValueGenerationStrategy() );
+			newProperty.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			newProperty.setInsertable( false );
 			newProperty.setUpdateable( false );
 			newProperty.setMetaAttributes( property.getMetaAttributes() );

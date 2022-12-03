@@ -1015,7 +1015,7 @@ public class ModelBinder {
 			versionValue.setNullValue( "undefined" );
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
-			property.setValueGenerationStrategy(
+			property.setValueGeneratorCreator(
 					context -> new SourceGeneration( DB_SOURCE, property.getType().getReturnedClass() ) );
 		}
 
@@ -2548,7 +2548,7 @@ public class ModelBinder {
 					);
 				}
 				if ( generationTiming.isNotNever() ) {
-					property.setValueGenerationStrategy( context -> new GeneratedValueGeneration( generationTiming ) );
+					property.setValueGeneratorCreator(context -> new GeneratedValueGeneration( generationTiming ) );
 
 					// generated properties can *never* be insertable...
 					if ( property.isInsertable() && generationTiming.includesInsert() ) {

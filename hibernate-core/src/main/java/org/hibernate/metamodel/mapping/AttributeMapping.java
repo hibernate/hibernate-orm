@@ -80,4 +80,10 @@ public interface AttributeMapping
 	default MutabilityPlan<?> getExposedMutabilityPlan() {
 		return getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan();
 	}
+
+	@Override //Overrides multiple interfaces!
+	default AttributeMapping asAttributeMapping() {
+		return this;
+	}
+
 }

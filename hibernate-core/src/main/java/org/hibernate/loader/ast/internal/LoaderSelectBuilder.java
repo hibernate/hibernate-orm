@@ -769,7 +769,7 @@ public class LoaderSelectBuilder {
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle = ( (AttributeMapping) fetchable ).getAttributeMetadataAccess()
+					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping().getAttributeMetadataAccess()
 							.resolveAttributeMetadata( fetchable.findContainingEntityMapping() )
 							.getCascadeStyle();
 					final CascadingAction cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()

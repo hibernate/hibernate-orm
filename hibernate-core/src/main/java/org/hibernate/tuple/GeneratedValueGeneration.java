@@ -7,8 +7,10 @@
 package org.hibernate.tuple;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.Dialect;
 
+import static org.hibernate.annotations.GenerationTime.INSERT_OR_UPDATE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -19,21 +21,19 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  */
 public class GeneratedValueGeneration implements InDatabaseGenerator {
 
-	private GenerationTiming timing;
+	private GenerationTime timing;
 	private boolean writable;
 	private String[] sql;
 
 	public GeneratedValueGeneration() {
 	}
 
-	public GeneratedValueGeneration(GenerationTiming timing) {
-		this.timing = timing;
+	public GeneratedValueGeneration(GenerationTime event) {
+		this.timing = event;
 	}
 
 	public GeneratedValueGeneration(Generated annotation) {
-		timing = annotation.timing().isAlways()
-				? annotation.value().getEquivalent()
-				: annotation.timing();
+		timing = annotation.event() == INSERT_OR_UPDATE ? annotation.value() : annotation.event();
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
 		writable = annotation.writable() || sql != null;
 	}

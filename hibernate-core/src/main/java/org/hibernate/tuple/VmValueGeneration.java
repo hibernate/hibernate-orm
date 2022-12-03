@@ -11,6 +11,7 @@ import java.lang.reflect.Constructor;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Session;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -28,7 +29,7 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 @Deprecated(since = "6.2")
 public class VmValueGeneration implements InMemoryGenerator {
 
-	private final GenerationTiming generationTiming;
+	private final GenerationTime timing;
 	private final ValueGenerator<?> generator;
 
 	public VmValueGeneration(GeneratorType annotation) {
@@ -39,9 +40,7 @@ public class VmValueGeneration implements InMemoryGenerator {
 		catch (Exception e) {
 			throw new HibernateException( "Couldn't instantiate value generator", e );
 		}
-		generationTiming = annotation.timing().isAlways()
-				? annotation.when().getEquivalent()
-				: annotation.timing();
+		timing = annotation.when();
 	}
 
 	/**
@@ -49,7 +48,7 @@ public class VmValueGeneration implements InMemoryGenerator {
 	 */
 	@Override
 	public boolean generatedOnInsert() {
-		return generationTiming.includesInsert();
+		return timing.includesInsert();
 	}
 
 	/**
@@ -57,7 +56,7 @@ public class VmValueGeneration implements InMemoryGenerator {
 	 */
 	@Override
 	public boolean generatedOnUpdate() {
-		return generationTiming.includesUpdate();
+		return timing.includesUpdate();
 	}
 
 

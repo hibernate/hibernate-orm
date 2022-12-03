@@ -6,6 +6,9 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.GenerationTime;
+
 /**
  * Represents the timing of {@link ValueGeneration value generation} that occurs
  * in the Java program, or in the database.
@@ -88,22 +91,18 @@ public enum GenerationTiming {
 
 		@Override
 		public boolean includes(GenerationTiming timing) {
-			return timing.isNotNever();
+			return timing != NEVER;
 		}
 	};
 
 	/**
-	 * Does value generation happen for SQL {@code INSERT} statements?
+	 * Does value generation happen for SQL {@code insert} statements?
 	 */
 	public abstract boolean includesInsert();
 	/**
-	 * Does value generation happen for SQL {@code UPDATE} statements?
+	 * Does value generation happen for SQL {@code update} statements?
 	 */
 	public abstract boolean includesUpdate();
-
-	public boolean isNotNever() {
-		return this != NEVER;
-	}
 
 	public boolean isAlways() {
 		return this == ALWAYS;
@@ -123,6 +122,24 @@ public enum GenerationTiming {
 		}
 		else {
 			return NEVER;
+		}
+	}
+
+	/**
+	 * @return the equivalent instance of {@link GenerationTime}
+	 */
+	public GenerationTime getEquivalent() {
+		switch (this) {
+			case ALWAYS:
+				return GenerationTime.INSERT_OR_UPDATE;
+			case INSERT:
+				return GenerationTime.INSERT;
+			case UPDATE:
+				return GenerationTime.UPDATE;
+			case NEVER:
+				return GenerationTime.NEVER;
+			default:
+				throw new AssertionFailure("unknown timing");
 		}
 	}
 }

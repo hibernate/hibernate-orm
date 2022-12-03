@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
@@ -17,8 +18,8 @@ import org.hibernate.internal.util.ReflectHelper;
 
 import java.lang.reflect.Member;
 
-import static org.hibernate.tuple.GenerationTiming.ALWAYS;
-import static org.hibernate.tuple.GenerationTiming.INSERT;
+import static org.hibernate.annotations.GenerationTime.INSERT;
+import static org.hibernate.annotations.GenerationTime.INSERT_OR_UPDATE;
 
 /**
  * Value generation strategy which produces a timestamp using the database
@@ -39,12 +40,12 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  */
 @Internal
 public class CurrentTimestampGeneration implements ValueGeneration {
-	private final GenerationTiming timing;
+	private final GenerationTime timing;
 	private final ValueGenerator<?> generator;
 
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		generator = getGenerator( annotation.source(), member );
-		timing = annotation.timing();
+		timing = annotation.event() == INSERT_OR_UPDATE ? annotation.timing().getEquivalent() : annotation.event();
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {
@@ -54,7 +55,7 @@ public class CurrentTimestampGeneration implements ValueGeneration {
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
 		generator = getGenerator( annotation.source(), member );
-		timing = ALWAYS;
+		timing = INSERT_OR_UPDATE;
 	}
 
 	private static ValueGenerator<?> getGenerator(SourceType source, Member member) {
@@ -71,7 +72,7 @@ public class CurrentTimestampGeneration implements ValueGeneration {
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
-		return timing;
+		return timing.getEquivalent();
 	}
 
 	@Override

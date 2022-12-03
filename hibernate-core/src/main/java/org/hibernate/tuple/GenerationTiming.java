@@ -84,7 +84,7 @@ public enum GenerationTiming {
 	public GenerationTime getEquivalent() {
 		switch (this) {
 			case ALWAYS:
-				return GenerationTime.INSERT_OR_UPDATE;
+				return GenerationTime.ALWAYS;
 			case INSERT:
 				return GenerationTime.INSERT;
 			case UPDATE:

@@ -22,8 +22,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.annotations.GenerationTime.INSERT;
-import static org.hibernate.annotations.GenerationTime.INSERT_OR_UPDATE;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * @author Steve Ebersole
@@ -66,9 +66,7 @@ public class CurrentTimestampAnnotationTests {
 		waitALittle();
 
 		// lastly, make sure we can load it..
-		final AuditedEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( AuditedEntity.class, 1 );
-		} );
+		final AuditedEntity loaded = scope.fromTransaction( (session) -> session.get( AuditedEntity.class, 1 ) );
 
 		assertThat( loaded ).isNotNull();
 		assertThat( loaded.createdAt ).isEqualTo( merged.createdAt );
@@ -86,7 +84,7 @@ public class CurrentTimestampAnnotationTests {
 		@CurrentTimestamp(event = INSERT)
 		public Instant createdAt;
 
-		@CurrentTimestamp(event = INSERT_OR_UPDATE)
+		@CurrentTimestamp(event = {INSERT, UPDATE})
 		public Instant lastUpdatedAt;
 		//end::mapping-generated-CurrentTimestamp-ex1[]
 

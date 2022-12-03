@@ -12,12 +12,16 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.lang.reflect.Member;
+import java.util.EnumSet;
 
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
@@ -39,19 +43,11 @@ public class TenantIdGeneration implements InMemoryGenerator {
 	}
 
 	/**
-	 * @return {@code true}
+	 * @return {@link EventTypeSets#INSERT_ONLY}
 	 */
 	@Override
-	public boolean generatedOnInsert() {
-		return true;
-	}
-
-	/**
-	 * @return {@code false}
-	 */
-	@Override
-	public boolean generatedOnUpdate() {
-		return false;
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
 	}
 
 	@Override

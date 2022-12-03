@@ -2771,7 +2771,7 @@ public abstract class AbstractEntityPersister
 					else {
 						final Generator generator = attributeMapping.getGenerator();
 						if ( generator!=null
-								&& generator.generatedOnUpdate()
+								&& generator.generatesOnUpdate()
 								&& generator.generatedByDatabase() ) {
 							final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
 							final Dialect dialect = getFactory().getJdbcServices().getDialect();

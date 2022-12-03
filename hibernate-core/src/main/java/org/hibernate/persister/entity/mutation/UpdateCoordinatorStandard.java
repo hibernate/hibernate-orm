@@ -337,14 +337,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.generatedOnUpdate()
+			&& generator.generatesOnUpdate()
 			&& generator.generatedByDatabase()
 			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect);
 	}
 
 	private boolean isValueGenerationInSqlNoWrite(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.generatedOnUpdate()
+			&& generator.generatesOnUpdate()
 			&& generator.generatedByDatabase()
 			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect)
 			&& !((InDatabaseGenerator) generator).writePropertyValue();
@@ -451,7 +451,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				Generator generator = generators[i];
 				if ( generator != null
 						&& !generator.generatedByDatabase()
-						&& generator.generatedOnUpdate() ) {
+						&& generator.generatesOnUpdate() ) {
 					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i] );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;

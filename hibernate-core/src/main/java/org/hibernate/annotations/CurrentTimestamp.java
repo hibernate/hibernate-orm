@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.hibernate.Remove;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -17,6 +18,8 @@ import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * Specifies that the annotated field of property is a generated timestamp,
@@ -68,9 +71,9 @@ public @interface CurrentTimestamp {
 	 * Determines when the timestamp is generated. But default, it is updated
 	 * when any SQL {@code insert} or {@code update} statement is executed.
 	 * If it should be generated just once, on the initial SQL {@code insert},
-	 * explicitly specify {@link GenerationTime#INSERT event = INSERT}.
+	 * explicitly specify {@link EventType#INSERT event = INSERT}.
 	 */
-	GenerationTime event() default GenerationTime.INSERT_OR_UPDATE;
+	EventType[] event() default {INSERT, UPDATE};
 
 	/**
 	 * Determines when the timestamp is generated. But default, it is updated

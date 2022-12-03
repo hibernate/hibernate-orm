@@ -106,7 +106,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				Generator generator = generators[i];
 				if ( generator != null
 						&& !generator.generatedByDatabase()
-						&& generator.generatedOnInsert() ) {
+						&& generator.generatesOnInsert() ) {
 					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i] );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
@@ -438,7 +438,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.generatedOnInsert()
+			&& generator.generatesOnInsert()
 			&& generator.generatedByDatabase()
 			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql(dialect);
 	}

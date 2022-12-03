@@ -14,6 +14,8 @@ import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -27,8 +29,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.EnumSet;
 
 import static java.sql.Types.TIMESTAMP;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 
 /**
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
@@ -77,19 +81,11 @@ public class SourceGeneration implements InMemoryGenerator {
 	}
 
 	/**
-	 * @return {@code true}
+	 * @return {@link EventTypeSets#INSERT_ONLY}
 	 */
 	@Override
-	public boolean generatedOnInsert() {
-		return true;
-	}
-
-	/**
-	 * @return {@code false}
-	 */
-	@Override
-	public boolean generatedOnUpdate() {
-		return false;
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
 	}
 
 	@Override

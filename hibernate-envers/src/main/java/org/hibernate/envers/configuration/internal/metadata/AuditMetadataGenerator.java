@@ -123,7 +123,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			final GeneratorCreator generation = property.getValueGeneratorCreator();
 			if ( generation instanceof GeneratedGeneration) {
 				final GeneratedGeneration valueGeneration = (GeneratedGeneration) generation;
-				if ( valueGeneration.generatedOnInsert() ) {
+				if ( valueGeneration.generatesOnInsert() ) {
 					return true;
 				}
 			}
@@ -189,7 +189,6 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addJoins(
 			PersistentClass persistentClass,
 			CompositeMapperBuilder currentMapper,

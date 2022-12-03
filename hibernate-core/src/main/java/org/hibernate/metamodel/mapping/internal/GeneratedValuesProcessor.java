@@ -97,7 +97,7 @@ public class GeneratedValuesProcessor {
 			final Generator generator = generators[ mapping.getStateArrayPosition() ];
 			if ( generator != null
 					&& generator.generatedByDatabase()
-					&& generator.isNotNever() ) {
+					&& generator.generatesSometimes() ) {
 				// this attribute is generated for the timing we are processing...
 				valueDescriptors.add( new GeneratedValueDescriptor(
 						new InDatabaseGeneratedValueResolver( timing, generatedValuesToSelect.size() ),

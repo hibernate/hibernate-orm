@@ -129,7 +129,7 @@ public final class Nullability {
 	}
 
 	private static boolean generated(Generator generator) {
-		return generator != null && generator.isNotNever();
+		return generator != null && generator.generatesSometimes();
 	}
 
 	/**

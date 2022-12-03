@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.tuple;
+package org.hibernate.generator.internal;
 
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
@@ -12,6 +12,8 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.lang.reflect.Member;
@@ -19,7 +21,8 @@ import java.lang.reflect.Member;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
- * Value generation implementation for {@link TenantId}.
+ * A generator that produces the current tenant identifier
+ * to be assigned to the {@link TenantId} property.
  *
  * @author Gavin King
  */

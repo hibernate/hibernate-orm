@@ -7,8 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.Internal;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.GeneratorCreationContext;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 
 @Internal
 @FunctionalInterface

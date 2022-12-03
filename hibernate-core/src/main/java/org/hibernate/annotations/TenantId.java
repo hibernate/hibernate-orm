@@ -6,8 +6,8 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.tuple.TenantIdBinder;
-import org.hibernate.tuple.TenantIdGeneration;
+import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.generator.internal.TenantIdGeneration;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

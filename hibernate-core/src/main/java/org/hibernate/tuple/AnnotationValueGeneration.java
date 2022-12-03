@@ -7,6 +7,9 @@
 package org.hibernate.tuple;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

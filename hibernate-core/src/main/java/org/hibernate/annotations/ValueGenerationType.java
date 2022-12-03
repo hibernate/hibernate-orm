@@ -10,10 +10,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.AnnotationBasedGenerator;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.internal.TenantIdGeneration;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -61,7 +62,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * There are several excellent examples of the use of this machinery right
  * here in this package. {@link TenantId} and its corresponding generator
- * {@link org.hibernate.tuple.TenantIdGeneration} are a good place to start.
+ * {@link TenantIdGeneration} are a good place to start.
  * <p>
  * A {@code @ValueGenerationType} annotation must have retention policy
  * {@link RetentionPolicy#RUNTIME}.

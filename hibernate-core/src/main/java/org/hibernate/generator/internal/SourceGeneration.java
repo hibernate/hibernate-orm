@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.tuple;
+package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -13,7 +13,11 @@ import org.hibernate.annotations.Source;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.tuple.TimestampGenerators;
+import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.reflect.Member;
@@ -39,7 +43,7 @@ import static java.sql.Types.TIMESTAMP;
  */
 @Deprecated(since = "6.2")
 @Internal
-public class SourceGeneration implements InMemoryGenerator, ValueGenerator<Object> {
+public class SourceGeneration implements InMemoryGenerator {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -57,7 +61,7 @@ public class SourceGeneration implements InMemoryGenerator, ValueGenerator<Objec
 		this.propertyType = propertyType;
 		switch ( annotation.value() ) {
 			case DB:
-				valueGenerator =  this;
+				valueGenerator = this::generateValue;
 				break;
 			case VM:
 				valueGenerator = TimestampGenerators.get( propertyType );
@@ -88,7 +92,6 @@ public class SourceGeneration implements InMemoryGenerator, ValueGenerator<Objec
 		return valueGenerator.generateValue( (Session) session, owner, currentValue );
 	}
 
-	@Override
 	public Object generateValue(Session session, Object owner) {
 		SharedSessionContractImplementor implementor = (SharedSessionContractImplementor) session;
 		return implementor.getTypeConfiguration().getBasicTypeForJavaType( propertyType )

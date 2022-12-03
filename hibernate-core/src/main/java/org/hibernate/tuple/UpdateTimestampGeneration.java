@@ -17,7 +17,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gunnar Morling
  *
- * @deprecated use {@link CurrentTimestampGeneration}
+ * @deprecated use {@link org.hibernate.generator.internal.CurrentTimestampGeneration}
  */
 @Internal
 @Deprecated(since = "6.2") @Remove

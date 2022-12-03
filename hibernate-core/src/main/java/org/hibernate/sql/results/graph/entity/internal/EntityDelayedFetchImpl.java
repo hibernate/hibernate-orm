@@ -14,6 +14,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -54,7 +55,7 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		final NavigablePath navigablePath = getNavigablePath();
-		final EntityInitializer entityInitializer = (EntityInitializer) creationState.resolveInitializer(
+		final Initializer entityInitializer = creationState.resolveInitializer(
 				navigablePath,
 				getEntityValuedModelPart(),
 				() -> new EntityDelayedFetchInitializer(
@@ -66,6 +67,6 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				)
 		);
 
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
+		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer.asEntityInitializer() );
 	}
 }

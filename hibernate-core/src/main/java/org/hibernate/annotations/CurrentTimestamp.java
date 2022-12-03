@@ -9,6 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.Remove;
 import org.hibernate.tuple.CurrentTimestampGeneration;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -67,8 +68,19 @@ public @interface CurrentTimestamp {
 	 * Determines when the timestamp is generated. But default, it is updated
 	 * when any SQL {@code insert} or {@code update} statement is executed.
 	 * If it should be generated just once, on the initial SQL {@code insert},
-	 * explicitly specify {@link GenerationTiming#INSERT timing = INSERT}.
+	 * explicitly specify {@link GenerationTime#INSERT time = INSERT}.
 	 */
+	GenerationTime event() default GenerationTime.INSERT_OR_UPDATE;
+
+	/**
+	 * Determines when the timestamp is generated. But default, it is updated
+	 * when any SQL {@code insert} or {@code update} statement is executed.
+	 * If it should be generated just once, on the initial SQL {@code insert},
+	 * explicitly specify {@link GenerationTiming#INSERT timing = INSERT}.
+	 *
+	 * @deprecated This was introduced in error
+	 */
+	@Deprecated(since = "6.2") @Remove
 	GenerationTiming timing() default GenerationTiming.ALWAYS;
 
 	/**

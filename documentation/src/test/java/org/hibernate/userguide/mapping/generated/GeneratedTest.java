@@ -82,7 +82,7 @@ public class GeneratedTest {
 
 		private String middleName5;
 
-		@Generated(value = GenerationTime.ALWAYS)
+		@Generated
 		@Column(columnDefinition =
 			"AS CONCAT(" +
 			"	COALESCE(firstName, ''), " +

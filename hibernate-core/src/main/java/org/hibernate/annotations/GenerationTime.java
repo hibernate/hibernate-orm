@@ -6,46 +6,80 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
 import org.hibernate.tuple.GenerationTiming;
 
 /**
- * Represents the timing of value generation that occurs in the database.
- * Intended for use with the {@link Generated} annotation.
+ * Represents a class of events involving interaction with the database
+ * that causes generation of a new value. Intended for use with the
+ * {@link Generated} and {@link CurrentTimestamp} annotations.
  *
  * @author Emmanuel Bernard
  *
  * @see Generated
- *
- * @deprecated use {@link GenerationTiming}
+ * @see CurrentTimestamp
  */
-@Deprecated(since = "6.2")
 public enum GenerationTime {
 	/**
-	 * Indicates the value is never generated.
+	 * Indicates that a value is never generated.
 	 */
-	NEVER( GenerationTiming.NEVER ),
+	NEVER,
 	/**
-	 * Indicates the value is generated on insert.
+	 * Indicates that a new value is generated on insert.
 	 */
-	INSERT( GenerationTiming.INSERT ),
+	INSERT,
 	/**
-	 * Indicates the value is generated on update.
+	 * Indicates that a new value is generated on update.
 	 *
 	 * @since 6.2
 	 */
-	UPDATE( GenerationTiming.UPDATE ),
+	UPDATE,
 	/**
-	 * Indicates the value is generated on insert and on update.
+	 * Indicates that a new value is generated on insert and on update.
+	 *
+	 * @since 6.2
 	 */
-	ALWAYS( GenerationTiming.ALWAYS );
+	INSERT_OR_UPDATE,
+	/**
+	 * Indicates that a new value is generated on insert and on update.
+	 *
+	 * @deprecated use {@link #INSERT_OR_UPDATE}
+	 */
+	@Deprecated(since = "6.2")
+	ALWAYS;
 
-	private final GenerationTiming equivalent;
-
-	private GenerationTime(GenerationTiming equivalent) {
-		this.equivalent = equivalent;
+	/**
+	 * @return {@code true} if a new value is generated when an insert is executed
+	 */
+	public boolean includesInsert() {
+		return getEquivalent().includesInsert();
 	}
 
+	/**
+	 * @return {@code true} if a new value is generated when an update is executed
+	 */
+	public boolean includesUpdate() {
+		return getEquivalent().includesUpdate();
+	}
+
+	/**
+	 * @return the equivalent instance of {@link GenerationTiming}
+	 */
+	@Internal
 	public GenerationTiming getEquivalent() {
-		return equivalent;
+		switch (this) {
+			case ALWAYS:
+			case INSERT_OR_UPDATE:
+				return GenerationTiming.ALWAYS;
+			case INSERT:
+				return GenerationTiming.INSERT;
+			case UPDATE:
+				return GenerationTiming.UPDATE;
+			case NEVER:
+				return GenerationTiming.NEVER;
+			default:
+				throw new AssertionFailure("unknown event");
+		}
 	}
 }

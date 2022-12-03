@@ -436,17 +436,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			RootClass rootClass) throws MappingException {
 		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
-			return super.createGenerator(
-					identifierGeneratorFactory,
-					dialect,
-					rootClass
-			);
+			return super.createGenerator( identifierGeneratorFactory, dialect, rootClass );
 		}
 
 		final Class<?> entityClass = rootClass.getMappedClass();
 		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
-		CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator;
-
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 		//		various scenarios for which we need to account here
 		if ( rootClass.getIdentifierMapper() != null ) {
@@ -458,11 +452,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			attributeDeclarer = resolveComponentClass();
 		}
 		else {
-			// we have the "straight up" embedded (again the hibernate term) component identifier
+			// we have the "straight up" embedded (again the Hibernate term) component identifier
 			attributeDeclarer = entityClass;
 		}
 
-		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
+		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
+				new StandardGenerationContextLocator( rootClass.getEntityName() );
 		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
 
 		for ( Property property : getProperties() ) {

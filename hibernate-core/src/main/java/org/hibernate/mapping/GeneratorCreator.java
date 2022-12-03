@@ -6,9 +6,11 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Internal;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.GeneratorCreationContext;
 
+@Internal
 @FunctionalInterface
 public interface GeneratorCreator {
 	Generator createGenerator(GeneratorCreationContext context);

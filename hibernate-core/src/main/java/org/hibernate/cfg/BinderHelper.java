@@ -381,7 +381,7 @@ public class BinderHelper {
 			clone.setInsertable( false );
 			clone.setUpdateable( false );
 			clone.setNaturalIdentifier( false );
-			clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
+			clone.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			return clone;
 		}
 	}

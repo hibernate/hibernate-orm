@@ -6,12 +6,16 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Remove;
 import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated this is no longer used
  */
 @FunctionalInterface
+@Deprecated @Remove
 public interface SemanticsResolver {
 	CollectionSemantics<?, ?> resolve(org.hibernate.type.CollectionType explicitType);
 }

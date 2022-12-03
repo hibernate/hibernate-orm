@@ -13,6 +13,12 @@ import java.util.Set;
 
 import org.hibernate.mapping.PersistentClass;
 
+/**
+ * Instantiator for entities represented as {@link Map}s.
+ *
+ * @deprecated since {@link Instantiator} is deprecated
+ */
+@Deprecated(since = "6.2")
 public class DynamicMapInstantiator implements Instantiator {
 	public static final String KEY = "$type$";
 

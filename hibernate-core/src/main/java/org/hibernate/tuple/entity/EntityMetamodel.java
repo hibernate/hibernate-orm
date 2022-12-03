@@ -18,7 +18,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
@@ -43,10 +42,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.GeneratorCreationContext;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseGenerator;
 import org.hibernate.tuple.InMemoryGenerator;
@@ -237,15 +234,15 @@ public class EntityMetamodel implements Serializable {
 
 		List<Property> props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
-			Property prop = props.get(i);
+			Property property = props.get(i);
 			final NonIdentifierAttribute attribute;
-			if ( prop == persistentClass.getVersion() ) {
+			if ( property == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
 				attribute = PropertyFactory.buildVersionProperty(
 						persister,
 						sessionFactory,
 						i,
-						prop,
+						property,
 						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
 				);
 			}
@@ -254,27 +251,27 @@ public class EntityMetamodel implements Serializable {
 						persister,
 						sessionFactory,
 						i,
-						prop,
+						property,
 						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
 						creationContext
 				);
 			}
 			properties[i] = attribute;
 
-			if ( prop.isNaturalIdentifier() ) {
+			if ( property.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
-				if ( prop.isUpdateable() ) {
+				if ( property.isUpdateable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}
 
-			if ( "id".equals( prop.getName() ) ) {
+			if ( "id".equals( property.getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					prop,
+					property,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
 					(entityName) -> {
 						final MetadataImplementor metadata = creationContext.getMetadata();
@@ -306,7 +303,7 @@ public class EntityMetamodel implements Serializable {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			final Generator generator = buildGenerator( persistentClass, prop, creationContext );
+			final Generator generator = buildGenerator( property, creationContext );
 			generators[i] = generator;
 			if ( generator != null ) {
 				if ( generatedWithNoParameter( generator ) ) {
@@ -369,7 +366,7 @@ public class EntityMetamodel implements Serializable {
 				mutableIndexes.set( i );
 			}
 
-			mapPropertyToIndex(prop, i);
+			mapPropertyToIndex(property, i);
 		}
 
 		if (naturalIdNumbers.size()==0) {
@@ -466,69 +463,25 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static Generator buildGenerator(
-			final PersistentClass persistentClass,
 			final Property mappingProperty,
 			final RuntimeModelCreationContext context) {
-		final GeneratorCreator generatorCreator = mappingProperty.getValueGenerationStrategy();
+		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
 		if ( generatorCreator != null ) {
-			final Generator generator = createGenerator( persistentClass, mappingProperty, context, generatorCreator );
+			final Generator generator = mappingProperty.createGenerator( context );
 			if ( generator.getGenerationTiming().isNotNever() ) {
 				return generator;
 			}
 		}
 		if ( mappingProperty.getValue() instanceof Component ) {
-			Dialect dialect = context.getSessionFactory().getJdbcServices().getDialect();
+			final Dialect dialect = context.getSessionFactory().getJdbcServices().getDialect();
 			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
 			final Component component = (Component) mappingProperty.getValue();
 			for ( Property property : component.getProperties() ) {
-				builder.addPair( createGenerator( null, property, context, property.getValueGenerationStrategy() ) );
+				builder.addPair( property.createGenerator( context ) );
 			}
 			return builder.build();
 		}
 		return null;
-	}
-
-	private static Generator createGenerator(
-			PersistentClass persistentClass,
-			Property mappingProperty,
-			RuntimeModelCreationContext context,
-			GeneratorCreator generatorCreator) {
-		if ( generatorCreator == null ) {
-			return null;
-		}
-		return generatorCreator.createGenerator(
-				new GeneratorCreationContext() {
-					@Override
-					public Database getDatabase() {
-						return context.getMetadata().getDatabase();
-					}
-
-					@Override
-					public ServiceRegistry getServiceRegistry() {
-						return context.getBootstrapContext().getServiceRegistry();
-					}
-
-					@Override
-					public String getDefaultCatalog() {
-						return context.getSessionFactory().getSessionFactoryOptions().getDefaultCatalog();
-					}
-
-					@Override
-					public String getDefaultSchema() {
-						return context.getSessionFactory().getSessionFactoryOptions().getDefaultSchema();
-					}
-
-					@Override
-					public PersistentClass getPersistentClass() {
-						return persistentClass;
-					}
-
-					@Override
-					public Property getProperty() {
-						return mappingProperty;
-					}
-				}
-		);
 	}
 
 	public Generator[] getGenerators() {

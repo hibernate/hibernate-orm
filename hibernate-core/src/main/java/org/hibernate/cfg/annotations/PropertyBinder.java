@@ -365,7 +365,7 @@ public class PropertyBinder {
 		if ( this.property != null ) {
 			if ( entityBinder != null ) {
 				handleNaturalId( property );
-				property.setValueGenerationStrategy( getValueGenerationFromAnnotations( this.property ) );
+				property.setValueGeneratorCreator( getValueGenerationFromAnnotations( this.property ) );
 			}
 			// HHH-4635 -- needed for dialect-specific property ordering
 			property.setLob( this.property.isAnnotationPresent( Lob.class ) );

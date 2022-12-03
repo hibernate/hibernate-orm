@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +17,6 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.Source;
 import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
@@ -170,17 +168,6 @@ import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
  */
 public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
-
-	private static final Source DB_SOURCE = new Source() {
-		@Override
-		public SourceType value() {
-			return SourceType.DB;
-		}
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Source.class;
-		}
-	};
 
 	private final MetadataBuildingContext metadataBuildingContext;
 
@@ -1016,7 +1003,7 @@ public class ModelBinder {
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
 			property.setValueGeneratorCreator(
-					context -> new SourceGeneration( DB_SOURCE, property.getType().getReturnedClass() ) );
+					context -> new SourceGeneration( SourceType.DB, property.getType().getReturnedClass() ) );
 		}
 
 		rootEntityDescriptor.setVersion( property );

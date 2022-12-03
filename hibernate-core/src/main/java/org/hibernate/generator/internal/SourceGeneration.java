@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.annotations.Source;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -33,13 +34,17 @@ import static java.sql.Types.TIMESTAMP;
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
  * This is a {@code select} that occurs <em>before</em> the {@code insert} or {@code update},
  * whereas with {@link CurrentTimestampGeneration} the {@code select} happens afterward.
+ * <p>
+ * Underlies the {@link Source @Source} annotation, and {@code <timestamp source="db"/>} in
+ * {@code hbm.xml} mapping documents.
  *
  * @see Source
  * @see CurrentTimestampGeneration
  *
  * @author Gavin King
  *
- * @deprecated because {@link Source} is deprecated, though this implementation is instructive
+ * @deprecated because both {@link Source} and {@code hbm.xml} are deprecated, though this
+ *             implementation is instructive
  */
 @Deprecated(since = "6.2")
 @Internal
@@ -54,12 +59,12 @@ public class SourceGeneration implements InMemoryGenerator {
 	private final ValueGenerator<?> valueGenerator;
 
 	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
-		this( annotation, context.getProperty().getType().getReturnedClass() );
+		this( annotation.value(), context.getProperty().getType().getReturnedClass() );
 	}
 
-	public SourceGeneration(Source annotation, Class<?> propertyType) {
+	public SourceGeneration(SourceType sourceType, Class<?> propertyType) {
 		this.propertyType = propertyType;
-		switch ( annotation.value() ) {
+		switch ( sourceType ) {
 			case DB:
 				valueGenerator = this::generateValue;
 				break;

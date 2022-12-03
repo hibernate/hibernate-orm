@@ -80,7 +80,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 	protected EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		return (EntityInitializer) creationState.resolveInitializer(
+		return creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> new EntityJoinedFetchInitializer(
@@ -94,7 +94,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						entityResult.getDiscriminatorFetch(),
 						creationState
 				)
-		);
+		).asEntityInitializer();
 	}
 
 	@Override

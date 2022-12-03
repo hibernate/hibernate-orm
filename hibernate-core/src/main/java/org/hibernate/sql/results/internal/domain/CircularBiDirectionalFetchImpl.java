@@ -242,7 +242,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 						path = path.getParent();
 						parentInitializer = rowProcessingState.resolveInitializer( path );
 					}
-					initializer = (EntityInitializer) parentInitializer;
+					initializer = parentInitializer.asEntityInitializer();
 				}
 				else {
 					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
@@ -319,14 +319,14 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
 			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
-			if ( initializer.isEntityInitializer() ) {
-				return (EntityInitializer) initializer;
+			final EntityInitializer entityInitializer = initializer.asEntityInitializer();
+			if ( entityInitializer!=null ) {
+				return entityInitializer;
 			}
 			if ( initializer.isCollectionInitializer() ) {
 				return null;
 			}
 			final ModelPart initializedPart = initializer.getInitializedPart();
-
 			if ( initializedPart instanceof EntityInitializer ) {
 				return (EntityInitializer) initializedPart;
 			}

@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
@@ -101,6 +102,10 @@ public interface Initializer {
 
 	default boolean isCollectionInitializer(){
 		return false;
+	}
+
+	default EntityInitializer asEntityInitializer() {
+		return null;
 	}
 
 }

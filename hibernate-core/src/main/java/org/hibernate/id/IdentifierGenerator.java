@@ -6,6 +6,7 @@
  */
 package org.hibernate.id;
 
+import java.util.EnumSet;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -14,15 +15,18 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.Type;
+
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 
 /**
  * A classic extension point from the very earliest days of Hibernate,
  * this interface is no longer the only way to generate identifiers. Any
- * {@link InMemoryGenerator} with timing {@link GenerationTiming#INSERT}
+ * {@link InMemoryGenerator} with timing {@link EventTypeSets#INSERT_ONLY}
  * may now be used.
  * <p>
  * This interface extends {@code InMemoryGenerator} with some additional
@@ -143,19 +147,11 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	}
 
 	/**
-	 * @return {@code true}
+	 * @return {@link EventTypeSets#INSERT_ONLY}
 	 */
 	@Override
-	default boolean generatedOnInsert() {
-		return true;
-	}
-
-	/**
-	 * @return {@code false}
-	 */
-	@Override
-	default boolean generatedOnUpdate() {
-		return false;
+	default EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
 	}
 
 	/**

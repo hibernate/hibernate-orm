@@ -572,12 +572,12 @@ public class PropertyBinder {
 
 	private static void checkVersionGenerationAlways(XProperty property, Generator generator) {
 		if ( property.isAnnotationPresent(Version.class) ) {
-			if ( !generator.generatedOnInsert() ) {
+			if ( !generator.generatesOnInsert() ) {
 				throw new AnnotationException("Property '" + property.getName()
 						+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
 				);
 			}
-			if ( !generator.generatedOnUpdate() ) {
+			if ( !generator.generatesOnUpdate() ) {
 				throw new AnnotationException("Property '" + property.getName()
 						+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
 				);
@@ -586,11 +586,11 @@ public class PropertyBinder {
 	}
 
 	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, Generator generator) {
-		if ( !generator.generatedOnInsert() ) {
+		if ( !generator.generatesOnInsert() ) {
 			throw new MappingException( "Annotation '" + annotationType
 					+ "' is annotated 'IdGeneratorType' but the given 'Generator' does not generate on inserts");
 		}
-		if ( generator.generatedOnUpdate() ) {
+		if ( generator.generatesOnUpdate() ) {
 			throw new MappingException( "Annotation '" + annotationType
 					+ "' is annotated 'IdGeneratorType' but the given 'Generator' generates on updates (it must generate only on inserts)");
 		}

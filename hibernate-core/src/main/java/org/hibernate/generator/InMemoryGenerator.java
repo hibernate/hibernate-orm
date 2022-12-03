@@ -7,7 +7,6 @@
 package org.hibernate.generator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tuple.GenerationTiming;
 
 /**
  * A generator that is called to produce a value just before a row is written to the database.
@@ -16,8 +15,8 @@ import org.hibernate.tuple.GenerationTiming;
  * database via a parameter of a JDBC prepared statement, just like any other field or property
  * value.
  * <p>
- * Any {@link InMemoryGenerator} with {@linkplain #getGenerationTiming() generation timing}
- * {@link GenerationTiming#INSERT} may be used to produce {@linkplain jakarta.persistence.Id
+ * Any {@link InMemoryGenerator} with {@linkplain #getEventTypes() generation event types}
+ * {@link EventTypeSets#INSERT_ONLY} may be used to produce {@linkplain jakarta.persistence.Id
  * identifiers}. The built-in identifier generators all implement the older extension point
  * {@link org.hibernate.id.IdentifierGenerator}, which is a subtype of this interface, but that
  * is no longer a requirement for custom id generators.

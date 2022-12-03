@@ -8,7 +8,11 @@ package org.hibernate.annotations;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.tuple.GenerationTiming;
+
+import java.util.EnumSet;
 
 /**
  * Represents a class of events involving interaction with the database
@@ -19,7 +23,10 @@ import org.hibernate.tuple.GenerationTiming;
  *
  * @see Generated
  * @see CurrentTimestamp
+ *
+ * @deprecated use {@link EventType} and {@link EventTypeSets} instead
  */
+@Deprecated(since = "6.2")
 public enum GenerationTime {
 	/**
 	 * Indicates that a value is never generated.
@@ -37,30 +44,22 @@ public enum GenerationTime {
 	UPDATE,
 	/**
 	 * Indicates that a new value is generated on insert and on update.
-	 *
-	 * @since 6.2
 	 */
-	INSERT_OR_UPDATE,
-	/**
-	 * Indicates that a new value is generated on insert and on update.
-	 *
-	 * @deprecated use {@link #INSERT_OR_UPDATE}
-	 */
-	@Deprecated(since = "6.2")
 	ALWAYS;
 
-	/**
-	 * @return {@code true} if a new value is generated when an insert is executed
-	 */
-	public boolean includesInsert() {
-		return getEquivalent().includesInsert();
-	}
-
-	/**
-	 * @return {@code true} if a new value is generated when an update is executed
-	 */
-	public boolean includesUpdate() {
-		return getEquivalent().includesUpdate();
+	public EnumSet<EventType> eventTypes() {
+		switch (this) {
+			case NEVER:
+				return EventTypeSets.NONE;
+			case ALWAYS:
+				return EventTypeSets.ALL;
+			case INSERT:
+				return EventTypeSets.INSERT_ONLY;
+			case UPDATE:
+				return EventTypeSets.UPDATE_ONLY;
+			default:
+				throw new AssertionFailure("unknown event");
+		}
 	}
 
 	/**
@@ -70,7 +69,6 @@ public enum GenerationTime {
 	public GenerationTiming getEquivalent() {
 		switch (this) {
 			case ALWAYS:
-			case INSERT_OR_UPDATE:
 				return GenerationTiming.ALWAYS;
 			case INSERT:
 				return GenerationTiming.INSERT;

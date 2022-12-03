@@ -8,7 +8,12 @@ package org.hibernate.generator.internal;
 
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.InDatabaseGenerator;
+
+import java.util.EnumSet;
+
+import static org.hibernate.generator.EventTypeSets.ALL;
 
 /**
  * For {@link GeneratedColumn}.
@@ -20,13 +25,8 @@ public class GeneratedAlwaysGeneration implements InDatabaseGenerator {
 	public GeneratedAlwaysGeneration() {}
 
 	@Override
-	public boolean generatedOnUpdate() {
-		return true;
-	}
-
-	@Override
-	public boolean generatedOnInsert() {
-		return true;
+	public EnumSet<EventType> getEventTypes() {
+		return ALL;
 	}
 
 	@Override

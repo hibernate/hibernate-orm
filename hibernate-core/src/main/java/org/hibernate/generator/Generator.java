@@ -10,6 +10,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.tuple.ValueGenerator;
 
 import java.io.Serializable;
+import java.util.EnumSet;
+
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * Describes the generation of values of a certain field or property of an entity. A generated
@@ -38,6 +42,14 @@ import java.io.Serializable;
  * <li>declare a constructor which accepts just the annotation instance, or
  * <li>declare a only default constructor, in which case it will not receive parameters.
  * </ul>
+ * A generator must implement {@link #getEventTypes()} to specify the events for which it should be
+ * called to produce a new value. {@link EventTypeSets} provides a convenient list of possibilities.
+ * <p>
+ * An {@linkplain jakarta.persistence.Id identifier} generator is a generator capable of producing
+ * surrogate primary key values. An identifier generator must respond to insert events only. That
+ * is, {@link #getEventTypes()} must return {@link EventTypeSets#INSERT_ONLY}. It may be integrated
+ * using the {@link org.hibernate.annotations.IdGeneratorType} meta-annotation or the older-style
+ * {@link org.hibernate.annotations.GenericGenerator} annotation.
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.IdGeneratorType
@@ -57,11 +69,25 @@ public interface Generator extends Serializable {
 	 */
 	boolean generatedByDatabase();
 
-	boolean generatedOnInsert();
+	/**
+	 * The {@linkplain EventType event types} for which this generator should be called
+	 * to produce a new value.
+	 * <p>
+	 * Identifier generators must return {@link EventTypeSets#INSERT_ONLY}.
+	 *
+	 * @return a set of {@link EventType}s.
+	 */
+	EnumSet<EventType> getEventTypes();
 
-	boolean generatedOnUpdate();
+	default boolean generatesSometimes() {
+		return !getEventTypes().isEmpty();
+	}
 
-	default boolean isNotNever() {
-		return generatedOnInsert() || generatedOnUpdate();
+	default boolean generatesOnInsert() {
+		return getEventTypes().contains(INSERT);
+	}
+
+	default boolean generatesOnUpdate() {
+		return getEventTypes().contains(UPDATE);
 	}
 }

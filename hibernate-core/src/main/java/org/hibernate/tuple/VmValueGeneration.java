@@ -7,13 +7,14 @@
 package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
+import java.util.EnumSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Session;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.InMemoryGenerator;
 
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
@@ -30,7 +31,7 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 @Deprecated(since = "6.2")
 public class VmValueGeneration implements InMemoryGenerator {
 
-	private final GenerationTime timing;
+	private final EnumSet<EventType> eventTypes;
 	private final ValueGenerator<?> generator;
 
 	public VmValueGeneration(GeneratorType annotation) {
@@ -41,25 +42,13 @@ public class VmValueGeneration implements InMemoryGenerator {
 		catch (Exception e) {
 			throw new HibernateException( "Couldn't instantiate value generator", e );
 		}
-		timing = annotation.when();
+		eventTypes = annotation.when().eventTypes();
 	}
 
-	/**
-	 * @return {@code true}
-	 */
 	@Override
-	public boolean generatedOnInsert() {
-		return timing.includesInsert();
+	public EnumSet<EventType> getEventTypes() {
+		return eventTypes;
 	}
-
-	/**
-	 * @return {@code false}
-	 */
-	@Override
-	public boolean generatedOnUpdate() {
-		return timing.includesUpdate();
-	}
-
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {

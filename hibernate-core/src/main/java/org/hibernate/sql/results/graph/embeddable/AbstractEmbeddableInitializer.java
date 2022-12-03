@@ -427,8 +427,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return ( (CollectionInitializer) parentInitializer ).getCollectionInstance().getOwner();
 		}
 
-		if ( parentInitializer.isEntityInitializer() ) {
-			return ( (EntityInitializer) parentInitializer ).getEntityInstance();
+		final EntityInitializer parentEntityInitializer = parentInitializer.asEntityInitializer();
+		if ( parentEntityInitializer != null ) {
+			return parentEntityInitializer.getEntityInstance();
 		}
 
 		throw new NotYetImplementedFor6Exception( getClass() );

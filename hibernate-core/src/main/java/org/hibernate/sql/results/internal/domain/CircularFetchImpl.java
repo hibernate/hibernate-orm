@@ -33,6 +33,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
@@ -111,7 +112,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 			AssemblerCreationState creationState) {
 		final DomainResultAssembler<?> keyAssembler = keyResult.createResultAssembler( parentAccess, creationState );
 
-		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
+		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				referencedModelPart,
 				() -> {
@@ -167,7 +168,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 		);
 
 		return new BiDirectionalFetchAssembler(
-				initializer,
+				initializer.asEntityInitializer(),
 				fetchable.getJavaType()
 		);
 	}

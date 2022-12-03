@@ -16,6 +16,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -64,7 +65,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 	public DomainResultAssembler createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
+		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				entityValuedModelPart,
 				() -> new EntityDelayedFetchInitializer(
@@ -76,7 +77,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaType(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer.asEntityInitializer() );
 	}
 
 	@Override

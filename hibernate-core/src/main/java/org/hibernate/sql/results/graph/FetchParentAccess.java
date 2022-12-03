@@ -23,11 +23,12 @@ public interface FetchParentAccess extends Initializer {
 	 */
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
-	default EntityInitializer findFirstEntityInitializer(){
-		if ( this.isEntityInitializer() ) {
-			return (EntityInitializer) this;
+	default EntityInitializer findFirstEntityInitializer() {
+		final EntityInitializer entityInitializer = this.asEntityInitializer();
+		if ( entityInitializer != null ) {
+			return entityInitializer;
 		}
-		return (EntityInitializer) findFirstEntityDescriptorAccess();
+		return findFirstEntityDescriptorAccess().asEntityInitializer();
 	}
 
 	Object getParentKey();

@@ -16,6 +16,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -52,7 +53,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 	@Override
 	public DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
+		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
 				() -> {
@@ -99,6 +100,6 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				}
 		);
 
-		return new EntityAssembler( getResultJavaType(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer.asEntityInitializer() );
 	}
 }

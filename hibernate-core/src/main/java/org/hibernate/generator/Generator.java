@@ -38,6 +38,18 @@ import java.io.Serializable;
  * <li>declare a constructor which accepts just the annotation instance, or
  * <li>declare a only default constructor, in which case it will not receive parameters.
  * </ul>
+ * A generator specifies the events which it reacts to:
+ * <ul>
+ * <li>{@link #generatedOnInsert()} should return {@code true} if it generates a new value when
+ *     an entity instance is inserted in the database, and
+ * <li>{@link #generatedOnUpdate()} should return {@code true} if it generates a new value every
+ *     time an entity instance of updated.
+ * </ul>
+ * <p>
+ * An {@linkplain jakarta.persistence.Id identifier} generator is a generator capable of producing
+ * surrogate primary key values. An identifier generator must generate new values only
+ * {@linkplain #generatedOnInsert() on insert}, and never {@linkplain #generatedOnUpdate() on update}.
+ * it may be integrated using the {@link org.hibernate.annotations.IdGeneratorType} meta-annotation.
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.IdGeneratorType

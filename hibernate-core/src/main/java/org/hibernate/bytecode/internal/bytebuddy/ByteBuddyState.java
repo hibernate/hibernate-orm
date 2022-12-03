@@ -304,7 +304,7 @@ public final class ByteBuddyState {
 			for ( Method m : PrimeAmongSecondarySupertypes.class.getMethods() ) {
 				//We need to ignore both the match of each default method on PrimeAmongSecondarySupertypes
 				toFullyIgnore.add( isDeclaredBy( PrimeAmongSecondarySupertypes.class ).and( named( m.getName() ) ).and( takesNoArguments() ) );
-				//And the override in the interface it belong to - which we happen to have in the return type
+				//And the override in the interface it belongs to - which we happen to have in the return type
 				toFullyIgnore.add( isDeclaredBy( m.getReturnType() ).and( named( m.getName() ) ).and( takesNoArguments() ) );
 			}
 

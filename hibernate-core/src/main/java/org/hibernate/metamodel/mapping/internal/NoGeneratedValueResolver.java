@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
-import org.hibernate.tuple.GenerationTiming;
 
 /**
  * @author Steve Ebersole

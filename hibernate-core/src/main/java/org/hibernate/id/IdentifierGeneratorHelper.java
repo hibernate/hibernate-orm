@@ -104,8 +104,7 @@ public final class IdentifierGeneratorHelper {
 
 	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
 		return alias.equals( keyColumnName )
-			|| StringHelper.isQuoted( keyColumnName, dialect )
-				&& alias.equals( StringHelper.unquote( keyColumnName, dialect ) );
+			|| alias.equals( StringHelper.unquote( keyColumnName, dialect ) );
 	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {

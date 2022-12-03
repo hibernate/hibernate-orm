@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import static java.sql.Types.TIMESTAMP;
-import static org.hibernate.tuple.GenerationTiming.ALWAYS;
 
 /**
  * Value generation strategy using the query {@link Dialect#getCurrentTimestampSelectString()}.
@@ -68,9 +67,20 @@ public class SourceGeneration implements InMemoryGenerator, ValueGenerator<Objec
 		}
 	}
 
+	/**
+	 * @return {@code true}
+	 */
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return ALWAYS;
+	public boolean generatedOnInsert() {
+		return true;
+	}
+
+	/**
+	 * @return {@code false}
+	 */
+	@Override
+	public boolean generatedOnUpdate() {
+		return false;
 	}
 
 	@Override

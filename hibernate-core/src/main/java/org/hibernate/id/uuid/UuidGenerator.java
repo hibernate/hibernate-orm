@@ -12,7 +12,6 @@ import java.util.UUID;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
@@ -60,9 +59,20 @@ public class UuidGenerator implements InMemoryGenerator {
 		}
 	}
 
+	/**
+	 * @return {@code true}
+	 */
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.INSERT;
+	public boolean generatedOnInsert() {
+		return true;
+	}
+
+	/**
+	 * @return {@code false}
+	 */
+	@Override
+	public boolean generatedOnUpdate() {
+		return false;
 	}
 
 	@Override

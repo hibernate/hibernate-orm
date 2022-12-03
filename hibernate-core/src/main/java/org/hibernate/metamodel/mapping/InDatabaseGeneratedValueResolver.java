@@ -18,18 +18,18 @@ import org.hibernate.tuple.GenerationTiming;
  */
 @Internal
 public class InDatabaseGeneratedValueResolver implements GeneratedValueResolver {
-	private final GenerationTiming timing;
+//	private final GenerationTiming timing;
 	private final int resultPosition;
 
 	public InDatabaseGeneratedValueResolver(GenerationTiming timing, int resultPosition) {
-		this.timing = timing;
+//		this.timing = timing;
 		this.resultPosition = resultPosition;
 	}
 
-	@Override
-	public GenerationTiming getGenerationTiming() {
-		return timing;
-	}
+//	@Override
+//	public GenerationTiming getGenerationTiming() {
+//		return timing;
+//	}
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {

@@ -20,10 +20,10 @@ public class NoGeneratedValueResolver implements GeneratedValueResolver {
 	 */
 	public static final NoGeneratedValueResolver INSTANCE = new NoGeneratedValueResolver();
 
-	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.NEVER;
-	}
+//	@Override
+//	public GenerationTiming getGenerationTiming() {
+//		return GenerationTiming.NEVER;
+//	}
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {

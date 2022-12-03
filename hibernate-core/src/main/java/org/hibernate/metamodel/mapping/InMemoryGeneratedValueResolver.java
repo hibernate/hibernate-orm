@@ -18,18 +18,18 @@ import org.hibernate.tuple.InMemoryGenerator;
  */
 @Internal
 public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
-	private final GenerationTiming generationTiming;
+//	private final GenerationTiming generationTiming;
 	private final InMemoryGenerator valueGenerator;
 
 	public InMemoryGeneratedValueResolver(InMemoryGenerator valueGenerator, GenerationTiming generationTiming) {
 		this.valueGenerator = valueGenerator;
-		this.generationTiming = generationTiming;
+//		this.generationTiming = generationTiming;
 	}
 
-	@Override
-	public GenerationTiming getGenerationTiming() {
-		return generationTiming;
-	}
+//	@Override
+//	public GenerationTiming getGenerationTiming() {
+//		return generationTiming;
+//	}
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {

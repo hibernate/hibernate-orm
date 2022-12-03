@@ -35,9 +35,20 @@ public class TenantIdGeneration implements InMemoryGenerator {
 		propertyType = getPropertyType( member );
 	}
 
+	/**
+	 * @return {@code true}
+	 */
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.INSERT;
+	public boolean generatedOnInsert() {
+		return true;
+	}
+
+	/**
+	 * @return {@code false}
+	 */
+	@Override
+	public boolean generatedOnUpdate() {
+		return false;
 	}
 
 	@Override

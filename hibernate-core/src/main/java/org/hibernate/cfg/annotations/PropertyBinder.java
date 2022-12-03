@@ -574,22 +574,27 @@ public class PropertyBinder {
 
 	private static void checkVersionGenerationAlways(XProperty property, Generator generator) {
 		if ( property.isAnnotationPresent(Version.class) ) {
-			final GenerationTiming timing = generator.getGenerationTiming();
-			if ( !timing.isAlways() ) {
+			if ( !generator.generatedOnInsert() ) {
 				throw new AnnotationException("Property '" + property.getName()
-						+ "' is annotated '@Version' but has a value generator with timing " + timing.name()
-						+ " (the value generation timing must be ALWAYS)"
+						+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
+				);
+			}
+			if ( !generator.generatedOnUpdate() ) {
+				throw new AnnotationException("Property '" + property.getName()
+						+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
 				);
 			}
 		}
 	}
 
 	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, Generator generator) {
-		GenerationTiming timing = generator.getGenerationTiming();
-		if ( timing != INSERT ) {
+		if ( !generator.generatedOnInsert() ) {
 			throw new MappingException( "Annotation '" + annotationType
-					+ "' is annotated 'IdGeneratorType' but the given 'InMemoryGenerator' has timing " + timing
-					+ " (an id generator must having timing INSERT)");
+					+ "' is annotated 'IdGeneratorType' but the given 'Generator' does not generate on inserts");
+		}
+		if ( generator.generatedOnUpdate() ) {
+			throw new MappingException( "Annotation '" + annotationType
+					+ "' is annotated 'IdGeneratorType' but the given 'Generator' generates on updates (it must generate only on inserts)");
 		}
 	}
 }

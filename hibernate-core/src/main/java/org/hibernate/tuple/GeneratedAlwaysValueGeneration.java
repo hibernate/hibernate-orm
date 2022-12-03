@@ -20,8 +20,13 @@ public class GeneratedAlwaysValueGeneration
 	public GeneratedAlwaysValueGeneration() {}
 
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.ALWAYS;
+	public boolean generatedOnUpdate() {
+		return true;
+	}
+
+	@Override
+	public boolean generatedOnInsert() {
+		return true;
 	}
 
 	@Override

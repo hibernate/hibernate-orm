@@ -20,22 +20,22 @@ import org.hibernate.tuple.InMemoryGenerator;
  */
 @Incubating
 public interface GeneratedValueResolver {
-	static GeneratedValueResolver from(
-			Generator generator,
-			GenerationTiming requestedTiming,
-			int dbSelectionPosition) {
-		assert requestedTiming.isNotNever();
+//	static GeneratedValueResolver from(
+//			Generator generator,
+//			GenerationTiming requestedTiming,
+//			int dbSelectionPosition) {
+//		assert requestedTiming.isNotNever();
+//
+//		if ( generator == null || !generator.getGenerationTiming().includes( requestedTiming ) ) {
+//			return NoGeneratedValueResolver.INSTANCE;
+//		}
+//		else {
+//			return generator.generatedByDatabase()
+//					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
+//					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
+//		}
+//	}
 
-		if ( generator == null || !generator.getGenerationTiming().includes( requestedTiming ) ) {
-			return NoGeneratedValueResolver.INSTANCE;
-		}
-		else {
-			return generator.generatedByDatabase()
-					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
-					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
-		}
-	}
-
-	GenerationTiming getGenerationTiming();
+//	GenerationTiming getGenerationTiming();
 	Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue);
 }

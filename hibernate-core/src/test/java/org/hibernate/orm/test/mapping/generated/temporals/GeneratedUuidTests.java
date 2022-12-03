@@ -91,8 +91,13 @@ public class GeneratedUuidTests {
 		}
 
 		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
+		public boolean generatedOnInsert() {
+			return timing.includesInsert();
+		}
+
+		@Override
+		public boolean generatedOnUpdate() {
+			return timing.includesUpdate();
 		}
 
 		@Override

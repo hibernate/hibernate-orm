@@ -44,10 +44,22 @@ public class VmValueGeneration implements InMemoryGenerator {
 				: annotation.timing();
 	}
 
+	/**
+	 * @return {@code true}
+	 */
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return generationTiming;
+	public boolean generatedOnInsert() {
+		return generationTiming.includesInsert();
 	}
+
+	/**
+	 * @return {@code false}
+	 */
+	@Override
+	public boolean generatedOnUpdate() {
+		return generationTiming.includesUpdate();
+	}
+
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {

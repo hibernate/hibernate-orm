@@ -15,14 +15,15 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.metamodel.relational.RuntimeRelationModelHelper.DEFAULT_COLUMN_WRITE_EXPRESSION;
+import static org.hibernate.sql.Template.TEMPLATE;
 
 /**
  * Models a reference to a Column in a SQL AST
@@ -76,7 +77,7 @@ public class ColumnReference implements Expression, Assignable {
 
 		if ( isFormula ) {
 			assert qualifier != null;
-			this.columnExpression = StringHelper.replace( columnExpression, Template.TEMPLATE, qualifier );
+			this.columnExpression = replace( columnExpression, TEMPLATE, qualifier );
 		}
 		else {
 			this.columnExpression = columnExpression;
@@ -85,16 +86,14 @@ public class ColumnReference implements Expression, Assignable {
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
 
+		//TODO: writeExpression is never used, can it be removed?
 		if ( isFormula ) {
 			this.writeExpression = null;
 		}
 		else if ( customWriteExpression != null ) {
-			if ( this.qualifier == null ) {
-				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE + ".", "" );
-			}
-			else {
-				this.writeExpression = StringHelper.replace( customWriteExpression, Template.TEMPLATE, qualifier );
-			}
+			this.writeExpression = this.qualifier == null
+					? replace( customWriteExpression, TEMPLATE + ".", "" )
+					: replace( customWriteExpression, TEMPLATE, qualifier );
 		}
 		else {
 			this.writeExpression = DEFAULT_COLUMN_WRITE_EXPRESSION;
@@ -176,10 +175,10 @@ public class ColumnReference implements Expression, Assignable {
 		}
 		else if ( readExpression != null ) {
 			if ( qualifier == null ) {
-				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE + ".", "" ) );
+				appender.append( replace( readExpression, TEMPLATE + ".", "" ) );
 			}
 			else {
-				appender.append( StringHelper.replace( readExpression, Template.TEMPLATE, qualifier ) );
+				appender.append( replace( readExpression, TEMPLATE, qualifier ) );
 			}
 		}
 		else {

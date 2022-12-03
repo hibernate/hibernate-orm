@@ -97,14 +97,14 @@ public final class IdentifierGeneratorHelper {
 			}
 		}
 		catch (SQLException e) {
-			LOG.debugf( "Could not determine column index from JDBC metadatda", e );
+			LOG.debugf( "Could not determine column index from JDBC metadata", e );
 		}
 		return 1;
 	}
 
 	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
-		return alias.equals( keyColumnName )
-			|| alias.equals( StringHelper.unquote( keyColumnName, dialect ) );
+		return alias.equalsIgnoreCase( keyColumnName )
+			|| alias.equalsIgnoreCase( StringHelper.unquote( keyColumnName, dialect ) );
 	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {

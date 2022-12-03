@@ -19,8 +19,6 @@ import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InMemoryGenerator;
 import org.hibernate.type.Type;
 
-import static org.hibernate.tuple.GenerationTiming.INSERT;
-
 /**
  * A classic extension point from the very earliest days of Hibernate,
  * this interface is no longer the only way to generate identifiers. Any
@@ -145,11 +143,19 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	}
 
 	/**
-	 * @return {@link GenerationTiming#INSERT}
+	 * @return {@code true}
 	 */
 	@Override
-	default GenerationTiming getGenerationTiming() {
-		return INSERT;
+	default boolean generatedOnInsert() {
+		return true;
+	}
+
+	/**
+	 * @return {@code false}
+	 */
+	@Override
+	default boolean generatedOnUpdate() {
+		return false;
 	}
 
 	/**

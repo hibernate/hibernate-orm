@@ -11,8 +11,6 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,7 +23,6 @@ import org.hibernate.metamodel.mapping.InDatabaseGeneratedValueResolver;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -33,7 +30,6 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.Generator;
 
@@ -100,7 +96,7 @@ public class GeneratedValuesProcessor {
 			final Generator generator = generators[ mapping.getStateArrayPosition() ];
 			if ( generator != null
 					&& generator.generatedByDatabase()
-					&& generator.getGenerationTiming().isNotNever() ) {
+					&& generator.isNotNever() ) {
 				// this attribute is generated for the timing we are processing...
 				valueDescriptors.add( new GeneratedValueDescriptor(
 						new InDatabaseGeneratedValueResolver( timing, generatedValuesToSelect.size() ),

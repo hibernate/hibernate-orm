@@ -42,7 +42,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.Generator;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseGenerator;
@@ -310,34 +309,21 @@ public class EntityMetamodel implements Serializable {
 					propertyInsertability[i] = false;
 					propertyUpdateability[i] = false;
 				}
-				// we have some level of generation indicated
-				switch ( generator.getGenerationTiming() ) {
-					case INSERT:
-						if ( generator.generatedByDatabase() ) {
-							foundPostInsertGeneratedValues = true;
-						}
-						else {
-							foundPreInsertGeneratedValues = true;
-						}
-						break;
-					case UPDATE:
-						if ( generator.generatedByDatabase() ) {
-							foundPostUpdateGeneratedValues = true;
-						}
-						else {
-							foundPreUpdateGeneratedValues = true;
-						}
-						break;
-					case ALWAYS:
-						if ( generator.generatedByDatabase() ) {
-							foundPostInsertGeneratedValues = true;
-							foundPostUpdateGeneratedValues = true;
-						}
-						else {
-							foundPreInsertGeneratedValues = true;
-							foundPreUpdateGeneratedValues = true;
-						}
-						break;
+				if ( generator.generatedOnInsert() ) {
+					if ( generator.generatedByDatabase() ) {
+						foundPostInsertGeneratedValues = true;
+					}
+					else {
+						foundPreInsertGeneratedValues = true;
+					}
+				}
+				if ( generator.generatedOnUpdate() ) {
+					if ( generator.generatedByDatabase() ) {
+						foundPostUpdateGeneratedValues = true;
+					}
+					else {
+						foundPreUpdateGeneratedValues = true;
+					}
 				}
 			}
 
@@ -468,7 +454,7 @@ public class EntityMetamodel implements Serializable {
 		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
 		if ( generatorCreator != null ) {
 			final Generator generator = mappingProperty.createGenerator( context );
-			if ( generator.getGenerationTiming().isNotNever() ) {
+			if ( generator.isNotNever() ) {
 				return generator;
 			}
 		}
@@ -524,7 +510,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		private void add(InMemoryGenerator inMemoryStrategy) {
-			if ( inMemoryStrategy.getGenerationTiming().isNotNever() ) {
+			if ( inMemoryStrategy.isNotNever() ) {
 				hadInMemoryGeneration = true;
 			}
 		}
@@ -535,7 +521,7 @@ public class EntityMetamodel implements Serializable {
 			}
 			inDatabaseStrategies.add( inDatabaseStrategy );
 
-			if ( inDatabaseStrategy.getGenerationTiming().isNotNever() ) {
+			if ( inDatabaseStrategy.isNotNever() ) {
 				hadInDatabaseGeneration = true;
 			}
 		}
@@ -563,7 +549,8 @@ public class EntityMetamodel implements Serializable {
 				}
 
 				// the base-line values for the aggregated InDatabaseValueGenerationStrategy we will build here.
-				GenerationTiming timing = GenerationTiming.NEVER;
+				boolean generatedOnInsert = false;
+				boolean generatedOnUpdate = false;
 				boolean referenceColumns = false;
 				String[] columnValues = new String[ composite.getColumnSpan() ];
 
@@ -573,29 +560,8 @@ public class EntityMetamodel implements Serializable {
 				for ( Property property : composite.getProperties() ) {
 					propertyIndex++;
 					final InDatabaseGenerator subStrategy = inDatabaseStrategies.get( propertyIndex );
-					switch ( subStrategy.getGenerationTiming() ) {
-						case INSERT:
-							switch ( timing ) {
-								case UPDATE:
-									timing = GenerationTiming.ALWAYS;
-									break;
-								case NEVER:
-									timing = GenerationTiming.INSERT;
-									break;
-							}
-							break;
-						case UPDATE:
-							switch ( timing ) {
-								case INSERT:
-									timing = GenerationTiming.ALWAYS;
-									break;
-								case NEVER:
-									timing = GenerationTiming.UPDATE;
-							}
-							break;
-						case ALWAYS:
-							timing = GenerationTiming.ALWAYS;
-					}
+					generatedOnUpdate = generatedOnUpdate || subStrategy.generatedOnUpdate();
+					generatedOnInsert = generatedOnInsert || subStrategy.generatedOnInsert();
 					if ( subStrategy.referenceColumnsInSql(dialect) ) {
 						// override base-line value
 						referenceColumns = true;
@@ -619,13 +585,17 @@ public class EntityMetamodel implements Serializable {
 				}
 
 				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
-				return new InDatabaseGeneratorImpl( timing, referenceColumns, columnValues );
+				return new InDatabaseGeneratorImpl( generatedOnUpdate, generatedOnInsert, referenceColumns, columnValues );
 			}
 			else {
 				return new Generator() {
 					@Override
-					public GenerationTiming getGenerationTiming() {
-						return GenerationTiming.NEVER;
+					public boolean generatedOnInsert() {
+						return false;
+					}
+					@Override
+					public boolean generatedOnUpdate() {
+						return false;
 					}
 					@Override
 					public boolean generatedByDatabase() {
@@ -637,22 +607,30 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static class InDatabaseGeneratorImpl implements InDatabaseGenerator {
-		private final GenerationTiming timing;
+		private final boolean generatedOnUpdate;
+		private final boolean generatedOnInsert;
 		private final boolean referenceColumnInSql;
 		private final String[] referencedColumnValues;
 
 		private InDatabaseGeneratorImpl(
-				GenerationTiming timing,
+				boolean generatedOnUpdate,
+				boolean generatedOnInsert,
 				boolean referenceColumnInSql,
 				String[] referencedColumnValues) {
-			this.timing = timing;
+			this.generatedOnUpdate = generatedOnUpdate;
+			this.generatedOnInsert = generatedOnInsert;
 			this.referenceColumnInSql = referenceColumnInSql;
 			this.referencedColumnValues = referencedColumnValues;
 		}
 
 		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
+		public boolean generatedOnInsert() {
+			return generatedOnInsert;
+		}
+
+		@Override
+		public boolean generatedOnUpdate() {
+			return generatedOnUpdate;
 		}
 
 		@Override
@@ -694,17 +672,17 @@ public class EntityMetamodel implements Serializable {
 		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
 		final Generator strategy = generators[ naturalIdPropertyNumbers[0] ];
-		return strategy != null && strategy.getGenerationTiming().isNotNever();
+		return strategy != null && strategy.isNotNever();
 	}
 
 	public boolean isVersionGeneratedByDatabase() {
 		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.getGenerationTiming().isNotNever() && strategy.generatedByDatabase();
+		return strategy != null && strategy.isNotNever() && strategy.generatedByDatabase();
 	}
 
 	public boolean isVersionGeneratedInMemory() {
 		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.getGenerationTiming().isNotNever() && !strategy.generatedByDatabase();
+		return strategy != null && strategy.isNotNever() && !strategy.generatedByDatabase();
 	}
 
 	public int[] getNaturalIdentifierProperties() {

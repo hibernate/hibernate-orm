@@ -9,8 +9,6 @@ package org.hibernate.tuple;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.Dialect;
 
-import java.lang.reflect.Member;
-
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -41,8 +39,13 @@ public class GeneratedValueGeneration implements InDatabaseGenerator {
 	}
 
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return timing;
+	public boolean generatedOnInsert() {
+		return timing.includesInsert();
+	}
+
+	@Override
+	public boolean generatedOnUpdate() {
+		return timing.includesUpdate();
 	}
 
 	@Override

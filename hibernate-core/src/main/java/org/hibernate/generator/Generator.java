@@ -45,11 +45,20 @@ import static org.hibernate.generator.EventType.UPDATE;
  * A generator must implement {@link #getEventTypes()} to specify the events for which it should be
  * called to produce a new value. {@link EventTypeSets} provides a convenient list of possibilities.
  * <p>
+ * There are two especially important applications of this machinery:
+ * <ul>
+ * <li>
  * An {@linkplain jakarta.persistence.Id identifier} generator is a generator capable of producing
  * surrogate primary key values. An identifier generator must respond to insert events only. That
  * is, {@link #getEventTypes()} must return {@link EventTypeSets#INSERT_ONLY}. It may be integrated
  * using the {@link org.hibernate.annotations.IdGeneratorType} meta-annotation or the older-style
  * {@link org.hibernate.annotations.GenericGenerator} annotation.
+ * <li>
+ * A {@linkplain jakarta.persistence.Version version} generator is a generator capable of seeding
+ * and incrementing version numbers. A version generator must respond to both insert and update
+ * events. That is, {@link #getEventTypes()} must return {@link EventTypeSets#INSERT_AND_UPDATE}.
+ * It may be integrated using {@link org.hibernate.annotations.ValueGenerationType} meta-annotation.
+ * </ul>
  *
  * @see org.hibernate.annotations.ValueGenerationType
  * @see org.hibernate.annotations.IdGeneratorType

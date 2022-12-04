@@ -19,6 +19,16 @@ import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 
 /**
+ * A default {@link org.hibernate.generator.Generator} for {@link jakarta.persistence.Version @Version}
+ * properties. This implementation simply delegates back to:
+ * <ul>
+ * <li>{@link org.hibernate.type.descriptor.java.VersionJavaType#seed} to seed an initial version, and
+ * <li>{@link org.hibernate.type.descriptor.java.VersionJavaType#next} to increment a version.
+ * </ul>
+ * Thus, this implementation reproduces the "classic" behavior of Hibernate. A custom generator specified
+ * using a {@linkplain org.hibernate.annotations.ValueGenerationType generator annotation} will override
+ * this implementation, allowing customized versioning.
+ *
  * @author Gavin King
  */
 public class VersionGeneration implements InMemoryGenerator {

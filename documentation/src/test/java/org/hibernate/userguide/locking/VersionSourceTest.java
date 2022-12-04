@@ -14,6 +14,7 @@ import org.hibernate.annotations.CurrentTimestamp;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.SourceType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -75,7 +76,7 @@ public class VersionSourceTest {
 
 		private String lastName;
 
-		@Version @CurrentTimestamp
+		@Version @CurrentTimestamp(source = SourceType.VM)
 		private LocalDateTime version;
 	//end::locking-optimistic-version-timestamp-source-mapping-example[]
 

@@ -93,6 +93,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -279,6 +282,8 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -415,7 +420,6 @@ public abstract class AbstractEntityPersister
 	private final Map<String,String[]> subclassPropertyAliases = new HashMap<>();
 	private final Map<String,String[]> subclassPropertyColumnNames = new HashMap<>();
 
-
 	private final JavaType<?> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
 
@@ -431,6 +435,8 @@ public abstract class AbstractEntityPersister
 	private List<AttributeMapping> attributeMappings;
 	protected Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
 	protected List<Fetchable> staticFetchableList;
+
+	private InMemoryGenerator versionGenerator;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -491,10 +497,10 @@ public abstract class AbstractEntityPersister
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		this.representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
+		representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, this, creationContext );
 
-		this.javaType = representationStrategy.getLoadJavaType();
+		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
 
 		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
@@ -1931,7 +1937,7 @@ public abstract class AbstractEntityPersister
 		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(GenerationTiming timing) {
+	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
 		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
 
@@ -3968,6 +3974,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public InMemoryGenerator getVersionGenerator() {
+		return versionGenerator;
+	}
+
+	@Override
 	public String getRootEntityName() {
 		return entityMetamodel.getRootName();
 	}
@@ -4746,11 +4757,11 @@ public abstract class AbstractEntityPersister
 		if ( superMappingType != null ) {
 			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
-				this.discriminatorMapping = superMappingType.getDiscriminatorMapping();
-				this.identifierMapping = superMappingType.getIdentifierMapping();
-				this.naturalIdMapping = superMappingType.getNaturalIdMapping();
-				this.versionMapping = superMappingType.getVersionMapping();
-				this.rowIdMapping = superMappingType.getRowIdMapping();
+				discriminatorMapping = superMappingType.getDiscriminatorMapping();
+				identifierMapping = superMappingType.getIdentifierMapping();
+				naturalIdMapping = superMappingType.getNaturalIdMapping();
+				versionMapping = superMappingType.getVersionMapping();
+				rowIdMapping = superMappingType.getRowIdMapping();
 			}
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
@@ -4762,10 +4773,17 @@ public abstract class AbstractEntityPersister
 //			rootEntityDescriptor = this;
 		}
 
-		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
+		final EntityMetamodel currentEntityMetamodel = getEntityMetamodel();
+
+		if ( currentEntityMetamodel.isVersioned() ) {
+			final InMemoryGenerator generator = currentEntityMetamodel.getVersionGenerator();
+			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
+			versionGenerator = generator == null ? new VersionGeneration( versionMapping ) : generator;
+		}
+
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 
-		NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
+		final NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
 			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
@@ -4801,7 +4819,6 @@ public abstract class AbstractEntityPersister
 		}
 
 
-
 		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
 		// generation of `staticFetchableList` because we need to wait until after all sub-classes have had their
 		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
@@ -4809,10 +4826,10 @@ public abstract class AbstractEntityPersister
 				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
 					if ( hasInsertGeneratedProperties() ) {
-						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.INSERT );
+						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT );
 					}
 					if ( hasUpdateGeneratedProperties() ) {
-						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.UPDATE );
+						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
 					}
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
@@ -4896,8 +4913,7 @@ public abstract class AbstractEntityPersister
 
 		identifierMapping = creationProcess.processSubPart(
 				EntityIdentifierMapping.ROLE_LOCAL_NAME,
-				(role, process) ->
-						generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
+				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
 		);
 
 		versionMapping = generateVersionMapping( templateInstanceCreator, bootEntityDescriptor, creationProcess );

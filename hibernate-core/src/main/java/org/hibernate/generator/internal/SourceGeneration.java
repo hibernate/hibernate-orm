@@ -89,7 +89,7 @@ public class SourceGeneration implements InMemoryGenerator {
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return valueGenerator.generateValue( (Session) session, owner, currentValue );
 	}
 

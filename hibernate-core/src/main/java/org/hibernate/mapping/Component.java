@@ -28,7 +28,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -40,6 +39,9 @@ import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -508,38 +510,36 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final Generator subGenerator;
+		private final Generator subgenerator;
 		private final Setter injector;
 
-		public ValueGenerationPlan(
-				Generator subGenerator,
-				Setter injector) {
-			this.subGenerator = subGenerator;
+		public ValueGenerationPlan(Generator subgenerator, Setter injector) {
+			this.subgenerator = subgenerator;
 			this.injector = injector;
 		}
 
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subGenerator.generatedByDatabase() ) {
-				Object generatedId = ( (InMemoryGenerator) subGenerator ).generate( session, incomingObject, null );
+			if ( !subgenerator.generatedByDatabase() ) {
+				Object generatedId = ( (InMemoryGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
 				injector.set( injectionContext, generatedId );
 			}
 			else {
-				injector.set( injectionContext, IdentifierGeneratorHelper.POST_INSERT_INDICATOR );
+				injector.set( injectionContext, POST_INSERT_INDICATOR );
 			}
 		}
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( subGenerator instanceof ExportableProducer ) {
-				( (ExportableProducer) subGenerator ).registerExportables( database );
+			if ( subgenerator instanceof ExportableProducer ) {
+				( (ExportableProducer) subgenerator).registerExportables( database );
 			}
 		}
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subGenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) subGenerator ).initialize( context );
+			if ( subgenerator instanceof IdentifierGenerator ) {
+				( (IdentifierGenerator) subgenerator).initialize( context );
 			}
 		}
 	}

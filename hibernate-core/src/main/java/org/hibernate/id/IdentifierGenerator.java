@@ -142,7 +142,7 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * The {@code currentValue} is usually null for id generation.
 	 */
 	@Override
-	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return generate( session, owner );
 	}
 

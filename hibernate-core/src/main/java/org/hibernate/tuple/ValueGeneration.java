@@ -55,7 +55,7 @@ public interface ValueGeneration extends InMemoryGenerator, InDatabaseGenerator 
 	ValueGenerator<?> getValueGenerator();
 
 	@Override
-	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return getValueGenerator().generateValue( (Session) session, owner, currentValue );
 	}
 

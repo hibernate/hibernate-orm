@@ -27,6 +27,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -462,6 +464,10 @@ public interface EntityPersister
 
 	default Generator getGenerator() {
 		return getIdentifierGenerator();
+	}
+
+	default InMemoryGenerator getVersionGenerator() {
+		return new VersionGeneration( getVersionMapping() );
 	}
 
 	@Override

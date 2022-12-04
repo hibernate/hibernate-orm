@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.InMemoryGenerator;
 
 /**
@@ -18,12 +18,12 @@ import org.hibernate.generator.InMemoryGenerator;
  */
 @Internal
 public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
-//	private final GenerationTiming generationTiming;
-	private final InMemoryGenerator valueGenerator;
+	private final EventType eventType;
+	private final InMemoryGenerator generator;
 
-	public InMemoryGeneratedValueResolver(InMemoryGenerator valueGenerator, GenerationTiming generationTiming) {
-		this.valueGenerator = valueGenerator;
-//		this.generationTiming = generationTiming;
+	public InMemoryGeneratedValueResolver(InMemoryGenerator generator, EventType eventType) {
+		this.generator = generator;
+		this.eventType = eventType;
 	}
 
 //	@Override
@@ -33,6 +33,6 @@ public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {
-		return valueGenerator.generate( session, entity, currentValue );
+		return generator.generate( session, entity, currentValue, eventType );
 	}
 }

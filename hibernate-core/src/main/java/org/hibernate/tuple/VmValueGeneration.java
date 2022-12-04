@@ -51,7 +51,7 @@ public class VmValueGeneration implements InMemoryGenerator {
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return generator.generateValue( (Session) session, owner, currentValue );
 	}
 }

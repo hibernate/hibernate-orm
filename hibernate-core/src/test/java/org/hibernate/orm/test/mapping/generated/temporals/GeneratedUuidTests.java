@@ -98,7 +98,7 @@ public class GeneratedUuidTests {
 		}
 
 		@Override
-		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 			return UUID.randomUUID();
 		}
 	}

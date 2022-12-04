@@ -381,8 +381,8 @@ public class PropertyBinder {
 		return property;
 	}
 
-	private void handleNaturalId(Property prop) {
-		final NaturalId naturalId = property.getAnnotation(NaturalId.class);
+	private void handleNaturalId(Property property) {
+		final NaturalId naturalId = this.property.getAnnotation(NaturalId.class);
 		if ( naturalId != null ) {
 			if ( !entityBinder.isRootEntity() ) {
 				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -392,27 +392,27 @@ public class PropertyBinder {
 			if ( !naturalId.mutable() ) {
 				updatable = false;
 			}
-			prop.setNaturalIdentifier( true );
+			property.setNaturalIdentifier( true );
 		}
 	}
 
-	private void inferOptimisticLocking(Property prop) {
+	private void inferOptimisticLocking(Property property) {
 		// this is already handled for collections in CollectionBinder...
 		if ( value instanceof Collection ) {
-			prop.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
+			property.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
 		}
-		else if ( property != null && property.isAnnotationPresent(OptimisticLock.class) ) {
-			final OptimisticLock lockAnn = property.getAnnotation(OptimisticLock.class);
-			validateOptimisticLock(lockAnn);
-			prop.setOptimisticLocked( !lockAnn.excluded() );
+		else if ( this.property != null && this.property.isAnnotationPresent(OptimisticLock.class) ) {
+			final OptimisticLock optimisticLock = this.property.getAnnotation(OptimisticLock.class);
+			validateOptimisticLock( optimisticLock );
+			property.setOptimisticLocked( !optimisticLock.excluded() );
 		}
 		else {
-			prop.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
+			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
 		}
 	}
 
-	private void validateOptimisticLock(OptimisticLock lockAnn) {
-		if ( lockAnn.excluded() ) {
+	private void validateOptimisticLock(OptimisticLock optimisticLock) {
+		if ( optimisticLock.excluded() ) {
 			if ( property.isAnnotationPresent(Version.class) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Version'" );

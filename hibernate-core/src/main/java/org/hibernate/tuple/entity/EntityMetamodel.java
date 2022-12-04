@@ -139,6 +139,8 @@ public class EntityMetamodel implements Serializable {
 	private final Set<String> subclassEntityNames;
 	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
 
+	private final InMemoryGenerator versionGenerator;
+
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
 	@Deprecated(since = "6.0")
@@ -217,7 +219,7 @@ public class EntityMetamodel implements Serializable {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		this.generators = new Generator[propertySpan];
+		generators = new Generator[propertySpan];
 
 		boolean foundPreInsertGeneratedValues = false;
 		boolean foundPreUpdateGeneratedValues = false;
@@ -233,6 +235,7 @@ public class EntityMetamodel implements Serializable {
 		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
+		InMemoryGenerator tempVersionGenerator = null;
 
 		List<Property> props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
@@ -298,34 +301,43 @@ public class EntityMetamodel implements Serializable {
 			propertyInsertability[i] = attribute.isInsertable();
 			propertyVersionability[i] = attribute.isVersionable();
 			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
-			propertyCheckability[i] = propertyUpdateability[i] ||
-					( propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked() );
+			propertyCheckability[i] = propertyUpdateability[i]
+					|| propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked();
 
 			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			final Generator generator = buildGenerator( property, creationContext );
-			generators[i] = generator;
 			if ( generator != null ) {
-				if ( generatedWithNoParameter( generator ) ) {
-					propertyInsertability[i] = false;
-					propertyUpdateability[i] = false;
+				if ( i == tempVersionProperty && !generator.generatedByDatabase() ) {
+					// when we have an in-memory generator for the version, we
+					// want to plug it in to the older infrastructure specific
+					// to version generation, instead of treating it like a
+					// plain "value" generator for a regular attribute
+					tempVersionGenerator = (InMemoryGenerator) generator;
 				}
-				if ( generator.generatesOnInsert() ) {
-					if ( generator.generatedByDatabase() ) {
-						foundPostInsertGeneratedValues = true;
+				else {
+					generators[i] = generator;
+					if ( generatedWithNoParameter( generator ) ) {
+						propertyInsertability[i] = false;
+						propertyUpdateability[i] = false;
 					}
-					else {
-						foundPreInsertGeneratedValues = true;
+					if ( generator.generatesOnInsert() ) {
+						if ( generator.generatedByDatabase() ) {
+							foundPostInsertGeneratedValues = true;
+						}
+						else {
+							foundPreInsertGeneratedValues = true;
+						}
 					}
-				}
-				if ( generator.generatesOnUpdate() ) {
-					if ( generator.generatedByDatabase() ) {
-						foundPostUpdateGeneratedValues = true;
-					}
-					else {
-						foundPreUpdateGeneratedValues = true;
+					if ( generator.generatesOnUpdate() ) {
+						if ( generator.generatedByDatabase() ) {
+							foundPostUpdateGeneratedValues = true;
+						}
+						else {
+							foundPreUpdateGeneratedValues = true;
+						}
 					}
 				}
 			}
@@ -369,17 +381,19 @@ public class EntityMetamodel implements Serializable {
 			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
 
-		this.hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
-		this.hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
-		this.hasInsertGeneratedValues = foundPostInsertGeneratedValues;
-		this.hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
+		hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
+		hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
+		hasInsertGeneratedValues = foundPostInsertGeneratedValues;
+		hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
+
+		versionGenerator = tempVersionGenerator;
 
 		hasCascades = foundCascade;
 		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
-		if (hasLazyProperties) {
+		if ( hasLazyProperties ) {
 			LOG.lazyPropertyFetchingAvailable(name);
 		}
 
@@ -405,7 +419,8 @@ public class EntityMetamodel implements Serializable {
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
 
 		dynamicUpdate = persistentClass.useDynamicUpdate()
-				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
+				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+					&& getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();
@@ -475,6 +490,10 @@ public class EntityMetamodel implements Serializable {
 
 	public Generator[] getGenerators() {
 		return generators;
+	}
+
+	public InMemoryGenerator getVersionGenerator() {
+		return versionGenerator;
 	}
 
 	public static class ValueGenerationStrategyException extends HibernateException {

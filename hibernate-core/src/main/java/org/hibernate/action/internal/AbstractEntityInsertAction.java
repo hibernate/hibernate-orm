@@ -11,13 +11,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -25,6 +23,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * A base class for entity insert actions.
@@ -127,7 +127,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = Versioning.getVersion( getState(), getPersister() );
+		final Object version = getVersion( getState(), getPersister() );
 		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
 		persistenceContextInternal.addEntity(
 				getInstance(),

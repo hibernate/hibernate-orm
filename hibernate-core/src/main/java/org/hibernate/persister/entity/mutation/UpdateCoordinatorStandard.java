@@ -60,6 +60,7 @@ import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.OptimisticLockStyle.NONE;
 import static org.hibernate.engine.OptimisticLockStyle.VERSION;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
+import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 
 /**
@@ -452,7 +453,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( generator != null
 						&& !generator.generatedByDatabase()
 						&& generator.generatesOnUpdate() ) {
-					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i] );
+					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i], UPDATE );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}

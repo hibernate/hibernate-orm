@@ -404,6 +404,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
+import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
@@ -1464,7 +1465,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				ExecutionContext executionContext) throws SQLException {
 			getJdbcMapping().getJdbcValueBinder().bind(
 					statement,
-					generator.generate( executionContext.getSession(), null, null ),
+					generator.generate( executionContext.getSession(), null, null, INSERT ),
 					startPosition,
 					executionContext.getSession()
 			);

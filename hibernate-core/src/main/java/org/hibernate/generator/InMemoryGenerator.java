@@ -37,13 +37,13 @@ public interface InMemoryGenerator extends Generator {
 	/**
 	 * Generate a value.
 	 *
-	 * @param session The session from which the request originates.
-	 * @param owner The instance of the object owning the attribute for which we are generating a value.
+	 * @param session      The session from which the request originates.
+	 * @param owner        The instance of the object owning the attribute for which we are generating a value.
 	 * @param currentValue The current value assigned to the property, or {@code null}
-	 *
+	 * @param eventType    The type of event that has triggered generation of a new value
 	 * @return The generated value
 	 */
-	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue);
+	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType);
 
 	default boolean generatedByDatabase() {
 		return false;

@@ -14,6 +14,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -31,7 +32,6 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.generator.Generator;
 
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
@@ -59,7 +59,7 @@ public class GeneratedValuesProcessor {
 
 	public GeneratedValuesProcessor(
 			EntityMappingType entityDescriptor,
-			GenerationTiming timing,
+			EventType timing,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
@@ -88,7 +88,7 @@ public class GeneratedValuesProcessor {
 	 * populate the list of {@link GeneratedValueDescriptor}s by side effect, and
 	 * return a list of {@link AttributeMapping}s.
 	 */
-	private List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, GenerationTiming timing) {
+	private List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
 		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
 		//             GenerationTiming.NEVER even if they have attributes that would need generation
 		final Generator[] generators = entityDescriptor.getEntityPersister().getEntityMetamodel().getGenerators();

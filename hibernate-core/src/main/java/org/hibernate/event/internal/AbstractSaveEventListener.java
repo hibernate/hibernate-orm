@@ -16,7 +16,6 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
@@ -27,7 +26,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -40,6 +38,10 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 
 /**
  * A convenience base class for listeners responding to save events.
@@ -115,11 +117,11 @@ public abstract class AbstractSaveEventListener<C>
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Generator generator = persister.getGenerator();
 		if ( !generator.generatedByDatabase() ) {
-			Object generatedId = ( (InMemoryGenerator) generator ).generate( source, entity, null );
+			final Object generatedId = ( (InMemoryGenerator) generator ).generate( source, entity, null, INSERT );
 			if ( generatedId == null ) {
 				throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
 			}
-			else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
+			else if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
 				return source.getIdentifier( entity );
 			}
 			else {
@@ -188,7 +190,7 @@ public abstract class AbstractSaveEventListener<C>
 	}
 
 	private static EntityKey entityKey(Object entity, Object id, EntityPersister persister, boolean useIdentityColumn, EventSource source) {
-		if ( !useIdentityColumn) {
+		if ( !useIdentityColumn ) {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 			final Object old = persistenceContext.getEntity( key );
@@ -316,16 +318,16 @@ public abstract class AbstractSaveEventListener<C>
 	}
 
 	private Object[] cloneAndSubstituteValues(Object entity, EntityPersister persister, C context, EventSource source, Object id) {
-		Object[] values = persister.getPropertyValuesToInsert(entity, getMergeMap(context), source);
+		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap(context), source );
 		Type[] types = persister.getPropertyTypes();
 
-		boolean substitute = substituteValuesIfNecessary(entity, id, values, persister, source);
+		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
 		if ( persister.hasCollections() ) {
-			substitute = visitCollectionsBeforeSave(entity, id, values, types, source) || substitute;
+			substitute = visitCollectionsBeforeSave( entity, id, values, types, source ) || substitute;
 		}
 
 		if ( substitute ) {
-			persister.setValues(entity, values );
+			persister.setValues( entity, values );
 		}
 
 		TypeHelper.deepCopy(
@@ -363,7 +365,7 @@ public abstract class AbstractSaveEventListener<C>
 					id,
 					values,
 					entity,
-					Versioning.getVersion( values, persister ),
+					getVersion( values, persister ),
 					persister,
 					isVersionIncrementDisabled(),
 					source
@@ -429,12 +431,7 @@ public abstract class AbstractSaveEventListener<C>
 
 		//keep the existing version number in the case of replicate!
 		if ( persister.isVersioned() ) {
-			substitute = Versioning.seedVersion(
-					values,
-					persister.getVersionProperty(),
-					persister.getVersionMapping(),
-					source
-			) || substitute;
+			substitute = seedVersion( entity, values, persister, source ) || substitute;
 		}
 		return substitute;
 	}

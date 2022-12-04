@@ -22,6 +22,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
@@ -508,7 +509,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							rootIdentity,
 							new JdbcParameterBindingImpl(
 									identifierMapping.getJdbcMapping(),
-									( (InMemoryGenerator) generator ).generate( executionContext.getSession(), null, null )
+									( (InMemoryGenerator) generator ).generate( executionContext.getSession(), null, null, EventType.INSERT )
 							)
 					);
 					jdbcServices.getJdbcMutationExecutor().execute(

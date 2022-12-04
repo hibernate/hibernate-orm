@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -103,11 +104,11 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
 			final Generator[] generators = entityMetamodel.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
-				Generator generator = generators[i];
+				final Generator generator = generators[i];
 				if ( generator != null
 						&& !generator.generatedByDatabase()
 						&& generator.generatesOnInsert() ) {
-					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i] );
+					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i], EventType.INSERT );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}

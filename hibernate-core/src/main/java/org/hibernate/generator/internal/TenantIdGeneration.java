@@ -51,7 +51,7 @@ public class TenantIdGeneration implements InMemoryGenerator {
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		JavaType<Object> descriptor = sessionFactory.getTypeConfiguration().getJavaTypeRegistry()
 				.findDescriptor(propertyType);

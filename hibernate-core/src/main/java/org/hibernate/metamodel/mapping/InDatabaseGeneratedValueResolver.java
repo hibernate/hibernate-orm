@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.generator.EventType;
 
 /**
  * GeneratedValueResolver impl for in-db generation.  It extracts the generated value
@@ -18,11 +18,11 @@ import org.hibernate.tuple.GenerationTiming;
  */
 @Internal
 public class InDatabaseGeneratedValueResolver implements GeneratedValueResolver {
-//	private final GenerationTiming timing;
+	private final EventType eventType;
 	private final int resultPosition;
 
-	public InDatabaseGeneratedValueResolver(GenerationTiming timing, int resultPosition) {
-//		this.timing = timing;
+	public InDatabaseGeneratedValueResolver(EventType eventType, int resultPosition) {
+		this.eventType = eventType;
 		this.resultPosition = resultPosition;
 	}
 

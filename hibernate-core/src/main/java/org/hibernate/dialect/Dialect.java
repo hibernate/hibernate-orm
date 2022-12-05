@@ -4152,7 +4152,7 @@ public abstract class Dialect implements ConversionContext {
 						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
-					if (precision != null) {
+					if ( precision != null ) {
 						// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
 						// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
 						precision = (int) ceil( precision * LOG_BASE2OF10 );
@@ -4197,8 +4197,8 @@ public abstract class Dialect implements ConversionContext {
 	 * native datetime formatting function for this
 	 * database (often the {@code to_char()} function).
 	 * <p>
-	 * Since it's never possible to translate all of
-	 * the pattern letter sequences understood by
+	 * Since it's never possible to translate every
+	 * pattern letter sequences understood by
 	 * {@code DateTimeFormatter}, only the following
 	 * subset of pattern letters is accepted by
 	 * Hibernate:

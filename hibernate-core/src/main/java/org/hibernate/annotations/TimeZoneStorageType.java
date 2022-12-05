@@ -11,19 +11,27 @@ import org.hibernate.dialect.Dialect;
 
 /**
  * Describes the storage of timezone information for zoned datetime types.
+ * <p>
+ * A default {@code TimeZoneStorageType} may be configured explicitly using
+ * {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE}.
+ * Otherwise, the storage type may be overridden for a given field or
+ * property of an entity using the {@link TimeZoneStorage} annotation.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
  *
  * @since 6.0
+ *
+ * @see TimeZoneStorage
+ * @see org.hibernate.TimeZoneStorageStrategy
  */
 @Incubating
 public enum TimeZoneStorageType {
 	/**
 	 * Stores the timezone by using the {@code with time zone}
 	 * SQL column type.
-	 *
+	 * <p>
 	 * Error if {@link Dialect#getTimeZoneSupport()} is not
 	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE}.
 	 */
@@ -34,8 +42,11 @@ public enum TimeZoneStorageType {
 	 */
 	NORMALIZE,
 	/**
-	 * Does not store the time zone, and instead normalizes
+	 * Does not preserve the time zone, and instead normalizes
 	 * timestamps to UTC.
+	 * <p>
+	 * The DDL column type depends on the setting
+	 * {@value org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE}.
 	 */
 	NORMALIZE_UTC,
 	/**
@@ -59,5 +70,4 @@ public enum TimeZoneStorageType {
 	 * @since 6.2
 	 */
 	DEFAULT
-
 }

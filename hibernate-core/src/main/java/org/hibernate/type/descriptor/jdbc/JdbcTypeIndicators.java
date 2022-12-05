@@ -9,10 +9,14 @@ package org.hibernate.type.descriptor.jdbc;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.sql.Types;
 
 /**
  * A parameter object that helps determine the {@link java.sql.Types SQL/JDBC type}
@@ -123,7 +127,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * Useful for resolutions based on column length.
-	 *
+	 * <p>
 	 * E.g. for choosing between a {@code VARCHAR} ({@code String}) and {@code CHAR(1)} ({@code Character}/{@code char}).
 	 */
 	default long getColumnLength() {
@@ -139,7 +143,7 @@ public interface JdbcTypeIndicators {
 
 	/**
 	 * Useful for resolutions based on column scale.
-	 *
+	 * <p>
 	 * E.g. for choosing between a {@code NUMERIC} and {@code INTERVAL SECOND}.
 	 */
 	default int getColumnScale() {
@@ -173,5 +177,51 @@ public interface JdbcTypeIndicators {
 
 	private JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+	}
+
+	/**
+	 * @return the SQL column type used for storing datetimes under the
+	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *
+	 * @see SqlTypes#TIME_WITH_TIMEZONE
+	 * @see SqlTypes#TIMESTAMP
+	 * @see SqlTypes#TIMESTAMP_UTC
+	 */
+	static int getZonedTimestampSqlType(TimeZoneStorageStrategy storageStrategy) {
+		switch ( storageStrategy ) {
+			case NATIVE:
+				return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+			case COLUMN:
+			case NORMALIZE:
+				return SqlTypes.TIMESTAMP;
+			case NORMALIZE_UTC:
+				// sensitive to hibernate.type.preferred_instant_jdbc_type
+				return SqlTypes.TIMESTAMP_UTC;
+			default:
+				throw new AssertionFailure( "unknown time zone storage strategy" );
+		}
+	}
+
+	/**
+	 * @return the SQL column type used for storing datetimes under the
+	 *         default {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *
+	 * @see SqlTypes#TIME_WITH_TIMEZONE
+	 * @see SqlTypes#TIMESTAMP
+	 * @see SqlTypes#TIMESTAMP_UTC
+	 */
+	default int getDefaultZonedTimestampSqlType() {
+		final TemporalType temporalPrecision = getTemporalPrecision();
+		switch ( temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision ) {
+			case TIME:
+				return Types.TIME;
+			case DATE:
+				return Types.DATE;
+			case TIMESTAMP:
+				// sensitive to hibernate.timezone.default_storage
+				return getZonedTimestampSqlType( getDefaultTimeZoneStorageStrategy() );
+			default:
+				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision);
+		}
 	}
 }

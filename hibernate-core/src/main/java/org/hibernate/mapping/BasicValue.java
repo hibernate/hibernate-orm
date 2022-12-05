@@ -12,11 +12,11 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -700,6 +700,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return timeZoneStorageStrategy( timeZoneStorageType, getBuildingContext() );
+	}
+
+	@Internal
+	public static TimeZoneStorageStrategy timeZoneStorageStrategy(
+			TimeZoneStorageType timeZoneStorageType,
+			MetadataBuildingContext buildingContext) {
 		if ( timeZoneStorageType != null ) {
 			switch ( timeZoneStorageType ) {
 				case COLUMN:
@@ -712,7 +719,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					return TimeZoneStorageStrategy.NORMALIZE_UTC;
 			}
 		}
-		return getBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage();
+		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
 	}
 
 	@Override

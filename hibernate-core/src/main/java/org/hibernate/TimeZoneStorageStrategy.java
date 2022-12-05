@@ -7,16 +7,20 @@
 package org.hibernate;
 
 /**
- * Describes the storage strategies understood by Hibernate.
+ * Enumerates the possible storage strategies for offset or zoned datetimes.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see org.hibernate.annotations.TimeZoneStorageType
+ * @see org.hibernate.dialect.TimeZoneSupport
  */
 @Incubating
 public enum TimeZoneStorageStrategy {
 	/**
-	 * Stores the time zone through the "with time zone" types which retain the information.
+	 * Stores the time zone via the {@code with time zone} SQL types which retain
+	 * the information.
 	 */
 	NATIVE,
 	/**

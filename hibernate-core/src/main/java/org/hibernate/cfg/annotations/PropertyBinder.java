@@ -27,7 +27,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
@@ -142,9 +141,6 @@ public class PropertyBinder {
 	}
 
 	public void setColumns(AnnotatedColumns columns) {
-		final AnnotatedColumn firstColumn = columns.getColumns().get(0);
-		insertable = firstColumn.isInsertable();
-		updatable = firstColumn.isUpdatable();
 		//consistency is checked later when we know the property name
 		this.columns = columns;
 	}
@@ -207,11 +203,6 @@ public class PropertyBinder {
 	}
 
 	private void validateBind() {
-		if ( property.isAnnotationPresent( Immutable.class ) ) {
-			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-					+ "' may not be '@Immutable'"
-					+ " ('@Immutable' may only be applied to entities and collections)" );
-		}
 		if ( !declaringClassSet ) {
 			throw new AssertionFailure( "declaringClass has not been set before a bind" );
 		}
@@ -371,14 +362,23 @@ public class PropertyBinder {
 			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
 		}
 
-		property.setInsertable( insertable );
-		property.setUpdateable( updatable );
 		property.setPropertyAccessStrategy( propertyAccessStrategy );
+
+		handleImmutable( property );
 
 		inferOptimisticLocking( property );
 
+		property.setInsertable( insertable );
+		property.setUpdateable( updatable );
+
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		return property;
+	}
+
+	private void handleImmutable(Property property) {
+		if ( this.property != null && this.property.isAnnotationPresent( Immutable.class ) ) {
+			updatable = false;
+		}
 	}
 
 	private void handleNaturalId(Property property) {

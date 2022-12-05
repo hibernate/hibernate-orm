@@ -2353,11 +2353,6 @@ public final class AnnotationBinder {
 			binder.setInsertable( false );
 			binder.setUpdatable( false );
 		}
-		else {
-			final AnnotatedJoinColumn firstColumn = columns.getJoinColumns().get(0);
-			binder.setInsertable( firstColumn.isInsertable() );
-			binder.setUpdatable( firstColumn.isUpdatable() );
-		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
 		Property prop = binder.makeProperty();

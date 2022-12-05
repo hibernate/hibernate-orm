@@ -38,6 +38,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.IdGeneratorType;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
@@ -77,6 +78,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -148,12 +150,12 @@ import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
-import static org.hibernate.cfg.annotations.PropertyBinder.generatorCreator;
 import static org.hibernate.cfg.annotations.PropertyBinder.identifierGeneratorCreator;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.Constraint.hashedName;
@@ -517,6 +519,8 @@ public final class AnnotationBinder {
 				bindQueries( annotatedClass, context );
 				bindFilterDefs( annotatedClass, context );
 				//fall through:
+			case IMPORTED:
+				handleImport( annotatedClass, context );
 			case EMBEDDABLE:
 			case NONE:
 				return;
@@ -533,6 +537,15 @@ public final class AnnotationBinder {
 		bindFilterDefs( annotatedClass, context );
 
 		EntityBinder.bindEntityClass( annotatedClass, inheritanceStatePerClass, generators, context );
+	}
+
+	private static void handleImport(XClass annotatedClass, MetadataBuildingContext context) {
+		if ( annotatedClass.isAnnotationPresent(Imported.class) ) {
+			String qualifiedName = annotatedClass.getName();
+			String name = StringHelper.unqualify( qualifiedName );
+			String rename = annotatedClass.getAnnotation(Imported.class).rename();
+			context.getMetadataCollector().addImport( isEmptyAnnotationValue( rename ) ? name : rename, qualifiedName );
+		}
 	}
 
 	private static void detectMappedSuperclassProblems(XClass annotatedClass) {

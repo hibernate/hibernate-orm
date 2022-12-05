@@ -375,7 +375,7 @@ public class PropertyBinder {
 		property.setUpdateable( updatable );
 		property.setPropertyAccessStrategy( propertyAccessStrategy );
 
-		inferOptimisticLocking(property);
+		inferOptimisticLocking( property );
 
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		return property;

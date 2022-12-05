@@ -27,6 +27,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -808,12 +809,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addImport(String importName, String entityName) {
-		if ( importName == null || entityName == null ) {
+	public void addImport(String importName, String className) {
+		if ( importName == null || className == null ) {
 			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
-		log.tracev( "Import: {0} -> {1}", importName, entityName );
-		String old = imports.put( importName, entityName );
+		log.tracev( "Import: {0} -> {1}", importName, className);
+		String old = imports.put( importName, className);
 		if ( old != null ) {
 			log.debugf( "import name [%s] overrode previous [{%s}]", importName, old );
 		}
@@ -1185,21 +1186,27 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public AnnotatedClassType addClassType(XClass clazz) {
-		AnnotatedClassType type;
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			type = AnnotatedClassType.ENTITY;
-		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			type = AnnotatedClassType.EMBEDDABLE;
-		}
-		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
-			type = AnnotatedClassType.MAPPED_SUPERCLASS;
-		}
-		else {
-			type = AnnotatedClassType.NONE;
-		}
+		final AnnotatedClassType type = getAnnotatedClassType(clazz);
 		annotatedClassTypeMap.put( clazz.getName(), type );
 		return type;
+	}
+
+	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
+		if ( clazz.isAnnotationPresent( Entity.class ) ) {
+			return AnnotatedClassType.ENTITY;
+		}
+		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+			return AnnotatedClassType.EMBEDDABLE;
+		}
+		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+			return AnnotatedClassType.MAPPED_SUPERCLASS;
+		}
+		else if ( clazz.isAnnotationPresent( Imported.class ) ) {
+			return AnnotatedClassType.IMPORTED;
+		}
+		else {
+			return AnnotatedClassType.NONE;
+		}
 	}
 
 

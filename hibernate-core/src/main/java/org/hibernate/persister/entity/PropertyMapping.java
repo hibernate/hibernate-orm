@@ -24,6 +24,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated This interface is obsolete
  */
 @Deprecated(since = "6", forRemoval = true)
 @Remove

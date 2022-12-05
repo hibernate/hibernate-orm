@@ -27,6 +27,8 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -39,7 +41,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 
 /**
@@ -50,7 +51,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	private final NonAggregatedIdentifierMapping idMapping;
 	private final VirtualIdRepresentationStrategy representationStrategy;
 
-	private final List<SingularAttributeMapping> attributeMappings;
+	private final MutableAttributeMappingList attributeMappings;
 	private SelectableMappings selectableMappings;
 
 	public VirtualIdEmbeddable(
@@ -72,7 +73,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
-		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
+		this.attributeMappings = new MutableAttributeMappingList( (compositeType).getPropertyNames().length );
 
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
@@ -100,7 +101,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		this.navigableRole = inverseMappingType.getNavigableRole();
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
 		this.representationStrategy = inverseMappingType.representationStrategy;
-		this.attributeMappings = arrayList( inverseMappingType.attributeMappings.size() );
+		this.attributeMappings = new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() );
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
 				"VirtualIdEmbeddable(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
@@ -236,8 +237,8 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
-		return (List) attributeMappings;
+	public AttributeMappingsList getAttributeMappings() {
+		return attributeMappings;
 	}
 
 	@Override
@@ -246,10 +247,8 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+		this.attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
@@ -275,7 +274,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.get( i );
+			final SingularAttributeMapping attribute = attributeMappings.getSingularAttributeMapping( i );
 			if ( attribute.getAttributeName().equals( name ) ) {
 				return attribute;
 			}
@@ -332,7 +331,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		}
 		else {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				attributeMapping.decompose(
 						attributeMapping.getValue( domainValue ),
 						valueConsumer,
@@ -442,7 +441,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping previous = attributeMappings.get( i );
 			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.set( i, attributeMapping );
+				attributeMappings.setAttributeMapping( i, attributeMapping );
 				return;
 			}
 		}

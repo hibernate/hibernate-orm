@@ -60,7 +60,7 @@ public interface PluralAttributeMapping
 	OrderByFragment getManyToManyOrderByFragment();
 
 	@Override
-	default void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitKeyFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( indexDescriptor );
@@ -82,7 +82,7 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitKeyFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitKeyFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( 0, indexDescriptor );
@@ -90,7 +90,7 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
 	}
 
@@ -100,7 +100,7 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( 0, getElementDescriptor() );
 	}
 

@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -192,7 +193,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
-		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 		mutationGroup.forEachOperation( (position, operation) -> {
 			final EntityTableMapping tableDetails = (EntityTableMapping) operation.getTableDetails();
 
@@ -380,7 +381,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	private void applyTableInsertDetails(
 			MutationGroupBuilder insertGroupBuilder,
 			boolean[] attributeInclusions) {
-		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();

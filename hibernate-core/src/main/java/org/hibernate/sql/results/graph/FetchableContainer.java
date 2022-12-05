@@ -47,40 +47,40 @@ public interface FetchableContainer extends ModelPartContainer {
 	}
 
 	default void visitKeyFetchables(
-			Consumer<Fetchable> fetchableConsumer,
+			Consumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		// by default, nothing to do
 	}
 
 	default void visitKeyFetchables(
-			IndexedConsumer<Fetchable> fetchableConsumer,
+			IndexedConsumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		visitKeyFetchables( 0, fetchableConsumer, treatTargetType );
 	}
 
 	default void visitKeyFetchables(
 			int offset,
-			IndexedConsumer<Fetchable> fetchableConsumer,
+			IndexedConsumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		// by default, nothing to do
 	}
 
 	default void visitFetchables(
-			Consumer<Fetchable> fetchableConsumer,
+			Consumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		//noinspection unchecked
 		visitSubParts( (Consumer) fetchableConsumer, treatTargetType );
 	}
 
 	default void visitFetchables(
-			IndexedConsumer<Fetchable> fetchableConsumer,
+			IndexedConsumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		visitFetchables( 0, fetchableConsumer, treatTargetType );
 	}
 
 	default void visitFetchables(
 			int offset,
-			IndexedConsumer<Fetchable> fetchableConsumer,
+			IndexedConsumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		final MutableInteger index = new MutableInteger( offset );
 		visitSubParts(

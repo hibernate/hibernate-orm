@@ -56,7 +56,9 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.spi.NavigablePath;
@@ -207,7 +209,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public java.util.Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		public AttributeMappingsMap getDeclaredAttributeMappings() {
 			return null;
 		}
 
@@ -752,7 +754,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<AttributeMapping> getAttributeMappings() {
+		public AttributeMappingsList getAttributeMappings() {
 			return null;
 		}
 

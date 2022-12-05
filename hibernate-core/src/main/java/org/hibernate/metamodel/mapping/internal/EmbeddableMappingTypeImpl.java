@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -50,6 +49,8 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -129,7 +130,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final JavaType<?> embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
-	private final List<AttributeMapping> attributeMappings = new ArrayList<>();
+	private final MutableAttributeMappingList attributeMappings = new MutableAttributeMappingList( 5 );
 	private SelectableMappings selectableMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
@@ -526,7 +527,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping previous = attributeMappings.get( i );
 			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.set( i, attributeMapping );
+				attributeMappings.setAttributeMapping( i, attributeMapping );
 				return;
 			}
 		}
@@ -582,16 +583,13 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		visitAttributeMappings( fetchableConsumer );
+	public void visitFetchables(Consumer<? super Fetchable> consumer, EntityMappingType treatTargetType) {
+		visitAttributeMappings( consumer );
 	}
 
 	@Override
-	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		final int size = attributeMappings.size();
-		for ( int i = 0; i < size; i++ ) {
-			fetchableConsumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void visitFetchables(IndexedConsumer<? super Fetchable> indexedConsumer, EntityMappingType treatTargetType) {
+		this.attributeMappings.indexedForEach( indexedConsumer );
 	}
 
 	@Override
@@ -764,19 +762,17 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		return attributeMappings;
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+		attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void visitAttributeMappings(final Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 

@@ -200,6 +200,7 @@ import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
+import org.hibernate.persister.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
@@ -430,9 +431,9 @@ public abstract class AbstractEntityPersister
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 
-	private List<AttributeMapping> attributeMappings;
-	protected Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
-	protected List<Fetchable> staticFetchableList;
+	private AttributeMappingsList attributeMappings;
+	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
+	protected AttributeMappingsList staticFetchableList;
 
 	private InMemoryGenerator versionGenerator;
 
@@ -4222,7 +4223,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				for ( int i = 0; i < staticFetchableList.size(); i++ ) {
-					final AttributeMapping attribute = staticFetchableList.get( i ).asAttributeMapping();
+					final AttributeMapping attribute = staticFetchableList.get( i );
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
 						final Setter setter = attribute.getPropertyAccess().getSetter();
@@ -4753,16 +4754,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		for ( AttributeMapping attributeMapping : attributeMappings ) {
-			action.accept( attributeMapping );
-		}
+		this.attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+		attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
@@ -4808,13 +4805,14 @@ public abstract class AbstractEntityPersister
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 
 		final NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
+		AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
 			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
 			if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
-				declaredAttributeMappings.put(
+				mappingsBuilder.put(
 						runtimeAttrDefinition.getName(),
 						generateNonIdAttributeMapping(
 								runtimeAttrDefinition,
@@ -4824,6 +4822,7 @@ public abstract class AbstractEntityPersister
 						)
 				);
 			}
+			this.declaredAttributeMappings = mappingsBuilder.build();
 //			else {
 				// its defined on the supertype, skip it here
 //			}
@@ -4842,7 +4841,6 @@ public abstract class AbstractEntityPersister
 			accessOptimizer = null;
 		}
 
-
 		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
 		// generation of `staticFetchableList` because we need to wait until after all sub-classes have had their
 		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
@@ -4855,8 +4853,9 @@ public abstract class AbstractEntityPersister
 					if ( hasUpdateGeneratedProperties() ) {
 						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
 					}
-					staticFetchableList = new ArrayList<>( attributeMappings.size() );
-					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
+					final ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
+					visitSubTypeAttributeMappings( attributeMapping -> builder.add( attributeMapping ) );
+					staticFetchableList = builder.build();
 					return true;
 				}
 		);
@@ -5203,13 +5202,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
-		return declaredAttributeMappings.values();
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
+		return declaredAttributeMappings;
 	}
 
 	@Override
 	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
-		declaredAttributeMappings.values().forEach( action );
+		declaredAttributeMappings.forEachValue( action );
 	}
 
 	@Override
@@ -5314,7 +5313,6 @@ public abstract class AbstractEntityPersister
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
 			PersistentClass bootEntityDescriptor) {
-		assert declaredAttributeMappings != null;
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
@@ -5635,16 +5633,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		if ( attributeMappings == null ) {
-			ArrayList<AttributeMapping> attributeMappings = new ArrayList<>();
+			int sizeHint = declaredAttributeMappings.size();
+			sizeHint += (superMappingType == null ? 0 : superMappingType.getAttributeMappings().size() );
+			ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( sizeHint );
 
 			if ( superMappingType != null ) {
-				superMappingType.visitAttributeMappings( attributeMappings::add );
+				superMappingType.visitAttributeMappings( builder::add );
 			}
 
-			attributeMappings.addAll( declaredAttributeMappings.values() );
-			this.attributeMappings = attributeMappings;
+			for ( AttributeMapping am : declaredAttributeMappings.valueIterator() ) {
+				builder.add( am );
+			}
+			this.attributeMappings = builder.build();
 			// subclasses?  it depends on the usage
 		}
 
@@ -5756,7 +5758,7 @@ public abstract class AbstractEntityPersister
 			return identifierModelPart;
 		}
 
-		for ( AttributeMapping attribute : declaredAttributeMappings.values() ) {
+		for ( AttributeMapping attribute : declaredAttributeMappings.valueIterator() ) {
 			if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
 				final ModelPart subPart = ( (EmbeddableValuedModelPart) attribute ).findSubPart( name, null );
 				if ( subPart != null ) {
@@ -5824,16 +5826,16 @@ public abstract class AbstractEntityPersister
 			EntityMappingType treatTargetType) {
 		consumer.accept( identifierMapping );
 
-		declaredAttributeMappings.values().forEach( consumer );
+		declaredAttributeMappings.forEachValue( consumer );
 	}
 
 	@Override
-	public void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		// No-op
 	}
 
 	@Override
-	public void visitKeyFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitKeyFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		// No-op
 	}
 
@@ -5859,7 +5861,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitFetchables(
-			Consumer<Fetchable> fetchableConsumer,
+			Consumer<? super Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().forEach( fetchableConsumer );
@@ -5872,34 +5874,25 @@ public abstract class AbstractEntityPersister
 			visitSubTypeAttributeMappings( fetchableConsumer );
 		}
 		else {
-			for ( AttributeMapping attributeMapping : attributeMappings ) {
-				fetchableConsumer.accept( attributeMapping );
-			}
+			attributeMappings.forEach( fetchableConsumer );
 		}
 	}
 
 	@Override
-	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		if ( treatTargetType == null ) {
-			final List<Fetchable> fetchableList = getStaticFetchableList();
-			final int size = fetchableList.size();
-			for ( int i = 0; i < size; i++ ) {
-				fetchableConsumer.accept( i, fetchableList.get( i ) );
-			}
+			getStaticFetchableList().indexedForEach( fetchableConsumer );
 			// EARLY EXIT!!!
 			return;
 		}
 
-		final int size = attributeMappings.size();
-		for ( int i = 0; i < size; i++ ) {
-			fetchableConsumer.accept( i, attributeMappings.get( i ) );
-		}
+		attributeMappings.indexedForEach( fetchableConsumer );
 		if ( treatTargetType.isTypeOrSuperType( this ) ) {
 			if ( subclassMappingTypes != null ) {
-				int offset = size;
+				int offset = attributeMappings.size();
 				for ( EntityMappingType subtype : subclassMappingTypes.values() ) {
-					final Collection<AttributeMapping> declaredAttributeMappings = subtype.getDeclaredAttributeMappings();
-					for ( AttributeMapping declaredAttributeMapping : declaredAttributeMappings ) {
+					final AttributeMappingsMap declaredAttributeMappings = subtype.getDeclaredAttributeMappings();
+					for ( AttributeMapping declaredAttributeMapping : declaredAttributeMappings.valueIterator() ) {
 						fetchableConsumer.accept( offset++, declaredAttributeMapping );
 					}
 				}
@@ -5907,7 +5900,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected List<Fetchable> getStaticFetchableList() {
+	protected AttributeMappingsList getStaticFetchableList() {
 		return staticFetchableList;
 	}
 
@@ -5915,9 +5908,7 @@ public abstract class AbstractEntityPersister
 	public void visitAttributeMappings(
 			Consumer<? super AttributeMapping> action,
 			EntityMappingType targetType) {
-		for ( AttributeMapping attributeMapping : attributeMappings ) {
-			action.accept( attributeMapping );
-		}
+		attributeMappings.forEach( action );
 	}
 
 	@Override

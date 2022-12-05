@@ -6,18 +6,17 @@
  */
 package org.hibernate.orm.test.mapping.attrorder;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.persister.entity.AttributeMappingsList;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -85,7 +84,7 @@ public class AttributeOrderingTests {
 		assertThat( naturalIdMapping.getNaturalIdAttributes().get( 0 ).getAttributeName(), is( "assignment" ) );
 		assertThat( naturalIdMapping.getNaturalIdAttributes().get( 1 ).getAttributeName(), is( "userCode" ) );
 
-		final ArrayList<AttributeMapping> attributeMappings = new ArrayList<>( entityMappingType.getAttributeMappings() );
+		final AttributeMappingsList attributeMappings = entityMappingType.getAttributeMappings();
 		assertThat( attributeMappings.size(), is( 5 ) );
 
 		assertThat( attributeMappings.get( 0 ).getAttributeName(), is( "assignment" ) );
@@ -99,7 +98,7 @@ public class AttributeOrderingTests {
 		assertThat( entityMappingType.getEntityPersister().getPropertyNames()[ 2 ], is( "theComponent" ) );
 
 		final EmbeddableMappingType embeddable = theComponentAttrMapping.getMappedType();
-		final ArrayList<AttributeMapping> embeddableAttributeMappings = new ArrayList<>( embeddable.getAttributeMappings() );
+		final AttributeMappingsList embeddableAttributeMappings = embeddable.getAttributeMappings();
 		assertThat( embeddableAttributeMappings.get( 0 ).getAttributeName(), is( "nestedAnything" ) );
 		assertThat( embeddableAttributeMappings.get( 1 ).getAttributeName(), is( "nestedName" ) );
 

@@ -37,6 +37,8 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -52,7 +54,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getAttributeMetadataAccess;
 
 /**
@@ -67,7 +68,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 //	private final IdClassEmbedded embedded;
 	private final EmbeddableValuedModelPart embedded;
 
-	private final List<SingularAttributeMapping> attributeMappings;
+	private final MutableAttributeMappingList attributeMappings;
 	private SelectableMappings selectableMappings;
 
 	public IdClassEmbeddable(
@@ -91,7 +92,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		this.representationStrategy = new IdClassRepresentationStrategy( this );
 
-		this.attributeMappings = arrayList( idClassSource.getPropertySpan() );
+		this.attributeMappings = new MutableAttributeMappingList( idClassSource.getPropertySpan() );
 
 		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
@@ -148,7 +149,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
 		this.representationStrategy = new IdClassRepresentationStrategy( this );
-		this.attributeMappings = arrayList( inverseMappingType.attributeMappings.size() );
+		this.attributeMappings = new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() );
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -306,7 +307,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public SingularAttributeMapping findAttributeMapping(String name) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.get( i );
+			final SingularAttributeMapping attribute = attributeMappings.getSingularAttributeMapping( i );
 			if ( attribute.getAttributeName().equals( name ) ) {
 				return attribute;
 			}
@@ -316,8 +317,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
-		return (List) attributeMappings;
+	public AttributeMappingsList getAttributeMappings() {
+		return attributeMappings;
 	}
 
 	@Override
@@ -326,10 +327,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+		this.attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
@@ -355,7 +354,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.get( i );
+			final SingularAttributeMapping attribute = attributeMappings.getSingularAttributeMapping( i );
 			if ( attribute.getAttributeName().equals( name ) ) {
 				return attribute;
 			}
@@ -531,7 +530,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping previous = attributeMappings.get( i );
 			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.set( i, attributeMapping );
+				attributeMappings.setAttributeMapping( i, attributeMapping );
 				return;
 			}
 		}

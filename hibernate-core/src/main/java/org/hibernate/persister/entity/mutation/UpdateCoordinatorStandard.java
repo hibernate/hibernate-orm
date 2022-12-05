@@ -36,6 +36,7 @@ import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.model.MutationOperation;
@@ -510,7 +511,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker dirtinessChecker,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
-		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 
 		// NOTE:
 		// 		* `dirtyAttributeIndexes == null` means we had no snapshot and couldn't
@@ -914,7 +915,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
-		final List<AttributeMapping> attributeMappings = entityPersister().getAttributeMappings();
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 		final boolean[] versionability = entityPersister().getPropertyVersionability();
 		final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
 

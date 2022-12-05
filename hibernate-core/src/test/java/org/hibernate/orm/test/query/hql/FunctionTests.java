@@ -1327,7 +1327,6 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

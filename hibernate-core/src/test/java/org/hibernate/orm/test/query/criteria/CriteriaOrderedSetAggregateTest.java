@@ -12,6 +12,9 @@ import java.util.List;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaWindow;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -107,7 +110,7 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<String> cr = cb.createQuery( String.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<String> function = cb.listagg( null, root.get( "theString" ), cb.literal( "," ) );
+			JpaExpression<String> function = cb.listagg( null, root.get( "theString" ), "," );
 
 			cr.select( function );
 			List<String> elements = Arrays.asList( session.createQuery( cr ).getSingleResult().split( "," ) );
@@ -126,11 +129,7 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<String> cr = cb.createQuery( String.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<String> function = cb.listagg(
-					cb.desc( root.get( "id" ) ),
-					root.get( "theString" ),
-					cb.literal( "," )
-			);
+			JpaExpression<String> function = cb.listagg( cb.desc( root.get( "id" ) ), root.get( "theString" ), "," );
 
 			cr.select( function );
 			String result = session.createQuery( cr ).getSingleResult();
@@ -150,7 +149,7 @@ public class CriteriaOrderedSetAggregateTest {
 					cb.desc( root.get( "id" ) ),
 					cb.lt( root.get( "theInt" ), cb.literal( 10 ) ),
 					root.get( "theString" ),
-					cb.literal( "," )
+					","
 			);
 
 			cr.select( function );
@@ -188,8 +187,10 @@ public class CriteriaOrderedSetAggregateTest {
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
 			JpaExpression<Integer> function = cb.percentileDisc(
-					cb.asc( root.get( "theInt" ) ),
-					cb.literal( 0.5 )
+					cb.literal( 0.5 ),
+					root.get( "theInt" ),
+					SortOrder.ASCENDING,
+					NullPrecedence.FIRST
 			);
 
 			cr.select( function );

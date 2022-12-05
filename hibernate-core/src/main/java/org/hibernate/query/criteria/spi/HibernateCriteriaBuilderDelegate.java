@@ -48,6 +48,7 @@ import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
+import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -1262,6 +1263,41 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaWindowFrame frameUnboundedPreceding() {
+		return criteriaBuilder.frameUnboundedPreceding();
+	}
+
+	@Override
+	public JpaWindowFrame frameBetweenPreceding(int offset) {
+		return criteriaBuilder.frameBetweenPreceding( offset );
+	}
+
+	@Override
+	public JpaWindowFrame frameBetweenPreceding(Expression<?> offset) {
+		return criteriaBuilder.frameBetweenPreceding( offset );
+	}
+
+	@Override
+	public JpaWindowFrame frameCurrentRow() {
+		return criteriaBuilder.frameCurrentRow();
+	}
+
+	@Override
+	public JpaWindowFrame frameBetweenFollowing(int offset) {
+		return criteriaBuilder.frameBetweenFollowing( offset );
+	}
+
+	@Override
+	public JpaWindowFrame frameBetweenFollowing(Expression<?> offset) {
+		return criteriaBuilder.frameBetweenFollowing( offset );
+	}
+
+	@Override
+	public JpaWindowFrame frameUnboundedFollowing() {
+		return criteriaBuilder.frameUnboundedFollowing();
+	}
+
+	@Override
 	public <T> JpaExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args) {
 		return criteriaBuilder.windowFunction( name, type, window, args );
 	}
@@ -1309,6 +1345,75 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaExpression<Double> cumeDist(JpaWindow window) {
 		return criteriaBuilder.cumeDist( window );
+	}
+
+	@Override
+	public <T> JpaExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			Expression<?>... args) {
+		return criteriaBuilder.functionAggregate( name, type, filter, args );
+	}
+
+	@Override
+	public <T> JpaExpression<T> functionAggregate(String name, Class<T> type, JpaWindow window, Expression<?>... args) {
+		return criteriaBuilder.functionAggregate( name, type, window, args );
+	}
+
+	@Override
+	public <T> JpaExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... args) {
+		return criteriaBuilder.functionAggregate( name, type, filter, window, args );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter) {
+		return criteriaBuilder.sum( argument, filter );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaWindow window) {
+		return criteriaBuilder.sum( argument, window );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter, JpaWindow window) {
+		return criteriaBuilder.sum( argument, filter, window );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter) {
+		return criteriaBuilder.avg( argument, filter );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaWindow window) {
+		return criteriaBuilder.avg( argument, window );
+	}
+
+	@Override
+	public <N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter, JpaWindow window) {
+		return criteriaBuilder.avg( argument, filter, window );
+	}
+
+	@Override
+	public JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter) {
+		return criteriaBuilder.count( argument, filter );
+	}
+
+	@Override
+	public JpaExpression<Long> count(Expression<?> argument, JpaWindow window) {
+		return criteriaBuilder.count( argument, window );
+	}
+
+	@Override
+	public JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter, JpaWindow window) {
+		return criteriaBuilder.count( argument, filter, window );
 	}
 
 	@Override

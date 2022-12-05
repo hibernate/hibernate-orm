@@ -29,8 +29,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -239,16 +239,21 @@ public class CriteriaWindowFunctionTest {
 		);
 	}
 
-	//	@Test
-	public void testSumWithFilterAsWindowFunction(SessionFactoryScope scope) {
+	@Test
+	public void testSumWithFilterAndWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					// todo marco : add 'simple` aggregate functions (sum, avg, count)
-					TypedQuery<Long> q = session.createQuery(
-							"select sum(eob.theInt) filter (where eob.theInt > 5) over (order by eob.theInt) from EntityOfBasics eob order by eob.theInt",
-							Long.class
-					);
-					List<Long> resultList = q.getResultList();
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					CriteriaQuery<Long> cr = cb.createQuery( Long.class );
+					Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					Path<Integer> theInt = root.get( "theInt" );
+					JpaWindow window = cb.createWindow().orderBy( cb.asc( theInt ) );
+					JpaExpression<Long> sum = cb.sum( theInt, cb.gt( theInt, 5 ), window ).asLong();
+
+					cr.select( sum ).orderBy( cb.asc( theInt, true ) );
+
+					List<Long> resultList = session.createQuery( cr ).getResultList();
 					assertEquals( 5L, resultList.size() );
 					assertNull( resultList.get( 0 ) );
 					assertNull( resultList.get( 1 ) );
@@ -259,16 +264,71 @@ public class CriteriaWindowFunctionTest {
 		);
 	}
 
-	//	@Test
+	@Test
+	public void testAvgAsWindowFunctionWithoutFilter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					CriteriaQuery<Double> cr = cb.createQuery( Double.class );
+					Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					Path<Integer> id = root.get( "id" );
+					JpaWindow window = cb.createWindow().orderBy( cb.asc( id ) );
+					JpaExpression<Double> avg = cb.avg( id, window );
+
+					cr.select( avg ).orderBy( cb.asc( cb.literal( 1 ) ) );
+
+					List<Double> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5L, resultList.size() );
+					assertEquals( 1.0, resultList.get( 0 ) );
+					assertEquals( 1.5, resultList.get( 1 ) );
+					assertEquals( 2.0, resultList.get( 2 ) );
+					assertEquals( 2.5, resultList.get( 3 ) );
+					assertEquals( 3.0, resultList.get( 4 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testCountAsWindowFunctionWithFilter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					CriteriaQuery<Long> cr = cb.createQuery( Long.class );
+					Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					JpaWindow window = cb.createWindow();
+					JpaExpression<Long> count = cb.count( root, cb.gt( root.get( "id" ), 2 ), window );
+
+					cr.select( count );
+
+					List<Long> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5L, resultList.size() );
+					assertEquals( 3L, resultList.get( 0 ) );
+					assertEquals( 3L, resultList.get( 1 ) );
+					assertEquals( 3L, resultList.get( 2 ) );
+					assertEquals( 3L, resultList.get( 3 ) );
+					assertEquals( 3L, resultList.get( 4 ) );
+				}
+		);
+	}
+
+	@Test
 	public void testFrame(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					// todo marco : how should we do window function frames in Criteria ?
-					TypedQuery<Integer> q = session.createQuery(
-							"select first_value(eob.theInt) over (order by eob.id rows between 2 preceding and current row) from EntityOfBasics eob order by eob.id",
-							Integer.class
-					);
-					List<Integer> resultList = q.getResultList();
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					CriteriaQuery<Integer> cr = cb.createQuery( Integer.class );
+					Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					JpaWindow window = cb.createWindow()
+							.orderBy( cb.asc( root.get( "id" ) ) )
+							.frameRows( cb.frameBetweenPreceding( 2 ), cb.frameCurrentRow() );
+					JpaExpression<Integer> firstValue = cb.firstValue( root.get( "theInt" ), window );
+
+					cr.select( firstValue ).orderBy( cb.asc( root.get( "id" ) ) );
+
+					List<Integer> resultList = session.createQuery( cr ).getResultList();
 					assertEquals( 5, resultList.size() );
 					assertEquals( 5, resultList.get( 0 ) );
 					assertEquals( 5, resultList.get( 1 ) );

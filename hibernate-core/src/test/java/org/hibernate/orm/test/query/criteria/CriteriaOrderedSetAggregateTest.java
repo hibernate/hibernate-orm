@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaWindow;
@@ -20,10 +22,12 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +37,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Marco Belladelli
@@ -129,7 +134,11 @@ public class CriteriaOrderedSetAggregateTest {
 			CriteriaQuery<String> cr = cb.createQuery( String.class );
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-			JpaExpression<String> function = cb.listagg( cb.desc( root.get( "id" ) ), root.get( "theString" ), "," );
+			JpaExpression<String> function = cb.listagg(
+					cb.desc( root.get( "id" ) ),
+					root.get( "theString" ),
+					","
+			);
 
 			cr.select( function );
 			String result = session.createQuery( cr ).getSingleResult();
@@ -155,6 +164,36 @@ public class CriteriaOrderedSetAggregateTest {
 			cr.select( function );
 			String result = session.createQuery( cr ).getSingleResult();
 			assertEquals( "5,7,6,5", result );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)
+	@RequiresDialect(H2Dialect.class)
+	public void testListaggWithFilterAndWindow(SessionFactoryScope scope) {
+		// note : not many dbs support this for now but the generated sql is correct
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<String> cr = cb.createQuery( String.class );
+			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+			JpaWindow window = cb.createWindow().partitionBy( root.get( "theInt" ) );
+			JpaExpression<String> function = cb.listagg(
+					cb.desc( root.get( "id" ) ),
+					cb.lt( root.get( "theInt" ), cb.literal( 10 ) ),
+					window,
+					root.get( "theString" ),
+					","
+			);
+
+			cr.select( function );
+			List<String> resultList = session.createQuery( cr ).getResultList();
+			assertEquals( "5,5", resultList.get( 0 ) );
+			assertEquals( "6", resultList.get( 1 ) );
+			assertEquals( "7", resultList.get( 2 ) );
+			assertNull( resultList.get( 3 ) );
+			assertEquals( "5,5", resultList.get( 4 ) );
 		} );
 	}
 
@@ -196,6 +235,37 @@ public class CriteriaOrderedSetAggregateTest {
 			cr.select( function );
 			Integer result = session.createQuery( cr ).getSingleResult();
 			assertEquals( 6, result );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class)
+	public void testInverseDistributionWithWindow(SessionFactoryScope scope) {
+		// note : PostgreSQL currently does not support ordered-set aggregate functions with OVER clause
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Integer> cr = cb.createQuery( Integer.class );
+			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+			JpaWindow window = cb.createWindow().partitionBy( root.get( "theInt" ) );
+			JpaExpression<Integer> function = cb.percentileDisc(
+					cb.literal( 0.5 ),
+					window,
+					root.get( "theInt" ),
+					SortOrder.ASCENDING,
+					NullPrecedence.FIRST
+			);
+
+			cr.select( function ).orderBy( cb.asc( cb.literal( 1 ) ) );
+			List<Integer> resultList = session.createQuery( cr ).getResultList();
+			assertEquals( 5, resultList.size() );
+			assertEquals( 5, resultList.get( 0 ) );
+			assertEquals( 5, resultList.get( 1 ) );
+			assertEquals( 6, resultList.get( 2 ) );
+			assertEquals( 7, resultList.get( 3 ) );
+			assertEquals( 13, resultList.get( 4 ) );
 		} );
 	}
 
@@ -258,5 +328,4 @@ public class CriteriaOrderedSetAggregateTest {
 			assertEquals( 1L, resultList.get( 2 ).get( 1, Long.class ) );
 		} );
 	}
-
 }

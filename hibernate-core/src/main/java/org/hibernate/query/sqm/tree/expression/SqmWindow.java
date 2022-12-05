@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.criteria.JpaWindow;
+import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.FrameMode;
@@ -34,12 +35,12 @@ import static org.hibernate.query.sqm.FrameMode.ROWS;
 public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitableNode {
 	private final List<SqmExpression<?>> partitions;
 	private final List<SqmSortSpecification> orderList;
-	private final FrameMode mode;
-	private final FrameKind startKind;
-	private final SqmExpression<?> startExpression;
-	private final FrameKind endKind;
-	private final SqmExpression<?> endExpression;
-	private final FrameExclusion exclusion;
+	private FrameMode mode;
+	private FrameKind startKind;
+	private SqmExpression<?> startExpression;
+	private FrameKind endKind;
+	private SqmExpression<?> endExpression;
+	private FrameExclusion exclusion;
 
 	public SqmWindow(NodeBuilder nodeBuilder) {
 		this(
@@ -106,6 +107,42 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 
 	public FrameExclusion getExclusion() {
 		return exclusion;
+	}
+
+	@Override
+	public JpaWindow frameRows(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+		return this.setFrames(FrameMode.ROWS, startFrame, endFrame);
+	}
+
+	@Override
+	public JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+		return this.setFrames(FrameMode.RANGE, startFrame, endFrame);
+
+	}
+
+	@Override
+	public JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+		return this.setFrames(FrameMode.GROUPS, startFrame, endFrame);
+
+	}
+
+	private SqmWindow setFrames(FrameMode frameMode, JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+		this.mode = frameMode;
+		if (startFrame != null) {
+			this.startKind = startFrame.getKind();
+			this.startExpression = (SqmExpression<?>) startFrame.getExpression();
+		}
+		if (endFrame != null) {
+			this.endKind = endFrame.getKind();
+			this.endExpression = (SqmExpression<?>) endFrame.getExpression();
+		}
+		return this;
+	}
+
+	@Override
+	public JpaWindow frameExclude(FrameExclusion frameExclusion) {
+		this.exclusion = frameExclusion;
+		return this;
 	}
 
 	@Override

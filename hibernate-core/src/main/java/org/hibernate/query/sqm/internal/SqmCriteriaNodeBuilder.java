@@ -58,11 +58,13 @@ import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
+import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
@@ -108,6 +110,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.SqmWindow;
+import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -140,6 +143,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
@@ -2574,13 +2578,44 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public SqmWindowFrame frameUnboundedPreceding() {
+		return new SqmWindowFrame( this, FrameKind.UNBOUNDED_PRECEDING );
+	}
+
+	@Override
+	public SqmWindowFrame frameBetweenPreceding(int offset) {
+		return new SqmWindowFrame( this, FrameKind.OFFSET_PRECEDING, literal( offset ) );
+	}
+
+	@Override
+	public SqmWindowFrame frameBetweenPreceding(Expression<?> offset) {
+		return new SqmWindowFrame( this, FrameKind.OFFSET_PRECEDING, (SqmExpression<?>) offset );
+	}
+
+	@Override
+	public SqmWindowFrame frameCurrentRow() {
+		return new SqmWindowFrame( this, FrameKind.CURRENT_ROW );
+	}
+
+	@Override
+	public SqmWindowFrame frameBetweenFollowing(int offset) {
+		return new SqmWindowFrame( this, FrameKind.OFFSET_FOLLOWING, literal( offset ) );
+	}
+
+	@Override
+	public SqmWindowFrame frameBetweenFollowing(Expression<?> offset) {
+		return new SqmWindowFrame( this, FrameKind.OFFSET_FOLLOWING, (SqmExpression<?>) offset );
+	}
+
+	@Override
+	public SqmWindowFrame frameUnboundedFollowing() {
+		return new SqmWindowFrame( this, FrameKind.UNBOUNDED_FOLLOWING );
+	}
+
+	@Override
 	public <T> SqmExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args) {
-		// todo marco : some functions (`rank` and `percent_rank`) are not registered as window functions
-		//  but as ordered set-aggregate functions, but they can serve both purposes
-		//  getting an error when calling generateWindowSqmExpression
-		//  (@see CommonFunctionFactory#hypotheticalOrderedSetAggregates)
 		SqmExpression<T> function = getFunctionDescriptor( name ).generateSqmExpression(
-				expressionList(args),
+				expressionList( args ),
 				null,
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()
@@ -2638,7 +2673,97 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Ordered set-aggregate functions
+	// Aggregate functions
+
+	@Override
+	public <T> SqmExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			Expression<?>... args) {
+		return functionAggregate( name, type, filter, null, args );
+	}
+
+	@Override
+	public <T> SqmExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaWindow window,
+			Expression<?>... args) {
+		return functionAggregate( name, type, null, window, args );
+	}
+
+	@Override
+	public <T> SqmExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... args) {
+		SqmPredicate sqmFilter = filter != null ? (SqmPredicate) filter : null;
+		SqmExpression<T> function = getFunctionDescriptor( name ).generateAggregateSqmExpression(
+				expressionList( args ),
+				sqmFilter,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+		if ( window == null ) {
+			return function;
+		}
+		else {
+			return new SqmOver<>( function, (SqmWindow) window );
+		}
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Number> sum(Expression<N> argument, JpaPredicate filter) {
+		return sum( argument, filter, null );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Number> sum(Expression<N> argument, JpaWindow window) {
+		return sum( argument, null, window );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Number> sum(Expression<N> argument, JpaPredicate filter, JpaWindow window) {
+		return functionAggregate( "sum", Number.class, filter, window, argument );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument, JpaPredicate filter) {
+		return avg( argument, filter, null );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument, JpaWindow window) {
+		return avg( argument, null, window );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument, JpaPredicate filter, JpaWindow window) {
+		return functionAggregate( "avg", Double.class, filter, window, argument );
+	}
+
+	@Override
+	public SqmExpression<Long> count(Expression<?> argument, JpaPredicate filter) {
+		return count( argument, filter, null );
+	}
+
+	@Override
+	public SqmExpression<Long> count(Expression<?> argument, JpaWindow window) {
+		return count( argument, null, window );
+	}
+
+	@Override
+	public SqmExpression<Long> count(Expression<?> argument, JpaPredicate filter, JpaWindow window) {
+		return functionAggregate( "count", Long.class, filter, window, argument );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Ordered-Set Aggregate functions
 
 	@Override
 	public <T> SqmExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args) {
@@ -2747,7 +2872,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaWindow window,
 			Expression<String> argument,
 			String separator) {
-		return listagg( order, filter, window, argument, value( separator, (SqmExpression<String>) argument ) );
+		return listagg( order, filter, window, argument, literal( separator ) );
 	}
 
 	@Override
@@ -2891,6 +3016,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				sortExpression.getJavaType(),
 				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
 				filter,
+				window,
 				argument
 		);
 	}

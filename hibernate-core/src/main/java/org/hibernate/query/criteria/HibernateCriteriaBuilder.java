@@ -32,6 +32,7 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -897,11 +898,60 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// Window functions
 
 	/**
-	 * Create an empty window to use for window and set-order aggregate functions.
+	 * Create an empty {@link JpaWindow} to use with window and aggregate functions.
 	 *
 	 * @return the empty window
 	 */
 	JpaWindow createWindow();
+
+	/**
+	 * Create a window frame of type {@link FrameKind#UNBOUNDED_PRECEDING} to use with {@link JpaWindow}s.
+	 *
+	 * @return the window frame
+	 */
+	JpaWindowFrame frameUnboundedPreceding();
+
+	/**
+	 * @see #frameBetweenPreceding(Expression)
+	 */
+	JpaWindowFrame frameBetweenPreceding(int offset);
+
+	/**
+	 * Create window frame of type {@link FrameKind#OFFSET_PRECEDING} to use with {@link JpaWindow}s.
+	 *
+	 * @param offset the {@code offset} expression
+	 *
+	 * @return the window frame
+	 */
+	JpaWindowFrame frameBetweenPreceding(Expression<?> offset);
+
+	/**
+	 * Create a window frame of type {@link FrameKind#CURRENT_ROW} to use with {@link JpaWindow}s.
+	 *
+	 * @return the window frame
+	 */
+	JpaWindowFrame frameCurrentRow();
+
+	/**
+	 * @see #frameBetweenFollowing(Expression)
+	 */
+	JpaWindowFrame frameBetweenFollowing(int offset);
+
+	/**
+	 * Create a window frame of type {@link FrameKind#OFFSET_FOLLOWING} to use with {@link JpaWindow}s.
+	 *
+	 * @param offset the {@code offset} expression
+	 *
+	 * @return the window frame
+	 */
+	JpaWindowFrame frameBetweenFollowing(Expression<?> offset);
+
+	/**
+	 * Create a window frame of type {@link FrameKind#UNBOUNDED_FOLLOWING} to use with {@link JpaWindow}s.
+	 *
+	 * @return the window frame
+	 */
+	JpaWindowFrame frameUnboundedFollowing();
 
 	/**
 	 * Create a generic window function expression that will be applied
@@ -1016,6 +1066,120 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #windowFunction
 	 */
 	JpaExpression<Double> cumeDist(JpaWindow window);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Aggregate functions
+
+	/**
+	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<T> JpaExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			Expression<?>... args);
+
+	/**
+	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<T> JpaExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaWindow window,
+			Expression<?>... args);
+
+	/**
+	 * Create a generic aggregate function expression.
+	 *
+	 * @param name name of the ordered set-aggregate function
+	 * @param type type of this expression
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param args optional arguments to the function
+	 * @param <T> type of this expression
+	 *
+	 * @return aggregate function expression
+	 */
+	<T> JpaExpression<T> functionAggregate(
+			String name,
+			Class<T> type,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... args);
+
+	/**
+	 * @see #sum(Expression, JpaPredicate, JpaWindow)
+	 */
+	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter);
+
+	/**
+	 * @see #sum(Expression, JpaPredicate, JpaWindow)
+	 */
+	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaWindow window);
+
+	/**
+	 * Create a {@code sum} aggregate function expression.
+	 *
+	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param <N> type of the input expression
+	 *
+	 * @return aggregate function expression
+	 *
+	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter, JpaWindow window);
+
+	/**
+	 * @see #avg(Expression, JpaPredicate, JpaWindow)
+	 */
+	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter);
+
+	/**
+	 * @see #avg(Expression, JpaPredicate, JpaWindow)
+	 */
+	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaWindow window);
+
+	/**
+	 * Create an {@code avg} aggregate function expression.
+	 *
+	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param <N> type of the input expression
+	 *
+	 * @return aggregate function expression
+	 *
+	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter, JpaWindow window);
+
+	/**
+	 * @see #count(Expression, JpaPredicate, JpaWindow)
+	 */
+	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter);
+
+	/**
+	 * @see #count(Expression, JpaPredicate, JpaWindow)
+	 */
+	JpaExpression<Long> count(Expression<?> argument, JpaWindow window);
+
+	/**
+	 * Create a {@code count} aggregate function expression.
+	 *
+	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 *
+	 * @return aggregate function expression
+	 *
+	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
+	 */
+	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter, JpaWindow window);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Ordered-Set Aggregate functions
 
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
@@ -1162,8 +1326,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param sortExpression the sort expression
 	 * @param sortOrder the sort order
 	 * @param nullPrecedence the null precedence
-	 * @return ordered set-aggregate expression
 	 * @param <T> type of this expression
+	 *
+	 * @return ordered set-aggregate expression
+	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
 	<T> JpaExpression<T> mode(
@@ -1300,7 +1466,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return ordered set-aggregate expression
 	 *
-	 * @see #functionWithinGroup
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments);
 
@@ -1329,7 +1495,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return ordered set-aggregate expression
 	 *
-	 * @see #functionWithinGroup
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
 	JpaExpression<Double> percentRank(
 			JpaOrder order,

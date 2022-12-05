@@ -2287,11 +2287,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private int indexOfExpression(List<? extends SqmAliasedNode<?>> selections, SqmExpression<?> node) {
 		final int result = indexOfExpression( 0, selections, node );
-		if ( result < 1 ) {
-			return -result;
+		if ( result < 0 ) {
+			return -1;
 		}
 		else {
-			return -1;
+			return result;
 		}
 	}
 
@@ -2307,27 +2307,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						( (SqmDynamicInstantiation<?>) selectableNode ).getArguments(),
 						node
 				);
-				if ( subResult < 0 ) {
+				if ( subResult >= 0 ) {
 					return subResult;
 				}
-				offset = subResult - i;
+				offset = -subResult - i;
 			}
 			else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
 				final List<SqmSelectableNode<?>> selectionItems = ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems();
 				for ( int j = 0; j < selectionItems.size(); j++ ) {
 					if ( selectionItems.get( j ) == node ) {
-						return -( offset + i + j );
+						return offset + i + j;
 					}
 				}
 				offset += selectionItems.size();
 			}
 			else {
 				if ( selectableNode == node ) {
-					return -( offset + i );
+					return offset + i;
 				}
 			}
 		}
-		return offset + selections.size();
+		return -( offset + selections.size() );
 	}
 
 	private boolean selectClauseContains(SqmFrom<?, ?> from) {

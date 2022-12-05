@@ -29,7 +29,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import java.util.List;
 
 /**
- * An SQL dialect for DB2 for iSeries previously known as DB2/400.
+ * An SQL dialect for DB2 for iSeries, previously known as "DB2/400".
  *
  * @author Peter DeGregorio (pdegregorio)
  * @author Christian Beikov

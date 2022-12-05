@@ -33,7 +33,7 @@ import java.util.List;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
- * An SQL dialect for DB2 for z/OS, previously known as known as Db2 UDB for z/OS and Db2 UDB for z/OS and OS/390.
+ * A SQL dialect for DB2 for z/OS, previously known as "Db2 UDB for z/OS" and as "Db2 UDB for z/OS and OS/390".
  *
  * @author Christian Beikov
  */

@@ -250,19 +250,19 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Understands the following target type names for the cast() function:
-	 *
-	 * - String
-	 * - Character
-	 * - Byte, Integer, Long
-	 * - Float, Double
-	 * - Time, Date, Timestamp
-	 * - LocalDate, LocalTime, LocalDateTime
-	 * - BigInteger
-	 * - BigDecimal
-	 * - Binary
-	 * - Boolean (fragile)
-	 *
+	 * Understands the following target type names for the {@code cast()} function:
+	 * <ul>
+	 * <li>String
+	 * <li>Character
+	 * <li>Byte, Integer, Long
+	 * <li>Float, Double
+	 * <li>Time, Date, Timestamp
+	 * <li>LocalDate, LocalTime, LocalDateTime
+	 * <li>BigInteger
+	 * <li>BigDecimal
+	 * <li>Binary
+	 * <li>Boolean (fragile)
+	 * </ul>
 	 * (The type names are not case-sensitive.)
 	 */
 	public BasicValuedMapping resolveCastTargetType(String name) {

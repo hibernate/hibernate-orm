@@ -179,19 +179,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-		if ( timeZoneStorageType != null ) {
-			switch ( timeZoneStorageType ) {
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
-				case NATIVE:
-					return TimeZoneStorageStrategy.NATIVE;
-				case NORMALIZE:
-					return TimeZoneStorageStrategy.NORMALIZE;
-				case NORMALIZE_UTC:
-					return TimeZoneStorageStrategy.NORMALIZE_UTC;
-			}
-		}
-		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+		return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, buildingContext );
 	}
 
 

@@ -7,13 +7,11 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -22,12 +20,12 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
@@ -52,44 +50,24 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
-		final JdbcTypeRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
-				case NORMALIZE:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
-				case NORMALIZE_UTC:
-					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
-				default:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
-			}
-		}
-
-		switch ( temporalPrecision ) {
-			case TIME:
-				return jdbcTypeRegistry.getDescriptor( Types.TIME );
-			case DATE:
-				return jdbcTypeRegistry.getDescriptor( Types.DATE );
-			default:
-				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );
-		}
+		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
 	@Override
 	public String toString(OffsetDateTime value) {
-		return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( value );
+		return ISO_OFFSET_DATE_TIME.format( value );
 	}
 
 	@Override
 	public OffsetDateTime fromString(CharSequence string) {
-		return OffsetDateTime.from( DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse( string ) );
+		return OffsetDateTime.from( ISO_OFFSET_DATE_TIME.parse( string ) );
 	}
 
 	@Override

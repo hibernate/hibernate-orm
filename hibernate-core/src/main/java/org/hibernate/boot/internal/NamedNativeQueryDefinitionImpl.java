@@ -92,6 +92,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		return new NamedNativeQueryMementoImpl(
 				getRegistrationName(),
 				sqlString,
+				sqlString,
 				resultSetMappingName,
 				resultSetMappingClass,
 				querySpaces,

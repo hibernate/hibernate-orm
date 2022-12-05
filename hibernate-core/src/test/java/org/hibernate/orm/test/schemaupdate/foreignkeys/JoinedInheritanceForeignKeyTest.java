@@ -22,11 +22,14 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -38,7 +41,8 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -77,13 +81,8 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 			throws Exception {
 		final String expectedAlterTableStatement = alterTableStatement.toSQL();
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
-		boolean found = false;
-		for ( String line : sqlLines ) {
-			if ( line.contains( expectedAlterTableStatement ) ) {
-				return;
-			}
-		}
-		assertThat( "Expected alter table statement not found : " + expectedAlterTableStatement, found, is( true ) );
+
+		assertThat( "Expected alter table statement not found", sqlLines, hasItem( containsString( expectedAlterTableStatement ) ) );
 	}
 
 	private static class AlterTableStatement {
@@ -106,7 +105,13 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			return ssr.getService( JdbcEnvironment.class ).getDialect().getAlterTableString( tableName ) + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
+			JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );
+			Dialect dialect = jdbcEnvironment.getDialect();
+			IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+			UnaryOperator<String> asIdentifier = identifier -> identifierHelper.toIdentifier( identifier ).render( dialect );
+			return dialect.getAlterTableString( asIdentifier.apply( tableName ) )
+					+ " add constraint " + asIdentifier.apply( fkConstraintName )
+					+ " foreign key (" + asIdentifier.apply( fkColumnName ) + ") references " + asIdentifier.apply( referenceTableName );
 		}
 	}
 

@@ -28,7 +28,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
 @BaseUnitTest
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
@@ -56,7 +57,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -66,7 +67,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 1" ) );
+		assertThat( fileContent, containsString( "increment by 1" ) );
 	}
 
 	@Test
@@ -76,7 +77,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -86,7 +87,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 1" ) );
+		assertThat( fileContent, containsString( "increment by 1" ) );
 	}
 
 	@Test
@@ -96,7 +97,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -106,7 +107,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -116,7 +117,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 20" ) );
+		assertThat( fileContent, containsString( "increment by 20" ) );
 	}
 
 	@Test
@@ -126,7 +127,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 20" ) );
+		assertThat( fileContent, containsString( "increment by 20" ) );
 	}
 
 	@Test
@@ -136,7 +137,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -146,7 +147,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 1" ) );
+		assertThat( fileContent, containsString( "increment by 1" ) );
 	}
 
 	@Test
@@ -156,7 +157,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 10" ) );
+		assertThat( fileContent, containsString( "increment by 10" ) );
 	}
 
 	@Test
@@ -166,7 +167,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 10" ) );
+		assertThat( fileContent, containsString( "increment by 10" ) );
 	}
 
 	@Test
@@ -176,7 +177,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 50" ) );
+		assertThat( fileContent, containsString( "increment by 50" ) );
 	}
 
 	@Test
@@ -189,7 +190,7 @@ public class SequenceGeneratorIncrementTest {
 		createSchema();
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		assertTrue( fileContent.contains( "increment by 1" ) );
+		assertThat( fileContent, containsString( "increment by 1" ) );
 	}
 
 	private void buildMetadata(Class annotatedClass) {

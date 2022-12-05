@@ -82,6 +82,7 @@ public class TimeZoneStorageMappingTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testOffsetRetainedAuto(SessionFactoryScope scope) {
 		testOffsetRetained( scope, "Auto" );
 	}

@@ -11,6 +11,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )
+    api project( ':hibernate-community-dialects' )
 
     api testLibs.junit4
     api testLibs.junit5Api

@@ -82,7 +82,8 @@ public enum CommunityDatabase {
 		}
 		@Override
 		public String getUrlPrefix() {
-			return "jdbc:firebirdsql:";
+			// Jaybird 4 and higher support jdbc:firebird: and jdbc:firebirdsql: as JDBC protocol
+			return "jdbc:firebird";
 		}
 	},
 

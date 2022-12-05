@@ -71,6 +71,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -538,7 +539,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 		private final IdentifierGeneratorFactory identifierGeneratorFactory;
-		private final TimeZoneStorageStrategy defaultTimezoneStorage;
+		private final TimeZoneStorageType defaultTimezoneStorage;
 
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
@@ -573,7 +574,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
-			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( serviceRegistry, configService );
+			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
 			this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 
 			this.xmlMappingEnabled = configService.getSetting(
@@ -745,7 +746,55 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
-			return defaultTimezoneStorage;
+			return toTimeZoneStorageStrategy( getTimeZoneSupport( serviceRegistry ) );
+		}
+
+		private static TimeZoneSupport getTimeZoneSupport(StandardServiceRegistry serviceRegistry) {
+			try {
+				return serviceRegistry.getService( JdbcServices.class )
+						.getDialect()
+						.getTimeZoneSupport();
+			}
+			catch (ServiceException se) {
+				return TimeZoneSupport.NONE;
+			}
+		}
+		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
+			switch ( defaultTimezoneStorage ) {
+				case NATIVE:
+					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
+					}
+					return TimeZoneStorageStrategy.NATIVE;
+				case COLUMN:
+					return TimeZoneStorageStrategy.COLUMN;
+				case NORMALIZE:
+					return TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC:
+					return TimeZoneStorageStrategy.NORMALIZE_UTC;
+				case AUTO:
+					switch (timeZoneSupport) {
+						case NATIVE:
+							return TimeZoneStorageStrategy.NATIVE;
+						case NORMALIZE:
+						case NONE:
+							return TimeZoneStorageStrategy.COLUMN;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
+					}
+				case DEFAULT:
+					switch (timeZoneSupport) {
+						case NATIVE:
+							return TimeZoneStorageStrategy.NATIVE;
+						case NORMALIZE:
+						case NONE:
+							return TimeZoneStorageStrategy.NORMALIZE_UTC;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
+					}
+				default:
+					throw new HibernateException( "Unsupported time zone storage type: " + defaultTimezoneStorage );
+			}
 		}
 
 		@Override
@@ -861,56 +910,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 	}
 
-	private static TimeZoneStorageStrategy resolveTimeZoneStorageStrategy(
-			StandardServiceRegistry serviceRegistry,
+	private static TimeZoneStorageType resolveTimeZoneStorageStrategy(
 			ConfigurationService configService) {
-		final TimeZoneStorageType configuredTimeZoneStorageType = configService.getSetting(
+		return  configService.getSetting(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
 				value -> TimeZoneStorageType.valueOf( value.toString() ),
-				null
+				TimeZoneStorageType.DEFAULT
 		);
-		final TimeZoneStorageStrategy resolvedTimezoneStorage;
-		// For now, we default to NORMALIZE as that is the Hibernate 5.x behavior
-		if ( configuredTimeZoneStorageType == null ) {
-			resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
-		}
-		else {
-			final TimeZoneSupport timeZoneSupport = serviceRegistry.getService( JdbcServices.class )
-					.getDialect()
-					.getTimeZoneSupport();
-			switch ( configuredTimeZoneStorageType ) {
-				case NATIVE:
-					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
-						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
-					}
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
-					break;
-				case COLUMN:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
-					break;
-				case NORMALIZE:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
-					break;
-				case NORMALIZE_UTC:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE_UTC;
-					break;
-				case AUTO:
-					switch ( timeZoneSupport ) {
-						case NATIVE:
-							resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
-							break;
-						case NORMALIZE:
-						case NONE:
-							resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
-							break;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport );
-					}
-					break;
-				default:
-					throw new HibernateException( "Unsupported time zone storage type: " + configuredTimeZoneStorageType );
-			}
-		}
-		return resolvedTimezoneStorage;
 	}
 }

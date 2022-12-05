@@ -49,6 +49,15 @@ public enum TimeZoneStorageType {
 	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
 	 * otherwise uses the {@link #COLUMN} strategy.
 	 */
-	AUTO
+	AUTO,
+	/**
+	 * Stores the time zone either with {@link #NATIVE} if
+	 * {@link Dialect#getTimeZoneSupport()} is
+	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
+	 * otherwise uses the {@link #NORMALIZE_UTC} strategy.
+	 *
+	 * @since 6.2
+	 */
+	DEFAULT
 
 }

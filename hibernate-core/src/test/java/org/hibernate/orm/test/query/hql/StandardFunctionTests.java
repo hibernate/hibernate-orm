@@ -11,10 +11,12 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import org.hibernate.dialect.CockroachDialect;
 
-import org.hamcrest.Matchers;
 import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -28,8 +30,10 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 
@@ -51,6 +55,7 @@ public class StandardFunctionTests {
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
+					entity.setTheZonedDateTime( ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ) );
 					em.persist(entity);
 				}
 		);
@@ -632,10 +637,18 @@ public class StandardFunctionTests {
 	public void testExtractFunctionTimeZone(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
-					session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
-							.list();
+					assertThat(
+							session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
+									.getResultList()
+									.get(0),
+							anyOf( nullValue(), instanceOf( Integer.class ) )
+					);
+					assertThat(
+							session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
+									.getResultList()
+									.get(0),
+							anyOf( nullValue(), instanceOf( Integer.class ) )
+					);
 				}
 		);
 	}
@@ -645,8 +658,12 @@ public class StandardFunctionTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
-						.list()
+				session -> assertThat(
+						session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
+								.getResultList()
+								.get( 0 ),
+						anyOf( nullValue(), instanceOf(ZoneOffset.class) )
+				)
 		);
 	}
 

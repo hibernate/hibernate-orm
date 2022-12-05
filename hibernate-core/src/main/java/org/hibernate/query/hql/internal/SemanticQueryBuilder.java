@@ -4248,15 +4248,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		switch ( ( (TerminalNode) ctx.getChild( ctx.getChildCount() - 1 ) ).getSymbol().getType() ) {
 			case HqlParser.TIMEZONE_HOUR:
+			case HqlParser.HOUR:
 				return new SqmExtractUnit<>( TIMEZONE_HOUR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
 			case HqlParser.TIMEZONE_MINUTE:
+			case HqlParser.MINUTE:
 				return new SqmExtractUnit<>(
 						TIMEZONE_MINUTE,
 						resolveExpressibleTypeBasic( Integer.class ),
 						nodeBuilder
 				);
-			default:
+			case HqlParser.OFFSET:
 				return new SqmExtractUnit<>( OFFSET, resolveExpressibleTypeBasic( ZoneOffset.class ), nodeBuilder );
+			default:
+				// should never happen
+				throw new ParsingException("Unsupported time zone field [" + ctx.getText() + "]");
 		}
 	}
 

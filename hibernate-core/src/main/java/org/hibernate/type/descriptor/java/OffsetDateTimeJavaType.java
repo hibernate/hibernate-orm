@@ -67,15 +67,12 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		switch ( temporalPrecision ) {
-			case TIME: {
+			case TIME:
 				return jdbcTypeRegistry.getDescriptor( Types.TIME );
-			}
-			case DATE: {
+			case DATE:
 				return jdbcTypeRegistry.getDescriptor( Types.DATE );
-			}
-			default: {
+			default:
 				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );
-			}
 		}
 	}
 

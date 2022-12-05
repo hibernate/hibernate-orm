@@ -29,6 +29,10 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 */
 	String getSqlString();
 
+	default String getOriginalSqlString(){
+		return getSqlString();
+	}
+
 	/**
 	 * The affected query spaces.
 	 */
@@ -131,6 +135,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 		public NamedNativeQueryMemento build(SessionFactoryImplementor sessionFactory) {
 			return new NamedNativeQueryMementoImpl(
 					name,
+					queryString,
 					queryString,
 					resultSetMappingName,
 					sessionFactory.getServiceRegistry()

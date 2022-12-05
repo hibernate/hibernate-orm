@@ -89,6 +89,7 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 		return new NamedNativeQueryMementoImpl(
 				getRegistrationName(),
 				sqlString,
+				sqlString,
 				resultSetMappingName,
 				isNotEmpty( resultSetMappingClassName )
 						? factory.getServiceRegistry().getService( ClassLoaderService.class )

@@ -41,6 +41,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -135,13 +136,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess,
 			ManagedMappingType declaringType,
-			List<? extends AttributeMapping> attributeMappings) {
+			MutableAttributeMappingList mappings) {
 		final int size = inverseMappingType.getNumberOfAttributeMappings();
 		if ( size == 0 ) {
 			return false;
 		}
-		//noinspection unchecked
-		final List<AttributeMapping> mappings = (List<AttributeMapping>) attributeMappings;
 		// Reset the attribute mappings that were added in previous attempts
 		mappings.clear();
 		int currentIndex = 0;

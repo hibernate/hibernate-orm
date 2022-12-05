@@ -434,7 +434,7 @@ public interface EntityPersister
 
 	@Override
 	default AttributeMapping getAttributeMapping(int position) {
-		return getAttributeMappings().get( position );
+		return getAttributeMappings().getAttributeMapping( position );
 	}
 
 	@Override

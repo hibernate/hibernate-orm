@@ -9,7 +9,6 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.access.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import jakarta.persistence.AccessType;
@@ -18,6 +17,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
@@ -184,8 +184,8 @@ public class XmlAccessTest {
 		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( classUnderTest.getName() );
-		final Collection<AttributeMapping> attributeMappings = entityDescriptor.getAttributeMappings();
-		final AttributeMapping attributeMapping = attributeMappings.iterator().next();
+		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
+		final AttributeMapping attributeMapping = attributeMappings.iterateAsAttributeMappings().iterator().next();
 
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 

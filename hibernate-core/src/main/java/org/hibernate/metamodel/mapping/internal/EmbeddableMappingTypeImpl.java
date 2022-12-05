@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -49,6 +48,8 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -123,7 +124,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final JavaType<?> embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
-	private final List<AttributeMapping> attributeMappings = new ArrayList<>();
+	private final MutableAttributeMappingList attributeMappings = new MutableAttributeMappingList( 5 );
 	private SelectableMappings selectableMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
@@ -509,9 +510,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private void addAttribute(AttributeMapping attributeMapping) {
 		// check if we've already seen this attribute...
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping previous = attributeMappings.get( i );
+			final AttributeMapping previous = attributeMappings.getAttributeMapping( i );
 			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.set( i, attributeMapping );
+				attributeMappings.setAttributeMapping( i, attributeMapping );
 				return;
 			}
 		}
@@ -563,7 +564,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public Fetchable getFetchable(int position) {
-		return attributeMappings.get( position );
+		return attributeMappings.getFetchable( position );
 	}
 
 	@Override
@@ -573,10 +574,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		final int size = attributeMappings.size();
-		for ( int i = 0; i < size; i++ ) {
-			fetchableConsumer.accept( i, attributeMappings.get( i ) );
-		}
+		this.attributeMappings.forEachFetchable( fetchableConsumer );
 	}
 
 	@Override
@@ -610,14 +608,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			assert values.length == size;
 
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMapping attributeMapping = attributeMappings.getAttributeMapping( i );
 				final Object attributeValue = values[ i ];
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMapping attributeMapping = attributeMappings.getAttributeMapping( i );
 				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}
@@ -646,7 +644,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		int span = 0;
 
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final AttributeMapping attributeMapping = attributeMappings.getAttributeMapping( i );
 			if ( attributeMapping instanceof PluralAttributeMapping ) {
 				continue;
 			}
@@ -666,7 +664,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping mapping = attributeMappings.get( i );
+			final AttributeMapping mapping = attributeMappings.getAttributeMapping( i );
 			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
 		}
 		return span;
@@ -706,13 +704,13 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public AttributeMapping getAttributeMapping(int position) {
-		return attributeMappings.get( position );
+		return attributeMappings.getAttributeMapping( position );
 	}
 
 	@Override
 	public AttributeMapping findAttributeMapping(String name) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attr = attributeMappings.get( i );
+			final AttributeMapping attr = attributeMappings.getAttributeMapping( i );
 			if ( name.equals( attr.getAttributeName() ) ) {
 				return attr;
 			}
@@ -721,20 +719,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		return attributeMappings;
 	}
 
 	@Override
-	public void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+	public void forEachAttributeMapping(final IndexedConsumer<AttributeMapping> consumer) {
+		attributeMappings.forEachAttributeMapping( consumer );
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		attributeMappings.forEach( action );
+	public void visitAttributeMappings(final Consumer<? super AttributeMapping> action) {
+		attributeMappings.forEachAttributeMapping( action );
 	}
 
 	@Override

@@ -54,6 +54,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -770,7 +771,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public List<AttributeMapping> getAttributeMappings() {
+		public AttributeMappingsList getAttributeMappings() {
 			return null;
 		}
 

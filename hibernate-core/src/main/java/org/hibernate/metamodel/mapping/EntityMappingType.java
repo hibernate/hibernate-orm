@@ -26,6 +26,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -259,7 +260,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
 	 */
 	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
-		getAttributeMappings().forEach( action );
+		getAttributeMappings().forEachAttributeMapping( action );
 	}
 
 	/**
@@ -325,7 +326,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	@Override
 	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		getAttributeMappings().forEach( action );
+		getAttributeMappings().forEachAttributeMapping( action );
 	}
 
 	// Customer <- DomesticCustomer <- OtherCustomer
@@ -460,7 +461,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default List<AttributeMapping> getAttributeMappings() {
+	default AttributeMappingsList getAttributeMappings() {
 		return getEntityPersister().getAttributeMappings();
 	}
 

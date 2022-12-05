@@ -6,10 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -47,7 +47,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Get access to the attributes defined on this class and any supers
 	 */
-	List<AttributeMapping> getAttributeMappings();
+	AttributeMappingsList getAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class and any supers
@@ -58,10 +58,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Visit attributes defined on this class and any supers
 	 */
 	default void forEachAttributeMapping(IndexedConsumer<AttributeMapping> consumer) {
-		final List<AttributeMapping> attributeMappings = getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
+		getAttributeMappings().forEachAttributeMapping( consumer );
 	}
 
 	Object[] getValues(Object instance);
@@ -75,4 +72,5 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	default void setValue(Object instance, int position, Object value) {
 		getAttributeMapping( position ).setValue( instance, value );
 	}
+
 }

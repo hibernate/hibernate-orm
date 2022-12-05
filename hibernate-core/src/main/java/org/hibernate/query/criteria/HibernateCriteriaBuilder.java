@@ -955,6 +955,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaExpression<T> lastValue(Expression<T> argument, JpaWindow window);
 
 	/**
+	 * @see #nthValue(Expression, Expression, JpaWindow) nthValue
+	 */
+	<T> JpaExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window);
+
+	/**
 	 * Create a {@code nth_value} window function expression.
 	 *
 	 * @param argument argument expression to pass to {@code nth_value}
@@ -1013,12 +1018,38 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<Double> cumeDist(JpaWindow window);
 
 	/**
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args);
+
+	/**
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<T> JpaExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<?>... args);
+
+	/**
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	<T> JpaExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaWindow window,
+			Expression<?>... args);
+
+	/**
 	 * Create a generic ordered set-aggregate function expression.
 	 *
 	 * @param name name of the ordered set-aggregate function
 	 * @param type type of this expression
 	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
 	 * @param args optional arguments to the function
 	 * @param <T> type of this expression
 	 *
@@ -1029,47 +1060,26 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Class<T> type,
 			JpaOrder order,
 			JpaPredicate filter,
+			JpaWindow window,
 			Expression<?>... args);
 
 	/**
-	 * Create a generic ordered set-aggregate function expression.
-	 *
-	 * @param name name of the ordered set-aggregate function
-	 * @param type type of this expression
-	 * @param order order by clause used in within group
-	 * @param args optional arguments to the function
-	 * @param <T> type of this expression
-	 *
-	 * @return ordered set-aggregate function expression
-	 *
-	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, Expression...) functionWithinGroup
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	<T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args);
+	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, String separator);
 
 	/**
-	 * Create a {@code listagg} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param argument values to join
-	 * @param separator the separator used to join the values
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #listagg(JpaOrder, JpaPredicate, Expression, Expression) listagg
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
 	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator);
 
 	/**
-	 * Create a {@code listagg} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param argument values to join
-	 * @param separator the separator used to join the values
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #functionWithinGroup
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
+	 */
+	JpaExpression<String> listagg(JpaOrder order, JpaPredicate filter, Expression<String> argument, String separator);
+
+	/**
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
 	JpaExpression<String> listagg(
 			JpaOrder order,
@@ -1078,127 +1088,252 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<String> separator);
 
 	/**
-	 * Create a {@code mode} ordered set-aggregate function expression.
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
+	 */
+	JpaExpression<String> listagg(JpaOrder order, JpaWindow window, Expression<String> argument, String separator);
+
+	/**
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
+	 */
+	JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator);
+
+	/**
+	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
+	 */
+	JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<String> argument,
+			String separator);
+
+	/**
+	 * Create a {@code listagg} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
-	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param argument values to join
+	 * @param separator the separator used to join the values
 	 *
 	 * @return ordered set-aggregate expression
 	 *
-	 * @see #mode(JpaOrder, JpaPredicate, Expression) mode
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<?> mode(JpaOrder order, Expression<?> argument);
+	JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator);
+
+	/**
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> mode(
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> mode(
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
 
 	/**
 	 * Create a {@code mode} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
-	 * @param argument argument to the function
-	 *
+	 * @param window optional window over which to apply the function
+	 * @param sortExpression the sort expression
+	 * @param sortOrder the sort order
+	 * @param nullPrecedence the null precedence
 	 * @return ordered set-aggregate expression
-	 *
-	 * @see #functionWithinGroup
+	 * @param <T> type of this expression
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+	<T> JpaExpression<T> mode(
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
 
 	/**
 	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
 	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param sortExpression the sort expression
+	 * @param sortOrder the sort order
+	 * @param nullPrecedence the null precedence
 	 *
 	 * @return ordered set-aggregate expression
 	 *
-	 * @see #percentileCont(JpaOrder, JpaPredicate, Expression) percentileCont
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument);
+	<T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
 
 	/**
-	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param argument argument to the function
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #functionWithinGroup
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
-	JpaExpression<Integer> percentileCont(JpaOrder order, JpaPredicate filter, Expression<? extends Number> argument);
+	<T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
+
+	/**
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 */
+	<T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
 
 	/**
 	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
 	 * @param argument argument to the function
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param sortExpression the sort expression
+	 * @param sortOrder the sort order
+	 * @param nullPrecedence the null precedence
 	 *
 	 * @return ordered set-aggregate expression
 	 *
-	 * @see #percentileDisc(JpaOrder, JpaPredicate, Expression) percentileDisc
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument);
+	<T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence);
 
 	/**
-	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param argument argument to the function
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #functionWithinGroup
+	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<Integer> percentileDisc(JpaOrder order, JpaPredicate filter, Expression<? extends Number> argument);
+	JpaExpression<Long> rank(JpaOrder order, Expression<?>... arguments);
+
+	/**
+	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
+
+	/**
+	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	JpaExpression<Long> rank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
 	 * Create a {@code rank} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
-	 * @param argument argument to the function
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #rank(JpaOrder, JpaPredicate, Expression) rank
-	 */
-	JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument);
-
-	/**
-	 * Create a {@code rank} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
-	 * @param argument argument to the function
+	 * @param window optional window over which to apply the function
+	 * @param arguments arguments to the function
 	 *
 	 * @return ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup
 	 */
-	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument);
+	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments);
 
 	/**
-	 * Create a {@code percent_rank} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param argument argument to the function
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #percentRank(JpaOrder, JpaPredicate, Expression) percentRank
+	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument);
+	JpaExpression<Double> percentRank(JpaOrder order, Expression<?>... arguments);
+
+	/**
+	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
+
+	/**
+	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	JpaExpression<Double> percentRank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
 	 * Create a {@code percent_rank} ordered set-aggregate function expression.
 	 *
 	 * @param order order by clause used in within group
 	 * @param filter optional filter clause
-	 * @param argument argument to the function
+	 * @param window optional window over which to apply the function
+	 * @param arguments arguments to the function
 	 *
 	 * @return ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup
 	 */
-	JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument);
+	JpaExpression<Double> percentRank(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... arguments);
 }

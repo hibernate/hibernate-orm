@@ -1282,6 +1282,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> JpaExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window) {
+		return criteriaBuilder.nthValue( argument, n, window );
+	}
+
+	@Override
 	public <T> JpaExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window) {
 		return criteriaBuilder.nthValue( argument, n, window );
 	}
@@ -1307,6 +1312,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args) {
+		return criteriaBuilder.functionWithinGroup( name, type, order, args );
+	}
+
+	@Override
 	public <T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -1317,8 +1327,29 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args) {
-		return criteriaBuilder.functionWithinGroup( name, type, order, args );
+	public <T> JpaExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaWindow window,
+			Expression<?>... args) {
+		return criteriaBuilder.functionWithinGroup( name, type, order, window, args );
+	}
+
+	@Override
+	public <T> JpaExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... args) {
+		return criteriaBuilder.functionWithinGroup( name, type, order, filter, window, args );
+	}
+
+	@Override
+	public JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, String separator) {
+		return criteriaBuilder.listagg( order, argument, separator );
 	}
 
 	@Override
@@ -1331,63 +1362,211 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaOrder order,
 			JpaPredicate filter,
 			Expression<String> argument,
+			String separator) {
+		return criteriaBuilder.listagg( order, filter, argument, separator );
+	}
+
+	@Override
+	public JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			Expression<String> argument,
 			Expression<String> separator) {
 		return criteriaBuilder.listagg( order, filter, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<?> mode(JpaOrder order, Expression<?> argument) {
-		return criteriaBuilder.mode( order, argument );
+	public JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaWindow window,
+			Expression<String> argument,
+			String separator) {
+		return criteriaBuilder.listagg( order, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
-		return criteriaBuilder.mode( order, filter, argument );
+	public JpaExpression<String> listagg(
+			JpaOrder order,
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator) {
+		return criteriaBuilder.listagg( order, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument) {
-		return criteriaBuilder.percentileCont( order, argument );
-	}
-
-	@Override
-	public JpaExpression<Integer> percentileCont(
+	public JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
-			Expression<? extends Number> argument) {
-		return criteriaBuilder.percentileCont( order, filter, argument );
+			JpaWindow window,
+			Expression<String> argument,
+			String separator) {
+		return criteriaBuilder.listagg( order, filter, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument) {
-		return criteriaBuilder.percentileDisc( order, argument );
-	}
-
-	@Override
-	public JpaExpression<Integer> percentileDisc(
+	public JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
-			Expression<? extends Number> argument) {
-		return criteriaBuilder.percentileDisc( order, filter, argument );
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator) {
+		return criteriaBuilder.listagg( order, filter, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument) {
-		return criteriaBuilder.rank( order, argument );
+	public <T> JpaExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		return criteriaBuilder.mode( sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
-		return criteriaBuilder.rank( order, filter, argument );
+	public <T> JpaExpression<T> mode(
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.mode( filter, sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument) {
-		return criteriaBuilder.percentRank( order, argument );
+	public <T> JpaExpression<T> mode(
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.mode( window, sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
-		return criteriaBuilder.percentRank( order, filter, argument );
+	public <T> JpaExpression<T> mode(
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.mode( filter, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileCont( argument, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileCont( argument, filter, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileCont( argument, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileCont( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileDisc( argument, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileDisc( argument, filter, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileDisc( argument, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> JpaExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return criteriaBuilder.percentileDisc( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public JpaExpression<Long> rank(JpaOrder order, Expression<?>... arguments) {
+		return criteriaBuilder.rank( order, arguments );
+	}
+
+	@Override
+	public JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments) {
+		return criteriaBuilder.rank( order, filter, arguments );
+	}
+
+	@Override
+	public JpaExpression<Long> rank(JpaOrder order, JpaWindow window, Expression<?>... arguments) {
+		return criteriaBuilder.rank( order, window, arguments );
+	}
+
+	@Override
+	public JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments) {
+		return criteriaBuilder.rank( order, filter, window, arguments );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(JpaOrder order, Expression<?>... arguments) {
+		return criteriaBuilder.percentRank( order, arguments );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments) {
+		return criteriaBuilder.percentRank( order, filter, arguments );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(JpaOrder order, JpaWindow window, Expression<?>... arguments) {
+		return criteriaBuilder.percentRank( order, window, arguments );
+	}
+
+	@Override
+	public JpaExpression<Double> percentRank(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... arguments) {
+		return criteriaBuilder.percentRank( order, filter, window, arguments );
 	}
 }

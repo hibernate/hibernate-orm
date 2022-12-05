@@ -167,7 +167,7 @@ public class CriteriaWindowFunctionTest {
 					JpaWindow window = cb.createWindow().orderBy( cb.desc( root.get( "theInt" ) ) );
 					JpaExpression<Integer> nthValue = cb.nthValue(
 							root.get( "theInt" ),
-							cb.literal( 2 ),
+							2,
 							window
 					);
 
@@ -243,8 +243,7 @@ public class CriteriaWindowFunctionTest {
 	public void testSumWithFilterAsWindowFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					// todo marco : add filter clause predicate to CriteriaBuilder ?
-					//  problem with getting the window functions as aggregate, @see SqmCriteriaNodeBuilder#windowFunction
+					// todo marco : add 'simple` aggregate functions (sum, avg, count)
 					TypedQuery<Long> q = session.createQuery(
 							"select sum(eob.theInt) filter (where eob.theInt > 5) over (order by eob.theInt) from EntityOfBasics eob order by eob.theInt",
 							Long.class

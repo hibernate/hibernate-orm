@@ -2607,6 +2607,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> SqmExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window) {
+		return nthValue( argument, value( n ), window );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window) {
 		return (SqmExpression<T>) windowFunction( "nth_value", argument.getJavaType(), window, argument, n );
@@ -2636,21 +2641,44 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	// Ordered set-aggregate functions
 
 	@Override
+	public <T> SqmExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args) {
+		return functionWithinGroup( name, type, order, null, null, args );
+	}
+
+	@Override
 	public <T> SqmExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
 			JpaOrder order,
 			JpaPredicate filter,
 			Expression<?>... args) {
-		// todo marco : we could also pass a Window (?)
-		//  set aggregate function support OVER clauses
-		//  eg. https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions110.htm
+		return functionWithinGroup( name, type, order, filter, null, args );
+	}
+
+	@Override
+	public <T> SqmExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaWindow window,
+			Expression<?>... args) {
+		return functionWithinGroup( name, type, order, null, window, args );
+	}
+
+	@Override
+	public <T> SqmExpression<T> functionWithinGroup(
+			String name,
+			Class<T> type,
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... args) {
 		SqmOrderByClause withinGroupClause = new SqmOrderByClause();
 		if ( order != null ) {
 			withinGroupClause.addSortSpecification( (SqmSortSpecification) order );
 		}
 		SqmPredicate sqmFilter = filter != null ? (SqmPredicate) filter : null;
-		return getFunctionDescriptor( name ).generateOrderedSetAggregateSqmExpression(
+		SqmExpression<T> function = getFunctionDescriptor( name ).generateOrderedSetAggregateSqmExpression(
 				expressionList( args ),
 				sqmFilter,
 				withinGroupClause,
@@ -2658,20 +2686,31 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()
 		);
+		if ( window == null ) {
+			return function;
+		}
+		else {
+			return new SqmOver<>( function, (SqmWindow) window );
+		}
 	}
 
 	@Override
-	public <T> SqmExpression<T> functionWithinGroup(
-			String name,
-			Class<T> type,
+	public SqmExpression<String> listagg(JpaOrder order, Expression<String> argument, String separator) {
+		return listagg( order, null, null, argument, separator );
+	}
+
+	@Override
+	public SqmExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator) {
+		return listagg( order, null, null, argument, separator );
+	}
+
+	@Override
+	public SqmExpression<String> listagg(
 			JpaOrder order,
-			Expression<?>... args) {
-		return functionWithinGroup( name, type, order, null, args );
-	}
-
-	@Override
-	public JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator) {
-		return listagg( order, null, argument, separator );
+			JpaPredicate filter,
+			Expression<String> argument,
+			String separator) {
+		return listagg( order, filter, null, argument, separator );
 	}
 
 	@Override
@@ -2680,62 +2719,223 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			Expression<String> argument,
 			Expression<String> separator) {
-		return functionWithinGroup( "listagg", String.class, order, filter, argument, separator );
+		return listagg( order, filter, null, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<?> mode(JpaOrder order, Expression<?> argument) {
-		return mode( order, null, argument );
+	public SqmExpression<String> listagg(
+			JpaOrder order,
+			JpaWindow window,
+			Expression<String> argument,
+			String separator) {
+		return listagg( order, null, window, argument, separator );
 	}
 
 	@Override
-	public SqmExpression<?> mode(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
-		return functionWithinGroup( "mode", argument.getJavaType(), order, filter, argument );
+	public SqmExpression<String> listagg(
+			JpaOrder order,
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator) {
+		return listagg( order, null, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<Integer> percentileCont(JpaOrder order, Expression<? extends Number> argument) {
-		return percentileCont( order, null, argument );
-	}
-
-	@Override
-	public SqmExpression<Integer> percentileCont(
+	public SqmExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
-			Expression<? extends Number> argument) {
-		return functionWithinGroup( "percentile_cont", Integer.class, order, filter, argument );
+			JpaWindow window,
+			Expression<String> argument,
+			String separator) {
+		return listagg( order, filter, window, argument, value( separator, (SqmExpression<String>) argument ) );
 	}
 
 	@Override
-	public JpaExpression<Integer> percentileDisc(JpaOrder order, Expression<? extends Number> argument) {
-		return percentileDisc( order, null, argument );
-	}
-
-	@Override
-	public SqmExpression<Integer> percentileDisc(
+	public SqmExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
-			Expression<? extends Number> argument) {
-		return functionWithinGroup( "percentile_disc", Integer.class, order, filter, argument );
+			JpaWindow window,
+			Expression<String> argument,
+			Expression<String> separator) {
+		return functionWithinGroup( "listagg", String.class, order, filter, window, argument, separator );
 	}
 
 	@Override
-	public JpaExpression<Long> rank(JpaOrder order, Expression<Integer> argument) {
-		return rank( order, null, argument );
+	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		return mode( null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public SqmExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
-		return functionWithinGroup( "rank", Long.class, order, filter, argument );
+	public <T> SqmExpression<T> mode(
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return mode( filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaExpression<Double> percentRank(JpaOrder order, Expression<Integer> argument) {
-		return percentRank( order, null, argument );
+	public <T> SqmExpression<T> mode(
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return mode( null, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public SqmExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<Integer> argument) {
-		return functionWithinGroup( "percent_rank", Double.class, order, filter, argument );
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> mode(
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return (SqmExpression<T>) functionWithinGroup(
+				"mode",
+				sortExpression.getJavaType(),
+				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
+				filter,
+				window
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileCont( argument, null, null, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileCont( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileCont( argument, null, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> percentileCont(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return (SqmExpression<T>) functionWithinGroup(
+				"percentile_cont",
+				sortExpression.getJavaType(),
+				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
+				filter,
+				window,
+				argument
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileDisc( argument, null, null, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileDisc( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	public <T> SqmExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return percentileDisc( argument, null, window, sortExpression, sortOrder, nullPrecedence );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmExpression<T> percentileDisc(
+			Expression<? extends Number> argument,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<T> sortExpression,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence) {
+		return (SqmExpression<T>) functionWithinGroup(
+				"percentile_disc",
+				sortExpression.getJavaType(),
+				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
+				filter,
+				argument
+		);
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaOrder order, Expression<?>... arguments) {
+		return functionWithinGroup( "rank", Long.class, order, null, null, arguments );
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments) {
+		return functionWithinGroup( "rank", Long.class, order, filter, null, arguments );
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaOrder order, JpaWindow window, Expression<?>... arguments) {
+		return functionWithinGroup( "rank", Long.class, order, null, window, arguments );
+	}
+
+	@Override
+	public SqmExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments) {
+		return functionWithinGroup( "rank", Long.class, order, filter, window, arguments );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(JpaOrder order, Expression<?>... arguments) {
+		return percentRank( order, null, null, arguments );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments) {
+		return percentRank( order, filter, null, arguments );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(JpaOrder order, JpaWindow window, Expression<?>... arguments) {
+		return percentRank( order, null, window, arguments );
+	}
+
+	@Override
+	public SqmExpression<Double> percentRank(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?>... arguments) {
+		return functionWithinGroup( "percent_rank", Double.class, order, filter, window, arguments );
 	}
 }

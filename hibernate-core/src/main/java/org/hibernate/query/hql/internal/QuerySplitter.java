@@ -653,8 +653,9 @@ public class QuerySplitter {
 
 		@Override
 		public SqmGroupedPredicate visitGroupedPredicate(SqmGroupedPredicate predicate) {
+			final SqmPredicate subPredicate = (SqmPredicate) predicate.getSubPredicate().accept( this );
 			return new SqmGroupedPredicate(
-					(SqmPredicate) predicate.accept( this ),
+					subPredicate,
 					getCreationContext().getNodeBuilder()
 			);
 		}
@@ -765,25 +766,14 @@ public class QuerySplitter {
 			);
 		}
 
-
-
 		@Override
 		public SqmPositionalParameter visitPositionalParameterExpression(SqmPositionalParameter<?> expression) {
-			return new SqmPositionalParameter(
-					expression.getPosition(),
-					expression.allowMultiValuedBinding(),
-					expression.nodeBuilder()
-			);
+			return expression;
 		}
 
 		@Override
 		public SqmNamedParameter visitNamedParameterExpression(SqmNamedParameter<?> expression) {
-			return new SqmNamedParameter(
-					expression.getName(),
-					expression.allowMultiValuedBinding(),
-					expression.getNodeType(),
-					expression.nodeBuilder()
-			);
+			return expression;
 		}
 
 		@Override

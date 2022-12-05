@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -19,7 +20,6 @@ import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -117,10 +117,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			attributeConverterManager.addAttributeConverter( (Class<? extends AttributeConverter<?,?>>) annotatedClass );
 		}
 		else if ( xClass.isAnnotationPresent( Entity.class )
-				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			xClasses.add( xClass );
-		}
-		else if ( xClass.isAnnotationPresent( Embeddable.class ) ) {
+				|| xClass.isAnnotationPresent( MappedSuperclass.class )
+				|| xClass.isAnnotationPresent( Embeddable.class )
+				|| xClass.isAnnotationPresent( Imported.class ) ) {
 			xClasses.add( xClass );
 		}
 		else {

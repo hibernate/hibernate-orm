@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -152,7 +153,9 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
+			return !( dialect instanceof DB2Dialect
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof FirebirdDialect );
 		}
 	}
 
@@ -452,8 +455,9 @@ abstract public class DialectFeatureChecks {
 			return !( dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
+					|| dialect instanceof FirebirdDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) )
-				|| dialect instanceof MariaDBDialect;
+					|| dialect instanceof MariaDBDialect;
 		}
 	}
 

@@ -48,12 +48,15 @@ public class NonUniqueIdTest {
 					session.createNativeQuery(
 							"create table CATEGORY( id integer not null, name varchar(255) )"
 					).executeUpdate();
+				}
+		);
 
+		scope.inTransaction(
+				session -> {
 					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'clothes' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into CATEGORY( id, name) VALUES( 1, 'shoes' )" )
 							.executeUpdate();
-
 				}
 		);
 	}

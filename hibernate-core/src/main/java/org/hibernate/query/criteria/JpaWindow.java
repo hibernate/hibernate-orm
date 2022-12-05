@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.query.sqm.FrameExclusion;
+
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 
@@ -16,4 +18,12 @@ public interface JpaWindow {
 	JpaWindow partitionBy(Expression<?>... expressions);
 
 	JpaWindow orderBy(Order... expressions);
+
+	JpaWindow frameRows(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+
+	JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+
+	JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame);
+
+	JpaWindow frameExclude(FrameExclusion frameExclusion);
 }

@@ -20,8 +20,6 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
  * @author Christian Beikov
  * @author Marco Belladelli
  */
-// todo marco : changed this for window functions, but isn't this API ?
-//  what changed ? getter methods + renderFrameKind moved to SqmWindow
 public class SqmOver<T> extends AbstractSqmExpression<T> {
 
 	private final SqmExpression<T> expression;

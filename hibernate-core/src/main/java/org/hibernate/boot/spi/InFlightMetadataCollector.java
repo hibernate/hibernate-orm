@@ -86,15 +86,15 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerComponent(Component component);
 
 	/**
-	 * Adds an import (HQL entity rename).
+	 * Adds an import (for use in HQL).
 	 *
-	 * @param entityName The entity name being renamed.
-	 * @param rename The rename
+	 * @param importName The name to be used in HQL
+	 * @param className The fully-qualified name of the class
 	 *
-	 * @throws DuplicateMappingException If rename already is mapped to another
+	 * @throws DuplicateMappingException If className already is mapped to another
 	 * entity name in this repository.
 	 */
-	void addImport(String entityName, String rename) throws DuplicateMappingException;
+	void addImport(String importName, String className) throws DuplicateMappingException;
 
 	/**
 	 * Add collection mapping metadata to this repository.

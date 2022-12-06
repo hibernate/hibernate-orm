@@ -35,6 +35,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -78,7 +79,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  */
 public class ManyToManyCollectionPart extends AbstractEntityCollectionPart implements EntityAssociationMapping {
 	private ForeignKeyDescriptor foreignKey;
-	private ModelPart fkTargetModelPart;
+	private ValuedModelPart fkTargetModelPart;
 
 	public ManyToManyCollectionPart(
 			Nature nature,
@@ -138,6 +139,16 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		fkTargetModelPart.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return fkTargetModelPart.getSelectable( columnIndex );
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return fkTargetModelPart.getContainingTableExpression();
 	}
 
 	@Override
@@ -512,7 +523,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 	}
 
-	private static ModelPart resolveNamedTargetPart(
+	private static ValuedModelPart resolveNamedTargetPart(
 			String targetPartName,
 			EntityMappingType entityMappingType,
 			CollectionPersister collectionDescriptor) {
@@ -533,7 +544,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					)
 			);
 		}
-		return namedPart;
+		return (ValuedModelPart) namedPart;
 	}
 
 	private ForeignKeyDescriptor createForeignKeyDescriptor(

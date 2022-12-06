@@ -84,7 +84,7 @@ public class TablePerClassTest {
 						fail( "Database Exception not handled" );
 					}
 					catch (PersistenceException e) {
-						assertTyping( JDBCException.class, e.getCause() );
+						assertTyping( JDBCException.class, e );
 						//success
 					}
 				}

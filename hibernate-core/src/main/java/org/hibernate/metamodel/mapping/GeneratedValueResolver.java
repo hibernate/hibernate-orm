@@ -8,10 +8,6 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.internal.NoGeneratedValueResolver;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
 
 /**
  * Generalized contract covering an attribute's generation handling
@@ -20,22 +16,22 @@ import org.hibernate.tuple.InMemoryGenerator;
  */
 @Incubating
 public interface GeneratedValueResolver {
-	static GeneratedValueResolver from(
-			Generator generator,
-			GenerationTiming requestedTiming,
-			int dbSelectionPosition) {
-		assert requestedTiming.isNotNever();
+//	static GeneratedValueResolver from(
+//			Generator generator,
+//			GenerationTiming requestedTiming,
+//			int dbSelectionPosition) {
+//		assert requestedTiming.isNotNever();
+//
+//		if ( generator == null || !generator.getGenerationTiming().includes( requestedTiming ) ) {
+//			return NoGeneratedValueResolver.INSTANCE;
+//		}
+//		else {
+//			return generator.generatedByDatabase()
+//					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
+//					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
+//		}
+//	}
 
-		if ( generator == null || !generator.getGenerationTiming().includes( requestedTiming ) ) {
-			return NoGeneratedValueResolver.INSTANCE;
-		}
-		else {
-			return generator.generatedByDatabase()
-					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
-					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
-		}
-	}
-
-	GenerationTiming getGenerationTiming();
+//	GenerationTiming getGenerationTiming();
 	Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue);
 }

@@ -30,8 +30,8 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.GeneratorCreationContext;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 

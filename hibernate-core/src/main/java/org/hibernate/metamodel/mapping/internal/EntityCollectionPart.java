@@ -26,6 +26,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface EntityCollectionPart extends CollectionPart, EntityValuedFetchable {
+
 	enum Cardinality { ONE_TO_MANY, MANY_TO_MANY }
 
 	Cardinality getCardinality();
@@ -57,6 +58,11 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 	@Override
 	default JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	default int getJdbcTypeCount() {
+		return CollectionPart.super.getJdbcTypeCount();
 	}
 
 	/**

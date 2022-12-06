@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;

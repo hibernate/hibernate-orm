@@ -20,7 +20,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import jakarta.persistence.PersistenceException;
 import org.mockito.Mockito;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -89,9 +88,8 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 					entityManager.createNamedQuery( "NamedQuery" );
 				}
 				catch (Exception e) {
-					assertEquals( PersistenceException.class, e.getClass() );
-					assertEquals( HibernateException.class, e.getCause().getClass() );
-					assertEquals( MarkedForRollbackException.class, e.getCause().getCause().getClass() );
+					assertEquals( HibernateException.class, e.getClass() );
+					assertEquals( MarkedForRollbackException.class, e.getCause().getClass() );
 				}
 			});
 		}

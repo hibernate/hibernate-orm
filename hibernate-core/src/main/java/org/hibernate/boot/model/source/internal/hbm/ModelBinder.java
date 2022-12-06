@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,8 +17,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.Source;
-import org.hibernate.tuple.SourceGeneration;
+import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -149,7 +147,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.generator.internal.GeneratedGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
@@ -170,17 +168,6 @@ import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
  */
 public class ModelBinder {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ModelBinder.class );
-
-	private static final Source DB_SOURCE = new Source() {
-		@Override
-		public SourceType value() {
-			return SourceType.DB;
-		}
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Source.class;
-		}
-	};
 
 	private final MetadataBuildingContext metadataBuildingContext;
 
@@ -1016,7 +1003,7 @@ public class ModelBinder {
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
 			property.setValueGeneratorCreator(
-					context -> new SourceGeneration( DB_SOURCE, property.getType().getReturnedClass() ) );
+					context -> new SourceGeneration( SourceType.DB, property.getType().getReturnedClass() ) );
 		}
 
 		rootEntityDescriptor.setVersion( property );
@@ -2536,9 +2523,9 @@ public class ModelBinder {
 			// NOTE : Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
-			final GenerationTiming generationTiming = singularAttributeSource.getGenerationTiming();
-			if ( generationTiming != null ) {
-				if ( (generationTiming == GenerationTiming.INSERT || generationTiming == GenerationTiming.UPDATE)
+			final GenerationTiming timing = singularAttributeSource.getGenerationTiming();
+			if ( timing != null ) {
+				if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
 						&& property.getValue() instanceof SimpleValue
 						&& ((SimpleValue) property.getValue()).isVersion() ) {
 					// this is enforced by DTD, but just make sure
@@ -2547,22 +2534,22 @@ public class ModelBinder {
 							mappingDocument.getOrigin()
 					);
 				}
-				if ( generationTiming.isNotNever() ) {
-					property.setValueGeneratorCreator(context -> new GeneratedValueGeneration( generationTiming ) );
+				if ( timing != GenerationTiming.NEVER ) {
+					property.setValueGeneratorCreator( context -> new GeneratedGeneration( timing.getEquivalent() ) );
 
 					// generated properties can *never* be insertable...
-					if ( property.isInsertable() && generationTiming.includesInsert() ) {
+					if ( property.isInsertable() && timing.includesInsert() ) {
 						log.debugf(
 								"Property [%s] specified %s generation, setting insertable to false : %s",
 								propertySource.getName(),
-								generationTiming.name(),
+								timing.name(),
 								mappingDocument.getOrigin()
 						);
 						property.setInsertable( false );
 					}
 
 					// properties generated on update can never be updatable...
-					if ( property.isUpdateable() && generationTiming.includesUpdate() ) {
+					if ( property.isUpdateable() && timing.includesUpdate() ) {
 						log.debugf(
 								"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
 								propertySource.getName(),

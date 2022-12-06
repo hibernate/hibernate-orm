@@ -37,6 +37,11 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
+	default void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		getEntityMappingType().forEachSubPart( consumer, treatTarget );
+	}
+
+	@Override
 	default ModelPart findSubPart(String name, EntityMappingType targetType) {
 		return getEntityMappingType().findSubPart( name, targetType );
 	}

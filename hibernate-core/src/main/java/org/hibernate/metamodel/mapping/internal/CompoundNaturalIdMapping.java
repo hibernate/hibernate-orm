@@ -439,6 +439,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			consumer.accept( i, attributes.get(i) );
+		}
+	}
+
+	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		attributes.forEach( consumer );
 	}

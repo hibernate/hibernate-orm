@@ -52,8 +52,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
 
 import org.jboss.logging.Logger;

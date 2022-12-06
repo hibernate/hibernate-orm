@@ -8,7 +8,7 @@ package org.hibernate.id;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 /**
  * An {@link InDatabaseGenerator} that handles {@code IDENTITY}/"autoincrement" columns

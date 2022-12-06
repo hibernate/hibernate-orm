@@ -20,7 +20,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 
 import java.util.Properties;
 

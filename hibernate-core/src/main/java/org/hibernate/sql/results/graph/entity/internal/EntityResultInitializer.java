@@ -56,4 +56,9 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 	public String toString() {
 		return CONCRETE_NAME + "(" + getNavigablePath() + ")";
 	}
+
+	@Override
+	public boolean isEntityResultInitializer() {
+		return true;
+	}
 }

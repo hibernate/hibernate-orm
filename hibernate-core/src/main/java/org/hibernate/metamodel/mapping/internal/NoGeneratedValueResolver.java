@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
-import org.hibernate.tuple.GenerationTiming;
 
 /**
  * @author Steve Ebersole
@@ -20,10 +19,10 @@ public class NoGeneratedValueResolver implements GeneratedValueResolver {
 	 */
 	public static final NoGeneratedValueResolver INSTANCE = new NoGeneratedValueResolver();
 
-	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.NEVER;
-	}
+//	@Override
+//	public GenerationTiming getGenerationTiming() {
+//		return GenerationTiming.NEVER;
+//	}
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session, Object currentValue) {

@@ -112,6 +112,10 @@ public interface EntityMappingType
 		return findSubPart( name, null );
 	}
 
+	default ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+		return findSubPart( name, treatTargetType );
+	}
+
 	@Override
 	ModelPart findSubPart(String name, EntityMappingType targetType);
 

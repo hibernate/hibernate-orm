@@ -177,9 +177,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 		bindKeyValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
 
-		session.getJdbcCoordinator()
-				.getResultSetReturn()
-				.executeUpdate( deleteStatement );
+		session.getJdbcCoordinator().getResultSetReturn()
+				.executeUpdate( deleteStatement, jdbcDelete.getSqlString() );
 	}
 
 	private void bindKeyValues(
@@ -346,14 +345,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		try {
 			final PreparedStatement updateStatement = statementDetails.resolveStatement();
 
-			final SqlStatementLogger sqlStatementLogger = session.getJdbcServices().getSqlStatementLogger();
-			sqlStatementLogger.logStatement( statementDetails.getSqlString() );
+			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 
 			jdbcValueBindings.beforeStatement( statementDetails, session );
 
-			final int rowCount = session.getJdbcCoordinator()
-					.getResultSetReturn()
-					.executeUpdate( updateStatement );
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
+					.executeUpdate( updateStatement, statementDetails.getSqlString() );
 
 			if ( rowCount == 0 ) {
 				return false;
@@ -406,9 +403,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				} );
 			}
 
-			session.getJdbcCoordinator()
-					.getResultSetReturn()
-					.executeUpdate( insertStatement );
+			session.getJdbcCoordinator().getResultSetReturn()
+					.executeUpdate( insertStatement, jdbcInsert.getSqlString() );
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( insertStatement );

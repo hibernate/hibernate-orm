@@ -284,6 +284,13 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get( i ) );
+		}
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

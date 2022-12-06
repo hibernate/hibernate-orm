@@ -89,7 +89,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 					// todo:  should this instead check for exactly one row modified?
 					if ( affected < 0 ) {
 						final StatisticsImplementor statistics = factory.getStatistics();

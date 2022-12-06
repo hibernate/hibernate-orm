@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.collection;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.persister.entity.AbstractPropertyMapping;
 import org.hibernate.type.CompositeType;
@@ -14,6 +15,8 @@ import org.hibernate.type.Type;
 /**
  * @author Gavin King
  */
+@Deprecated( since = "6", forRemoval = true )
+@Remove()
 public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 
 	private final CompositeType compositeType;

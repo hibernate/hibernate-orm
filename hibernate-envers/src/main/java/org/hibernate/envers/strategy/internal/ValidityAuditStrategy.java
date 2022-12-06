@@ -6,9 +6,6 @@
  */
 package org.hibernate.envers.strategy.internal;
 
-import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
-import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -36,12 +33,15 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentDat
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.spi.AuditStrategyContext;
 import org.hibernate.envers.strategy.spi.MappingContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -53,6 +53,9 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  * An audit strategy implementation that persists and fetches audit information using a validity
@@ -548,7 +551,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final Queryable revisionEntity = getQueryable( configuration.getRevisionInfo().getRevisionInfoEntityName(), session );
 
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
-		final Type revisionNumberType = revisionEntity.getIdentifierType();
 
 		// The expected SQL is an update statement as follows:
 		// UPDATE audited_entity SET REVEND = ? [, REVEND_TSTMP = ?] WHERE (entity_id) = ? AND REV <> ? AND REVEND is null
@@ -556,30 +558,34 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		context.setTableName( getUpdateTableName( rootEntity, rootAuditEntity, auditEntity ) );
 
 		// Apply "SET REVEND = ?"  portion of the SQL
-		final String revEndColumnName = configuration.getRevisionEndFieldName();
-		context.addColumn( rootAuditEntity.toColumns( revEndColumnName )[ 0 ] );
-		context.bind( revisionNumber, revisionNumberType );
+		final String revEndAttributeName = configuration.getRevisionEndFieldName();
+		final String revEndColumnName = rootAuditEntity.findAttributeMapping( revEndAttributeName )
+				.getSelectable( 0 )
+				.getSelectionExpression();
+		context.addColumn( revEndColumnName );
+		context.bind( revisionNumber, revisionEntity.getIdentifierMapping() );
 
 		if ( configuration.isRevisionEndTimestampEnabled() ) {
-			final String revEndTimestampColumnName = configuration.getRevisionEndTimestampFieldName();
-			final Type revEndTimestampType = rootAuditEntity.getPropertyType( revEndTimestampColumnName );
 			final Object revisionTimestamp = revisionTimestampGetter.get( revision );
+			final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
+			final AttributeMapping revEndTimestampAttributeMapping = rootAuditEntity.findAttributeMapping( revEndTimestampAttributeName );
 			// Apply optional "[, REVEND_TSTMP = ?]" portion of the SQL
-			context.addColumn( rootAuditEntity.toColumns( revEndTimestampColumnName )[ 0 ] );
-			context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampType );
+			context.addColumn( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
+			context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 		}
 
 		// Apply "WHERE (entity_id) = ?"
 		context.addPrimaryKeyColumns( rootEntity.getIdentifierColumnNames() );
-		context.bind( id, rootEntity.getIdentifierType() );
+		context.bind( id, rootEntity.getIdentifierMapping() );
 
 		// Apply "AND REV <> ?"
+		// todo (PropertyMapping) : need to be able to handle paths
 		final String path = configuration.getRevisionNumberPath();
 		context.addWhereColumn( rootAuditEntity.toColumns( path )[ 0 ], " <> ?" );
 		context.bind( revisionNumber, rootAuditEntity.getPropertyType( path ) );
 
 		// Apply "AND REVEND is null"
-		context.addWhereColumn( auditEntity.toColumns( revEndColumnName )[ 0 ], " is null" );
+		context.addWhereColumn( revEndColumnName, " is null" );
 
 		return context;
 	}
@@ -607,8 +613,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final Queryable entity = getQueryable( entityName, session );
 		final Queryable auditEntity = getQueryable( auditEntityName, session );
 
-		final String revEndTimestampColumnName = configuration.getRevisionEndTimestampFieldName();
-		final Type revEndTimestampType = auditEntity.getPropertyType( revEndTimestampColumnName );
 
 		// The expected SQL is an update statement as follows:
 		// UPDATE audited_entity SET REVEND_TSTMP = ? WHERE (entity_id) = ? AND REV <> ? AND REVEND_TSMTP is null
@@ -617,8 +621,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		// Apply "SET REVEND_TSTMP = ?" portion of the SQL
 		final Object revisionTimestamp = revisionTimestampGetter.get( revision );
-		context.addColumn( auditEntity.toColumns( revEndTimestampColumnName )[ 0 ] );
-		context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampType );
+		final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
+		final AttributeMapping revEndTimestampAttributeMapping = auditEntity.findAttributeMapping( revEndTimestampAttributeName );
+		final String revEndTimestampColumnName = revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression();
+		context.addColumn( revEndTimestampColumnName );
+		context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 
 		// Apply "WHERE (entity_id) = ? AND REV <> ?" portion of the SQL
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
@@ -628,11 +635,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		context.bind( id, entity.getIdentifierType() );
 
 		// Apply "AND REV <> ?"
+		// todo (PropertyMapping) : need to be able to handle paths
 		context.addWhereColumn( configuration.getRevisionFieldName(), " <> ?" );
 		context.bind( revisionNumber, auditEntity.getPropertyType( configuration.getRevisionNumberPath() ) );
 
 		// Apply "AND REVEND_TSTMP is null"
-		context.addWhereColumn( auditEntity.toColumns( revEndTimestampColumnName )[ 0 ], " is null" );
+		context.addWhereColumn( revEndTimestampColumnName, " is null" );
 
 		return context;
 	}
@@ -669,15 +677,23 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		public void bind(Object value, Type type) {
-			bindings.add( new QueryParameterBinding( value, type ) );
+			bindings.add( new QueryParameterBindingType( value, type ) );
+		}
+
+		public void bind(Object value, ModelPart part) {
+			bindings.add( new QueryParameterBindingPart( value, part ) );
 		}
 	}
 
-	private static class QueryParameterBinding {
+	private interface QueryParameterBinding {
+		int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException;
+	}
+
+	private static class QueryParameterBindingType implements QueryParameterBinding {
 		private final Type type;
 		private final Object value;
 
-		public QueryParameterBinding(Object value, Type type) {
+		public QueryParameterBindingType(Object value, Type type) {
 			this.type = type;
 			this.value = value;
 		}
@@ -685,6 +701,51 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		public int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException {
 			type.nullSafeSet( statement, value, index, session );
 			return type.getColumnSpan( session.getSessionFactory() );
+		}
+	}
+
+	private static class QueryParameterBindingPart implements QueryParameterBinding {
+		private final ModelPart modelPart;
+		private final Object value;
+
+		public QueryParameterBindingPart(Object value, ModelPart modelPart) {
+			this.value = value;
+			this.modelPart = modelPart;
+		}
+
+		@Override
+		public int bind(
+				int index,
+				PreparedStatement statement,
+				SessionImplementor session) {
+			final MutableInteger position = new MutableInteger( index );
+			modelPart.breakDownJdbcValues(
+					value,
+					(jdbcValue, jdbcValueMapping) -> {
+						try {
+							//noinspection unchecked
+							jdbcValueMapping.getJdbcMapping().getJdbcValueBinder().bind(
+									statement,
+									jdbcValue,
+									position.getAndIncrease(),
+									session
+							);
+						}
+						catch (SQLException e) {
+							throw session.getJdbcServices().getSqlExceptionHelper().convert(
+									e,
+									String.format(
+											Locale.ROOT,
+											"Error binding JDBC value relative to `%s`",
+											modelPart.getNavigableRole().getFullPath()
+									)
+							);
+						}
+					},
+					session
+			);
+
+			return modelPart.getJdbcTypeCount();
 		}
 	}
 }

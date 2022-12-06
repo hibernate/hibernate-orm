@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
@@ -38,6 +39,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@Deprecated( since = "6", forRemoval = true )
+@Remove()
 public abstract class AbstractPropertyMapping implements PropertyMapping {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPropertyMapping.class );
 

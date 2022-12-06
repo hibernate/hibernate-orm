@@ -16,6 +16,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -56,6 +57,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
 		return delegate.getDefaultTimeZoneStorage();
+	}
+
+	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return delegate.getTimeZoneSupport();
 	}
 
 	@Override

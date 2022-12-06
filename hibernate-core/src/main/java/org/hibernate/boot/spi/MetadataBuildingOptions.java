@@ -19,6 +19,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
@@ -50,6 +51,8 @@ public interface MetadataBuildingOptions {
 	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
 	TimeZoneStorageStrategy getDefaultTimeZoneStorage();
+
+	TimeZoneSupport getTimeZoneSupport();
 
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
 		// for now always return the standard one

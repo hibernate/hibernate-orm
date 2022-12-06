@@ -930,9 +930,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
 			if ( targetAnn != null ) {
-				return (BasicJavaType<?>) typeConfiguration
-						.getJavaTypeRegistry()
-						.getDescriptor( targetAnn.value() );
+				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry().getDescriptor( targetAnn.value() );
 			}
 
 			return null;
@@ -964,9 +962,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					);
 				}
 			}
-		}
-		else {
-			timeZoneStorageType = null;
 		}
 	}
 

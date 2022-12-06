@@ -66,7 +66,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForUuid;
 
 /**
- * Represents the process of of transforming a {@link MetadataSources}
+ * Represents the process of transforming a {@link MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.  Allows for 2 different process paradigms:<ul>
  *     <li>
  *         Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
@@ -465,7 +465,7 @@ public class MetadataBuildingProcess {
 		if ( timestampWithTimeZoneOverride != null ) {
 			adaptToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
 		}
-		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant(serviceRegistry);
+		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
 			adaptToPreferredSqlTypeCodeForInstant( typeConfiguration, jdbcTypeRegistry, preferredSqlTypeCodeForInstant );
 		}

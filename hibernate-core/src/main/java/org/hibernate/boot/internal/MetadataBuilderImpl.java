@@ -746,10 +746,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
-			return toTimeZoneStorageStrategy( getTimeZoneSupport( serviceRegistry ) );
+			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
 		}
 
-		private static TimeZoneSupport getTimeZoneSupport(StandardServiceRegistry serviceRegistry) {
+		@Override
+		public TimeZoneSupport getTimeZoneSupport() {
 			try {
 				return serviceRegistry.getService( JdbcServices.class )
 						.getDialect()
@@ -759,6 +760,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				return TimeZoneSupport.NONE;
 			}
 		}
+
 		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
 			switch ( defaultTimezoneStorage ) {
 				case NATIVE:
@@ -775,9 +777,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				case AUTO:
 					switch (timeZoneSupport) {
 						case NATIVE:
+							// if the db has native support for timezones, we use that, not a column
 							return TimeZoneStorageStrategy.NATIVE;
 						case NORMALIZE:
 						case NONE:
+							// otherwise we use a separate column
 							return TimeZoneStorageStrategy.COLUMN;
 						default:
 							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
@@ -785,9 +789,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				case DEFAULT:
 					switch (timeZoneSupport) {
 						case NATIVE:
+							// if the db has native support for timezones, we use that, and don't normalize
 							return TimeZoneStorageStrategy.NATIVE;
 						case NORMALIZE:
 						case NONE:
+							// otherwise we normalize things to UTC
 							return TimeZoneStorageStrategy.NORMALIZE_UTC;
 						default:
 							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);

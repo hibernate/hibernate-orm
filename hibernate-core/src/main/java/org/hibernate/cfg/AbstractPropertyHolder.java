@@ -26,12 +26,9 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Internal;
-import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -46,6 +43,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AnnotationBinder.useColumnForTimeZoneStorage;
 
 /**
  * @author Emmanuel Bernard
@@ -64,8 +63,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Map<String, JoinTable> currentPropertyJoinTableOverride;
 	private Map<String, ForeignKey> holderForeignKeyOverride;
 	private Map<String, ForeignKey> currentPropertyForeignKeyOverride;
-	private String path;
-	private MetadataBuildingContext context;
+	private final String path;
+	private final MetadataBuildingContext context;
 	private Boolean isInIdClass;
 
 	AbstractPropertyHolder(
@@ -192,7 +191,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				this.currentPropertyColumnOverride = null;
 			}
 
-			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( property, getPath() );
+			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( property );
 			if ( this.currentPropertyColumnTransformerOverride.size() == 0 ) {
 				this.currentPropertyColumnTransformerOverride = null;
 			}
@@ -217,7 +216,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	/**
 	 * Get column overriding, property first, then parent, then holder
 	 * replace the placeholder 'collection&amp;&amp;element' with nothing
-	 *
+	 * <p>
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
 	 */
 	@Override
@@ -416,7 +415,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					|| current.isAnnotationPresent( Embeddable.class ) ) {
 				//FIXME is embeddable override?
 				Map<String, Column[]> currentOverride = buildColumnOverride( current, getPath(), context );
-				Map<String, ColumnTransformer> currentTransformerOverride = buildColumnTransformerOverride( current, getPath() );
+				Map<String, ColumnTransformer> currentTransformerOverride = buildColumnTransformerOverride( current );
 				Map<String, JoinColumn[]> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
 				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
 				Map<String, ForeignKey> currentForeignKeyOverride = buildForeignKeyOverride( current, getPath() );
@@ -477,105 +476,97 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 					}
 				}
 
-				for (Map.Entry<String, List<Column>> entry : columnOverrideList.entrySet()) {
-					columnOverride.put(
-						entry.getKey(),
-						entry.getValue().toArray( new Column[entry.getValue().size()] )
-					);
+				for ( Map.Entry<String, List<Column>> entry : columnOverrideList.entrySet() ) {
+					columnOverride.put( entry.getKey(), entry.getValue().toArray( new Column[0] ) );
 				}
 			}
-			else {
-				final TimeZoneStorage timeZoneStorage = element.getAnnotation( TimeZoneStorage.class );
-				if ( timeZoneStorage != null ) {
-					switch ( timeZoneStorage.value() ) {
-						case AUTO:
-							if ( context.getBuildingOptions().getDefaultTimeZoneStorage() != TimeZoneStorageStrategy.COLUMN ) {
-								break;
-							}
-						case COLUMN:
-							final Column column;
-							final Column annotatedColumn = element.getAnnotation( Column.class );
-							if ( annotatedColumn != null ) {
-								column = annotatedColumn;
-							}
-							else {
-								// Base the name of the synthetic dateTime field on the name of the original attribute
-								final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
-										context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
-												new ImplicitBasicColumnNameSource() {
-													final AttributePath attributePath = AttributePath.parse( path );
-
-													@Override
-													public AttributePath getAttributePath() {
-														return attributePath;
-													}
-
-													@Override
-													public boolean isCollectionElement() {
-														return false;
-													}
-
-													@Override
-													public MetadataBuildingContext getBuildingContext() {
-														return context;
-													}
-												}
-										)
-								);
-								column = new ColumnImpl(
-										implicitName.getText(),
-										false,
-										true,
-										true,
-										true,
-										"",
-										"",
-										0
-								);
-							}
-							columnOverride.put(
-									path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
-									new Column[] { column }
-							);
-							final Column offsetColumn;
-							final TimeZoneColumn timeZoneColumn = element.getAnnotation( TimeZoneColumn.class );
-							if ( timeZoneColumn != null ) {
-								offsetColumn = new ColumnImpl(
-									timeZoneColumn.name(),
-									false,
-									column.nullable(),
-									timeZoneColumn.insertable(),
-									timeZoneColumn.updatable(),
-									timeZoneColumn.columnDefinition(),
-									timeZoneColumn.table(),
-									0
-								);
-							}
-							else {
-								offsetColumn = new ColumnImpl(
-										column.name() + "_tz",
-										false,
-										column.nullable(),
-										column.insertable(),
-										column.updatable(),
-										"",
-										column.table(),
-										0
-								);
-							}
-							columnOverride.put(
-									path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
-									new Column[] { offsetColumn }
-							);
-							break;
-					}
-				}
+			else if ( useColumnForTimeZoneStorage( element, context ) ) {
+				final Column column = createTimestampColumn( element, path, context );
+				columnOverride.put(
+						path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
+						new Column[]{ column }
+				);
+				final Column offsetColumn = createTimeZoneColumn( element, column );
+				columnOverride.put(
+						path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
+						new Column[]{ offsetColumn }
+				);
 			}
 		}
 		return columnOverride;
 	}
 
-	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(XAnnotatedElement element, String path) {
+	private static Column createTimeZoneColumn(XAnnotatedElement element, Column column) {
+		final TimeZoneColumn timeZoneColumn = element.getAnnotation( TimeZoneColumn.class );
+		if ( timeZoneColumn != null ) {
+			return new ColumnImpl(
+				timeZoneColumn.name(),
+				false,
+				column.nullable(),
+				timeZoneColumn.insertable(),
+				timeZoneColumn.updatable(),
+				timeZoneColumn.columnDefinition(),
+				timeZoneColumn.table(),
+				0
+			);
+		}
+		else {
+			return new ColumnImpl(
+					column.name() + "_tz",
+					false,
+					column.nullable(),
+					column.insertable(),
+					column.updatable(),
+					"",
+					column.table(),
+					0
+			);
+		}
+	}
+
+	private static Column createTimestampColumn(XAnnotatedElement element, String path, MetadataBuildingContext context) {
+		final Column annotatedColumn = element.getAnnotation( Column.class );
+		if ( annotatedColumn != null ) {
+			return annotatedColumn;
+		}
+		else {
+			// Base the name of the synthetic dateTime field on the name of the original attribute
+			final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
+					context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
+							new ImplicitBasicColumnNameSource() {
+								final AttributePath attributePath = AttributePath.parse(path);
+
+								@Override
+								public AttributePath getAttributePath() {
+									return attributePath;
+								}
+
+								@Override
+								public boolean isCollectionElement() {
+									return false;
+								}
+
+								@Override
+								public MetadataBuildingContext getBuildingContext() {
+									return context;
+								}
+							}
+					)
+			);
+			return new ColumnImpl(
+					implicitName.getText(),
+					false,
+					true,
+					true,
+					true,
+					"",
+					"",
+					0
+			);
+		}
+	}
+
+	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(XAnnotatedElement element) {
 		Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			ColumnTransformer singleOverride = element.getAnnotation( ColumnTransformer.class );

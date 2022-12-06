@@ -9,6 +9,8 @@ package org.hibernate.cfg;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,6 +76,7 @@ import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -170,6 +173,9 @@ import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
  */
 public final class AnnotationBinder {
 	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
+
+	private static final String OFFSET_DATETIME_CLASS = OffsetDateTime.class.getName();
+	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
 	private AnnotationBinder() {}
 
@@ -1780,31 +1786,6 @@ public final class AnnotationBinder {
 		return null;
 	}
 
-	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
-			XProperty property,
-			XClass returnedClass,
-			MetadataBuildingContext context) {
-		if ( property != null ) {
-			final TimeZoneStorage timeZoneStorage = property.getAnnotation( TimeZoneStorage.class );
-			if ( timeZoneStorage != null ) {
-				switch ( timeZoneStorage.value() ) {
-					case AUTO:
-						if ( context.getBuildingOptions().getDefaultTimeZoneStorage() != TimeZoneStorageStrategy.COLUMN ) {
-							return null;
-						}
-					case COLUMN:
-						switch ( returnedClass.getName() ) {
-							case "java.time.OffsetDateTime":
-								return OffsetDateTimeCompositeUserType.class;
-							case "java.time.ZonedDateTime":
-								return ZonedDateTimeCompositeUserType.class;
-						}
-				}
-			}
-		}
-		return null;
-	}
-
 	private static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
 	}
@@ -2493,6 +2474,53 @@ public final class AnnotationBinder {
 			FetchType fetchType) {
 		if ( notFoundAction != null && fetchType == FetchType.LAZY ) {
 			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
+		}
+	}
+
+	private static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		if ( useColumnForTimeZoneStorage( property, context ) ) {
+			String returnedClassName = returnedClass.getName();
+			if ( OFFSET_DATETIME_CLASS.equals( returnedClassName ) ) {
+				return OffsetDateTimeCompositeUserType.class;
+			}
+			else if ( ZONED_DATETIME_CLASS.equals( returnedClassName ) ) {
+				return ZonedDateTimeCompositeUserType.class;
+			}
+		}
+		return null;
+	}
+
+	private static boolean isZonedDateTimeClass(String returnedClassName) {
+		return OFFSET_DATETIME_CLASS.equals( returnedClassName )
+			|| ZONED_DATETIME_CLASS.equals( returnedClassName );
+	}
+
+	static boolean useColumnForTimeZoneStorage(XAnnotatedElement element, MetadataBuildingContext context) {
+		final TimeZoneStorage timeZoneStorage = element.getAnnotation( TimeZoneStorage.class );
+		if ( timeZoneStorage == null ) {
+			if ( element instanceof XProperty ) {
+				XProperty property = (XProperty) element;
+				return isZonedDateTimeClass( property.getType().getName() )
+					//no @TimeZoneStorage annotation, so we need to use the default storage strategy
+					&& context.getBuildingOptions().getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.COLUMN;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			switch ( timeZoneStorage.value() ) {
+				case COLUMN:
+					return true;
+				case AUTO:
+					// if the db has native support for timezones, we use that, not a column
+					return context.getBuildingOptions().getTimeZoneSupport() != TimeZoneSupport.NATIVE;
+				default:
+					return false;
+			}
 		}
 	}
 }

@@ -156,11 +156,11 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	public static class CacheItem implements Serializable {
-		private final long timestamp;
+		private final Long timestamp;
 		private final List<?> results;
 
 		CacheItem(long timestamp, List<?> results) {
-			this.timestamp = timestamp;
+			this.timestamp = Long.valueOf( timestamp );
 			this.results = results;
 		}
 	}

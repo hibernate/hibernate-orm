@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  *
  * @author Steve Ebersole
  */
-public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressible {
+public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExpressible {
 	enum Nature {
 		/**
 		 * The Collection element or Map element

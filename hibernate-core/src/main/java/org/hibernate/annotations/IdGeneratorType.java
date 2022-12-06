@@ -10,7 +10,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -58,7 +59,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link RetentionPolicy#RUNTIME}.
  *
  * @see Generator
- * @see org.hibernate.tuple.AnnotationBasedGenerator
+ * @see AnnotationBasedGenerator
  *
  * @since 6.0
  */

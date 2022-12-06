@@ -29,6 +29,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -196,8 +197,21 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getDiscriminatorPart().getContainingTableExpression();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		if ( columnIndex == 0 ) {
+			return getDiscriminatorPart();
+		}
+		return getKeyPart();
 	}
 
 	@Override
@@ -320,13 +334,19 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public void visitFetchables(IndexedConsumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		fetchableConsumer.accept( 0, getDiscriminatorPart() );
-		fetchableConsumer.accept( 1, getKeyPart() );
+		//noinspection unchecked,rawtypes
+		forEachSubPart( (IndexedConsumer) fetchableConsumer, treatTargetType );
 	}
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		return discriminatorMapping.findSubPart( name, treatTargetType );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, getDiscriminatorPart() );
+		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override

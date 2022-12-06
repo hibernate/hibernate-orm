@@ -7,7 +7,6 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -20,6 +19,8 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity
@@ -65,7 +66,7 @@ public abstract class AbstractReassociateEventListener {
 				values,
 				source
 		);
-		Object version = Versioning.getVersion( values, persister );
+		Object version = getVersion( values, persister );
 
 		EntityEntry newEntry = persistenceContext.addEntity(
 				object,

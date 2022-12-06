@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.tuple.TenantIdBinder;
+import org.hibernate.binder.internal.TenantIdBinder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -103,7 +103,7 @@ public class TenantUuidTest implements SessionFactoryProducer {
             fail("should have thrown");
         }
         catch (Throwable e) {
-            assertTrue( e.getCause() instanceof PropertyValueException );
+            assertTrue( e instanceof PropertyValueException );
         }
     }
 

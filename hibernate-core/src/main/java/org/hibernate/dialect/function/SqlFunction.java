@@ -47,7 +47,8 @@ public class SqlFunction
 				final SqlAstNode argument = arguments.get( i );
 				final int paramIndex = sqlFragment.indexOf( '?', index );
 				if ( paramIndex == -1 ) {
-					throw new IllegalArgumentException( "The SQL function passes an argument at index " + i + " but the fragment contains no placeholder for the argument: " + sqlFragment );
+					throw new IllegalArgumentException( "The SQL function passes an argument at index " + i
+							+ " but the fragment contains no placeholder for the argument: " + sqlFragment );
 				}
 				sqlAppender.append( sqlFragment, index, paramIndex );
 				argument.accept( walker );

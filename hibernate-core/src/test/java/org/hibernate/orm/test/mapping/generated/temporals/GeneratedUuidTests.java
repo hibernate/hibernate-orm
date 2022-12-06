@@ -11,6 +11,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.EnumSet;
 import java.util.UUID;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -19,8 +20,9 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -84,19 +86,19 @@ public class GeneratedUuidTests {
 
 	//tag::mapping-generated-custom-ex3[]
 	public static class UuidValueGeneration implements InMemoryGenerator {
-		private final GenerationTiming timing;
+		private final EnumSet<EventType> eventTypes;
 
 		public UuidValueGeneration(GeneratedUuidValue annotation) {
-			timing = annotation.timing();
+			eventTypes = annotation.timing().getEquivalent().eventTypes();
 		}
 
 		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
+		public EnumSet<EventType> getEventTypes() {
+			return eventTypes;
 		}
 
 		@Override
-		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 			return UUID.randomUUID();
 		}
 	}

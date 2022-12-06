@@ -12,7 +12,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -32,6 +31,8 @@ import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.TypeHelper;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * The action for performing entity updates.
@@ -239,7 +240,7 @@ public class EntityUpdateAction extends EntityAction {
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
 			if ( persister.isVersionPropertyGenerated() ) {
-				nextVersion = Versioning.getVersion( state, persister );
+				nextVersion = getVersion( state, persister );
 			}
 			entry.postUpdate( instance, state, nextVersion );
 		}

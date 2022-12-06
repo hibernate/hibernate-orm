@@ -90,6 +90,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return collectionDescriptor;
 	}
 
+	@Override
+	public EntityMappingType getMappedType() {
+		return getAssociatedEntityMappingType();
+	}
+
 	protected Set<String> getTargetKeyPropertyNames() {
 		return targetKeyPropertyNames;
 	}

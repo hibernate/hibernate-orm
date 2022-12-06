@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -187,6 +188,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public MappingType getMappedType() {
+		return getPartMappingType();
+	}
+
+	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
@@ -204,6 +210,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		return discriminatorMapping.findSubPart( name, treatTargetType );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, getDiscriminatorPart() );
+		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override
@@ -229,8 +241,18 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getDiscriminatorPart().getContainingTableExpression();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return getDiscriminatorPart().getSelectable( columnIndex );
 	}
 
 	@Override

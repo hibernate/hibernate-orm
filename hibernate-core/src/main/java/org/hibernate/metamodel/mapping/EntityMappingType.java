@@ -25,6 +25,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.spi.NavigablePath;
@@ -194,7 +195,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	/**
 	 * Get access to the attributes defined on this class - do not access attributes defined on the super
 	 */
-	Collection<AttributeMapping> getDeclaredAttributeMappings();
+	AttributeMappingsMap getDeclaredAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class - do not visit attributes defined on the super

@@ -7,7 +7,6 @@
 package org.hibernate.query.derived;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +39,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -545,7 +545,7 @@ public class AnonymousTupleEntityValuedModelPart implements EntityValuedModelPar
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return delegate.getEntityMappingType().getDeclaredAttributeMappings();
 	}
 

@@ -19,7 +19,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -193,6 +192,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.internal.EmptyAttributeMappingsMap;
 import org.hibernate.persister.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -5676,7 +5676,7 @@ public abstract class AbstractEntityPersister
 	private EntityDiscriminatorMapping discriminatorMapping;
 
 	private AttributeMappingsList attributeMappings;
-	protected Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
+	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
 	protected AttributeMappingsList staticFetchableList; //Needs to NOT use a generic List as it causes a critical level of type pollution on each read!
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
@@ -5727,13 +5727,14 @@ public abstract class AbstractEntityPersister
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 
 		NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
+		ImmutableAttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
 			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
 			if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
-				declaredAttributeMappings.put(
+				mappingsBuilder.put(
 						runtimeAttrDefinition.getName(),
 						generateNonIdAttributeMapping(
 								runtimeAttrDefinition,
@@ -5743,6 +5744,7 @@ public abstract class AbstractEntityPersister
 						)
 				);
 			}
+			this.declaredAttributeMappings = mappingsBuilder.build();
 //			else {
 				// its defined on the supertype, skip it here
 //			}
@@ -6122,13 +6124,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
-		return declaredAttributeMappings.values();
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
+		return declaredAttributeMappings;
 	}
 
 	@Override
 	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
-		declaredAttributeMappings.values().forEach( action );
+		declaredAttributeMappings.forEachValue( action );
 	}
 
 	@Override
@@ -6230,7 +6232,6 @@ public abstract class AbstractEntityPersister
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
 			PersistentClass bootEntityDescriptor) {
-		assert declaredAttributeMappings != null;
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
@@ -6544,14 +6545,15 @@ public abstract class AbstractEntityPersister
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		if ( attributeMappings == null ) {
-			final Collection<AttributeMapping> values = declaredAttributeMappings.values();
-			ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( values.size() );
+			int sizeHint = declaredAttributeMappings.size();
+			sizeHint += (superMappingType == null ? 0 : superMappingType.getAttributeMappings().size() );
+			ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( sizeHint );
 
 			if ( superMappingType != null ) {
 				superMappingType.visitAttributeMappings( builder::add );
 			}
 
-			for ( AttributeMapping am : values ) {
+			for ( AttributeMapping am : declaredAttributeMappings.valueIterator() ) {
 				builder.add( am );
 			}
 			this.attributeMappings = builder.build();
@@ -6666,7 +6668,7 @@ public abstract class AbstractEntityPersister
 			return identifierModelPart;
 		}
 
-		for ( AttributeMapping attribute : declaredAttributeMappings.values() ) {
+		for ( AttributeMapping attribute : declaredAttributeMappings.valueIterator() ) {
 			if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
 				final ModelPart subPart = ( (EmbeddableValuedModelPart) attribute ).findSubPart( name, null );
 				if ( subPart != null ) {
@@ -6734,7 +6736,7 @@ public abstract class AbstractEntityPersister
 			EntityMappingType treatTargetType) {
 		consumer.accept( identifierMapping );
 
-		declaredAttributeMappings.values().forEach( consumer );
+		declaredAttributeMappings.forEachValue( consumer );
 	}
 
 	@Override
@@ -6799,8 +6801,8 @@ public abstract class AbstractEntityPersister
 			if ( subclassMappingTypes != null ) {
 				int offset = attributeMappings.size();
 				for ( EntityMappingType subtype : subclassMappingTypes.values() ) {
-					final Collection<AttributeMapping> declaredAttributeMappings = subtype.getDeclaredAttributeMappings();
-					for ( AttributeMapping declaredAttributeMapping : declaredAttributeMappings ) {
+					final AttributeMappingsMap declaredAttributeMappings = subtype.getDeclaredAttributeMappings();
+					for ( AttributeMapping declaredAttributeMapping : declaredAttributeMappings.valueIterator() ) {
 						fetchableConsumer.accept( offset++, declaredAttributeMapping );
 					}
 				}

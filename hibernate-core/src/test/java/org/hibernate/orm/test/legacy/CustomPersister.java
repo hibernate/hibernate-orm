@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.legacy;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
@@ -53,6 +52,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -196,7 +196,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return null;
 	}
 

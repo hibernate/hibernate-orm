@@ -1,4 +1,4 @@
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.orm.test.timezones;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,10 +19,10 @@ import java.time.ZonedDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(annotatedClasses = ColumnZonedTest.Zoned.class)
+@DomainModel(annotatedClasses = AutoZonedTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "COLUMN"))
-public class ColumnZonedTest {
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "AUTO"))
+public class AutoZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );

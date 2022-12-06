@@ -1,13 +1,15 @@
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.orm.test.timezones;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -17,9 +19,10 @@ import java.time.ZonedDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(annotatedClasses = DefaultZonedTest.Zoned.class)
+@DomainModel(annotatedClasses = ColumnZonedTest.Zoned.class)
 @SessionFactory
-public class DefaultZonedTest {
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "COLUMN"))
+public class ColumnZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
@@ -42,14 +45,8 @@ public class DefaultZonedTest {
 				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );
 				assertEquals( nowOffset.toInstant(), z.offsetDateTime.toInstant() );
 			}
-			if ( scope.getSessionFactory().getJdbcServices().getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
-				assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );
-				assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );
-			}
-			else {
-				assertEquals( ZoneId.of("Z"), z.zonedDateTime.getZone() );
-				assertEquals( ZoneOffset.ofHours(0), z.offsetDateTime.getOffset() );
-			}
+			assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );
+			assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );
 		});
 	}
 

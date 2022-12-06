@@ -10,8 +10,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaWindow;
@@ -46,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 public class CriteriaOrderedSetAggregateTest {
-
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -104,7 +106,7 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from EntityOfBasics" ).executeUpdate() );
+		scope.inTransaction( session -> session.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate() );
 	}
 
 	@Test
@@ -229,7 +231,7 @@ public class CriteriaOrderedSetAggregateTest {
 					cb.literal( 0.5 ),
 					root.get( "theInt" ),
 					SortOrder.ASCENDING,
-					NullPrecedence.FIRST
+					NullPrecedence.NONE
 			);
 
 			cr.select( function );
@@ -242,8 +244,9 @@ public class CriteriaOrderedSetAggregateTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class)
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class)
 	public void testInverseDistributionWithWindow(SessionFactoryScope scope) {
-		// note : PostgreSQL currently does not support ordered-set aggregate functions with OVER clause
+		// note : PostgreSQL and EDB currently does not support ordered-set aggregate functions with OVER clause
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Integer> cr = cb.createQuery( Integer.class );
@@ -255,7 +258,7 @@ public class CriteriaOrderedSetAggregateTest {
 					window,
 					root.get( "theInt" ),
 					SortOrder.ASCENDING,
-					NullPrecedence.FIRST
+					NullPrecedence.NONE
 			);
 
 			cr.select( function ).orderBy( cb.asc( cb.literal( 1 ) ) );
@@ -301,9 +304,12 @@ public class CriteriaOrderedSetAggregateTest {
 		} );
 	}
 
-	// @Test
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = DB2Dialect.class)
 	public void testHypotheticalSetRankWithGroupByHavingOrderByLimit(SessionFactoryScope scope) {
+		// note : this query is not translated correctly for SQLServer and DB2, skip for now
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
@@ -315,11 +321,6 @@ public class CriteriaOrderedSetAggregateTest {
 			cr.multiselect( root2.get( "id" ), function )
 					.groupBy( root2.get( "id" ) ).having( cb.gt( root2.get( "id" ), cb.literal( 1 ) ) )
 					.orderBy( cb.asc( cb.literal( 1 ) ), cb.asc( cb.literal( 2 ) ) );
-
-			// todo marco : this test causes problems but only with mssql and db2, the sql obtained is not correct.
-			//  we are trying to get something like this query:
-			//  select eob2.id, rank(5) within group (order by eob.theInt asc) from EntityOfBasics eob
-			//  cross join EntityOfBasics eob2 group by eob2.id having eob2.id > 1 order by 1,2 offset 1
 
 			List<Tuple> resultList = session.createQuery( cr ).setFirstResult( 1 ).getResultList();
 			assertEquals( 3, resultList.size() );

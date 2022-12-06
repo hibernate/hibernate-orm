@@ -2643,7 +2643,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window) {
-		return nthValue( argument, value( n ), window );
+		return nthValue( argument, literal( n ), window );
 	}
 
 	@Override

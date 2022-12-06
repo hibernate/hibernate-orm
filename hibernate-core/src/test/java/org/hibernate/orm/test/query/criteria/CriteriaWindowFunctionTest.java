@@ -9,7 +9,6 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
@@ -104,7 +103,7 @@ public class CriteriaWindowFunctionTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "delete from EntityOfBasics" ).executeUpdate()
+				session -> session.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate()
 		);
 	}
 
@@ -156,28 +155,27 @@ public class CriteriaWindowFunctionTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
-	@SkipForDialect(dialectClass = DB2Dialect.class)
 	public void testNthValue(SessionFactoryScope scope) {
+		// note : SQLServer does not support nth_value function
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					CriteriaQuery<Integer> cr = cb.createQuery( Integer.class );
 					Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
-					JpaWindow window = cb.createWindow().orderBy( cb.desc( root.get( "theInt" ) ) );
+					JpaWindow window = cb.createWindow()
+							.orderBy( cb.desc( root.get( "theInt" ) ) )
+							.frameRows( cb.frameUnboundedPreceding(), cb.frameUnboundedFollowing() );
 					JpaExpression<Integer> nthValue = cb.nthValue(
 							root.get( "theInt" ),
 							2,
 							window
 					);
 
-					// todo marco : db2 throws java.lang.IndexOutOfBoundsException: Index 1 out of bounds for length 1
-					//  on getResultList() line, and SqlServer doesn't support nth_value function (even tho it's in Dialect)
-
-					cr.select( nthValue ).orderBy( cb.asc( cb.literal( 1 ), true ) );
+					cr.select( nthValue );
 					List<Integer> resultList = session.createQuery( cr ).getResultList();
 					assertEquals( 5, resultList.size() );
-					assertNull( resultList.get( 0 ) );
+					assertEquals( 7, resultList.get( 0 ) );
 					assertEquals( 7, resultList.get( 1 ) );
 					assertEquals( 7, resultList.get( 2 ) );
 					assertEquals( 7, resultList.get( 3 ) );

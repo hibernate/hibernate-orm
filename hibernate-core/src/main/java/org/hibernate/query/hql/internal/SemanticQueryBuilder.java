@@ -2955,6 +2955,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		switch ( node.getSymbol().getType() ) {
 			case HqlParser.STRING_LITERAL:
 				return stringLiteral( node.getText() );
+			case HqlParser.JAVA_STRING_LITERAL:
+				return javaStringLiteral( node.getText() );
 			case HqlParser.INTEGER_LITERAL:
 				return integerOrLongLiteral( node.getText() );
 			case HqlParser.LONG_LITERAL:
@@ -3262,6 +3264,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
 				QuotingHelper.unquoteStringLiteral( text ),
+				resolveExpressibleTypeBasic( String.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral<String> javaStringLiteral(String text) {
+		String unquoted = QuotingHelper.unquoteJavaStringLiteral( text );
+		return new SqmLiteral<>(
+				unquoted,
 				resolveExpressibleTypeBasic( String.class ),
 				creationContext.getNodeBuilder()
 		);

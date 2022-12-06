@@ -74,7 +74,7 @@ public final class QuotingHelper {
 		final int end = text.length() - 1;
 		final char delimiter = text.charAt( 0 );
 		assert delimiter == text.charAt( end );
-		// Unescape the parsed literal and handle escape sequences
+		// Unescape the parsed literal
 		final StringBuilder sb = new StringBuilder( text.length() - 2 );
 		for ( int i = 1; i < end; i++ ) {
 			char c = text.charAt( i );
@@ -89,50 +89,64 @@ public final class QuotingHelper {
 						i++;
 					}
 					break;
-				case '\\':
-					if ( ( i + 1 ) < end ) {
-						char nextChar = text.charAt( ++i );
-						switch ( nextChar ) {
-							case 'b':
-								c = '\b';
-								break;
-							case 't':
-								c = '\t';
-								break;
-							case 'n':
-								c = '\n';
-								break;
-							case 'f':
-								c = '\f';
-								break;
-							case 'r':
-								c = '\r';
-								break;
-							case '\\':
-								c = '\\';
-								break;
-							case '\'':
-								c = '\'';
-								break;
-							case '"':
-								c = '"';
-								break;
-							case '`':
-								c = '`';
-								break;
-							case 'u':
-								c = (char) Integer.parseInt( text.substring( i + 1, i + 5 ), 16 );
-								i += 4;
-								break;
-							default:
-								sb.append( '\\' );
-								c = nextChar;
-								break;
-						}
-					}
-					break;
 				default:
 					break;
+			}
+			sb.append( c );
+		}
+		return sb.toString();
+	}
+
+	public static String unquoteJavaStringLiteral(String text) {
+		assert text.length() > 1;
+		final char firstChar = text.charAt( 0 );
+		final int start = firstChar == 'j' || firstChar == 'J' ? 1 : 0;
+		final int end = text.length() - 1;
+		final char delimiter = text.charAt( start );
+		assert delimiter == text.charAt( end );
+		// Handle escape sequences
+		final StringBuilder sb = new StringBuilder( text.length() - ( start + 2 ) );
+		for ( int i = start + 1; i < end; i++ ) {
+			char c = text.charAt( i );
+			if ( c == '\\' && ( i + 1 ) < end ) {
+				char nextChar = text.charAt( ++i );
+				switch ( nextChar ) {
+					case 'b':
+						c = '\b';
+						break;
+					case 't':
+						c = '\t';
+						break;
+					case 'n':
+						c = '\n';
+						break;
+					case 'f':
+						c = '\f';
+						break;
+					case 'r':
+						c = '\r';
+						break;
+					case '\\':
+						c = '\\';
+						break;
+					case '\'':
+						c = '\'';
+						break;
+					case '"':
+						c = '"';
+						break;
+					case '`':
+						c = '`';
+						break;
+					case 'u':
+						c = (char) Integer.parseInt( text.substring( i + 1, i + 5 ), 16 );
+						i += 4;
+						break;
+					default:
+						sb.append( '\\' );
+						c = nextChar;
+						break;
+				}
 			}
 			sb.append( c );
 		}

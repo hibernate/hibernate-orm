@@ -61,6 +61,17 @@ public class LiteralTests {
 	}
 
 	@Test
+	public void testJavaString(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select \"\\n\"" ).getSingleResult(), is( "\n" ) );
+					assertThat( session.createQuery( "select J'\\n'" ).getSingleResult(), is( "\n" ) );
+					assertThat( session.createQuery( "select J'\\''" ).getSingleResult(), is( "'" ) );
+				}
+		);
+	}
+
+	@Test
 	public void testJdbcTimeLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -315,6 +326,4 @@ public class LiteralTests {
 				}
 		);
 	}
-
-
 }

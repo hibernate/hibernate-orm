@@ -109,6 +109,9 @@ dependencies {
 	else if ( db.startsWith( 'mariadb' ) ) {
 		testRuntimeOnly dbLibs.mariadb
 	}
+	else if ( db.startsWith( 'firebird' ) ) {
+		testRuntimeOnly dbLibs.firebird
+	}
 
 	annotationProcessor libs.loggingProcessor
 	annotationProcessor libs.logging

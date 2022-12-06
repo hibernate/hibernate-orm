@@ -176,7 +176,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (PersistenceException e) {
 			try {
-				assertTyping( ConstraintViolationException.class, e.getCause() );
+				assertTyping( ConstraintViolationException.class, e );
 				//success
 			}
 			finally {

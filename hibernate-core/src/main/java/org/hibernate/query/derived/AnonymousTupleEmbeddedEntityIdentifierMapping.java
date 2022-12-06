@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -94,7 +93,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
-	public MappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return this;
 	}
 

@@ -48,8 +48,8 @@ public class NonActiveTransactionSessionFindJdbcExceptionHandlingTest extends Ba
 			fail( "A PersistenceException should have been thrown." );
 		}
 		catch ( PersistenceException ex ) {
-			assertTrue( JDBCException.class.isInstance( ex.getCause() ) );
-			assertTrue( SQLException.class.isInstance( ex.getCause().getCause() ) );
+			assertTrue( JDBCException.class.isInstance( ex ) );
+			assertTrue( SQLException.class.isInstance( ex.getCause() ) );
 		}
 		finally {
 			entityManager.close();

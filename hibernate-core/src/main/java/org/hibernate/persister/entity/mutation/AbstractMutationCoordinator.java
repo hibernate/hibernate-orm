@@ -24,7 +24,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 /**
  * Base support for coordinating mutations against an entity

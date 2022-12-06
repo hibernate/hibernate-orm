@@ -48,6 +48,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -275,9 +276,11 @@ public class ToOneAttributeMapping
 			else {
 				final String targetTableName = MappingModelCreationHelper.getTableIdentifierExpression( manyToOne.getTable(), declaringEntityPersister.getFactory() );
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
-					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.resolveSubPart(
-							navigableRole.getParent().getParent()
-					);
+					// * the to-one's parent is directly a collection element or index
+					// * therefore, its parent-parent should be the collection itself
+					final String pluralAttributeName = StringHelper.unqualify( navigableRole.getParent().getParent().getLocalName() );
+					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.findAttributeMapping( pluralAttributeName );
+					assert pluralAttribute != null;
 					final QueryableCollection persister = (QueryableCollection) pluralAttribute.getCollectionDescriptor();
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}
@@ -2009,8 +2012,26 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			return foreignKeyDescriptor.getKeyTable();
+		}
+		else {
+			return foreignKeyDescriptor.getTargetTable();
+		}
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return foreignKeyDescriptor.getJdbcTypeCount();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			return foreignKeyDescriptor.getSelectable( columnIndex );
+		}
+		return null;
 	}
 
 	@Override

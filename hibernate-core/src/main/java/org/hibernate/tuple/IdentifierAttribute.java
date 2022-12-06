@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 
 /**

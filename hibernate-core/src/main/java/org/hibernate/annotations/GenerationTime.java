@@ -6,46 +6,78 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.tuple.GenerationTiming;
 
+import java.util.EnumSet;
+
 /**
- * Represents the timing of value generation that occurs in the database.
- * Intended for use with the {@link Generated} annotation.
+ * Represents a class of events involving interaction with the database
+ * that causes generation of a new value. Intended for use with the
+ * {@link Generated} and {@link CurrentTimestamp} annotations.
  *
  * @author Emmanuel Bernard
  *
  * @see Generated
+ * @see CurrentTimestamp
  *
- * @deprecated use {@link GenerationTiming}
+ * @deprecated use {@link EventType} and {@link EventTypeSets} instead
  */
 @Deprecated(since = "6.2")
 public enum GenerationTime {
 	/**
-	 * Indicates the value is never generated.
+	 * Indicates that a value is never generated.
 	 */
-	NEVER( GenerationTiming.NEVER ),
+	NEVER,
 	/**
-	 * Indicates the value is generated on insert.
+	 * Indicates that a new value is generated on insert.
 	 */
-	INSERT( GenerationTiming.INSERT ),
+	INSERT,
 	/**
-	 * Indicates the value is generated on update.
+	 * Indicates that a new value is generated on update.
 	 *
 	 * @since 6.2
 	 */
-	UPDATE( GenerationTiming.UPDATE ),
+	UPDATE,
 	/**
-	 * Indicates the value is generated on insert and on update.
+	 * Indicates that a new value is generated on insert and on update.
 	 */
-	ALWAYS( GenerationTiming.ALWAYS );
+	ALWAYS;
 
-	private final GenerationTiming equivalent;
-
-	private GenerationTime(GenerationTiming equivalent) {
-		this.equivalent = equivalent;
+	public EnumSet<EventType> eventTypes() {
+		switch (this) {
+			case NEVER:
+				return EventTypeSets.NONE;
+			case ALWAYS:
+				return EventTypeSets.ALL;
+			case INSERT:
+				return EventTypeSets.INSERT_ONLY;
+			case UPDATE:
+				return EventTypeSets.UPDATE_ONLY;
+			default:
+				throw new AssertionFailure("unknown event");
+		}
 	}
 
+	/**
+	 * @return the equivalent instance of {@link GenerationTiming}
+	 */
+	@Internal
 	public GenerationTiming getEquivalent() {
-		return equivalent;
+		switch (this) {
+			case ALWAYS:
+				return GenerationTiming.ALWAYS;
+			case INSERT:
+				return GenerationTiming.INSERT;
+			case UPDATE:
+				return GenerationTiming.UPDATE;
+			case NEVER:
+				return GenerationTiming.NEVER;
+			default:
+				throw new AssertionFailure("unknown event");
+		}
 	}
 }

@@ -27,7 +27,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedColumns;
 import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
@@ -47,13 +46,12 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.tuple.AnnotationBasedGenerator;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.AttributeBinder;
-import org.hibernate.tuple.GeneratorCreationContext;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.binder.AttributeBinder;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
@@ -64,7 +62,6 @@ import java.util.Map;
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.tuple.GenerationTiming.INSERT;
 
 /**
  * @author Emmanuel Bernard
@@ -142,9 +139,6 @@ public class PropertyBinder {
 	}
 
 	public void setColumns(AnnotatedColumns columns) {
-		final AnnotatedColumn firstColumn = columns.getColumns().get(0);
-		insertable = firstColumn.isInsertable();
-		updatable = firstColumn.isUpdatable();
 		//consistency is checked later when we know the property name
 		this.columns = columns;
 	}
@@ -207,11 +201,6 @@ public class PropertyBinder {
 	}
 
 	private void validateBind() {
-		if ( property.isAnnotationPresent( Immutable.class ) ) {
-			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-					+ "' may not be '@Immutable'"
-					+ " ('@Immutable' may only be applied to entities and collections)" );
-		}
 		if ( !declaringClassSet ) {
 			throw new AssertionFailure( "declaringClass has not been set before a bind" );
 		}
@@ -252,9 +241,9 @@ public class PropertyBinder {
 	private void callAttributeBinders(Property prop) {
 		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class);
 		if ( containingAnnotation != null ) {
-			final AttributeBinderType binderAnn = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
+			final AttributeBinderType binderType = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
 			try {
-				final AttributeBinder binder = binderAnn.binder().newInstance();
+				final AttributeBinder binder = binderType.binder().newInstance();
 				binder.bind( containingAnnotation, buildingContext, entityBinder.getPersistentClass(), prop );
 			}
 			catch (Exception e) {
@@ -371,14 +360,23 @@ public class PropertyBinder {
 			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
 		}
 
-		property.setInsertable( insertable );
-		property.setUpdateable( updatable );
 		property.setPropertyAccessStrategy( propertyAccessStrategy );
 
-		inferOptimisticLocking(property);
+		handleImmutable( property );
+
+		inferOptimisticLocking( property );
+
+		property.setInsertable( insertable );
+		property.setUpdateable( updatable );
 
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		return property;
+	}
+
+	private void handleImmutable(Property property) {
+		if ( this.property != null && this.property.isAnnotationPresent( Immutable.class ) ) {
+			updatable = false;
+		}
 	}
 
 	private void handleNaturalId(Property property) {
@@ -574,22 +572,27 @@ public class PropertyBinder {
 
 	private static void checkVersionGenerationAlways(XProperty property, Generator generator) {
 		if ( property.isAnnotationPresent(Version.class) ) {
-			final GenerationTiming timing = generator.getGenerationTiming();
-			if ( !timing.isAlways() ) {
+			if ( !generator.generatesOnInsert() ) {
 				throw new AnnotationException("Property '" + property.getName()
-						+ "' is annotated '@Version' but has a value generator with timing " + timing.name()
-						+ " (the value generation timing must be ALWAYS)"
+						+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
+				);
+			}
+			if ( !generator.generatesOnUpdate() ) {
+				throw new AnnotationException("Property '" + property.getName()
+						+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
 				);
 			}
 		}
 	}
 
 	private static void checkIdGeneratorTiming(Class<? extends Annotation> annotationType, Generator generator) {
-		GenerationTiming timing = generator.getGenerationTiming();
-		if ( timing != INSERT ) {
+		if ( !generator.generatesOnInsert() ) {
 			throw new MappingException( "Annotation '" + annotationType
-					+ "' is annotated 'IdGeneratorType' but the given 'InMemoryGenerator' has timing " + timing
-					+ " (an id generator must having timing INSERT)");
+					+ "' is annotated 'IdGeneratorType' but the given 'Generator' does not generate on inserts");
+		}
+		if ( generator.generatesOnUpdate() ) {
+			throw new MappingException( "Annotation '" + annotationType
+					+ "' is annotated 'IdGeneratorType' but the given 'Generator' generates on updates (it must generate only on inserts)");
 		}
 	}
 }

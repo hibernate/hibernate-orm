@@ -95,7 +95,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 		try {
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
-					.executeUpdate( statementDetails.getStatement() );
+					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
 
 			if ( affectedRowCount == 0 && tableDetails.isOptional() ) {
 				// the optional table did not have a row

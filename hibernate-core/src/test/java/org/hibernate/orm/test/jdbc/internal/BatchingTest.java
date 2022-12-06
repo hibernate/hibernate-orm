@@ -302,6 +302,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 	}
 
 	private void exportSandboxSchema(SessionImplementor sessionImpl) {
+		Transaction txn = sessionImpl.beginTransaction();
 		final JdbcCoordinator jdbcCoordinator = sessionImpl.getJdbcCoordinator();
 		LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 
@@ -320,6 +321,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
 		assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
+		txn.commit();
 	}
 
 	@Override

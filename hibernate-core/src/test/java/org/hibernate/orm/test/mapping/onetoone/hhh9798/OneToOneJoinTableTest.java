@@ -47,7 +47,7 @@ public class OneToOneJoinTableTest {
 						fail();
 					}
 					catch (PersistenceException e) {
-						assertTyping( ConstraintViolationException.class, e.getCause() );
+						assertTyping( ConstraintViolationException.class, e );
 						// expected
 					}
 					finally {

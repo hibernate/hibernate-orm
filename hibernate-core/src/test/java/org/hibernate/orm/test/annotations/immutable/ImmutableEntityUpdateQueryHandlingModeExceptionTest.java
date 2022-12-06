@@ -66,10 +66,10 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 			fail("Should throw PersistenceException");
 		}
 		catch (PersistenceException e) {
-			assertTrue( e.getCause() instanceof HibernateException );
+			assertTrue( e instanceof HibernateException );
 			assertEquals(
 					"The query: [update Country set name = :name] attempts to update an immutable entity: [Country]",
-					e.getCause().getMessage()
+					e.getMessage()
 			);
 		}
 

@@ -9,8 +9,7 @@ package org.hibernate.mapping;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
 
 /**
  * A mapping model {@link Value} which may be treated as an identifying key of a

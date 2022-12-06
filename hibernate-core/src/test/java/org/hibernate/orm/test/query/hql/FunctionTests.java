@@ -365,8 +365,8 @@ public class FunctionTests {
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery("select chr(65)").getSingleResult(), is('A') );
-					assertThat( session.createQuery("select ascii('A')").getSingleResult(), is(65) );
+					assertThat( session.createQuery("select chr(65)").getSingleResult(), is( 'A' ) );
+					assertThat( session.createQuery("select ascii('A')").getSingleResult(), anyOf( is( 65 ), is( (short) 65 ) ) );
 				}
 		);
 	}

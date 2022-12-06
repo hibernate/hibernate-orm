@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -229,7 +230,9 @@ abstract public class DialectChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
+			return !( dialect instanceof DB2Dialect
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof FirebirdDialect );
 		}
 	}
 

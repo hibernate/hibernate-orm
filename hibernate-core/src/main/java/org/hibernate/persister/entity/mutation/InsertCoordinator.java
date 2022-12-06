@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -31,9 +32,9 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -103,11 +104,11 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
 			final Generator[] generators = entityMetamodel.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
-				Generator generator = generators[i];
+				final Generator generator = generators[i];
 				if ( generator != null
 						&& !generator.generatedByDatabase()
-						&& generator.getGenerationTiming().includesInsert() ) {
-					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i] );
+						&& generator.generatesOnInsert() ) {
+					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i], EventType.INSERT );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}
@@ -438,7 +439,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.getGenerationTiming().includesInsert()
+			&& generator.generatesOnInsert()
 			&& generator.generatedByDatabase()
 			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql(dialect);
 	}

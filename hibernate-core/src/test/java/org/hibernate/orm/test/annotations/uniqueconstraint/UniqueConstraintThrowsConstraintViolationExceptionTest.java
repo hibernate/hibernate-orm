@@ -54,7 +54,7 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 		catch ( PersistenceException e ) {
 			assertEquals(
 					ConstraintViolationException.class,
-					e.getCause().getClass()
+					e.getClass()
 			);
 		}
 	}

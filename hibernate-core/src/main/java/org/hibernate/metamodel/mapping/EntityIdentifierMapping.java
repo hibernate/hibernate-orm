@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @see jakarta.persistence.Id
  * @see jakarta.persistence.EmbeddedId
  */
-public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
+public interface EntityIdentifierMapping extends ValuedModelPart {
 
 	String ROLE_LOCAL_NAME = "{id}";
 

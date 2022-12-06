@@ -464,7 +464,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.getEntityInstance();
 		if ( proxy != null && ( proxy instanceof MapProxy
 				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) ) ) {
-			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			if ( this.isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -477,7 +477,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingEntity != null ) {
 				this.entityInstance = existingEntity;
 			}
-			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			else if ( this.isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}

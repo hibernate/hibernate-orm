@@ -84,7 +84,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 		catch ( Exception expected ) {
 			assertEquals(
 					SQLGrammarException.class,
-					expected.getCause().getClass()
+					expected.getClass()
 			);
 		}
 	}

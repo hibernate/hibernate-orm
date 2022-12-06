@@ -4,21 +4,31 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.tuple;
+package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Internal;
+import org.hibernate.Session;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.TimestampGenerators;
+import org.hibernate.tuple.ValueGenerator;
 
 import java.lang.reflect.Member;
+import java.util.EnumSet;
 
-import static org.hibernate.tuple.GenerationTiming.ALWAYS;
-import static org.hibernate.tuple.GenerationTiming.INSERT;
+import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.generator.EventTypeSets.fromArray;
 
 /**
  * Value generation strategy which produces a timestamp using the database
@@ -37,24 +47,25 @@ import static org.hibernate.tuple.GenerationTiming.INSERT;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@Internal
-public class CurrentTimestampGeneration implements ValueGeneration {
-	private final GenerationTiming timing;
+public class CurrentTimestampGeneration implements InMemoryGenerator, InDatabaseGenerator {
+	private final EnumSet<EventType> eventTypes;
 	private final ValueGenerator<?> generator;
 
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		generator = getGenerator( annotation.source(), member );
-		timing = annotation.timing();
+		eventTypes = annotation.timing() == GenerationTiming.ALWAYS
+				? fromArray( annotation.event() )
+				: annotation.timing().getEquivalent().eventTypes();
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {
 		generator = getGenerator( annotation.source(), member );
-		timing = INSERT;
+		eventTypes = INSERT_ONLY;
 	}
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
 		generator = getGenerator( annotation.source(), member );
-		timing = ALWAYS;
+		eventTypes = INSERT_AND_UPDATE;
 	}
 
 	private static ValueGenerator<?> getGenerator(SourceType source, Member member) {
@@ -70,27 +81,32 @@ public class CurrentTimestampGeneration implements ValueGeneration {
 	}
 
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return timing;
+	public boolean generatedByDatabase() {
+		return generator == null;
 	}
 
 	@Override
-	public ValueGenerator<?> getValueGenerator() {
-		return generator;
+	public EnumSet<EventType> getEventTypes() {
+		return eventTypes;
 	}
 
 	@Override
-	public boolean referenceColumnInSql() {
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+		return generator.generateValue( (Session) session, owner, currentValue );
+	}
+
+	@Override
+	public boolean writePropertyValue() {
+		return false;
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
 		return true;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return "current_timestamp";
-	}
-
-	@Override
-	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
-		return dialect.currentTimestamp();
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { dialect.currentTimestamp() };
 	}
 }

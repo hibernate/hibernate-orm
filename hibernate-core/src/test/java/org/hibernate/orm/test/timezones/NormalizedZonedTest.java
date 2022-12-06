@@ -1,4 +1,4 @@
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.orm.test.timezones;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

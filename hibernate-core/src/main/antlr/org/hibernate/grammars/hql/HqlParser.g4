@@ -665,7 +665,7 @@ inList
  * A single character used to escape the '_' and '%' wildcards in a 'like' pattern
  */
 likeEscape
-	: ESCAPE (STRING_LITERAL | parameter)
+	: ESCAPE (STRING_LITERAL | JAVA_STRING_LITERAL | parameter)
 	;
 
 
@@ -823,6 +823,7 @@ searchedCaseWhen
  */
 literal
 	: STRING_LITERAL
+	| JAVA_STRING_LITERAL
 	| NULL
 	| booleanLiteral
 	| numericLiteral

@@ -38,8 +38,8 @@ public class ColumnZonedTest {
 			Zoned z = s.find(Zoned.class, id);
 			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
-				assertEquals( nowZoned.toInstant().toEpochMilli()/10, z.zonedDateTime.toInstant().toEpochMilli()/10 );
-				assertEquals( nowOffset.toInstant().toEpochMilli()/10, z.offsetDateTime.toInstant().toEpochMilli()/10 );
+				assertEquals( nowZoned.toInstant().toEpochMilli()/30, z.zonedDateTime.toInstant().toEpochMilli()/30 );
+				assertEquals( nowOffset.toInstant().toEpochMilli()/30, z.offsetDateTime.toInstant().toEpochMilli()/30 );
 			}
 			else {
 				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );

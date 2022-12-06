@@ -11,10 +11,22 @@ import org.hibernate.query.sqm.FrameKind;
 import jakarta.persistence.criteria.Expression;
 
 /**
+ * Common contract for a {@link JpaWindow} frame specification.
+ *
  * @author Marco Belladelli
  */
 public interface JpaWindowFrame {
+	/**
+	 * Get the {@link FrameKind} of this window frame.
+	 *
+	 * @return the window frame kind
+	 */
 	FrameKind getKind();
 
+	/**
+	 * Get the {@link Expression} of this window frame.
+	 *
+	 * @return the window frame expression
+	 */
 	Expression<?> getExpression();
 }

@@ -18,14 +18,11 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 
 /**
  * @author Nathan Xu
@@ -116,17 +113,10 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		if ( currentGraphContext == null || !( fetchParent instanceof EntityResultGraphNode ) ) {
+		if ( currentGraphContext == null ) {
 			return false;
 		}
-
-		final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-
-		assert currentGraphContext.getGraphedType() instanceof EntityDomainType;
-		final EntityDomainType entityDomainType = (EntityDomainType) currentGraphContext.getGraphedType();
-
-		return entityDomainType.getHibernateEntityName().equals( entityFetchParentMappingType.getEntityName() );
+		return fetchParent.appliesTo( currentGraphContext );
 	}
 
 	private static boolean isJpaMapCollectionType(PluralAttributeMapping pluralAttributeMapping) {

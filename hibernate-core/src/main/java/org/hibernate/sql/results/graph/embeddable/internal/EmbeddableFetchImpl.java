@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.spi.NavigablePath;
@@ -30,7 +31,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
  * @author Steve Ebersole
  */
 public class EmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
-	private final EmbeddableValuedFetchable embeddedPartDescriptor;
 
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
@@ -45,7 +45,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			boolean hasTableGroup,
 			DomainResultCreationState creationState) {
 		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
-		this.embeddedPartDescriptor = embeddedPartDescriptor;
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -142,4 +141,10 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 
 		return new EmbeddableAssembler( initializer );
 	}
+
+	@Override
+	public boolean appliesTo(GraphImplementor graphImplementor) {
+		return getFetchParent().appliesTo( graphImplementor );
+	}
+
 }

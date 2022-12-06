@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -39,4 +40,9 @@ public interface DomainResultGraphNode {
 		// override this already to return it
 		return null;
 	}
+
+	default boolean appliesTo(GraphImplementor graphImplementor){
+		return false;
+	}
+
 }

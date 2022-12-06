@@ -27,9 +27,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-
 /**
  * Base for types which map associations to persistent entities.
  *
@@ -318,11 +315,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		EntityPersister persister = getAssociatedEntityPersister( factory );
-		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.getHashCode( x );
-		}
-
+		final EntityPersister persister = getAssociatedEntityPersister( factory );
 		final Object id;
 		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( x );
 		if ( lazyInitializer != null ) {
@@ -347,11 +340,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return x == y;
 		}
 
-		EntityPersister persister = getAssociatedEntityPersister( factory );
-		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.isEqual( x, y );
-		}
-
+		final EntityPersister persister = getAssociatedEntityPersister( factory );
 		final Class<?> mappedClass = persister.getMappedClass();
 		Object xid;
 		final LazyInitializer lazyInitializerX = HibernateProxy.extractLazyInitializer( x );

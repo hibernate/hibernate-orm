@@ -349,7 +349,10 @@ public interface EntityPersister
 	 * @return The type.
 	 * @throws MappingException Typically indicates an unknown
 	 * property name.
+	 *
+	 * @deprecated See {@linkplain #findAttributeMapping(String)}
 	 */
+	@Deprecated( since = "6", forRemoval = true )
 	Type getPropertyType(String propertyName) throws MappingException;
 
 	/**
@@ -392,9 +395,12 @@ public interface EntityPersister
 	 * the id during session calls.
 	 *
 	 * @return True if either (1) {@link #hasIdentifierProperty()} or
-	 * (2) the identifier is an embedded composite identifier; false otherwise.
+	 * 		(2) the identifier is an embedded composite identifier; false otherwise.
 	 */
-	boolean canExtractIdOutOfEntity();
+	@Deprecated(since = "6")
+	default boolean canExtractIdOutOfEntity() {
+		return true;
+	}
 
 	/**
 	 * Determine whether optimistic locking by column is enabled for this

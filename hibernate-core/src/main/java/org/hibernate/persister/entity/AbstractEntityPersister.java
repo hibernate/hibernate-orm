@@ -40,6 +40,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
@@ -2131,6 +2132,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public Type toType(String propertyName) throws QueryException {
+		// todo (PropertyMapping) : simple delegation (aka, easy to remove)
 		return propertyMapping.toType( propertyName );
 	}
 
@@ -2159,29 +2161,31 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public int getSubclassPropertyTableNumber(String propertyPath) {
-		String rootPropertyName = StringHelper.root( propertyPath );
-		Type type = propertyMapping.toType( rootPropertyName );
-		if ( type.isAssociationType() ) {
-			AssociationType assocType = (AssociationType) type;
-			if ( assocType.useLHSPrimaryKey() ) {
-				// performance op to avoid the array search
-				return 0;
-			}
-			else if ( type.isCollectionType() ) {
-				// properly handle property-ref-based associations
-				rootPropertyName = assocType.getLHSPropertyName();
-			}
-		}
-		//Enable for HHH-440, which we don't like:
-		/*if ( type.isComponentType() && !propertyName.equals(rootPropertyName) ) {
-			String unrooted = StringHelper.unroot(propertyName);
-			int idx = ArrayHelper.indexOf( getSubclassColumnClosure(), unrooted );
-			if ( idx != -1 ) {
-				return getSubclassColumnTableNumberClosure()[idx];
-			}
-		}*/
-		int index = ArrayHelper.indexOf( getSubclassPropertyNameClosure(), rootPropertyName ); //TODO: optimize this better!
-		return index == -1 ? 0 : getSubclassPropertyTableNumber( index );
+		// todo (PropertyMapping) : clean this up
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		String rootPropertyName = StringHelper.root( propertyPath );
+//		Type type = propertyMapping.toType( rootPropertyName );
+//		if ( type.isAssociationType() ) {
+//			AssociationType assocType = (AssociationType) type;
+//			if ( assocType.useLHSPrimaryKey() ) {
+//				// performance op to avoid the array search
+//				return 0;
+//			}
+//			else if ( type.isCollectionType() ) {
+//				// properly handle property-ref-based associations
+//				rootPropertyName = assocType.getLHSPropertyName();
+//			}
+//		}
+//		//Enable for HHH-440, which we don't like:
+//		/*if ( type.isComponentType() && !propertyName.equals(rootPropertyName) ) {
+//			String unrooted = StringHelper.unroot(propertyName);
+//			int idx = ArrayHelper.indexOf( getSubclassColumnClosure(), unrooted );
+//			if ( idx != -1 ) {
+//				return getSubclassColumnTableNumberClosure()[idx];
+//			}
+//		}*/
+//		int index = ArrayHelper.indexOf( getSubclassPropertyNameClosure(), rootPropertyName ); //TODO: optimize this better!
+//		return index == -1 ? 0 : getSubclassPropertyTableNumber( index );
 	}
 
 	@Override
@@ -3766,7 +3770,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id = canExtractIdOutOfEntity() ? getIdentifier(entity, session) : null;
+		final Object id = getIdentifier(entity, session);
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
@@ -3870,13 +3874,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean canExtractIdOutOfEntity() {
-		return hasIdentifierProperty()
-			|| entityMetamodel.getIdentifierProperty().isEmbedded()
-			|| entityMetamodel.getIdentifierProperty().hasIdentifierMapper();
-	}
-
-	@Override
 	public String[] getKeyColumnNames() {
 		return getIdentifierColumnNames();
 	}
@@ -3913,6 +3910,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public Type getPropertyType(String propertyName) throws MappingException {
+		// todo (PropertyMapping) : caller also deprecated (aka, easy to remove)
 		return propertyMapping.toType( propertyName );
 	}
 

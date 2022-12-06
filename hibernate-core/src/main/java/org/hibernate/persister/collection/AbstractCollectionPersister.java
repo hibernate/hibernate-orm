@@ -1173,6 +1173,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public Type toType(String propertyName) throws QueryException {
+		// todo (PropertyMapping) : simple delegation (aka, easy to remove)
 		if ( "index".equals( propertyName ) ) {
 			return indexType;
 		}
@@ -1308,6 +1309,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
+		// todo (PropertyMapping) : simple delegation (aka, easy to remove)
 		if ( "index".equals( propertyName ) ) {
 			if ( indexFragments == null ) {
 				String[] tmp = new String[indexColumnNames.length];

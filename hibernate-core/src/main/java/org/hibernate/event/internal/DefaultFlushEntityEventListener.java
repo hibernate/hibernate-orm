@@ -75,18 +75,16 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			return;
 		}
 
-		if ( persister.canExtractIdOutOfEntity() ) {
-			final Object oid = persister.getIdentifier( object, session );
+		final Object oid = persister.getIdentifier( object, session );
 
-			if ( id == null ) {
-				throw new AssertionFailure( "null id in " + persister.getEntityName()
-						+ " entry (don't flush the Session after an exception occurs)" );
-			}
+		if ( id == null ) {
+			throw new AssertionFailure( "null id in " + persister.getEntityName()
+					+ " entry (don't flush the Session after an exception occurs)" );
+		}
 
-			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
-				throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
-						+ " was altered from " + oid + " to " + id );
-			}
+		if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
+			throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
+					+ " was altered from " + oid + " to " + id );
 		}
 	}
 

@@ -56,6 +56,8 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TypeRegistration;
+import org.hibernate.annotations.TypeRegistrations;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -307,6 +309,7 @@ public final class AnnotationBinder {
 
 		handleTypeDescriptorRegistrations( annotatedPackage, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedPackage, context );
+		bindUserTypeRegistrations( annotatedPackage, context );
 		bindCompositeUserTypeRegistrations( annotatedPackage, context );
 		handleConverterRegistrations( annotatedPackage, context );
 
@@ -536,6 +539,7 @@ public final class AnnotationBinder {
 		final Map<String, IdentifierGeneratorDefinition> generators = buildGenerators( annotatedClass, context );
 		handleTypeDescriptorRegistrations( annotatedClass, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedClass, context );
+		bindUserTypeRegistrations( annotatedClass, context );
 		bindCompositeUserTypeRegistrations( annotatedClass, context );
 		handleConverterRegistrations( annotatedClass, context );
 
@@ -684,6 +688,35 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+	}
+
+	private static void bindUserTypeRegistrations(
+			XAnnotatedElement annotatedElement,
+			MetadataBuildingContext context) {
+		final TypeRegistration typeRegistration =
+				annotatedElement.getAnnotation( TypeRegistration.class );
+		if ( typeRegistration != null ) {
+			handleUserTypeRegistration( context, typeRegistration );
+		}
+		else {
+			final TypeRegistrations typeRegistrations =
+					annotatedElement.getAnnotation( TypeRegistrations.class );
+			if ( typeRegistrations != null ) {
+				final TypeRegistration[] registrations = typeRegistrations.value();
+				for ( TypeRegistration registration : registrations ) {
+					handleUserTypeRegistration( context, registration );
+				}
+			}
+		}
+	}
+
+	private static void handleUserTypeRegistration(
+			MetadataBuildingContext context,
+			TypeRegistration compositeTypeRegistration) {
+		context.getMetadataCollector().registerUserType(
+				compositeTypeRegistration.basicClass(),
+				compositeTypeRegistration.userType()
+		);
 	}
 
 	private static void handleCompositeUserTypeRegistration(

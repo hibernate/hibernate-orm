@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.usertype.UserType;
 
@@ -19,11 +20,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * This is usually mutually exclusive with the compositional approach of
  * {@link JavaType}, {@link JdbcType}, etc.
+ *
+ * @see UserType
+ * @see TypeRegistration
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Type {
-
 	/**
 	 * The implementation class which implements {@link UserType}.
 	 */

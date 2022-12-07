@@ -22,7 +22,7 @@ import static java.lang.annotation.ElementType.METHOD;
  * element collection value is of basic type. If the {@code TimeZoneStorage} annotation is not used,
  * the {@link TimeZoneStorageType} has a default value determined by the dialect and by the
  * configuration property {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE}.
- *
+ * <p>
  * For example:
  * <pre>
  * {@code
@@ -43,6 +43,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see TimeZoneStorageType
  * @see TimeZoneColumn
  *
  * @since 6.0

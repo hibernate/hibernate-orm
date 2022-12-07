@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.usertype.CompositeUserType;
 
@@ -16,11 +17,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Applies a custom {@link CompositeUserType} for the attribute mapping.
+ *
+ * @see CompositeUserType
+ * @see CompositeTypeRegistration
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface CompositeType {
-
 	/**
 	 * The custom type implementor class
 	 */

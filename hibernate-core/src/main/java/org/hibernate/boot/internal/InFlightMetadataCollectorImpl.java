@@ -113,6 +113,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
+import org.hibernate.usertype.UserType;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -429,8 +430,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return registeredCompositeUserTypes.get( embeddableType );
 	}
 
-	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
+	private Map<Class<?>, Class<? extends UserType<?>>> registeredUserTypes;
+	@Override
+	public void registerUserType(Class<?> basicType, Class<? extends UserType<?>> userType) {
+		if ( registeredUserTypes == null ) {
+			registeredUserTypes = new HashMap<>();
+		}
+		registeredUserTypes.put( basicType, userType );
+	}
 
+	@Override
+	public Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType) {
+		if ( registeredUserTypes == null ) {
+			return null;
+		}
+
+		return registeredUserTypes.get( basicType );
+	}
+
+	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
 
 	@Override
 	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {

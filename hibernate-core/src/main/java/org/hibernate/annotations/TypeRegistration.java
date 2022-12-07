@@ -6,11 +6,11 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.usertype.UserType;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import org.hibernate.usertype.CompositeUserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -18,21 +18,24 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Registers a custom {@linkplain CompositeUserType composite user type}
- * implementation to be used by default for all references to a particular
- * {@linkplain jakarta.persistence.Embeddable embeddable} class.
+ * Registers a custom {@linkplain UserType user type} implementation
+ * to be used by default for all references to a particular basic type.
  * <p>
  * May be overridden for a specific entity field or property using
- * {@link CompositeType}.
+ * {@link Type}.
  *
- * @see CompositeUserType
- * @see CompositeType
- * @see TypeRegistration
+ * @see UserType
+ * @see Type
+ * @see CompositeTypeRegistration
+ *
+ * @author Gavin King
+ *
+ * @since 6.2
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
-@Repeatable( CompositeTypeRegistrations.class )
-public @interface CompositeTypeRegistration {
-	Class<?> embeddableClass();
-	Class<? extends CompositeUserType<?>> userType();
+@Repeatable( TypeRegistrations.class )
+public @interface TypeRegistration {
+	Class<?> basicClass();
+	Class<? extends UserType<?>> userType();
 }

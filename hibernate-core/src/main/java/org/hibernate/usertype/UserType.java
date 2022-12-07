@@ -52,9 +52,20 @@ import org.hibernate.type.spi.TypeConfiguration;
  * may be used in queries. If a custom type does have attributes, and
  * can be thought of as something more like an embeddable object, it
  * might be better to implement {@link CompositeUserType}.
+ * <p>
+ * A custom type may be applied to an attribute of an entity either:
+ * <ul>
+ * <li>explicitly, using {@link org.hibernate.annotations.Type @Type},
+ *     or
+ * <li>implicitly, using
+ *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration}.
+ * </ul>
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.CustomType
+ *
+ * @see org.hibernate.annotations.Type
+ * @see org.hibernate.annotations.TypeRegistration
  *
  * @author Gavin King
  */

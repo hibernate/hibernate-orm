@@ -57,6 +57,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.usertype.UserType;
 
 /**
  * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.
@@ -305,6 +306,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void registerCompositeUserType(Class<?> embeddableType, Class<? extends CompositeUserType<?>> userType);
 	Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType);
+
+	void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType);
+	Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType);
 
 	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);

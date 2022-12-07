@@ -44,6 +44,18 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * <p>
  * Every implementor of {@code CompositeUserType} must be immutable
  * and must declare a public default constructor.
+ * <p>
+ * A custom type may be applied to an attribute of an entity either:
+ * <ul>
+ * <li>explicitly, using
+ *     {@link org.hibernate.annotations.CompositeType @CompositeType},
+ *     or
+ * <li>implicitly, using
+ *     {@link org.hibernate.annotations.CompositeTypeRegistration @CompositeTypeRegistration}.
+ * </ul>
+ *
+ * @see org.hibernate.annotations.CompositeType
+ * @see org.hibernate.annotations.CompositeTypeRegistration
  */
 @Incubating
 public interface CompositeUserType<J> extends EmbeddableInstantiator {

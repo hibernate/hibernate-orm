@@ -324,6 +324,17 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
 			return;
 		}
+		else if ( modelTypeXClass != null ) {
+			final Class<?> basicClass = buildingContext.getBootstrapContext()
+					.getReflectionManager()
+					.toClass( modelTypeXClass );
+			final Class<? extends UserType<?>> registeredUserTypeImpl =
+					buildingContext.getMetadataCollector().findRegisteredUserType( basicClass );
+			if ( registeredUserTypeImpl != null ) {
+				applyExplicitType( registeredUserTypeImpl, new Parameter[0] );
+				return;
+			}
+		}
 
 		switch ( kind ) {
 			case ATTRIBUTE: {

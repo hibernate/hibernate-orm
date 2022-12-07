@@ -123,7 +123,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;

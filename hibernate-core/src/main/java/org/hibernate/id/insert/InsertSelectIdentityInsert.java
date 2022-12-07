@@ -8,7 +8,7 @@ package org.hibernate.id.insert;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.Insert;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 /**
  * Specialized {@link IdentifierGeneratingInsert} which appends the database

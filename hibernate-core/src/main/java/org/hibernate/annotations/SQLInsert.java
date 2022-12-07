@@ -32,13 +32,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A custom SQL insert statement might assign a value to a mapped column as it
  * is written. In this case, the corresponding property of the entity remains
  * unassigned after the insert is executed unless
- * {@link Generated @Generated(timing=INSERT)} is specified, forcing Hibernate
+ * {@link Generated @Generated(event=INSERT)} is specified, forcing Hibernate
  * to reread the state of the entity after each insert.
  * <p>
  * Similarly, a custom insert statement might transform a mapped column value
  * as it is written. In this case, the state of the entity held in memory
  * loses synchronization with the database after the insert is executed unless
- * {@link Generated @Generated(value=INSERT, writable=true)} is specified,
+ * {@link Generated @Generated(event=INSERT, writable=true)} is specified,
  * again forcing Hibernate to reread the state of the entity after each insert.
  *
  * @author Laszlo Benke

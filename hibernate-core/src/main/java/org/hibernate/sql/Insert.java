@@ -14,7 +14,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 /**
  * An SQL {@code INSERT} statement

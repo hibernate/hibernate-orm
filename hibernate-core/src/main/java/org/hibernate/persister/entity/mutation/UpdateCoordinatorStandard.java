@@ -50,9 +50,9 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InDatabaseGenerator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.ALL;
@@ -60,6 +60,7 @@ import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.OptimisticLockStyle.NONE;
 import static org.hibernate.engine.OptimisticLockStyle.VERSION;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
+import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 
 /**
@@ -337,14 +338,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.getGenerationTiming().includesUpdate()
+			&& generator.generatesOnUpdate()
 			&& generator.generatedByDatabase()
 			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect);
 	}
 
 	private boolean isValueGenerationInSqlNoWrite(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.getGenerationTiming().includesUpdate()
+			&& generator.generatesOnUpdate()
 			&& generator.generatedByDatabase()
 			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect)
 			&& !((InDatabaseGenerator) generator).writePropertyValue();
@@ -451,8 +452,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				Generator generator = generators[i];
 				if ( generator != null
 						&& !generator.generatedByDatabase()
-						&& generator.getGenerationTiming().includesUpdate() ) {
-					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i] );
+						&& generator.generatesOnUpdate() ) {
+					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i], UPDATE );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}

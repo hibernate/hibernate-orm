@@ -300,7 +300,7 @@ public class TransactionJoiningTest {
 				em.persist( new Book( "The Book of Foo", 1 ) );
 			}
 			catch (PersistenceException e) {
-				caught = e.getCause().getClass().equals( HibernateException.class );
+				caught = e.getClass().equals( HibernateException.class );
 			}
 			assertTrue( caught );
 

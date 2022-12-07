@@ -7,17 +7,20 @@
 package org.hibernate.id.uuid;
 
 import java.lang.reflect.Member;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
@@ -60,13 +63,16 @@ public class UuidGenerator implements InMemoryGenerator {
 		}
 	}
 
+	/**
+	 * @return {@link EventTypeSets#INSERT_ONLY}
+	 */
 	@Override
-	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.INSERT;
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return valueTransformer.transform( generator.generateUuid( session ) );
 	}
 }

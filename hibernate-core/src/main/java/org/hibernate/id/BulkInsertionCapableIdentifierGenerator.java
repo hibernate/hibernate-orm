@@ -7,7 +7,7 @@
 package org.hibernate.id;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 
 /**
  * Specialized contract for {@link IdentifierGenerator} implementations capable of being used in conjunction

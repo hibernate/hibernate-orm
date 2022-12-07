@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.internal.domain;
 
-import java.util.function.BiConsumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CollectionKey;
@@ -15,31 +13,18 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -53,7 +38,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Andrea Boriero
  */
-public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Association {
+public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
 	private final ToOneAttributeMapping fetchable;
@@ -125,87 +110,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	@Override
 	public boolean hasTableGroup() {
 		return true;
-	}
-
-	@Override
-	public String getFetchableName() {
-		return fetchable.getFetchableName();
-	}
-
-	@Override
-	public String getPartName() {
-		return fetchable.getFetchableName();
-	}
-
-	@Override
-	public NavigableRole getNavigableRole() {
-		return fetchable.getNavigableRole();
-	}
-
-	@Override
-	public EntityMappingType findContainingEntityMapping() {
-		return fetchable.findContainingEntityMapping();
-	}
-
-	@Override
-	public MappingType getPartMappingType() {
-		return fetchable.getPartMappingType();
-	}
-
-	@Override
-	public JavaType<?> getJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public FetchOptions getMappedFetchOptions() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public ForeignKeyDescriptor getForeignKeyDescriptor() {
-		return ( (Association) fetchParent ).getForeignKeyDescriptor();
-	}
-
-	@Override
-	public ForeignKeyDescriptor.Nature getSideNature() {
-		return ( (Association) fetchParent ).getSideNature();
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachDisassembledJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new UnsupportedOperationException();
 	}
 
 	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
@@ -351,29 +255,4 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		}
 	}
 
-	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return fetchable.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		fetchable.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
-	}
 }

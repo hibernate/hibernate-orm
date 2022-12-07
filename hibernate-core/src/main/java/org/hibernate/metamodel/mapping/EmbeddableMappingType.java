@@ -24,6 +24,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 /**
  * Describes an embeddable - the actual type
  *
+ * @implNote Even though this represents the embeddable class, one is created for
+ * each embedded usage.  This is done to help
+ *
  * @see EmbeddableValuedModelPart
  */
 public interface EmbeddableMappingType extends ManagedMappingType, SelectableMappings {

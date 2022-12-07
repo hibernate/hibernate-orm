@@ -207,7 +207,7 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 		try {
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
-					.executeUpdate( statementDetails.getStatement() );
+					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
 
 			ModelMutationHelper.checkResults( resultChecker, statementDetails, affectedRowCount, -1 );
 		}

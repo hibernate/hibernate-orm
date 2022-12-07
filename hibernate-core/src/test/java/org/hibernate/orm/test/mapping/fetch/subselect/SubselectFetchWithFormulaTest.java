@@ -11,6 +11,7 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.Collection;
@@ -25,7 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
-@SkipForDialect({SQLServerDialect.class, SybaseDialect.class})
+@SkipForDialect({SQLServerDialect.class, SybaseDialect.class, FirebirdDialect.class})
 public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String getBaseForMappings() {

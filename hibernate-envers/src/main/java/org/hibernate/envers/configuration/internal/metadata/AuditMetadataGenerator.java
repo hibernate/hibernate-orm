@@ -34,7 +34,7 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.generator.internal.GeneratedGeneration;
 
 import org.jboss.logging.Logger;
 
@@ -121,9 +121,9 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		if ( !property.isInsertable() ) {
 			// TODO: this is now broken by changes to generators
 			final GeneratorCreator generation = property.getValueGeneratorCreator();
-			if ( generation instanceof GeneratedValueGeneration ) {
-				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
-				if ( valueGeneration.getGenerationTiming().includesInsert() ) {
+			if ( generation instanceof GeneratedGeneration) {
+				final GeneratedGeneration valueGeneration = (GeneratedGeneration) generation;
+				if ( valueGeneration.generatesOnInsert() ) {
 					return true;
 				}
 			}
@@ -189,7 +189,6 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addJoins(
 			PersistentClass persistentClass,
 			CompositeMapperBuilder currentMapper,

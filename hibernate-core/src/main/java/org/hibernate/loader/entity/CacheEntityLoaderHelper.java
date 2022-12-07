@@ -18,7 +18,6 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.TwoPhaseLoad;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -45,6 +44,7 @@ import org.hibernate.type.TypeHelper;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 
 /**
@@ -424,7 +424,7 @@ public class CacheEntityLoaderHelper {
 					source
 			);
 		}
-		version = Versioning.getVersion( values, subclassPersister );
+		version = getVersion( values, subclassPersister );
 		LOG.tracef( "Cached Version : %s", version );
 
 		final Object proxy = persistenceContext.getProxy( entityKey );

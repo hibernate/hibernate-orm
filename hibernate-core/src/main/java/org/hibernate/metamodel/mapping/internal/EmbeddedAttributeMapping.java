@@ -138,9 +138,9 @@ public class EmbeddedAttributeMapping
 				null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
-				inverseModelPart instanceof PropertyBasedMapping ?
-						( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess() :
-						null
+				inverseModelPart instanceof PropertyBasedMapping
+						? ( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess()
+						: null
 		);
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );

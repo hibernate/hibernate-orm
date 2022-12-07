@@ -21,7 +21,7 @@ import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.tuple.InDatabaseGenerator;
+import org.hibernate.generator.InDatabaseGenerator;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
@@ -66,7 +66,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
-		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( insertStatement );
+		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( insertStatement, insertSql );
 		try {
 			return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
 		}

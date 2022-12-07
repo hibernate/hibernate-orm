@@ -24,44 +24,24 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
-
-	enum Nature {
-		KEY,
-		TARGET;
-
-		public Nature inverse() {
-			return this == KEY ? TARGET : KEY;
-		}
-	}
-
-	interface Side {
-
-		Nature getNature();
-
-		ModelPart getModelPart();
-
-	}
+public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart {
 
 	String PART_NAME = "{fk}";
 	String TARGET_PART_NAME = "{fk-target}";
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
 
 	String getKeyTable();
 
 	String getTargetTable();
 
-	default String getTable(Nature nature) {
-		if ( nature == Nature.KEY ) {
-			return getKeyTable();
-		}
-		else {
-			return getTargetTable();
-		}
-	}
 
-	ModelPart getKeyPart();
+	ValuedModelPart getKeyPart();
 
-	ModelPart getTargetPart();
+	ValuedModelPart getTargetPart();
 
 	default ModelPart getPart(Nature nature) {
 		if ( nature == Nature.KEY ) {
@@ -83,6 +63,11 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		else {
 			return getTargetSide();
 		}
+	}
+
+	@Override
+	default String getContainingTableExpression() {
+		return getKeyTable();
 	}
 
 	/**
@@ -127,9 +112,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	@Override
-	default String getPartName() {
-		return PART_NAME;
-	}
+	SelectableMapping getSelectable(int columnIndex);
 
 	/**
 	 * Visits the FK "referring" columns
@@ -175,4 +158,19 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();
+
+	enum Nature {
+		KEY,
+		TARGET;
+
+		public Nature inverse() {
+			return this == KEY ? TARGET : KEY;
+		}
+	}
+
+	interface Side {
+		Nature getNature();
+		ValuedModelPart getModelPart();
+
+	}
 }

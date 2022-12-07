@@ -20,7 +20,6 @@ import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -33,15 +32,18 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.Versioning.incrementVersion;
+import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.generator.EventType.INSERT;
 
 /**
  * Concrete implementation of the {@link StatelessSession} API.
@@ -98,17 +100,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
-		Generator generator = persister.getGenerator();
+		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedByDatabase() ) {
-			id = ( (InMemoryGenerator) generator).generate( this, entity, null );
+			id = ( (InMemoryGenerator) generator).generate( this, entity, null, INSERT );
 			if ( persister.isVersioned() ) {
-				boolean substitute = Versioning.seedVersion(
-						state,
-						persister.getVersionProperty(),
-						persister.getVersionMapping(),
-						this
-				);
-				if ( substitute ) {
+				if ( seedVersion( entity, state, persister, this ) ) {
 					persister.setValues( entity, state );
 				}
 			}
@@ -157,8 +153,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning.increment( oldVersion, persister.getVersionMapping(), this );
-			Versioning.setVersion( state, newVersion, persister );
+			Object newVersion = incrementVersion( entity, oldVersion, persister, this );
+			setVersion( state, newVersion, persister );
 			persister.setValues( entity, state );
 		}
 		else {

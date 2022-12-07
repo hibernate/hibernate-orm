@@ -44,6 +44,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTra
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.engine.internal.Versioning.incrementVersion;
+import static org.hibernate.engine.internal.Versioning.setVersion;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -381,13 +384,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		if ( persister.isVersioned() ) {
 			Object[] values = event.getPropertyValues();
 			if ( entry.isBeingReplicated() ) {
-				return Versioning.getVersion( values, persister );
+				return getVersion( values, persister );
 			}
 			else {
 				final Object nextVersion = isVersionIncrementRequired( event, entry )
-						? Versioning.increment( entry.getVersion(), persister.getVersionMapping(), event.getSession() )
+						? incrementVersion( event.getEntity(), entry.getVersion(), persister, event.getSession() )
 						: entry.getVersion(); //use the current version
-				Versioning.setVersion( values, nextVersion, persister );
+				setVersion( values, nextVersion, persister );
 				return nextVersion;
 			}
 		}
@@ -397,7 +400,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	}
 
-	private boolean isVersionIncrementRequired(FlushEntityEvent event, EntityEntry entry) {
+	private static boolean isVersionIncrementRequired(FlushEntityEvent event, EntityEntry entry) {
 		if ( entry.getStatus() == Status.DELETED ) {
 			return false;
 		}

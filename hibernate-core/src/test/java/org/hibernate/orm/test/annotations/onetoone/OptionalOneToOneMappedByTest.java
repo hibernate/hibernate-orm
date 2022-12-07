@@ -45,7 +45,7 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			} );
 		}
 		catch (PersistenceException ex) {
-			assertTyping( IdentifierGenerationException.class, ex.getCause() );
+			assertTyping( IdentifierGenerationException.class, ex );
 			// expected
 		}
 	}

@@ -261,11 +261,6 @@ public class ToOneBinder {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
 		}
-		else {
-			final AnnotatedJoinColumn firstColumn = columns.getJoinColumns().get(0);
-			propertyBinder.setInsertable( firstColumn.isInsertable() );
-			propertyBinder.setUpdatable( firstColumn.isUpdatable() );
-		}
 		propertyBinder.setColumns( columns );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );

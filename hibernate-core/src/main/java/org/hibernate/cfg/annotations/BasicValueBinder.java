@@ -179,19 +179,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-		if ( timeZoneStorageType != null ) {
-			switch ( timeZoneStorageType ) {
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
-				case NATIVE:
-					return TimeZoneStorageStrategy.NATIVE;
-				case NORMALIZE:
-					return TimeZoneStorageStrategy.NORMALIZE;
-				case NORMALIZE_UTC:
-					return TimeZoneStorageStrategy.NORMALIZE_UTC;
-			}
-		}
-		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+		return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, buildingContext );
 	}
 
 
@@ -942,9 +930,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
 			if ( targetAnn != null ) {
-				return (BasicJavaType<?>) typeConfiguration
-						.getJavaTypeRegistry()
-						.getDescriptor( targetAnn.value() );
+				return (BasicJavaType<?>) typeConfiguration.getJavaTypeRegistry().getDescriptor( targetAnn.value() );
 			}
 
 			return null;
@@ -976,9 +962,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					);
 				}
 			}
-		}
-		else {
-			timeZoneStorageType = null;
 		}
 	}
 

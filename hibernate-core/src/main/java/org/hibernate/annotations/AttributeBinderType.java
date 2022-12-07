@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
-import org.hibernate.tuple.AttributeBinder;
+import org.hibernate.binder.AttributeBinder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

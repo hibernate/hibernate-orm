@@ -6,6 +6,7 @@
  */
 package org.hibernate.id;
 
+import java.util.EnumSet;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -14,17 +15,18 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.Type;
 
-import static org.hibernate.tuple.GenerationTiming.INSERT;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 
 /**
  * A classic extension point from the very earliest days of Hibernate,
  * this interface is no longer the only way to generate identifiers. Any
- * {@link InMemoryGenerator} with timing {@link GenerationTiming#INSERT}
+ * {@link InMemoryGenerator} with timing {@link EventTypeSets#INSERT_ONLY}
  * may now be used.
  * <p>
  * This interface extends {@code InMemoryGenerator} with some additional
@@ -140,16 +142,16 @@ public interface IdentifierGenerator extends InMemoryGenerator, ExportableProduc
 	 * The {@code currentValue} is usually null for id generation.
 	 */
 	@Override
-	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue) {
+	default Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return generate( session, owner );
 	}
 
 	/**
-	 * @return {@link GenerationTiming#INSERT}
+	 * @return {@link EventTypeSets#INSERT_ONLY}
 	 */
 	@Override
-	default GenerationTiming getGenerationTiming() {
-		return INSERT;
+	default EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
 	}
 
 	/**

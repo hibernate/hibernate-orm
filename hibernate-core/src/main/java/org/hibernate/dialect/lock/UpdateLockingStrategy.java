@@ -96,7 +96,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 					lockableVersionType.nullSafeSet( st, version, offset, session );
 				}
 
-				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 				if ( affected < 0 ) {
 					final StatisticsImplementor statistics = factory.getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {

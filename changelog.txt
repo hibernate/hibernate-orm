@@ -3,6 +3,66 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.6.Final (December 07, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32118
+
+** Bug
+    * [HHH-15765] - Build fails due to missing dependency on Maven Central of nu.studer.credentials
+    * [HHH-15749] - Hibernate fails when selecting grouped by entities in a specific order
+    * [HHH-15744] - HQL where clause parsing fails with StackOverflow exception
+    * [HHH-15742] - Querying converter attribute fails
+    * [HHH-15731] - Multi-level Derived Tables fail with Unsupported path source: org.hibernate.query.derived.AnonymousTupleSqmPathSource
+    * [HHH-15730] - Hibernate throws NullPointerException if loading an Entity that contains a null Embedded field and enableDirtyTracking = true
+    * [HHH-15721] - NullPointerException in BaseSqmToSqlAstConverter.visitJunctionPredicate with combination of treats
+    * [HHH-15718] - Polymorphic queries with condition do not work
+    * [HHH-15717] - SQL script executed twice when using persistence.xml jakarta.persistence.sql-load-script-source property with the default sql script name
+    * [HHH-15716] - ClassCastException in QueryParameterBindingsImpl.generateQueryKeyMemento
+    * [HHH-15715] - broken links in 6 docs
+    * [HHH-15713] - UnknownTableReferenceException on @ElementCollection of @Embeddable containing a @MayToOne with a @ManyToMany
+    * [HHH-15711] - ArgumentTypesValidator doesn't support enums in string functions
+    * [HHH-15703] - SqlFunction does not render the fragment after the last parameter
+    * [HHH-15699] - HibernateException: Found shared references to a collection when ShareCacheMode.All or ShareCacheMode.DISABLE_SELECTIVE
+    * [HHH-15695] - Batch Fetching, Embeddable with an Association is considered null when all the other Embeddable attributes are null 
+    * [HHH-15694] - HibernateException: Unable to resolve property xyz on ManyToOne with BatchSize
+    * [HHH-15686] - Envers incorrect key parameter order in insert statement when InheritanceType.JOINED and @Embeddable ID
+    * [HHH-15674] - @NamedEntityGraph not working on entity that have composite PK
+    * [HHH-15666] - When a reference entry is found in the Second Level Cache there is not need to set its values 
+    * [HHH-15658] - Embeddable with more fields than the parent fails with Index out of Bounds
+    * [HHH-15656] - use privileged action when invoking ScheduledExecutorService.shutdown
+    * [HHH-15655] - ByteBuddyState should use privileged action when defining classes
+    * [HHH-15653] - Named Native Query cannot be registered/used with named parameters
+    * [HHH-15648] - Fetching association and using implicit path in condition fails
+    * [HHH-15646] - Using a generic DTO i get a ClassCastException: class sun.reflect.generics.reflectiveObjects.TypeVariableImpl cannot be cast to class java.lang.reflect.ParameterizedType
+    * [HHH-15644] - ClassCastException when batch-fetching association in embeddable
+    * [HHH-15640] - ElementCollection with SubSelect FetchMode throws NPE, "ownerEntry" is null
+    * [HHH-15634] - Lazy basic property does not get updated on change
+    * [HHH-15624] - java.lang.ClassCastException: class sun.reflect.generics.reflectiveObjects.WildcardTypeImpl cannot be cast to class java.lang.reflect.ParameterizedType when using generics and Wildcard
+    * [HHH-15608] - Error In Native Query where column is mapped twice
+    * [HHH-15606] - @OneToOne(mappedBy = ..., fetch = LAZY) in embedded leads to IllegalArgumentException: Can not set [...] to LazyPropertyInitializer$1
+
+** Improvement
+    * [HHH-15836] - Cleanup unneccessary String <> Serializable casts in TimestampsCacheEnabledImpl
+    * [HHH-15835] - Avoid using functions in PersistenceContext#clear implementation
+    * [HHH-15825] - Avoid pointless auto-boxing of timestamp in QueryResult's CacheItem 
+    * [HHH-15811] - Avoid secondary super-type cache pollution when casting to AttributeMapping
+    * [HHH-15810] - Avoid secondary super-type cache pollution when casting to EntityInitializer
+    * [HHH-15809] - Secondary super-type cache pollution mitigations for HibernateBasicProxy
+    * [HHH-15808] - ByteBuddyProxyFactory#getHibernateProxy is triggering type pollution via generic PrivilegedAction
+    * [HHH-15804] - Avoid JDK functional interfaces in ManagedTypeHelper
+    * [HHH-15803] - Have the default EmptyInterceptor avoid triggering type pollution
+    * [HHH-15793] - Mitigate type pollution on ColumnReference#getExpressionType
+    * [HHH-15790] - Secondary super-type cache pollution mitigations for Enhanced Proxies and Components
+    * [HHH-15787] - DefaultMergeEventlistener#onMerge is performing runtime services lookup
+    * [HHH-15779] - Avoid stateful lambdas in hot processing of JdbcValuesResultSetImpl
+    * [HHH-15776] - Avoid type checking for ManagedEntity in StatefulPersistenceContext#addReferenceEntry
+    * [HHH-15728] - Consider parameter values in QueryKey hashCode but disregard firstResult/maxResults
+    * [HHH-15719] - Hint UniqueSematics.NONE for entity queries without collection join fetches
+    * [HHH-15662] - ClasscastException caused by check for Managed rather than ManagedEntity
+    * [HHH-15651] - StatefulPersistenceContext#clear shouldn't need defensive copies for iteration
+
+
 Changes in 6.1.5.Final (October 28, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

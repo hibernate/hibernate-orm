@@ -228,11 +228,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void clear() {
 		if ( proxiesByKey != null ) {
-			proxiesByKey.forEach( (k,o) -> {
-				if ( o != null) {
-					HibernateProxy.extractLazyInitializer( o ).unsetSession();
+			//Strictly avoid lambdas in this case
+			for ( Object value : proxiesByKey.values() ) {
+				if ( value != null) {
+					HibernateProxy.extractLazyInitializer( value ).unsetSession();
 				}
-			} );
+			}
 		}
 
 		entityEntryContext.processEachEntity( StatefulPersistenceContext::processEntityOnClear );

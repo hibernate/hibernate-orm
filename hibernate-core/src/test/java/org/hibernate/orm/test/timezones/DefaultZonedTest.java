@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,8 +36,8 @@ public class DefaultZonedTest {
 			Zoned z = s.find(Zoned.class, id);
 			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
-				assertEquals( nowZoned.toInstant().toEpochMilli()/30, z.zonedDateTime.toInstant().toEpochMilli()/30 );
-				assertEquals( nowOffset.toInstant().toEpochMilli()/30, z.offsetDateTime.toInstant().toEpochMilli()/30 );
+				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
+				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
 			}
 			else {
 				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );

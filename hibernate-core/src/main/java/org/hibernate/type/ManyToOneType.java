@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 import org.hibernate.AssertionFailure;
@@ -157,7 +156,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public Serializable disassemble(
+	public Object disassemble(
 			Object value,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
@@ -184,7 +183,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
@@ -204,7 +203,7 @@ public class ManyToOneType extends EntityType {
 
 	@Override
 	public Object assemble(
-			Serializable oid,
+			Object oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
 		
@@ -221,13 +220,13 @@ public class ManyToOneType extends EntityType {
 		}
 	}
 
-	private Object assembleId(Serializable oid, SharedSessionContractImplementor session) {
+	private Object assembleId(Object oid, SharedSessionContractImplementor session) {
 		//the owner of the association is not the owner of the id
 		return getIdentifierType( session ).assemble( oid, session, null );
 	}
 
 	@Override
-	public void beforeAssemble(Serializable oid, SharedSessionContractImplementor session) {
+	public void beforeAssemble(Object oid, SharedSessionContractImplementor session) {
 		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
 	}
 

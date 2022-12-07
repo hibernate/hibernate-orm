@@ -96,7 +96,7 @@ public class CompositeDateTimeUserType implements CompositeUserType<CompositeDat
 	}
 
 	@Override
-	public CompositeDateTime assemble(Serializable cached, Object owner) {
+	public CompositeDateTime assemble(Object cached, Object owner) {
 		return deepCopy( (CompositeDateTime) cached );
 	}
 

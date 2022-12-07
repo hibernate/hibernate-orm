@@ -6,7 +6,6 @@
  */
 package org.hibernate.usertype;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -122,7 +121,7 @@ public interface UserType<J> {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	Serializable disassemble(J value);
+	Object disassemble(J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -132,7 +131,7 @@ public interface UserType<J> {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	J assemble(Serializable cached, Object owner);
+	J assemble(Object cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

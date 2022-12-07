@@ -82,7 +82,7 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	public Object assemble(Object cached, Object owner) throws HibernateException {
 		return cached;
 	}
 

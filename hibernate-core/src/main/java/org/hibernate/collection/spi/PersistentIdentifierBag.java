@@ -225,7 +225,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public Object disassemble(CollectionPersister persister) {
-		final Serializable[] result = new Serializable[ values.size() * 2 ];
+		final Object[] result = new Object[ values.size() * 2 ];
 		int i = 0;
 		for ( int j=0; j< values.size(); j++ ) {
 			final Object value = values.get( j );

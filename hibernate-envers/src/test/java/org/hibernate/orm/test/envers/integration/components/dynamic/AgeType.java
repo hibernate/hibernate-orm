@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.envers.integration.components.dynamic;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -60,12 +59,12 @@ public class AgeType implements UserType<Age> {
 	}
 
 	@Override
-	public Serializable disassemble(Age value) throws HibernateException {
+	public Object disassemble(Age value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Age assemble(Serializable cached, Object owner) throws HibernateException {
+	public Age assemble(Object cached, Object owner) throws HibernateException {
 		return null;
 	}
 

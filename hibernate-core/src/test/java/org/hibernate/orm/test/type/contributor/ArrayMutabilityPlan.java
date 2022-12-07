@@ -37,12 +37,12 @@ public class ArrayMutabilityPlan implements MutabilityPlan<Array> {
 	}
 
 	@Override
-	public Serializable disassemble(Array value, SharedSessionContract session) {
+	public Object disassemble(Array value, SharedSessionContract session) {
 		return ArrayJavaType.INSTANCE.toString( value );
 	}
 
 	@Override
-	public Array assemble(Serializable cached, SharedSessionContract session) {
+	public Array assemble(Object cached, SharedSessionContract session) {
 		return ArrayJavaType.INSTANCE.fromString( (String) cached );
 	}
 }

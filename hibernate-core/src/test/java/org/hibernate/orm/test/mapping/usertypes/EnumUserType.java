@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.usertypes;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -96,12 +95,12 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return false;
 	}
 
-	public T assemble(Serializable cached, Object owner) throws HibernateException {
+	public T assemble(Object cached, Object owner) throws HibernateException {
 		//noinspection unchecked
 		return (T) cached;
 	}
 
-	public Serializable disassemble(T value) throws HibernateException {
+	public Object disassemble(T value) throws HibernateException {
 		return value;
 	}
 

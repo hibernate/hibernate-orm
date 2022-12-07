@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.envers.entities.ids;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -71,11 +70,11 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return false;
 	}
 
-	public Serializable disassemble(CustomEnum value) throws HibernateException {
+	public Object disassemble(CustomEnum value) throws HibernateException {
 		return value;
 	}
 
-	public CustomEnum assemble(Serializable cached, Object owner) throws HibernateException {
+	public CustomEnum assemble(Object cached, Object owner) throws HibernateException {
 		return (CustomEnum) cached;
 	}
 

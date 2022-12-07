@@ -8,7 +8,6 @@
 //$Id$
 package org.hibernate.orm.test.annotations.generics;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -65,11 +64,11 @@ public class StateType implements UserType<State> {
 		return false;
 	}
 
-	public Serializable disassemble(State value) throws HibernateException {
+	public Object disassemble(State value) throws HibernateException {
 		return value;
 	}
 
-	public State assemble(Serializable cached, Object owner) throws HibernateException {
+	public State assemble(Object cached, Object owner) throws HibernateException {
 		return (State) cached;
 	}
 

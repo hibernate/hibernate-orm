@@ -6,8 +6,6 @@
  */
 package org.hibernate.cache.spi.entry;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -61,7 +59,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
-	public Serializable[] getDisassembledState() {
+	public Object[] getDisassembledState() {
 		// reference data is not disassembled into the cache
 		return null;
 	}

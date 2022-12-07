@@ -6,8 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -68,7 +66,7 @@ public class SpecialOneToOneType extends OneToOneType {
 
 	// TODO: copy/paste from ManyToOneType
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 
 		if (value==null) {
@@ -89,7 +87,7 @@ public class SpecialOneToOneType extends OneToOneType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
@@ -108,7 +106,7 @@ public class SpecialOneToOneType extends OneToOneType {
 	}
 
 	@Override
-	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner)
+	public Object assemble(Object oid, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)

@@ -67,12 +67,12 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType assemble(Serializable cached, Object owner) throws HibernateException {
+	public RevisionType assemble(Object cached, Object owner) throws HibernateException {
 		return (RevisionType) cached;
 	}
 
 	@Override
-	public Serializable disassemble(RevisionType value) throws HibernateException {
+	public Object disassemble(RevisionType value) throws HibernateException {
 		return value;
 	}
 

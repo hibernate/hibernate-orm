@@ -164,12 +164,12 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public Serializable disassemble(CustomId value) throws HibernateException {
+		public Object disassemble(CustomId value) throws HibernateException {
 			return value;
 		}
 
 		@Override
-		public CustomId assemble(Serializable cached, Object owner) throws HibernateException {
+		public CustomId assemble(Object cached, Object owner) throws HibernateException {
 			return (CustomId) cached;
 		}
 

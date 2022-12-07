@@ -29,13 +29,13 @@ class CacheEntryHelper {
 	 *
 	 * @return The disassembled state
 	 */
-	public static Serializable[] disassemble(
+	public static Object[] disassemble(
 			final Object[] row,
 			final Type[] types,
 			final boolean[] nonCacheable,
 			final SharedSessionContractImplementor session,
 			final Object owner) {
-		Serializable[] disassembled = new Serializable[row.length];
+		Object[] disassembled = new Object[row.length];
 		for ( int i = 0; i < row.length; i++ ) {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
 				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -61,7 +61,7 @@ class CacheEntryHelper {
 	 * @return The assembled state
 	 */
 	public static Object[] assemble(
-			final Serializable[] row,
+			final Object[] row,
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner) {

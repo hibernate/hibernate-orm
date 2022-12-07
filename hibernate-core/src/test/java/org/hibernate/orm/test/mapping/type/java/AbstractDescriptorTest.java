@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.mapping.type.java;
-import java.io.Serializable;
+
 import java.sql.Blob;
 import java.sql.Clob;
 
@@ -90,7 +90,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		// ensure the symmetry of assemble/disassebly
 		//		NOTE: these should not use Session, so we just pass null
 
-		Serializable cached = typeDescriptor.getMutabilityPlan().disassemble( testData.copyOfOriginalValue, null );
+		Object cached = typeDescriptor.getMutabilityPlan().disassemble( testData.copyOfOriginalValue, null );
 		if ( ! shouldBeMutable() ) {
 			assertTrue( cached == testData.copyOfOriginalValue );
 		}

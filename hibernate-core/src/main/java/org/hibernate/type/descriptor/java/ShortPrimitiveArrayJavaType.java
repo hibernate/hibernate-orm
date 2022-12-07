@@ -185,12 +185,12 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 		}
 
 		@Override
-		public Serializable disassemble(short[] value, SharedSessionContract session) {
+		public Object disassemble(short[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public short[] assemble(Serializable cached, SharedSessionContract session) {
+		public short[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (short[]) cached );
 		}
 

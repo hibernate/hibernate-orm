@@ -30,12 +30,12 @@ public class ComponentArrayMutabilityPlan implements MutabilityPlan<Object[]> {
 	}
 
 	@Override
-	public Serializable disassemble(Object[] value, SharedSessionContract session) {
-		return (Serializable) deepCopy( value );
+	public Object disassemble(Object[] value, SharedSessionContract session) {
+		return deepCopy( value );
 	}
 
 	@Override
-	public Object[] assemble(Serializable cached, SharedSessionContract session) {
+	public Object[] assemble(Object cached, SharedSessionContract session) {
 		return deepCopy( (Object[]) cached );
 	}
 

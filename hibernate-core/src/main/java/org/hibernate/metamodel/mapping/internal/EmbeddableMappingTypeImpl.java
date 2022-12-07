@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -345,12 +344,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						}
 
 						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
+						public Object disassemble(Object value, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 
 						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
+						public Object assemble(Object cached, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 					};

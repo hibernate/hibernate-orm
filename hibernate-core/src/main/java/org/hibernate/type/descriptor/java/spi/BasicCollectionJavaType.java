@@ -470,12 +470,12 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 
 		@Override
-		public Serializable disassemble(C value, SharedSessionContract session) {
-			return (Serializable) deepCopy( value );
+		public Object disassemble(C value, SharedSessionContract session) {
+			return deepCopy( value );
 		}
 
 		@Override
-		public C assemble(Serializable cached, SharedSessionContract session) {
+		public C assemble(Object cached, SharedSessionContract session) {
 			//noinspection unchecked
 			return deepCopy( (C) cached );
 		}

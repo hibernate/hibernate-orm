@@ -50,7 +50,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 
 		if (value==null) {
@@ -62,7 +62,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
@@ -72,7 +72,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
+	public Object assemble(Object cached, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		if ( cached==null ) {
 			return null;
@@ -144,7 +144,7 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {}
+	public void beforeAssemble(Object cached, SharedSessionContractImplementor session) {}
 
 	/*public Object copy(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
 	throws HibernateException {

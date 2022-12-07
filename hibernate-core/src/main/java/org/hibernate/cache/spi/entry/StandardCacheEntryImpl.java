@@ -25,7 +25,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class StandardCacheEntryImpl implements CacheEntry {
 
-	private final Serializable[] disassembledState;
+	private final Object[] disassembledState;
 	private final Object version;
 	private final String subclass;
 
@@ -59,7 +59,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	}
 
 	StandardCacheEntryImpl(Serializable[] disassembledState, String subclass, Object version) {
-		this.disassembledState = disassembledState;
+		this.disassembledState = new Serializable[][] { disassembledState };
 		this.subclass = subclass;
 		this.version = version;
 	}
@@ -72,7 +72,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
-	public Serializable[] getDisassembledState() {
+	public Object[] getDisassembledState() {
 		// todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
 		// this should be refactored to instead expose a method to assemble an EntityEntry based on this
 		// state for return.

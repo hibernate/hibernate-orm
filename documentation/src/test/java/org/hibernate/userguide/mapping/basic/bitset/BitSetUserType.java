@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.mapping.basic.bitset;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -91,13 +90,13 @@ public class BitSetUserType implements UserType<BitSet> {
     }
 
     @Override
-    public Serializable disassemble(BitSet value)
+    public Object disassemble(BitSet value)
 			throws HibernateException {
         return deepCopy(value);
     }
 
     @Override
-    public BitSet assemble(Serializable cached, Object owner)
+    public BitSet assemble(Object cached, Object owner)
 			throws HibernateException {
         return deepCopy( (BitSet) cached );
     }

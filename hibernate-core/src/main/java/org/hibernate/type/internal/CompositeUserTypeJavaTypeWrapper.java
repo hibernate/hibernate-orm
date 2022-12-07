@@ -140,12 +140,12 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 		}
 
 		@Override
-		public Serializable disassemble(J value, SharedSessionContract session) {
+		public Object disassemble(J value, SharedSessionContract session) {
 			return userType.disassemble( value );
 		}
 
 		@Override
-		public J assemble(Serializable cached, SharedSessionContract session) {
+		public J assemble(Object cached, SharedSessionContract session) {
 			return userType.assemble( cached, null );
 		}
 	}

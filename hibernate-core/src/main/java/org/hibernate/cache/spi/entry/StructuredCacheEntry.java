@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

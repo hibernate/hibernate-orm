@@ -8,7 +8,6 @@
 //$Id: RowIdType.java 6477 2005-04-21 07:39:21Z oneovthafew $
 package org.hibernate.orm.test.rowid;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,11 +58,11 @@ public class RowIdType implements UserType<Object>{
 		return false;
 	}
 
-	public Serializable disassemble(Object value) throws HibernateException {
+	public Object disassemble(Object value) throws HibernateException {
 		return null;
 	}
 
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	public Object assemble(Object cached, Object owner) throws HibernateException {
 		return null;
 	}
 

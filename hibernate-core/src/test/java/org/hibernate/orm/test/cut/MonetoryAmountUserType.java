@@ -81,7 +81,7 @@ public class MonetoryAmountUserType implements CompositeUserType<MonetoryAmount>
 	}
 
 	@Override
-	public MonetoryAmount assemble(Serializable cached, Object owner)
+	public MonetoryAmount assemble(Object cached, Object owner)
 			throws HibernateException {
 		return deepCopy( (MonetoryAmount) cached );
 	}

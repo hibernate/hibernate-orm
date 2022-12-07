@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -160,12 +159,12 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public Serializable disassemble(Object value) throws HibernateException {
+		public Object disassemble(Object value) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		public Object assemble(Object cached, Object owner) throws HibernateException {
 			return null;
 		}
 

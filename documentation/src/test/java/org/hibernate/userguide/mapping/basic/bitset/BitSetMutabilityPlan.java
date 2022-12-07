@@ -32,12 +32,12 @@ public class BitSetMutabilityPlan implements MutabilityPlan<BitSet> {
 	}
 
 	@Override
-	public Serializable disassemble(BitSet value, SharedSessionContract session) {
+	public Object disassemble(BitSet value, SharedSessionContract session) {
 		return value.toByteArray();
 	}
 
 	@Override
-	public BitSet assemble(Serializable cached, SharedSessionContract session) {
+	public BitSet assemble(Object cached, SharedSessionContract session) {
 		return BitSet.valueOf((byte[]) cached);
 	}
 }

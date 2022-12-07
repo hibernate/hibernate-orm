@@ -192,7 +192,6 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.internal.EmptyAttributeMappingsMap;
 import org.hibernate.persister.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -1740,9 +1739,9 @@ public abstract class AbstractEntityPersister
 		LOG.trace( "Initializing lazy properties from second-level cache" );
 
 		Object result = null;
-		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
+		Object[] disassembledValues = cacheEntry.getDisassembledState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-			final Serializable cachedValue = disassembledValues[lazyPropertyNumbers[j]];
+			final Object cachedValue = disassembledValues[lazyPropertyNumbers[j]];
 			final Type lazyPropertyType = lazyPropertyTypes[j];
 			final String propertyName = lazyPropertyNames[j];
 			if (cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY) {

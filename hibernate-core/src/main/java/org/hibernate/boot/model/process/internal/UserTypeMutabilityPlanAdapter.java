@@ -33,12 +33,12 @@ public class UserTypeMutabilityPlanAdapter<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	public Serializable disassemble(T value, SharedSessionContract session) {
+	public Object disassemble(T value, SharedSessionContract session) {
 		return userType.disassemble( value );
 	}
 
 	@Override
-	public T assemble(Serializable cached, SharedSessionContract session) {
+	public T assemble(Object cached, SharedSessionContract session) {
 		return userType.assemble( cached, null );
 	}
 }

@@ -346,7 +346,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	default Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	default Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		return disassemble( value, null, null );
 	}
 
@@ -363,7 +363,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	Object disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble(Object, SharedSessionContractImplementor, Object)}
@@ -376,7 +376,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	Object assemble(Object cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * Called before assembling a query result set from the query cache, to allow batch fetching
@@ -385,7 +385,7 @@ public interface Type extends Serializable {
 	 * @param cached The key
 	 * @param session The originating session
 	 */
-	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
+	void beforeAssemble(Object cached, SharedSessionContractImplementor session);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

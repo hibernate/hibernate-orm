@@ -281,7 +281,7 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
-		final Serializable[] result = new Serializable[ map.size() * 2 ];
+		final Object[] result = new Object[ map.size() * 2 ];
 		final Iterator<Entry<K,E>> itr = map.entrySet().iterator();
 		int i=0;
 		while ( itr.hasNext() ) {

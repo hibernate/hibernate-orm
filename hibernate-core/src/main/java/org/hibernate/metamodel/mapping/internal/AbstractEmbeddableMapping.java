@@ -341,12 +341,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						}
 
 						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
+						public Object disassemble(Object value, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 
 						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
+						public Object assemble(Object cached, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 					};

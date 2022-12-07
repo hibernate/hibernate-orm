@@ -354,12 +354,12 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 
 		@Override
-		public Serializable disassemble(T[] value, SharedSessionContract session) {
+		public Object disassemble(T[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public T[] assemble(Serializable cached, SharedSessionContract session) {
+		public T[] assemble(Object cached, SharedSessionContract session) {
 			//noinspection unchecked
 			return deepCopy( (T[]) cached );
 		}

@@ -185,12 +185,12 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 		}
 
 		@Override
-		public Serializable disassemble(float[] value, SharedSessionContract session) {
+		public Object disassemble(float[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public float[] assemble(Serializable cached, SharedSessionContract session) {
+		public float[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (float[]) cached );
 		}
 

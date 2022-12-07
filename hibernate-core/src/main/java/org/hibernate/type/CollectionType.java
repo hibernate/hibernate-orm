@@ -244,7 +244,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		//remember the uk value
 
@@ -264,12 +264,12 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		throw new UnsupportedOperationException( "CollectionType not supported as part of cache key!" );
 	}
 
 	@Override
-	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
+	public Object assemble(Object cached, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		//we must use the "remembered" uk value, since it is
 		//not available from the EntityEntry during assembly

@@ -323,7 +323,7 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
-		final Serializable[] result = new Serializable[ set.size() ];
+		final Object[] result = new Object[ set.size() ];
 		final Iterator<E> itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {

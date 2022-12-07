@@ -43,11 +43,11 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			return value;
 		}
 
-		public Serializable disassemble(NClob value, SharedSessionContract session) {
+		public Object disassemble(NClob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
-		public NClob assemble(Serializable cached, SharedSessionContract session) {
+		public NClob assemble(Object cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 	}

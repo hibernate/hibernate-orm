@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.type.contributor.usertype;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -94,13 +93,13 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
     }
 
     @Override
-    public Serializable disassemble(StringWrapper value)
+    public Object disassemble(StringWrapper value)
 			throws HibernateException {
         return deepCopy( value );
     }
 
     @Override
-    public StringWrapper assemble(Serializable cached, Object owner)
+    public StringWrapper assemble(Object cached, Object owner)
 			throws HibernateException {
         return deepCopy( (StringWrapper) cached );
     }

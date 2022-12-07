@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -188,7 +187,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Serializable discriminator = metaType.disassemble( value, session, value );
+		final Object discriminator = metaType.disassemble( value, session, value );
 		return discriminator;
 	}
 

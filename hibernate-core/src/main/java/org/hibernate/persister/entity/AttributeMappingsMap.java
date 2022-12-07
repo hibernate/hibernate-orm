@@ -10,9 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.internal.EmptyAttributeMappingsMap;
 
+@Incubating
 public interface AttributeMappingsMap {
 
 	void forEachValue(Consumer<? super AttributeMapping> action);

@@ -79,12 +79,12 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 		return x.hashCode();
 	}
 
-	public Integer assemble(Serializable cached, Object owner)
+	public Integer assemble(Object cached, Object owner)
 			throws HibernateException {
 		return (Integer) cached;
 	}
 
-	public Serializable disassemble(Integer value) throws HibernateException {
+	public Object disassemble(Integer value) throws HibernateException {
 		return value;
 	}
 

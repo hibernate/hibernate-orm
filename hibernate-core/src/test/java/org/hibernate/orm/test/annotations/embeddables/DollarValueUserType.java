@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,12 +65,12 @@ public class DollarValueUserType implements UserType<DollarValue> {
 	}
 
 	@Override
-	public Serializable disassemble(DollarValue value) throws HibernateException {
+	public Object disassemble(DollarValue value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public DollarValue assemble(Serializable cached, Object owner)
+	public DollarValue assemble(Object cached, Object owner)
 			throws HibernateException {
 		return null;
 	}

@@ -172,7 +172,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
+	public Object assemble(Object cached, SharedSessionContractImplementor session, Object owner) {
 		final J assembled = getUserType().assemble( cached, owner );
 		// Since UserType#assemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,
@@ -191,18 +191,18 @@ public class CustomType<J>
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
 		return (Serializable) disassemble( value, session );
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		return (Serializable) disassemble( value, (SharedSessionContractImplementor) null );
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Serializable disassembled = getUserType().disassemble( (J) value );
+		final Object disassembled = getUserType().disassemble( (J) value );
 		// Since UserType#disassemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,
 		// in which case we will try to use a converter for disassembling,

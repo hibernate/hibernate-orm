@@ -185,12 +185,12 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 		}
 
 		@Override
-		public Serializable disassemble(boolean[] value, SharedSessionContract session) {
+		public Object disassemble(boolean[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public boolean[] assemble(Serializable cached, SharedSessionContract session) {
+		public boolean[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (boolean[]) cached );
 		}
 

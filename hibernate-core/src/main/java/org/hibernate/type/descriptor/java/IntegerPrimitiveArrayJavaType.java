@@ -185,12 +185,12 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 		}
 
 		@Override
-		public Serializable disassemble(int[] value, SharedSessionContract session) {
+		public Object disassemble(int[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public int[] assemble(Serializable cached, SharedSessionContract session) {
+		public int[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (int[]) cached );
 		}
 

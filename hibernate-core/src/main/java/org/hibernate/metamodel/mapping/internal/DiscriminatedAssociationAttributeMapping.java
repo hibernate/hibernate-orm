@@ -360,7 +360,7 @@ public class DiscriminatedAssociationAttributeMapping
 		}
 
 		@Override
-		public Serializable disassemble(Object value, SharedSessionContract session) {
+		public Object disassemble(Object value, SharedSessionContract session) {
 //			if ( value == null ) {
 //				return null;
 //			}
@@ -383,7 +383,7 @@ public class DiscriminatedAssociationAttributeMapping
 		}
 
 		@Override
-		public Object assemble(Serializable cached, SharedSessionContract session) {
+		public Object assemble(Object cached, SharedSessionContract session) {
 //			final AnyType.ObjectTypeCacheEntry e = (AnyType.ObjectTypeCacheEntry) cached;
 //			return e == null ? null : session.internalLoad( e.entityName, e.id, eager, false );
 

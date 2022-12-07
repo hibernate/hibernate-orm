@@ -196,7 +196,7 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> assemble(final Serializable cached, final Object owner) throws HibernateException {
+		public List<String> assemble(final Object cached, final Object owner) throws HibernateException {
 			return (List<String>) cached;
 		}
 
@@ -207,7 +207,7 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public Serializable disassemble(final List<String> o) throws HibernateException {
+		public Object disassemble(final List<String> o) throws HibernateException {
 			return (Serializable) o;
 		}
 

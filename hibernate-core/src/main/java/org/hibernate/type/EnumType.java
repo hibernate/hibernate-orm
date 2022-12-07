@@ -404,12 +404,12 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Serializable disassemble(T value) throws HibernateException {
+	public Object disassemble(T value) throws HibernateException {
 		return (Serializable) enumValueConverter.toRelationalValue( value );
 	}
 
 	@Override
-	public T assemble(Serializable cached, Object owner) throws HibernateException {
+	public T assemble(Object cached, Object owner) throws HibernateException {
 		return enumValueConverter.toDomainValue( cached );
 	}
 

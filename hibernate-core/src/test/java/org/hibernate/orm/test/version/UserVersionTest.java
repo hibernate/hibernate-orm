@@ -168,12 +168,12 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 		}
 
 		@Override
-		public Serializable disassemble(CustomVersion value) {
+		public Object disassemble(CustomVersion value) {
 			return value;
 		}
 
 		@Override
-		public CustomVersion assemble(Serializable cached, Object owner) throws HibernateException {
+		public CustomVersion assemble(Object cached, Object owner) throws HibernateException {
 			return (CustomVersion) cached;
 		}
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -247,17 +246,17 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public final Object disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().disassemble( (T) value, session );
 	}
 
 	@Override
-	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public final Object assemble(Object cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().assemble( cached, session );
 	}
 
 	@Override
-	public final void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {
+	public final void beforeAssemble(Object cached, SharedSessionContractImplementor session) {
 	}
 
 	@Override

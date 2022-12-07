@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.embeddables;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -68,12 +67,12 @@ public class MyDateUserType implements UserType<MyDate> {
 	}
 
 	@Override
-	public Serializable disassemble(MyDate value) throws HibernateException {
+	public Object disassemble(MyDate value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public MyDate assemble(Serializable cached, Object owner)
+	public MyDate assemble(Object cached, Object owner)
 			throws HibernateException {
 		return null;
 	}

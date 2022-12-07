@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.envers.entities.customtype;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,7 +61,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return Types.VARCHAR;
 	}
 
-	public String assemble(Serializable cached, Object owner) throws HibernateException {
+	public String assemble(Object cached, Object owner) throws HibernateException {
 		return (String) cached;
 	}
 
@@ -70,7 +69,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return value;
 	}
 
-	public Serializable disassemble(String value) throws HibernateException {
+	public Object disassemble(String value) throws HibernateException {
 		return value;
 	}
 

@@ -1,6 +1,5 @@
 package org.hibernate.orm.test.type.contributor;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -111,12 +110,12 @@ public class ArrayType implements UserType<Array>, BindableType<Array>, BasicVal
     }
 
     @Override
-    public Serializable disassemble(Array value) throws HibernateException {
+    public Object disassemble(Array value) throws HibernateException {
         return ArrayMutabilityPlan.INSTANCE.disassemble( value, null );
     }
 
     @Override
-    public Array assemble(Serializable cached, Object owner) throws HibernateException {
+    public Array assemble(Object cached, Object owner) throws HibernateException {
         return ArrayMutabilityPlan.INSTANCE.assemble( cached, null );
     }
 

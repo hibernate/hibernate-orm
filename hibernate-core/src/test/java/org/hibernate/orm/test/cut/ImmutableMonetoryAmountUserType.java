@@ -72,7 +72,7 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	public ImmutableMonetoryAmount assemble(Serializable cached, Object owner)
+	public ImmutableMonetoryAmount assemble(Object cached, Object owner)
 			throws HibernateException {
 		return deepCopy( (ImmutableMonetoryAmount) cached );
 	}

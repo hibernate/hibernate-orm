@@ -44,7 +44,7 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	}
 
 	@Override
-	public T assemble(Serializable cached, Object owner) {
+	public T assemble(Object cached, Object owner) {
 		//noinspection unchecked
 		return (T) cached;
 	}

@@ -278,13 +278,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public Object assemble(Object cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		final ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
 		return e == null ? null : session.internalLoad( e.entityName, e.id, eager, false );
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
@@ -301,7 +301,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		throw new UnsupportedOperationException( "AnyType not supported as part of cache key!" );
 	}
 

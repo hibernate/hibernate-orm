@@ -50,12 +50,12 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		}
 
 		@Override
-		public Serializable disassemble(Blob value, SharedSessionContract session) {
+		public Object disassemble(Blob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
 
 		@Override
-		public Blob assemble(Serializable cached, SharedSessionContract session) {
+		public Blob assemble(Object cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Blobs are not cacheable" );
 		}
 	}

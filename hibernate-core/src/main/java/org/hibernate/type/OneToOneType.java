@@ -6,13 +6,10 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -136,17 +133,17 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public Object assemble(Object oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		//this should be a call to resolve(), not resolveIdentifier(),
 		//because it might be a property-ref, and we did not cache the
 		//referenced value

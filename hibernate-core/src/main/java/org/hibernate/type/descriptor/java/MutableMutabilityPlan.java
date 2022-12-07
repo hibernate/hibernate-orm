@@ -30,13 +30,13 @@ public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	}
 
 	@Override
-	public Serializable disassemble(T value, SharedSessionContract session) {
-		return (Serializable) deepCopy( value );
+	public Object disassemble(T value, SharedSessionContract session) {
+		return deepCopy( value );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public T assemble(Serializable cached, SharedSessionContract session) {
+	public T assemble(Object cached, SharedSessionContract session) {
 		return deepCopy( (T) cached );
 	}
 

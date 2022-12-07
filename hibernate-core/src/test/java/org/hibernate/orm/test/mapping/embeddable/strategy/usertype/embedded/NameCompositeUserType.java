@@ -79,7 +79,7 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	public Name assemble(Serializable cached, Object owner) {
+	public Name assemble(Object cached, Object owner) {
 		final String[] parts = (String[]) cached;
 		return new Name( parts[0], parts[1] );
 	}

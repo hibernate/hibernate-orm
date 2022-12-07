@@ -82,7 +82,7 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public MonetaryAmount assemble(Serializable cached, Object owner) throws HibernateException {
+	public MonetaryAmount assemble(Object cached, Object owner) throws HibernateException {
 		return (MonetaryAmount) cached;
 	}
 

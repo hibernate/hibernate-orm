@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -17,7 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
@@ -381,12 +379,12 @@ public class MappingModelCreationHelper {
 						}
 
 						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
+						public Object disassemble(Object value, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 
 						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
+						public Object assemble(Object cached, SharedSessionContract session) {
 							throw new NotYetImplementedFor6Exception( getClass() );
 						}
 					};

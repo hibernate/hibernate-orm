@@ -39,7 +39,7 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @see #assemble
 	 */
-	Serializable disassemble(T value, SharedSessionContract session);
+	Object disassemble(T value, SharedSessionContract session);
 
 	/**
 	 * Assemble a previously {@linkplain #disassemble disassembled} value.  This is used when pulling values from the
@@ -47,5 +47,5 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @see #disassemble
 	 */
-	T assemble(Serializable cached, SharedSessionContract session);
+	T assemble(Object cached, SharedSessionContract session);
 }

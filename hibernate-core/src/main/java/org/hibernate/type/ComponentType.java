@@ -608,7 +608,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
+	public Object disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( value == null ) {
@@ -627,7 +627,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Object disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
@@ -644,7 +644,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner)
+	public Object assemble(Object object, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( object == null ) {

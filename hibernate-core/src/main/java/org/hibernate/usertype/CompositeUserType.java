@@ -114,7 +114,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	J assemble(Serializable cached, Object owner);
+	J assemble(Object cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

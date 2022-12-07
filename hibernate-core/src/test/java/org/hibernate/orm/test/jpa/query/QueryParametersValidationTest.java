@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -157,12 +156,12 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Serializable disassemble(Boolean value) throws HibernateException {
+		public Object disassemble(Boolean value) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Boolean assemble(Serializable cached, Object owner) throws HibernateException {
+		public Boolean assemble(Object cached, Object owner) throws HibernateException {
 			return null;
 		}
 

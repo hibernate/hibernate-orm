@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -88,12 +87,12 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Serializable disassemble(Classification value) throws HibernateException {
+	public Object disassemble(Classification value) throws HibernateException {
 		return ( Classification ) value;
 	}
 
 	@Override
-	public Classification assemble(Serializable cached, Object owner) throws HibernateException {
+	public Classification assemble(Object cached, Object owner) throws HibernateException {
 		return (Classification) cached;
 	}
 

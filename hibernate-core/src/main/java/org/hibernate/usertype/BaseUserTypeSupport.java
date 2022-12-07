@@ -6,7 +6,6 @@
  */
 package org.hibernate.usertype;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -104,12 +103,12 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public Serializable disassemble(T value) throws HibernateException {
+	public Object disassemble(T value) throws HibernateException {
 		return javaType().getMutabilityPlan().disassemble( value, null );
 	}
 
 	@Override
-	public T assemble(Serializable cached, Object owner) throws HibernateException {
+	public T assemble(Object cached, Object owner) throws HibernateException {
 		return javaType().getMutabilityPlan().assemble( cached, null );
 	}
 

@@ -185,12 +185,12 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 		}
 
 		@Override
-		public Serializable disassemble(long[] value, SharedSessionContract session) {
+		public Object disassemble(long[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public long[] assemble(Serializable cached, SharedSessionContract session) {
+		public long[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (long[]) cached );
 		}
 

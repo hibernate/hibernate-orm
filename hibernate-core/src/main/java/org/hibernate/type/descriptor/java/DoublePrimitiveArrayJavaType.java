@@ -185,12 +185,12 @@ public class DoublePrimitiveArrayJavaType extends AbstractArrayJavaType<double[]
 		}
 
 		@Override
-		public Serializable disassemble(double[] value, SharedSessionContract session) {
+		public Object disassemble(double[] value, SharedSessionContract session) {
 			return deepCopy( value );
 		}
 
 		@Override
-		public double[] assemble(Serializable cached, SharedSessionContract session) {
+		public double[] assemble(Object cached, SharedSessionContract session) {
 			return deepCopy( (double[]) cached );
 		}
 

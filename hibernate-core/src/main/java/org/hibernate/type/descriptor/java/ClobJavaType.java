@@ -173,11 +173,11 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 			return value;
 		}
 
-		public Serializable disassemble(Clob value, SharedSessionContract session) {
+		public Object disassemble(Clob value, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 
-		public Clob assemble(Serializable cached, SharedSessionContract session) {
+		public Clob assemble(Object cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
 		}
 	}

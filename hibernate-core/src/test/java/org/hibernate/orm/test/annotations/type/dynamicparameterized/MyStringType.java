@@ -23,7 +23,6 @@
  */
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -136,12 +135,12 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public Serializable disassemble(String value) {
+	public Object disassemble(String value) {
 		return value;
 	}
 
 	@Override
-	public String assemble(Serializable cached, Object owner) {
+	public String assemble(Object cached, Object owner) {
 		return (String) cached;
 	}
 

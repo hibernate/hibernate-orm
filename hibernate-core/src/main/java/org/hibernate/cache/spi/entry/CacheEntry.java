@@ -46,5 +46,5 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The disassembled state
 	 */
-	Serializable[] getDisassembledState();
+	Object[] getDisassembledState();
 }

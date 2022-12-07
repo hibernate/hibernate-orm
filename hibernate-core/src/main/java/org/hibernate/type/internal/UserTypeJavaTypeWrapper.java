@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.internal;
 
-import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.SharedSessionContract;
@@ -175,12 +174,12 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		}
 
 		@Override
-		public Serializable disassemble(J value, SharedSessionContract session) {
+		public Object disassemble(J value, SharedSessionContract session) {
 			return userType.disassemble( value );
 		}
 
 		@Override
-		public J assemble(Serializable cached, SharedSessionContract session) {
+		public J assemble(Object cached, SharedSessionContract session) {
 			return userType.assemble( cached , session);
 		}
 	}

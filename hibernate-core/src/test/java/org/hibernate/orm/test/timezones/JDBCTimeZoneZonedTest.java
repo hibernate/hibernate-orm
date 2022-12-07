@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -20,10 +21,11 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(annotatedClasses = NormalizedZonedTest.Zoned.class)
+@DomainModel(annotatedClasses = JDBCTimeZoneZonedTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE_UTC"))
-public class NormalizedZonedTest {
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
+							@Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "GMT+5")})
+public class JDBCTimeZoneZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
@@ -37,17 +39,19 @@ public class NormalizedZonedTest {
 		});
 		scope.inSession( s-> {
 			Zoned z = s.find(Zoned.class, id);
+			ZoneId systemZone = ZoneId.systemDefault();
+			ZoneOffset systemOffset = systemZone.getRules().getOffset( Instant.now() );
 			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
-				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
-				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
+				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
+				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
 			}
 			else {
-				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );
-				assertEquals( nowOffset.toInstant(), z.offsetDateTime.toInstant() );
+				assertEquals( nowZoned.withZoneSameInstant(systemZone), z.zonedDateTime );
+				assertEquals( nowOffset.withOffsetSameInstant(systemOffset), z.offsetDateTime );
 			}
-			assertEquals( ZoneId.of("Z"), z.zonedDateTime.getZone() );
-			assertEquals( ZoneOffset.ofHours(0), z.offsetDateTime.getOffset() );
+			assertEquals( systemZone, z.zonedDateTime.getZone() );
+			assertEquals( systemOffset, z.offsetDateTime.getOffset() );
 		});
 	}
 

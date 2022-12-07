@@ -2577,12 +2577,12 @@ public interface AvailableSettings {
 	 * type is explicitly specified, a sensible
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 * dialect-specific default type code} is used.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_boolean_jdbc_type=BIT}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_boolean_jdbc_type=BIT}.
 	 *
 	 * @since 6.0
 	 */
@@ -2591,12 +2591,12 @@ public interface AvailableSettings {
 
 	/**
 	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}.
 	 *
 	 * @since 6.0
 	 */
@@ -2604,14 +2604,14 @@ public interface AvailableSettings {
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
-	 * The preferred JDBC type to use for storing duration values.  Falls back to
+	 * The preferred JDBC type to use for storing duration values. Falls back to
 	 * {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND}.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 *Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}.
 	 *
 	 * @since 6.0
 	 */
@@ -2620,13 +2620,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the preferred JDBC type for storing instant values. When no
-	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC} is used.
-	 *
+	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}
+	 * is used.
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}.
 	 *
 	 * @since 6.0
 	 */
@@ -2666,15 +2667,24 @@ public interface AvailableSettings {
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
-	 * Specifies the default strategy for storage of the timezone information
-	 * for zoned datetime types:
-	 * <ul>
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE}, or
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}.
-	 * </ul>
-	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
-	 * meaning that timezone information is not stored by default, but timestamps are
-	 * normalized to UTC instead.
+	 * Specifies the default strategy for storage of the timezone information for the zoned
+	 * datetime types {@link java.time.OffsetDateTime} and {@link java.time.ZonedDateTime}.
+	 * The possible options for this setting are enumerated by
+	 * {@link org.hibernate.annotations.TimeZoneStorageType}.
+	 * <p>
+	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#DEFAULT DEFAULT},
+	 * which guarantees that the {@linkplain java.time.OffsetDateTime#toInstant() instant}
+	 * represented by a zoned datetime type is preserved by a round trip to the database.
+	 * It does <em>not</em> guarantee that the time zone or offset is preserved.
+	 * <p>
+	 * For backward compatibility with older versions of Hibernate, set this property to
+	 * {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE NORMALIZE}.
+	 * <p>
+	 * The default strategy specified using this setting may be overridden using the
+	 * annotation {@link org.hibernate.annotations.TimeZoneStorage}.
+	 *
+	 * @see org.hibernate.annotations.TimeZoneStorageType
+	 * @see org.hibernate.annotations.TimeZoneStorage
 	 *
 	 * @since 6.0
 	 */

@@ -52,6 +52,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * The {@code @CustomSequence} annotation itself implies that {@code id} is
  * a generated value.
  * <p>
+ * An id generator annotation may have members, which are used to configure
+ * the id generator, if either:
+ * <ul>
+ * <li>the id generator implements {@link AnnotationBasedGenerator}, or
+ * <li>the id generator class has a constructor with the same signature as
+ *     {@link AnnotationBasedGenerator#initialize}.
+ * </ul>
  * For a more complete example, see the annotation {@link UuidGenerator} and
  * the corresponding generator class {@link org.hibernate.id.uuid.UuidGenerator}.
  * <p>
@@ -67,15 +74,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface IdGeneratorType {
 	/**
-	 * A class which implements {@link Generator} and has a constructor with
-	 * the signature:
-	 * <pre>{@code
-	 * public GeneratorType(AnnotationType config, Member idMember,
-	 *                      CustomIdGeneratorCreationContext creationContext)
-	 * }</pre>
-	 * where {@code GeneratorType} is the class that implements {@code Generator},
-	 * and {@code AnnotationType} is the annotation type to which this annotation
-	 * was applied.
+	 * A class which implements {@link Generator}.
 	 */
 	Class<? extends Generator> value();
 }

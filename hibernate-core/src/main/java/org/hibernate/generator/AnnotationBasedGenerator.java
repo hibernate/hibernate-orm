@@ -19,6 +19,16 @@ import java.lang.reflect.Member;
  * signature as the {@link #initialize} method. But implementing this interface is
  * slightly more typesafe.
  * <p>
+ * For example, implementing {@code AnnotationBasedGenerator<AnnotationType>} is the
+ * same as providing a constructor with this signature:
+ * <pre>{@code
+ * public GeneratorClass(AnnotationType config, Member idMember,
+ *                      CustomIdGeneratorCreationContext creationContext)
+ * }</pre>
+ * where {@code GeneratorClass} is the class that implements {@code Generator}, and
+ * {@code AnnotationType} is the generator annotation type used to configure the
+ * generator.
+ * <p>
  * Every instance of this class must implement either {@link InMemoryGenerator} or
  * {@link InDatabaseGenerator}.
  *

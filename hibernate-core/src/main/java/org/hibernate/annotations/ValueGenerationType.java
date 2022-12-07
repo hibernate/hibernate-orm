@@ -56,9 +56,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     database.
  * </ul>
  * A generator annotation may have members, which are used to configure the
- * generation strategy, when the strategy instance in initialized via
- * {@link AnnotationBasedGenerator#initialize}.
- * <p>
+ * value generator, if either:
+ * <ul>
+ * <li>the value generator implements {@link AnnotationBasedGenerator}, or
+ * <li>the value generator class has a constructor with the same signature as
+ *     {@link AnnotationBasedGenerator#initialize}.
+ * </ul>
  * There are several excellent examples of the use of this machinery right
  * here in this package. {@link TenantId} and its corresponding generator
  * {@link TenantIdGeneration} are a good place to start.
@@ -77,11 +80,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ValueGenerationType {
 	/**
-	 * A class that implements {@link Generator}.
-	 * <p>
-	 * If the generator annotation has members used to configure the
-	 * generation strategy instance, the strategy should implement
-	 * {@link AnnotationBasedGenerator}.
+	 * A class which implements {@link Generator}.
 	 */
 	Class<? extends Generator> generatedBy();
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.cache.spi.RegionFactory;
@@ -55,7 +54,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final boolean debugEnabled = log.isDebugEnabled();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( debugEnabled ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
@@ -87,7 +86,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
 		final boolean debugEnabled = log.isDebugEnabled();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( debugEnabled ) {
 				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
@@ -114,7 +113,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
@@ -124,7 +123,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	}
 
 	private boolean isSpaceOutOfDate(
-			Serializable space,
+			String space,
 			Long timestamp,
 			SharedSessionContractImplementor session,
 			StatisticsImplementor statistics) {
@@ -165,7 +164,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 
-		for ( Serializable space : spaces ) {
+		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
@@ -174,7 +173,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		return true;
 	}
 
-	private Long getLastUpdateTimestampForSpace(Serializable space, SharedSessionContractImplementor session) {
+	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();

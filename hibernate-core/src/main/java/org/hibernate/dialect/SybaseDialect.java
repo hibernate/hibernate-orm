@@ -306,6 +306,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
+		// Not sure if it's a JDBC driver issue, but it doesn't work
+		return false;
+	}
+
+	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO!!
 		return "dateadd(?1,?2,?3)";

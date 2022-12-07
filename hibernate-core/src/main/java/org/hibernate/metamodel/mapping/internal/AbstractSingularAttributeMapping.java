@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 
 /**
  * @author Steve Ebersole

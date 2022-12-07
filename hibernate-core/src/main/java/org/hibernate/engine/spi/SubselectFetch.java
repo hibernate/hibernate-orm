@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
@@ -104,7 +105,7 @@ public class SubselectFetch {
 
 		return new StandardRegistrationHandler(
 				batchFetchQueue,
-				sqlAst.getQuerySpec(),
+				sqlAst,
 				tableGroup,
 				jdbcParameters,
 				jdbcParameterBindings
@@ -137,7 +138,7 @@ public class SubselectFetch {
 
 	public static class StandardRegistrationHandler implements RegistrationHandler {
 		private final BatchFetchQueue batchFetchQueue;
-		private final QuerySpec loadingSqlAst;
+		private final SelectStatement loadingSqlAst;
 		private final TableGroup ownerTableGroup;
 		private final List<JdbcParameter> loadingJdbcParameters;
 		private final JdbcParameterBindings loadingJdbcParameterBindings;
@@ -145,7 +146,7 @@ public class SubselectFetch {
 
 		private StandardRegistrationHandler(
 				BatchFetchQueue batchFetchQueue,
-				QuerySpec loadingSqlAst,
+				SelectStatement loadingSqlAst,
 				TableGroup ownerTableGroup,
 				List<JdbcParameter> loadingJdbcParameters,
 				JdbcParameterBindings loadingJdbcParameterBindings) {
@@ -160,19 +161,39 @@ public class SubselectFetch {
 			if ( !entry.getDescriptor().hasSubselectLoadableCollections() ) {
 				return;
 			}
-			final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
-					entry.getEntityInitializer().getNavigablePath(),
-					navigablePath -> new SubselectFetch(
-						null,
-						loadingSqlAst,
-						ownerTableGroup,
-						loadingJdbcParameters,
-						loadingJdbcParameterBindings,
-						new HashSet<>()
-				)
-			);
-			subselectFetch.resultingEntityKeys.add( key );
-			batchFetchQueue.addSubselect( key, subselectFetch );
+
+			if ( shouldAddSubselectFetch( entry ) ) {
+				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
+						entry.getEntityInitializer().getNavigablePath(),
+						navigablePath -> new SubselectFetch(
+								null,
+								loadingSqlAst.getQuerySpec(),
+								ownerTableGroup,
+								loadingJdbcParameters,
+								loadingJdbcParameterBindings,
+								new HashSet<>()
+						)
+				);
+				subselectFetch.resultingEntityKeys.add( key );
+				batchFetchQueue.addSubselect( key, subselectFetch );
+			}
+		}
+
+		private boolean shouldAddSubselectFetch(LoadingEntityEntry entry) {
+			if ( entry.getEntityInitializer().isEntityResultInitializer() ) {
+				return true;
+			}
+
+			final NavigablePath entityInitializerParent = entry.getEntityInitializer().getNavigablePath().getParent();
+
+			// We want to add only the collections of the loading entities
+			for ( DomainResult domainResult : loadingSqlAst.getDomainResultDescriptors() ) {
+				if ( domainResult.getNavigablePath().equals( entityInitializerParent ) ) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }

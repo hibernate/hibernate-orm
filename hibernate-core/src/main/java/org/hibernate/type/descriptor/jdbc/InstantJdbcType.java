@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;

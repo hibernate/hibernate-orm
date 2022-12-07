@@ -364,6 +364,13 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get( i ) );
+		}
+	}
+
+	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		attributeMappings.forEach( (attribute) -> {
 			final Object attributeValue = attribute.getValue( domainValue );

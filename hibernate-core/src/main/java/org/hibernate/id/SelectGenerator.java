@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
+import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -24,7 +25,7 @@ import org.hibernate.type.Type;
  * Hibernate.
  * <p>
  * Arguably, this class breaks the natural separation of responsibility between the
- * {@linkplain org.hibernate.tuple.InDatabaseGenerator generator} and the coordinating
+ * {@linkplain InDatabaseGenerator generator} and the coordinating
  * code, since it's role is to specify how the generated value is <em>retrieved</em>.
  *
  * @see org.hibernate.annotations.NaturalId

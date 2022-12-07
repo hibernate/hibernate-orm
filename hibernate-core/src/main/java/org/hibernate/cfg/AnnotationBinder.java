@@ -9,6 +9,8 @@ package org.hibernate.cfg;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +40,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.IdGeneratorType;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
@@ -73,10 +76,12 @@ import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -91,7 +96,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -148,12 +153,12 @@ import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.cfg.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
-import static org.hibernate.cfg.annotations.PropertyBinder.generatorCreator;
 import static org.hibernate.cfg.annotations.PropertyBinder.identifierGeneratorCreator;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.Constraint.hashedName;
@@ -168,6 +173,9 @@ import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
  */
 public final class AnnotationBinder {
 	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
+
+	private static final String OFFSET_DATETIME_CLASS = OffsetDateTime.class.getName();
+	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
 	private AnnotationBinder() {}
 
@@ -517,6 +525,8 @@ public final class AnnotationBinder {
 				bindQueries( annotatedClass, context );
 				bindFilterDefs( annotatedClass, context );
 				//fall through:
+			case IMPORTED:
+				handleImport( annotatedClass, context );
 			case EMBEDDABLE:
 			case NONE:
 				return;
@@ -533,6 +543,15 @@ public final class AnnotationBinder {
 		bindFilterDefs( annotatedClass, context );
 
 		EntityBinder.bindEntityClass( annotatedClass, inheritanceStatePerClass, generators, context );
+	}
+
+	private static void handleImport(XClass annotatedClass, MetadataBuildingContext context) {
+		if ( annotatedClass.isAnnotationPresent(Imported.class) ) {
+			String qualifiedName = annotatedClass.getName();
+			String name = StringHelper.unqualify( qualifiedName );
+			String rename = annotatedClass.getAnnotation(Imported.class).rename();
+			context.getMetadataCollector().addImport( isEmptyAnnotationValue( rename ) ? name : rename, qualifiedName );
+		}
 	}
 
 	private static void detectMappedSuperclassProblems(XClass annotatedClass) {
@@ -1767,31 +1786,6 @@ public final class AnnotationBinder {
 		return null;
 	}
 
-	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
-			XProperty property,
-			XClass returnedClass,
-			MetadataBuildingContext context) {
-		if ( property != null ) {
-			final TimeZoneStorage timeZoneStorage = property.getAnnotation( TimeZoneStorage.class );
-			if ( timeZoneStorage != null ) {
-				switch ( timeZoneStorage.value() ) {
-					case AUTO:
-						if ( context.getBuildingOptions().getDefaultTimeZoneStorage() != TimeZoneStorageStrategy.COLUMN ) {
-							return null;
-						}
-					case COLUMN:
-						switch ( returnedClass.getName() ) {
-							case "java.time.OffsetDateTime":
-								return OffsetDateTimeCompositeUserType.class;
-							case "java.time.ZonedDateTime":
-								return ZonedDateTimeCompositeUserType.class;
-						}
-				}
-			}
-		}
-		return null;
-	}
-
 	private static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
 	}
@@ -2340,11 +2334,6 @@ public final class AnnotationBinder {
 			binder.setInsertable( false );
 			binder.setUpdatable( false );
 		}
-		else {
-			final AnnotatedJoinColumn firstColumn = columns.getJoinColumns().get(0);
-			binder.setInsertable( firstColumn.isInsertable() );
-			binder.setUpdatable( firstColumn.isUpdatable() );
-		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
 		Property prop = binder.makeProperty();
@@ -2485,6 +2474,53 @@ public final class AnnotationBinder {
 			FetchType fetchType) {
 		if ( notFoundAction != null && fetchType == FetchType.LAZY ) {
 			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
+		}
+	}
+
+	private static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
+		if ( useColumnForTimeZoneStorage( property, context ) ) {
+			String returnedClassName = returnedClass.getName();
+			if ( OFFSET_DATETIME_CLASS.equals( returnedClassName ) ) {
+				return OffsetDateTimeCompositeUserType.class;
+			}
+			else if ( ZONED_DATETIME_CLASS.equals( returnedClassName ) ) {
+				return ZonedDateTimeCompositeUserType.class;
+			}
+		}
+		return null;
+	}
+
+	private static boolean isZonedDateTimeClass(String returnedClassName) {
+		return OFFSET_DATETIME_CLASS.equals( returnedClassName )
+			|| ZONED_DATETIME_CLASS.equals( returnedClassName );
+	}
+
+	static boolean useColumnForTimeZoneStorage(XAnnotatedElement element, MetadataBuildingContext context) {
+		final TimeZoneStorage timeZoneStorage = element.getAnnotation( TimeZoneStorage.class );
+		if ( timeZoneStorage == null ) {
+			if ( element instanceof XProperty ) {
+				XProperty property = (XProperty) element;
+				return isZonedDateTimeClass( property.getType().getName() )
+					//no @TimeZoneStorage annotation, so we need to use the default storage strategy
+					&& context.getBuildingOptions().getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.COLUMN;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			switch ( timeZoneStorage.value() ) {
+				case COLUMN:
+					return true;
+				case AUTO:
+					// if the db has native support for timezones, we use that, not a column
+					return context.getBuildingOptions().getTimeZoneSupport() != TimeZoneSupport.NATIVE;
+				default:
+					return false;
+			}
 		}
 	}
 }

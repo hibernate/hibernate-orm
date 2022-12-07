@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 )
 @SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support a CONCAT function")
+@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support a CONCAT function")
 public class SubselectTest {
 
 	@Test

@@ -139,8 +139,7 @@ public class ExceptionTest {
 							fail();
 						}
 						catch ( PersistenceException e ) {
-							Throwable t = e.getCause();
-							assertTrue( t instanceof ConstraintViolationException, "Should be a constraint violation" );
+							assertTrue( e instanceof ConstraintViolationException, "Should be a constraint violation" );
 							entityManager.getTransaction().rollback();
 						}
 					}

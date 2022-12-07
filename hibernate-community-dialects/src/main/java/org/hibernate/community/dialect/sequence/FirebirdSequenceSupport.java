@@ -18,14 +18,14 @@ import org.hibernate.dialect.sequence.SequenceSupport;
  */
 public class FirebirdSequenceSupport extends ANSISequenceSupport {
 
-	public static final SequenceSupport INSTANCE = new FirebirdSequenceSupport() {
+	public static final SequenceSupport INSTANCE = new FirebirdSequenceSupport();
+
+	public static final SequenceSupport FB3_INSTANCE = new FirebirdSequenceSupport() {
 		@Override
 		public String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
-			// NOTE Firebird 3 has an 'off by increment' bug, see
-			// http://tracker.firebirdsql.org/browse/CORE-6084
+			// NOTE Firebird 3 has an 'off by increment' bug, see https://github.com/FirebirdSQL/firebird/issues/6334
 			if (initialValue == 1 && incrementSize == 1) {
 				// Workaround for initial value and increment 1
-				// This workaround also works fine in Firebird 4, so we don't need to add yet another specialization
 				return getCreateSequenceString( sequenceName );
 			}
 			return super.getCreateSequenceString( sequenceName, initialValue, incrementSize);

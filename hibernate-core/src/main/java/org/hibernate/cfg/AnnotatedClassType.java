@@ -7,6 +7,8 @@
 package org.hibernate.cfg;
 
 
+import org.hibernate.annotations.Imported;
+
 /**
  * Type of annotation of a class will give its type
  *
@@ -17,6 +19,10 @@ public enum AnnotatedClassType {
 	 * has no relevant top level annotation
 	 */
 	NONE,
+	/**
+	 * has an {@link Imported} annotation
+	 */
+	IMPORTED,
 	/**
 	 * has an {@link jakarta.persistence.Entity} annotation
 	 */

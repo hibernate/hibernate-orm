@@ -488,6 +488,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return keySelectableMappings.getSelectable( columnIndex );
+	}
+
+	@Override
 	public int visitKeySelectables(int offset, SelectableConsumer consumer) {
 		return keySelectableMappings.forEachSelectable( offset, consumer );
 	}

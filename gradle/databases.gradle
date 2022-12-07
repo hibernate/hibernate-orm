@@ -205,14 +205,14 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 firebird : [
-                        'db.dialect' : 'org.hibernate.dialect.FirebirdDialect',
+                        'db.dialect' : 'org.hibernate.community.dialect.FirebirdDialect',
                         'jdbc.driver': 'org.firebirdsql.jdbc.FBDriver',
                         'jdbc.user'  : 'sysdba',
                         'jdbc.pass'  : 'masterkey',
                         // Overriding default transaction definition (5 seconds instead of infinite wait) to prevent problems in test cleanup
                         // Expects alias 'hibernate_orm_test' in aliases.conf (FB2.5 and earlier) or databases.conf (FB3.0 and later)
                         // Created database must either use default character set NONE, or UTF8 with page size 16384 or higher (to prevent issues with indexes due to keysize)
-                        'jdbc.url'   : 'jdbc:firebirdsql://' + dbHost +'localhost/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5',
+                        'jdbc.url'   : 'jdbc:firebirdsql://' + dbHost +'/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5',
                         'connection.init_sql' : ''
                 ],
         ]

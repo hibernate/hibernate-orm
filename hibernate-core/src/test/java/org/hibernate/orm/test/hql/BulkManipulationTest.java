@@ -33,7 +33,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 import org.junit.Test;
 import org.junit.jupiter.api.Assumptions;
 import junit.framework.AssertionFailedError;

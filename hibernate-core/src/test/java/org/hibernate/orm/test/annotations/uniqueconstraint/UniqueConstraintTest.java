@@ -62,7 +62,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
             fail( "Database constraint non-existent" );
         }
         catch (PersistenceException e) {
-            assertTyping( JDBCException.class, e.getCause() );
+            assertTyping( JDBCException.class, e );
             //success
         }
         finally {

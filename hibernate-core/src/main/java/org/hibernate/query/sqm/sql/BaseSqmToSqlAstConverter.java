@@ -382,8 +382,8 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
-import org.hibernate.tuple.Generator;
-import org.hibernate.tuple.InMemoryGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
@@ -404,6 +404,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
+import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
@@ -1464,7 +1465,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				ExecutionContext executionContext) throws SQLException {
 			getJdbcMapping().getJdbcValueBinder().bind(
 					statement,
-					generator.generate( executionContext.getSession(), null, null ),
+					generator.generate( executionContext.getSession(), null, null, INSERT ),
 					startPosition,
 					executionContext.getSession()
 			);
@@ -2287,11 +2288,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private int indexOfExpression(List<? extends SqmAliasedNode<?>> selections, SqmExpression<?> node) {
 		final int result = indexOfExpression( 0, selections, node );
-		if ( result < 1 ) {
-			return -result;
+		if ( result < 0 ) {
+			return -1;
 		}
 		else {
-			return -1;
+			return result;
 		}
 	}
 
@@ -2307,27 +2308,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						( (SqmDynamicInstantiation<?>) selectableNode ).getArguments(),
 						node
 				);
-				if ( subResult < 0 ) {
+				if ( subResult >= 0 ) {
 					return subResult;
 				}
-				offset = subResult - i;
+				offset = -subResult - i;
 			}
 			else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
 				final List<SqmSelectableNode<?>> selectionItems = ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems();
 				for ( int j = 0; j < selectionItems.size(); j++ ) {
 					if ( selectionItems.get( j ) == node ) {
-						return -( offset + i + j );
+						return offset + i + j;
 					}
 				}
 				offset += selectionItems.size();
 			}
 			else {
 				if ( selectableNode == node ) {
-					return -( offset + i );
+					return offset + i;
 				}
 			}
 		}
-		return offset + selections.size();
+		return -( offset + selections.size() );
 	}
 
 	private boolean selectClauseContains(SqmFrom<?, ?> from) {
@@ -4059,7 +4060,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) subPart;
 		final ForeignKeyDescriptor fkDescriptor = toOneMapping.getForeignKeyDescriptor();
-		final TableReference tableReference = tableGroup.resolveTableReference( fkDescriptor.getTable( toOneMapping.getSideNature() ) );
+		final TableReference tableReference = tableGroup.resolveTableReference( toOneMapping.getContainingTableExpression() );
 
 		final ModelPart fkKeyPart = fkDescriptor.getPart( toOneMapping.getSideNature() );
 		if ( fkKeyPart instanceof BasicValuedModelPart ) {
@@ -5392,11 +5393,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						return resolveEntityPersister( (EntityDomainType<?>) type );
 					}
 				}
-				else if ( parameterJavaType.isEnum() ) {
-					//inferredMapping is JavaObjectType and we cannot deduct the t
-					if ( inferredMapping != null ) {
-						return inferredMapping;
-					}
+				else if ( inferredMapping != null ) {
+					// inferredMapping is JavaObjectType and we cannot deduct the type
+					return inferredMapping;
 				}
 			}
 			return basicTypeForJavaType;
@@ -6503,10 +6502,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		boolean hasAnyTreatUsage = false;
 		for ( SqmPredicate subPredicate : predicate.getPredicates() ) {
 			disjunction.add( (Predicate) subPredicate.accept( this ) );
-			if ( conjunctTreatUsages.isEmpty() ) {
-				conjunctTreatUsagesList.add( null );
-			}
-			else {
+			if ( !conjunctTreatUsages.isEmpty() ) {
 				hasAnyTreatUsage = true;
 				for ( Map.Entry<SqmPath<?>, Set<String>> entry : conjunctTreatUsages.entrySet() ) {
 					conjunctTreatUsagesUnion.computeIfAbsent( entry.getKey(), k -> new HashSet<>() )

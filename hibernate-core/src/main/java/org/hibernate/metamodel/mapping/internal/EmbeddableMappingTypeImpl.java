@@ -78,7 +78,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  * composite fks
  */
 public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping implements SelectableMappings {
-
 	public static EmbeddableMappingTypeImpl from(
 			Component bootDescriptor,
 			CompositeType compositeType,
@@ -784,6 +783,13 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		return findAttributeMapping( name );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			consumer.accept( i, attributeMappings.get(i) );
+		}
 	}
 
 	@Override

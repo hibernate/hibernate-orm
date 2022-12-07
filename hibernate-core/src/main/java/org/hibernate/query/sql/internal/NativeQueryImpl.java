@@ -111,7 +111,7 @@ public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
 	private final String sqlString;
-
+	private final String originalSqlString;
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final List<ParameterOccurrence> parameterOccurrences;
 	private final QueryParameterBindings parameterBindings;
@@ -186,8 +186,12 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 
-		final String mementoSqlString = memento.getSqlString();
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( mementoSqlString, session );
+		this.originalSqlString = memento.getOriginalSqlString();
+
+		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation(
+				originalSqlString,
+				session
+		);
 
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
@@ -322,6 +326,7 @@ public class NativeQueryImpl<R>
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
 
+		this.originalSqlString = sqlString;
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
@@ -383,7 +388,7 @@ public class NativeQueryImpl<R>
 		this.querySpaces = new HashSet<>();
 
 		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
-
+		this.originalSqlString = sqlString;
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
@@ -455,6 +460,7 @@ public class NativeQueryImpl<R>
 		return new NamedNativeQueryMementoImpl(
 				name,
 				sqlString,
+				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
 				null,
 				querySpaces,

@@ -184,7 +184,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (PersistenceException ce) {
 			try {
-				assertTyping( ConstraintViolationException.class, ce.getCause() );
+				assertTyping( ConstraintViolationException.class, ce );
 				//success
 
 			}

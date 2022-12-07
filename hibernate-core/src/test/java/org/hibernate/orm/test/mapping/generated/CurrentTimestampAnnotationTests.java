@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.tuple.GenerationTiming;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,6 +22,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * @author Steve Ebersole
@@ -65,9 +66,7 @@ public class CurrentTimestampAnnotationTests {
 		waitALittle();
 
 		// lastly, make sure we can load it..
-		final AuditedEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( AuditedEntity.class, 1 );
-		} );
+		final AuditedEntity loaded = scope.fromTransaction( (session) -> session.get( AuditedEntity.class, 1 ) );
 
 		assertThat( loaded ).isNotNull();
 		assertThat( loaded.createdAt ).isEqualTo( merged.createdAt );
@@ -82,10 +81,10 @@ public class CurrentTimestampAnnotationTests {
 		public String name;
 
 		//tag::mapping-generated-CurrentTimestamp-ex1[]
-		@CurrentTimestamp( timing = GenerationTiming.INSERT )
+		@CurrentTimestamp(event = INSERT)
 		public Instant createdAt;
 
-		@CurrentTimestamp( timing = GenerationTiming.ALWAYS )
+		@CurrentTimestamp(event = {INSERT, UPDATE})
 		public Instant lastUpdatedAt;
 		//end::mapping-generated-CurrentTimestamp-ex1[]
 

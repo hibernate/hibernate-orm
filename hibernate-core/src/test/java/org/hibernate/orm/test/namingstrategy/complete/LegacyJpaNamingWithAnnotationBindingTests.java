@@ -14,6 +14,9 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Selectable;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
@@ -68,7 +71,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateOrderPrimaryTableName(String name) {
-		assertEquals( "Order", name );
+		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
 	}
 
 	@Override
@@ -172,7 +175,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 
 	@Override
 	protected void validateCustomerOrdersTableName(String name) {
-		assertEquals( "Order", name );
+		assertThat( name, anyOf( equalTo( "Order"), equalTo( "`Order`") ) );
 	}
 
 	@Override

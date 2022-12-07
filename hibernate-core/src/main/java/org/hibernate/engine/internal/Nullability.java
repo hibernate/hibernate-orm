@@ -14,7 +14,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.Generator;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -129,7 +129,7 @@ public final class Nullability {
 	}
 
 	private static boolean generated(Generator generator) {
-		return generator != null && generator.getGenerationTiming().isNotNever();
+		return generator != null && generator.generatesSometimes();
 	}
 
 	/**

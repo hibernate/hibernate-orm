@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Remove;
-import org.hibernate.tuple.SourceGeneration;
+import org.hibernate.generator.internal.SourceGeneration;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

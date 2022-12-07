@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.tuple;
+package org.hibernate.generator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -15,8 +15,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * database via a parameter of a JDBC prepared statement, just like any other field or property
  * value.
  * <p>
- * Any {@link InMemoryGenerator} with {@linkplain #getGenerationTiming() generation timing}
- * {@link GenerationTiming#INSERT} may be used to produce {@linkplain jakarta.persistence.Id
+ * Any {@link InMemoryGenerator} with {@linkplain #getEventTypes() generation event types}
+ * {@link EventTypeSets#INSERT_ONLY} may be used to produce {@linkplain jakarta.persistence.Id
  * identifiers}. The built-in identifier generators all implement the older extension point
  * {@link org.hibernate.id.IdentifierGenerator}, which is a subtype of this interface, but that
  * is no longer a requirement for custom id generators.
@@ -37,13 +37,13 @@ public interface InMemoryGenerator extends Generator {
 	/**
 	 * Generate a value.
 	 *
-	 * @param session The session from which the request originates.
-	 * @param owner The instance of the object owning the attribute for which we are generating a value.
+	 * @param session      The session from which the request originates.
+	 * @param owner        The instance of the object owning the attribute for which we are generating a value.
 	 * @param currentValue The current value assigned to the property, or {@code null}
-	 *
+	 * @param eventType    The type of event that has triggered generation of a new value
 	 * @return The generated value
 	 */
-	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue);
+	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType);
 
 	default boolean generatedByDatabase() {
 		return false;

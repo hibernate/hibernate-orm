@@ -58,7 +58,7 @@ public class EmbeddableIntegratorTest {
 				assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
 			}
 			catch (PersistenceException e) {
-				assertTyping( JDBCException.class, e.getCause() );
+				assertTyping( JDBCException.class, e );
 				sess.getTransaction().rollback();
 			}
 			finally {

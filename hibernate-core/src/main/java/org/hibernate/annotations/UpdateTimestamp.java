@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.CurrentTimestampGeneration;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
 
 /**
  * Specifies that the annotated field of property is a generated <em>update timestamp.</em>

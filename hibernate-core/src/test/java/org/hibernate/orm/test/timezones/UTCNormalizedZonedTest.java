@@ -20,11 +20,10 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(annotatedClasses = ExplicitZonedTest.Zoned.class)
+@DomainModel(annotatedClasses = UTCNormalizedZonedTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = {@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
-							@Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "GMT+5")})
-public class ExplicitZonedTest {
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE_UTC"))
+public class UTCNormalizedZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
@@ -40,15 +39,15 @@ public class ExplicitZonedTest {
 			Zoned z = s.find(Zoned.class, id);
 			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
-				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
-				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
+				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
+				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
 			}
 			else {
 				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );
 				assertEquals( nowOffset.toInstant(), z.offsetDateTime.toInstant() );
 			}
-			assertEquals( ZoneId.systemDefault(), z.zonedDateTime.getZone() );
-			assertEquals( ZoneOffset.systemDefault().normalized(), z.offsetDateTime.getOffset().normalized() );
+			assertEquals( ZoneId.of("Z"), z.zonedDateTime.getZone() );
+			assertEquals( ZoneOffset.ofHours(0), z.offsetDateTime.getOffset() );
 		});
 	}
 

@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -37,17 +38,19 @@ public class PassThruZonedTest {
 		});
 		scope.inSession( s-> {
 			Zoned z = s.find(Zoned.class, id);
+			ZoneId systemZone = ZoneId.systemDefault();
+			ZoneOffset systemOffset = systemZone.getRules().getOffset( Instant.now() );
 			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
 				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
 				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS));
 			}
 			else {
-				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );
-				assertEquals( nowOffset.toInstant(), z.offsetDateTime.toInstant() );
+				assertEquals( nowZoned.withZoneSameInstant(systemZone), z.zonedDateTime );
+				assertEquals( nowOffset.withOffsetSameInstant(systemOffset), z.offsetDateTime );
 			}
-			assertEquals( ZoneId.systemDefault(), z.zonedDateTime.getZone() );
-			assertEquals( ZoneOffset.systemDefault().normalized(), z.offsetDateTime.getOffset().normalized() );
+			assertEquals( systemZone, z.zonedDateTime.getZone() );
+			assertEquals( systemOffset, z.offsetDateTime.getOffset() );
 		});
 	}
 

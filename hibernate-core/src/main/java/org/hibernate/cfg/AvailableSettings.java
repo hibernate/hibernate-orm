@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.util.Calendar;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -1025,11 +1026,18 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Specify a {@linkplain java.util.TimeZone time zone} that should be passed to
+	 * Specifies a {@linkplain java.util.TimeZone time zone} that should be passed to
 	 * {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
-	 * and {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)}
-	 * when binding parameters.
+	 * {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)},
+	 * {@link java.sql.ResultSet#getTimestamp(int, Calendar)}, and
+	 * {@link java.sql.ResultSet#getTime(int, Calendar)} when binding parameters.
 	 * <p>
+	 * The time zone may be given as:
+	 * <ul>
+	 *     <li>an instance of {@link java.util.TimeZone},
+	 *     <li>an instance of {@link java.time.ZoneId}, or
+	 *     <li>a time zone ID string to be passed to {@link java.time.ZoneId#of(String)}.
+	 * </ul>
 	 * By default, the {@linkplain java.util.TimeZone#getDefault() JVM default time zone}
 	 * is assumed by the JDBC driver.
 	 *
@@ -1505,7 +1513,7 @@ public interface AvailableSettings {
 	/**
 	 * Setting to perform {@link org.hibernate.tool.schema.spi.SchemaManagementTool}
 	 * actions automatically as part of the {@link org.hibernate.SessionFactory}
-	 * lifecycle. Valid options are enumeratd by {@link org.hibernate.tool.schema.Action}.
+	 * lifecycle. Valid options are enumerated by {@link org.hibernate.tool.schema.Action}.
 	 * <p>
 	 * Interpreted in combination with {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} and
 	 * {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default

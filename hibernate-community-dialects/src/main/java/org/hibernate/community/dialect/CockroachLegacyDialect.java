@@ -424,6 +424,21 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCurrentTimestampSelection() {
+		return true;
+	}
+
+	@Override
+	public boolean isCurrentTimestampSelectStringCallable() {
+		return false;
+	}
+
+	@Override
+	public String getCurrentTimestampSelectString() {
+		return "select now()";
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}

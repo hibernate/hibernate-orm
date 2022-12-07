@@ -525,45 +525,50 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Column createTimestampColumn(XAnnotatedElement element, String path, MetadataBuildingContext context) {
+		int precision;
 		final Column annotatedColumn = element.getAnnotation( Column.class );
 		if ( annotatedColumn != null ) {
-			return annotatedColumn;
+			if ( !annotatedColumn.name().isEmpty() ) {
+				return annotatedColumn;
+			}
+			precision = annotatedColumn.precision();
 		}
 		else {
-			// Base the name of the synthetic dateTime field on the name of the original attribute
-			final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
-					context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
-							new ImplicitBasicColumnNameSource() {
-								final AttributePath attributePath = AttributePath.parse(path);
-
-								@Override
-								public AttributePath getAttributePath() {
-									return attributePath;
-								}
-
-								@Override
-								public boolean isCollectionElement() {
-									return false;
-								}
-
-								@Override
-								public MetadataBuildingContext getBuildingContext() {
-									return context;
-								}
-							}
-					)
-			);
-			return new ColumnImpl(
-					implicitName.getText(),
-					false,
-					true,
-					true,
-					true,
-					"",
-					"",
-					0
-			);
+			precision = 0;
 		}
+		// Base the name of the synthetic dateTime field on the name of the original attribute
+		final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
+				context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
+						new ImplicitBasicColumnNameSource() {
+							final AttributePath attributePath = AttributePath.parse(path);
+
+							@Override
+							public AttributePath getAttributePath() {
+								return attributePath;
+							}
+
+							@Override
+							public boolean isCollectionElement() {
+								return false;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						}
+				)
+		);
+		return new ColumnImpl(
+				implicitName.getText(),
+				false,
+				true,
+				true,
+				true,
+				"",
+				"",
+				precision
+		);
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(XAnnotatedElement element) {

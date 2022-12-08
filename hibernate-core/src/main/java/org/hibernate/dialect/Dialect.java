@@ -229,6 +229,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -4380,7 +4381,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:

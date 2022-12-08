@@ -14,12 +14,14 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -41,8 +43,10 @@ public final class DateTimeUtils {
 	public static final String FORMAT_STRING_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MILLIS = FORMAT_STRING_TIMESTAMP + ".SSS";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS = FORMAT_STRING_TIMESTAMP + ".SSSSSS";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_NANOS = FORMAT_STRING_TIMESTAMP + ".SSSSSSSSS";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MILLIS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MILLIS + "XXX";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "XXX";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_NANOS + "XXX";
 
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME_WITH_OFFSET, Locale.ENGLISH );
@@ -55,12 +59,20 @@ public final class DateTimeUtils {
 			FORMAT_STRING_TIMESTAMP_WITH_MICROS,
 			Locale.ENGLISH
 	);
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS = DateTimeFormatter.ofPattern(
+			FORMAT_STRING_TIMESTAMP_WITH_NANOS,
+			Locale.ENGLISH
+	);
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET = DateTimeFormatter.ofPattern(
 			FORMAT_STRING_TIMESTAMP_WITH_MILLIS_AND_OFFSET,
 			Locale.ENGLISH
 	);
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET = DateTimeFormatter.ofPattern(
 			FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET,
+			Locale.ENGLISH
+	);
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET = DateTimeFormatter.ofPattern(
+			FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET,
 			Locale.ENGLISH
 	);
 
@@ -96,12 +108,6 @@ public final class DateTimeUtils {
 					Locale.ENGLISH
 			)
 	);
-	private static final ThreadLocal<SimpleDateFormat> TIMESTAMP_WITH_MICROS_FORMAT = ThreadLocal.withInitial(
-			() -> new SimpleDateFormat(
-					FORMAT_STRING_TIMESTAMP_WITH_MICROS,
-					Locale.ENGLISH
-			)
-	);
 
 	/**
 	 * Pattern used for parsing literal offset datetimes in HQL.
@@ -120,45 +126,34 @@ public final class DateTimeUtils {
 			.appendOffset("+HH:mm", "+00")
 			.toFormatter();
 
+	public static void appendAsTimestampWithNanos(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone) {
+		appendAsTimestamp(
+				appender,
+				temporalAccessor,
+				supportsOffset,
+				jdbcTimeZone,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET
+		);
+	}
+
 	public static void appendAsTimestampWithMicros(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
 			boolean supportsOffset,
 			TimeZone jdbcTimeZone) {
-		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-			if ( supportsOffset ) {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET.formatTo( temporalAccessor, appender );
-			}
-			else {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.formatTo(
-						LocalDateTime.ofInstant(
-								Instant.from( temporalAccessor ),
-								jdbcTimeZone.toZoneId()
-						),
-						appender
-				);
-			}
-		}
-		else if ( temporalAccessor instanceof Instant ) {
-			if ( supportsOffset ) {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET.formatTo(
-						( (Instant) temporalAccessor ).atZone( jdbcTimeZone.toZoneId() ),
-						appender
-				);
-			}
-			else {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.formatTo(
-						LocalDateTime.ofInstant(
-								(Instant) temporalAccessor,
-								jdbcTimeZone.toZoneId()
-						),
-						appender
-				);
-			}
-		}
-		else {
-			DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.formatTo( temporalAccessor, appender );
-		}
+		appendAsTimestamp(
+				appender,
+				temporalAccessor,
+				supportsOffset,
+				jdbcTimeZone,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET
+		);
 	}
 
 	public static void appendAsTimestampWithMillis(
@@ -166,12 +161,29 @@ public final class DateTimeUtils {
 			TemporalAccessor temporalAccessor,
 			boolean supportsOffset,
 			TimeZone jdbcTimeZone) {
+		appendAsTimestamp(
+				appender,
+				temporalAccessor,
+				supportsOffset,
+				jdbcTimeZone,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET
+		);
+	}
+
+	private static void appendAsTimestamp(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone,
+			DateTimeFormatter format,
+			DateTimeFormatter formatWithOffset) {
 		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 			if ( supportsOffset ) {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET.formatTo( temporalAccessor, appender );
+				formatWithOffset.formatTo( temporalAccessor, appender );
 			}
 			else {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.formatTo(
+				format.formatTo(
 						LocalDateTime.ofInstant(
 								Instant.from( temporalAccessor ),
 								jdbcTimeZone.toZoneId()
@@ -182,13 +194,13 @@ public final class DateTimeUtils {
 		}
 		else if ( temporalAccessor instanceof Instant ) {
 			if ( supportsOffset ) {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET.formatTo(
+				formatWithOffset.formatTo(
 						( (Instant) temporalAccessor ).atZone( jdbcTimeZone.toZoneId() ),
 						appender
 				);
 			}
 			else {
-				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.formatTo(
+				format.formatTo(
 						LocalDateTime.ofInstant(
 								(Instant) temporalAccessor,
 								jdbcTimeZone.toZoneId()
@@ -198,7 +210,7 @@ public final class DateTimeUtils {
 			}
 		}
 		else {
-			DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.formatTo( temporalAccessor, appender );
+			format.formatTo( temporalAccessor, appender );
 		}
 	}
 
@@ -241,22 +253,54 @@ public final class DateTimeUtils {
 	}
 
 	public static void appendAsTimestampWithMicros(SqlAppender appender, Date date, TimeZone jdbcTimeZone) {
-		final SimpleDateFormat simpleDateFormat;
 		if ( date instanceof Timestamp ) {
-			// java.sql.Timestamp supports micro sec
-			simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+			// java.sql.Timestamp supports nano sec
+			appendAsTimestamp(
+					appender,
+					date.toInstant().atZone( jdbcTimeZone.toZoneId() ),
+					false,
+					jdbcTimeZone,
+					DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS,
+					DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET
+			);
 		}
 		else {
 			// java.util.Date supports only milli sec
-			simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+			final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+			final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+			try {
+				simpleDateFormat.setTimeZone( jdbcTimeZone );
+				appender.appendSql( simpleDateFormat.format( date ) );
+			}
+			finally {
+				simpleDateFormat.setTimeZone( originalTimeZone );
+			}
 		}
-		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
-		try {
-			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			appender.appendSql( simpleDateFormat.format( date ) );
+	}
+
+	public static void appendAsTimestampWithNanos(SqlAppender appender, Date date, TimeZone jdbcTimeZone) {
+		if ( date instanceof Timestamp ) {
+			// java.sql.Timestamp supports nano sec
+			appendAsTimestamp(
+					appender,
+					date.toInstant().atZone( jdbcTimeZone.toZoneId() ),
+					false,
+					jdbcTimeZone,
+					DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS,
+					DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET
+			);
 		}
-		finally {
-			simpleDateFormat.setTimeZone( originalTimeZone );
+		else {
+			// java.util.Date supports only milli sec
+			final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+			final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
+			try {
+				simpleDateFormat.setTimeZone( jdbcTimeZone );
+				appender.appendSql( simpleDateFormat.format( date ) );
+			}
+			finally {
+				simpleDateFormat.setTimeZone( originalTimeZone );
+			}
 		}
 	}
 
@@ -303,6 +347,12 @@ public final class DateTimeUtils {
 		}
 	}
 
+	/**
+	 * Calendar has no microseconds.
+	 *
+	 * @deprecated use {@link #appendAsTimestampWithMillis(SqlAppender, Calendar, TimeZone)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static void appendAsTimestampWithMicros(SqlAppender appender, Calendar calendar, TimeZone jdbcTimeZone) {
 		// it is possible to use micro sec resolution with java.util.Date
 		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
@@ -352,4 +402,45 @@ public final class DateTimeUtils {
 		appender.appendSql( LOCAL_TIME_FORMAT.get().format( calendar.getTime() ) );
 	}
 
+	/**
+	 * Do the same conversion that databases do when they encounter a timestamp with a higher precision
+	 * than what is supported by a column, which is to round the excess fractions.
+	 */
+	public static <T extends Temporal> T roundToDefaultPrecision(T temporal, Dialect d) {
+		final int defaultTimestampPrecision = d.getDefaultTimestampPrecision();
+		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+			return temporal;
+		}
+		final int precisionMask = pow10( 9 - defaultTimestampPrecision );
+		final int nano = temporal.get( ChronoField.NANO_OF_SECOND );
+		final int nanosToRound = nano % precisionMask;
+		final int finalNano = nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
+		//noinspection unchecked
+		return (T) temporal.with( ChronoField.NANO_OF_SECOND, finalNano );
+	}
+
+	private static int pow10(int exponent) {
+		switch ( exponent ) {
+			case 0:
+				return 1;
+			case 1:
+				return 10;
+			case 2:
+				return 100;
+			case 3:
+				return 1000;
+			case 4:
+				return 10000;
+			case 5:
+				return 100000;
+			case 6:
+				return 1000000;
+			case 7:
+				return 10000000;
+			case 8:
+				return 100000000;
+			default:
+				return (int) Math.pow( 10, exponent );
+		}
+	}
 }

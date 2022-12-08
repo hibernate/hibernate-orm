@@ -104,6 +104,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for CockroachDB.
@@ -664,7 +665,7 @@ public class CockroachDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:

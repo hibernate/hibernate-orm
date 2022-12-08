@@ -50,7 +50,6 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
@@ -60,7 +59,6 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -198,55 +196,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final Value value = bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-
-		final AttributeMetadataAccess attributeMetadataAccess = entityMappingType -> new AttributeMetadata() {
-			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
-			private final boolean nullable = value.isNullable();
-			private final boolean insertable = bootProperty.isInsertable();
-			private final boolean updateable = bootProperty.isUpdateable();
-			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
-
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return nullable;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return insertable;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				// todo (6.0) : do not believe this is correct
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return includeInOptimisticLocking;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+		BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
@@ -364,145 +314,54 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		return entityMappingType -> new AttributeMetadata() {
-			private final boolean nullable = bootProperty.getValue().isNullable();
-			private final boolean insertable = bootProperty.isInsertable();
-			private final boolean updateable = bootProperty.isUpdateable();
-			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
+		final MutabilityPlan mutabilityPlan;
+		if ( bootProperty.isUpdateable() ) {
+			mutabilityPlan = new MutabilityPlan() {
 
-			private final MutabilityPlan mutabilityPlan;
+				final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext()
+						.getSessionFactory();
 
-			{
-				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan() {
-						@Override
-						public boolean isMutable() {
-							return true;
-						}
-
-						@Override
-						public Object deepCopy(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							return attrType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
-						}
-
-						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-
-						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-					};
+				@Override
+				public boolean isMutable() {
+					return true;
 				}
-				else {
-					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+
+				@Override
+				public Object deepCopy(Object value) {
+					if ( value == null ) {
+						return null;
+					}
+
+					return attrType.deepCopy( value, sessionFactory );
 				}
-			}
 
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
+				@Override
+				public Serializable disassemble(Object value, SharedSessionContract session) {
+					throw new NotYetImplementedFor6Exception( getClass() );
+				}
 
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return nullable;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return insertable;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				// todo (6.0) : do not believe this is correct
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return includeInOptimisticLocking;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+				@Override
+				public Object assemble(Serializable cached, SharedSessionContract session) {
+					throw new NotYetImplementedFor6Exception( getClass() );
+				}
+			};
+		}
+		else {
+			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+		}
+		BasicAttributeMetadataAccess basicAttributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess,
+																								mutabilityPlan,
+																								bootProperty.getValue().isNullable(),
+																								bootProperty.isInsertable(),
+																								bootProperty.isUpdateable(),
+																								bootProperty.isOptimisticLocked(),
+																								cascadeStyle );
+		return basicAttributeMetadataAccess;
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static AttributeMetadataAccess getAttributeMetadataAccess(PropertyAccess propertyAccess) {
-		return new AttributeMetadataAccess() {
-			final AttributeMetadata attributeMetadata = new AttributeMetadata() {
-				private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
-
-				@Override
-				public PropertyAccess getPropertyAccess() {
-					return propertyAccess;
-				}
-
-				@Override
-				public MutabilityPlan getMutabilityPlan() {
-					return mutabilityPlan;
-				}
-
-				@Override
-				public boolean isNullable() {
-					return false;
-				}
-
-				@Override
-				public boolean isInsertable() {
-					return true;
-				}
-
-				@Override
-				public boolean isUpdatable() {
-					return false;
-				}
-
-				@Override
-				public boolean isIncludedInDirtyChecking() {
-
-					return false;
-				}
-
-				@Override
-				public boolean isIncludedInOptimisticLocking() {
-					// todo (6.0) : do not sure this is correct
-					return true;
-				}
-
-				@Override
-				public CascadeStyle getCascadeStyle() {
-					// todo (6.0) : do not sure this is correct
-					return null;
-				}
-			};
-
-			@Override
-			public AttributeMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
-				return attributeMetadata;
-			}
-		};
+		return new BasicAttributeMetadataAccess(propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -683,47 +542,14 @@ public class MappingModelCreationHelper {
 			}
 		}
 
-		final AttributeMetadata attributeMetadata = new AttributeMetadata() {
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return ImmutableMutabilityPlan.instance();
-			}
-
-			@Override
-			public boolean isNullable() {
-				return bootProperty.isOptional();
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return bootProperty.isInsertable();
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return bootProperty.isUpdateable();
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				return false;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return bootProperty.isOptimisticLocked();
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+		BasicAttributeMetadataAccess attributeMetadata = new BasicAttributeMetadataAccess( propertyAccess,
+																						ImmutableMutabilityPlan.instance(),
+																						bootProperty.isOptional(),
+																						bootProperty.isInsertable(),
+																						bootProperty.isUpdateable(),
+																						bootProperty.isOptimisticLocked(),
+																						cascadeStyle
+		);
 
 		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
@@ -743,7 +569,7 @@ public class MappingModelCreationHelper {
 				attrName,
 				bootValueMapping,
 				propertyAccess,
-				entityMappingType -> attributeMetadata,
+				attributeMetadata,
 				collectionMappingType,
 				stateArrayPosition,
 				elementDescriptor,

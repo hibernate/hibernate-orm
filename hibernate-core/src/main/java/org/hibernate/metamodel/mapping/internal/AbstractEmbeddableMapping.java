@@ -30,8 +30,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -364,48 +362,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 				}
 
-				final AttributeMetadataAccess attributeMetadataAccess = entityMappingType -> new AttributeMetadata() {
-					@Override
-					public PropertyAccess getPropertyAccess() {
-						return propertyAccess;
-					}
-
-					@Override
-					public MutabilityPlan<?> getMutabilityPlan() {
-						return mutabilityPlan;
-					}
-
-					@Override
-					public boolean isNullable() {
-						return nullable;
-					}
-
-					@Override
-					public boolean isInsertable() {
-						return insertable;
-					}
-
-					@Override
-					public boolean isUpdatable() {
-						return updateable;
-					}
-
-					@Override
-					public boolean isIncludedInDirtyChecking() {
-						// todo (6.0) : do not believe this is correct
-						return updateable;
-					}
-
-					@Override
-					public boolean isIncludedInOptimisticLocking() {
-						return includeInOptimisticLocking;
-					}
-
-					@Override
-					public CascadeStyle getCascadeStyle() {
-						return cascadeStyle;
-					}
-				};
+				BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess,
+																										mutabilityPlan,
+																										nullable,
+																										insertable,
+																										updateable,
+																										includeInOptimisticLocking,
+																										cascadeStyle
+				);
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						navigableRole.append( bootPropertyDescriptor.getName() ),

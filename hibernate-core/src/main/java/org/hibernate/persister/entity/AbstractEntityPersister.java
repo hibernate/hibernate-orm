@@ -78,6 +78,7 @@ import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -174,6 +175,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -5499,55 +5501,22 @@ public abstract class AbstractEntityPersister
 
 			final AnyType anyType = (AnyType) attrType;
 
+			final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
+			final BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess(
+					propertyAccess,
+					mutabilityPlan,
+					bootProperty.isOptional(),
+					bootProperty.isInsertable(),
+					bootProperty.isUpdateable(),
+					bootProperty.isOptimisticLocked()
+			);
+
 			return new DiscriminatedAssociationAttributeMapping(
 					navigableRole.append( bootProperty.getName() ),
 					baseAssociationJtd,
 					this,
 					stateArrayPosition,
-					entityMappingType -> new AttributeMetadata() {
-
-						private final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
-
-						private final boolean nullable = bootProperty.isOptional();
-						private final boolean insertable = bootProperty.isInsertable();
-						private final boolean updateable = bootProperty.isUpdateable();
-						private final boolean optimisticallyLocked = bootProperty.isOptimisticLocked();
-
-						@Override
-						public PropertyAccess getPropertyAccess() {
-							return propertyAccess;
-						}
-
-						@Override
-						public MutabilityPlan<?> getMutabilityPlan() {
-							return mutabilityPlan;
-						}
-
-						@Override
-						public boolean isNullable() {
-							return nullable;
-						}
-
-						@Override
-						public boolean isInsertable() {
-							return insertable;
-						}
-
-						@Override
-						public boolean isUpdatable() {
-							return updateable;
-						}
-
-						@Override
-						public boolean isIncludedInDirtyChecking() {
-							return updateable;
-						}
-
-						@Override
-						public boolean isIncludedInOptimisticLocking() {
-							return optimisticallyLocked;
-						}
-					},
+					attributeMetadataAccess,
 					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
 					bootProperty,

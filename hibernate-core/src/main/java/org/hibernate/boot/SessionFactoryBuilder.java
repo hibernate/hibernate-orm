@@ -217,7 +217,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
 
 	/**
-	 * Should generated identifiers be "unset" on entities during a rollback?
+	 * Should the generated identifier be "unset" when an entity is deleted?
 	 *
 	 * @param enabled {@code true} indicates identifiers should be unset; {@code false} indicates not.
 	 *

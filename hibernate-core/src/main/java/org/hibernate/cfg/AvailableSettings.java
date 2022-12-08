@@ -322,7 +322,8 @@ public interface AvailableSettings {
 	 * to use for obtaining JDBC connections, either:
 	 * <ul>
 	 *     <li>an instance of {@code ConnectionProvider},
-	 *     <li>a {@link Class} representing a class that implements {@code ConnectionProvider}, or
+	 *     <li>a {@link Class} representing a class that implements
+	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
 	 * <p>
@@ -354,10 +355,10 @@ public interface AvailableSettings {
 	 * specified username might be used to:
 	 * <ul>
 	 *     <li>create a JDBC connection using
-	 *     {@link java.sql.DriverManager#getConnection(String,java.util.Properties)}
-	 *     or {@link java.sql.Driver#connect(String,java.util.Properties)}, or
+	 *         {@link java.sql.DriverManager#getConnection(String,java.util.Properties)}
+	 *         or {@link java.sql.Driver#connect(String,java.util.Properties)}, or
 	 *     <li>obtain a JDBC connection from a datasource, using
-	 *     {@link javax.sql.DataSource#getConnection(String, String)}.
+	 *         {@link javax.sql.DataSource#getConnection(String, String)}.
 	 * </ul>
 	 *
 	 * @see #PASS
@@ -1063,7 +1064,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies how Hibernate should manage JDBC connections in terms of acquisition
-	 * and release.
+	 * and release, either:
+	 * <ul>
+	 *     <li>an instance of the enumeration
+	 *         {@link org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode},
+	 *         or
+	 *     <li>the name of one of its instances.
+	 * </ul>
+	 * The default is {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}.
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionHandlingMode(PhysicalConnectionHandlingMode)
@@ -1086,6 +1094,11 @@ public interface AvailableSettings {
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
+	 * When enabled, specifies that the generated identifier of an entity is unset
+	 * when the entity is {@linkplain org.hibernate.Session#remove(Object) deleted}.
+	 * <p>
+	 * By default, generated identifiers are never unset.
+	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyIdentifierRollbackSupport(boolean)
 	 */
 	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
@@ -1147,22 +1160,27 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
-	 * Enable ordering of update statements by primary key value.
+	 * Enable ordering of update statements by primary key value, for the purpose of more
+	 * efficient JDBC batching
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates(boolean)
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
-	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
+	 * Enable ordering of insert statements by primary key value, for the purpose of more
+	 * efficient JDBC batching.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts(boolean)
 	 */
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
-	 * JPA callbacks are enabled by default. Set this to {@code false} to disable them.
-	 * Mostly useful to save a bit of memory when they are not used.
+	 * Allows JPA callbacks (via {@link jakarta.persistence.PreUpdate} and friends) to be
+	 * completely disabled. Mostly useful to save some memory when they are not used.
+	 * <p>
+	 * JPA callbacks are enabled by default. Set this property to {@code false} to disable
+	 * them.
 	 * <p>
 	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
 	 *
@@ -1174,10 +1192,12 @@ public interface AvailableSettings {
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
-	 * Default precedence of null values in {@code ORDER BY} clause.
+	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the HQL
+	 * {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last}.
 	 * <p>
-	 * Supported options: {@code none} (default), {@code first}, {@code last}.
+	 * The default is {@code none}.
 	 *
+	 * @see NullPrecedence
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";

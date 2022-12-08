@@ -20,7 +20,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -54,7 +54,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
-import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getAttributeMetadataAccess;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getAttributeMetadata;
 
 /**
  * EmbeddableMappingType implementation describing an {@link jakarta.persistence.IdClass}
@@ -98,7 +98,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				null,
 				EntityIdentifierMapping.ROLE_LOCAL_NAME,
 				true );
-		final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
+		final AttributeMetadata attributeMetadata = MappingModelCreationHelper.getAttributeMetadata(
 				propertyAccess
 		);
 
@@ -109,7 +109,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						.append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ),
 				-1,
 				idTable,
-				attributeMetadataAccess,
+				attributeMetadata,
 				(PropertyAccess) null,
 				FetchTiming.IMMEDIATE,
 				FetchStyle.JOIN,

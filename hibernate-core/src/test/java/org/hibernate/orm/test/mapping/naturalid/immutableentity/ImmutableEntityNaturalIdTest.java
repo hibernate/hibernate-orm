@@ -95,7 +95,7 @@ public class ImmutableEntityNaturalIdTest {
 		assertThat( naturalIdMapping.getNaturalIdAttributes().size(), is( 3 ) );
 		// nullability is not specified, so they should be nullable by annotations-specific default
 		for ( SingularAttributeMapping attribute : naturalIdMapping.getNaturalIdAttributes() ) {
-			assertThat( attribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(), is( true ) );
+			assertThat( attribute.getAttributeMetadata().isNullable(), is( true ) );
 		}
 
 		final EntityPersister entityPersister = buildingMapping.getEntityPersister();

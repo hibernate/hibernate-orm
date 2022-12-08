@@ -77,12 +77,12 @@ public class NullableNaturalIdTest {
 			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "assA" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "assA" ) ) );
-			assertTrue( firstAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
 			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "naturalid" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "naturalid" ) ) );
-			assertFalse( secondAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertFalse( secondAttribute.getAttributeMetadata().isNullable() );
 		}
 
 		{
@@ -96,7 +96,7 @@ public class NullableNaturalIdTest {
 
 			final SingularAttributeMapping attribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( attribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "name" ) ) );
-			assertTrue( attribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( attribute.getAttributeMetadata().isNullable() );
 		}
 
 		{
@@ -112,12 +112,12 @@ public class NullableNaturalIdTest {
 			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "associatedC" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "associatedC" ) ) );
-			assertTrue( firstAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
 			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "name" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "name" ) ) );
-			assertTrue( secondAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( secondAttribute.getAttributeMetadata().isNullable() );
 		}
 
 		{
@@ -136,17 +136,17 @@ public class NullableNaturalIdTest {
 			final SingularAttributeMapping firstAttribute = naturalIdMapping.getNaturalIdAttributes().get(0);
 			assertThat( firstAttribute.getAttributeName(), is( "intVal" ) );
 			assertThat( firstAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "intVal" ) ) );
-			assertTrue( firstAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( firstAttribute.getAttributeMetadata().isNullable() );
 
 			final SingularAttributeMapping secondAttribute = naturalIdMapping.getNaturalIdAttributes().get(1);
 			assertThat( secondAttribute.getAttributeName(), is( "name" ) );
 			assertThat( secondAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "name" ) ) );
-			assertTrue( secondAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( secondAttribute.getAttributeMetadata().isNullable() );
 
 			final SingularAttributeMapping thirdAttribute = naturalIdMapping.getNaturalIdAttributes().get(2);
 			assertThat( thirdAttribute.getAttributeName(), is( "org" ) );
 			assertThat( thirdAttribute.getStateArrayPosition(), is( entityMetamodel.getPropertyIndex( "org" ) ) );
-			assertTrue( thirdAttribute.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+			assertTrue( thirdAttribute.getAttributeMetadata().isNullable() );
 		}
 	}
 

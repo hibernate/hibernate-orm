@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -86,8 +85,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
 		forEachAttributeMapping( (position, attribute) -> {
-			final Getter getter = attribute.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( findContainingEntityMapping() )
+			final Getter getter = attribute.getAttributeMetadata()
 					.getPropertyAccess()
 					.getGetter();
 			results[position] = getter.get( compositeInstance );
@@ -362,13 +360,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 				}
 
-				BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess,
-																										mutabilityPlan,
-																										nullable,
-																										insertable,
-																										updateable,
-																										includeInOptimisticLocking,
-																										cascadeStyle
+				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
+						propertyAccess,
+						mutabilityPlan,
+						nullable,
+						insertable,
+						updateable,
+						includeInOptimisticLocking,
+						cascadeStyle
 				);
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(

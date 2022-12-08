@@ -56,7 +56,7 @@ public class ImmutableNaturalIdTest {
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
 
 		final AttributeMapping userNameMapping = entityMappingType.findAttributeMapping( "userName" );
-		assertFalse( userNameMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable() );
+		assertFalse( userNameMapping.getAttributeMetadata().isNullable() );
 
 		final EntityPersister persister = entityMappingType.getEntityPersister();
 		final int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( "userName" );

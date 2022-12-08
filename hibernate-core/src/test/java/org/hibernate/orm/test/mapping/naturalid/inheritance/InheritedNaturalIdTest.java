@@ -46,7 +46,7 @@ public class InheritedNaturalIdTest {
 
 		final SingularAttributeMapping uidMapping = ((SimpleNaturalIdMapping) userMapping.getNaturalIdMapping()).getAttribute();
 		assertThat( uidMapping.getAttributeName(), is ("uid" ) );
-		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata uidMetadata = uidMapping.getAttributeMetadata();
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
 		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();

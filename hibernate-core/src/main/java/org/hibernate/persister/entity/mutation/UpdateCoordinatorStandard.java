@@ -242,8 +242,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 //						&& updateableAttributeIndexes[position];
 			}
 
-			final boolean includeInLocking = attribute.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( null )
+			final boolean includeInLocking = attribute.getAttributeMetadata()
 					.isIncludedInOptimisticLocking();
 			if ( !includeInLocking ) {
 				return false;

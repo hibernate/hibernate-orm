@@ -14,7 +14,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -72,7 +72,7 @@ public class EmbeddedAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -84,7 +84,7 @@ public class EmbeddedAttributeMapping
 			navigableRole,
 			stateArrayPosition,
 			tableExpression,
-			attributeMetadataAccess,
+			attributeMetadata,
 			getPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
@@ -99,7 +99,7 @@ public class EmbeddedAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -109,7 +109,7 @@ public class EmbeddedAttributeMapping
 		super(
 				name,
 				stateArrayPosition,
-				attributeMetadataAccess,
+				attributeMetadata,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,

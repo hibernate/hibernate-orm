@@ -31,7 +31,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( Account.class );
 		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();
-		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadata();
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );
 
 		final EntityPersister rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();

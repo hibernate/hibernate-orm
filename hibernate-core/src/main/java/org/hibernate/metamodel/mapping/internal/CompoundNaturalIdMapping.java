@@ -25,7 +25,7 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -97,9 +97,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			MappingModelCreationProcess creationProcess) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			final AttributeMetadataAccess metadataAccess = attributeMapping.getAttributeMetadataAccess();
-
-			if ( ! metadataAccess.resolveAttributeMetadata( entityDescriptor ).isUpdatable() ) {
+			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
+			if ( ! metadata.isUpdatable() ) {
 				return false;
 			}
 		}
@@ -209,7 +208,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = getNaturalIdAttributes().get( i );
 
-			final boolean updatable = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( persister ).isUpdatable();
+			final boolean updatable = attributeMapping.getAttributeMetadata().isUpdatable();
 			if ( updatable ) {
 				// property is updatable (mutable), there is nothing to check
 				continue;

@@ -372,7 +372,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 				}
 
-				BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess(
+				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
 						mutabilityPlan,
 						nullable,

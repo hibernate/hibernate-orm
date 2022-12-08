@@ -211,8 +211,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final int numberOfAttributeMappings = containerDescriptor.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = containerDescriptor.getAttributeMapping( i );
-			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( concreteDescriptor );
+			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
 			if ( attributeMetadata.isUpdatable() ) {
 				final int position = attributeMapping.getStateArrayPosition();
 				Object result;

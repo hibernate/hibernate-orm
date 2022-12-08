@@ -48,7 +48,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			MappingModelCreationProcess creationProcess) {
 		super(
 				declaringType,
-				attribute.getAttributeMetadataAccess().resolveAttributeMetadata( declaringType ).isUpdatable()
+				attribute.getAttributeMetadata().isUpdatable()
 		);
 		this.attribute = attribute;
 

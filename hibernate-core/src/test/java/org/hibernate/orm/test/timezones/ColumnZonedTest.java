@@ -4,7 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.type.descriptor.DateTimeUtils;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,14 +40,21 @@ public class ColumnZonedTest {
 		});
 		scope.inSession( s -> {
 			Zoned z = s.find(Zoned.class, id);
-			if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) {
+			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof SybaseDialect) {
 				// Sybase with jTDS driver has 1/300th sec precision
 				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
 				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
 			}
 			else {
-				assertEquals( nowZoned.toInstant(), z.zonedDateTime.toInstant() );
-				assertEquals( nowOffset.toInstant(), z.offsetDateTime.toInstant() );
+				assertEquals(
+						DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
+						DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+				);
+				assertEquals(
+						DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
+						DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+				);
 			}
 			assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );
 			assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );

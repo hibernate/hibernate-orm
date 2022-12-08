@@ -86,6 +86,7 @@ import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * A dialect for Microsoft SQL Server 2000 and above
@@ -924,7 +925,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( "' as datetime2)" );
 				break;
 			default:

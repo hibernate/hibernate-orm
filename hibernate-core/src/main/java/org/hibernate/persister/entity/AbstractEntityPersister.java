@@ -78,7 +78,6 @@ import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -154,7 +153,6 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -175,7 +173,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -4253,11 +4251,10 @@ public abstract class AbstractEntityPersister
 			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final AttributeMetadataAccess attributeMetadataAccess = attributeMapping.getAttributeMetadataAccess();
+				final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
 				if ( ! lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
 						|| enhancementMetadata.isAttributeLoaded( object, attributeMapping.getAttributeName() ) ) {
-					values[i] = attributeMetadataAccess
-							.resolveAttributeMetadata( this )
+					values[i] = attributeMetadata
 							.getPropertyAccess()
 							.getGetter()
 							.get( object );
@@ -4273,8 +4270,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, int i) {
-		return attributeMappings.get( i ).getAttributeMetadataAccess()
-				.resolveAttributeMetadata( this )
+		return attributeMappings.get( i ).getAttributeMetadata()
 				.getPropertyAccess()
 				.getGetter()
 				.get( object );
@@ -4290,8 +4286,7 @@ public abstract class AbstractEntityPersister
 		ManagedMappingType baseValueType = null;
 		Object baseValue = null;
 		if ( attributeMapping != null ) {
-			baseValue = attributeMapping.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( this )
+			baseValue = attributeMapping.getAttributeMetadata()
 					.getPropertyAccess()
 					.getGetter()
 					.get( object );
@@ -4305,8 +4300,7 @@ public abstract class AbstractEntityPersister
 					? null
 					: embeddedAttributeMapping.getMappedType().findAttributeMapping( basePropertyName );
 			if ( mapping != null ) {
-				baseValue = mapping.getAttributeMetadataAccess()
-						.resolveAttributeMetadata( this )
+				baseValue = mapping.getAttributeMetadata()
 						.getPropertyAccess()
 						.getGetter()
 						.get( object );
@@ -4332,8 +4326,7 @@ public abstract class AbstractEntityPersister
 		attributeMapping = baseValueType.findAttributeMapping(
 				propertyName.substring( dotIndex + 1, endIndex )
 		);
-		baseValue = attributeMapping.getAttributeMetadataAccess()
-				.resolveAttributeMetadata( this )
+		baseValue = attributeMapping.getAttributeMetadata()
 				.getPropertyAccess()
 				.getGetter()
 				.get( baseValue );
@@ -4613,7 +4606,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void setPropertyValue(Object object, String propertyName, Object value) {
 		final AttributeMapping attributeMapping = findSubPart( propertyName, this ).asAttributeMapping();
-		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this );
+		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
 		attributeMetadata.getPropertyAccess().getSetter().set( object, value );
 	}
 
@@ -5502,7 +5495,7 @@ public abstract class AbstractEntityPersister
 			final AnyType anyType = (AnyType) attrType;
 
 			final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
-			final BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess(
+			final SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 					propertyAccess,
 					mutabilityPlan,
 					bootProperty.isOptional(),

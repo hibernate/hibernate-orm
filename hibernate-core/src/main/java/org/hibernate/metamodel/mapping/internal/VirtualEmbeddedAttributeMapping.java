@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -28,7 +28,7 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -40,7 +40,7 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 				navigableRole,
 				stateArrayPosition,
 				tableExpression,
-				attributeMetadataAccess,
+				attributeMetadata,
 				parentInjectionAttributeName,
 				mappedFetchTiming,
 				mappedFetchStyle,
@@ -55,7 +55,7 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -67,7 +67,7 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 				navigableRole,
 				stateArrayPosition,
 				tableExpression,
-				attributeMetadataAccess,
+				attributeMetadata,
 				parentInjectionAttributePropertyAccess,
 				mappedFetchTiming,
 				mappedFetchStyle,

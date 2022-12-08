@@ -11,12 +11,10 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-public final class BasicAttributeMetadataAccess implements AttributeMetadataAccess, AttributeMetadata {
+public final class SimpleAttributeMetadata implements AttributeMetadata {
 
 	private final PropertyAccess propertyAccess;
 	private final MutabilityPlan<?> mutabilityPlan;
@@ -26,7 +24,7 @@ public final class BasicAttributeMetadataAccess implements AttributeMetadataAcce
 	private final boolean includeInOptimisticLocking;
 	private final CascadeStyle cascadeStyle;
 
-	public BasicAttributeMetadataAccess(
+	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
 			MutabilityPlan mutabilityPlan,
 			Property bootProperty,
@@ -42,7 +40,7 @@ public final class BasicAttributeMetadataAccess implements AttributeMetadataAcce
 		);
 	}
 
-	public BasicAttributeMetadataAccess(
+	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
 			MutabilityPlan mutabilityPlan,
 			boolean nullable, boolean insertable, boolean updateable, boolean includeInOptimisticLocking) {
@@ -57,7 +55,7 @@ public final class BasicAttributeMetadataAccess implements AttributeMetadataAcce
 		);
 	}
 
-	public BasicAttributeMetadataAccess(
+	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
 			MutabilityPlan mutabilityPlan,
 			boolean nullable,
@@ -72,11 +70,6 @@ public final class BasicAttributeMetadataAccess implements AttributeMetadataAcce
 		this.updateable = updateable;
 		this.includeInOptimisticLocking = includeInOptimisticLocking;
 		this.cascadeStyle = cascadeStyle;
-	}
-
-	@Override
-	public AttributeMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
-		return this;
 	}
 
 	@Override

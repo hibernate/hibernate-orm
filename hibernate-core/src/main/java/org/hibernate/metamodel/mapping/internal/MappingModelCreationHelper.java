@@ -50,7 +50,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
@@ -196,7 +196,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final Value value = bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-		BasicAttributeMetadataAccess attributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
+		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
@@ -220,7 +220,7 @@ public class MappingModelCreationHelper {
 				attrName,
 				navigableRole,
 				stateArrayPosition,
-				attributeMetadataAccess,
+				attributeMetadata,
 				fetchTiming,
 				fetchStyle,
 				tableExpression,
@@ -253,7 +253,7 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
+		final AttributeMetadata attributeMetadataAccess = getAttributeMetadata(
 				bootProperty,
 				attrType,
 				propertyAccess,
@@ -308,7 +308,7 @@ public class MappingModelCreationHelper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected static AttributeMetadataAccess getAttributeMetadataAccess(
+	protected static AttributeMetadata getAttributeMetadata(
 			Property bootProperty,
 			Type attrType,
 			PropertyAccess propertyAccess,
@@ -349,19 +349,19 @@ public class MappingModelCreationHelper {
 		else {
 			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 		}
-		BasicAttributeMetadataAccess basicAttributeMetadataAccess = new BasicAttributeMetadataAccess( propertyAccess,
-																								mutabilityPlan,
-																								bootProperty.getValue().isNullable(),
-																								bootProperty.isInsertable(),
-																								bootProperty.isUpdateable(),
-																								bootProperty.isOptimisticLocked(),
-																								cascadeStyle );
+		SimpleAttributeMetadata basicAttributeMetadataAccess = new SimpleAttributeMetadata( propertyAccess,
+																							mutabilityPlan,
+																							bootProperty.getValue().isNullable(),
+																							bootProperty.isInsertable(),
+																							bootProperty.isUpdateable(),
+																							bootProperty.isOptimisticLocked(),
+																							cascadeStyle );
 		return basicAttributeMetadataAccess;
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static AttributeMetadataAccess getAttributeMetadataAccess(PropertyAccess propertyAccess) {
-		return new BasicAttributeMetadataAccess(propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
+	public static AttributeMetadata getAttributeMetadata(PropertyAccess propertyAccess) {
+		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -542,13 +542,14 @@ public class MappingModelCreationHelper {
 			}
 		}
 
-		BasicAttributeMetadataAccess attributeMetadata = new BasicAttributeMetadataAccess( propertyAccess,
-																						ImmutableMutabilityPlan.instance(),
-																						bootProperty.isOptional(),
-																						bootProperty.isInsertable(),
-																						bootProperty.isUpdateable(),
-																						bootProperty.isOptimisticLocked(),
-																						cascadeStyle
+		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata(
+				propertyAccess,
+				ImmutableMutabilityPlan.instance(),
+				bootProperty.isOptional(),
+				bootProperty.isInsertable(),
+				bootProperty.isUpdateable(),
+				bootProperty.isOptimisticLocked(),
+				cascadeStyle
 		);
 
 		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
@@ -1491,7 +1492,7 @@ public class MappingModelCreationHelper {
 		if ( bootProperty.getValue() instanceof ToOne ) {
 			final ToOne value = (ToOne) bootProperty.getValue();
 			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
-			final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
+			final AttributeMetadata attributeMetadata = getAttributeMetadata(
 					bootProperty,
 					attrType,
 					propertyAccess,
@@ -1536,7 +1537,7 @@ public class MappingModelCreationHelper {
 					navigableRole,
 					stateArrayPosition,
 					(ToOne) bootProperty.getValue(),
-					attributeMetadataAccess,
+					attributeMetadata,
 					fetchTiming,
 					fetchStyle,
 					entityPersister,

@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.sql.results.graph.FetchOptions;
 
@@ -19,21 +19,20 @@ public abstract class AbstractStateArrayContributorMapping
 		extends AbstractAttributeMapping
 		implements FetchOptions {
 
-	private final AttributeMetadataAccess attributeMetadataAccess;
+	private final AttributeMetadata attributeMetadata;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
 	private final int stateArrayPosition;
 
-
 	public AbstractStateArrayContributorMapping(
 			String name,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
 		super( name, declaringType );
-		this.attributeMetadataAccess = attributeMetadataAccess;
+		this.attributeMetadata = attributeMetadata;
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
 		this.stateArrayPosition = stateArrayPosition;
@@ -41,13 +40,13 @@ public abstract class AbstractStateArrayContributorMapping
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
 		this(
 				name,
-				attributeMetadataAccess,
+				attributeMetadata,
 				mappedFetchOptions.getTiming(),
 				mappedFetchOptions.getStyle(),
 				stateArrayPosition,
@@ -61,8 +60,8 @@ public abstract class AbstractStateArrayContributorMapping
 	}
 
 	@Override
-	public AttributeMetadataAccess getAttributeMetadataAccess() {
-		return attributeMetadataAccess;
+	public AttributeMetadata getAttributeMetadata() {
+		return attributeMetadata;
 	}
 
 	@Override

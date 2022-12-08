@@ -6,13 +6,13 @@
  */
 package org.hibernate.annotations;
 
+import java.util.EnumSet;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.tuple.GenerationTiming;
-
-import java.util.EnumSet;
 
 /**
  * Represents a class of events involving interaction with the database
@@ -64,8 +64,11 @@ public enum GenerationTime {
 
 	/**
 	 * @return the equivalent instance of {@link GenerationTiming}
+	 *
+	 * @deprecated Needed for backwards compatibility until the deprecated, legacy
+	 * generation stuff can be removed
 	 */
-	@Internal
+	@Internal @Deprecated(forRemoval = true)
 	public GenerationTiming getEquivalent() {
 		switch (this) {
 			case ALWAYS:

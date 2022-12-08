@@ -8,6 +8,9 @@
 /**
  * Most contracts here have been replaced by Hibernate's
  * {@linkplain org.hibernate.metamodel.mapping mapping-model}.
+ * <p/>
+ * Value-generation related contracts have been replaced by
+ * {@link org.hibernate.generator}
  */
 @Remove
 package org.hibernate.tuple;

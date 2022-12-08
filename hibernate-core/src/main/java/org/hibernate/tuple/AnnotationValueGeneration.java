@@ -6,15 +6,15 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.generator.AnnotationBasedGenerator;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+
+import org.hibernate.AssertionFailure;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 
 
 /**
@@ -31,7 +31,10 @@ import java.lang.reflect.Method;
  * @author Gunnar Morling
  *
  * @see ValueGeneration
+ *
+ * @deprecated Replaced by {@link AnnotationBasedGenerator}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface AnnotationValueGeneration<A extends Annotation>
 		extends ValueGeneration, AnnotationBasedGenerator<A> {
 	/**

@@ -7,12 +7,16 @@
 package org.hibernate.tuple;
 
 import org.hibernate.Session;
+import org.hibernate.generator.Generator;
 
 /**
  * Defines a generator for in-VM generation of (non-identifier) attribute values.
  *
+ * @deprecated Replaced by {@link Generator}
+ *
  * @author Steve Ebersole
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface ValueGenerator<T> {
 	/**
 	 * Generate the value.

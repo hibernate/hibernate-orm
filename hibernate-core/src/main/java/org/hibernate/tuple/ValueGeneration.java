@@ -6,6 +6,8 @@
  */
 package org.hibernate.tuple;
 
+import java.util.EnumSet;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -13,8 +15,6 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.generator.InMemoryGenerator;
-
-import java.util.EnumSet;
 
 /**
  * A value generator that can adapt to both Java value generation and database value generation.
@@ -26,7 +26,10 @@ import java.util.EnumSet;
  * @author Gavin King
  *
  * @see AnnotationValueGeneration
+ *
+ * @deprecated Replaced by {@link Generator}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface ValueGeneration extends InMemoryGenerator, InDatabaseGenerator {
 	/**
 	 * Specifies that the property value is generated:

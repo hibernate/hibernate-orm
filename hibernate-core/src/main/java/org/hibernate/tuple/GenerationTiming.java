@@ -6,10 +6,11 @@
  */
 package org.hibernate.tuple;
 
+import java.util.Locale;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenerationTime;
-
-import java.util.Locale;
+import org.hibernate.generator.EventType;
 
 /**
  * Represents the timing of {@link ValueGeneration value generation} that occurs
@@ -18,7 +19,12 @@ import java.util.Locale;
  * @author Steve Ebersole
  *
  * @see ValueGeneration
+ *
+ * @deprecated Replaced by {@link EventType} as id-generation has been
+ * redefined using the new broader {@linkplain org.hibernate.generator generation}
+ * approach.
  */
+@Deprecated(since = "6", forRemoval = true)
 public enum GenerationTiming {
 	/**
 	 * Value generation that never occurs.

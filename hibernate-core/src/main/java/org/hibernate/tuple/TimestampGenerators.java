@@ -30,7 +30,10 @@ import org.hibernate.HibernateException;
  * Generators for obtaining the current VM timestamp in different representations.
  *
  * @author Gunnar Morling
+ *
+ * @deprecated This style of generation has been replaced by {@link org.hibernate.generator}
  */
+@Deprecated
 public final class TimestampGenerators {
 
 	private static final Map<Class<?>, ValueGenerator<?>> generators;

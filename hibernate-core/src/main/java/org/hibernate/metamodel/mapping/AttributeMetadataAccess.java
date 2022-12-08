@@ -12,7 +12,6 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
-@FunctionalInterface
 public interface AttributeMetadataAccess {
 	/**
 	 * Resolve the details about the attribute

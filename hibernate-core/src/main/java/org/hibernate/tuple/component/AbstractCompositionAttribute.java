@@ -14,10 +14,9 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.CompositeType;
 
 /**
- * A base class for a composite, non-identifier attribute.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractCompositionAttribute
 		extends AbstractNonIdentifierAttribute {
 

@@ -68,6 +68,7 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
@@ -95,6 +96,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.Assigned;
@@ -193,7 +196,6 @@ import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
@@ -262,10 +264,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -3484,19 +3483,17 @@ public abstract class AbstractEntityPersister
 			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}
-			// we still need to verify collection fields to be eagerly loaded by 'join'
-			for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
-				if ( attribute instanceof EntityBasedAssociationAttribute ) {
-					final AssociationType associationType = ( (EntityBasedAssociationAttribute) attribute ).getType();
-					if ( associationType instanceof CollectionType ) {
-						final Joinable joinable = associationType.getAssociatedJoinable( getFactory() );
-						if ( joinable.isCollection() ) {
-							final QueryableCollection collectionPersister = (QueryableCollection) joinable;
-							if ( collectionPersister.getFetchMode() == FetchMode.JOIN
-									&& collectionPersister.isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
-								return true;
-							}
-						}
+
+			// we still need to verify collection fields to be eagerly loaded by join
+			final List<AttributeMapping> attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+					if ( pluralAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.IMMEDIATE
+							&& pluralAttributeMapping.getMappedFetchOptions().getStyle() == FetchStyle.JOIN
+							&& pluralAttributeMapping.getCollectionDescriptor().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+						return true;
 					}
 				}
 			}
@@ -3583,7 +3580,8 @@ public abstract class AbstractEntityPersister
 	private void logDirtyProperties(int[] props) {
 		if ( LOG.isTraceEnabled() ) {
 			for ( int prop : props ) {
-				String propertyName = entityMetamodel.getProperties()[prop].getName();
+				final AttributeMapping attributeMapping = getAttributeMapping( prop );
+				final String propertyName = attributeMapping.getAttributeName();
 				LOG.trace(StringHelper.qualify(getEntityName(), propertyName) + " is dirty");
 			}
 		}

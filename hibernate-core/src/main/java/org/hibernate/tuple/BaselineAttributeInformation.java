@@ -10,8 +10,10 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
-* @author Steve Ebersole
+ * @deprecated No direct replacement, though see {@link org.hibernate.metamodel.mapping.AttributeMapping}
+ * and {@link org.hibernate.metamodel.mapping.AttributeMetadata}
 */
+@Deprecated(forRemoval = true)
 public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;

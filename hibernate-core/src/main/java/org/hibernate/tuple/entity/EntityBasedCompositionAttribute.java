@@ -13,8 +13,9 @@ import org.hibernate.tuple.component.AbstractCompositionAttribute;
 import org.hibernate.type.CompositeType;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public class EntityBasedCompositionAttribute
 		extends AbstractCompositionAttribute {
 

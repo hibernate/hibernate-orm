@@ -23,7 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * of a deprecation lifecycle.
  *
  * @apiNote Intended for use at development-time for developers to better understand
- * the lifecycle of the annotated element.
+ * the lifecycle of the annotated element.  Also, useful for "deprecating" a package
+ * as the Java compiler does not like `@Deprecated` on packages.
  *
  * @see Deprecated#forRemoval()
  *

@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
@@ -36,9 +37,6 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.generator.Generator;
-import org.hibernate.tuple.PropertyFactory;
-import org.hibernate.tuple.StandardProperty;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.usertype.CompositeUserType;
@@ -81,30 +79,26 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		int i = 0;
 		for ( Property property : component.getProperties() ) {
-			// todo (6.0) : see if we really need to create these
-			final StandardProperty prop = PropertyFactory.buildStandardProperty( property, false );
-			this.propertyNames[i] = prop.getName();
-			this.propertyTypes[i] = prop.getType();
-			this.propertyNullability[i] = prop.isNullable();
-			this.cascade[i] = prop.getCascadeStyle();
-			this.joinedFetch[i] = prop.getFetchMode();
-			if ( !prop.isNullable() ) {
+			this.propertyNames[i] = property.getName();
+			this.propertyTypes[i] = property.getValue().getType();
+			this.propertyNullability[i] = property.isOptional();
+			this.cascade[i] = property.getCascadeStyle();
+			this.joinedFetch[i] = property.getValue().getFetchMode();
+			if ( !propertyNullability[i] ) {
 				hasNotNullProperty = true;
 			}
 			i++;
 		}
 
 		if ( component.getTypeName() != null ) {
-			//noinspection unchecked
-			this.compositeUserType = (CompositeUserType<Object>) buildingContext.getBootstrapContext()
+			final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
 					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean(
-							buildingContext.getBootstrapContext()
-									.getClassLoaderAccess()
-									.classForName( component.getTypeName() )
-					)
-					.getBeanInstance();
+					.getService( ManagedBeanRegistry.class );
+			final Class<Object> customTypeClass = buildingContext.getBootstrapContext()
+					.getClassLoaderAccess()
+					.classForName( component.getTypeName() );
+			//noinspection unchecked
+			this.compositeUserType = (CompositeUserType<Object>) beanRegistry.getBean( customTypeClass ).getBeanInstance();
 		}
 		else {
 			this.compositeUserType = null;

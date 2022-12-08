@@ -6,18 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.NonIdentifierAttribute;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -27,6 +22,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -76,9 +79,9 @@ public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase
             assertTrue( propertyLaziness[0] );
 
             // Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
-            NonIdentifierAttribute[] properties = entityPersister.getEntityMetamodel().getProperties();
-            assertEquals( 1, properties.length );
-            assertTrue( properties[0].isLazy() );
+            final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
+            assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
+            assertThat( theBytesAttr.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
         } );
     }
 

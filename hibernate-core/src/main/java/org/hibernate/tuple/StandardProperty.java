@@ -11,13 +11,9 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.type.Type;
 
 /**
- * Represents a non-identifier property within the Hibernate runtime-metamodel.
- *
- * @author Steve Ebersole
- *
- * @deprecated Use one of the {@link Attribute}-based impls instead.
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.AttributeMapping}
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class StandardProperty extends AbstractNonIdentifierAttribute implements NonIdentifierAttribute {
 
 	/**

@@ -11,11 +11,9 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.type.Type;
 
 /**
- * Represents a defined entity identifier property within the Hibernate
- * runtime-metamodel.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement; see {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping}
  */
+@Deprecated(forRemoval = true)
 public class IdentifierProperty extends AbstractAttribute implements IdentifierAttribute {
 
 	private final boolean virtual;

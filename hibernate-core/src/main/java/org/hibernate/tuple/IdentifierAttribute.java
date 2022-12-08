@@ -10,8 +10,9 @@ import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement; see {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping}
  */
+@Deprecated(forRemoval = true)
 public interface IdentifierAttribute extends Attribute {
 	boolean isVirtual();
 

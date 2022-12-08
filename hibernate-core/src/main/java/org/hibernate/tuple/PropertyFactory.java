@@ -25,11 +25,9 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * Responsible for generation of runtime metamodel {@link Property} representations.
- * Makes distinction between identifier, version, and other (standard) properties.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public final class PropertyFactory {
 	private PropertyFactory() {
 	}
@@ -238,39 +236,6 @@ public final class PropertyFactory {
 
 			return NonIdentifierAttributeNature.BASIC;
 		}
-	}
-
-	/**
-	 * @deprecated See mainly {@link #buildEntityBasedAttribute}
-	 */
-	@Deprecated
-	public static StandardProperty buildStandardProperty(Property property, boolean lazyAvailable) {
-		final Type type = property.getValue().getType();
-
-		// we need to dirty check collections, since they can cause an owner
-		// version number increment
-
-		// we need to dirty check many-to-ones with not-found="ignore" in order
-		// to update the cache (not the database), since in this case a null
-		// entity reference can lose information
-
-		boolean alwaysDirtyCheck = type.isAssociationType()
-				&& ( (AssociationType) type ).isAlwaysDirtyChecked();
-
-		return new StandardProperty(
-				property.getName(),
-				type,
-				// only called for embeddable sub-attributes which are never (yet) lazy
-				//lazyAvailable && property.isLazy(),
-				false,
-				property.isInsertable(),
-				property.isUpdateable(),
-				property.isOptional(),
-				alwaysDirtyCheck || property.isUpdateable(),
-				property.isOptimisticLocked(),
-				property.getCascadeStyle(),
-				property.getValue().getFetchMode()
-		);
 	}
 
 }

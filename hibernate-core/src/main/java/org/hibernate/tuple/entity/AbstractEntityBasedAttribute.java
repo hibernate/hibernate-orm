@@ -13,8 +13,9 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.Type;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractEntityBasedAttribute extends AbstractNonIdentifierAttribute {
 	protected AbstractEntityBasedAttribute(
 			EntityPersister source,

@@ -20,7 +20,15 @@ public interface TableDetails {
 	String getTableName();
 
 	/**
-	 * Whether this table is the root for a given {@link ModelPartContainer}
+	 * Details about the primary-key of this table
+	 */
+	KeyDetails getKeyDetails();
+
+	/**
+	 * Whether this table is the root for a given {@link ModelPartContainer}.
+	 * <p/>
+	 * Only relevant for entity-mappings where this indicates whether this
+	 * table holds the entity's identifier.
 	 */
 	boolean isIdentifierTable();
 
@@ -36,7 +44,7 @@ public interface TableDetails {
 		/**
 		 * Group of columns defined on the primary key
 		 */
-		List<KeyColumn> getKeyColumns();
+		List<? extends KeyColumn> getKeyColumns();
 
 		/**
 		 * Get a key column by relative position

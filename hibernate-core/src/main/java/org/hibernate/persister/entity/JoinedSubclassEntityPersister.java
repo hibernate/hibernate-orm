@@ -1294,7 +1294,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( superMappingType == null ) {
 			return getMappedTableDetails();
 		}
-		return superMappingType.getIdentifierTableDetails();
+		return getRootEntityDescriptor().getIdentifierTableDetails();
 	}
 
 	@Override

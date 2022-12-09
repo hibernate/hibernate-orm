@@ -49,6 +49,12 @@ public class CollectionTableMapping implements TableMapping {
 		return tableName;
 	}
 
+	@Override
+	public KeyDetails getKeyDetails() {
+		// todo (tuple-cleanup) : implement this
+		return null;
+	}
+
 	public boolean isJoinTable() {
 		return isJoinTable;
 	}

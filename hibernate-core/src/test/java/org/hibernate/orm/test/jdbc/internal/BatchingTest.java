@@ -24,7 +24,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -32,7 +31,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.jdbc.Expectations.NONE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -42,52 +40,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey {
 	private final String SANDBOX_TBL = "SANDBOX_JDBC_TST";
-	private final TableMapping SANDBOX_TBL_MAPPING = new TableMapping() {
-		@Override
-		public String getTableName() {
-			return SANDBOX_TBL;
-		}
-
-		@Override
-		public int getRelativePosition() {
-			return 0;
-		}
-
-		@Override
-		public boolean isOptional() {
-			return false;
-		}
-
-		@Override
-		public boolean isInverse() {
-			return false;
-		}
-
-		@Override
-		public boolean isIdentifierTable() {
-			return true;
-		}
-
-		@Override
-		public MutationDetails getInsertDetails() {
-			return new MutationDetails( MutationType.INSERT, NONE, null, false );
-		}
-
-		@Override
-		public MutationDetails getUpdateDetails() {
-			return new MutationDetails( MutationType.UPDATE, NONE, null, false );
-		}
-
-		@Override
-		public boolean isCascadeDeleteEnabled() {
-			return false;
-		}
-
-		@Override
-		public MutationDetails getDeleteDetails() {
-			return new MutationDetails( MutationType.DELETE, NONE, null, false );
-		}
-	};
 
 	@Override
 	public int getBatchedStatementCount() {

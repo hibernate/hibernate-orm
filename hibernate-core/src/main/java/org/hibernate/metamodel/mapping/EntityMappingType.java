@@ -190,7 +190,9 @@ public interface EntityMappingType
 	// Inheritance
 
 	/**
-	 * Get the class that this class is mapped as a subclass of
+	 * Get the name of the entity that is the "super class" for this entity
+	 *
+	 * @see #getSuperMappingType
 	 */
 	default String getMappedSuperclass() {
 		return getSuperMappingType().getEntityName();

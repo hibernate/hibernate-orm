@@ -29,16 +29,12 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface ModelPart extends MappingModelExpressible {
-	MappingType getPartMappingType();
-
-	JavaType<?> getJavaType();
-
-	String getPartName();
 
 	/**
 	 * @asciidoc
 	 *
-	 * The path for this fetchable back to an entity in the domain model.
+	 * The path for this fetchable back to an entity in the domain model.  Acts as a unique
+	 * identifier for individual parts.
 	 *
 	 * Some examples:
 	 *
@@ -62,6 +58,43 @@ public interface ModelPart extends MappingModelExpressible {
 	 * @see #getPartName()
 	 */
 	NavigableRole getNavigableRole();
+
+	/**
+	 * The local part name, which is generally the unqualified role name
+	 */
+	String getPartName();
+
+	/**
+	 * The type for this part.
+	 */
+	MappingType getPartMappingType();
+
+	/**
+	 * The Java type for this part.  Generally equivalent to
+	 * {@link MappingType#getMappedJavaType()} relative to
+	 * {@link #getPartMappingType()}
+	 */
+	JavaType<?> getJavaType();
+
+	/**
+	 * Whether this model part describes something that physically
+	 * exists in the domain model.
+	 * <p/>
+	 * For example, take an entity defining its identifier with multiple
+	 * {@link jakarta.persistence.Id} attributes; a "non-aggregated" identifier.
+	 * Internally, Hibernate models the
+	 * {@linkplain EntityMappingType#getIdentifierMapping() identifier mapping}
+	 * for that entity as a virtual {@link EmbeddableMappingType}.  The entity
+	 * might also define an {@link jakarta.persistence.IdClass}, but that is a
+	 * different mapping; in this case, the entity will have 2 mappings - one
+	 * physical (the {@link jakarta.persistence.IdClass}) and the other virtual
+	 * (the "non-aggregated" embeddable)
+	 * <p/>
+	 * Also indicates whether the part is castable to {@link VirtualModelPart}
+	 */
+	default boolean isVirtual() {
+		return false;
+	}
 
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.

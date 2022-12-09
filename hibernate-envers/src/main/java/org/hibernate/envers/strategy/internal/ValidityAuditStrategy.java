@@ -651,15 +651,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private String getUpdateTableName(Queryable rootEntity, Queryable rootAuditEntity, Queryable auditEntity) {
-		if ( UnionSubclassEntityPersister.class.isInstance( rootEntity ) ) {
-			// This is the condition causing all the problems of the generated SQL update;
-			// the problem being that we currently try to update the inline view made of the union query.
-			//
-			// This is hacky to get the root table name for the union subclass style entities because
-			// it relies on internal behavior of UnionSubclassEntityPersister.
-			return auditEntity.getSubclassTableName( 0 );
+		if ( rootEntity instanceof UnionSubclassEntityPersister ) {
+			// we need to specially handle union-subclass mappings
+			return auditEntity.getMappedTableDetails().getTableName();
 		}
-		return rootAuditEntity.getTableName();
+		return rootAuditEntity.getMappedTableDetails().getTableName();
 	}
 
 	/**

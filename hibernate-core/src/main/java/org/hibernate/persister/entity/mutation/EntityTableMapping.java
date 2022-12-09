@@ -17,6 +17,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
@@ -90,6 +91,11 @@ public class EntityTableMapping implements TableMapping {
 
 	@Override public String getTableName() {
 		return tableName;
+	}
+
+	@Override
+	public KeyDetails getKeyDetails() {
+		return keyMapping;
 	}
 
 	@Override public int getRelativePosition() {
@@ -203,7 +209,7 @@ public class EntityTableMapping implements TableMapping {
 		void consume(Object jdbcValue, KeyColumn columnMapping);
 	}
 
-	public static class KeyMapping {
+	public static class KeyMapping implements KeyDetails {
 		private final List<KeyColumn> keyColumns;
 
 		private final ModelPart identifierPart;
@@ -230,12 +236,34 @@ public class EntityTableMapping implements TableMapping {
 			);
 		}
 
+		@Override
+		public int getColumnCount() {
+			return keyColumns.size();
+		}
+
+		@Override
+		public List<KeyColumn> getKeyColumns() {
+			return keyColumns;
+		}
+
+		@Override
+		public KeyColumn getKeyColumn(int position) {
+			return keyColumns.get( position );
+		}
+
+		@Override
+		public void forEachKeyColumn(KeyColumnConsumer consumer) {
+			for ( int i = 0; i < keyColumns.size(); i++ ) {
+				consumer.consume( i, keyColumns.get( i ) );
+			}
+		}
+
 		public void forEachKeyColumn(Consumer<KeyColumn> keyColumnConsumer) {
 			keyColumns.forEach( keyColumnConsumer );
 		}
 	}
 
-	public static class KeyColumn implements SelectableMapping {
+	public static class KeyColumn implements SelectableMapping, TableDetails.KeyColumn {
 		private final String tableName;
 		private final String columnName;
 		private final String writeExpression;

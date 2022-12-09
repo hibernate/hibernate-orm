@@ -95,6 +95,11 @@ public class BatchBuilderImpl implements BatchBuilder {
 									}
 
 									@Override
+									public KeyDetails getKeyDetails() {
+										return null;
+									}
+
+									@Override
 									public boolean isOptional() {
 										return false;
 									}

@@ -39,7 +39,6 @@ import org.jboss.logging.Logger;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -701,12 +700,12 @@ public class AnnotatedColumn {
 	}
 
 	private static String getTableName(jakarta.persistence.Column column, Database database) {
-		return isEmptyAnnotationValue( column.table() ) ? ""
+		return column.table().isEmpty() ? ""
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.table() ).render();
 	}
 
 	private static String getSqlType(MetadataBuildingContext context, jakarta.persistence.Column column) {
-		return isEmptyAnnotationValue( column.columnDefinition() ) ? null
+		return column.columnDefinition().isEmpty() ? null
 				: context.getObjectNameNormalizer().applyGlobalQuoting( column.columnDefinition() );
 	}
 
@@ -763,7 +762,7 @@ public class AnnotatedColumn {
 	}
 
 	private static String getColumnName(Database database, jakarta.persistence.Column column) {
-		return isEmptyAnnotationValue( column.name() ) ? null
+		return column.name().isEmpty() ? null
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( column.name() ).render();
 	}
 

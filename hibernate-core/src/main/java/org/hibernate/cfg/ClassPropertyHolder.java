@@ -33,6 +33,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * @author Emmanuel Bernard
 
@@ -106,7 +108,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			final Convert convertAnnotation = xClass.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, xClass );
-				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+				if ( isEmpty( info.getAttributeName() ) ) {
 					throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
 				}
 				infoMap.put( info.getAttributeName(), info );
@@ -117,7 +119,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			if ( convertsAnnotation != null ) {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, xClass );
-					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+					if ( isEmpty( info.getAttributeName() ) ) {
 						throw new IllegalStateException( "@Converts placed on @Entity/@MappedSuperclass must define attributeName" );
 					}
 					infoMap.put( info.getAttributeName(), info );
@@ -142,7 +144,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			final Convert convertAnnotation = property.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+				if ( isEmpty( info.getAttributeName() ) ) {
 					attributeConversionInfoMap.put( propertyName, info );
 				}
 				else {
@@ -156,7 +158,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			if ( convertsAnnotation != null ) {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+					if ( isEmpty( info.getAttributeName() ) ) {
 						attributeConversionInfoMap.put( propertyName, info );
 					}
 					else {

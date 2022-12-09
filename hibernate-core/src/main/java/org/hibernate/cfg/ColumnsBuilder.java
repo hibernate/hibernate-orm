@@ -36,6 +36,7 @@ import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
@@ -119,28 +120,27 @@ class ColumnsBuilder {
 		}
 
 		//set default values if needed
-		if ( joinColumns == null &&
-				( property.isAnnotationPresent( ManyToOne.class )
-						|| property.isAnnotationPresent( OneToOne.class ) )
-				) {
+		if ( joinColumns == null
+				&& ( property.isAnnotationPresent( ManyToOne.class )
+						|| property.isAnnotationPresent( OneToOne.class ) ) ) {
 			joinColumns = buildDefaultJoinColumnsForToOne( property, inferredData );
 		}
-		else if ( joinColumns == null &&
-				( property.isAnnotationPresent( OneToMany.class )
-						|| property.isAnnotationPresent( ElementCollection.class )
-				) ) {
+		else if ( joinColumns == null
+				&& ( property.isAnnotationPresent( OneToMany.class )
+						|| property.isAnnotationPresent( ElementCollection.class ) ) ) {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
 					comment,
-					oneToMany != null ? oneToMany.mappedBy() : "",
+					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData,
 					buildingContext
 			);
 		}
-		else if ( joinColumns == null && property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
+		else if ( joinColumns == null
+				&& property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
 					+ "' is annotated '@Any' and must declare at least one '@JoinColumn'" );
 		}
@@ -191,7 +191,7 @@ class ColumnsBuilder {
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
 					comment,
-					oneToOneAnn != null ? oneToOneAnn.mappedBy() : null,
+					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData,

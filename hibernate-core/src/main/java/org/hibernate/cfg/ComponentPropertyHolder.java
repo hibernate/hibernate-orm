@@ -29,6 +29,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * PropertyHolder for composites (Embeddable/Embedded).
  * <p>
@@ -135,7 +137,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			final Convert convertAnnotation = embeddedXProperty.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+				if ( isEmpty( info.getAttributeName() ) ) {
 					throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 				}
 				infoMap.put( info.getAttributeName(), info );
@@ -147,7 +149,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( convertsAnnotation != null ) {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+					if ( isEmpty( info.getAttributeName() ) ) {
 						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 					}
 					infoMap.put( info.getAttributeName(), info );
@@ -164,7 +166,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			final Convert convertAnnotation = embeddableXClass.getAnnotation( Convert.class );
 			if ( convertAnnotation != null ) {
 				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-				if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+				if ( isEmpty( info.getAttributeName() ) ) {
 					throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
 				}
 				infoMap.put( info.getAttributeName(), info );
@@ -176,7 +178,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( convertsAnnotation != null ) {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-					if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+					if ( isEmpty( info.getAttributeName() ) ) {
 						throw new IllegalStateException( "@Converts placed on @Embeddable must define attributeName" );
 					}
 					infoMap.put( info.getAttributeName(), info );

@@ -17,7 +17,6 @@ import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.List;
@@ -26,8 +25,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -43,6 +40,10 @@ public class ListBinder extends CollectionBinder {
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
 			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, false, buildingContext );
+	}
+
+	private List getList() {
+		return (List) collection;
 	}
 
 	@Override
@@ -79,9 +80,7 @@ public class ListBinder extends CollectionBinder {
 				getBuildingContext()
 		);
 
-		final List listValueMapping = (List) collection;
-
-		if ( !listValueMapping.isOneToMany() ) {
+		if ( !collection.isOneToMany() ) {
 			indexColumn.forceNotNull();
 		}
 		indexColumn.getParent().setPropertyHolder( valueHolder );
@@ -93,24 +92,28 @@ public class ListBinder extends CollectionBinder {
 //			valueBinder.setExplicitType( "integer" );
 		final SimpleValue indexValue = valueBinder.make();
 		indexColumn.linkWithValue( indexValue );
-		listValueMapping.setIndex( indexValue );
-		listValueMapping.setBaseIndex( indexColumn.getBase() );
-		createBackref( listValueMapping );
+
+		final List list = getList();
+		list.setIndex( indexValue );
+		list.setBaseIndex( indexColumn.getBase() );
+
+		createBackref();
 	}
 
-	private void createBackref(List listValueMapping) {
-		if ( listValueMapping.isOneToMany()
-				&& !listValueMapping.getKey().isNullable()
-				&& !listValueMapping.isInverse() ) {
-			final String entityName = ( (OneToMany) listValueMapping.getElement() ).getReferencedEntityName();
+	private void createBackref() {
+		if ( collection.isOneToMany()
+				&& !collection.getKey().isNullable()
+				&& !collection.isInverse() ) {
+			final String entityName = ( (OneToMany) collection.getElement() ).getReferencedEntityName();
 			final PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
 			final IndexBackref backref = new IndexBackref();
 			backref.setName( '_' + propertyName + "IndexBackref" );
 			backref.setUpdateable( false );
 			backref.setSelectable( false );
-			backref.setCollectionRole( listValueMapping.getRole() );
-			backref.setEntityName( listValueMapping.getOwner().getEntityName() );
-			backref.setValue( listValueMapping.getIndex() );
+			backref.setCollectionRole( collection.getRole() );
+			backref.setEntityName( collection.getOwner().getEntityName() );
+			List list = getList();
+			backref.setValue( list.getIndex() );
 			referenced.addProperty( backref );
 		}
 	}

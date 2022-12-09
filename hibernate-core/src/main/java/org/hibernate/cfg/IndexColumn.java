@@ -12,7 +12,7 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Join;
 
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * An {@link jakarta.persistence.OrderColumn} annotation
@@ -98,8 +98,10 @@ public class IndexColumn extends AnnotatedColumn {
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
-			final String sqlType = isEmptyAnnotationValue( orderColumn.columnDefinition() ) ? null : orderColumn.columnDefinition();
-			final String name = isEmptyAnnotationValue( orderColumn.name() ) ? inferredData.getPropertyName() + "_ORDER" : orderColumn.name();
+			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
+			final String name = orderColumn.name().isEmpty()
+					? inferredData.getPropertyName() + "_ORDER"
+					: orderColumn.name();
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
 			column.setSqlType( sqlType );
@@ -139,8 +141,10 @@ public class IndexColumn extends AnnotatedColumn {
 			PropertyData inferredData,
 			MetadataBuildingContext context) {
 		if ( indexColumn != null ) {
-			final String sqlType = isEmptyAnnotationValue( indexColumn.columnDefinition() ) ? null : indexColumn.columnDefinition();
-			final String name = isEmptyAnnotationValue( indexColumn.name() ) ? inferredData.getPropertyName() : indexColumn.name();
+			final String sqlType = nullIfEmpty( indexColumn.columnDefinition() );
+			final String name = indexColumn.name().isEmpty()
+					? inferredData.getPropertyName()
+					: indexColumn.name();
 			//TODO move it to a getter based system and remove the constructor
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );

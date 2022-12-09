@@ -33,10 +33,11 @@ import org.hibernate.type.ForeignKeyDirection;
 
 import static org.hibernate.cfg.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.BinderHelper.getPath;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.ToOneBinder.bindForeignKeyNameAndDefinition;
 import static org.hibernate.cfg.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.type.ForeignKeyDirection.FROM_PARENT;
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * We have to handle {@link jakarta.persistence.OneToOne} associations
@@ -98,7 +99,7 @@ public class OneToOneSecondPass implements SecondPass {
 		XProperty property = inferredData.getProperty();
 		ToOneBinder.defineFetchingStrategy( value, property, inferredData, propertyHolder );
 		//value.setFetchMode( fetchMode );
-		value.setOnDeleteAction(onDeleteAction);
+		value.setOnDeleteAction( onDeleteAction );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 
 		value.setConstrained( !optional );
@@ -119,20 +120,20 @@ public class OneToOneSecondPass implements SecondPass {
 
 		final Property result = binder.makeProperty();
 		result.setOptional( optional );
-		if ( isEmptyAnnotationValue( mappedBy ) ) {
-			bindUnowned( persistentClasses, value, propertyName, result );
+		if ( mappedBy == null ) {
+			bindOwned( persistentClasses, value, propertyName, result );
 		}
 		else {
-			bindOwned( persistentClasses, value, result );
+			bindUnowned( persistentClasses, value, result );
 		}
 		value.sortProperties();
 	}
 
 	private ForeignKeyDirection getForeignKeyDirection() {
-		return !isEmptyAnnotationValue( mappedBy ) ? ForeignKeyDirection.TO_PARENT : ForeignKeyDirection.FROM_PARENT;
+		return mappedBy == null ? FROM_PARENT : TO_PARENT;
 	}
 
-	private void bindOwned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, Property property) {
+	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, Property property) {
 		oneToOne.setMappedByProperty( mappedBy );
 		final PersistentClass targetEntity = persistentClasses.get( oneToOne.getReferencedEntityName() );
 		if ( targetEntity == null ) {
@@ -237,7 +238,7 @@ public class OneToOneSecondPass implements SecondPass {
 				+ "' which does not exist in the target entity type '" + oneToOne.getReferencedEntityName() + "'" );
 	}
 
-	private void bindUnowned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, String propertyName, Property property) {
+	private void bindOwned(Map<String, PersistentClass> persistentClasses, OneToOne oneToOne, String propertyName, Property property) {
 		// we need to check if the columns are in the right order
 		// if not, then we need to create a many to one and formula
 		// but actually, since entities linked by a one to one need

@@ -39,6 +39,9 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Temporal;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
@@ -119,7 +122,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		if ( collection.isMap() ) {
-			boolean specCompliant = StringHelper.isNotEmpty( info.getAttributeName() )
+			boolean specCompliant = isNotEmpty( info.getAttributeName() )
 					&& ( info.getAttributeName().startsWith( "key" )
 					|| info.getAttributeName().startsWith( "value" ) );
 			if ( !specCompliant ) {
@@ -127,7 +130,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			}
 		}
 
-		if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+		if ( isEmpty( info.getAttributeName() ) ) {
 			// the @Convert did not name an attribute...
 			if ( canElementBeConverted && canKeyBeConverted ) {
 				throw new IllegalStateException(

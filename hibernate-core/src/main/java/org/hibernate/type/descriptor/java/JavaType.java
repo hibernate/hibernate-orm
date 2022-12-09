@@ -289,6 +289,10 @@ public interface JavaType<T> extends Serializable {
 		return null;
 	}
 
+	default String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		return null;
+	}
+
 	/**
 	 * Creates the {@link JavaType} for the given {@link ParameterizedType}
 	 * based on this {@link JavaType} registered for the raw type.

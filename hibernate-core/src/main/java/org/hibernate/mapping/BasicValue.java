@@ -317,21 +317,26 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			throw new IllegalStateException( "Unable to resolve BasicValue : " + this );
 		}
 
-		final Selectable column = getColumn();
-		if ( column instanceof Column && resolution.getValueConverter() == null ) {
-			final Column physicalColumn = (Column) column;
-			if ( physicalColumn.getSqlTypeCode() == null ) {
-				physicalColumn.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
+		final Selectable selectable = getColumn();
+		if ( selectable instanceof Column && resolution.getValueConverter() == null ) {
+			final Column column = (Column) selectable;
+
+			if ( column.getSqlTypeCode() == null ) {
+				column.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
 			}
 
-			final BasicType<?> basicType = resolution.getLegacyResolvedBasicType();
 			final Dialect dialect = getServiceRegistry().getService( JdbcServices.class ).getDialect();
-			final String checkConstraint = physicalColumn.getCheckConstraint();
-			if ( checkConstraint == null && dialect.supportsColumnCheck() ) {
-				physicalColumn.setCheckConstraint(
-						basicType.getJavaTypeDescriptor().getCheckCondition(
-								physicalColumn.getQuotedName( dialect ),
-								basicType.getJdbcType(),
+			column.setSpecializedTypeDeclaration(
+					resolution.getDomainJavaType().getSpecializedTypeDeclaration(
+							resolution.getJdbcType(),
+							dialect
+					)
+			);
+			if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
+				column.setCheckConstraint(
+						resolution.getDomainJavaType().getCheckCondition(
+								column.getQuotedName(dialect),
+								resolution.getJdbcType(),
 								dialect
 						)
 				);

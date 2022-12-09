@@ -77,6 +77,8 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.isCharacterType;
+import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -750,6 +752,23 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsColumnCheck() {
 		return false;
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(int sqlType, Class<? extends Enum<?>> enumClass) {
+		if ( isCharacterType(sqlType) || isIntegral(sqlType) ) {
+			StringBuilder type = new StringBuilder();
+			type.append( "enum (" );
+			String separator = "";
+			for ( Enum<?> value : enumClass.getEnumConstants() ) {
+				type.append( separator ).append('\'').append( value.name() ).append('\'');
+				separator = ",";
+			}
+			return type.append( ')' ).toString();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override

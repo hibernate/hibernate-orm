@@ -61,6 +61,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
+	private String specializedTypeDeclaration;
 
 	public Column() {
 	}
@@ -431,6 +432,18 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
+	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
+		this.specializedTypeDeclaration = specializedTypeDeclaration;
+	}
+
+	public String getSpecializedTypeDeclaration() {
+		return specializedTypeDeclaration;
+	}
+
+	public boolean hasSpecializedTypeDeclaration() {
+		return specializedTypeDeclaration != null;
+	}
+
 	public String getCheckConstraint() {
 		return checkConstraint;
 	}
@@ -444,7 +457,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public String checkConstraint() {
-		if (checkConstraint==null) {
+		if ( checkConstraint == null ) {
 			return null;
 		}
 		return " check (" + checkConstraint + ")";
@@ -539,7 +552,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	public void setGeneratedAs(String generatedAs) {
 		this.generatedAs = generatedAs;
 	}
-
 
 	public String getCustomWrite() {
 		return customWrite;

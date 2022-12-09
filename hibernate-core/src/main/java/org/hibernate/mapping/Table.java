@@ -461,8 +461,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						dialect,
 						metadata
 				);
-				if ( column.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-					alter.append( ' ' ).append( columnType );
+				if ( column.hasSpecializedTypeDeclaration() ) {
+					alter.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
+				}
+				else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+					alter.append(' ').append(columnType);
 				}
 
 				final String defaultValue = column.getDefaultValue();
@@ -490,9 +493,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
 				}
 
-				final String checkConstraint = column.checkConstraint();
-				if ( checkConstraint !=null && dialect.supportsColumnCheck() ) {
-					alter.append( checkConstraint );
+				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
+					alter.append( column.checkConstraint() );
 				}
 
 				final String columnComment = column.getComment();

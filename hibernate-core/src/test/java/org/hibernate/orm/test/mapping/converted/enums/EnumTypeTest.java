@@ -14,8 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
-import org.hibernate.type.descriptor.jdbc.BasicBinder;
-import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

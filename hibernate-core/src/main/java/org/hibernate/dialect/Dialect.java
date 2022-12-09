@@ -668,6 +668,10 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	public String getEnumTypeDeclaration(int sqlType, Class<? extends Enum<?>> enumClass) {
+		return null;
+	}
+
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 */
@@ -2268,8 +2272,8 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return The appropriate empty values clause.
 	 *
-	 * @deprecated Override {@link org.hibernate.sql.ast.spi.AbstractSqlAstTranslator#renderInsertIntoNoColumns}
-	 * on the {@link #getSqlAstTranslatorFactory() translator} returned by this dialect
+	 * @deprecated Override the method {@code renderInsertIntoNoColumns()} on the
+	 * {@link #getSqlAstTranslatorFactory() translator} returned by this dialect
 	 */
 	@Deprecated( since = "6" )
 	public String getNoColumnsInsertString() {

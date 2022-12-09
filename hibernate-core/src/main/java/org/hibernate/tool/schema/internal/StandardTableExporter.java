@@ -52,7 +52,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		try {
 			String formattedTableName = context.format( tableName );
-			StringBuilder buf =
+			StringBuilder createTable =
 					new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 							.append( ' ' )
 							.append( formattedTableName )
@@ -78,96 +78,98 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 
 			boolean isFirst = true;
-			for ( Column col : table.getColumns() ) {
+			for ( Column column : table.getColumns() ) {
 				if ( isFirst ) {
 					isFirst = false;
 				}
 				else {
-					buf.append( ", " );
+					createTable.append( ", " );
 				}
 
-				String colName = col.getQuotedName( dialect );
-				buf.append( colName );
+				String colName = column.getQuotedName( dialect );
+				createTable.append( colName );
 
 				if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 					// to support dialects that have their own identity data type
 					if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-						buf.append( ' ' ).append(
-								col.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata )
+						createTable.append( ' ' ).append(
+								column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata )
 						);
 					}
 					String identityColumnString = dialect.getIdentityColumnSupport()
-							.getIdentityColumnString( col.getSqlTypeCode(metadata) );
-					buf.append( ' ' ).append( identityColumnString );
+							.getIdentityColumnString( column.getSqlTypeCode(metadata) );
+					createTable.append( ' ' ).append( identityColumnString );
 				}
 				else {
-					final String columnType = col.getSqlType(
+					final String columnType = column.getSqlType(
 							metadata.getDatabase().getTypeConfiguration(),
 							dialect,
 							metadata
 					);
-					if ( col.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-						buf.append( ' ' ).append( columnType );
+					if ( column.hasSpecializedTypeDeclaration() ) {
+						createTable.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
+					}
+					else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+						createTable.append( ' ' ).append( columnType );
 					}
 
-					String defaultValue = col.getDefaultValue();
+					String defaultValue = column.getDefaultValue();
 					if ( defaultValue != null ) {
-						buf.append( " default " ).append( defaultValue );
+						createTable.append( " default " ).append( defaultValue );
 					}
 
-					String generatedAs = col.getGeneratedAs();
+					String generatedAs = column.getGeneratedAs();
 					if ( generatedAs != null) {
-						buf.append( dialect.generatedAs( generatedAs ) );
+						createTable.append( dialect.generatedAs( generatedAs ) );
 					}
 
-					if ( col.isNullable() ) {
-						buf.append( dialect.getNullColumnString( columnType ) );
+					if ( column.isNullable() ) {
+						createTable.append( dialect.getNullColumnString( columnType ) );
 					}
 					else {
-						buf.append( " not null" );
+						createTable.append( " not null" );
 					}
 
 				}
 
-				if ( col.isUnique() && !table.isPrimaryKey( col ) ) {
-					String keyName = Constraint.generateName( "UK_", table, col );
+				if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
+					String keyName = Constraint.generateName( "UK_", table, column );
 					UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-					uk.addColumn( col );
-					buf.append(
+					uk.addColumn( column );
+					createTable.append(
 							dialect.getUniqueDelegate()
-									.getColumnDefinitionUniquenessFragment( col, context )
+									.getColumnDefinitionUniquenessFragment( column, context )
 					);
 				}
 
-				String checkConstraint = col.checkConstraint();
-				if ( checkConstraint != null && dialect.supportsColumnCheck() ) {
-					buf.append( checkConstraint );
+				if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
+					createTable.append( column.checkConstraint() );
 				}
 
-				String columnComment = col.getComment();
+				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					buf.append( dialect.getColumnComment( columnComment ) );
+					createTable.append( dialect.getColumnComment( columnComment ) );
 				}
 			}
 			if ( table.hasPrimaryKey() ) {
-				buf.append( ", " )
+				createTable.append( ", " )
 						.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 			}
 
-			buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
+			createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
 
-			applyTableCheck( table, buf );
+			applyTableCheck( table, createTable );
 
-			buf.append( ')' );
+			createTable.append( ')' );
 
 			if ( table.getComment() != null ) {
-				buf.append( dialect.getTableComment( table.getComment() ) );
+				createTable.append( dialect.getTableComment( table.getComment() ) );
 			}
 
-			applyTableTypeString( buf );
+			applyTableTypeString( createTable );
 
 			List<String> sqlStrings = new ArrayList<>();
-			sqlStrings.add( buf.toString() );
+			sqlStrings.add( createTable.toString() );
 
 			applyComments( table, formattedTableName, sqlStrings );
 

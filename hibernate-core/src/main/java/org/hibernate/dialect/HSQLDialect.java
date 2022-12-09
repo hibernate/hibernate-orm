@@ -369,11 +369,6 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsColumnCheck() {
-		return true;
-	}
-
-	@Override
 	public SequenceSupport getSequenceSupport() {
 		return HSQLSequenceSupport.INSTANCE;
 	}

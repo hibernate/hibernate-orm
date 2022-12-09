@@ -220,4 +220,8 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		return dialect.getEnumCheckCondition( columnName, jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
 	}
 
+	@Override
+	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		return dialect.getEnumTypeDeclaration( jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
+	}
 }

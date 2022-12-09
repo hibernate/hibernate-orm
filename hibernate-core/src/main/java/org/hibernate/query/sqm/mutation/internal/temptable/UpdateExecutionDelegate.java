@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -64,12 +63,10 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
  * @author Steve Ebersole
  */
 public class UpdateExecutionDelegate implements TableBasedUpdateHandler.ExecutionDelegate {
-	private final SqmUpdateStatement<?> sqmUpdate;
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable idTable;
 	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
-	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
 	private final Predicate suppliedPredicate;
 
@@ -78,33 +75,27 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public UpdateExecutionDelegate(
-			SqmUpdateStatement<?> sqmUpdate,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable idTable,
 			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup updatingTableGroup,
-			TableReference hierarchyRootTableReference,
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
-		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
-		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = updatingTableGroup;
 		this.suppliedPredicate = suppliedPredicate;
-		this.paramTypeResolutions = paramTypeResolutions;
 
 		this.sessionFactory = executionContext.getSession().getFactory();
 

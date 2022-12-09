@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * An SQL {@code UPDATE} statement
@@ -67,6 +68,13 @@ public class Update {
 		for ( String columnName : columnNames ) {
 			addPrimaryKeyColumn( columnName, "?" );
 		}
+		return this;
+	}
+
+	public Update addPrimaryKeyColumns(ModelPart keyPart) {
+		keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
+			addPrimaryKeyColumn( selectableMapping.getSelectionExpression(), "?" );
+		} );
 		return this;
 	}
 	

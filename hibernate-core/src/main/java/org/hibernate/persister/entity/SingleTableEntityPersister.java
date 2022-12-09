@@ -39,6 +39,8 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -519,6 +521,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public TableDetails getMappedTableDetails() {
+		return getTableMapping( 0 );
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		return getTableMapping( 0 );
+	}
+
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
@@ -860,22 +872,22 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		for ( String subclass : treatedEntityNames ) {
-			final Queryable queryable = (Queryable) mappingMetamodel.getEntityDescriptor( subclass );
-			if ( !queryable.isAbstract() ) {
-				frag.addValue( queryable.getDiscriminatorSQLValue() );
+			final EntityMappingType treatTargetType = mappingMetamodel.getEntityDescriptor( subclass );
+			if ( !treatTargetType.isAbstract() ) {
+				frag.addValue( treatTargetType.getDiscriminatorSQLValue() );
 			}
-			if ( queryable.hasSubclasses() ) {
+			if ( treatTargetType.hasSubclasses() ) {
 				// if the treat is an abstract class, add the concrete implementations to values if any
-				Set<String> actualSubClasses = queryable.getSubclassEntityNames();
+				Set<String> actualSubClasses = treatTargetType.getSubclassEntityNames();
 
 				for ( String actualSubClass : actualSubClasses ) {
 					if ( actualSubClass.equals( subclass ) ) {
 						continue;
 					}
 
-					final Queryable actualQueryable = (Queryable) mappingMetamodel.getEntityDescriptor( actualSubClass );
-					if ( !actualQueryable.hasSubclasses() ) {
-						frag.addValue( actualQueryable.getDiscriminatorSQLValue() );
+					final EntityMappingType actualEntityDescriptor = mappingMetamodel.getEntityDescriptor( actualSubClass );
+					if ( !actualEntityDescriptor.hasSubclasses() ) {
+						frag.addValue( actualEntityDescriptor.getDiscriminatorSQLValue() );
 					}
 				}
 			}

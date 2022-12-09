@@ -20,7 +20,36 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Models the type of a thing that can be used as an expression in a SQL query
+ * Describes the mapping for things which can be expressed in a SQL query.
+ * <p/>
+ * Generally speaking this models a column.  However, it can also model SQL
+ * tuples as well
+ * <p/>
+ * This includes details such as<ul>
+ *     <li>
+ *         the {@linkplain #getJavaTypeDescriptor() Java type} of the mapping
+ *     </li>
+ *     <li>
+ *         the {@linkplain #getJdbcType() JDBC type} of the mapping
+ *     </li>
+ *     <li>
+ *         how to {@linkplain #getJdbcValueExtractor() read} values
+ *         from {@linkplain java.sql.ResultSet result-sets}
+ *         as well as {@linkplain java.sql.CallableStatement callable parameters}
+ *     </li>
+ *     <li>
+ *         how to {@linkplain #getJdbcValueBinder() write} values to
+ *         {@linkplain java.sql.PreparedStatement JDBC statements}
+ *     </li>
+ * </ul>
+ * <p/>
+ * Some mappings will have an associated {@linkplain #getValueConverter() value converter}.
+ * The {@linkplain #getJdbcValueExtractor() readers} and {@linkplain #getJdbcValueBinder() writers}
+ * for such mappings will already incorporate those conversions
+ * <p/>
+ * Some mappings support usage as SQL literals.  Such mappings will return a non-null
+ * {@linkplain #getJdbcLiteralFormatter literal formatter} which handles formatting
+ * values as a SQL literal
  *
  * @author Steve Ebersole
  */

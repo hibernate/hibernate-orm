@@ -44,6 +44,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -300,6 +301,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public Type getDiscriminatorType() {
 		return discriminatorType;
+	}
+
+	@Override
+	public TableDetails getMappedTableDetails() {
+		return getTableMapping( 0 );
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		return getTableMapping( 0 );
 	}
 
 	@Override

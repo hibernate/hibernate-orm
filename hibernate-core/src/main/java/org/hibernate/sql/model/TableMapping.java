@@ -7,13 +7,17 @@
 package org.hibernate.sql.model;
 
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.TableDetails;
 
 /**
  * Describes a table as far as Hibernate understands it from mapping details
+ * <p/>
+ * Includes {@linkplain TableDetails basic details}, in addition to details
+ * about the table in relation to a particular {@link MutationTarget}
  *
  * @author Steve Ebersole
  */
-public interface TableMapping {
+public interface TableMapping extends TableDetails {
 	/**
 	 * The name of the mapped table
 	 */

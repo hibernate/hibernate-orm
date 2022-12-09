@@ -54,6 +54,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -138,6 +139,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public TableDetails getMappedTableDetails() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public TableDetails getIdentifierTableDetails() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public ModelPart findSubPart(
 				String name, EntityMappingType targetType) {
 			return null;
@@ -191,6 +202,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 				JdbcValuesConsumer valuesConsumer,
 				SharedSessionContractImplementor session) {
 			return 0;
+		}
+
+		@Override
+		public boolean isExplicitPolymorphism() {
+			return false;
 		}
 
 		@Override

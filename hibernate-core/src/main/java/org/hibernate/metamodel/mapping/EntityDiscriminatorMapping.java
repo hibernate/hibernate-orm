@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -40,6 +41,8 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	default String getFetchableName() {
 		return getPartName();
 	}
+
+	DiscriminatorType getDiscriminatorType();
 
 	String getConcreteEntityNameForDiscriminatorValue(Object value);
 

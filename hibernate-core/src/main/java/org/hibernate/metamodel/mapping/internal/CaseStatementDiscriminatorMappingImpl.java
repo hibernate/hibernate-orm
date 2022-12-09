@@ -79,7 +79,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,

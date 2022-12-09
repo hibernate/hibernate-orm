@@ -43,6 +43,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -50,9 +51,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
@@ -6280,8 +6279,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
-		final EntityPersister entityTypeDescriptor = expression.getEntityTypeDescriptor();
-		appendSql( (( Queryable ) entityTypeDescriptor).getDiscriminatorSQLValue() );
+		final EntityMappingType entityMapping = expression.getEntityTypeDescriptor();
+		appendSql( entityMapping.getDiscriminatorSQLValue() );
 	}
 
 	@Override

@@ -28,9 +28,10 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 /**
  * @author Steve Ebersole
  */
-public class EntityTypeLiteral implements Expression, MappingModelExpressible, DomainResultProducer, JavaTypedExpressible {
+public class EntityTypeLiteral
+		implements Expression, MappingModelExpressible<Object>, DomainResultProducer<Object>, JavaTypedExpressible<Object> {
 	private final EntityPersister entityTypeDescriptor;
-	private final DiscriminatorType discriminatorType;
+	private final DiscriminatorType<?> discriminatorType;
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
@@ -99,24 +100,21 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 	}
 
 	@Override
-	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		return new BasicResult(
-				createSqlSelection( creationState )
-						.getValuesArrayPosition(),
+	public DomainResult<Object> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		return new BasicResult<>(
+				createSqlSelection( creationState ).getValuesArrayPosition(),
 				resultVariable,
 				discriminatorType
 		);
 	}
 
 	private SqlSelection createSqlSelection(DomainResultCreationState creationState) {
-		return creationState.getSqlAstCreationState().getSqlExpressionResolver()
-				.resolveSqlSelection(
-						this,
-						discriminatorType.getJdbcJavaType(),
-						null,
-						creationState.getSqlAstCreationState().getCreationContext()
-								.getMappingMetamodel().getTypeConfiguration()
-				);
+		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				discriminatorType.getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
+		);
 	}
 
 	@Override

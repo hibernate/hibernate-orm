@@ -62,6 +62,11 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return entityDescriptor;
 	}
 
+	@Override
+	public DiscriminatorType getDiscriminatorType() {
+		return discriminatorType;
+	}
+
 	public BasicType<?> getUnderlyingJdbcMappingType() {
 		return discriminatorType.getUnderlyingType();
 	}
@@ -142,7 +147,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,

@@ -13,7 +13,13 @@ import org.hibernate.metamodel.mapping.Restrictable;
  * persisters for classes or collections.
  *
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.metamodel.mapping.ModelPartContainer},
+ * {@link org.hibernate.sql.ast.tree.from.TableGroupProducer} and/or
+ * {@link org.hibernate.sql.ast.tree.from.TableGroupJoinProducer} instead
+ * depending on need
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface Joinable extends Restrictable {
 	//should this interface extend PropertyMapping?
 

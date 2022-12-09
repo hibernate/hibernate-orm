@@ -267,7 +267,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -871,7 +870,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		if ( getEntityMetamodel().getSubclassEntityNames().size() == 1 ) {
+		if ( getSubMappingTypes().size() == 1 ) {
 			return getDiscriminatorSQLValue();
 		}
 		else {
@@ -2839,6 +2838,17 @@ public abstract class AbstractEntityPersister
 		insertCoordinator.coordinateInsert( id, fields, object, session );
 	}
 
+	protected EntityTableMapping[] getTableMappings() {
+		return tableMappings;
+	}
+
+	public int getTableMappingsCount() {
+		return tableMappings.length;
+	}
+
+	public EntityTableMapping getTableMapping(int i) {
+		return tableMappings[i];
+	}
 
 	/**
 	 * Unfortunately we cannot directly use `SelectableMapping#getContainingTableExpression()`

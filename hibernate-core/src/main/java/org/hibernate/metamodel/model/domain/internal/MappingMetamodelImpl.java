@@ -18,9 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import jakarta.persistence.metamodel.EmbeddableType;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -50,6 +47,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -68,10 +66,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
@@ -80,6 +78,10 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
@@ -750,10 +752,9 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
 			if ( checkPersister instanceof Queryable ) {
-				final Queryable checkQueryable = (Queryable) checkPersister;
-				final String checkQueryableEntityName = checkQueryable.getEntityName();
+				final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
 				final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-				if ( checkQueryable.isExplicitPolymorphism() ) {
+				if ( checkPersister.isExplicitPolymorphism() ) {
 					if ( isMappedClass ) {
 						return new String[] { clazz.getName() }; // NOTE EARLY EXIT
 					}
@@ -763,11 +764,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 						results.add( checkQueryableEntityName );
 					}
 					else {
-						final Class<?> mappedClass = checkQueryable.getMappedClass();
+						final Class<?> mappedClass = checkPersister.getMappedClass();
 						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
 							final boolean assignableSuperclass;
-							if ( checkQueryable.isInherited() ) {
-								Class<?> mappedSuperclass = getEntityDescriptor( checkQueryable.getMappedSuperclass() ).getMappedClass();
+							if ( checkPersister.isInherited() ) {
+								final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
+								Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
 								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
 							}
 							else {

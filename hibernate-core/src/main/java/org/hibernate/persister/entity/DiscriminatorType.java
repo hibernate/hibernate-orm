@@ -93,6 +93,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		else {
 			loadable = (Loadable) mappingMetamodel.getEntityDescriptor( (String) domainForm );
 		}
+
 		return loadable.getDiscriminatorValue();
 	}
 

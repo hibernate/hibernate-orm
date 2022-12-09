@@ -78,6 +78,19 @@ public interface EntityMappingType
 
 	String getEntityName();
 
+	/**
+	 * Details for the table this persister maps.
+	 *
+	 * @see #getIdentifierTableDetails()
+	 */
+	TableDetails getMappedTableDetails();
+
+	/**
+	 * Details for the table that defines the identifier column(s)
+	 * for an entity hierarchy.
+	 */
+	TableDetails getIdentifierTableDetails();
+
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
 		return this;
@@ -176,6 +189,13 @@ public interface EntityMappingType
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
 
+	/**
+	 * Get the class that this class is mapped as a subclass of
+	 */
+	default String getMappedSuperclass() {
+		return getSuperMappingType().getEntityName();
+	}
+
 	default int getSubclassId() {
 		return getEntityPersister().getEntityMetamodel().getSubclassId();
 	}
@@ -187,6 +207,23 @@ public interface EntityMappingType
 	default Set<String> getSubclassEntityNames() {
 		return getEntityPersister().getEntityMetamodel().getSubclassEntityNames();
 	}
+
+	/**
+	 * Is this class explicit polymorphism only?
+	 */
+	boolean isExplicitPolymorphism();
+
+	Object getDiscriminatorValue();
+
+	default String getDiscriminatorSQLValue() {
+		return getDiscriminatorValue().toString();
+	}
+
+	String getSubclassForDiscriminatorValue(Object value);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Attribute mappings
 
 	AttributeMapping findDeclaredAttributeMapping(String name);
 
@@ -247,10 +284,6 @@ public interface EntityMappingType
 	EntityIdentifierMapping getIdentifierMapping();
 
 	EntityDiscriminatorMapping getDiscriminatorMapping();
-
-	Object getDiscriminatorValue();
-
-	String getSubclassForDiscriminatorValue(Object value);
 
 	EntityVersionMapping getVersionMapping();
 

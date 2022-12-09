@@ -36,6 +36,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -569,6 +570,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public boolean isExplicitPolymorphism() {
+		return false;
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return delegate.forEachJdbcType( offset, action );
 	}
@@ -581,6 +587,16 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public String getEntityName() {
 		return delegate.getEntityMappingType().getEntityName();
+	}
+
+	@Override
+	public TableDetails getMappedTableDetails() {
+		return delegate.getEntityMappingType().getMappedTableDetails();
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		return delegate.getEntityMappingType().getIdentifierTableDetails();
 	}
 
 	@Override
@@ -616,6 +632,11 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public Object getDiscriminatorValue() {
 		return delegate.getEntityMappingType().getDiscriminatorValue();
+	}
+
+	@Override
+	public String getDiscriminatorSQLValue() {
+		return delegate.getEntityMappingType().getDiscriminatorSQLValue();
 	}
 
 	@Override

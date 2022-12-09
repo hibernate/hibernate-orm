@@ -46,6 +46,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -1280,6 +1281,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
+	}
+
+	@Override
+	public TableDetails getMappedTableDetails() {
+		return getTableMapping( getTableMappings().length - 1 );
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		final EntityMappingType superMappingType = getSuperMappingType();
+		if ( superMappingType == null ) {
+			return getMappedTableDetails();
+		}
+		return superMappingType.getIdentifierTableDetails();
 	}
 
 	@Override

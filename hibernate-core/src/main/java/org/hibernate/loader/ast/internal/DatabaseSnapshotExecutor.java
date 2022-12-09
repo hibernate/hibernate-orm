@@ -43,6 +43,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
@@ -100,14 +101,11 @@ class DatabaseSnapshotExecutor {
 		final SqlExpressionResolver sqlExpressionResolver = state.getSqlExpressionResolver();
 
 		// We just need a literal to have a result set
-		domainResults.add(
-				new QueryLiteral<>(
-						null,
-						sessionFactory.getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.INTEGER )
-				).createDomainResult( null, state )
-		);
+		final BasicType<Integer> resolved = sessionFactory.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( StandardBasicTypes.INTEGER );
+		final QueryLiteral<Integer> queryLiteral = new QueryLiteral<>( null, resolved );
+		domainResults.add( queryLiteral.createDomainResult( null, state ) );
 		final NavigablePath idNavigablePath = rootPath.append( entityDescriptor.getIdentifierMapping().getNavigableRole().getNavigableName() );
 		entityDescriptor.getIdentifierMapping().forEachSelectable(
 				(columnIndex, selection) -> {

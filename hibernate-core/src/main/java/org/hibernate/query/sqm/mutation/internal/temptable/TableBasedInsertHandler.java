@@ -20,6 +20,7 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -52,7 +53,6 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
 
 import org.jboss.logging.Logger;

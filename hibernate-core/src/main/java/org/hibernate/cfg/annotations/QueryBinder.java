@@ -45,8 +45,7 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.StoredProcedureParameter;
 
-import static org.hibernate.cfg.BinderHelper.getAnnotationValueStringOrNull;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
 
 /**
@@ -65,12 +64,12 @@ public abstract class QueryBinder {
 			return;
 		}
 
-		if ( isEmptyAnnotationValue( namedQuery.name() ) ) {
-			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
-		}
-
 		final String queryName = namedQuery.name();
 		final String queryString = namedQuery.query();
+
+		if ( queryName.isEmpty() ) {
+			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
+		}
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding named query: %s => %s", queryName, queryString );
@@ -108,12 +107,12 @@ public abstract class QueryBinder {
 			return;
 		}
 
-		if ( isEmptyAnnotationValue( namedNativeQuery.name() ) ) {
-			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
-		}
-
 		final String registrationName = namedNativeQuery.name();
 		final String queryString = namedNativeQuery.query();
+
+		if ( registrationName.isEmpty() ) {
+			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
+		}
 
 		final QueryHintDefinition hints = new QueryHintDefinition( registrationName, namedNativeQuery.hints() );
 
@@ -162,7 +161,7 @@ public abstract class QueryBinder {
 		final String registrationName = namedNativeQuery.name();
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( queryAnn.resultSetMapping() );
-		if ( isEmptyAnnotationValue( registrationName ) ) {
+		if ( registrationName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
@@ -177,14 +176,14 @@ public abstract class QueryBinder {
 				.setResultSetMappingClassName( resultSetMappingClassName )
 				.setQuerySpaces( null )
 				.setCacheable( namedNativeQuery.cacheable() )
-				.setCacheRegion( getAnnotationValueStringOrNull( namedNativeQuery.cacheRegion() ) )
+				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
 				.setCacheMode(  getCacheMode( namedNativeQuery )  )
 				.setTimeout( namedNativeQuery.timeout() < 0 ? null : namedNativeQuery.timeout() )
 				.setFetchSize( namedNativeQuery.fetchSize() < 0 ? null : namedNativeQuery.fetchSize() )
 				.setFlushMode( getFlushMode( namedNativeQuery.flushMode() ) )
 				.setReadOnly( namedNativeQuery.readOnly() )
 				.setQuerySpaces( setOf( namedNativeQuery.querySpaces() ) )
-				.setComment( getAnnotationValueStringOrNull( namedNativeQuery.comment() ) );
+				.setComment(nullIfEmpty(namedNativeQuery.comment()));
 
 		if ( namedNativeQuery.callable() ) {
 			final NamedProcedureCallDefinition definition =
@@ -329,21 +328,20 @@ public abstract class QueryBinder {
 		final String registrationName = namedQuery.name();
 
 		//ResultSetMappingDefinition mappingDefinition = mappings.getJdbcValuesMappingProducer( namedQuery.resultSetMapping() );
-		if ( isEmptyAnnotationValue( registrationName ) ) {
+		if ( registrationName.isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
-
 
 		final NamedHqlQueryDefinition.Builder builder = new NamedHqlQueryDefinition.Builder( registrationName )
 				.setHqlString( namedQuery.query() )
 				.setCacheable( namedQuery.cacheable() )
-				.setCacheRegion( getAnnotationValueStringOrNull( namedQuery.cacheRegion() ) )
+				.setCacheRegion(nullIfEmpty(namedQuery.cacheRegion()))
 				.setCacheMode( getCacheMode( namedQuery ) )
 				.setTimeout( namedQuery.timeout() < 0 ? null : namedQuery.timeout() )
 				.setFetchSize( namedQuery.fetchSize() < 0 ? null : namedQuery.fetchSize() )
 				.setFlushMode( getFlushMode( namedQuery.flushMode() ) )
 				.setReadOnly( namedQuery.readOnly() )
-				.setComment( isEmptyAnnotationValue( namedQuery.comment() ) ? null : namedQuery.comment() );
+				.setComment( nullIfEmpty( namedQuery.comment() ) );
 
 		final NamedHqlQueryDefinitionImpl hqlQueryDefinition = builder.build();
 
@@ -426,9 +424,7 @@ public abstract class QueryBinder {
 			return;
 		}
 
-		final String registrationName = annotation.name();
-
-		if ( isEmptyAnnotationValue( registrationName ) ) {
+		if ( annotation.name().isEmpty() ) {
 			throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
 		}
 

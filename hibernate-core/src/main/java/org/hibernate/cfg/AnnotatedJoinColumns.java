@@ -34,8 +34,9 @@ import java.util.Map;
 
 import static org.hibernate.cfg.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
-import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -78,7 +79,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
         for ( JoinColumnOrFormula columnOrFormula : joinColumnOrFormulas ) {
             final JoinFormula formula = columnOrFormula.formula();
             final JoinColumn column = columnOrFormula.column();
-            if ( !isEmptyOrNullAnnotationValue( formula.value() ) ) {
+			final String annotationString = formula.value();
+			if ( isNotEmpty( annotationString ) ) {
                 AnnotatedJoinColumn.buildJoinFormula( formula, parent );
             }
             else {
@@ -132,6 +134,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
             PropertyData inferredData,
             String defaultColumnSuffix,
             MetadataBuildingContext context) {
+        assert mappedBy == null || !mappedBy.isEmpty();
         final String propertyName = inferredData.getPropertyName();
         final String path = qualify( propertyHolder.getPath(), propertyName );
         final JoinColumn[] overriddes = propertyHolder.getOverriddenJoinColumn( path );
@@ -218,7 +221,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
     }
 
     public void setMappedBy(String mappedBy) {
-        this.mappedBy = mappedBy;
+        this.mappedBy = nullIfEmpty( mappedBy );
     }
 
     /**
@@ -228,7 +231,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
      *         unowned many-valued association.
      */
     public boolean hasMappedBy() {
-        return !isEmptyOrNullAnnotationValue( getMappedBy() );
+		return mappedBy != null;
     }
 
     public String getMappedByEntityName() {

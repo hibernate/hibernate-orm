@@ -49,9 +49,9 @@ import org.hibernate.mapping.Value;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -485,8 +485,8 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		schema = isEmptyOrNullAnnotationValue( schema )  ? null : schema;
-		catalog = isEmptyOrNullAnnotationValue( catalog ) ? null : catalog;
+		schema = nullIfEmpty( schema );
+		catalog = nullIfEmpty( catalog );
 
 		final Table table;
 		if ( denormalizedSuperTableXref != null ) {

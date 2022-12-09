@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -16,7 +17,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentBag bags},
- * whose mapping model type is {@link org.hibernate.mapping.Bag}.
+ * whose mapping model type is {@link Bag}.
  *
  * @author Matthew Inger
  */
@@ -29,6 +30,6 @@ public class BagBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass owner) {
-		return new org.hibernate.mapping.Bag( getCustomTypeBeanResolver(), owner, getBuildingContext() );
+		return new Bag( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
 }

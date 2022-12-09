@@ -200,6 +200,8 @@ import jakarta.persistence.Version;
 
 import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.JAXB_TRANSIENT_NAME;
 import static org.hibernate.cfg.annotations.reflection.internal.PropertyMappingElementCollector.PERSISTENT_ATTRIBUTE_NAME;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor (orm.xml, ...).
@@ -621,8 +623,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	private String qualifyConverterAttributeName(String attributeNamePrefix, String specifiedAttributeName) {
 		String qualifiedAttributeName;
-		if ( StringHelper.isNotEmpty( specifiedAttributeName ) ) {
-			if ( StringHelper.isNotEmpty( attributeNamePrefix ) ) {
+		if ( isNotEmpty( specifiedAttributeName ) ) {
+			if ( isNotEmpty( attributeNamePrefix ) ) {
 				qualifiedAttributeName = attributeNamePrefix + '.' + specifiedAttributeName;
 			}
 			else {
@@ -857,14 +859,14 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				|| isPhysicalAnnotationPresent( JoinColumns.class ) );
 		final Class<? extends Annotation> annotationClass = annotation.annotationType();
 		defaultToJoinTable = defaultToJoinTable &&
-				( ( annotationClass == ManyToMany.class && StringHelper.isEmpty( ( (ManyToMany) annotation ).mappedBy() ) )
-						|| ( annotationClass == OneToMany.class && StringHelper.isEmpty( ( (OneToMany) annotation ).mappedBy() ) )
+				( ( annotationClass == ManyToMany.class && isEmpty( ( (ManyToMany) annotation ).mappedBy() ) )
+						|| ( annotationClass == OneToMany.class && isEmpty( ( (OneToMany) annotation ).mappedBy() ) )
 						|| ( annotationClass == ElementCollection.class )
 				);
 		final Class<JoinTable> annotationType = JoinTable.class;
 		if ( defaultToJoinTable
-				&& ( StringHelper.isNotEmpty( defaults.getCatalog() )
-				|| StringHelper.isNotEmpty( defaults.getSchema() ) ) ) {
+				&& ( isNotEmpty( defaults.getCatalog() )
+				|| isNotEmpty( defaults.getSchema() ) ) ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
 			if ( defaults.canUseJavaAnnotations() ) {
 				JoinTable table = getPhysicalAnnotation( annotationType );
@@ -877,12 +879,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					ad.setValue( "inverseJoinColumns", table.inverseJoinColumns() );
 				}
 			}
-			if ( StringHelper.isEmpty( (String) ad.valueOf( "schema" ) )
-					&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+			if ( isEmpty( (String) ad.valueOf( "schema" ) )
+					&& isNotEmpty( defaults.getSchema() ) ) {
 				ad.setValue( "schema", defaults.getSchema() );
 			}
-			if ( StringHelper.isEmpty( (String) ad.valueOf( "catalog" ) )
-					&& StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+			if ( isEmpty( (String) ad.valueOf( "catalog" ) )
+					&& isNotEmpty( defaults.getCatalog() ) ) {
 				ad.setValue( "catalog", defaults.getCatalog() );
 			}
 			return AnnotationFactory.create( ad );
@@ -958,13 +960,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		AnnotationDescriptor annotation = new AnnotationDescriptor( annotationType );
 		copyAttribute( annotation, "name", subelement.getName(), false );
 		copyAttribute( annotation, "catalog", subelement.getCatalog(), false );
-		if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-				&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+		if ( isNotEmpty( defaults.getCatalog() )
+				&& isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 			annotation.setValue( "catalog", defaults.getCatalog() );
 		}
 		copyAttribute( annotation, "schema", subelement.getSchema(), false );
-		if ( StringHelper.isNotEmpty( defaults.getSchema() )
-				&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+		if ( isNotEmpty( defaults.getSchema() )
+				&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 			annotation.setValue( "schema", defaults.getSchema() );
 		}
 		buildUniqueConstraints( annotation, subelement.getUniqueConstraint() );
@@ -1433,7 +1435,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		if ( element != null ) {
 			String mapKeyClassName = element.getClazz();
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyClass.class );
-			if ( StringHelper.isNotEmpty( mapKeyClassName ) ) {
+			if ( isNotEmpty( mapKeyClassName ) ) {
 				Class clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
@@ -1456,13 +1458,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( CollectionTable.class );
 			copyAttribute( annotation, "name", element.getName(), false );
 			copyAttribute( annotation, "catalog", element.getCatalog(), false );
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+			if ( isNotEmpty( defaults.getCatalog() )
+					&& isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
 			copyAttribute( annotation, "schema", element.getSchema(), false );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+			if ( isNotEmpty( defaults.getSchema() )
+					&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
 			JoinColumn[] joinColumns = getJoinColumns( element.getJoinColumn(), false );
@@ -2324,7 +2326,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
 		copyAttribute( columnResultDescriptor, "name", columnResultElement.getName(), true );
 		final String columnTypeName = columnResultElement.getClazz();
-		if ( StringHelper.isNotEmpty( columnTypeName ) ) {
+		if ( isNotEmpty( columnTypeName ) ) {
 			columnResultDescriptor.setValue( "type", resolveClassReference( columnTypeName, defaults, classLoaderAccess ) );
 		}
 		return AnnotationFactory.create( columnResultDescriptor );
@@ -2607,7 +2609,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			addSynchronizationsHint( additionalHints, element.getSynchronizations() );
 			buildQueryHints( element.getHint(), ann, additionalHints );
 			String clazzName = element.getResultClass();
-			if ( StringHelper.isNotEmpty( clazzName ) ) {
+			if ( isNotEmpty( clazzName ) ) {
 				Class clazz;
 				try {
 					clazz = classLoaderAccess.classForName(
@@ -2659,19 +2661,19 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 		else if ( defaults.canUseJavaAnnotations() && isPhysicalAnnotationPresent( TableGenerator.class ) ) {
 			TableGenerator tableAnn = getPhysicalAnnotation( TableGenerator.class );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					|| StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+			if ( isNotEmpty( defaults.getSchema() )
+					|| isNotEmpty( defaults.getCatalog() ) ) {
 				AnnotationDescriptor annotation = new AnnotationDescriptor( TableGenerator.class );
 				annotation.setValue( "name", tableAnn.name() );
 				annotation.setValue( "table", tableAnn.table() );
 				annotation.setValue( "catalog", tableAnn.table() );
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) )
-						&& StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "catalog" ) )
+						&& isNotEmpty( defaults.getCatalog() ) ) {
 					annotation.setValue( "catalog", defaults.getCatalog() );
 				}
 				annotation.setValue( "schema", tableAnn.table() );
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) )
-						&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "schema" ) )
+						&& isNotEmpty( defaults.getSchema() ) ) {
 					annotation.setValue( "catalog", defaults.getSchema() );
 				}
 				annotation.setValue( "pkColumnName", tableAnn.pkColumnName() );
@@ -2703,12 +2705,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		copyAttribute( ad, "initial-value", element.getInitialValue(), false );
 		copyAttribute( ad, "allocation-size", element.getAllocationSize(), false );
 		buildUniqueConstraints( ad, element.getUniqueConstraint() );
-		if ( StringHelper.isEmpty( (String) ad.valueOf( "schema" ) )
-				&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+		if ( isEmpty( (String) ad.valueOf( "schema" ) )
+				&& isNotEmpty( defaults.getSchema() ) ) {
 			ad.setValue( "schema", defaults.getSchema() );
 		}
-		if ( StringHelper.isEmpty( (String) ad.valueOf( "catalog" ) )
-				&& StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+		if ( isEmpty( (String) ad.valueOf( "catalog" ) )
+				&& isNotEmpty( defaults.getCatalog() ) ) {
 			ad.setValue( "catalog", defaults.getCatalog() );
 		}
 		return AnnotationFactory.create( ad );
@@ -2880,7 +2882,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor entity = new AnnotationDescriptor( Entity.class );
 				copyAttribute( entity, "name", entityElement.getName(), false );
 				if ( defaults.canUseJavaAnnotations()
-						&& StringHelper.isEmpty( (String) entity.valueOf( "name" ) ) ) {
+						&& isEmpty( (String) entity.valueOf( "name" ) ) ) {
 					Entity javaAnn = getPhysicalAnnotation( Entity.class );
 					if ( javaAnn != null ) {
 						entity.setValue( "name", javaAnn.name() );
@@ -2926,7 +2928,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 
 	private Subselect getTableExpression(JaxbEntity entity, XMLContext.Default defaults) {
 		final String tableExpression = entity.getTableExpression();
-		if ( StringHelper.isEmpty( tableExpression ) ) {
+		if ( isEmpty( tableExpression ) ) {
 			return null;
 		}
 
@@ -2939,8 +2941,8 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		final JaxbTable element = root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTable() : null;
 		if ( element == null ) {
 			//no element but might have some default or some annotation
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					|| StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+			if ( isNotEmpty( defaults.getCatalog() )
+					|| isNotEmpty( defaults.getSchema() ) ) {
 				AnnotationDescriptor annotation = new AnnotationDescriptor( Table.class );
 				if ( defaults.canUseJavaAnnotations() ) {
 					Table table = getPhysicalAnnotation( Table.class );
@@ -2952,12 +2954,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 						annotation.setValue( "indexes", table.indexes() );
 					}
 				}
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) )
-						&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "schema" ) )
+						&& isNotEmpty( defaults.getSchema() ) ) {
 					annotation.setValue( "schema", defaults.getSchema() );
 				}
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) )
-						&& StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "catalog" ) )
+						&& isNotEmpty( defaults.getCatalog() ) ) {
 					annotation.setValue( "catalog", defaults.getCatalog() );
 				}
 				return AnnotationFactory.create( annotation );
@@ -2974,13 +2976,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( Table.class );
 			copyAttribute( annotation, "name", element.getName(), false );
 			copyAttribute( annotation, "catalog", element.getCatalog(), false );
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+			if ( isNotEmpty( defaults.getCatalog() )
+					&& isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
 			copyAttribute( annotation, "schema", element.getSchema(), false );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+			if ( isNotEmpty( defaults.getSchema() )
+					&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
 			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
@@ -2998,13 +3000,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( SecondaryTable.class );
 			copyAttribute( annotation, "name", element.getName(), false );
 			copyAttribute( annotation, "catalog", element.getCatalog(), false );
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+			if ( isNotEmpty( defaults.getCatalog() )
+					&& isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
 				annotation.setValue( "catalog", defaults.getCatalog() );
 			}
 			copyAttribute( annotation, "schema", element.getSchema(), false );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+			if ( isNotEmpty( defaults.getSchema() )
+					&& isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
 				annotation.setValue( "schema", defaults.getSchema() );
 			}
 			buildUniqueConstraints( annotation, element.getUniqueConstraint() );
@@ -3042,20 +3044,20 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	) {
 		if ( secTableAnn != null ) {
 			//handle default values
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					|| StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+			if ( isNotEmpty( defaults.getCatalog() )
+					|| isNotEmpty( defaults.getSchema() ) ) {
 				AnnotationDescriptor annotation = new AnnotationDescriptor( SecondaryTable.class );
 				annotation.setValue( "name", secTableAnn.name() );
 				annotation.setValue( "schema", secTableAnn.schema() );
 				annotation.setValue( "catalog", secTableAnn.catalog() );
 				annotation.setValue( "uniqueConstraints", secTableAnn.uniqueConstraints() );
 				annotation.setValue( "pkJoinColumns", secTableAnn.pkJoinColumns() );
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) )
-						&& StringHelper.isNotEmpty( defaults.getSchema() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "schema" ) )
+						&& isNotEmpty( defaults.getSchema() ) ) {
 					annotation.setValue( "schema", defaults.getSchema() );
 				}
-				if ( StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) )
-						&& StringHelper.isNotEmpty( defaults.getCatalog() ) ) {
+				if ( isEmpty( (String) annotation.valueOf( "catalog" ) )
+						&& isNotEmpty( defaults.getCatalog() ) ) {
 					annotation.setValue( "catalog", defaults.getCatalog() );
 				}
 				secondaryTables.add( AnnotationFactory.create( annotation ) );

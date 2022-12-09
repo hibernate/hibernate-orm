@@ -24,11 +24,10 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
-import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unquote;
 
@@ -53,7 +52,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	private AnnotatedJoinColumn() {}
 
 	public void setReferencedColumn(String referencedColumn) {
-		this.referencedColumn = referencedColumn;
+		this.referencedColumn = nullIfEmpty( referencedColumn );
 	}
 
 	/**
@@ -68,7 +67,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 *         {@link JoinColumn#referencedColumnName() referencedColumnName}.
 	 */
 	public boolean isReferenceImplicit() {
-		return isEmptyOrNullAnnotationValue( referencedColumn );
+		return isEmpty( referencedColumn );
 	}
 
 	static AnnotatedJoinColumn buildJoinColumn(
@@ -111,7 +110,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		if ( joinColumn != null ) {
-			if ( !isEmptyOrNullAnnotationValue( mappedBy ) ) {
+			if ( mappedBy != null ) {
 				throw new AnnotationException( "Association '"
 						+ getRelativePath( propertyHolder, inferredData.getPropertyName() )
 						+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" );
@@ -177,11 +176,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else {
 			setImplicit( false );
-			if ( !isEmptyAnnotationValue( joinColumn.columnDefinition() ) ) {
+			if ( !joinColumn.columnDefinition().isEmpty() ) {
 				setSqlType( getBuildingContext().getObjectNameNormalizer()
 						.applyGlobalQuoting( joinColumn.columnDefinition() ) );
 			}
-			if ( !isEmptyAnnotationValue( joinColumn.name() ) ) {
+			if ( !joinColumn.name().isEmpty() ) {
 				setLogicalColumnName( joinColumn.name() );
 			}
 			setNullable( joinColumn.nullable() );
@@ -190,7 +189,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setUpdatable( joinColumn.updatable() );
 			setReferencedColumn( joinColumn.referencedColumnName() );
 
-			if ( isEmptyAnnotationValue( joinColumn.table() ) ) {
+			if ( joinColumn.table().isEmpty() ) {
 				setExplicitTableName( "" );
 			}
 			else {
@@ -242,7 +241,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 		final String columnDef = columnDefinition.isEmpty() ? null
 				: normalizer.toDatabaseIdentifierText( columnDefinition );
-		final String logicalColumnName = columnName != null && columnName.isEmpty()
+		final String logicalColumnName = columnName.isEmpty()
 				? normalizer.normalizeIdentifierQuotingAsString( defaultColumnName )
 				: normalizer.normalizeIdentifierQuotingAsString( columnName );
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
@@ -350,7 +349,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	protected void addColumnBinding(SimpleValue value) {
-		if ( isEmpty( getParent().getMappedBy() ) ) {
+		if ( !getParent().hasMappedBy() ) {
 			// was the column explicitly quoted in the mapping/annotation
 			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names
 			boolean isLogicalColumnQuoted = isQuoted( getLogicalColumnName() );

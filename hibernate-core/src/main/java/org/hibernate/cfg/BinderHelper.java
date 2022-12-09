@@ -73,6 +73,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -482,7 +483,7 @@ public class BinderHelper {
 		int lastPropertyColumnIndex = 0;
 		Property currentProperty = null;
 		for ( Column column : orderedColumns ) {
-			Set<Property> properties = columnsToProperty.get( column );
+			final Set<Property> properties = columnsToProperty.get( column );
 			if ( properties.isEmpty() ) {
 				// no property found which maps to this column
 				throw new AnnotationException( "Referenced column '" + column.getName()
@@ -576,11 +577,9 @@ public class BinderHelper {
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
 		Property property = null;
 		Property idProperty = associatedClass.getIdentifierProperty();
-		String idName = idProperty != null ? idProperty.getName() : null;
+		String idName = idProperty == null ? null : idProperty.getName();
 		try {
-			if ( propertyName == null
-					|| propertyName.length() == 0
-					|| propertyName.equals( idName ) ) {
+			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
 				//default to id
 				property = idProperty;
 			}
@@ -768,7 +767,7 @@ public class BinderHelper {
 		parameters.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
 		parameters.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
 
-		if ( !isEmptyAnnotationValue( generatorName ) ) {
+		if ( !generatorName.isEmpty() ) {
 			//we have a named generator
 			final IdentifierGeneratorDefinition definition = makeIdentifierGeneratorDefinition(
 					generatorName,
@@ -856,19 +855,6 @@ public class BinderHelper {
 
 	private static GenerationType interpretGenerationType(GeneratedValue generatedValueAnn) {
 		return generatedValueAnn.strategy() == null ? GenerationType.AUTO : generatedValueAnn.strategy();
-	}
-
-	public static boolean isEmptyAnnotationValue(String annotationString) {
-		return annotationString != null && annotationString.isEmpty();
-		//equivalent to (but faster) ANNOTATION_STRING_DEFAULT.equals( annotationString );
-	}
-
-	public static boolean isEmptyOrNullAnnotationValue(String annotationString) {
-		return annotationString == null || annotationString.isEmpty();
-	}
-
-	public static String getAnnotationValueStringOrNull(String value) {
-		return isEmptyOrNullAnnotationValue( value ) ? null : value;
 	}
 
 	public static Any buildAnyValue(

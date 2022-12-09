@@ -142,8 +142,6 @@ import static org.hibernate.cfg.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.cfg.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
-import static org.hibernate.cfg.BinderHelper.isEmptyOrNullAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
@@ -703,7 +701,7 @@ public class EntityBinder {
 
 	private static void handleForeignKeys(XClass clazzToProcess, MetadataBuildingContext context, DependantValue key) {
 		final ForeignKey foreignKey = clazzToProcess.getAnnotation( ForeignKey.class );
-		if ( foreignKey != null && !isEmptyAnnotationValue( foreignKey.name() ) ) {
+		if ( foreignKey != null && !foreignKey.name().isEmpty() ) {
 			key.setForeignKeyName( foreignKey.name() );
 		}
 		else {
@@ -715,9 +713,9 @@ public class EntityBinder {
 				// don't apply a constraint based on ConstraintMode
 				key.disableForeignKey();
 			}
-			else if ( pkJoinColumns != null && !StringHelper.isEmpty( pkJoinColumns.foreignKey().name() ) ) {
+			else if ( pkJoinColumns != null && isNotEmpty( pkJoinColumns.foreignKey().name() ) ) {
 				key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
-				if ( !isEmptyAnnotationValue( pkJoinColumns.foreignKey().foreignKeyDefinition() ) ) {
+				if ( !pkJoinColumns.foreignKey().foreignKeyDefinition().isEmpty() ) {
 					key.setForeignKeyDefinition( pkJoinColumns.foreignKey().foreignKeyDefinition() );
 				}
 			}
@@ -726,9 +724,9 @@ public class EntityBinder {
 				// don't apply a constraint based on ConstraintMode
 				key.disableForeignKey();
 			}
-			else if ( pkJoinColumn != null && !StringHelper.isEmpty( pkJoinColumn.foreignKey().name() ) ) {
+			else if ( pkJoinColumn != null && isNotEmpty( pkJoinColumn.foreignKey().name() ) ) {
 				key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
-				if ( !isEmptyAnnotationValue( pkJoinColumn.foreignKey().foreignKeyDefinition() ) ) {
+				if ( !pkJoinColumn.foreignKey().foreignKeyDefinition().isEmpty() ) {
 					key.setForeignKeyDefinition( pkJoinColumn.foreignKey().foreignKeyDefinition() );
 				}
 			}
@@ -1063,7 +1061,8 @@ public class EntityBinder {
 		if ( entity == null ) {
 			throw new AssertionFailure( "@Entity should never be missing" );
 		}
-		name = isEmptyAnnotationValue( entity.name() ) ? unqualify( annotatedClass.getName() ) : entity.name();
+		final String entityName = entity.name();
+		name = entityName.isEmpty() ? unqualify( annotatedClass.getName() ) : entityName;
 	}
 
 	public boolean isRootEntity() {
@@ -1201,7 +1200,7 @@ public class EntityBinder {
 	private void bindFilters() {
 		for ( Filter filter : filters ) {
 			String condition = filter.condition();
-			if ( isEmptyAnnotationValue( condition ) ) {
+			if ( condition.isEmpty() ) {
 				condition = getDefaultFilterCondition( filter.name() );
 			}
 			persistentClass.addFilter(
@@ -1284,7 +1283,7 @@ public class EntityBinder {
 		final String discriminatorValue = annotatedClass.isAnnotationPresent( DiscriminatorValue.class )
 				? annotatedClass.getAnnotation( DiscriminatorValue.class ).value()
 				: null;
-		if ( isEmptyOrNullAnnotationValue( discriminatorValue ) ) {
+		if ( isEmpty( discriminatorValue ) ) {
 			final Value discriminator = persistentClass.getDiscriminator();
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
@@ -1371,7 +1370,7 @@ public class EntityBinder {
 		naturalIdCacheRegion = null;
 		final NaturalIdCache naturalIdCacheAnn = annotatedClass.getAnnotation( NaturalIdCache.class );
 		if ( naturalIdCacheAnn != null ) {
-			if ( isEmptyAnnotationValue( naturalIdCacheAnn.region() ) ) {
+			if ( naturalIdCacheAnn.region().isEmpty() ) {
 				final Cache explicitCacheAnn = annotatedClass.getAnnotation( Cache.class );
 				naturalIdCacheRegion = explicitCacheAnn != null && isNotEmpty( explicitCacheAnn.region() )
 						? explicitCacheAnn.region() + NATURAL_ID_CACHE_SUFFIX
@@ -1744,7 +1743,7 @@ public class EntityBinder {
 		final String tableName = join.getTable().getQuotedName();
 		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
-		if ( matchingTable != null && !isEmptyAnnotationValue( matchingTable.foreignKey().name() ) ) {
+		if ( matchingTable != null && !matchingTable.foreignKey().name().isEmpty() ) {
 			key.setForeignKeyName( matchingTable.foreignKey().name() );
 		}
 		else {
@@ -2017,7 +2016,7 @@ public class EntityBinder {
 		}
 		else if ( matchingTable != null ) {
 			final String insertSql = matchingTable.sqlInsert().sql();
-			if ( !isEmptyAnnotationValue(insertSql) ) {
+			if ( !insertSql.isEmpty() ) {
 				join.setCustomSQLInsert(
 						insertSql.trim(),
 						matchingTable.sqlInsert().callable(),
@@ -2036,7 +2035,7 @@ public class EntityBinder {
 		}
 		else if ( matchingTable != null ) {
 			final String updateSql = matchingTable.sqlUpdate().sql();
-			if ( !isEmptyAnnotationValue(updateSql) ) {
+			if ( !updateSql.isEmpty() ) {
 				join.setCustomSQLUpdate(
 						updateSql.trim(),
 						matchingTable.sqlUpdate().callable(),
@@ -2055,7 +2054,7 @@ public class EntityBinder {
 		}
 		else if ( matchingTable != null ) {
 			final String deleteSql = matchingTable.sqlDelete().sql();
-			if ( !isEmptyAnnotationValue(deleteSql) ) {
+			if ( !deleteSql.isEmpty() ) {
 				join.setCustomSQLDelete(
 						deleteSql.trim(),
 						matchingTable.sqlDelete().callable(),
@@ -2095,10 +2094,10 @@ public class EntityBinder {
 	public void processComplementaryTableDefinitions(org.hibernate.annotations.Table table) {
 		if ( table != null ) {
 			Table appliedTable = findTable( table.appliesTo() );
-			if ( !isEmptyAnnotationValue( table.comment() ) ) {
+			if ( !table.comment().isEmpty() ) {
 				appliedTable.setComment( table.comment() );
 			}
-			if ( !isEmptyAnnotationValue( table.checkConstraint() ) ) {
+			if ( !table.checkConstraint().isEmpty() ) {
 				appliedTable.addCheckConstraint( table.checkConstraint() );
 			}
 			TableBinder.addIndexes( appliedTable, table.indexes(), context );

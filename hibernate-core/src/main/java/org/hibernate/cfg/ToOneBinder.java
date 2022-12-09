@@ -49,7 +49,6 @@ import static org.hibernate.cfg.AnnotationBinder.matchIgnoreNotFoundWithFetchTyp
 import static org.hibernate.cfg.BinderHelper.getCascadeStrategy;
 import static org.hibernate.cfg.BinderHelper.getFetchMode;
 import static org.hibernate.cfg.BinderHelper.getPath;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -221,14 +220,15 @@ public class ToOneBinder {
 					columnName = prop.getAnnotation( Column.class ).name();
 				}
 
-				if ( property.isAnnotationPresent( ManyToOne.class ) && joinColumn != null
-						&& ! isEmptyAnnotationValue( joinColumn.name() )
-						&& joinColumn.name().equals( columnName )
-						&& !property.isAnnotationPresent( MapsId.class ) ) {
-					hasSpecjManyToOne = true;
-					for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
-						column.setInsertable( false );
-						column.setUpdatable( false );
+				if ( property.isAnnotationPresent( ManyToOne.class ) && joinColumn != null ) {
+					if ( !joinColumn.name().isEmpty()
+							&& joinColumn.name().equals( columnName )
+							&& !property.isAnnotationPresent( MapsId.class ) ) {
+						hasSpecjManyToOne = true;
+						for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
+							column.setInsertable( false );
+							column.setUpdatable( false );
+						}
 					}
 				}
 			}
@@ -424,7 +424,7 @@ public class ToOneBinder {
 				getTargetEntity( inferredData, context ),
 				propertyHolder,
 				inferredData,
-				oneToOne.mappedBy(),
+				nullIfEmpty( oneToOne.mappedBy() ),
 				trueOneToOne,
 				isIdentifierMapper,
 				inSecondPass,
@@ -453,7 +453,7 @@ public class ToOneBinder {
 		final String propertyName = inferredData.getPropertyName();
 		LOG.tracev( "Fetching {0} with {1}", propertyName, fetchMode );
 		if ( isMapToPK( joinColumns, propertyHolder, trueOneToOne )
-				|| !isEmptyAnnotationValue( mappedBy ) ) {
+				|| mappedBy != null ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
 			final OneToOneSecondPass secondPass = new OneToOneSecondPass(
@@ -474,7 +474,7 @@ public class ToOneBinder {
 				secondPass.doSecondPass( context.getMetadataCollector().getEntityBindingMap() );
 			}
 			else {
-				context.getMetadataCollector().addSecondPass( secondPass, isEmptyAnnotationValue( mappedBy ) );
+				context.getMetadataCollector().addSecondPass( secondPass, mappedBy == null );
 			}
 		}
 		else {

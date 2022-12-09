@@ -155,7 +155,6 @@ import static org.hibernate.cfg.BinderHelper.getPath;
 import static org.hibernate.cfg.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.cfg.BinderHelper.getRelativePath;
 import static org.hibernate.cfg.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
 import static org.hibernate.cfg.BinderHelper.makeIdGenerator;
 import static org.hibernate.cfg.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.cfg.InheritanceState.getSuperclassInheritanceState;
@@ -550,11 +549,11 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleImport(XClass annotatedClass, MetadataBuildingContext context) {
-		if ( annotatedClass.isAnnotationPresent(Imported.class) ) {
+		if ( annotatedClass.isAnnotationPresent( Imported.class ) ) {
 			String qualifiedName = annotatedClass.getName();
 			String name = StringHelper.unqualify( qualifiedName );
-			String rename = annotatedClass.getAnnotation(Imported.class).rename();
-			context.getMetadataCollector().addImport( isEmptyAnnotationValue( rename ) ? name : rename, qualifiedName );
+			String rename = annotatedClass.getAnnotation( Imported.class ).rename();
+			context.getMetadataCollector().addImport( rename.isEmpty() ? name : rename, qualifiedName );
 		}
 	}
 

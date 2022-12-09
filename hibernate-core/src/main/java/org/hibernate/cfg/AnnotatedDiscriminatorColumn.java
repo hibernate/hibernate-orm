@@ -13,8 +13,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import static org.hibernate.cfg.BinderHelper.isEmptyAnnotationValue;
-
 /**
  * A {@link jakarta.persistence.DiscriminatorColumn} annotation
  *
@@ -59,10 +57,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		}
 		else if ( discriminatorColumn != null ) {
 			column.setImplicit( false );
-			if ( !isEmptyAnnotationValue( discriminatorColumn.columnDefinition() ) ) {
+			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
 				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
-			if ( !isEmptyAnnotationValue( discriminatorColumn.name() ) ) {
+			if ( !discriminatorColumn.name().isEmpty() ) {
 				column.setLogicalColumnName( discriminatorColumn.name() );
 			}
 			column.setNullable( false );

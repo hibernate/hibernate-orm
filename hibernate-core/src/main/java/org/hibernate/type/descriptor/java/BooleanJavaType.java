@@ -168,13 +168,21 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType sqlTypeDescriptor, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
 		return dialect.getBooleanCheckCondition(
 				columnName,
-				sqlTypeDescriptor.getJdbcTypeCode(),
+				jdbcType.getJdbcTypeCode(),
 				characterValueFalse,
 				characterValueTrue
 		);
 	}
 
+	@Override
+	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		return dialect.getBooleanTypeDeclaration(
+				jdbcType.getJdbcTypeCode(),
+				characterValueFalse,
+				characterValueTrue
+		);
+	}
 }

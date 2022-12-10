@@ -653,6 +653,10 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	public String getBooleanTypeDeclaration(int sqlType, char falseChar, char trueChar) {
+		return null;
+	}
+
 	/**
 	 * Render a SQL check condition for a column that represents a boolean value.
 	 */

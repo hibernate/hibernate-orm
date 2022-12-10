@@ -772,9 +772,20 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getBooleanTypeDeclaration(int sqlType, char falseChar, char trueChar) {
+		return isCharacterType( sqlType ) ? "enum ('" + falseChar + "','" + trueChar + "')" : null;
+	}
+
+	@Override
 	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
 		// don't need it, since we're using the 'enum' type
 		return null;
+	}
+
+	@Override
+	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
+		return isCharacterType( sqlType ) ? null
+				: super.getBooleanCheckCondition( columnName, sqlType, falseChar, trueChar );
 	}
 
 	@Override

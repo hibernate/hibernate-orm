@@ -47,6 +47,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
@@ -215,11 +216,9 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
 import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
@@ -348,6 +347,8 @@ public abstract class Dialect implements ConversionContext {
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
 				Boolean.toString( getDefaultUseGetGeneratedKeys() )  );
 	}
+
+	public void registerAttributeConverters(InFlightMetadataCollector metadataCollector) {}
 
 	/**
 	 * Register ANSI-standard column types using the length limits defined
@@ -653,50 +654,29 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
-	public String getBooleanTypeDeclaration(int sqlType, char falseChar, char trueChar) {
-		return null;
-	}
-
-	/**
-	 * Render a SQL check condition for a column that represents a boolean value.
-	 */
-	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
-		if ( isCharacterType(sqlType) ) {
-			return columnName + " in ('" + falseChar + "','" + trueChar + "')";
-		}
-		else if ( isNumericType(sqlType) && !supportsBitType() ) {
-			return columnName + " in (0,1)";
-		}
-		else {
-			return null;
-		}
-	}
-
-	public String getEnumTypeDeclaration(int sqlType, Class<? extends Enum<?>> enumClass) {
+	public String getEnumTypeDeclaration(String[] values) {
 		return null;
 	}
 
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 */
-	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
-		if ( isCharacterType(sqlType) ) {
-			StringBuilder check = new StringBuilder();
-			check.append( columnName ).append( " in (" );
-			String separator = "";
-			for ( Enum<?> value : enumClass.getEnumConstants() ) {
-				check.append( separator ).append('\'').append( value.name() ).append('\'');
-				separator = ",";
-			}
-			return check.append( ')' ).toString();
+	public String getCheckCondition(String columnName, String[] values) {
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		for ( String value : values ) {
+			check.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
 		}
-		else if ( isNumericType(sqlType) ) {
-			int last = enumClass.getEnumConstants().length - 1;
-			return columnName + " between 0 and " + last;
-		}
-		else {
-			return null;
-		}
+		return check.append( ')' ).toString();
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value.
+	 */
+	public String getCheckCondition(String columnName, long min, long max) {
+			return columnName + " between " + min + " and " + max;
 	}
 
 	/**

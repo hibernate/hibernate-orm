@@ -69,21 +69,21 @@ public class CustomType<J>
 
 	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
 		this.userType = userType;
-		this.name = userType.getClass().getName();
+		name = userType.getClass().getName();
 
 		if ( userType instanceof JavaType<?> ) {
 			//noinspection unchecked
-			this.mappedJavaType = (JavaType<J>) userType;
+			mappedJavaType = (JavaType<J>) userType;
 		}
 		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
+			mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+			mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
-			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
+			mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
@@ -91,22 +91,22 @@ public class CustomType<J>
 			// When an explicit value converter is given,
 			// we configure the custom type to use that instead of adapters that delegate to UserType.
 			// This is necessary to support selecting a column with multiple domain type representations.
-			this.jdbcType = userType.getJdbcType( typeConfiguration );
-			this.jdbcJavaType = valueConverter.getRelationalJavaType();
+			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcJavaType = valueConverter.getRelationalJavaType();
 			//noinspection unchecked
-			this.valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
+			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
 			//noinspection unchecked
-			this.valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
+			valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
 			//noinspection unchecked
-			this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+			jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
 		}
 		else {
 			// create a JdbcType adapter that uses the UserType binder/extract handling
-			this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
-			this.jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
-			this.valueBinder = jdbcType.getBinder( mappedJavaType );
-			this.jdbcLiteralFormatter = userType instanceof EnhancedUserType
+			jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
+			jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			valueExtractor = jdbcType.getExtractor( mappedJavaType );
+			valueBinder = jdbcType.getBinder( mappedJavaType );
+			jdbcLiteralFormatter = userType instanceof EnhancedUserType
 					? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
 					: null;
 		}

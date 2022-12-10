@@ -166,23 +166,4 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
-
-	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-		return dialect.getBooleanCheckCondition(
-				columnName,
-				jdbcType.getJdbcTypeCode(),
-				characterValueFalse,
-				characterValueTrue
-		);
-	}
-
-	@Override
-	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return dialect.getBooleanTypeDeclaration(
-				jdbcType.getJdbcTypeCode(),
-				characterValueFalse,
-				characterValueTrue
-		);
-	}
 }

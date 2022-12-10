@@ -213,7 +213,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void checkType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) &&!isNumericType(code) && code != UUID ) {
+				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && code != UUID ) {
 					if ( javaType == java.util.UUID.class && ( code == Types.BINARY || isCharacterType( code ) ) ) {
 						// We also consider UUID to be comparable when it's a character or binary type
 						return;

@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Types;
 import jakarta.persistence.EnumType;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -213,15 +212,5 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 			return null;
 		}
 		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-		return dialect.getEnumCheckCondition( columnName, jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
-	}
-
-	@Override
-	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return dialect.getEnumTypeDeclaration( jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
 	}
 }

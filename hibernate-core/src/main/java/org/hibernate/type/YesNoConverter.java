@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
@@ -13,27 +14,24 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Handles conversion to/from Boolean as `Y` or `N`
+ * Handles conversion to/from {@code Boolean} as {@code 'Y'} or {@code 'N'}
  *
  * @author Steve Ebersole
  */
 @Converter
-public class YesNoConverter implements AttributeConverter<Boolean, Character>, BasicValueConverter<Boolean, Character> {
+public class YesNoConverter extends CharBooleanConverter {
 	/**
 	 * Singleton access
 	 */
 	public static final YesNoConverter INSTANCE = new YesNoConverter();
+	private static final String[] VALUES = {"N", "Y"};
 
 	@Override
-	public Character convertToDatabaseColumn(Boolean attribute) {
-		return toRelationalValue( attribute );
-	}
-
-	@Override
-	public Boolean convertToEntityAttribute(Character dbData) {
-		return toDomainValue( dbData );
+	protected String[] getValues() {
+		return VALUES;
 	}
 
 	@Override
@@ -59,15 +57,5 @@ public class YesNoConverter implements AttributeConverter<Boolean, Character>, B
 		}
 
 		return domainForm ? 'Y' : 'N';
-	}
-
-	@Override
-	public JavaType<Boolean> getDomainJavaType() {
-		return BooleanJavaType.INSTANCE;
-	}
-
-	@Override
-	public JavaType<Character> getRelationalJavaType() {
-		return CharacterJavaType.INSTANCE;
 	}
 }

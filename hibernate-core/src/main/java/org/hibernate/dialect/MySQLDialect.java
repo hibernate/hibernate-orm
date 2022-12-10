@@ -77,8 +77,6 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -755,37 +753,21 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(int sqlType, Class<? extends Enum<?>> enumClass) {
-		if ( isCharacterType(sqlType) || isIntegral(sqlType) ) {
-			StringBuilder type = new StringBuilder();
-			type.append( "enum (" );
-			String separator = "";
-			for ( Enum<?> value : enumClass.getEnumConstants() ) {
-				type.append( separator ).append('\'').append( value.name() ).append('\'');
-				separator = ",";
-			}
-			return type.append( ')' ).toString();
+	public String getEnumTypeDeclaration(String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
 		}
-		else {
-			return null;
-		}
+		return type.append( ')' ).toString();
 	}
 
 	@Override
-	public String getBooleanTypeDeclaration(int sqlType, char falseChar, char trueChar) {
-		return isCharacterType( sqlType ) ? "enum ('" + falseChar + "','" + trueChar + "')" : null;
-	}
-
-	@Override
-	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
-		// don't need it, since we're using the 'enum' type
+	public String getCheckCondition(String columnName, String[] values) {
+		//not needed, because we use an 'enum' type
 		return null;
-	}
-
-	@Override
-	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
-		return isCharacterType( sqlType ) ? null
-				: super.getBooleanCheckCondition( columnName, sqlType, falseChar, trueChar );
 	}
 
 	@Override

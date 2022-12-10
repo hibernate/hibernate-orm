@@ -13,13 +13,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Locale;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -32,7 +34,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private final JdbcType jdbcType;
 	private final JavaType<String> relationalTypeDescriptor;
 
-	private transient ValueExtractor<String> valueExtractor;
+//	private transient ValueExtractor<String> valueExtractor;
 	private transient ValueBinder<String> valueBinder;
 
 	public NamedEnumValueConverter(
@@ -43,8 +45,8 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 		this.jdbcType = jdbcType;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;
 
-		this.valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
+//		valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
+		valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override
@@ -85,8 +87,8 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
 
-		this.valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
+//		valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
+		valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override
@@ -97,5 +99,15 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 			SharedSessionContractImplementor session) throws SQLException {
 		final String jdbcValue = value == null ? null : value.name();
 		valueBinder.bind( statement, jdbcValue, position, session );
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
+		return dialect.getCheckCondition( columnName, getEnumeratedValues( getDomainJavaType().getJavaTypeClass() ) );
+	}
+
+	@Override
+	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		return dialect.getEnumTypeDeclaration( getEnumeratedValues( getDomainJavaType().getJavaTypeClass() ) );
 	}
 }

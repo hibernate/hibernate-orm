@@ -75,7 +75,7 @@ public class TypeDefinition implements Serializable {
 			Map<String,String> parameters) {
 		this.name = name;
 		this.typeImplementorClass = typeImplementorClass;
-		this.registrationKeys= registrationKeys;
+		this.registrationKeys = registrationKeys;
 		this.parameters = parameters;
 	}
 

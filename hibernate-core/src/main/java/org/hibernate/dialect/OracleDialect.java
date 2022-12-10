@@ -15,9 +15,12 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
@@ -47,6 +50,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -74,6 +78,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -634,6 +640,48 @@ public class OracleDialect extends Dialect {
 		else if ( getVersion().isSameOrAfter( 12 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 		}
+	}
+
+	@Converter(autoApply = true)
+	static class BooleanBooleanConverter implements AttributeConverter<Boolean,Boolean>, BasicValueConverter<Boolean,Boolean> {
+		@Override
+		public Boolean convertToDatabaseColumn(Boolean attribute) {
+			return attribute;
+		}
+
+		@Override
+		public Boolean convertToEntityAttribute(Boolean dbData) {
+			return dbData;
+		}
+
+		@Override
+		public Boolean toDomainValue(Boolean relationalForm) {
+			return relationalForm;
+		}
+
+		@Override
+		public Boolean toRelationalValue(Boolean domainForm) {
+			return domainForm;
+		}
+
+		@Override
+		public JavaType<Boolean> getDomainJavaType() {
+			return BooleanJavaType.INSTANCE;
+		}
+
+		@Override
+		public JavaType<Boolean> getRelationalJavaType() {
+			return BooleanJavaType.INSTANCE;
+		}
+
+		@Override
+		public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
+			return jdbcType.getDefaultSqlTypeCode() == Types.BOOLEAN ? columnName + " in (0,1)" : null;
+		}
+	}
+
+	public void registerAttributeConverters(InFlightMetadataCollector metadataCollector) {
+		metadataCollector.addAttributeConverter( BooleanBooleanConverter.class );
 	}
 
 	@Override

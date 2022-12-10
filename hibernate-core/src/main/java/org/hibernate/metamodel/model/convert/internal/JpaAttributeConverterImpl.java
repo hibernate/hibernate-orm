@@ -10,6 +10,8 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
@@ -17,6 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Standard implementation of JpaAttributeConverter
@@ -103,6 +106,28 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		}
 		catch (RuntimeException re) {
 			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, JdbcType sqlType, Dialect dialect) {
+		if ( BasicValueConverter.class.isAssignableFrom( attributeConverterBean.getBeanClass() ) ) {
+			return ((BasicValueConverter<?, ?>) attributeConverterBean.getBeanInstance())
+					.getCheckCondition( columnName, sqlType, dialect );
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		if ( BasicValueConverter.class.isAssignableFrom( attributeConverterBean.getBeanClass() ) ) {
+			return ((BasicValueConverter<?, ?>) attributeConverterBean.getBeanInstance())
+					.getSpecializedTypeDeclaration( jdbcType, dialect );
+		}
+		else {
+			return null;
 		}
 	}
 

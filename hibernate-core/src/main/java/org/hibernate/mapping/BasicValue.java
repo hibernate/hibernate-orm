@@ -318,32 +318,33 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		final Selectable selectable = getColumn();
-		if ( selectable instanceof Column && resolution.getValueConverter() == null ) {
-			final Column column = (Column) selectable;
-
-			if ( column.getSqlTypeCode() == null ) {
-				column.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
-			}
-
-			final Dialect dialect = getServiceRegistry().getService( JdbcServices.class ).getDialect();
-			column.setSpecializedTypeDeclaration(
-					resolution.getDomainJavaType().getSpecializedTypeDeclaration(
-							resolution.getJdbcType(),
-							dialect
-					)
-			);
-			if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
-				column.setCheckConstraint(
-						resolution.getDomainJavaType().getCheckCondition(
-								column.getQuotedName(dialect),
-								resolution.getJdbcType(),
-								dialect
-						)
-				);
-			}
+		if ( selectable instanceof Column ) {
+			resolveColumn( (Column) selectable, getServiceRegistry().getService( JdbcServices.class ).getDialect() );
 		}
 
 		return resolution;
+	}
+
+	private void resolveColumn(Column column, Dialect dialect) {
+
+		if ( column.getSqlTypeCode() == null ) {
+			column.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
+		}
+
+		if ( resolution.getValueConverter() != null ) {
+			column.setSpecializedTypeDeclaration( resolution.getValueConverter().getSpecializedTypeDeclaration( resolution.getJdbcType(), dialect ) );
+
+			if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
+				column.setCheckConstraint(
+						resolution.getValueConverter()
+								.getCheckCondition(
+										column.getQuotedName( dialect ),
+										resolution.getJdbcType(),
+										dialect
+								)
+				);
+			}
+		}
 	}
 
 	protected Resolution<?> buildResolution() {

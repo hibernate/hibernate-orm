@@ -10,10 +10,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.Remove;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * BasicValueConverter extension for enum-specific support

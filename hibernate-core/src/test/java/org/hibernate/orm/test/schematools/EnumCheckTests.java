@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.schematools;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,6 +34,8 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.RetentionPolicy;
@@ -94,7 +97,9 @@ public class EnumCheckTests {
 							}
 					);
 
-					assertThat( CollectingGenerationTarget.commands.get(0).contains( "check ('SOURCE','CLASS','RUNTIME')") );
+					assertThat( CollectingGenerationTarget.commands.get(0) ).contains( "in ('SOURCE','CLASS','RUNTIME')");
+					assertThat( CollectingGenerationTarget.commands.get(0) ).contains( "in ('N','Y')");
+					assertThat( CollectingGenerationTarget.commands.get(0) ).contains( "in (0,1)");
 				}
 		);
 	}
@@ -143,6 +148,10 @@ public class EnumCheckTests {
 		private String name;
 		@Enumerated(EnumType.STRING)
 		RetentionPolicy retentionPolicy;
+		@Convert(converter=YesNoConverter.class)
+		private boolean yesNo;
+		@Convert(converter= NumericBooleanConverter.class)
+		private boolean oneZero;
 
 		private SimpleEntity() {
 			// for use by Hibernate

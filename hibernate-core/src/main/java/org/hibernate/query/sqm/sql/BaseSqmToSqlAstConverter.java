@@ -6432,18 +6432,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
 			final JavaType<Number> relationalJtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
 
-			return new QueryLiteral<>(
-					sqmEnumLiteral.getEnumValue().ordinal(),
-					new CustomType<>(
-							new EnumType<>(
-									enumJtd.getJavaTypeClass(),
-									new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
-									typeConfiguration
-							),
-							typeConfiguration
-					)
-			);
+			return queryLiteral( sqmEnumLiteral, enumJtd, typeConfiguration, jdbcType, relationalJtd );
 		}
+	}
+
+	private static <T extends Enum<T>, N extends Number> QueryLiteral<Integer> queryLiteral(
+			SqmEnumLiteral<?> sqmEnumLiteral,
+			EnumJavaType<T> enumJtd,
+			TypeConfiguration typeConfiguration,
+			JdbcType jdbcType,
+			JavaType<N> relationalJtd) {
+		return new QueryLiteral<>(
+				sqmEnumLiteral.getEnumValue().ordinal(),
+				new CustomType<>(
+						new EnumType<>(
+								enumJtd.getJavaTypeClass(),
+								new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
+								typeConfiguration
+						),
+						typeConfiguration
+				)
+		);
 	}
 
 	@Override

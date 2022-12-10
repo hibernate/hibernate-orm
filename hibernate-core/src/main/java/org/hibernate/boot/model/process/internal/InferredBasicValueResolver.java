@@ -274,7 +274,8 @@ public class InferredBasicValueResolver {
 								recommendedJtd,
 								explicitJdbcType
 						),
-						recommendedJtd );
+						recommendedJtd
+				);
 				legacyType = jdbcMapping;
 			}
 			else {
@@ -358,9 +359,9 @@ public class InferredBasicValueResolver {
 		}
 	}
 
-	public static <E extends Enum<E>> InferredBasicValueResolution<E,?> fromEnum(
+	public static <E extends Enum<E>, N extends Number> InferredBasicValueResolution<E,?> fromEnum(
 			EnumJavaType<E> enumJavaType,
-			BasicJavaType<?> explicitJavaType,
+			BasicJavaType<N> explicitJavaType,
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
@@ -383,7 +384,6 @@ public class InferredBasicValueResolver {
 						enumJavaType,
 						explicitJavaType,
 						explicitJdbcType,
-						stdIndicators,
 						typeConfiguration
 				);
 			}
@@ -393,41 +393,51 @@ public class InferredBasicValueResolver {
 		}
 	}
 
-	private static <E extends Enum<E>> InferredBasicValueResolution<E, Number> ordinalEnumValueResolution(
+	private static <E extends Enum<E>, N extends Number> InferredBasicValueResolution<E,N> ordinalEnumValueResolution(
 			EnumJavaType<E> enumJavaType,
-			BasicJavaType<?> explicitJavaType,
+			JavaType<N> explicitJavaType,
 			JdbcType explicitJdbcType,
-			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<Number> relationalJtd;
+		return ordinalResolution(
+				enumJavaType,
+				integerJavaType( explicitJavaType, typeConfiguration ),
+				integerJdbcType( explicitJdbcType, typeConfiguration ),
+				typeConfiguration
+		);
+	}
+
+	private static JdbcType integerJdbcType(JdbcType explicitJdbcType, TypeConfiguration typeConfiguration) {
+		return explicitJdbcType != null
+				? explicitJdbcType
+				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
+	}
+
+	private static <N extends Number> JavaType<N> integerJavaType(JavaType<N> explicitJavaType, TypeConfiguration typeConfiguration) {
 		if ( explicitJavaType != null ) {
-			if ( ! Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
+			if ( !Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"Explicit JavaType [" + explicitJavaType +
 								"] applied to enumerated value with EnumType#ORDINAL" +
 								" should handle `java.lang.Integer` as its relational type descriptor"
 				);
 			}
-			//noinspection unchecked
-			relationalJtd = (BasicJavaType<Number>) explicitJavaType;
+			return explicitJavaType;
 		}
 		else {
-			relationalJtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
+			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
 		}
+	}
 
-		final JdbcType jdbcType = explicitJdbcType != null
-				? explicitJdbcType
-				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
-
-		final OrdinalEnumValueConverter<E> valueConverter = new OrdinalEnumValueConverter<>(
-				enumJavaType,
-				jdbcType,
-				relationalJtd
-		);
+	private static <E extends Enum<E>, N extends Number> InferredBasicValueResolution<E, N> ordinalResolution(
+			EnumJavaType<E> enumJavaType,
+			JavaType<N> relationalJtd,
+			JdbcType jdbcType,
+			TypeConfiguration typeConfiguration
+	) {
 		final CustomType<E> customType = new CustomType<>(
 				new org.hibernate.type.EnumType<>(
 						enumJavaType.getJavaTypeClass(),
-						valueConverter,
+						new OrdinalEnumValueConverter<>( enumJavaType, jdbcType, relationalJtd ),
 						typeConfiguration
 				),
 				typeConfiguration
@@ -448,37 +458,28 @@ public class InferredBasicValueResolver {
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<String> relationalJtd;
-		if ( explicitJavaType != null ) {
-			if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
-				throw new MappingException(
-						"Explicit JavaType [" + explicitJavaType +
-								"] applied to enumerated value with EnumType#STRING" +
-								" should handle `java.lang.String` as its relational type descriptor"
-				);
-			}
-			//noinspection unchecked
-			relationalJtd = (BasicJavaType<String>) explicitJavaType;
-		}
-		else {
-			final boolean useCharacter = stdIndicators.getColumnLength() == 1;
-			relationalJtd = typeConfiguration.getJavaTypeRegistry()
-					.getDescriptor( useCharacter ? Character.class : String.class );
-		}
-
-		final JdbcType jdbcType = explicitJdbcType != null
-				? explicitJdbcType
-				: relationalJtd.getRecommendedJdbcType(stdIndicators);
-
-		final NamedEnumValueConverter<E> valueConverter = new NamedEnumValueConverter<>(
+		final JavaType<String> relationalJtd = stringJavaType( explicitJavaType, stdIndicators, typeConfiguration );
+		return stringResolution(
 				enumJavaType,
-				jdbcType,
-				relationalJtd
+				relationalJtd,
+				stringJdbcType( explicitJdbcType, stdIndicators, relationalJtd ),
+				typeConfiguration
 		);
+	}
+
+	private static <E extends Enum<E>> InferredBasicValueResolution<E, String> stringResolution(
+			EnumJavaType<E> enumJavaType,
+			JavaType<String> relationalJtd,
+			JdbcType jdbcType,
+			TypeConfiguration typeConfiguration) {
 		final CustomType<E> customType = new CustomType<>(
 				new org.hibernate.type.EnumType<>(
 						enumJavaType.getJavaTypeClass(),
-						valueConverter,
+						new NamedEnumValueConverter<E>(
+								enumJavaType,
+								jdbcType,
+								relationalJtd
+						),
 						typeConfiguration
 				),
 				typeConfiguration
@@ -491,6 +492,29 @@ public class InferredBasicValueResolver {
 				customType,
 				ImmutableMutabilityPlan.instance()
 		);
+	}
+
+	private static JdbcType stringJdbcType(JdbcType explicitJdbcType, JdbcTypeIndicators stdIndicators, JavaType<String> relationalJtd) {
+		return explicitJdbcType != null
+				? explicitJdbcType
+				: relationalJtd.getRecommendedJdbcType( stdIndicators );
+	}
+
+	private static JavaType<String> stringJavaType(BasicJavaType<?> explicitJavaType, JdbcTypeIndicators stdIndicators, TypeConfiguration typeConfiguration) {
+		if ( explicitJavaType != null ) {
+			if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
+				throw new MappingException(
+						"Explicit JavaType [" + explicitJavaType +
+								"] applied to enumerated value with EnumType#STRING" +
+								" should handle `java.lang.String` as its relational type descriptor"
+				);
+			}
+			return (JavaType<String>) explicitJavaType;
+		}
+		else {
+			return typeConfiguration.getJavaTypeRegistry()
+					.getDescriptor( stdIndicators.getColumnLength() == 1 ? Character.class : String.class );
+		}
 	}
 
 	public static <T> InferredBasicValueResolution<T,T> fromTemporal(

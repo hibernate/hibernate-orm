@@ -751,7 +751,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return false;
+		return getMySQLVersion().isSameOrAfter( 8, 0, 16 );
 	}
 
 	@Override
@@ -769,6 +769,12 @@ public class MySQLDialect extends Dialect {
 		else {
 			return null;
 		}
+	}
+
+	@Override
+	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
+		// don't need it, since we're using the 'enum' type
+		return null;
 	}
 
 	@Override

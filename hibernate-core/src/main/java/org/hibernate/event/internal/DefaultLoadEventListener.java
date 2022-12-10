@@ -281,7 +281,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	private static boolean hasBytecodeProxy(EntityPersister persister, LoadType options) {
 		return options.isAllowProxyCreation()
-			&& persister.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+			&& persister.getEntityPersister().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	private static Object loadWithProxyFactory(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
@@ -342,6 +342,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
+		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
+		final Object existing = persistenceContext.getEntity( keyToLoad );
+		if ( existing != null ) {
+			return options.isCheckDeleted() && wasDeleted( persistenceContext, existing ) ? null : existing;
+		}
 		if ( persister.hasSubclasses() ) {
 			final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
 					event.getSession(),

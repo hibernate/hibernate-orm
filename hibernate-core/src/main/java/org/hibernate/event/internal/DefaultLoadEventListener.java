@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -16,7 +14,6 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -275,13 +272,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// if there is already a managed entity instance associated with the PC, return it
 			final Object managed = persistenceContext.getEntity( keyToLoad );
 			if ( managed != null ) {
-				if ( options.isCheckDeleted() ) {
-					final Status status = persistenceContext.getEntry( managed ).getStatus();
-					if ( status == Status.DELETED || status == Status.GONE ) {
-						return null;
-					}
-				}
-				return managed;
+				return options.isCheckDeleted() && wasDeleted( persistenceContext, managed ) ? null : managed;
 			}
 
 			// if the entity defines a HibernateProxy factory, see if there is an
@@ -341,6 +332,10 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				}
 
 				if ( options.isAllowProxyCreation() ) {
+					final Object existing = persistenceContext.getEntity( keyToLoad );
+					if ( existing != null ) {
+							return options.isCheckDeleted() && wasDeleted( persistenceContext, existing ) ? null : existing;
+					}
 					if ( entityMetamodel.hasSubclasses() ) {
 						final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
 								session,
@@ -397,7 +392,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( impl == null ) {
 				if ( options == LoadEventListener.INTERNAL_LOAD_NULLABLE ) {
 					// The proxy is for a non-existing association mapped as @NotFound.
-					// Don't throw an exeption; just return null.
+					// Don't throw an exception; just return null.
 					return null;
 				}
 				else {
@@ -437,14 +432,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Entity found in session cache" );
 			}
-			if ( options.isCheckDeleted() ) {
-				EntityEntry entry = persistenceContext.getEntry( existing );
-				Status status = entry.getStatus();
-				if ( status == Status.DELETED || status == Status.GONE ) {
-					return null;
-				}
-			}
-			return existing;
+			return options.isCheckDeleted() && wasDeleted( persistenceContext, existing ) ? null : existing;
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
@@ -452,6 +440,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 			return createProxy( event, persister, keyToLoad, persistenceContext );
 		}
+	}
+
+	private static boolean wasDeleted(PersistenceContext persistenceContext, Object existing) {
+		final Status status = persistenceContext.getEntry( existing ).getStatus();
+		return status == Status.DELETED || status == Status.GONE;
 	}
 
 	private Object createProxy(

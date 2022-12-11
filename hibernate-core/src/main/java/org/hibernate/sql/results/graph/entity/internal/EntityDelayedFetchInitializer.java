@@ -83,6 +83,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			return;
 		}
 
+		final EntityInitializer parentEntityInitializer = getParentEntityInitializer( parentAccess );
+		if ( parentEntityInitializer != null && parentEntityInitializer.isInitialized() ) {
+			return;
+		}
+
 		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, referencedModelPart ) ) {
 			return;
 		}
@@ -115,7 +120,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				if ( referencedModelPart.isOptional()
 						&& parentAccess != null
 						&& !parentAccess.isEmbeddableInitializer()
-						&& isEnhancedForLazyLoading( parentAccess ) ) {
+						&& isEnhancedForLazyLoading( parentEntityInitializer ) ) {
 					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				else {
@@ -141,7 +146,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 						if ( entityInstance == null ) {
 							if ( parentAccess != null
 									&& !parentAccess.isEmbeddableInitializer()
-									&& isEnhancedForLazyLoading( parentAccess ) ) {
+									&& isEnhancedForLazyLoading( parentEntityInitializer ) ) {
 								return;
 							}
 							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
@@ -180,8 +185,16 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		}
 	}
 
-	private static boolean isEnhancedForLazyLoading(FetchParentAccess parentAccess) {
-		return parentAccess.findFirstEntityInitializer().getEntityDescriptor().getBytecodeEnhancementMetadata()
+	private EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {
+		if ( parentAccess != null ) {
+			return parentAccess.findFirstEntityInitializer();
+		}
+		return null;
+	}
+
+	private static boolean isEnhancedForLazyLoading(EntityInitializer parentEntityIntialiazer) {
+		return parentEntityIntialiazer != null && parentEntityIntialiazer.getEntityDescriptor()
+				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 	}
 

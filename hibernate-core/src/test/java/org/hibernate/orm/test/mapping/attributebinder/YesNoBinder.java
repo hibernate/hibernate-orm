@@ -6,17 +6,13 @@
  */
 package org.hibernate.orm.test.mapping.attributebinder;
 
-import java.sql.Types;
-
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.binder.AttributeBinder;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.YesNoConverter;
-import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 //tag::attribute-binder-example[]
 /**
@@ -29,26 +25,12 @@ public class YesNoBinder implements AttributeBinder<YesNo> {
 			MetadataBuildingContext buildingContext,
 			PersistentClass persistentClass,
 			Property property) {
-		final BasicValue booleanValueMapping = (BasicValue) property.getValue();
-
-		final BasicJavaType<?> javaType = (BasicJavaType<?>) buildingContext.getBootstrapContext()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Boolean.class );
-
-		final JdbcType jdbcType = buildingContext.getBootstrapContext()
-				.getTypeConfiguration()
-				.getJdbcTypeRegistry()
-				.getDescriptor( Types.CHAR );
-
-		final InstanceBasedConverterDescriptor converter = new InstanceBasedConverterDescriptor(
-				YesNoConverter.INSTANCE,
-				buildingContext.getBootstrapContext().getClassmateContext()
+		( (SimpleValue) property.getValue() ).setJpaAttributeConverterDescriptor(
+				new InstanceBasedConverterDescriptor(
+						YesNoConverter.INSTANCE,
+						buildingContext.getBootstrapContext().getClassmateContext()
+				)
 		);
-
-		booleanValueMapping.setExplicitJavaTypeAccess( (typeConfiguration) -> javaType );
-		booleanValueMapping.setExplicitJdbcTypeAccess( (typeConfiguration) -> jdbcType );
-		booleanValueMapping.setJpaAttributeConverterDescriptor( converter );
 	}
 }
 //end::attribute-binder-example[]

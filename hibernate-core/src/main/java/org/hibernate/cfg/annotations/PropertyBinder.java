@@ -41,7 +41,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -232,8 +231,8 @@ public class PropertyBinder {
 		basicValueBinder.setAccessType( accessType );
 
 
-		final SimpleValue propertyValue = basicValueBinder.make();
-		setValue( propertyValue );
+		value = basicValueBinder.make();
+
 		return makeProperty();
 	}
 
@@ -266,7 +265,7 @@ public class PropertyBinder {
 		this.isXToMany = xToMany;
 	}
 
-	private Property bind(Property prop) {
+	private Property bind(Property property) {
 		if ( isId ) {
 			final RootClass rootClass = (RootClass) holder.getPersistentClass();
 			//if an xToMany, it has to be wrapped today.
@@ -280,7 +279,7 @@ public class PropertyBinder {
 							new PropertyPreloadedData(null, null, null),
 							true,
 							false,
-							resolveCustomInstantiator( property, returnedClass ),
+							resolveCustomInstantiator(this.property, returnedClass ),
 							buildingContext
 					);
 					rootClass.setIdentifier( identifier );
@@ -289,7 +288,7 @@ public class PropertyBinder {
 					rootClass.setIdentifierMapper( identifier );
 				}
 				//FIXME is it good enough?
-				identifier.addProperty( prop );
+				identifier.addProperty( property );
 			}
 			else {
 				rootClass.setIdentifier( (KeyValue) getValue() );
@@ -297,29 +296,34 @@ public class PropertyBinder {
 					rootClass.setEmbeddedIdentifier( true );
 				}
 				else {
-					rootClass.setIdentifierProperty( prop );
+					rootClass.setIdentifierProperty( property );
 					final MappedSuperclass superclass = getMappedSuperclassOrNull(
 							declaringClass,
 							inheritanceStatePerClass,
 							buildingContext
 					);
 					if ( superclass != null ) {
-						superclass.setDeclaredIdentifierProperty(prop);
+						superclass.setDeclaredIdentifierProperty(property);
 					}
 					else {
 						//we know the property is on the actual entity
-						rootClass.setDeclaredIdentifierProperty( prop );
+						rootClass.setDeclaredIdentifierProperty( property );
 					}
 				}
 			}
 		}
 		else {
-			holder.addProperty( prop, columns, declaringClass );
+			holder.addProperty( property, columns, declaringClass );
 		}
 
-		callAttributeBinders( prop );
+		if ( buildingContext.getMetadataCollector().isInSecondPass() ) {
+			callAttributeBinders( property );
+		}
+		else {
+			buildingContext.getMetadataCollector().addSecondPass( persistentClasses -> callAttributeBinders( property ) );
+		}
 
-		return prop;
+		return property;
 	}
 
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
@@ -370,6 +374,7 @@ public class PropertyBinder {
 		property.setUpdateable( updatable );
 
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
+
 		return property;
 	}
 

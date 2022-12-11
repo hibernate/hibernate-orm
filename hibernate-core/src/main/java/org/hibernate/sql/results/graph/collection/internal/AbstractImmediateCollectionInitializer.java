@@ -36,7 +36,6 @@ import static org.hibernate.sql.results.graph.collection.CollectionLoadingLogger
  * @implNote Mainly an intention contract wrt the immediacy of the fetch.
  */
 public abstract class AbstractImmediateCollectionInitializer extends AbstractCollectionInitializer {
-	private final LockMode lockMode;
 
 	// per-row state
 	private LoadingCollectionEntryImpl responsibility;
@@ -61,7 +60,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			DomainResultAssembler<?> collectionValueKeyResultAssembler) {
 		super( collectionPath, collectionAttributeMapping, parentAccess, collectionKeyResultAssembler );
 		this.collectionValueKeyResultAssembler = collectionValueKeyResultAssembler;
-		this.lockMode = lockMode;
 	}
 
 	protected abstract String getSimpleConcreteImplName();

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Function;
 
 import org.hibernate.DuplicateMappingException;
@@ -24,6 +23,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -225,17 +225,37 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 	/**
-	 * Apply the descriptor for an {@link AttributeConverter}
+	 * Obtain the {@link ConverterRegistry} which may be
+	 * used to register {@link AttributeConverter}s.
 	 */
+	ConverterRegistry getConverterRegistry();
+
+	/**
+	 * Apply the descriptor for an {@link AttributeConverter}
+	 *
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	void addAttributeConverter(ConverterDescriptor descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}
+	 *
+	 * @deprecated use {@link #getConverterRegistry()}
 	 */
+	@Deprecated(since = "6.2")
 	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
 
+	/**
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	void addRegisteredConversion(RegisteredConversion conversion);
 
+	/**
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 
 

@@ -745,7 +745,7 @@ public final class AnnotationBinder {
 
 	private static void handleConverterRegistration(ConverterRegistration registration, MetadataBuildingContext context) {
 		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
-		metadataCollector.addRegisteredConversion(
+		metadataCollector.getConverterRegistry().addRegisteredConversion(
 				new RegisteredConversion(
 						registration.domainType(),
 						registration.converter(),

@@ -40,6 +40,7 @@ import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
@@ -125,7 +126,7 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector {
+public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector, ConverterRegistry {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final BootstrapContext bootstrapContext;
@@ -493,10 +494,28 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters
 
+
+	@Override
+	public ConverterRegistry getConverterRegistry() {
+		return this;
+	}
+
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		attributeConverterManager.addConverter(
 				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
+		);
+	}
+
+	@Override
+	public void addOverridableConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+		attributeConverterManager.addConverter(
+				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() ) {
+					@Override
+					public boolean overrideable() {
+						return true;
+					}
+				}
 		);
 	}
 
@@ -515,6 +534,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
 		if ( !doneDialect ) {
+			// we want to delay this step until as late as possible
 			getDatabase().getDialect().registerAttributeConverters( this );
 			doneDialect = true;
 		}

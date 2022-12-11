@@ -45,9 +45,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
@@ -348,7 +348,13 @@ public abstract class Dialect implements ConversionContext {
 				Boolean.toString( getDefaultUseGetGeneratedKeys() )  );
 	}
 
-	public void registerAttributeConverters(InFlightMetadataCollector metadataCollector) {}
+	/**
+	 * Register any {@link jakarta.persistence.AttributeConverter}s needed.
+	 * <p>
+	 * Good citizens should use {@link ConverterRegistry#addOverridableConverter}
+	 * so as not to interfere with user-registered converters.
+	 */
+	public void registerAttributeConverters(ConverterRegistry converterRegistry) {}
 
 	/**
 	 * Register ANSI-standard column types using the length limits defined

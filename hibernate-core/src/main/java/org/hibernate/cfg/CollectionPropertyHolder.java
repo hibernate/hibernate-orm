@@ -20,7 +20,6 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -408,6 +407,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// todo : do we need to pass along `XClass elementXClass`?
 
 		return getContext().getMetadataCollector()
+				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForCollectionElement( collectionXProperty, getContext() );
 	}
@@ -436,6 +436,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// todo : do we need to pass along `XClass keyXClass`?
 
 		return getContext().getMetadataCollector()
+				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForMapKey( mapXProperty, getContext() );
 	}

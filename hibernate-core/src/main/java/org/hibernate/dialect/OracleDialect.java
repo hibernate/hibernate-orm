@@ -20,7 +20,7 @@ import jakarta.persistence.Converter;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
@@ -642,6 +642,10 @@ public class OracleDialect extends Dialect {
 		}
 	}
 
+	/**
+	 * A dummy converter responsible for creating the check constraints
+	 * for Java {@code boolean} mapped to {@code number(1,0)}.
+	 */
 	@Converter(autoApply = true)
 	static class BooleanBooleanConverter implements AttributeConverter<Boolean,Boolean>, BasicValueConverter<Boolean,Boolean> {
 		@Override
@@ -680,8 +684,9 @@ public class OracleDialect extends Dialect {
 		}
 	}
 
-	public void registerAttributeConverters(InFlightMetadataCollector metadataCollector) {
-		metadataCollector.addAttributeConverter( BooleanBooleanConverter.class );
+	@Override
+	public void registerAttributeConverters(ConverterRegistry converterRegistry) {
+		converterRegistry.addOverridableConverter( BooleanBooleanConverter.class );
 	}
 
 	@Override

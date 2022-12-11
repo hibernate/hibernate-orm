@@ -1766,6 +1766,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	 * Ugh!  But we need this done before we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
+		assert !inSecondPass;
 		inSecondPass = true;
 
 		try {

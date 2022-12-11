@@ -25,10 +25,10 @@ import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitMetadata;
 import org.hibernate.boot.jaxb.mapping.ManagedType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -232,9 +232,9 @@ public class XMLContext implements Serializable {
 
 	private final List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
 
-	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
+	public void applyDiscoveredAttributeConverters(ConverterRegistry converterRegistry) {
 		for ( ConverterDescriptor descriptor : converterDescriptors ) {
-			collector.addAttributeConverter( descriptor );
+			converterRegistry.addAttributeConverter( descriptor );
 		}
 		converterDescriptors.clear();
 	}

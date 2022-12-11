@@ -45,4 +45,11 @@ public interface ConverterDescriptor {
 	 * Factory for the runtime representation of the converter
 	 */
 	JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
+
+	/**
+	 * Can this converter be overridden by other competing converters?
+	 */
+	default boolean overrideable() {
+		return false;
+	}
 }

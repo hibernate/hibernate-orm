@@ -104,6 +104,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
 
 		return context.getMetadataCollector()
+				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForAttribute( property, context );
 	}

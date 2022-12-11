@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
@@ -30,6 +30,8 @@ import org.jboss.logging.Logger;
 
 import com.fasterxml.classmate.ResolvedType;
 
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveAttributeType;
 import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 
 /**
@@ -46,22 +48,18 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	public void addConverter(ConverterDescriptor descriptor) {
 		if ( log.isTraceEnabled() ) {
-			log.tracef( "Starting AttributeConverterManager#addConverter : `%s`", descriptor.getAttributeConverterClass().getName() );
+			log.tracef( "Starting AttributeConverterManager#addConverter : `%s`",
+					descriptor.getAttributeConverterClass().getName() );
 		}
 
 		if ( registeredConversionsByDomainType != null ) {
-			final ResolvedType domainValueResolvedType = descriptor.getDomainValueResolvedType();
-			final Class<?> domainType = domainValueResolvedType.getErasedType();
+			final Class<?> domainType = descriptor.getDomainValueResolvedType().getErasedType();
 			final RegisteredConversion registeredConversion = registeredConversionsByDomainType.get( domainType );
 			if ( registeredConversion != null ) {
-				// we can skip the registering the converter...
-				// the RegisteredConversion will always take precedence
+				// we can skip registering the converter, the RegisteredConversion will always take precedence
 				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Skipping registration of discovered AttributeConverter `%s` for auto-apply; there was" +
-									"already ",
-							descriptor.getAttributeConverterClass().getName()
-					);
+					log.debugf( "Skipping registration of discovered AttributeConverter `%s` for auto-apply",
+							descriptor.getAttributeConverterClass().getName() );
 				}
 				return;
 			}
@@ -77,7 +75,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		);
 
 		if ( old != null ) {
-			throw new AssertionFailure(
+			throw new HibernateException(
 					String.format(
 							Locale.ENGLISH,
 							"AttributeConverter class [%s] registered multiple times",
@@ -95,7 +93,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		final Class<?> domainType;
 		if ( conversion.getExplicitDomainType().equals( void.class ) ) {
 			// the registration did not define an explicit domain-type, so inspect the converter
-			final List<ResolvedType> converterParamTypes = resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
+			final List<ResolvedType> converterParamTypes =
+					resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
 			domainType = converterParamTypes.get( 0 ).getErasedType();
 		}
 		else {
@@ -106,14 +105,13 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		final RegisteredConversion existingRegistration = registeredConversionsByDomainType.get( domainType );
 		if ( existingRegistration != null ) {
 			if ( !conversion.equals( existingRegistration ) ) {
-				throw new AnnotationException(
-						"Conflicting '@ConverterRegistration' descriptors for attribute converter '"
-								+ conversion.getConverterType().getName() + "'"
-				);
+				throw new AnnotationException( "Conflicting '@ConverterRegistration' descriptors for attribute converter '"
+						+ conversion.getConverterType().getName() + "'" );
 			}
 			else {
 				if ( log.isDebugEnabled() ) {
-					log.debugf( "Skipping duplicate '@ConverterRegistration' for '%s'", conversion.getConverterType().getName() );
+					log.debugf( "Skipping duplicate '@ConverterRegistration' for '%s'",
+							conversion.getConverterType().getName() );
 				}
 			}
 		}
@@ -123,10 +121,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		if ( attributeConverterDescriptorsByClass != null ) {
 			final ConverterDescriptor removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
 			if ( removed != null && log.isDebugEnabled() ) {
-				log.debugf(
-						"Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
-						removed.getAttributeConverterClass().getName()
-				);
+				log.debugf( "Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
+						removed.getAttributeConverterClass().getName() );
 			}
 		}
 
@@ -155,6 +151,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			return siteDescriptor;
 		}
 	}
+
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForAttribute(
 			XProperty property,
@@ -176,8 +173,9 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			MetadataBuildingContext context) {
 		if ( registeredConversionsByDomainType != null ) {
 			// we had registered conversions - see if any of them match and, if so, use that conversion
-			final ResolvedType resolveAttributeType = ConverterHelper.resolveAttributeType( xProperty, context );
-			final RegisteredConversion registrationForDomainType = registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
+			final ResolvedType resolveAttributeType = resolveAttributeType( xProperty, context );
+			final RegisteredConversion registrationForDomainType =
+					registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
 			if ( registrationForDomainType != null ) {
 				return registrationForDomainType.isAutoApply() ? registrationForDomainType.getConverterDescriptor() : null;
 			}
@@ -210,11 +208,16 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		}
 
 		if ( matches.size() == 1 ) {
-			return matches.get( 0 );
+			return matches.get(0);
+		}
+
+		List<ConverterDescriptor> filtered = matches.stream().filter( match -> !match.overrideable() ).collect( toList() );
+		if ( filtered.size() == 1 ) {
+			return filtered.get(0);
 		}
 
 		// otherwise, we had multiple matches
-		throw new RuntimeException(
+		throw new HibernateException(
 				String.format(
 						Locale.ROOT,
 						"Multiple auto-apply converters matched %s [%s.%s] : %s",

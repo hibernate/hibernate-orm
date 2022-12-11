@@ -6,13 +6,16 @@
  */
 package org.hibernate.cfg.annotations.reflection;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.AttributeConverterInfo;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated no longer used, use {@link ConverterRegistry}
  */
-public interface AttributeConverterDefinitionCollector {
+@Deprecated(since = "6.2", forRemoval = true) @Remove
+public interface AttributeConverterDefinitionCollector extends ConverterRegistry {
 	void addAttributeConverter(AttributeConverterInfo info);
-	void addAttributeConverter(ConverterDescriptor descriptor);
 }

@@ -257,20 +257,16 @@ public class ManyToOneType extends EntityType {
 		return isDirtyManyToOne(old, current, isAlwaysDirtyChecked()? null:checkable, session);
 	}
 
-	private boolean isDirtyManyToOne(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
-	{
-		if (isSame(old, current))
-		{
+	private boolean isDirtyManyToOne(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+		if (isSame(old, current)) {
 			return false;
 		}
 
-		if (old == null || current == null)
-		{
+		if (old == null || current == null) {
 			return true;
 		}
 
-		if (ForeignKeys.isTransient(getAssociatedEntityName(), current, Boolean.FALSE, session))
-		{
+		if (ForeignKeys.isTransient(getAssociatedEntityName(), current, Boolean.FALSE, session)) {
 			return true;
 		}
 

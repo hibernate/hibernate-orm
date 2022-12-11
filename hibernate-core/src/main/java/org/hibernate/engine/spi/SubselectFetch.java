@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
@@ -180,7 +181,7 @@ public class SubselectFetch {
 		}
 
 		private boolean shouldAddSubselectFetch(LoadingEntityEntry entry) {
-			if ( entry.getEntityInitializer().isEntityResultInitializer() ) {
+			if ( entry.getEntityInitializer() instanceof EntityResultInitializer ) {
 				return true;
 			}
 

@@ -135,12 +135,19 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public FetchParentAccess findFirstEntityDescriptorAccess() {
-		return getFetchParentAccess().findFirstEntityDescriptorAccess();
+		if ( fetchParentAccess == null ) {
+			return null;
+		}
+		return fetchParentAccess.findFirstEntityDescriptorAccess();
 	}
 
 	@Override
 	public EntityInitializer findFirstEntityInitializer() {
-		return findFirstEntityDescriptorAccess().findFirstEntityInitializer();
+		final FetchParentAccess firstEntityDescriptorAccess = findFirstEntityDescriptorAccess();
+		if ( firstEntityDescriptorAccess == null ) {
+			return null;
+		}
+		return firstEntityDescriptorAccess.findFirstEntityInitializer();
 	}
 
 	@Override

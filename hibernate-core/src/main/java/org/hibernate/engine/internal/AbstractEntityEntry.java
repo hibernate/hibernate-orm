@@ -264,17 +264,19 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		this.loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
-		if ( getPersister().isVersioned() ) {
+		final EntityPersister persister = getPersister();
+		if ( persister.isVersioned() ) {
 			this.version = nextVersion;
-			getPersister().setValue( entity, getPersister().getVersionProperty(), nextVersion );
+			persister.setValue( entity, persister.getVersionProperty(), nextVersion );
 		}
 
 		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
 
-		getPersistenceContext().getSession()
+		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
+		session
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+				.resetDirty( entity, persister, (Session) session );
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {

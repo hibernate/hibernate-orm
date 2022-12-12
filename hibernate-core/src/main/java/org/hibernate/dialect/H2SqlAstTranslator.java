@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -176,7 +177,17 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 			}
 		}
 		return super.renderPrimaryTableReference( tableGroup, lockMode );
+	}
 
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		super.visitLikePredicate( likePredicate );
+		// Custom implementation because H2 uses backslash as the default escape character
+		// We can override this by specifying an empty escape character
+		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side
+		if ( likePredicate.getEscapeCharacter() == null ) {
+			appendSql( " escape ''" );
+		}
 	}
 
 	@Override

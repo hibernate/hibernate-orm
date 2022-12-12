@@ -86,6 +86,8 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public class MySQLDialect extends Dialect {
 
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 7 );
+
 	private final UniqueDelegate uniqueDelegate = new MySQLUniqueDelegate( this );
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
@@ -110,22 +112,59 @@ public class MySQLDialect extends Dialect {
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
 
+	private final boolean noBackslashEscapesEnabled;
+
 	public MySQLDialect() {
 		this( DatabaseVersion.make( 5, 0 ) );
 	}
 
 	public MySQLDialect(DatabaseVersion version) {
+		this( version, 4 );
+	}
+
+	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter) {
+		this( version, bytesPerCharacter, false );
+	}
+
+	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
+		this( version, serverConfiguration.getBytesPerCharacter(), serverConfiguration.isNoBackslashEscapesEnabled() );
+	}
+
+	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
 		super( version );
 		registerKeyword( "key" );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = noBackslashEscapes;
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		super( info );
-		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		final String versionString = info.getDatabaseVersion();
+		if ( versionString != null ) {
+			final String[] components = versionString.split( "\\." );
+			if ( components.length >= 3 ) {
+				try {
+					final int majorVersion = Integer.parseInt( components[0] );
+					final int minorVersion = Integer.parseInt( components[1] );
+					final int patchLevel = Integer.parseInt( components[2] );
+					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
+				}
+				catch (NumberFormatException ex) {
+					// Ignore
+				}
+			}
+		}
+		return info.makeCopy();
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -305,6 +344,7 @@ public class MySQLDialect extends Dialect {
 		);
 	}
 
+	@Deprecated
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
@@ -377,6 +417,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		return maxVarbinaryLength;
+	}
+
+	public boolean isNoBackslashEscapesEnabled() {
+		return noBackslashEscapesEnabled;
 	}
 
 	@Override
@@ -1035,7 +1079,10 @@ public class MySQLDialect extends Dialect {
 					appender.appendSql( '\'' );
 					break;
 				case '\\':
-					appender.appendSql( '\\' );
+					if ( !noBackslashEscapesEnabled ) {
+						// See https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_backslash_escapes
+						appender.appendSql( '\\' );
+					}
 					break;
 			}
 			appender.appendSql( c );

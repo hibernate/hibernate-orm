@@ -100,6 +100,10 @@ public interface Initializer {
 		return false;
 	}
 
+	default boolean isEntityResultInitializer(){
+		return false;
+	}
+
 	default boolean isCollectionInitializer(){
 		return false;
 	}

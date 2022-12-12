@@ -71,6 +71,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		if ( collectionInstance != null || collectionKey == null) {
 			return;
 		}
+		if ( parentAccess != null && !rowProcessingState.isQueryExecution() && parentAccess.findFirstEntityInitializer().isInitialized() ) {
+			return;
+		}
 
 		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
 			COLL_LOAD_LOGGER.tracef(

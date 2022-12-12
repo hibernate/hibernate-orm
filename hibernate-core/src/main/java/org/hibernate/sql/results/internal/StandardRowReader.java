@@ -120,6 +120,10 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		final int numberOfInitializers = initializers.size();
 
+		if ( numberOfInitializers == 0 ) {
+			return;
+		}
+
 		for ( int i = 0; i < numberOfInitializers; i++ ) {
 			final Initializer initializer = initializers.get( i );
 			if ( ! initializer.isCollectionInitializer() ) {
@@ -134,14 +138,22 @@ public class StandardRowReader<T> implements RowReader<T> {
 			}
 		}
 
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
+		final Initializer rootInitializer = initializers.get( numberOfInitializers - 1 );
+		rootInitializer.resolveInstance( rowProcessingState );
+
+		if ( !rowProcessingState.isQueryExecution()
+				&& rootInitializer.isEntityResultInitializer()
+				&& rootInitializer.asEntityInitializer().isInitialized() ) {
+			return;
+		}
+		for ( int i = 0; i < numberOfInitializers - 1; i++ ) {
 			Initializer initializer = initializers.get( i );
 			if ( !( initializer instanceof EntityDelayedFetchInitializer ) ) {
 				initializer.resolveInstance( rowProcessingState );
 			}
 		}
 
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
+		for ( int i = 0; i < numberOfInitializers - 1; i++ ) {
 			Initializer initializer = initializers.get( i );
 			if ( initializer instanceof EntityDelayedFetchInitializer ) {
 				initializer.resolveInstance( rowProcessingState );

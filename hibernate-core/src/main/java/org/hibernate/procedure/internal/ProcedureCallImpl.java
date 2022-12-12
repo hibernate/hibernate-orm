@@ -673,6 +673,11 @@ public class ProcedureCallImpl<R>
 				}
 
 				@Override
+				public boolean isQueryExecution() {
+					return true;
+				}
+
+				@Override
 				public QueryParameterBindings getQueryParameterBindings() {
 					return QueryParameterBindings.NO_PARAM_BINDINGS;
 				}

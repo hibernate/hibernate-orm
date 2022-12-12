@@ -28,6 +28,9 @@ public class SelectEagerCollectionInitializer extends AbstractCollectionInitiali
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( parentAccess != null && !rowProcessingState.isQueryExecution() && parentAccess.findFirstEntityInitializer().isInitialized() ) {
+			return;
+		}
 		resolveInstance( rowProcessingState, true );
 	}
 

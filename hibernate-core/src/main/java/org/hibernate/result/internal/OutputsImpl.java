@@ -204,6 +204,11 @@ public class OutputsImpl implements Outputs {
 			}
 
 			@Override
+			public boolean isQueryExecution() {
+				return true;
+			}
+
+			@Override
 			public QueryParameterBindings getQueryParameterBindings() {
 				return QueryParameterBindings.NO_PARAM_BINDINGS;
 			}

@@ -84,4 +84,7 @@ public interface ExecutionContext {
 		return false;
 	}
 
+	default boolean isQueryExecution(){
+		return false;
+	}
 }

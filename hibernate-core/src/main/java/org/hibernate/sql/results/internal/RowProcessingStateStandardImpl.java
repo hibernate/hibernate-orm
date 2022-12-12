@@ -180,6 +180,11 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	@Override
+	public boolean isQueryExecution() {
+		return true;
+	}
+
+	@Override
 	public Initializer resolveInitializer(NavigablePath path) {
 		for ( Initializer initializer : initializers ) {
 			if ( initializer.getNavigablePath().equals( path ) ) {

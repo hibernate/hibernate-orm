@@ -78,4 +78,9 @@ public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
 	public String getQueryIdentifier(String sql) {
 		return sql;
 	}
+
+	@Override
+	public boolean isQueryExecution() {
+		return true;
+	}
 }

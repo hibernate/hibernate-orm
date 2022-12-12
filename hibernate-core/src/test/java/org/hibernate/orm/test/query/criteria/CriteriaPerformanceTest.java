@@ -5,20 +5,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.spi.CollectionKey;
-
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,21 +15,58 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Root;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.hibernate.Session;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.CollectionKey;
 
-@Disabled("Manual performance test")
-@Jpa(
-		annotatedClasses = {
-				CriteriaPerformanceTest.Author.class,
-				CriteriaPerformanceTest.Book.class,
-				CriteriaPerformanceTest.Other.class
-		}
-)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-public class CriteriaPerformanceTest {
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.Assert.assertNotNull;
+
+@Ignore
+public class CriteriaPerformanceTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Author.class, Book.class, Other.class };
+	}
+
+	@Before
+	public void setUp() {
+		inTransaction(
+				session -> {
+					for ( int i = 0; i < 1000; i++ ) {
+						populateData( session );
+					}
+					for ( int i = 0; i < 1000; i++ ) {
+						populateSimpleData( session );
+					}
+				}
+		);
+	}
+
+	@After
+	public void tearDown() {
+		inTransaction(
+				session -> {
+					session.createQuery( "delete from Book" ).executeUpdate();
+					session.createQuery( "delete from Author" ).executeUpdate();
+					session.createQuery( "delete from Other" ).executeUpdate();
+				}
+		);
+	}
 
 	/**
 	 * This test demonstrates that fetching entities with associations fires expensive initializers in 6.1 even
@@ -52,19 +77,28 @@ public class CriteriaPerformanceTest {
 	 * In 5.6, breakpoint will never be hit.
 	 */
 	@Test
-	public void testFetchEntityWithAssociations(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			for ( int i = 0; i < 1000; i++ ) {
-				populateData( entityManager );
-			}
+	public void testFetchEntityWithAssociations() {
+		inTransaction(
+				session -> {
 
-			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<Author> query = builder.createQuery( Author.class );
-			query.from( Author.class );
+					final Instant startTime = Instant.now();
 
-			final List<Author> author = entityManager.createQuery( query ).getResultList();
-			assertNotNull( author );
-		} );
+					final CriteriaBuilder builder = session.getCriteriaBuilder();
+					final CriteriaQuery<Author> query = builder.createQuery( Author.class );
+					query.from( Author.class );
+
+					final List<Author> authors = session.createQuery( query ).getResultList();
+					assertNotNull( authors );
+
+
+					System.out.println( MessageFormat.format(
+							"{0} took {1}",
+							"6.1 testFetchEntityWithAssociations ",
+							Duration.between( startTime, Instant.now() )
+					) );
+
+					assertThat( authors.size() ).isEqualTo( 1000 );
+				} );
 	}
 
 	/**
@@ -77,25 +111,51 @@ public class CriteriaPerformanceTest {
 	 * 2. Missing query plan cache for criteria queries (possibly)
 	 */
 	@Test
-	public void testFetchEntityWithAssociationsPerformance(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			for ( int i = 0; i < 1000; i++ ) {
-				populateData( entityManager );
-			}
-
+	public void testFetchEntityWithAssociationsPerformance() {
+		inTransaction(  session -> {
 			final Instant startTime = Instant.now();
 
 			for ( int i = 0; i < 100_000; i++ ) {
-				final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+				final CriteriaBuilder builder = session.getCriteriaBuilder();
 				final CriteriaQuery<Author> query = builder.createQuery( Author.class );
 				query.from( Author.class );
-				final List<Author> authors = entityManager.createQuery( query ).getResultList();
+				final List<Author> authors = session.createQuery( query ).getResultList();
 				assertNotNull( authors );
 			}
 
 			System.out.println( MessageFormat.format(
 					"{0} took {1}",
-					"Query",
+					"6.1 testFetchEntityWithAssociationsPerformance",
+					Duration.between( startTime, Instant.now() )
+			) );
+		} );
+	}
+
+
+	@Test
+	public void testFetchEntityWithAssociationsPerformanceWithParameters() {
+		inTransaction(  session -> {
+			final Instant startTime = Instant.now();
+
+			for ( int i = 0; i < 100_000; i++ ) {
+				final CriteriaBuilder builder = session.getCriteriaBuilder();
+				final CriteriaQuery<Author> criteriaQuery = builder.createQuery( Author.class );
+				Root<Author> from = criteriaQuery.from( Author.class );
+				final ParameterExpression<String> stringValueParameter = builder.parameter( String.class );
+
+				criteriaQuery.where(
+						builder.like( from.get( "name" ), stringValueParameter )
+
+				);
+				TypedQuery<Author> query = session.createQuery( criteriaQuery );
+				query.setParameter( stringValueParameter, "David Gourley" );
+				final List<Author> authors = query.getResultList();
+				assertNotNull( authors );
+			}
+
+			System.out.println( MessageFormat.format(
+					"{0} took {1}",
+					"6.1 testFetchEntityWithAssociationsPerformanceWithParameters",
 					Duration.between( startTime, Instant.now() )
 			) );
 		} );
@@ -111,25 +171,22 @@ public class CriteriaPerformanceTest {
 	 * 2. Missing query plan cache for criteria queries (possibly)
 	 */
 	@Test
-	public void testFetchEntityPerformance(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			for ( int i = 0; i < 1000; i++ ) {
-				populateSimpleData( entityManager );
-			}
+	public void testFetchEntityPerformance() {
+		inTransaction( session -> {
 
 			final Instant startTime = Instant.now();
 
 			for ( int i = 0; i < 100_000; i++ ) {
-				final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+				final CriteriaBuilder builder = session.getCriteriaBuilder();
 				final CriteriaQuery<Other> query = builder.createQuery( Other.class );
 				query.from( Other.class );
-				final List<Other> others = entityManager.createQuery( query ).getResultList();
+				final List<Other> others = session.createQuery( query ).getResultList();
 				assertNotNull( others );
 			}
 
 			System.out.println( MessageFormat.format(
 					"{0} took {1}",
-					"Simple Query",
+					"6.1 testFetchEntityPerformance",
 					Duration.between( startTime, Instant.now() )
 			) );
 		} );
@@ -140,28 +197,23 @@ public class CriteriaPerformanceTest {
 	 * (5.6 is about 5-7% faster on my machine)
 	 */
 	@Test
-	public void testFetchEntityPerformanceSmallTransactions(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			for ( int i = 0; i < 1000; i++ ) {
-				populateSimpleData( entityManager );
-			}
-		} );
+	public void testFetchEntityPerformanceSmallTransactions() {
 
 		final Instant startTime = Instant.now();
 
 		for ( int i = 0; i < 100_000; i++ ) {
-			scope.inTransaction( entityManager -> {
-				final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			inTransaction(  session -> {
+				final CriteriaBuilder builder = session.getCriteriaBuilder();
 				final CriteriaQuery<Other> query = builder.createQuery( Other.class );
 				query.from( Other.class );
-				final List<Other> others = entityManager.createQuery( query ).getResultList();
+				final List<Other> others = session.createQuery( query ).getResultList();
 				assertNotNull( others );
 			} );
 		}
 
 		System.out.println( MessageFormat.format(
 				"{0} took {1}",
-				"Simple Query Criteria",
+				"6.1 testFetchEntityPerformanceSmallTransactions",
 				Duration.between( startTime, Instant.now() )
 		) );
 	}
@@ -171,18 +223,13 @@ public class CriteriaPerformanceTest {
 	 * (5.6 is about 5-7% faster on my machine)
 	 */
 	@Test
-	public void testFetchEntityPerformanceSmallTransactionsHql(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			for ( int i = 0; i < 1000; i++ ) {
-				populateSimpleData( entityManager );
-			}
-		} );
+	public void testFetchEntityPerformanceSmallTransactionsHql() {
 
 		final Instant startTime = Instant.now();
 
 		for ( int i = 0; i < 100_000; i++ ) {
-			scope.inTransaction( entityManager -> {
-				final List<Other> others = entityManager.createQuery( "SELECT p FROM Other p", Other.class )
+			inTransaction( session -> {
+				final List<Other> others = session.createQuery( "SELECT p FROM Other p", Other.class )
 						.getResultList();
 				assertNotNull( others );
 			} );
@@ -190,12 +237,12 @@ public class CriteriaPerformanceTest {
 
 		System.out.println( MessageFormat.format(
 				"{0} took {1}",
-				"Simple Query HQL",
+				"6.1 testFetchEntityPerformanceSmallTransactionsHql",
 				Duration.between( startTime, Instant.now() )
 		) );
 	}
 
-	public void populateData(EntityManager entityManager) {
+	public static void populateData(Session session) {
 		final Book book = new Book();
 		book.name = "HTTP Definitive guide";
 
@@ -205,14 +252,14 @@ public class CriteriaPerformanceTest {
 		author.books.add( book );
 		book.author = author;
 
-		entityManager.persist( author );
+		session.persist( author );
 	}
 
-	public void populateSimpleData(EntityManager entityManager) {
+	public static void populateSimpleData(Session session) {
 		final Other other = new Other();
 		other.name = "Other";
 
-		entityManager.persist( other );
+		session.persist( other );
 	}
 
 	@Entity(name = "Author")
@@ -227,6 +274,18 @@ public class CriteriaPerformanceTest {
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		public List<Book> books = new ArrayList<>();
+
+		public Long getAuthorId() {
+			return authorId;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public List<Book> getBooks() {
+			return books;
+		}
 	}
 
 	@Entity(name = "Book")
@@ -242,6 +301,18 @@ public class CriteriaPerformanceTest {
 		@ManyToOne(fetch = FetchType.LAZY, optional = false)
 		@JoinColumn(name = "author_id", nullable = false)
 		public Author author;
+
+		public Long getBookId() {
+			return bookId;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Author getAuthor() {
+			return author;
+		}
 	}
 
 	@Entity(name = "Other")

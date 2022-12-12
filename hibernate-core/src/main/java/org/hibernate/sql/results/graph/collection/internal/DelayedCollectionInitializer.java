@@ -29,6 +29,9 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( parentAccess != null && parentAccess.findFirstEntityInitializer().isInitialized() ) {
+			return;
+		}
 		resolveInstance( rowProcessingState, false );
 	}
 

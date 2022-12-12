@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static java.util.Arrays.sort;
 import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
 
 /**
@@ -108,6 +109,8 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	@Override
 	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return dialect.getEnumTypeDeclaration( getEnumeratedValues( getDomainJavaType().getJavaTypeClass() ) );
+		String[] values = getEnumeratedValues( getDomainJavaType().getJavaTypeClass() );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return dialect.getEnumTypeDeclaration( values );
 	}
 }

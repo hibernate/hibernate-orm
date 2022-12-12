@@ -80,7 +80,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Session openSession() throws HibernateException {
+	public SessionImplementor openSession() throws HibernateException {
 		return delegate.openSession();
 	}
 
@@ -215,7 +215,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Session openTemporarySession() throws HibernateException {
+	public SessionImplementor openTemporarySession() throws HibernateException {
 		return delegate.openTemporarySession();
 	}
 

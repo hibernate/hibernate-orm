@@ -321,7 +321,7 @@ public class SessionFactoryExtension
 		public void inSession(Consumer<SessionImplementor> action) {
 			log.trace( "#inSession(Consumer)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				action.accept( session );
 			}
@@ -334,7 +334,7 @@ public class SessionFactoryExtension
 		public <T> T fromSession(Function<SessionImplementor, T> action) {
 			log.trace( "#fromSession(Function)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				return action.apply( session );
 			}
@@ -347,7 +347,7 @@ public class SessionFactoryExtension
 		public void inTransaction(Consumer<SessionImplementor> action) {
 			log.trace( "#inTransaction(Consumer)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				inTransaction( session, action );
 			}
@@ -360,7 +360,7 @@ public class SessionFactoryExtension
 		public <T> T fromTransaction(Function<SessionImplementor, T> action) {
 			log.trace( "#fromTransaction(Function)" );
 
-			try (SessionImplementor session = (SessionImplementor) getSessionFactory().openSession()) {
+			try (SessionImplementor session = getSessionFactory().openSession()) {
 				log.trace( "Session opened, calling action" );
 				return fromTransaction( session, action );
 			}

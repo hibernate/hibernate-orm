@@ -67,6 +67,15 @@ public interface SessionFactoryImplementor
 	 */
 	String getName();
 
+	/**
+	 * Overrides {@link SessionFactory#openSession()} to widen the return type:
+	 * this is useful for internal code depending on {@link SessionFactoryImplementor}
+	 * as it would otherwise need to frequently resort to casting to the internal contract.
+	 * @return the opened Session.
+	 */
+	@Override
+	SessionImplementor openSession();
+
 	TypeConfiguration getTypeConfiguration();
 
 	default SessionFactoryImplementor getSessionFactory() {
@@ -89,7 +98,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
-	Session openTemporarySession() throws HibernateException;
+	SessionImplementor openTemporarySession() throws HibernateException;
 
 	@Override
 	CacheImplementor getCache();

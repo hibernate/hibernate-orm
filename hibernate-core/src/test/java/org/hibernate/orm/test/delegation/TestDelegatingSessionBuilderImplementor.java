@@ -19,9 +19,9 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
  * @author Guillaume Smet
  */
 @SuppressWarnings("unused")
-public class TestDelegatingSessionBuilderImplementor extends AbstractDelegatingSessionBuilderImplementor<TestDelegatingSessionBuilderImplementor> {
+public class TestDelegatingSessionBuilderImplementor extends AbstractDelegatingSessionBuilderImplementor {
 
-	public TestDelegatingSessionBuilderImplementor(SessionBuilderImplementor<TestDelegatingSessionBuilderImplementor> delegate) {
+	public TestDelegatingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
 		super( delegate );
 	}
 

@@ -969,7 +969,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private void preLoad(RowProcessingState rowProcessingState) {
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 
-		if ( session instanceof EventSource ) {
+		if ( session.isEventSource() ) {
 			final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
 			assert preLoadEvent != null;
 

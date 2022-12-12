@@ -17,7 +17,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * 
  * @author Steve Ebersole
  */
-public interface SessionBuilder<T extends SessionBuilder> {
+public interface SessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -32,7 +32,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T interceptor(Interceptor interceptor);
+	SessionBuilder interceptor(Interceptor interceptor);
 
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
@@ -45,7 +45,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T noInterceptor();
+	SessionBuilder noInterceptor();
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.
@@ -54,7 +54,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T statementInspector(StatementInspector statementInspector);
+	SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -63,7 +63,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	SessionBuilder connection(Connection connection);
 
 	/**
 	 * Signifies that the connection release mode from the original session
@@ -73,7 +73,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**
 	 * Should the session built automatically join in any ongoing JTA transactions.
@@ -84,7 +84,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
 	 * Should the session be automatically cleared on a failed transaction?
@@ -94,7 +94,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	@SuppressWarnings("UnusedReturnValue")
-	T autoClear(boolean autoClear);
+	SessionBuilder autoClear(boolean autoClear);
 
 	/**
 	 * Specify the initial FlushMode to use for the opened Session
@@ -105,7 +105,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T flushMode(FlushMode flushMode);
+	SessionBuilder flushMode(FlushMode flushMode);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -114,7 +114,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	SessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of
@@ -124,7 +124,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T eventListeners(SessionEventListener... listeners);
+	SessionBuilder eventListeners(SessionEventListener... listeners);
 
 	/**
 	 * Remove all listeners intended for the built session currently held here,
@@ -132,9 +132,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * {@code this}, for method chaining
 	 */
-	T clearEventListeners();
+	SessionBuilder clearEventListeners();
 
-	T jdbcTimeZone(TimeZone timeZone);
+	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -145,5 +145,5 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T autoClose(boolean autoClose);
+	SessionBuilder autoClose(boolean autoClose);
 }

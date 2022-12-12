@@ -672,6 +672,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsOrderByInSubquery() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsWindowFunctions() {
 		return true;
 	}

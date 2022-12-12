@@ -7087,6 +7087,70 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void renderBackslashEscapedLikePattern(
+			Expression pattern,
+			Expression escapeCharacter,
+			boolean noBackslashEscapes) {
+		// Check if escapeCharacter was explicitly set and do nothing in that case
+		// Note: this does not cover cases where it's set via parameter binding
+		boolean isExplicitEscape = false;
+		if ( escapeCharacter instanceof Literal ) {
+			Object literalValue = ( (Literal) escapeCharacter ).getLiteralValue();
+			isExplicitEscape = literalValue != null && !literalValue.toString().equals( "" );
+		}
+		if ( isExplicitEscape ) {
+			pattern.accept( this );
+		}
+		else {
+			// Since escape with empty or null character is ignored we need
+			// four backslashes to render a single one in a like pattern
+			if ( pattern instanceof Literal ) {
+				Object literalValue = ( (Literal) pattern ).getLiteralValue();
+				if ( literalValue == null ) {
+					pattern.accept( this );
+				}
+				else {
+					appendBackslashEscapedLikeLiteral( this, literalValue.toString(), noBackslashEscapes );
+				}
+			}
+			else {
+				// replace(<pattern>,'\\','\\\\')
+				appendSql( "replace" );
+				appendSql( OPEN_PARENTHESIS );
+				pattern.accept( this );
+				if ( noBackslashEscapes ) {
+					appendSql( ",'\\','\\\\'" );
+				}
+				else {
+					appendSql( ",'\\\\','\\\\\\\\'" );
+				}
+				appendSql( CLOSE_PARENTHESIS );
+			}
+		}
+	}
+
+	protected void appendBackslashEscapedLikeLiteral(SqlAppender appender, String literal, boolean noBackslashEscapes) {
+		appender.appendSql( '\'' );
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			switch ( c ) {
+				case '\'':
+					appender.appendSql( '\'' );
+					break;
+				case '\\':
+					if ( noBackslashEscapes ) {
+						appender.appendSql( '\\' );
+					}
+					else {
+						appender.appendSql( "\\\\\\" );
+					}
+					break;
+			}
+			appender.appendSql( c );
+		}
+		appender.appendSql( '\'' );
+	}
+
 	@Override
 	public void visitNegatedPredicate(NegatedPredicate negatedPredicate) {
 		if ( negatedPredicate.isEmpty() ) {

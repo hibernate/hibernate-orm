@@ -22,6 +22,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -56,7 +57,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
 		registerKeywords( info );
 	}
 

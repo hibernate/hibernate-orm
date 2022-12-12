@@ -1461,7 +1461,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				needsParenthesis = !needsRowNumberingWrapper && !needsQueryGroupWrapper;
 			}
 			else {
-				needsParenthesis = !queryGroup.isRoot();
+				needsParenthesis = needsParenthesis( queryGroup );
 			}
 			if ( needsParenthesis ) {
 				appendSql( OPEN_PARENTHESIS );
@@ -1515,7 +1515,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			String separator = "";
 			for ( int i = 0; i < queryParts.size(); i++ ) {
 				appendSql( separator );
-				queryParts.get( i ).accept( this );
+				final QueryPart queryPart = queryParts.get( i );
+				final boolean queryPartNeedsParenthesis = needsParenthesis( queryPart );
+				if ( queryPartNeedsParenthesis ) {
+					appendSql( OPEN_PARENTHESIS );
+				}
+				queryPart.accept( this );
+				if ( queryPartNeedsParenthesis ) {
+					appendSql( CLOSE_PARENTHESIS );
+				}
 				separator = setOperatorString;
 			}
 
@@ -1540,6 +1548,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
 		}
+	}
+
+	private boolean needsParenthesis(QueryPart queryPart) {
+		return !queryPart.isRoot() && (queryPart.hasSortSpecifications() || queryPart.hasOffsetOrFetchClause());
 	}
 
 	@Override

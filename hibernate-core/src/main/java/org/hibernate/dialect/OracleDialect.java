@@ -1085,6 +1085,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsOrderByInSubquery() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
 		// when the query contains duplicate implicit aliases in the select clause

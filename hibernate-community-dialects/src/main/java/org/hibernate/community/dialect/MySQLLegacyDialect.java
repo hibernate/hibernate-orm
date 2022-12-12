@@ -11,6 +11,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -20,6 +21,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.InnoDBStorageEngine;
 import org.hibernate.dialect.MyISAMStorageEngine;
+import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
@@ -141,6 +143,8 @@ public class MySQLLegacyDialect extends Dialect {
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
 
+	private final boolean noBackslashEscapesEnabled;
+
 	public MySQLLegacyDialect() {
 		this( DatabaseVersion.make( 5, 0 ) );
 	}
@@ -150,13 +154,22 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	public MySQLLegacyDialect(DatabaseVersion version, int bytesPerCharacter) {
+		this( version, bytesPerCharacter, false );
+	}
+
+	public MySQLLegacyDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
+		this( version, serverConfiguration.getBytesPerCharacter(), serverConfiguration.isNoBackslashEscapesEnabled() );
+	}
+
+	public MySQLLegacyDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
 		super( version );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = noBackslashEscapes;
 	}
 
 	public MySQLLegacyDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
 		registerKeywords( info );
 	}
 
@@ -356,6 +369,7 @@ public class MySQLLegacyDialect extends Dialect {
 		);
 	}
 
+	@Deprecated
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
@@ -428,6 +442,10 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		return maxVarbinaryLength;
+	}
+
+	public boolean isNoBackslashEscapesEnabled() {
+		return noBackslashEscapesEnabled;
 	}
 
 	@Override

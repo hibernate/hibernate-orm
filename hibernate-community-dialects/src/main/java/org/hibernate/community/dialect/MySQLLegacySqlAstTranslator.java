@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -16,6 +17,7 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -136,6 +138,17 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		super.visitLikePredicate( likePredicate );
+		// Custom implementation because MySQL uses backslash as the default escape character
+		// We can override this by specifying an empty escape character
+		// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
+		if ( !( (MySQLLegacyDialect) getDialect() ).isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
+			appendSql( " escape ''" );
 		}
 	}
 

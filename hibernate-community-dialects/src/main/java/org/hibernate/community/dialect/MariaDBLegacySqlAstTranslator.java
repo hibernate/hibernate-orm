@@ -6,6 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -16,6 +18,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -158,6 +161,44 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		if ( likePredicate.isCaseSensitive() ) {
+			likePredicate.getMatchExpression().accept( this );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " like " );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					getDialect().isNoBackslashEscapesEnabled()
+			);
+		}
+		else {
+			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			likePredicate.getMatchExpression().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " like " );
+			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					getDialect().isNoBackslashEscapesEnabled()
+			);
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
+		}
+	}
+
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInSet() {
 		return false;
 	}
@@ -176,6 +217,11 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	protected boolean supportsDistinctFromPredicate() {
 		// It supports a proprietary operator
 		return true;
+	}
+
+	@Override
+	public MariaDBLegacyDialect getDialect() {
+		return (MariaDBLegacyDialect) super.getDialect();
 	}
 
 	private boolean supportsWindowFunctions() {

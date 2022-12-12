@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.InnoDBStorageEngine;
+import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -25,6 +26,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -51,7 +53,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	public MariaDBLegacyDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
 		registerKeywords( info );
 	}
 

@@ -11,6 +11,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -137,6 +138,8 @@ public class MySQLDialect extends Dialect {
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
 
+	private final boolean noBackslashEscapesEnabled;
+
 	public MySQLDialect() {
 		this( MINIMUM_VERSION );
 	}
@@ -146,13 +149,22 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter) {
+		this( version, bytesPerCharacter, false );
+	}
+
+	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
+		this( version, serverConfiguration.getBytesPerCharacter(), serverConfiguration.isNoBackslashEscapesEnabled() );
+	}
+
+	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
 		super( version );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = noBackslashEscapes;
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), getCharacterSetBytesPerCharacter( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
 		registerKeywords( info );
 	}
 
@@ -355,6 +367,7 @@ public class MySQLDialect extends Dialect {
 		);
 	}
 
+	@Deprecated
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
@@ -421,6 +434,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		return maxVarbinaryLength;
+	}
+
+	public boolean isNoBackslashEscapesEnabled() {
+		return noBackslashEscapesEnabled;
 	}
 
 	@Override
@@ -1114,7 +1131,10 @@ public class MySQLDialect extends Dialect {
 					appender.appendSql( '\'' );
 					break;
 				case '\\':
-					appender.appendSql( '\\' );
+					if ( !noBackslashEscapesEnabled ) {
+						// See https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_backslash_escapes
+						appender.appendSql( '\\' );
+					}
 					break;
 			}
 			appender.appendSql( c );

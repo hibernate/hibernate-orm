@@ -32,17 +32,4 @@ public interface EnumValueConverter<O extends Enum<O>, R> extends BasicValueConv
 
 	String toSqlLiteral(Object value);
 
-	/**
-	 * @since 6.0
-	 *
-	 * @deprecated Added temporarily in support of dual SQL execution until
-	 * fully migrated to {@link SelectStatement} and {@link JdbcOperationQuery}
-	 */
-	@Remove
-	@Deprecated
-	void writeValue(
-			PreparedStatement statement,
-			O value,
-			int position,
-			SharedSessionContractImplementor session) throws SQLException;
 }

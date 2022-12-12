@@ -6,17 +6,11 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
-import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -35,9 +29,6 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private final JdbcType jdbcType;
 	private final JavaType<String> relationalTypeDescriptor;
 
-//	private transient ValueExtractor<String> valueExtractor;
-	private transient ValueBinder<String> valueBinder;
-
 	public NamedEnumValueConverter(
 			EnumJavaType<E> domainTypeDescriptor,
 			JdbcType jdbcType,
@@ -45,9 +36,6 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 		this.domainTypeDescriptor = domainTypeDescriptor;
 		this.jdbcType = jdbcType;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;
-
-//		valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
-		valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override
@@ -83,23 +71,6 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	public String toSqlLiteral(Object value) {
 		//noinspection rawtypes
 		return String.format( Locale.ROOT, "'%s'", ( (Enum) value ).name() );
-	}
-
-	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
-		stream.defaultReadObject();
-
-//		valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
-		valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
-	}
-
-	@Override
-	public void writeValue(
-			PreparedStatement statement,
-			E value,
-			int position,
-			SharedSessionContractImplementor session) throws SQLException {
-		final String jdbcValue = value == null ? null : value.name();
-		valueBinder.bind( statement, jdbcValue, position, session );
 	}
 
 	@Override

@@ -20,7 +20,6 @@ import jakarta.persistence.Converter;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
@@ -82,6 +81,7 @@ import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -642,53 +642,6 @@ public class OracleDialect extends Dialect {
 		}
 	}
 
-	/**
-	 * A dummy converter responsible for creating the check constraints
-	 * for Java {@code boolean} mapped to {@code number(1,0)}.
-	 */
-	@Converter(autoApply = true)
-	static class BooleanBooleanConverter implements AttributeConverter<Boolean,Boolean>, BasicValueConverter<Boolean,Boolean> {
-		@Override
-		public Boolean convertToDatabaseColumn(Boolean attribute) {
-			return attribute;
-		}
-
-		@Override
-		public Boolean convertToEntityAttribute(Boolean dbData) {
-			return dbData;
-		}
-
-		@Override
-		public Boolean toDomainValue(Boolean relationalForm) {
-			return relationalForm;
-		}
-
-		@Override
-		public Boolean toRelationalValue(Boolean domainForm) {
-			return domainForm;
-		}
-
-		@Override
-		public JavaType<Boolean> getDomainJavaType() {
-			return BooleanJavaType.INSTANCE;
-		}
-
-		@Override
-		public JavaType<Boolean> getRelationalJavaType() {
-			return BooleanJavaType.INSTANCE;
-		}
-
-		@Override
-		public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-			return jdbcType.getDefaultSqlTypeCode() == Types.BOOLEAN ? columnName + " in (0,1)" : null;
-		}
-	}
-
-	@Override
-	public void registerAttributeConverters(ConverterRegistry converterRegistry) {
-		converterRegistry.addOverridableConverter( BooleanBooleanConverter.class );
-	}
-
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
@@ -783,6 +736,7 @@ public class OracleDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
+		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {

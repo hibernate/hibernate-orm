@@ -682,7 +682,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 */
 	public String getCheckCondition(String columnName, long min, long max) {
-			return columnName + " between " + min + " and " + max;
+		return columnName + " between " + min + " and " + max;
 	}
 
 	/**

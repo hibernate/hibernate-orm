@@ -24,7 +24,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder> implements SessionBuilder<T> {
+public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder {
 
 	private final SessionBuilder delegate;
 
@@ -33,8 +33,8 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	}
 
 	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
+	protected SessionBuilder getThis() {
+		return this;
 	}
 
 	protected SessionBuilder delegate() {
@@ -47,80 +47,80 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	}
 
 	@Override
-	public T interceptor(Interceptor interceptor) {
+	public SessionBuilder interceptor(Interceptor interceptor) {
 		delegate.interceptor( interceptor );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T noInterceptor() {
+	public SessionBuilder noInterceptor() {
 		delegate.noInterceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T statementInspector(StatementInspector statementInspector) {
+	public SessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection(Connection connection) {
+	public SessionBuilder connection(Connection connection) {
 		delegate.connection( connection );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions(boolean autoJoinTransactions) {
+	public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose(boolean autoClose) {
+	public SessionBuilder autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
+	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T eventListeners(SessionEventListener... listeners) {
+	public SessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T clearEventListeners() {
+	public SessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T jdbcTimeZone(TimeZone timeZone) {
+	public SessionBuilder jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone(timeZone);
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	public SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClear(boolean autoClear) {
+	public SessionBuilder autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode(FlushMode flushMode) {
+	public SessionBuilder flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
-		return getThis();
+		return this;
 	}
 }

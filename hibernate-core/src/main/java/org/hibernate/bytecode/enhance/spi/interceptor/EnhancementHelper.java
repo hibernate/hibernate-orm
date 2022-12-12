@@ -284,7 +284,7 @@ public class EnhancementHelper {
 		}
 
 		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
-		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
+		final SharedSessionContractImplementor session = sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;

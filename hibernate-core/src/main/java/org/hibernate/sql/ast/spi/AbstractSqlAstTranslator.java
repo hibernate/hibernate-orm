@@ -385,7 +385,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		@Override
 		protected SessionImplementor delegate() {
 			if ( session == null ) {
-				session = (SessionImplementor) sessionFactory.openTemporarySession();
+				session = sessionFactory.openTemporarySession();
 			}
 			return session;
 		}

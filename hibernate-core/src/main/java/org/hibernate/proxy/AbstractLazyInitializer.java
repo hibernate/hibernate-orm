@@ -194,7 +194,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			try {
 				SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
+				SharedSessionContractImplementor session = sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setHibernateFlushMode( FlushMode.MANUAL );
 

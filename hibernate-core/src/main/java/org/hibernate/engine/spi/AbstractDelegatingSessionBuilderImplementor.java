@@ -12,9 +12,7 @@ package org.hibernate.engine.spi;
  *
  * @author Gunnar Morling
  */
-public abstract class AbstractDelegatingSessionBuilderImplementor<T extends SessionBuilderImplementor>
-		extends AbstractDelegatingSessionBuilder<T>
-		implements SessionBuilderImplementor<T> {
+public abstract class AbstractDelegatingSessionBuilderImplementor extends AbstractDelegatingSessionBuilder implements SessionBuilderImplementor {
 
 	public AbstractDelegatingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
 		super( delegate );

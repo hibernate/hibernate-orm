@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.context.TenantIdentifierMismatchException;
+import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -35,7 +36,7 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 	}
 
 	protected SessionBuilder baseSessionBuilder() {
-		final SessionBuilder builder = factory.withOptions();
+		final SessionBuilderImplementor builder = factory.withOptions();
 		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null ) {
 			builder.tenantIdentifier( resolver.resolveCurrentTenantIdentifier() );

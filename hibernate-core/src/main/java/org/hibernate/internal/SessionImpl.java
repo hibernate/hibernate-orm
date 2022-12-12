@@ -14,6 +14,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.Interceptor;
 import org.hibernate.JDBCException;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
@@ -344,7 +346,7 @@ public class SessionImpl
 
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl<>( this );
+		return new SharedSessionBuilderImpl( this );
 	}
 
 	@Override
@@ -2019,9 +2021,7 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder>
-			extends SessionFactoryImpl.SessionBuilderImpl<T>
-			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl extends SessionFactoryImpl.SessionBuilderImpl implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -2036,51 +2036,87 @@ public class SessionImpl
 
 
 		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
+		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}
 
 		@Override
-		public T interceptor() {
-			return interceptor( session.getInterceptor() );
+		public SharedSessionBuilderImpl interceptor() {
+			super.interceptor( session.getInterceptor() );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl interceptor(Interceptor interceptor) {
+			super.interceptor( interceptor );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl noInterceptor() {
+			super.noInterceptor();
+			return this;
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public T connection() {
+		public SharedSessionBuilderImpl connection() {
 			this.shareTransactionContext = true;
-			return (T) this;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl connection(Connection connection) {
+			super.connection( connection );
+			return this;
 		}
 
 		@Override
 		@Deprecated(since = "6.0")
-		public T connectionReleaseMode() {
+		public SharedSessionBuilderImpl connectionReleaseMode() {
 			final PhysicalConnectionHandlingMode handlingMode = PhysicalConnectionHandlingMode.interpret(
 					ConnectionAcquisitionMode.AS_NEEDED,
 					session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode()
 			);
-			return connectionHandlingMode( handlingMode );
+			connectionHandlingMode( handlingMode );
+			return this;
 		}
 
 		@Override
-		public T connectionHandlingMode() {
-			return connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
+		public SharedSessionBuilderImpl connectionHandlingMode() {
+			connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
+			return this;
 		}
 
 		@Override
-		public T autoJoinTransactions() {
-			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
+		public SharedSessionBuilderImpl autoJoinTransactions() {
+			super.autoJoinTransactions( session.isAutoCloseSessionEnabled() );
+			return this;
 		}
 
 		@Override
-		public T flushMode() {
-			return flushMode( session.getHibernateFlushMode() );
+		public SharedSessionBuilderImpl autoJoinTransactions(boolean autoJoinTransactions) {
+			super.autoJoinTransactions( autoJoinTransactions );
+			return this;
 		}
 
 		@Override
-		public T autoClose() {
-			return autoClose( session.autoClose );
+		public SharedSessionBuilderImpl autoClose(boolean autoClose) {
+			super.autoClose( autoClose );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl flushMode() {
+			flushMode( session.getHibernateFlushMode() );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl autoClose() {
+			autoClose( session.autoClose );
+			return this;
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

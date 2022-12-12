@@ -46,7 +46,8 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super(info);
+		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
 	}
 
 	@Override

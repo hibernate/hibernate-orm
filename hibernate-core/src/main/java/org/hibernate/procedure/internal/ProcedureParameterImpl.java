@@ -200,10 +200,9 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			BindableType<?> hibernateType,
 			ProcedureCallImplementor<?> procedureCall) {
 		final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
-				.getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry().getService( JdbcEnvironment.class )
+				.getFactory()
+				.getJdbcServices()
+				.getJdbcEnvironment()
 				.getExtractedDatabaseMetaData();
 		return procedureCall.getFunctionReturn() == null
 				&& databaseMetaData.supportsNamedParameters()

@@ -116,7 +116,7 @@ public interface JdbcParameterBindings {
 			List<ParameterOccurrence> parameterOccurrences,
 			List<JdbcParameterBinder> jdbcParameterBinders,
 			SessionFactoryImplementor factory) {
-		final Dialect dialect = factory.getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 

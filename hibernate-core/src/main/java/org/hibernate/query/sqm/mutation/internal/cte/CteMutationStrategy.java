@@ -70,10 +70,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(

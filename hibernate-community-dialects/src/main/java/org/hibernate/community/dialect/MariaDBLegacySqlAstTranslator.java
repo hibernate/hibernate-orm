@@ -6,13 +6,10 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -31,13 +28,16 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private MariaDBLegacyDialect dialect;
+
 	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+		this.dialect = (MariaDBLegacyDialect)super.getDialect();
 	}
 
 	@Override
 	protected boolean supportsWithClause() {
-		return getDialect().getVersion().isSameOrAfter( 10, 2 );
+		return dialect.getVersion().isSameOrAfter( 10, 2 );
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 10, 4 );
+		return dialect.getVersion().isSameOrAfter( 10, 4 );
 	}
 
 	@Override
@@ -171,11 +171,11 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 			renderBackslashEscapedLikePattern(
 					likePredicate.getPattern(),
 					likePredicate.getEscapeCharacter(),
-					getDialect().isNoBackslashEscapesEnabled()
+					dialect.isNoBackslashEscapesEnabled()
 			);
 		}
 		else {
-			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( dialect.getLowercaseFunction() );
 			appendSql( OPEN_PARENTHESIS );
 			likePredicate.getMatchExpression().accept( this );
 			appendSql( CLOSE_PARENTHESIS );
@@ -183,12 +183,12 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 				appendSql( " not" );
 			}
 			appendSql( " like " );
-			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( dialect.getLowercaseFunction() );
 			appendSql( OPEN_PARENTHESIS );
 			renderBackslashEscapedLikePattern(
 					likePredicate.getPattern(),
 					likePredicate.getEscapeCharacter(),
-					getDialect().isNoBackslashEscapesEnabled()
+					dialect.isNoBackslashEscapesEnabled()
 			);
 			appendSql( CLOSE_PARENTHESIS );
 		}
@@ -210,7 +210,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	protected boolean supportsIntersect() {
-		return getDialect().getVersion().isSameOrAfter( 10, 3 );
+		return dialect.getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override
@@ -221,10 +221,10 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	public MariaDBLegacyDialect getDialect() {
-		return (MariaDBLegacyDialect) super.getDialect();
+		return this.dialect;
 	}
 
 	private boolean supportsWindowFunctions() {
-		return getDialect().getVersion().isSameOrAfter( 10, 2 );
+		return dialect.getVersion().isSameOrAfter( 10, 2 );
 	}
 }

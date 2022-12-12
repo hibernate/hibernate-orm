@@ -183,7 +183,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 
-		final BatchBuilder batchBuilder = sessionFactory().getServiceRegistry().getService( BatchBuilder.class );
+		final BatchBuilder batchBuilder = sessionFactory().getFastSessionServices().batchBuilder;
 		currentBatch = batchBuilder.buildBatch( key, batchSize, statementGroupSupplier, this );
 
 		return currentBatch;

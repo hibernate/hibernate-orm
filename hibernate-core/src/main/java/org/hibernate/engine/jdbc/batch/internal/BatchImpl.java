@@ -70,8 +70,8 @@ public class BatchImpl implements Batch {
 
 		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
 				.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
+				.getSessionFactory()
+				.getFastSessionServices().jdbcServices;
 
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();

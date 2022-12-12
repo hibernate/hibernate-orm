@@ -28,8 +28,11 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private final MariaDBDialect dialect;
+
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+		this.dialect = (MariaDBDialect) super.getDialect();
 	}
 
 	@Override
@@ -213,7 +216,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	public MariaDBDialect getDialect() {
-		return (MariaDBDialect) super.getDialect();
+		return this.dialect;
 	}
 
 	private boolean supportsWindowFunctions() {

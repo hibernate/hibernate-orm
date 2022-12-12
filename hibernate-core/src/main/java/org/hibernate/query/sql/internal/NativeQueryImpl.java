@@ -669,8 +669,9 @@ public class NativeQueryImpl<R>
 		}
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final Dialect dialect = getSessionFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
-		final boolean paddingEnabled = getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+		final SessionFactoryImplementor sessionFactory = getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final boolean paddingEnabled = sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		StringBuilder sb = null;

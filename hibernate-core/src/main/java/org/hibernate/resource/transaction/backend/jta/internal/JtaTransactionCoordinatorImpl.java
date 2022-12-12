@@ -15,7 +15,6 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
@@ -317,9 +316,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return new JtaIsolationDelegate(
 				jdbcSessionOwner.getJdbcConnectionAccess(),
 				jdbcSessionOwner.getJdbcSessionContext()
-						.getServiceRegistry()
-						.getService( JdbcServices.class )
-						.getSqlExceptionHelper(),
+						.getSessionFactory()
+						.getFastSessionServices().jdbcServices.getSqlExceptionHelper(),
 				jtaPlatform.retrieveTransactionManager()
 		);
 	}

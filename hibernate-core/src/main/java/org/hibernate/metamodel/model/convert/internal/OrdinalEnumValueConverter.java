@@ -9,11 +9,8 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -32,9 +29,6 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 	private final JdbcType jdbcType;
 	private final JavaType<N> relationalJavaType;
 
-//	private transient ValueExtractor<N> valueExtractor;
-	private transient ValueBinder<N> valueBinder;
-
 	public OrdinalEnumValueConverter(
 			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
@@ -42,9 +36,6 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 		this.enumJavaType = enumJavaType;
 		this.jdbcType = jdbcType;
 		this.relationalJavaType = relationalJavaType;
-
-//		valueExtractor = jdbcType.getExtractor( relationalJavaType );
-		valueBinder = jdbcType.getBinder( relationalJavaType );
 	}
 
 	@Override
@@ -76,19 +67,6 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 	public String toSqlLiteral(Object value) {
 		//noinspection rawtypes
 		return Integer.toString( ( (Enum) value ).ordinal() );
-	}
-
-	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
-		stream.defaultReadObject();
-
-//		valueExtractor = jdbcType.getExtractor( relationalJavaType );
-		valueBinder = jdbcType.getBinder( relationalJavaType );
-	}
-
-	@Override
-	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session)
-			throws SQLException {
-		valueBinder.bind( statement, toRelationalValue( value ), position, session );
 	}
 
 	@Override

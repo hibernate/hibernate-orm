@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.SqlTypes;
@@ -127,6 +128,20 @@ public interface JdbcType extends Serializable {
 	 */
 	@Incubating
 	default Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return null;
+	}
+
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param javaType the {@link JavaType} of the mapped column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 * @since 6.2
+	 */
+	default String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
 		return null;
 	}
 

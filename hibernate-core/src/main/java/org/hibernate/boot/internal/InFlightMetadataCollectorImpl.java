@@ -529,15 +529,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		attributeConverterManager.addRegistration( conversion, bootstrapContext );
 	}
 
-	private boolean doneDialect;
-
 	@Override
 	public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
-		if ( !doneDialect ) {
-			// we want to delay this step until as late as possible
-			getDatabase().getDialect().registerAttributeConverters( this );
-			doneDialect = true;
-		}
 		return attributeConverterManager;
 	}
 

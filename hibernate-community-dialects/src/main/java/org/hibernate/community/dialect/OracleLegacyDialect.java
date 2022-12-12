@@ -23,6 +23,7 @@ import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.OracleBooleanJdbcType;
 import org.hibernate.dialect.OracleTypes;
 import org.hibernate.dialect.OracleTypesHelper;
 import org.hibernate.dialect.OracleXmlJdbcType;
@@ -739,6 +740,7 @@ public class OracleLegacyDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
+		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {

@@ -349,14 +349,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Register any {@link jakarta.persistence.AttributeConverter}s needed.
-	 * <p>
-	 * Good citizens should use {@link ConverterRegistry#addOverridableConverter}
-	 * so as not to interfere with user-registered converters.
-	 */
-	public void registerAttributeConverters(ConverterRegistry converterRegistry) {}
-
-	/**
 	 * Register ANSI-standard column types using the length limits defined
 	 * by {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
 	 * and {@link #getMaxVarbinaryLength()}.

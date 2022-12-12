@@ -332,18 +332,18 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		if ( resolution.getValueConverter() != null ) {
-			column.setSpecializedTypeDeclaration( resolution.getValueConverter().getSpecializedTypeDeclaration( resolution.getJdbcType(), dialect ) );
+			column.setSpecializedTypeDeclaration(
+					resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration( dialect )
+			);
+		}
 
-			if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
-				column.setCheckConstraint(
-						resolution.getValueConverter()
-								.getCheckCondition(
-										column.getQuotedName( dialect ),
-										resolution.getJdbcType(),
-										dialect
-								)
-				);
-			}
+		if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
+			column.setCheckConstraint(
+					resolution.getLegacyResolvedBasicType().getCheckCondition(
+							column.getQuotedName( dialect ),
+							dialect
+					)
+			);
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Incubating;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -22,6 +23,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Marker interface for basic types.
@@ -120,4 +122,39 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJdbcTypeCount();
 	}
 
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 * @since 6.2
+	 */
+	@Incubating
+	default String getCheckCondition(String columnName, Dialect dialect) {
+		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
+		String checkCondition = null;
+		if ( valueConverter != null ) {
+			checkCondition = valueConverter.getCheckCondition(
+					columnName,
+					getJdbcType(),
+					dialect
+			);
+		}
+		if ( checkCondition == null ) {
+			checkCondition = getJdbcType().getCheckCondition(
+					columnName,
+					getMappedJavaType(),
+					dialect
+			);
+		}
+		return checkCondition;
+	}
+
+	@Incubating
+	default String getSpecializedTypeDeclaration(Dialect dialect) {
+		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
+		return valueConverter == null ? null : valueConverter.getSpecializedTypeDeclaration( getJdbcType(), dialect );
+	}
 }

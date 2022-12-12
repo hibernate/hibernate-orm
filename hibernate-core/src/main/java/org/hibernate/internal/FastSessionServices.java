@@ -24,6 +24,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -156,7 +157,7 @@ public final class FastSessionServices {
 	final MultiTenantConnectionProvider multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	final JdbcServices jdbcServices;
+	public final JdbcServices jdbcServices;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
 	final FlushMode initialSessionFlushMode;
@@ -165,11 +166,12 @@ public final class FastSessionServices {
 	final LockOptions defaultLockOptions;
 	final int defaultJdbcBatchSize;
 
-	//This one needs to be public unfortunately:
+	//Some fields are handy as public - still considered internal.
 	public final EntityCopyObserverFactory entityCopyObserverFactory;
+	public final BatchBuilder batchBuilder;
+	public final Dialect dialect;
 
 	//Private fields:
-	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
@@ -251,6 +253,7 @@ public final class FastSessionServices {
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
+		this.batchBuilder = sr.getService( BatchBuilder.class );
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {

@@ -1538,8 +1538,9 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator(
+				final LobCreator lobCreator = jdbcServices.getLobCreator(
 						session
 				);
 				return original == null
@@ -1547,7 +1548,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
 			}
 		}
 
@@ -1556,14 +1557,15 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createClob( "" )
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 			}
 		}
 
@@ -1572,14 +1574,15 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createNClob( "" )
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 			}
 		}
 	};

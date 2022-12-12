@@ -12,7 +12,6 @@ import java.util.List;
 import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.internal.CoreMessageLogger;
@@ -137,7 +136,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		return new JdbcIsolationDelegate(
 				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper()
+				jdbcSessionOwner.getJdbcSessionContext().getSessionFactory().getFastSessionServices().jdbcServices.getSqlExceptionHelper()
 		);
 	}
 

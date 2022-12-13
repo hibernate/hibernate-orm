@@ -627,7 +627,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, intgValidationMode );
 		}
 		else if ( persistenceUnit.getValidationMode() != null ) {
-			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 			mergedSettings.configurationValues.put( JAKARTA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 		}
 
@@ -643,7 +642,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		else if ( persistenceUnit.getSharedCacheMode() != null ) {
 			mergedSettings.configurationValues.put( JAKARTA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
-			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 		}
 
 		// Apply all "integration overrides" as the last step.  By specification,

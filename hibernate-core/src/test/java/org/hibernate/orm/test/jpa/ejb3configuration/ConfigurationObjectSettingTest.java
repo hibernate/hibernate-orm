@@ -37,6 +37,7 @@ import jakarta.persistence.ValidationMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -88,7 +89,14 @@ public class ConfigurationObjectSettingTest {
 					adapter,
 					null
 			);
-			assertEquals( SharedCacheMode.ENABLE_SELECTIVE, builder.getConfigurationValues().get( settingName ) );
+			Object value = builder.getConfigurationValues().get( settingName );
+			// PUI should only set non-deprecated setting
+			if (AvailableSettings.JPA_SHARED_CACHE_MODE.equals( settingName )) {
+				assertNull( value );
+			}
+			else {
+				assertEquals( SharedCacheMode.ENABLE_SELECTIVE, value );
+			}
 		}
 		builder.cancel();
 
@@ -145,7 +153,14 @@ public class ConfigurationObjectSettingTest {
 					adapter,
 					null
 			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( ValidationMode.CALLBACK );
+			Object value = builder.getConfigurationValues().get( settingName );
+			// PUI should only set non-deprecated settings
+			if (AvailableSettings.JPA_VALIDATION_MODE.equals( settingName )) {
+				assertNull( value );
+			}
+			else {
+				assertThat( value ).isEqualTo( ValidationMode.CALLBACK );
+			}
 		}
 		builder.cancel();
 

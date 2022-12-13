@@ -1180,11 +1180,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Since we get here, we know that no alias locks were applied.
 				// We only apply locking on the root query though if there is a global lock mode
 				final LockOptions lockOptions = getLockOptions();
-				final Boolean followOnLocking = getLockOptions() == null ? Boolean.FALSE : lockOptions.getFollowOnLocking();
+				final Boolean followOnLocking = lockOptions == null ? Boolean.FALSE : lockOptions.getFollowOnLocking();
 				if ( Boolean.TRUE.equals( followOnLocking ) ) {
 					this.lockOptions = null;
 				}
-				else if ( lockOptions.getLockMode() != LockMode.NONE ) {
+				else if ( lockOptions != null && lockOptions.getLockMode() != LockMode.NONE ) {
 					final ForUpdateClause forUpdateClause = new ForUpdateClause();
 					forUpdateClause.merge( getLockOptions() );
 					forUpdateClause.applyAliases( getDialect().getWriteRowLockStrategy(), querySpec );

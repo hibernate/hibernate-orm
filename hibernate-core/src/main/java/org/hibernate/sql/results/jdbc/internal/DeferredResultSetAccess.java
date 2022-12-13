@@ -119,7 +119,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 						executionContext.getCallback().registerAfterLoadAction(
 								(session, entity, persister) ->
-									( (SessionImplementor) session ).lock(
+									session.asSessionImplementor().lock(
 											persister.getEntityName(),
 											entity,
 											lockOptionsToUse

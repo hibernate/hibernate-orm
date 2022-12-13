@@ -725,4 +725,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private LockMode getNullSafeLockMode(LockMode lockMode) {
 		return lockMode == null ? LockMode.NONE : lockMode;
 	}
+
+	@Override
+	public StatelessSession asStatelessSession() {
+		return this;
+	}
+
+	@Override
+	public boolean isStatelessSession() {
+		return true;
+	}
+
 }

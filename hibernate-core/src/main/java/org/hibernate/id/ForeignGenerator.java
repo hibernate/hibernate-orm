@@ -10,13 +10,10 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
@@ -118,18 +115,18 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 						associatedEntityName
 				);
 			}
-			if ( sessionImplementor instanceof Session ) {
-				id = ((Session) sessionImplementor).save( associatedEntityName, associatedObject );
+			if ( sessionImplementor.isSessionImplementor() ) {
+				id = sessionImplementor.asSessionImplementor().save( associatedEntityName, associatedObject );
 			}
-			else if ( sessionImplementor instanceof StatelessSession ) {
-				id = ((StatelessSession) sessionImplementor).insert( associatedEntityName, associatedObject );
+			else if ( sessionImplementor.isStatelessSession() ) {
+				id = sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedObject );
 			}
 			else {
 				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
 			}
 		}
 
-		if ( sessionImplementor instanceof Session && ((Session) sessionImplementor).contains( entityName, object ) ) {
+		if ( sessionImplementor.isSessionImplementor() && sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");

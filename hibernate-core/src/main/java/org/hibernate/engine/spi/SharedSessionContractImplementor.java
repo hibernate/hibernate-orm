@@ -15,6 +15,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.StatelessSession;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
@@ -439,5 +440,31 @@ public interface SharedSessionContractImplementor
 	 * @param success Was the operation a success
 	 */
 	void afterOperation(boolean success);
+
+	/**
+	 * If this can be casted to a @{@link SessionImplementor},
+	 * you'll get this returned after an efficient cast.
+	 * @throws ClassCastException if this is not compatible!
+	 */
+	default SessionImplementor asSessionImplementor() {
+		throw new ClassCastException();
+	}
+
+	default boolean isSessionImplementor() {
+		return false;
+	}
+
+	/**
+	 * If this can be casted to a @{@link StatelessSession},
+	 * you'll get this returned after an efficient cast.
+	 * @throws ClassCastException if this is not compatible!
+	 */
+	default StatelessSession asStatelessSession() {
+		throw new ClassCastException();
+	}
+
+	default boolean isStatelessSession() {
+		return false;
+	}
 
 }

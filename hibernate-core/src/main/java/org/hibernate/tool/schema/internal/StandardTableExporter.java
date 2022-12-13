@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.MappingException;
@@ -20,12 +19,14 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
+
+import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 
 /**
  * An {@link Exporter} for {@linkplain Table tables}.
@@ -33,6 +34,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  * @author Steve Ebersole
  */
 public class StandardTableExporter implements Exporter<Table> {
+
 	protected final Dialect dialect;
 
 	public StandardTableExporter(Dialect dialect) {
@@ -44,38 +46,16 @@ public class StandardTableExporter implements Exporter<Table> {
 			Table table,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				table.getNameIdentifier()
-		);
+		final QualifiedName tableName = getTableName(table);
 
 		try {
-			String formattedTableName = context.format( tableName );
-			StringBuilder createTable =
+			final String formattedTableName = context.format( tableName );
+
+			final StringBuilder createTable =
 					new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 							.append( ' ' )
 							.append( formattedTableName )
 							.append( " (" );
-
-
-			boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
-					&& table.getIdentifierValue() != null
-					&& table.getIdentifierValue().isIdentityColumn(
-							( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
-									.getIdentifierGeneratorFactory(),
-							dialect
-					);
-			// TODO: this is the much better form moving forward as we move to metamodel
-			//boolean isPrimaryKeyIdentity = hasPrimaryKey
-			//				&& table.getPrimaryKey().getColumnSpan() == 1
-			//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
-
-			// Try to find out the name of the primary key in case the dialect needs it to create an identity
-			String pkColName = null;
-			if ( table.hasPrimaryKey() ) {
-				pkColName = table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect );
-			}
 
 			boolean isFirst = true;
 			for ( Column column : table.getColumns() ) {
@@ -85,75 +65,10 @@ public class StandardTableExporter implements Exporter<Table> {
 				else {
 					createTable.append( ", " );
 				}
-
-				String colName = column.getQuotedName( dialect );
-				createTable.append( colName );
-
-				if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
-					// to support dialects that have their own identity data type
-					if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-						createTable.append( ' ' ).append(
-								column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata )
-						);
-					}
-					String identityColumnString = dialect.getIdentityColumnSupport()
-							.getIdentityColumnString( column.getSqlTypeCode(metadata) );
-					createTable.append( ' ' ).append( identityColumnString );
-				}
-				else {
-					final String columnType = column.getSqlType(
-							metadata.getDatabase().getTypeConfiguration(),
-							dialect,
-							metadata
-					);
-					if ( column.hasSpecializedTypeDeclaration() ) {
-						createTable.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
-					}
-					else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-						createTable.append( ' ' ).append( columnType );
-					}
-
-					String defaultValue = column.getDefaultValue();
-					if ( defaultValue != null ) {
-						createTable.append( " default " ).append( defaultValue );
-					}
-
-					String generatedAs = column.getGeneratedAs();
-					if ( generatedAs != null) {
-						createTable.append( dialect.generatedAs( generatedAs ) );
-					}
-
-					if ( column.isNullable() ) {
-						createTable.append( dialect.getNullColumnString( columnType ) );
-					}
-					else {
-						createTable.append( " not null" );
-					}
-
-				}
-
-				if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-					String keyName = Constraint.generateName( "UK_", table, column );
-					UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-					uk.addColumn( column );
-					createTable.append(
-							dialect.getUniqueDelegate()
-									.getColumnDefinitionUniquenessFragment( column, context )
-					);
-				}
-
-				if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
-					createTable.append( column.checkConstraint() );
-				}
-
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					createTable.append( dialect.getColumnComment( columnComment ) );
-				}
+				appendColumn( createTable, column, table, metadata, dialect, context );
 			}
 			if ( table.hasPrimaryKey() ) {
-				createTable.append( ", " )
-						.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
+				createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 			}
 
 			createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
@@ -168,18 +83,106 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			applyTableTypeString( createTable );
 
-			List<String> sqlStrings = new ArrayList<>();
+			final List<String> sqlStrings = new ArrayList<>();
 			sqlStrings.add( createTable.toString() );
-
 			applyComments( table, formattedTableName, sqlStrings );
-
 			applyInitCommands( table, sqlStrings, context );
-
-			return sqlStrings.toArray(StringHelper.EMPTY_STRINGS);
+			return sqlStrings.toArray( EMPTY_STRINGS );
 		}
 		catch (Exception e) {
 			throw new MappingException( "Error creating SQL create commands for table : " + tableName, e );
 		}
+	}
+
+	static void appendColumn(
+			StringBuilder statement,
+			Column column,
+			Table table,
+			Metadata metadata,
+			Dialect dialect,
+			SqlStringGenerationContext context) {
+
+		statement.append( column.getQuotedName( dialect ) );
+
+		final String columnType = column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata );
+		if ( isIdentityColumn( column, table, metadata, dialect ) ) {
+			// to support dialects that have their own identity data type
+			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
+				statement.append( ' ' ).append( columnType );
+			}
+			final String identityColumnString = dialect.getIdentityColumnSupport()
+					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
+			statement.append( ' ' ).append( identityColumnString );
+		}
+		else {
+			if ( column.hasSpecializedTypeDeclaration() ) {
+				statement.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
+			}
+			else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+				statement.append( ' ' ).append( columnType );
+			}
+
+			final String defaultValue = column.getDefaultValue();
+			if ( defaultValue != null ) {
+				statement.append( " default " ).append( defaultValue );
+			}
+
+			final String generatedAs = column.getGeneratedAs();
+			if ( generatedAs != null) {
+				statement.append( dialect.generatedAs( generatedAs ) );
+			}
+
+			if ( column.isNullable() ) {
+				statement.append( dialect.getNullColumnString(columnType) );
+			}
+			else {
+				statement.append( " not null" );
+			}
+		}
+
+		if ( column.isUnique() && !table.isPrimaryKey(column) ) {
+			final String keyName = Constraint.generateName( "UK_", table, column);
+			final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+			uk.addColumn(column);
+			statement.append(
+					dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context )
+			);
+		}
+
+		if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
+			statement.append( column.checkConstraint() );
+		}
+
+		final String columnComment = column.getComment();
+		if ( columnComment != null ) {
+			statement.append( dialect.getColumnComment( columnComment ) );
+		}
+	}
+
+	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {
+		// Try to find out the name of the primary key in case the dialect needs it to create an identity
+		return isPrimaryKeyIdentity( table, metadata, dialect )
+			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
+	}
+
+	private static String getPrimaryKeyColumnName(Table table, Dialect dialect) {
+		return table.hasPrimaryKey()
+				? table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect )
+				: null;
+	}
+
+	private static boolean isPrimaryKeyIdentity(Table table, Metadata metadata, Dialect dialect) {
+		// TODO: this is the much better form moving forward as we move to metamodel
+		//return hasPrimaryKey
+		//				&& table.getPrimaryKey().getColumnSpan() == 1
+		//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
+		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
+		return table.hasPrimaryKey()
+			&& table.getIdentifierValue() != null
+			&& table.getIdentifierValue().isIdentityColumn(
+					metadataImplementor.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
+					dialect
+			);
 	}
 
 	/**
@@ -202,12 +205,16 @@ public class StandardTableExporter implements Exporter<Table> {
 	protected void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
-				sqlStrings.add( "comment on table " + formattedTableName + " is '" + table.getComment() + "'" );
+				sqlStrings.add( "comment on table "
+						+ formattedTableName
+						+ " is '" + table.getComment() + "'" );
 			}
 			for ( Column column : table.getColumns() ) {
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + formattedTableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+					sqlStrings.add( "comment on column "
+							+ formattedTableName + '.' + column.getQuotedName( dialect )
+							+ " is '" + columnComment + "'" );
 				}
 			}
 		}
@@ -215,7 +222,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
 		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
-			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
+			addAll( sqlStrings, initCommand.getInitCommands() );
 		}
 	}
 
@@ -226,9 +233,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
 			for (String constraint : table.getCheckConstraints() ) {
-				buf.append( ", check (" )
-						.append( constraint )
-						.append( ')' );
+				buf.append( ", check (" ).append( constraint ).append( ')' );
 			}
 		}
 	}
@@ -244,19 +249,19 @@ public class StandardTableExporter implements Exporter<Table> {
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );
 		}
+		buf.append( context.format( getTableName( table ) ) )
+				.append( dialect.getCascadeConstraintsString() );
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+		return new String[] { buf.toString() };
+	}
 
-		final QualifiedName tableName = new QualifiedNameParser.NameParts(
+	private static QualifiedName getTableName(Table table) {
+		return new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier()
 		);
-		buf.append( context.format( tableName ) )
-				.append( dialect.getCascadeConstraintsString() );
-
-		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
-		}
-
-		return new String[] { buf.toString() };
 	}
 }

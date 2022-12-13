@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
  *
  * @author Gavin King
  */
+@Incubating
 public class StandardTableCleaner implements Cleaner {
 	protected final Dialect dialect;
 

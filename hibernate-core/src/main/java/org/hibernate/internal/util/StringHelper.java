@@ -869,10 +869,11 @@ public final class StringHelper {
 	 * Return the interned form of a String, or null if the parameter is null.
 	 * <p>
 	 * Use with caution: excessive interning is known to cause issues.
-	 * Best to use only with strings which are known to be long lived constants,
+	 * Best to use only with strings which are known to be long-lived constants,
 	 * and for which the chances of being actual duplicates is proven.
 	 * (Even better: avoid needing interning by design changes such as reusing
 	 * the known reference)
+	 *
 	 * @param string The string to intern.
 	 * @return The interned string.
 	 */

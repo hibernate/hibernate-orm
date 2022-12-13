@@ -186,14 +186,14 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
 		final Database database = metadata.getDatabase();
+		Exporter<AuxiliaryDatabaseObject> auxiliaryExporter = dialect.getAuxiliaryDatabaseObjectExporter();
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
-						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, metadata, sqlGenerationContext ),
+						auxiliaryExporter.getSqlDropStrings( auxiliaryDatabaseObject, metadata, sqlGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -207,7 +207,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					&& auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( sqlGenerationContext ),
+						auxiliaryExporter.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, sqlGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -246,18 +246,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
 					if ( contributableInclusionFilter.matches( sequence ) ) {
-						checkExportIdentifier( sequence, exportIdentifiers );
-						final SequenceInformation sequenceInformation =
-								existingDatabase.getSequenceInformation( sequence.getName() );
+						checkExportIdentifier( sequence, exportIdentifiers);
+						final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
 						if ( sequenceInformation == null ) {
-							applySqlStrings(
-									false,
-									dialect.getSequenceExporter()
-											.getSqlCreateStrings( sequence, metadata, sqlGenerationContext ),
-									formatter,
-									options,
-									targets
-							);
+							applySequence( sequence, dialect, metadata, formatter, options, sqlGenerationContext, targets );
 						}
 					}
 				}
@@ -269,17 +261,12 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( Table table : namespace.getTables() ) {
-					if ( ! options.getSchemaFilter().includeTable( table ) ) {
-						continue;
-					}
-					if ( ! contributableInclusionFilter.matches( table ) ) {
-						continue;
-					}
-
-					final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
-					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-						applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options,
-									sqlGenerationContext, targets );
+					if ( options.getSchemaFilter().includeTable( table ) && contributableInclusionFilter.matches( table ) ) {
+						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
+						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
+							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options,
+										sqlGenerationContext, targets );
+						}
 					}
 				}
 			}
@@ -287,16 +274,33 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 		// Create after-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
-			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
+			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( sqlGenerationContext ),
+						auxiliaryExporter.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, sqlGenerationContext ),
 						formatter,
 						options,
 						targets
 				);
 			}
 		}
+	}
+
+	private static void applySequence(
+			Sequence sequence,
+			Dialect dialect,
+			Metadata metadata,
+			Formatter formatter,
+			ExecutionOptions options,
+			SqlStringGenerationContext sqlGenerationContext,
+			GenerationTarget... targets) {
+		applySqlStrings(
+				false,
+				dialect.getSequenceExporter().getSqlCreateStrings( sequence, metadata, sqlGenerationContext ),
+				formatter,
+				options,
+				targets
+		);
 	}
 
 	protected void createTable(
@@ -327,12 +331,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		applySqlStrings(
 				false,
-				table.sqlAlterStrings(
-						dialect,
-						metadata,
-						tableInformation,
-						sqlGenerationContext
-				),
+				dialect.getTableMigrator()
+						.getSqlAlterStrings( table, metadata, tableInformation, sqlGenerationContext ),
 				formatter,
 				options,
 				targets
@@ -573,19 +573,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 					// otherwise ignore the exception
 				}
-			}
-		}
-	}
-
-	private static void applySqlStrings(
-			boolean quiet,
-			Iterator<String> sqlStrings,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( sqlStrings != null ) {
-			while ( sqlStrings.hasNext() ) {
-				applySqlString( quiet, sqlStrings.next(), formatter, options, targets );
 			}
 		}
 	}

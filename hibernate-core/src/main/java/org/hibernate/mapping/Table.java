@@ -31,9 +31,9 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
+import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.unmodifiableList;
@@ -158,6 +158,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public Identifier getNameIdentifier() {
 		return name;
+	}
+
+	public Identifier getSchemaIdentifier() {
+		return schema;
+	}
+
+	public Identifier getCatalogIdentifier() {
+		return catalog;
 	}
 
 	public String getQuotedName() {
@@ -432,88 +440,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
+	@Deprecated(since = "6.2") @Remove
 	public Iterator<String> sqlAlterStrings(
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInfo,
 			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
-		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName( catalog, schema, name ) );
-
-		final StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
-				.append( ' ' )
-				.append( dialect.getAddColumnString() );
-
-		final List<String> results = new ArrayList<>();
-
-		for ( Column column : getColumns() ) {
-			final ColumnInformation columnInfo = tableInfo.getColumn(
-					Identifier.toIdentifier( column.getName(), column.isQuoted() )
-			);
-
-			if ( columnInfo == null ) {
-				// the column doesn't exist at all.
-				final StringBuilder alter = new StringBuilder( root.toString() )
-						.append( ' ' )
-						.append( column.getQuotedName( dialect ) );
-
-				final String columnType = column.getSqlType(
-						metadata.getDatabase().getTypeConfiguration(),
-						dialect,
-						metadata
-				);
-				if ( column.hasSpecializedTypeDeclaration() ) {
-					alter.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
-				}
-				else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-					alter.append(' ').append(columnType);
-				}
-
-				final String defaultValue = column.getDefaultValue();
-				if ( defaultValue != null ) {
-					alter.append( " default " ).append( defaultValue );
-				}
-
-				final String generatedAs = column.getGeneratedAs();
-				if ( generatedAs != null) {
-					alter.append( dialect.generatedAs( generatedAs ) );
-				}
-
-				if ( column.isNullable() ) {
-					alter.append( dialect.getNullColumnString( columnType ) );
-				}
-				else {
-					alter.append( " not null" );
-				}
-
-				if ( column.isUnique() && !isPrimaryKey( column ) ) {
-					String keyName = Constraint.generateName( "UK_", this, column );
-					UniqueKey uk = getOrCreateUniqueKey( keyName );
-					uk.addColumn( column );
-					alter.append( dialect.getUniqueDelegate()
-							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
-				}
-
-				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
-					alter.append( column.checkConstraint() );
-				}
-
-				final String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					alter.append( dialect.getColumnComment( columnComment ) );
-				}
-
-				alter.append( dialect.getAddColumnSuffixString() );
-
-				results.add( alter.toString() );
-			}
-
-		}
-
-		if ( results.isEmpty() ) {
-			log.debugf( "No alter strings for table : %s", getQuotedName() );
-		}
-
-		return results.iterator();
+		return StandardTableMigrator.sqlAlterStrings(this, dialect, metadata, tableInfo, sqlStringGenerationContext )
+				.iterator();
 	}
 
 	public boolean isPrimaryKey(Column column) {

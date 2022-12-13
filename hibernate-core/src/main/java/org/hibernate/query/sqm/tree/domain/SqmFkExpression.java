@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -24,7 +25,7 @@ public class SqmFkExpression<T> extends AbstractSqmExpression<T> {
 
 	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath, NodeBuilder criteriaBuilder) {
 		//noinspection unchecked
-		super( (SqmExpressible<? extends T>) toOnePath.getNodeType().getIdType(), criteriaBuilder );
+		super( (SqmExpressible<? extends T>) ( (IdentifiableDomainType<?>) toOnePath.getNodeType() ).getIdType(), criteriaBuilder );
 		this.toOnePath = toOnePath;
 	}
 

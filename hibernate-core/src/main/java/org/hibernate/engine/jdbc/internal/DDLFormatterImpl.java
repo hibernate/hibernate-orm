@@ -9,7 +9,7 @@ package org.hibernate.engine.jdbc.internal;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Performs formatting of DDL SQL statements.
@@ -28,16 +28,16 @@ public class DDLFormatterImpl implements Formatter {
 
 	@Override
 	public String format(String sql) {
-		if ( StringHelper.isEmpty( sql ) ) {
+		if ( isEmpty( sql ) ) {
 			return sql;
 		}
 
-		String lowerCaseSql = sql.toLowerCase(Locale.ROOT);
+		final String lowerCaseSql = sql.toLowerCase(Locale.ROOT);
 		if ( lowerCaseSql.startsWith( "create table" ) ) {
 			return formatCreateTable( sql );
 		}
 		else if ( lowerCaseSql.startsWith( "create index" )
-				|| lowerCaseSql.startsWith("create unique") ) {
+				|| lowerCaseSql.startsWith( "create unique" ) ) {
 			return formatAlterTable( sql );
 		}
 		else if ( lowerCaseSql.startsWith( "create" ) ) {
@@ -125,7 +125,7 @@ public class DDLFormatterImpl implements Formatter {
 				if ( "(".equals( token ) ) {
 					depth++;
 					if ( depth == 1 ) {
-						result.append( OTHER_LINES );
+						result.append( OTHER_LINES ).append(' ');
 					}
 				}
 			}
@@ -135,19 +135,19 @@ public class DDLFormatterImpl implements Formatter {
 	}
 
 	private static boolean isBreak(String token) {
-		return "drop".equals( token ) ||
-				"add".equals( token ) ||
-				"references".equals( token ) ||
-				"foreign".equals( token ) ||
-				"on".equals( token );
+		return "drop".equals( token )
+			|| "add".equals( token )
+			|| "references".equals( token )
+			|| "foreign".equals( token )
+			|| "on".equals( token );
 	}
 
 	private static boolean isQuote(String tok) {
-		return "\"".equals( tok ) ||
-				"`".equals( tok ) ||
-				"]".equals( tok ) ||
-				"[".equals( tok ) ||
-				"'".equals( tok );
+		return "\"".equals( tok )
+			|| "`".equals( tok )
+			|| "]".equals( tok )
+			|| "[".equals( tok )
+			|| "'".equals( tok );
 	}
 
 }

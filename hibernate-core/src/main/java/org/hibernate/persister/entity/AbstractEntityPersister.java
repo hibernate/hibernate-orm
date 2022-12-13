@@ -3447,11 +3447,11 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
-	private InsertCoordinator buildInsertCoordinator() {
+	protected InsertCoordinator buildInsertCoordinator() {
 		return new InsertCoordinator( this, factory );
 	}
 
-	private UpdateCoordinator buildUpdateCoordinator() {
+	protected UpdateCoordinator buildUpdateCoordinator() {
 		// we only have updates to issue for entities with one or more singular attributes
 		for ( AttributeMapping attributeMapping : attributeMappings ) {
 			if ( attributeMapping instanceof SingularAttributeMapping ) {
@@ -3463,7 +3463,7 @@ public abstract class AbstractEntityPersister
 		return new UpdateCoordinatorNoOp( this );
 	}
 
-	private DeleteCoordinator buildDeleteCoordinator() {
+	protected DeleteCoordinator buildDeleteCoordinator() {
 		return new DeleteCoordinator( this, factory );
 	}
 

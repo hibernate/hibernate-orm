@@ -72,6 +72,10 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		return attributeMapping;
 	}
 
+	protected SelectStatement getSqlAst() {
+		return sqlAst;
+	}
+
 	@Override
 	public PersistentCollection<?> load(Object triggerKey, SharedSessionContractImplementor session) {
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );

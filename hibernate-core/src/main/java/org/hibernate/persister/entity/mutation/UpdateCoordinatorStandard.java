@@ -101,6 +101,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return staticUpdateGroup;
 	}
 
+	protected MutationOperationGroup getVersionUpdateGroup() {
+		return versionUpdateGroup;
+	}
+
+	protected BatchKey getBatchKey() {
+		return batchKey;
+	}
+
 	public final boolean isModifiableEntity(EntityEntry entry) {
 		return ( entry == null ? entityPersister().isMutable() : entry.isModifiableEntity() );
 	}
@@ -361,7 +369,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				: entityPersister().getPropertyUpdateability();
 	}
 
-	private void doVersionUpdate(
+	protected void doVersionUpdate(
 			Object entity,
 			Object id,
 			Object version,
@@ -612,7 +620,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private void doStaticUpdate(
+	protected void doStaticUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -663,7 +671,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private void decomposeForUpdate(
+	protected void decomposeForUpdate(
 			Object id,
 			Object rowId,
 			Object[] values,
@@ -789,7 +797,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private void doDynamicUpdate(
+	protected void doDynamicUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -866,7 +874,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private MutationOperationGroup generateDynamicUpdateGroup(
+	protected MutationOperationGroup generateDynamicUpdateGroup(
 			Object id,
 			Object rowId,
 			Object[] oldValues,
@@ -1041,7 +1049,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * what SQL UPDATE statement(s) should be used to update the entity
 	 * and to drive parameter binding
 	 */
-	private class UpdateValuesAnalysisImpl implements UpdateValuesAnalysis {
+	protected class UpdateValuesAnalysisImpl implements UpdateValuesAnalysis {
 		private final Object[] values;
 		private final int[] dirtyAttributeIndexes;
 		private final InclusionChecker dirtinessChecker;
@@ -1451,12 +1459,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@FunctionalInterface
-	private interface InclusionChecker {
+	protected interface InclusionChecker {
 		boolean include(int position, SingularAttributeMapping attribute);
 	}
 
 	@FunctionalInterface
-	private interface DirtinessChecker {
+	protected interface DirtinessChecker {
 		boolean isDirty(int position, AttributeMapping attribute);
 	}
 

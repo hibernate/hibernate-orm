@@ -343,6 +343,10 @@ public class NativeQueryImpl<R>
 		this.resultMappingSuppliedToCtor = true;
 	}
 
+	public List<ParameterOccurrence> getParameterOccurrences() {
+		return parameterOccurrences;
+	}
+
 	private ParameterInterpretation resolveParameterInterpretation(
 			String sqlString,
 			SharedSessionContractImplementor session) {
@@ -614,7 +618,7 @@ public class NativeQueryImpl<R>
 		return resolveSelectQueryPlan().performList( this );
 	}
 
-	private SelectQueryPlan<R> resolveSelectQueryPlan() {
+	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
 		if ( isCacheableQuery() ) {
 			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 			return getSession().getFactory().getQueryEngine().getInterpretationCache()
@@ -659,7 +663,7 @@ public class NativeQueryImpl<R>
 				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
-	private String expandParameterLists() {
+	protected String expandParameterLists() {
 		if ( parameterOccurrences == null || parameterOccurrences.isEmpty() ) {
 			return sqlString;
 		}

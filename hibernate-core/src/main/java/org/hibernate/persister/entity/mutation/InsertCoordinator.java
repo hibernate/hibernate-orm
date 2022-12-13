@@ -72,6 +72,10 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		return staticInsertGroup;
 	}
 
+	public BasicBatchKey getInsertBatchKey() {
+		return insertBatchKey;
+	}
+
 	/**
 	 * Perform the insert(s).
 	 *
@@ -116,7 +120,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private static class InsertValuesAnalysis implements ValuesAnalysis {
+	protected static class InsertValuesAnalysis implements ValuesAnalysis {
 		private final List<TableMapping> tablesWithNonNullValues = new ArrayList<>();
 
 		public InsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {
@@ -136,7 +140,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private Object doStaticInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
+	protected Object doStaticInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
 		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 
 		final TableInclusionChecker tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
@@ -183,7 +187,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private void decomposeForInsert(
+	protected void decomposeForInsert(
 			MutationExecutor mutationExecutor,
 			Object id,
 			Object[] values,
@@ -259,7 +263,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private Object doDynamicInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
+	protected Object doDynamicInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
 		final boolean[] insertability = getPropertiesToInsert( values );
 		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability );
 
@@ -301,8 +305,8 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
-		return (tableMapping) -> !tableMapping.isOptional() || insertValuesAnalysis.hasNonNullBindings( tableMapping );
+	protected static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
+		return tableMapping -> !tableMapping.isOptional() || insertValuesAnalysis.hasNonNullBindings( tableMapping );
 	}
 
 
@@ -319,7 +323,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		return notNull;
 	}
 
-	private MutationOperationGroup generateDynamicInsertSqlGroup(boolean[] insertable) {
+	protected MutationOperationGroup generateDynamicInsertSqlGroup(boolean[] insertable) {
 		assert entityPersister().getEntityMetamodel().isDynamicInsert();
 
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );

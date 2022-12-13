@@ -63,7 +63,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcOperationQueryDelete> createDeleteTranslator(DomainQueryExecutionContext executionContext) {
+	protected SqlAstTranslator<JdbcOperationQueryDelete> createDeleteTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 

@@ -83,7 +83,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private void doDynamicDelete(
+	protected void doDynamicDelete(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -134,7 +134,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private void applyLocking(
+	protected void applyLocking(
 			Object version,
 			Object[] loadedState,
 			MutationExecutor mutationExecutor,
@@ -205,7 +205,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private void applyId(
+	protected void applyId(
 			Object id,
 			Object rowId,
 			MutationExecutor mutationExecutor,
@@ -250,7 +250,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private void doStaticDelete(
+	protected void doStaticDelete(
 			Object entity,
 			Object id,
 			Object version,
@@ -308,7 +308,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		mutationExecutor.release();
 	}
 
-	private MutationOperationGroup resolveNoVersionDeleteGroup(SharedSessionContractImplementor session) {
+	protected MutationOperationGroup resolveNoVersionDeleteGroup(SharedSessionContractImplementor session) {
 		if ( noVersionDeleteGroup == null ) {
 			noVersionDeleteGroup = generateOperationGroup( null, false, session );
 		}
@@ -316,7 +316,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		return noVersionDeleteGroup;
 	}
 
-	private MutationOperationGroup generateOperationGroup(
+	protected MutationOperationGroup generateOperationGroup(
 			Object[] loadedState,
 			boolean applyVersion,
 			SharedSessionContractImplementor session) {

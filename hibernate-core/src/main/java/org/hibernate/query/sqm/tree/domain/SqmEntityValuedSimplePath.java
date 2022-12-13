@@ -63,10 +63,18 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public EntityDomainType<T> getNodeType() {
+	public SqmPathSource<T> getNodeType() {
 		//noinspection unchecked
-		return (EntityDomainType<T>) getReferencedPathSource().getSqmPathType();
+		return (SqmPathSource<T>) getReferencedPathSource().getSqmPathType();
 	}
+// We can't expose that the type is a EntityDomainType because it could also be a MappedSuperclass
+// Ideally, we would specify the return type to be IdentifiableDomainType, but that does not implement SqmPathSource yet
+// and is hence incompatible with the return type of the super class
+//	@Override
+//	public EntityDomainType<T> getNodeType() {
+//		//noinspection unchecked
+//		return (EntityDomainType<T>) getReferencedPathSource().getSqmPathType();
+//	}
 
 	@Override
 	public <S extends T> SqmTreatedSimplePath<T,S> treatAs(Class<S> treatJavaType) throws PathException {

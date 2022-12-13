@@ -112,4 +112,15 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
+
+	@Override
+	default SessionImplementor asSessionImplementor() {
+		return this;
+	}
+
+	@Override
+	default boolean isSessionImplementor() {
+		return true;
+	}
+
 }

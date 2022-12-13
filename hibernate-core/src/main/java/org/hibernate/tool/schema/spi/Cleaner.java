@@ -18,6 +18,8 @@ import java.util.Collection;
  * An object that produces the SQL required to truncate the tables in a schema.
  *
  * @author Gavin King
+ *
+ * @since 6.2
  */
 @Incubating
 public interface Cleaner {

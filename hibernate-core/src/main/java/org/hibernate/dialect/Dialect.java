@@ -45,7 +45,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -153,7 +152,9 @@ import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableCleaner;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.internal.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -2488,10 +2489,15 @@ public abstract class Dialect implements ConversionContext {
 	private final StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private final StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 	private final StandardTemporaryTableExporter temporaryTableExporter = new StandardTemporaryTableExporter( this );
+	private final StandardTableMigrator tableMigrator = new StandardTableMigrator( this );
 	private final StandardTableCleaner tableCleaner = new StandardTableCleaner( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
+	}
+
+	public TableMigrator getTableMigrator() {
+		return tableMigrator;
 	}
 
 	public Cleaner getTableCleaner() {

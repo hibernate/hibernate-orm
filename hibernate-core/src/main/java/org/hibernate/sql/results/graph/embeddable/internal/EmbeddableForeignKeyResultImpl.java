@@ -43,7 +43,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
 		this.fetchParent = fetchParent;
-		this.fetches = creationState.visitFetches( this );
+		resetFetches( creationState.visitFetches( this ) );
 	}
 
 	@Override
@@ -108,11 +108,6 @@ public class EmbeddableForeignKeyResultImpl<T>
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
 		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
-	}
-
-	@Override
-	public Fetch findFetch(Fetchable fetchable) {
-		return super.findFetch( fetchable );
 	}
 
 	@Override

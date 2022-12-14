@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -467,7 +468,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			this.arrayJtd = arrayJtd;
 			this.resultVariable = resultVariable;
 
-			this.fetches = creationState.visitFetches( this );
+			this.fetches = Collections.unmodifiableList( creationState.visitFetches( this ) );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

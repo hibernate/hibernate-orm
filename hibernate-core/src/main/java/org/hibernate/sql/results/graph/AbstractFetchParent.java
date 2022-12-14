@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -20,7 +21,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	private final FetchableContainer fetchContainer;
 	private final NavigablePath navigablePath;
 
-	protected List<Fetch> fetches;
+	private List<Fetch> fetches;
 
 	public AbstractFetchParent(FetchableContainer fetchContainer, NavigablePath navigablePath) {
 		this.fetchContainer = fetchContainer;
@@ -29,7 +30,11 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
 		assert fetches == null;
-		this.fetches = creationState.visitFetches( fetchParent );
+		resetFetches( creationState.visitFetches( fetchParent ) );
+	}
+
+	protected void resetFetches(final List<Fetch> newFetches) {
+		this.fetches = Collections.unmodifiableList( newFetches );
 	}
 
 	public FetchableContainer getFetchContainer() {
@@ -53,22 +58,31 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	@Override
 	public List<Fetch> getFetches() {
-		return fetches == null ? Collections.emptyList() : Collections.unmodifiableList( fetches );
+		return fetches == null ? Collections.emptyList() : fetches;
 	}
 
 	@Override
-	public Fetch findFetch(Fetchable fetchable) {
+	public Fetch findFetch(final Fetchable fetchable) {
 		if ( fetches == null ) {
 			return null;
 		}
 
+		//Iterate twice so we can perform the cheapest checks on each item first:
 		for ( int i = 0; i < fetches.size(); i++ ) {
 			final Fetch fetch = fetches.get( i );
-			final Fetchable fetchedMapping = fetch.getFetchedMapping();
-			if ( fetchedMapping == fetchable
-					// the fetched mapping for the version is a Basic attribute, so check the role
-					|| ( fetchable instanceof EntityVersionMapping && fetchable.getNavigableRole().equals( fetchedMapping.getNavigableRole() ) ) ) {
+			if ( fetchable == fetch.getFetchedMapping() ) {
 				return fetch;
+			}
+		}
+
+		if ( fetchable instanceof EntityVersionMapping ) {
+			//Second iteration performs the slightly more expensive checks, necessary for EntityVersionMapping:
+			final NavigableRole navigableRole = fetchable.getNavigableRole();
+			for ( int i = 0; i < fetches.size(); i++ ) {
+				final Fetch fetch = fetches.get( i );
+				if ( fetch.getFetchedMapping().getNavigableRole().equals( navigableRole ) ) {
+					return fetch;
+				}
 			}
 		}
 

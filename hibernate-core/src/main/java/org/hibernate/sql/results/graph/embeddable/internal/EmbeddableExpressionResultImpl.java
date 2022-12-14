@@ -81,8 +81,8 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 			);
 		}
 
-		this.fetches = fetches;
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+		resetFetches( fetches );
 	}
 
 	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {

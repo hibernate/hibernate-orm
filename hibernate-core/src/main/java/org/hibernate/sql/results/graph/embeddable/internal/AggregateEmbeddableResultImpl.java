@@ -102,8 +102,8 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				null,
 				typeConfiguration
 		);
-		this.fetches = creationState.visitNestedFetches( this );
-		this.containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+		resetFetches( creationState.visitNestedFetches( this ) );
+		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
 	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {

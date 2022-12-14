@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
@@ -103,7 +104,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				creationState
 		);
 
-		fetches = creationState.visitFetches( this );
+		fetches = Collections.unmodifiableList( creationState.visitFetches( this ) );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {
 			assert fetches.size() == 2;
 			indexFetch = fetches.get( 0 );

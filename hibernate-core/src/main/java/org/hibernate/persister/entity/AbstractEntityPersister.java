@@ -177,7 +177,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -189,6 +188,7 @@ import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -3495,7 +3495,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			// we still need to verify collection fields to be eagerly loaded by join
-			final List<AttributeMapping> attributeMappings = getAttributeMappings();
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				if ( attributeMapping instanceof PluralAttributeMapping ) {

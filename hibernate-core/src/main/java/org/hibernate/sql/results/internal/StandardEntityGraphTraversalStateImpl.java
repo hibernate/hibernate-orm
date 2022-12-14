@@ -72,8 +72,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			if ( fetchable instanceof PluralAttributeMapping ) {
 				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
-						|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
+				assert isJpaMapCollectionType( pluralAttributeMapping ) || !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
 
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();

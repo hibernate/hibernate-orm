@@ -167,7 +167,7 @@ stage('Build') {
 								case "postgresql":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:14-3.3').pull()
+										docker.image('postgis/postgis:15-3.3').pull()
 									}
 									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"

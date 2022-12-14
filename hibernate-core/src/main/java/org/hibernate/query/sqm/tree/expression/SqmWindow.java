@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.FrameExclusion;
@@ -32,6 +33,7 @@ import static org.hibernate.query.sqm.FrameMode.ROWS;
 /**
  * @author Marco Belladelli
  */
+@Incubating
 public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitableNode {
 	private final List<SqmExpression<?>> partitions;
 	private final List<SqmSortSpecification> orderList;

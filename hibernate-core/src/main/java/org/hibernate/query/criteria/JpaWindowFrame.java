@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.FrameKind;
 
 import jakarta.persistence.criteria.Expression;
@@ -15,6 +16,7 @@ import jakarta.persistence.criteria.Expression;
  *
  * @author Marco Belladelli
  */
+@Incubating
 public interface JpaWindowFrame {
 	/**
 	 * Get the {@link FrameKind} of this window frame.

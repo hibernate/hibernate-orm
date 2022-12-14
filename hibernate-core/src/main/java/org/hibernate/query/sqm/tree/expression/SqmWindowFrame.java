@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -15,6 +16,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 /**
  * @author Marco Belladelli
  */
+@Incubating
 public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	private final FrameKind kind;
 	private final SqmExpression<?> expression;

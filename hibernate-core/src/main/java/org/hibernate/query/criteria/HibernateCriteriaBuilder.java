@@ -902,6 +902,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the empty window
 	 */
+	@Incubating
 	JpaWindow createWindow();
 
 	/**
@@ -909,11 +910,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
+	@Incubating
 	JpaWindowFrame frameUnboundedPreceding();
 
 	/**
 	 * @see #frameBetweenPreceding(Expression)
 	 */
+	@Incubating
 	JpaWindowFrame frameBetweenPreceding(int offset);
 
 	/**
@@ -923,6 +926,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
+	@Incubating
 	JpaWindowFrame frameBetweenPreceding(Expression<?> offset);
 
 	/**
@@ -930,11 +934,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
+	@Incubating
 	JpaWindowFrame frameCurrentRow();
 
 	/**
 	 * @see #frameBetweenFollowing(Expression)
 	 */
+	@Incubating
 	JpaWindowFrame frameBetweenFollowing(int offset);
 
 	/**
@@ -944,6 +950,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
+	@Incubating
 	JpaWindowFrame frameBetweenFollowing(Expression<?> offset);
 
 	/**
@@ -951,6 +958,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
+	@Incubating
 	JpaWindowFrame frameUnboundedFollowing();
 
 	/**
@@ -965,6 +973,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return window function expression
 	 */
+	@Incubating
 	<T> JpaExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args);
 
 	/**
@@ -976,6 +985,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	JpaExpression<Long> rowNumber(JpaWindow window);
 
 	/**
@@ -989,6 +999,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	<T> JpaExpression<T> firstValue(Expression<T> argument, JpaWindow window);
 
 	/**
@@ -1002,11 +1013,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	<T> JpaExpression<T> lastValue(Expression<T> argument, JpaWindow window);
 
 	/**
 	 * @see #nthValue(Expression, Expression, JpaWindow) nthValue
 	 */
+	@Incubating
 	<T> JpaExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window);
 
 	/**
@@ -1021,6 +1034,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	<T> JpaExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window);
 
 	/**
@@ -1032,6 +1046,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	JpaExpression<Long> rank(JpaWindow window);
 
 	/**
@@ -1043,6 +1058,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	JpaExpression<Long> denseRank(JpaWindow window);
 
 	/**
@@ -1054,6 +1070,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	JpaExpression<Double> percentRank(JpaWindow window);
 
 	/**
@@ -1065,6 +1082,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
+	@Incubating
 	JpaExpression<Double> cumeDist(JpaWindow window);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1073,6 +1091,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -1082,6 +1101,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -1100,6 +1120,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return aggregate function expression
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -1110,11 +1131,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #sum(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter);
 
 	/**
 	 * @see #sum(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaWindow window);
 
 	/**
@@ -1129,16 +1152,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter, JpaWindow window);
 
 	/**
 	 * @see #avg(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter);
 
 	/**
 	 * @see #avg(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaWindow window);
 
 	/**
@@ -1153,16 +1179,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter, JpaWindow window);
 
 	/**
 	 * @see #count(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter);
 
 	/**
 	 * @see #count(Expression, JpaPredicate, JpaWindow)
 	 */
+	@Incubating
 	JpaExpression<Long> count(Expression<?> argument, JpaWindow window);
 
 	/**
@@ -1176,6 +1205,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter, JpaWindow window);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1184,11 +1214,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args);
 
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -1199,6 +1231,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -1219,6 +1252,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return ordered set-aggregate function expression
 	 */
+	@Incubating
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -1230,21 +1264,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(JpaOrder order, JpaPredicate filter, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -1254,11 +1292,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(JpaOrder order, JpaWindow window, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaWindow window,
@@ -1268,6 +1308,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -1288,6 +1329,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -1298,11 +1340,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence);
 
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
@@ -1312,6 +1356,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
@@ -1332,6 +1377,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			JpaWindow window,
@@ -1342,6 +1388,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
@@ -1351,6 +1398,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -1361,6 +1409,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaWindow window,
@@ -1382,6 +1431,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -1393,6 +1443,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
@@ -1402,6 +1453,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -1412,6 +1464,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaWindow window,
@@ -1433,6 +1486,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -1444,16 +1498,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Long> rank(JpaOrder order, Expression<?>... arguments);
 
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
 
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Long> rank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
@@ -1468,21 +1525,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Double> percentRank(JpaOrder order, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Double> percentRank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
@@ -1497,6 +1558,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
+	@Incubating
 	JpaExpression<Double> percentRank(
 			JpaOrder order,
 			JpaPredicate filter,

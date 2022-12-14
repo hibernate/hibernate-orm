@@ -14,6 +14,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -103,6 +105,11 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
 		return (ResultSet) ps.getObject( 1 );
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return getVersion().isSameOrAfter( 10 ) ? PostgreSQLCallableStatementSupport.INSTANCE : PostgreSQLCallableStatementSupport.V10_INSTANCE;
 	}
 
 	@Override

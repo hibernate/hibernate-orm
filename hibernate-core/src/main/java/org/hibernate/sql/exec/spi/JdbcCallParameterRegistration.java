@@ -12,6 +12,7 @@ import jakarta.persistence.ParameterMode;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 
 /**
@@ -29,9 +30,9 @@ public interface JdbcCallParameterRegistration {
 
 	JdbcParameterBinder getParameterBinder();
 
-	JdbcCallParameterExtractor getParameterExtractor();
+	JdbcCallParameterExtractor<?> getParameterExtractor();
 
 	JdbcCallRefCursorExtractorImpl getRefCursorExtractor();
 
-	BindableType getParameterType();
+	OutputableType<?> getParameterType();
 }

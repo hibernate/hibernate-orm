@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -24,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
+import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.QueryOptions;
@@ -141,7 +143,7 @@ public class OutputsImpl implements Outputs {
 		context.getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( jdbcStatement );
 	}
 
-	private List extractCurrentResults() {
+	private List<?> extractCurrentResults() {
 		try {
 			return extractResults( jdbcStatement.getResultSet() );
 		}
@@ -150,7 +152,7 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	protected List extractResults(ResultSet resultSet) {
+	protected List<Object> extractResults(ResultSet resultSet) {
 
 		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess(
 				context.getSession(),
@@ -158,7 +160,7 @@ public class OutputsImpl implements Outputs {
 				resultSet
 		);
 
-		final ProcedureCallImpl procedureCall = (ProcedureCallImpl) context;
+		final ProcedureCallImpl<?> procedureCall = (ProcedureCallImpl<?>) context;
 		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
 
 		final JavaTypeRegistry javaTypeRegistry = context.getSession()
@@ -166,7 +168,7 @@ public class OutputsImpl implements Outputs {
 				.getJavaTypeRegistry();
 		procedureCall.getParameterBindings().visitBindings(
 				(parameterImplementor, queryParameterBinding) -> {
-					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;
+					final ProcedureParameter<?> parameter = (ProcedureParameter<?>) parameterImplementor;
 					if ( parameter.getMode() == ParameterMode.INOUT ) {
 						final JavaType<?> basicType = javaTypeRegistry.getDescriptor(
 								parameterImplementor.getParameterType() );
@@ -225,7 +227,8 @@ public class OutputsImpl implements Outputs {
 				executionContext
 		);
 
-		final RowReader<Object[]> rowReader = (RowReader<Object[]>) ResultsHelper.createRowReader(
+		//noinspection unchecked
+		final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
 				executionContext,
 				null,
 				RowTransformerStandardImpl.INSTANCE,
@@ -273,10 +276,19 @@ public class OutputsImpl implements Outputs {
 			);
 
 
-			final List results = new ArrayList<>();
+			final ArrayList<Object> results = new ArrayList<>();
 			while ( rowProcessingState.next() ) {
 				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
 				rowProcessingState.finishRowProcessing();
+			}
+			if ( resultSetMapping.getNumberOfResultBuilders() == 0
+					&& procedureCall.isFunctionCall()
+					&& procedureCall.getFunctionReturn().getJdbcTypeCode() == Types.REF_CURSOR
+					&& results.size() == 1
+					&& results.get( 0 ) instanceof ResultSet ) {
+				// When calling a function that returns a ref_cursor with as table function,
+				// we have to unnest the ResultSet manually here
+				return extractResults( (ResultSet) results.get( 0 ) );
 			}
 			return results;
 		}
@@ -343,17 +355,20 @@ public class OutputsImpl implements Outputs {
 			else if ( hasExtendedReturns() ) {
 				return buildExtendedReturn();
 			}
+			else if ( hasFunctionReturns() ) {
+				return buildFunctionReturn();
+			}
 
 			throw new NoMoreOutputsException();
 		}
 
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		protected Output buildResultSetOutput(List list) {
+		protected Output buildResultSetOutput(List<?> list) {
 			return new ResultSetOutputImpl( list );
 		}
 
-		protected Output buildResultSetOutput(Supplier<List> listSupplier) {
+		protected Output buildResultSetOutput(Supplier<List<?>> listSupplier) {
 			return new ResultSetOutputImpl( listSupplier );
 		}
 
@@ -367,6 +382,14 @@ public class OutputsImpl implements Outputs {
 
 		protected Output buildExtendedReturn() {
 			throw new IllegalStateException( "State does not define extended returns" );
+		}
+
+		protected boolean hasFunctionReturns() {
+			return false;
+		}
+
+		protected Output buildFunctionReturn() {
+			throw new IllegalStateException( "State does not define function returns" );
 		}
 	}
 

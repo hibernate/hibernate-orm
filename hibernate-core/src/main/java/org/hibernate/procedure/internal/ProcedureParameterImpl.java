@@ -19,6 +19,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.OutputableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.internal.BindingTypeHelper;
@@ -116,7 +117,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
-		final BindableType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
+		final OutputableType<T> typeToUse = (OutputableType<T>) BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null || binding.getExplicitTemporalPrecision() == null
 						? null
 						: binding.getExplicitTemporalPrecision(),

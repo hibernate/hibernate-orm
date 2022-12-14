@@ -40,6 +40,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.procedure.internal.DB2CallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -747,6 +749,11 @@ public class DB2Dialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return DB2CallableStatementSupport.INSTANCE;
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Remove;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
@@ -215,22 +216,20 @@ public abstract class QueryBinder {
 			Supplier<RuntimeException> exceptionProducer) {
 		List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<>();
 		List<QueryHint> queryHints = new ArrayList<>();
-		List<String> parameterNames = new ArrayList<>();
 		final String sqlString = builder.getSqlString().trim();
 		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
 			throw exceptionProducer.get();
 		}
-		final String procedureName = QueryBinder.parseJdbcCall(
+		final JdbcCall jdbcCall = parseJdbcCall(
 				sqlString,
-				parameterNames,
 				exceptionProducer
 		);
 
 		AnnotationDescriptor ann = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
 		ann.setValue( "name", builder.getName() );
-		ann.setValue( "procedureName", procedureName );
+		ann.setValue( "procedureName", jdbcCall.callableName );
 
-		for ( String parameterName : parameterNames ) {
+		for ( String parameterName : jdbcCall.parameters ) {
 			AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
 			parameterDescriptor.setValue( "name", parameterName );
 			parameterDescriptor.setValue( "mode", ParameterMode.IN );
@@ -279,10 +278,13 @@ public abstract class QueryBinder {
 			queryHints.add( AnnotationFactory.create( hintDescriptor ) );
 		}
 
-		AnnotationDescriptor hintDescriptor2 = new AnnotationDescriptor( QueryHint.class );
-		hintDescriptor2.setValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
-		hintDescriptor2.setValue( "value", "true" );
-		queryHints.add( AnnotationFactory.create( hintDescriptor2 ) );
+		if ( jdbcCall.resultParameter ) {
+			// Mark native queries that have a result parameter as callable functions
+			AnnotationDescriptor hintDescriptor2 = new AnnotationDescriptor( QueryHint.class );
+			hintDescriptor2.setValue( "name", HibernateHints.HINT_CALLABLE_FUNCTION );
+			hintDescriptor2.setValue( "value", "true" );
+			queryHints.add( AnnotationFactory.create( hintDescriptor2 ) );
+		}
 
 		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
 
@@ -461,6 +463,79 @@ public abstract class QueryBinder {
 		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( ann, context, isDefault ) );
 	}
 
+	private static class JdbcCall {
+		private final String callableName;
+		private final boolean resultParameter;
+		private final ArrayList<String> parameters;
+
+		public JdbcCall(String callableName, boolean resultParameter, ArrayList<String> parameters) {
+			this.callableName = callableName;
+			this.resultParameter = resultParameter;
+			this.parameters = parameters;
+		}
+	}
+
+	private static JdbcCall parseJdbcCall(String sqlString, Supplier<RuntimeException> exceptionProducer) {
+		String callableName = null;
+		boolean resultParameter = false;
+		int index = skipWhitespace( sqlString, 1 );
+		// Parse the out param `?=` part
+		if ( sqlString.charAt( index ) == '?' ) {
+			resultParameter = true;
+			index++;
+			index = skipWhitespace( sqlString, index );
+			if ( sqlString.charAt( index ) != '=' ) {
+				throw exceptionProducer.get();
+			}
+			index++;
+			index = skipWhitespace( sqlString, index );
+		}
+		// Parse the call keyword
+		if ( !sqlString.regionMatches( true, index, "call", 0, 4 ) ) {
+			throw exceptionProducer.get();
+		}
+		index += 4;
+		index = skipWhitespace( sqlString, index );
+
+		// Parse the procedure name
+		final int procedureStart = index;
+		for ( ; index < sqlString.length(); index++ ) {
+			final char c = sqlString.charAt( index );
+			if ( c == '(' || Character.isWhitespace( c ) ) {
+				callableName = sqlString.substring( procedureStart, index );
+				break;
+			}
+		}
+		index = skipWhitespace( sqlString, index );
+		final ArrayList<String> parameters = new ArrayList<>();
+		ParameterParser.parse(
+				sqlString.substring( index, sqlString.length() - 1 ),
+				new ParameterRecognizer() {
+					@Override
+					public void ordinalParameter(int sourcePosition) {
+						parameters.add( "" );
+					}
+
+					@Override
+					public void namedParameter(String name, int sourcePosition) {
+						parameters.add( name );
+					}
+
+					@Override
+					public void jpaPositionalParameter(int label, int sourcePosition) {
+						parameters.add( "" );
+					}
+
+					@Override
+					public void other(char character) {
+					}
+				}
+		);
+		return new JdbcCall( callableName, resultParameter, parameters );
+	}
+
+	@Remove
+	@Deprecated(since = "6.2")
 	public static String parseJdbcCall(
 			String sqlString,
 			List<String> parameterNames,

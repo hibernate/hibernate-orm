@@ -7,6 +7,8 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
@@ -236,5 +238,21 @@ public interface JdbcType extends Serializable {
 			default:
 				return CastType.OTHER;
 		}
+	}
+
+	/**
+	 * Register the {@code OUT} parameter on the {@link CallableStatement} with the given name for this {@linkplain JdbcType}.
+	 * @since 6.2
+	 */
+	default void registerOutParameter(CallableStatement callableStatement, String name) throws SQLException {
+		callableStatement.registerOutParameter( name, getJdbcTypeCode() );
+	}
+
+	/**
+	 * Register the {@code OUT} parameter on the {@link CallableStatement} with the given index for this {@linkplain JdbcType}.
+	 * @since 6.2
+	 */
+	default void registerOutParameter(CallableStatement callableStatement, int index) throws SQLException {
+		callableStatement.registerOutParameter( index, getJdbcTypeCode() );
 	}
 }

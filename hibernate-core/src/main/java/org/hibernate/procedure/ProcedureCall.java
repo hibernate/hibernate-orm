@@ -95,6 +95,28 @@ public interface ProcedureCall
 	ProcedureCall markAsFunctionCall(int sqlType);
 
 	/**
+	 * Mark this ProcedureCall as representing a call to a database function,
+	 * rather than a database procedure.
+	 *
+	 * @param resultType The result type for the function return
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.2
+	 */
+	ProcedureCall markAsFunctionCall(Class<?> resultType);
+
+	/**
+	 * Mark this ProcedureCall as representing a call to a database function,
+	 * rather than a database procedure.
+	 *
+	 * @param typeReference The result type for the function return
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.2
+	 */
+	ProcedureCall markAsFunctionCall(BasicTypeReference<?> typeReference);
+
+	/**
 	 * Basic form for registering a positional parameter.
 	 *
 	 * @param position The position

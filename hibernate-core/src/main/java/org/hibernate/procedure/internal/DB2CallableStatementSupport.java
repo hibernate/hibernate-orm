@@ -8,49 +8,38 @@ package org.hibernate.procedure.internal;
 
 import java.util.List;
 
-import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
-
-import jakarta.persistence.ParameterMode;
+import org.hibernate.type.SqlTypes;
 
 /**
- * Standard implementation of CallableStatementSupport
+ * DB2 implementation of CallableStatementSupport.
  *
- * @author Steve Ebersole
+ * The JDBC driver of DB2 doesn't support function invocations, so we have to render a select statement instead.
  */
-public class StandardCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+public class DB2CallableStatementSupport extends AbstractStandardCallableStatementSupport {
 	/**
-	 * Singleton access - without REF_CURSOR support
+	 * Singleton access
 	 */
-	public static final StandardCallableStatementSupport NO_REF_CURSOR_INSTANCE = new StandardCallableStatementSupport( false );
-
-	/**
-	 * Singleton access - with REF CURSOR support
-	 */
-	public static final StandardCallableStatementSupport REF_CURSOR_INSTANCE = new StandardCallableStatementSupport( true );
-
-	private final boolean supportsRefCursors;
-	private final boolean implicitReturn;
-
-	public StandardCallableStatementSupport(boolean supportsRefCursors) {
-		this.supportsRefCursors = supportsRefCursors;
-		this.implicitReturn = !supportsRefCursors;
-	}
+	public static final DB2CallableStatementSupport INSTANCE = new DB2CallableStatementSupport();
+	private static final String FUNCTION_SYNTAX_START = "select ";
+	private static final String FUNCTION_SYNTAX_END = ") from sysibm.dual";
+	private static final String TABLE_FUNCTION_SYNTAX_START = "select * from table(";
+	private static final String TABLE_FUNCTION_SYNTAX_END = "))";
+	private static final String CALL_SYNTAX_START = "{call ";
+	private static final String CALL_SYNTAX_END = ")}";
 
 	@Override
 	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
-		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
 		final int paramStringSizeEstimate;
 		if ( functionReturn == null && parameterMetadata.hasNamedParameters() ) {
@@ -64,14 +53,21 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder();
 		final StringBuilder buffer;
 		final int offset;
-		if ( functionReturn != null && !implicitReturn ) {
-			offset = 2;
-			buffer = new StringBuilder( 11 + procedureName.length() + paramStringSizeEstimate ).append( "{?=call " );
-			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
+		if ( functionReturn != null ) {
+			offset = 1;
+			if ( functionReturn.getJdbcTypeCode() == SqlTypes.REF_CURSOR ) {
+				buffer = new StringBuilder( TABLE_FUNCTION_SYNTAX_START.length() + TABLE_FUNCTION_SYNTAX_END.length() + procedureName.length() + paramStringSizeEstimate )
+						.append( TABLE_FUNCTION_SYNTAX_START );
+			}
+			else {
+				buffer = new StringBuilder( FUNCTION_SYNTAX_START.length() + FUNCTION_SYNTAX_END.length() + procedureName.length() + paramStringSizeEstimate )
+						.append( FUNCTION_SYNTAX_START );
+			}
 		}
 		else {
 			offset = 1;
-			buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
+			buffer = new StringBuilder( CALL_SYNTAX_START.length() + CALL_SYNTAX_END.length() + procedureName.length() + paramStringSizeEstimate )
+					.append( CALL_SYNTAX_START );
 		}
 
 		buffer.append( procedureName );
@@ -83,9 +79,6 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 			char sep = '(';
 			for ( int i = 0; i < registrations.size(); i++ ) {
 				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
-				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
-				}
 				buffer.append( sep );
 				final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(
 						i + offset,
@@ -102,15 +95,19 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 			}
 		}
 
-		buffer.append( ")}" );
+		if ( functionReturn != null ) {
+			if ( functionReturn.getJdbcTypeCode() == SqlTypes.REF_CURSOR ) {
+				buffer.append( TABLE_FUNCTION_SYNTAX_END );
+			}
+			else {
+				buffer.append( FUNCTION_SYNTAX_END );
+			}
+		}
+		else {
+			buffer.append( CALL_SYNTAX_END );
+		}
 
 		builder.setCallableName( buffer.toString() );
 		return builder.buildJdbcCall();
-	}
-
-	private void verifyRefCursorSupport(Dialect dialect) {
-		if ( ! supportsRefCursors ) {
-			throw new QueryException( "Dialect [" + dialect.getClass().getName() + "] not known to support REF_CURSOR parameters" );
-		}
 	}
 }

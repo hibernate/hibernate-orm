@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import jakarta.persistence.DiscriminatorType;
 
@@ -36,7 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention( RUNTIME )
 public @interface AnyDiscriminator {
 	/**

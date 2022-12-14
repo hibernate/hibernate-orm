@@ -7,6 +7,8 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import jakarta.persistence.FetchType;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -29,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface ManyToAny {
 	/**

@@ -415,9 +415,6 @@ public class DefaultCatalogAndSchemaTest {
 		} );
 		verifyOnlyQualifier( sqlUpdateStrings, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 
-		verifyOnlyQualifier( persister.getSQLLazyUpdateStrings(), SqlType.RUNTIME,
-				jpaEntityName, expectedQualifier );
-
 		final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticDeleteGroup();
 		final String[] sqlDeleteStrings = new String[staticDeleteGroup.getNumberOfOperations()];
 		staticDeleteGroup.forEachOperation( (tablePosition, operation) -> {

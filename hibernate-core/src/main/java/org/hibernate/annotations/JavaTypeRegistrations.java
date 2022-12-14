@@ -8,6 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -22,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
+@Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
 public @interface JavaTypeRegistrations {

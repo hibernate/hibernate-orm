@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.usertype.UserCollectionType;
 
@@ -20,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({FIELD, METHOD, ANNOTATION_TYPE})
+@Target({FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface CollectionType {
 	/**

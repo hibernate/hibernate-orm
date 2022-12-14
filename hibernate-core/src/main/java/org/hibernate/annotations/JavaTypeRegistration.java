@@ -9,6 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.java.BasicJavaType;
 
@@ -31,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
+@Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JavaTypeRegistrations.class )

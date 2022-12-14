@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -79,7 +80,7 @@ public class EntityResultImpl implements EntityResult {
 
 		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );
 
-		this.fetches = creationState.visitFetches( this );
+		final List<Fetch> localFetches = creationState.visitFetches( this );
 
 		final EntityIdentifierMapping identifierMapping = entityValuedModelPart
 				.getEntityMappingType()
@@ -90,18 +91,19 @@ public class EntityResultImpl implements EntityResult {
 
 		final MutableObject<Fetch> idFetchRef = new MutableObject<>();
 
-		for ( int i = 0; i < this.fetches.size(); i++ ) {
-			final Fetch fetch = this.fetches.get( i );
+		for ( int i = 0; i < localFetches.size(); i++ ) {
+			final Fetch fetch = localFetches.get( i );
 			final String fetchLocalName = fetch.getNavigablePath().getLocalName();
 
 			if ( fetchLocalName.equals( EntityIdentifierMapping.ROLE_LOCAL_NAME )
 					|| ( idAttributeName != null && fetchLocalName.equals( idAttributeName ) ) ) {
 				// we found the id fetch
 				idFetchRef.set( fetch );
-				this.fetches.remove( i );
+				localFetches.remove( i );
 				break;
 			}
 		}
+		this.fetches = Collections.unmodifiableList( localFetches );
 
 		if ( idFetchRef.isNotSet() ) {
 			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
@@ -148,12 +150,13 @@ public class EntityResultImpl implements EntityResult {
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
+		final String name = fetchable.getFetchableName();
 		for ( int i = 0; i < fetches.size(); i++ ) {
-			if ( fetches.get( i ).getFetchedMapping().getFetchableName().equals( fetchable.getFetchableName() ) ) {
-				return fetches.get( i );
+			final Fetch fetch = fetches.get( i );
+			if ( fetch.getFetchedMapping().getFetchableName().equals( name ) ) {
+				return fetch;
 			}
 		}
-
 		return null;
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -357,6 +358,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		private Fetch discriminatorValueFetch;
 		private Fetch keyValueFetch;
+		private List<Fetch> fetches;
 
 		public AnyValuedResultGraphNode(
 				NavigablePath navigablePath,
@@ -368,7 +370,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		protected void afterInitialize(DomainResultCreationState creationState) {
-			final List<Fetch> fetches = creationState.visitFetches( this );
+			this.fetches = Collections.unmodifiableList( creationState.visitFetches( this ) );
 			assert fetches.size() == 2;
 
 			discriminatorValueFetch = fetches.get( 0 );
@@ -414,14 +416,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		@Override
 		public List<Fetch> getFetches() {
-			return Arrays.asList( discriminatorValueFetch, keyValueFetch );
+			return fetches;
 		}
 
 		@Override
 		public Fetch findFetch(Fetchable fetchable) {
-			assert graphedPart.getDiscriminatorPart() == fetchable
-					|| graphedPart.getKeyPart() == fetchable;
-
 			if ( graphedPart.getDiscriminatorPart() == fetchable ) {
 				return discriminatorValueFetch;
 			}

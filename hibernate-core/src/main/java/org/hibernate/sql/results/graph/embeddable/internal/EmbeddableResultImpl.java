@@ -73,7 +73,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		afterInitialize( this, creationState );
 
 		// after-after-initialize :D
-		containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+		containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
 	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {

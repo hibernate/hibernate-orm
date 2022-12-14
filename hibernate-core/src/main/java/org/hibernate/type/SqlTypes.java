@@ -6,6 +6,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
 import java.sql.Types;
 
 /**
@@ -606,6 +608,17 @@ public class SqlTypes {
 		switch ( typeCode ) {
 			case INTEGER:
 			case BIGINT:
+			case SMALLINT:
+			case TINYINT:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Internal
+	public static boolean isSmallOrTinyInt(int typeCode) {
+		switch ( typeCode ) {
 			case SMALLINT:
 			case TINYINT:
 				return true;

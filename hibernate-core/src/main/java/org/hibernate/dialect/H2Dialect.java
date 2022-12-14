@@ -591,6 +591,18 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " set data type " + columnType;
+		// if only altering the type, no need to specify the whole definition
+//		return "alter column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}

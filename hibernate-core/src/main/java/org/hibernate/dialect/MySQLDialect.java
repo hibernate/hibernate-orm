@@ -11,7 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -853,6 +852,17 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getDropUniqueKeyString() {
 		return " drop index ";
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// no way to change just the column type, leaving other attributes intact
+		return "modify column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
 	}
 
 	@Override

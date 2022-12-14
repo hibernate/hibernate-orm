@@ -12,6 +12,7 @@ public class Version {
 	long id;
 	String name;
 	String description;
+	int versionNumber;
 	
 	public long getId() {
 		return id;
@@ -33,5 +34,13 @@ public class Version {
 	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public void setVersionNumber(int versionNumber) {
+		this.versionNumber = versionNumber;
+	}
+
+	public int getVersionNumber() {
+		return versionNumber;
 	}
 }

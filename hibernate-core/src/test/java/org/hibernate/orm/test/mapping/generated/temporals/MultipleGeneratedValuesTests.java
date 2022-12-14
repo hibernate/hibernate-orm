@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
 @SkipForDialect( dialectClass = SybaseASEDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported in insert/update in Sybase ASE. Also see https://groups.google.com/g/comp.databases.sybase/c/j-RxPnF3img" )
+@SkipForDialect( dialectClass = SQLServerDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP has millisecond precision" )
 public class MultipleGeneratedValuesTests {
 	@Test
 	public void test(SessionFactoryScope scope) {

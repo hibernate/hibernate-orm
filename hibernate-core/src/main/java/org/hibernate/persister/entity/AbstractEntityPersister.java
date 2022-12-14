@@ -397,9 +397,6 @@ public abstract class AbstractEntityPersister
 	private String sqlVersionSelectString;
 	private Map<String, SingleIdArrayLoadPlan> sqlLazySelectStringsByFetchGroup;
 
-	private String[] sqlLazyUpdateStrings;
-	private String sqlUpdateByRowIdString;
-	private String sqlLazyUpdateByRowIdString;
 
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
@@ -933,10 +930,6 @@ public abstract class AbstractEntityPersister
 	@Internal
 	public DeleteCoordinator getDeleteCoordinator() {
 		return deleteCoordinator;
-	}
-
-	public String[] getSQLLazyUpdateStrings() {
-		return sqlLazyUpdateStrings;
 	}
 
 	public String getVersionSelectString() {
@@ -2743,132 +2736,6 @@ public abstract class AbstractEntityPersister
 
 	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
 
-	public String generateUpdateString(boolean[] includeProperty, int j, boolean useRowId) {
-		return generateUpdateString( includeProperty, j, null, useRowId );
-	}
-
-	/**
-	 * Generate the SQL that updates a row by id (and version)
-	 */
-	public String generateUpdateString(
-			final boolean[] includeProperty,
-			final int j,
-			final Object[] oldFields,
-			final boolean useRowId) {
-		final Update update = new Update( getFactory().getJdbcServices().getDialect() ).setTableName( getTableName( j ) );
-
-		boolean hasColumns = false;
-		for ( int index = 0; index < attributeMappings.size(); index++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( index );
-			if ( isPropertyOfTable( index, j ) ) {
-				// `attributeMapping` is an attribute of the table we are updating
-
-				if ( ! lobProperties.contains( index ) ) {
-					// HHH-4635
-					// Oracle expects all Lob properties to be last in inserts
-					// and updates.  Insert them at the end - see below
-
-					if ( includeProperty[ index ] ) {
-						update.addColumns(
-								getPropertyColumnNames( index ),
-								propertyColumnUpdateable[index ],
-								propertyColumnWriters[index]
-						);
-						hasColumns = true;
-					}
-					else {
-						final Generator generator = attributeMapping.getGenerator();
-						if ( generator!=null
-								&& generator.generatesOnUpdate()
-								&& generator.generatedByDatabase() ) {
-							final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
-							final Dialect dialect = getFactory().getJdbcServices().getDialect();
-							if ( databaseGenerator.referenceColumnsInSql(dialect) ) {
-								update.addColumns(
-										getPropertyColumnNames(index),
-										SINGLE_TRUE,
-										databaseGenerator.getReferencedColumnValues(dialect)
-								);
-								hasColumns = true;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// HHH-4635
-		// Oracle expects all Lob properties to be last in inserts
-		// and updates.  Insert them at the end.
-		for ( int i : lobProperties ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
-				// this property belongs on the table and is to be inserted
-				update.addColumns(
-						getPropertyColumnNames( i ),
-						propertyColumnUpdateable[i], propertyColumnWriters[i]
-				);
-				hasColumns = true;
-			}
-		}
-
-		// select the correct row by either pk or row id
-		if ( useRowId ) {
-			update.addPrimaryKeyColumns( new String[] {rowIdName} ); //TODO: eventually, rowIdName[j]
-		}
-		else {
-			update.addPrimaryKeyColumns( getKeyColumns( j ) );
-		}
-
-		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockStyle().isVersion() ) {
-			// this is the root (versioned) table, and we are using version-based
-			// optimistic locking;  if we are not updating the version, also don't
-			// check it (unless this is a "generated" version column)!
-			if ( checkVersion( includeProperty ) ) {
-				update.setVersionColumnName( getVersionColumnName() );
-				hasColumns = true;
-			}
-		}
-		else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
-			// we are using "all" or "dirty" property-based optimistic locking
-
-			boolean[] includeInWhere = entityMetamodel.getOptimisticLockStyle().isAll()
-					//optimistic-lock="all", include all updatable properties
-					? getPropertyUpdateability()
-					//optimistic-lock="dirty", include all properties we are updating this time
-					: includeProperty;
-
-			boolean[] versionability = getPropertyVersionability();
-			Type[] types = getPropertyTypes();
-			for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-				boolean include = includeInWhere[i] &&
-						isPropertyOfTable( i, j ) &&
-						versionability[i];
-				if ( include ) {
-					// this property belongs to the table, and it is not specifically
-					// excluded from optimistic locking by optimistic-lock="false"
-					String[] propertyColumnNames = getPropertyColumnNames( i );
-					String[] propertyColumnWriters = getPropertyColumnWriters( i );
-					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i], getFactory() );
-					for ( int k = 0; k < propertyNullness.length; k++ ) {
-						if ( propertyNullness[k] ) {
-							update.addWhereColumn( propertyColumnNames[k], "=" + propertyColumnWriters[k] );
-						}
-						else {
-							update.addWhereColumn( propertyColumnNames[k], " is null" );
-						}
-					}
-				}
-			}
-
-		}
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			update.setComment( "update " + getEntityName() );
-		}
-
-		return hasColumns ? update.toStatementString() : null;
-	}
-
 	public final boolean checkVersion(final boolean[] includeProperty) {
 		return includeProperty[getVersionProperty()] || entityMetamodel.isVersionGeneratedByDatabase();
 	}
@@ -3095,13 +2962,6 @@ public abstract class AbstractEntityPersister
 					LOG.debugf( " Delete (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
 				}
 			} );
-
-			if ( sqlUpdateByRowIdString != null ) {
-				LOG.debugf( " Update by row id (all fields): %s", sqlUpdateByRowIdString );
-			}
-			if ( sqlLazyUpdateByRowIdString != null ) {
-				LOG.debugf( " Update by row id (non-lazy fields): %s", sqlLazyUpdateByRowIdString );
-			}
 		}
 	}
 
@@ -3220,20 +3080,6 @@ public abstract class AbstractEntityPersister
 		deleteCoordinator = buildDeleteCoordinator();
 
 		final int joinSpan = getTableSpan();
-		sqlLazyUpdateStrings = new String[joinSpan];
-
-		sqlUpdateByRowIdString = rowIdName == null ?
-				null :
-				generateUpdateString( getPropertyUpdateability(), 0, true );
-		sqlLazyUpdateByRowIdString = rowIdName == null ?
-				null :
-				generateUpdateString( getNonLazyPropertyUpdateability(), 0, true );
-
-		for ( int j = 0; j < joinSpan; j++ ) {
-			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null
-					? generateUpdateString( getNonLazyPropertyUpdateability(), j, false )
-					: substituteBrackets( customSQLUpdate[j] );
-		}
 
 		tableHasColumns = new boolean[joinSpan];
 		for ( int j = 0; j < joinSpan; j++ ) {

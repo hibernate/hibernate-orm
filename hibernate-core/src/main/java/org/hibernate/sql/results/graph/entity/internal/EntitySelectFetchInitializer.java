@@ -26,7 +26,6 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -89,6 +88,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( np instanceof EntityIdentifierNavigablePath
 					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
 					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
+
 				initializeInstance( rowProcessingState );
 				return;
 			}
@@ -129,24 +129,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
 		if ( entityInstance != null ) {
-			isInitialized = true;
-			return;
-		}
-
-		Initializer initializer = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.findInitializer( entityKey );
-
-		if ( initializer != null ) {
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
-				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-						"(%s) Found an initializer for entity (%s) : %s",
-						CONCRETE_NAME,
-						toLoggableString( getNavigablePath(), entityIdentifier ),
-						entityIdentifier
-				);
-			}
-			initializer.resolveInstance( rowProcessingState );
-			entityInstance = initializer.getInitializedInstance();
 			isInitialized = true;
 			return;
 		}

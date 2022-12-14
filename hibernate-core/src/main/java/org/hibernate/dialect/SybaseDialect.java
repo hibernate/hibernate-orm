@@ -23,6 +23,8 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -357,5 +359,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
 	}
 }

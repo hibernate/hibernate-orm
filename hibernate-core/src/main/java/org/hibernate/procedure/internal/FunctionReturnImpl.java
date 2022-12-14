@@ -16,11 +16,13 @@ import org.hibernate.query.BindableType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -48,7 +50,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-		final BindableType<T> ormType;
+		final OutputableType<T> ormType;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
 
@@ -58,11 +60,22 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			parameterExtractor = null;
 		}
 		else {
-			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
-			final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeRegistry().getDescriptor( getJdbcTypeCode() );
-			final BasicJavaType<?> javaTypeMapping = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			//noinspection unchecked
-			ormType = (BindableType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
+			if ( this.ormType != null ) {
+				ormType = this.ormType;
+			}
+			else {
+				final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
+				final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeRegistry().getDescriptor(
+						getJdbcTypeCode()
+				);
+				final JavaType<?> javaTypeMapping = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping(
+						null,
+						null,
+						typeConfiguration
+				);
+				//noinspection unchecked
+				ormType = (OutputableType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
+			}
 			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 1, ormType );
 			refCursorExtractor = null;
 		}

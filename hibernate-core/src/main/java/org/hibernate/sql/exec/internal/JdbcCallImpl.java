@@ -150,7 +150,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 
 		private List<JdbcCallParameterRegistration> parameterRegistrations;
 		private List<JdbcParameterBinder> parameterBinders;
-		private List<JdbcCallParameterExtractor> parameterExtractors;
+		private List<JdbcCallParameterExtractor<?>> parameterExtractors;
 		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
 		public Builder() {
@@ -210,7 +210,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 			parameterBinders.add( binder );
 		}
 
-		private void addParameterExtractor(JdbcCallParameterExtractor extractor) {
+		private void addParameterExtractor(JdbcCallParameterExtractor<?> extractor) {
 			if ( parameterExtractors == null ) {
 				parameterExtractors = new ArrayList<>();
 			}

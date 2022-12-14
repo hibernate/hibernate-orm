@@ -47,7 +47,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
+import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
@@ -929,7 +929,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return PostgresCallableStatementSupport.INSTANCE;
+		return getVersion().isSameOrAfter( 11 ) ? PostgreSQLCallableStatementSupport.INSTANCE : PostgreSQLCallableStatementSupport.V10_INSTANCE;
 	}
 
 	@Override

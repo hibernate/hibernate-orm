@@ -45,6 +45,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -120,7 +121,6 @@ public class ProcedureCallImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private JdbcOperationQueryCall call;
 	private ProcedureOutputsImpl outputs;
 
 
@@ -137,7 +137,7 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( procedureName );
+		this.resultSetMapping = new ResultSetMappingImpl( procedureName, true );
 
 		this.synchronizedQuerySpaces = null;
 	}
@@ -317,7 +317,7 @@ public class ProcedureCallImpl<R>
 			markAsFunctionCall( Types.REF_CURSOR );
 		}
 		else {
-			markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
+			markAsFunctionCall( type );
 		}
 	}
 
@@ -356,8 +356,42 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCall markAsFunctionCall(int sqlType) {
+	public ProcedureCallImpl<R> markAsFunctionCall(int sqlType) {
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
+		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+		final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType( resultType );
+		if ( basicType == null ) {
+			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + resultType.getName() );
+		}
+		return markAsFunctionCall( basicType );
+	}
+
+	@Override
+	public ProcedureCallImpl<R> markAsFunctionCall(BasicTypeReference<?> typeReference) {
+		final BasicType<?> basicType = getSessionFactory().getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( typeReference );
+		if ( basicType == null ) {
+			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
+		}
+		return markAsFunctionCall( basicType );
+	}
+
+	private ProcedureCallImpl<R> markAsFunctionCall(BasicType<?> basicType) {
+		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			// Function returns might not be represented as callable parameters,
+			// but we still want to convert the result to the requested java type if possible
+			resultSetMapping.addResultBuilder(
+					new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() )
+			);
+		}
+		//noinspection unchecked
+		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) basicType );
 		return this;
 	}
 
@@ -585,7 +619,7 @@ public class ProcedureCallImpl<R>
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
-		this.call = callableStatementSupport.interpretCall(this);
+		final JdbcOperationQueryCall call = callableStatementSupport.interpretCall( this );
 
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();

@@ -17,8 +17,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.StoredProcedureQuery;
 import org.hibernate.Session;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
@@ -26,14 +24,18 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
+
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -44,8 +46,8 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 11, comment = "Stored procedures are only supported since version 11")
-public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(PostgreSQLDialect.class)
+public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -61,40 +63,45 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		final Namespace namespace = database.getDefaultNamespace();
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						"sp_count_phones",
+						"fn_count_phones",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE sp_count_phones( " +
-								"   IN personId bigint, " +
-								"   OUT phoneCount bigint) " +
-								"   AS " +
+						"CREATE OR REPLACE FUNCTION fn_count_phones( " +
+								"   IN personId bigint) " +
+								"   RETURNS bigint AS " +
 								"$BODY$ " +
+								"    DECLARE " +
+								"        phoneCount bigint; " +
 								"    BEGIN " +
 								"        SELECT COUNT(*) INTO phoneCount " +
 								"        FROM phone  " +
 								"        WHERE person_id = personId; " +
+								"        RETURN phoneCount;" +
 								"    END; " +
 								"$BODY$ " +
 								"LANGUAGE plpgsql;",
-						"DROP PROCEDURE sp_count_phones(bigint, bigint)",
+						"drop function fn_count_phones(bigint)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
 		);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						"sp_phones",
+						"fn_phones",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE sp_phones(IN personId BIGINT, OUT phones REFCURSOR) " +
-								"    AS " +
+						"CREATE OR REPLACE FUNCTION fn_phones(personId BIGINT) " +
+								"   RETURNS REFCURSOR AS " +
 								"$BODY$ " +
+								"    DECLARE " +
+								"        phones REFCURSOR; " +
 								"    BEGIN " +
 								"        OPEN phones FOR  " +
 								"            SELECT *  " +
 								"            FROM phone   " +
 								"            WHERE person_id = personId;  " +
+								"        RETURN phones; " +
 								"    END; " +
 								"$BODY$ " +
 								"LANGUAGE plpgsql",
-						"DROP PROCEDURE sp_phones(bigint, refcursor)",
+						"drop function fn_phones(bigint, bigint)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
 		);
@@ -102,33 +109,38 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 				new NamedAuxiliaryDatabaseObject(
 						"singleRefCursor",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE singleRefCursor(OUT p_recordset REFCURSOR) " +
-								"   AS " +
+						"CREATE OR REPLACE FUNCTION singleRefCursor() " +
+								"   RETURNS REFCURSOR AS " +
 								"$BODY$ " +
+								"    DECLARE " +
+								"        p_recordset REFCURSOR; " +
 								"    BEGIN " +
 								"      OPEN p_recordset FOR SELECT 1; " +
+								"      RETURN p_recordset; " +
 								"    END; " +
 								"$BODY$ " +
 								"LANGUAGE plpgsql;",
-						"DROP PROCEDURE singleRefCursor(refcursor)",
+						"drop function singleRefCursor()",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
 		);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						"sp_is_null",
+						"fn_is_null",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE sp_is_null( " +
-								"   IN param varchar(255), " +
-								"   OUT result boolean) " +
-								"   AS " +
+						"CREATE OR REPLACE FUNCTION fn_is_null( " +
+								"   IN param varchar(255)) " +
+								"   RETURNS boolean AS " +
 								"$BODY$ " +
+								"    DECLARE " +
+								"        result boolean; " +
 								"    BEGIN " +
-								"    select param is null into result; " +
+								"        SELECT param is null INTO result; " +
+								"        RETURN result; " +
 								"    END; " +
 								"$BODY$ " +
 								"LANGUAGE plpgsql;",
-						"DROP PROCEDURE sp_is_null(varchar, boolean)",
+						"drop function fn_is_null(varchar)",
 						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
 				)
 		);
@@ -158,26 +170,26 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	public void testStoredProcedureOutParameter() {
+	public void testFunctionProcedureOutParameter() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_count_phones", Long.class );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
-			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 
 			query.setParameter( "personId", 1L );
 
 			query.execute();
-			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
+			Long phoneCount = (Long) query.getSingleResult();
 			assertEquals( Long.valueOf( 2 ), phoneCount );
 		} );
 	}
 
 	@Test
-	public void testStoredProcedureRefCursor() {
+	public void testFunctionProcedureRefCursor() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phones" );
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
 			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
-			query.registerStoredProcedureParameter( 2, void.class, ParameterMode.REF_CURSOR );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 
 			query.setParameter( 1, 1L );
 
@@ -187,21 +199,36 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	public void testStoredProcedureWithJDBC() {
+	public void testFunctionProcedureRefCursorOld() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
+			query.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
+			query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.IN );
+			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
+
+			query.setParameter( 2, 1L );
+
+			List<Object[]> phones = query.getResultList();
+			assertEquals( 2, phones.size() );
+		} );
+	}
+
+	@Test
+	public void testFunctionWithJDBC() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			Long phoneCount = session.doReturningWork( connection -> {
-				CallableStatement procedure = null;
+				CallableStatement function = null;
 				try {
-					procedure = connection.prepareCall( "{ call sp_count_phones(?,?) }" );
-					procedure.registerOutParameter( 2, Types.BIGINT );
-					procedure.setLong( 1, 1L );
-					procedure.execute();
-					return procedure.getLong( 2 );
+					function = connection.prepareCall( "{ ? = call fn_count_phones(?) }" );
+					function.registerOutParameter( 1, Types.BIGINT );
+					function.setLong( 2, 1L );
+					function.execute();
+					return function.getLong( 1 );
 				}
 				finally {
-					if ( procedure != null ) {
-						procedure.close();
+					if ( function != null ) {
+						function.close();
 					}
 				}
 			} );
@@ -210,22 +237,22 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	public void testProcedureWithJDBCByName() {
+	public void testFunctionWithJDBCByName() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
 				Session session = entityManager.unwrap( Session.class );
 				Long phoneCount = session.doReturningWork( connection -> {
-					CallableStatement procedure = null;
+					CallableStatement function = null;
 					try {
-						procedure = connection.prepareCall( "{ call sp_count_phones(?,?) }" );
-						procedure.registerOutParameter( "phoneCount", Types.BIGINT );
-						procedure.setLong( "personId", 1L );
-						procedure.execute();
-						return procedure.getLong( 1 );
+						function = connection.prepareCall( "{ ? = call fn_count_phones(?) }" );
+						function.registerOutParameter( "phoneCount", Types.BIGINT );
+						function.setLong( "personId", 1L );
+						function.execute();
+						return function.getLong( 1 );
 					}
 					finally {
-						if ( procedure != null ) {
-							procedure.close();
+						if ( function != null ) {
+							function.close();
 						}
 					}
 				} );
@@ -242,79 +269,95 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	public void testSysRefCursorAsOutParameter() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Long value = null;
+			Integer value = null;
 
 			Session session = entityManager.unwrap( Session.class );
 
 			try (ResultSet resultSet = session.doReturningWork( connection -> {
-				CallableStatement procedure = null;
+				CallableStatement function = null;
 				try {
-					procedure = connection.prepareCall( "{ call singleRefCursor(?) }" );
-					procedure.registerOutParameter( 1, Types.REF_CURSOR );
-					procedure.execute();
-					return (ResultSet) procedure.getObject( 1 );
+					function = connection.prepareCall( "{ ? = call singleRefCursor() }" );
+					function.registerOutParameter( 1, Types.REF_CURSOR );
+					function.execute();
+					return (ResultSet) function.getObject( 1 );
 				}
 				finally {
-					if ( procedure != null ) {
-						procedure.close();
+					if ( function != null ) {
+						function.close();
 					}
 				}
 			} )) {
 				while ( resultSet.next() ) {
-					value = resultSet.getLong( 1 );
+					value = resultSet.getInt( 1 );
 				}
 			}
 			catch (Exception e) {
 				fail( e.getMessage() );
 			}
-			assertEquals( Long.valueOf( 1 ), value );
+			assertEquals( Integer.valueOf( 1 ), value );
 
 
-			StoredProcedureQuery procedure = entityManager.createStoredProcedureQuery( "singleRefCursor" );
-			procedure.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
+			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
+			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
 
-			procedure.execute();
+			function.execute();
 
-			assertFalse( procedure.hasMoreResults() );
+			value = (Integer) function.getSingleResult();
 
-			value = null;
-			try (ResultSet resultSet = (ResultSet) procedure.getOutputParameterValue( 1 )) {
+			assertEquals( Integer.valueOf( 1 ), value );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11863")
+	public void testSysRefCursorAsOutParameterOld() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
+			function.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
+			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
+
+			function.execute();
+
+			assertFalse( function.hasMoreResults() );
+
+			Integer value = null;
+			try (ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 ) ) {
 				while ( resultSet.next() ) {
-					value = resultSet.getLong( 1 );
+					value = resultSet.getInt( 1 );
 				}
 			}
 			catch (SQLException e) {
 				fail( e.getMessage() );
 			}
 
-			assertEquals( Long.valueOf( 1 ), value );
+			assertEquals( Integer.valueOf( 1 ), value );
 		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12905")
-	public void testStoredProcedureNullParameterHibernate() {
+	public void testFunctionProcedureNullParameterHibernate() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-					.createStoredProcedureCall( "sp_is_null" );
+					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
+			procedureCall.markAsFunctionCall( Boolean.class );
 			procedureCall.setParameter( 1, null );
 
-			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
+			Boolean result = (Boolean) procedureCall.getSingleResult();
 
 			assertTrue( result );
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-					.createStoredProcedureCall( "sp_is_null" );
+					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
+			procedureCall.markAsFunctionCall( Boolean.class );
 			procedureCall.setParameter( 1, "test" );
 
-			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
+			Boolean result = (Boolean) procedureCall.getSingleResult();
 
 			assertFalse( result );
 		} );
@@ -322,28 +365,30 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12905")
-	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls() {
+	public void testFunctionProcedureNullParameterHibernateWithoutEnablePassingNulls() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-					.createStoredProcedureCall( "sp_is_null" );
+					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
+			procedureCall.markAsFunctionCall( Boolean.class );
 			procedureCall.setParameter( "param", null );
 
-			procedureCall.getOutputParameterValue( "result" );
+			Boolean result = (Boolean) procedureCall.getSingleResult();
+
+			assertTrue( result );
 		} );
 	}
 
 	@Test
-	public void testStoredProcedureNullParameterHibernateWithoutSettingTheParameter() {
+	public void testFunctionProcedureNullParameterHibernateWithoutSettingTheParameter() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
 				ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-						.createStoredProcedureCall( "sp_is_null" );
+						.createStoredProcedureCall( "fn_is_null" );
 				procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
-				procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
+				procedureCall.markAsFunctionCall( Boolean.class );
 
 				procedureCall.execute();
 

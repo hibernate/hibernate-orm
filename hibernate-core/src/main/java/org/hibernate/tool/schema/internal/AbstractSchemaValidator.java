@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema.internal;
 
 import java.util.Locale;
-import java.util.StringTokenizer;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
@@ -31,7 +30,6 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.jboss.logging.Logger;
 
@@ -160,22 +158,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata ).toLowerCase(Locale.ROOT)
-						.startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
-		if ( !typesMatch ) {
-			// Try to resolve the JdbcType by type name and check for a match again based on that type code.
-			// This is used to handle SqlTypes type codes like TIMESTAMP_UTC etc.
-			final JdbcType jdbcType = dialect.resolveSqlTypeDescriptor(
-					columnInformation.getTypeName(),
-					columnInformation.getTypeCode(),
-					columnInformation.getColumnSize(),
-					columnInformation.getDecimalDigits(),
-					metadata.getDatabase().getTypeConfiguration().getJdbcTypeRegistry()
-			);
-			typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), jdbcType.getDefaultSqlTypeCode() );
-		}
-		if ( !typesMatch ) {
+		if ( !ColumnDefinitions.hasMatchingType( column, columnInformation, metadata, dialect ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +

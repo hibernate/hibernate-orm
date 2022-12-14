@@ -365,4 +365,14 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public CallableStatementSupport getCallableStatementSupport() {
 		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
 	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
 }

@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -192,40 +193,7 @@ import jakarta.persistence.TemporalType;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.INTEGER;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NUMERIC;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -1358,10 +1326,21 @@ public abstract class Dialect implements ConversionContext {
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-			|| isIntegral(typeCode1) && isIntegral(typeCode2)
+			|| isSmallOrTinyInt(typeCode1) && isSmallOrTinyInt(typeCode2) //special case for HHH-15288 migration
+//			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
-			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2);
+			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			|| sameColumnType(typeCode1, typeCode2);
+	}
+
+	private boolean sameColumnType(int typeCode1, int typeCode2) {
+		try {
+			return Objects.equals( columnType(typeCode1), columnType(typeCode2) );
+		}
+		catch (IllegalArgumentException iae) {
+			return false;
+		}
 	}
 
 	/**
@@ -2006,6 +1985,14 @@ public abstract class Dialect implements ConversionContext {
 		}
 		sb.append( tableName );
 		return sb.toString();
+	}
+
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return null;
+	}
+
+	public boolean supportsAlterColumnType() {
+		return false;
 	}
 
 	/**

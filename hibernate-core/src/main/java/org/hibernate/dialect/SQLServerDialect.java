@@ -74,7 +74,6 @@ import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -999,6 +998,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		else {
 			return "";
 		}
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
 	}
 
 	@Override

@@ -56,14 +56,8 @@ public interface JdbcValuesSourceProcessingState {
 			LoadingEntityEntry loadingEntry);
 
 	void registerInitializer(
-			EntityKey entityKey,
-			Initializer initializer);
-
-	void registerInitializer(
 			EntityUniqueKey entityKey,
 			Initializer initializer);
-
-	Initializer findInitializer(EntityKey entityKey);
 
 	Initializer findInitializer(EntityUniqueKey entityKey);
 

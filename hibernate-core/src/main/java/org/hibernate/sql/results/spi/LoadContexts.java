@@ -60,12 +60,6 @@ public class LoadContexts {
 		);
 	}
 
-	public Initializer findInitializer(EntityKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findInitializer( key )
-		);
-	}
-
 	public Initializer findInitializer(EntityUniqueKey key){
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
 				state -> state.findInitializer( key )

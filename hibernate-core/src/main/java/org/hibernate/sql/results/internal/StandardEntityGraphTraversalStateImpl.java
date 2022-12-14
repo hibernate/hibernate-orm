@@ -23,8 +23,6 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 
-import jakarta.persistence.metamodel.PluralAttribute;
-
 /**
  * @author Nathan Xu
  */
@@ -68,9 +66,6 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 
 			if ( fetchable instanceof PluralAttributeMapping ) {
 				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
-				assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
-						|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
 
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
@@ -118,10 +113,6 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			return false;
 		}
 		return fetchParent.appliesTo( currentGraphContext );
-	}
-
-	private static boolean isJpaMapCollectionType(PluralAttributeMapping pluralAttributeMapping) {
-		return pluralAttributeMapping.getCollectionDescriptor().getCollectionSemantics().getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
 	}
 
 }

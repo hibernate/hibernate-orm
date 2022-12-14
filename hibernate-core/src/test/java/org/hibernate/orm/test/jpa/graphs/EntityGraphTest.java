@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.graphs;
 
+import jakarta.persistence.MapKey;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Foo.class, Bar.class, Baz.class,
+		return new Class[] { Foo.class, Bar.class, Baz.class, Author.class, Book.class,
 				Company.class, Employee.class, Manager.class, Location.class };
 	}
 
@@ -297,6 +298,36 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         em.close();
     }
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-15859")
+	public void mapAttributeTest() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Author author = new Author();
+		em.persist(author);
+
+		Book book = new Book();
+		author.books.put(1, book);
+		em.persist(author);
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+		EntityGraph<Author> entityGraph = em.createEntityGraph(Author.class);
+		entityGraph.addAttributeNodes("books");
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("javax.persistence.loadgraph", entityGraph);
+
+		Author result = em.find(Author.class, author.id, properties);
+		assertTrue(Hibernate.isInitialized(result));
+		assertTrue(Hibernate.isInitialized(result.books));
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
     @Entity
 	@Table(name = "foo")
     public static class Foo {
@@ -337,4 +368,26 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Entity
+	@Table(name = "book")
+	public static class Book {
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Author author;
+	}
+
+	@Entity
+	@Table(name = "author")
+	public static class Author {
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
+		@MapKey
+		public Map<Integer, Book> books = new HashMap<>();
+	}
 }

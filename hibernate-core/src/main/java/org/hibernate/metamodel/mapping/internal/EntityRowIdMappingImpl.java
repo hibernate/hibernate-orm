@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -28,7 +27,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Nathan Xu
@@ -117,11 +115,10 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return rowIdType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return rowIdType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override

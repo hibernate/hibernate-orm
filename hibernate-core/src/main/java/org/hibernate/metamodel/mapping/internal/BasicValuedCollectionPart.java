@@ -25,7 +25,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
@@ -312,7 +311,6 @@ public class BasicValuedCollectionPart
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

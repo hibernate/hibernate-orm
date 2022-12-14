@@ -189,7 +189,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -209,14 +208,13 @@ public abstract class AbstractCompositeIdentifierMapping
 				);
 				span += fkDescriptor.forEachJdbcValue(
 						identifier,
-						clause,
 						span + offset,
 						valuesConsumer,
 						session
 				);
 			}
 			else {
-				span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+				span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
 			}
 		}
 		return span;

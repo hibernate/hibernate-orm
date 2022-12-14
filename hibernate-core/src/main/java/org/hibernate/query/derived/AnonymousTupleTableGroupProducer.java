@@ -40,7 +40,6 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
@@ -382,7 +381,6 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

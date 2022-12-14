@@ -25,7 +25,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -210,7 +209,6 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

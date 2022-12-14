@@ -42,7 +42,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -936,11 +935,10 @@ public class PluralAttributeMappingImpl
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return elementDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return elementDescriptor.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override

@@ -47,7 +47,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -552,21 +551,19 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return delegate.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachJdbcValue( value, clause, offset, consumer, session );
+		return delegate.forEachJdbcValue( value, offset, consumer, session );
 	}
 
 	@Override

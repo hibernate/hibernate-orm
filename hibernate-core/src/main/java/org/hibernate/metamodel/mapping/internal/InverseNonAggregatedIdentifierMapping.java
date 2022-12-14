@@ -136,11 +136,10 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return identifierValueMapper.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return identifierValueMapper.forEachJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override

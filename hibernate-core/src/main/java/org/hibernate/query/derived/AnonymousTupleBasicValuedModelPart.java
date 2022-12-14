@@ -22,7 +22,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -265,7 +264,6 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -290,7 +288,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+	public int forEachJdbcValue(
+			Object value,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -589,11 +588,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override

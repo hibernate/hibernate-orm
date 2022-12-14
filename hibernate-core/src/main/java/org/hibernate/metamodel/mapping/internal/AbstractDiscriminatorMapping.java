@@ -21,7 +21,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -202,7 +201,6 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

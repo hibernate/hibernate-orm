@@ -91,7 +91,6 @@ public interface JdbcParameterBindings {
 			SharedSessionContractImplementor session) {
 		return bindable.forEachJdbcValue(
 				value,
-				clause,
 				offset,
 				(selectionIndex, jdbcValue, type) -> {
 					addBinding(

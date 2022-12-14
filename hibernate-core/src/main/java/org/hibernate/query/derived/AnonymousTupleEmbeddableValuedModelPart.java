@@ -420,7 +420,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -428,7 +427,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		int span = 0;
 		int i = 0;
 		for ( ModelPart mapping : modelParts.values() ) {
-			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
+			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
 			i++;
 		}
 		return span;
@@ -437,7 +436,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
@@ -446,7 +444,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		int i = 0;
 		for ( ModelPart attributeMapping : modelParts.values() ) {
 			final Object o = values[i];
-			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
+			span += attributeMapping.forEachJdbcValue( o, span + offset, consumer, session );
 			i++;
 		}
 		return span;

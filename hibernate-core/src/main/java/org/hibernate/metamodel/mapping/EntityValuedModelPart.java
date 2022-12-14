@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -101,20 +100,18 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	@Override
 	default int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return getEntityMappingType().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachJdbcValue( value, clause, offset, consumer, session );
+		return getEntityMappingType().forEachJdbcValue( value, offset, consumer, session );
 	}
 }

@@ -118,7 +118,7 @@ mariadb_10_9() {
 }
 
 postgresql() {
-  postgresql_14
+  postgresql_15
 }
 
 postgresql_9_5() {
@@ -139,6 +139,11 @@ postgresql_13() {
 postgresql_14() {
     $CONTAINER_CLI rm -f postgres || true
     $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:14-3.3
+}
+
+postgresql_15() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:15-3.3
 }
 
 edb() {
@@ -712,6 +717,7 @@ if [ -z ${1} ]; then
     echo -e "\toracle_18"
     echo -e "\toracle_11"
     echo -e "\tpostgresql"
+    echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
     echo -e "\tpostgresql_10"

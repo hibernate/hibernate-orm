@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.FrameExclusion;
 
 import jakarta.persistence.criteria.Expression;
@@ -16,6 +17,7 @@ import jakarta.persistence.criteria.Order;
  *
  * @author Marco Belladelli
  */
+@Incubating
 public interface JpaWindow {
 	/**
 	 * Add partition by expressions to the window.

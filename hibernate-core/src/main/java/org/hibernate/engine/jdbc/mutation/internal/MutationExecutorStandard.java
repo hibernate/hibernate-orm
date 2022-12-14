@@ -127,7 +127,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		}
 		else {
 			final List<PreparableMutationOperation> batchedMutationsRef = batchedJdbcMutations;
-			this.batch = session.getJdbcCoordinator().getBatch2(
+			this.batch = session.getJdbcCoordinator().getBatch(
 					batchKey,
 					batchSize,
 					() -> ModelMutationHelper.toPreparedStatementGroup(

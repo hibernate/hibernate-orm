@@ -44,7 +44,7 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 
 	private Batch resolveBatch() {
 		if ( batch == null ) {
-			batch = session.getJdbcCoordinator().getBatch2(
+			batch = session.getJdbcCoordinator().getBatch(
 					batchKey,
 					batchSize,
 					() -> new PreparedStatementGroupSingleTable( getMutationOperation(), session )

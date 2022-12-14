@@ -172,7 +172,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public Batch getBatch2(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier) {
+	public Batch getBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier) {
 		if ( currentBatch != null ) {
 			if ( currentBatch.getKey().equals( key ) ) {
 				return currentBatch;

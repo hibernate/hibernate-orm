@@ -49,7 +49,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
-	Batch getBatch2(
+	Batch getBatch(
 			BatchKey key,
 			Integer batchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier);

@@ -1005,11 +1005,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteral<>( value, expressible, this );
 		}
 		// Just like in HQL, we allow coercion of literal values to the inferred type
-		return new SqmLiteral<>(
-				expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration ),
-				expressible,
-				this
-		);
+		T coercedValue = expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration );
+		if (expressible.getExpressibleJavaType().isInstance( coercedValue )) {
+			return new SqmLiteral<>(
+					coercedValue,
+					expressible,
+					this
+			);
+		}
+		else {
+			// ignore typeInferenceSource and fallback the value type
+			return literal( value );
+		}
 	}
 
 	private static <T> SqmExpressible<T> resolveInferredType(
@@ -1572,11 +1579,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			);
 		}
 		final SqmExpressible<T> expressible = bindableType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
-		return new ValueBindJpaCriteriaParameter<>(
-				bindableType,
-				expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration ),
-				this
-		);
+		T coercedValue = expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration );
+		if ( isInstance( bindableType, coercedValue ) ) {
+			return new ValueBindJpaCriteriaParameter<>(
+					bindableType,
+					coercedValue,
+					this
+			);
+		}
+		else {
+			// ignore typeInferenceSource and fallback the value type
+			return new ValueBindJpaCriteriaParameter<>(
+					queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
+					value,
+					this
+			);
+		}
 	}
 
 	private <T> boolean isInstance(BindableType<T> bindableType, T value) {

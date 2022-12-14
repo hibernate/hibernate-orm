@@ -31,7 +31,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -95,7 +94,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 				fetchParent,
 				typeConfiguration
 		);
-		this.fetches = creationState.visitNestedFetches( this );
+		resetFetches( creationState.visitNestedFetches( this ) );
 	}
 
 	@Override

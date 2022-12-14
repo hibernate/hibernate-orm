@@ -5040,7 +5040,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Expression> list = new ArrayList<>( embeddableValuedModelPart.getJdbcTypeCount() );
 			embeddableValuedModelPart.forEachJdbcValue(
 					literal.getLiteralValue(),
-					null,
 					(selectionIndex, value, jdbcMapping)
 							-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 					null
@@ -5088,7 +5087,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final List<Expression> list = new ArrayList<>( associationKeyPart.getJdbcTypeCount() );
 				associationKeyPart.forEachJdbcValue(
 						associationKey,
-						null,
 						(selectionIndex, value, jdbcMapping)
 								-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 						null

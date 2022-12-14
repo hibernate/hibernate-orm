@@ -30,7 +30,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -297,7 +296,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -309,7 +307,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 				continue;
 			}
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+			span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -356,7 +354,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -364,7 +361,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		int span = 0;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping mapping = attributeMappings.get( i );
-			span += mapping.forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
+			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}

@@ -35,7 +35,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -381,7 +380,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -392,7 +390,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
+			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -400,7 +398,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -412,7 +409,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
+			span += attribute.forEachJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}

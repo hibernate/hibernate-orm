@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
@@ -98,7 +97,6 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

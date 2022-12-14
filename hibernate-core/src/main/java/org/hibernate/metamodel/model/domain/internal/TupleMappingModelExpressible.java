@@ -10,7 +10,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.sql.ast.Clause;
 
 /**
  * @author Christian Beikov
@@ -45,14 +44,13 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		for ( int i = 0; i < components.length; i++ ) {
-			span += components[i].forEachDisassembledJdbcValue( values[i], clause, span + offset, valuesConsumer, session );
+			span += components[i].forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -60,7 +58,6 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -69,7 +66,6 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 		for ( int i = 0; i < components.length; i++ ) {
 			span += components[i].forEachDisassembledJdbcValue(
 					components[i].disassemble( values[i], session ),
-					clause,
 					span + offset,
 					valuesConsumer,
 					session

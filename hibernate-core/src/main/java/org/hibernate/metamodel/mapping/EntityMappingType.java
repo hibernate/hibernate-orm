@@ -31,7 +31,6 @@ import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -171,7 +170,6 @@ public interface EntityMappingType
 	@Override
 	int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session);
@@ -179,11 +177,10 @@ public interface EntityMappingType
 	@Override
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		return forEachDisassembledJdbcValue( disassemble( value, session ), clause, offset, consumer, session );
+		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, consumer, session );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

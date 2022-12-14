@@ -16,7 +16,6 @@ import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -73,21 +72,19 @@ public class EntityTypeLiteral
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return discriminatorType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return discriminatorType.forEachJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 

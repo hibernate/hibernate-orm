@@ -224,7 +224,6 @@ import org.hibernate.sql.Delete;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -5779,13 +5778,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getIdentifierMapping().forEachDisassembledJdbcValue(
 				value,
-				clause,
 				offset,
 				valuesConsumer,
 				session
@@ -5795,7 +5792,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
@@ -5809,7 +5805,6 @@ public abstract class AbstractEntityPersister
 		}
 		return identifierMapping.forEachDisassembledJdbcValue(
 				identifier,
-				clause,
 				offset,
 				consumer,
 				session

@@ -58,7 +58,6 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -2050,17 +2049,15 @@ public class ToOneAttributeMapping
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return foreignKeyDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return foreignKeyDescriptor.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
@@ -2069,7 +2066,6 @@ public class ToOneAttributeMapping
 						foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 						session
 				),
-				clause,
 				offset,
 				consumer,
 				session

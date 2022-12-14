@@ -78,6 +78,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			assertTrue( jdbcCoord.getLogicalConnection().isPhysicallyConnected() ); // after_transaction specified
 			ddlTxn.commit();
 
+			Transaction dmlTxn = session.beginTransaction();
 			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
 					"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
@@ -86,19 +87,21 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 
 			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			jdbcCoord.getResultSetReturn().extract( ps );
-
 			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
+			dmlTxn.commit();
 		}
 		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {
 			try {
+				Transaction ddlTx = session.beginTransaction();
 				session.doWork( connection -> {
 					final Statement stmnt = connection.createStatement();
 
 					stmnt.execute( sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
 				} );
+				ddlTx.commit();
 			}
 			finally {
 				session.close();

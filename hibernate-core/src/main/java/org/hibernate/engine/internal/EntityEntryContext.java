@@ -9,9 +9,12 @@ package org.hibernate.engine.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -25,6 +28,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 
 /**
@@ -329,18 +333,6 @@ public class EntityEntryContext {
 		return reentrantSafeEntries;
 	}
 
-	/**
-	 * Not reentrant like #reentrantSafeEntityEntries but most likely
-	 * the more efficient choice, when reentrant safety isn't required.
-	 */
-	public void processEachEntity(final Consumer<Object> entityProcessor) {
-		ManagedEntity managedEntity = head;
-		while ( managedEntity != null ) {
-			entityProcessor.accept( managedEntity.$$_hibernate_getEntityInstance() );
-			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
-		}
-	}
-
 	private void processEachManagedEntity(final Consumer<ManagedEntity> action) {
 		ManagedEntity node = head;
 		while ( node != null ) {
@@ -350,13 +342,37 @@ public class EntityEntryContext {
 		}
 	}
 
+	// Could have used #processEachManagedEntity but avoided because of measurable overhead.
+	// Careful, this needs to be very efficient as we potentially iterate quite a bit!
+	// Also: we perform two operations at once, so to not iterate on the list twice;
+	// being a linked list, multiple iterations are not cache friendly at all.
+	private void clearAllReferencesFromManagedEntities() {
+		ManagedEntity nextManagedEntity = head;
+		while ( nextManagedEntity != null ) {
+			final ManagedEntity current = nextManagedEntity;
+			nextManagedEntity = current.$$_hibernate_getNextManagedEntity();
+			Object toProcess = current.$$_hibernate_getEntityInstance();
+			unsetSession( asPersistentAttributeInterceptableOrNull( toProcess ) );
+			clearManagedEntity( current );//careful this also unlinks from the "next" entry in the list
+		}
+	}
+
+	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable) {
+		if ( persistentAttributeInterceptable != null ) {
+			final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
+			}
+		}
+	}
+
 	/**
 	 * Clear this context of all managed entities
 	 */
 	public void clear() {
 		dirty = true;
 
-		processEachManagedEntity( EntityEntryContext::clearManagedEntity );
+		clearAllReferencesFromManagedEntities();
 
 		if ( immutableManagedEntityXref != null ) {
 			immutableManagedEntityXref.clear();

@@ -63,12 +63,7 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 				String colName = col.getQuotedName( dialect );
 				buf.append( colName );
 
-				final String columnType = col.getSqlType(
-						metadata.getDatabase().getTypeConfiguration(),
-						dialect,
-						metadata
-				);
-				buf.append( ' ' ).append( columnType );
+				buf.append( ' ' ).append( col.getSqlType( metadata ) );
 			}
 
 			buf.append( ')' );

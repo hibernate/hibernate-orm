@@ -22,8 +22,7 @@ class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
 		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode(metadata), columnInformation.getTypeCode() )
-				|| stripArgs( column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata ) )
-						.equalsIgnoreCase( columnInformation.getTypeName() );
+				|| stripArgs( column.getSqlType( metadata ) ).equalsIgnoreCase( columnInformation.getTypeName() );
 		if ( typesMatch ) {
 			return true;
 		}
@@ -119,7 +118,7 @@ class ColumnDefinitions {
 			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		final String columnType = getColumnType( column, metadata, dialect );
+		final String columnType = column.getSqlType(metadata);
 		if ( isIdentityColumn(column, table, metadata, dialect) ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
@@ -154,10 +153,6 @@ class ColumnDefinitions {
 				definition.append( " not null" );
 			}
 		}
-	}
-
-	static String getColumnType(Column column, Metadata metadata, Dialect dialect) {
-		return column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata );
 	}
 
 	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {

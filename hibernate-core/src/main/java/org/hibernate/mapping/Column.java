@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -211,9 +212,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			try {
 				int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
 				if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
-					throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
+					throw new MappingException( "SQL type codes do not match, mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
 				}
 				return this.sqlTypeCode = sqlTypeCode;
+			}
+			catch (MappingException me)  {
+				throw me;
 			}
 			catch (Exception e) {
 				throw new MappingException(
@@ -269,11 +273,11 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	/**
-	 * Returns the underlying columns SqlTypeCode.
-	 * If null, it is because the SqlTypeCode is unknown.
+	 * Returns {@linkplain org.hibernate.type.SqlTypes SQL type code}
+	 * for this column, or {@code null} if the type code is unknown.
 	 * <p>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
-	 * for the columns associated Value/Type.
+	 * Use {@link #getSqlTypeCode(Mapping)} to retrieve the type code
+	 * using {@link Value} associated with the column.
 	 *
 	 * @return sqlTypeCode if it is set, otherwise null.
 	 */
@@ -285,6 +289,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		sqlTypeCode = typeCode;
 	}
 
+	public String getSqlType(Metadata mapping) throws HibernateException {
+		return getSqlType( mapping.getDatabase().getTypeConfiguration(), mapping.getDatabase().getDialect(), mapping );
+	}
+
+	/**
+	 * @deprecated use {@link #getSqlType(Metadata)}
+	 */
+	@Deprecated(since = "6.2")
 	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
 			try {

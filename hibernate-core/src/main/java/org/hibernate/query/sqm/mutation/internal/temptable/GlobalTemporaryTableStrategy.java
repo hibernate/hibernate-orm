@@ -59,6 +59,8 @@ public class GlobalTemporaryTableStrategy {
 			return;
 		}
 
+		prepared = true;
+
 		final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
 				.getBootstrapContext()
 				.getServiceRegistry().getService( ConfigurationService.class );
@@ -71,8 +73,6 @@ public class GlobalTemporaryTableStrategy {
 		if ( !createIdTables ) {
 			return;
 		}
-
-		prepared = true;
 
 		log.debugf( "Creating global-temp ID table : %s", getTemporaryTable().getTableExpression() );
 
@@ -132,7 +132,10 @@ public class GlobalTemporaryTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debugf( "Unable to obtain JDBC connection; unable to drop global-temp ID table : %s", getTemporaryTable().getTableExpression() );
+			log.debugf(
+					"Unable to obtain JDBC connection; unable to drop global-temp ID table : %s",
+					getTemporaryTable().getTableExpression()
+			);
 			return;
 		}
 		catch (SQLException e) {

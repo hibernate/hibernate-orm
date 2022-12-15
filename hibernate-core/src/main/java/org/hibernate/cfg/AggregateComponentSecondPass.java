@@ -74,7 +74,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
 			// Make sure this state is initialized
 			aggregatedColumn.getSqlTypeCode( metadataCollector );
-			aggregatedColumn.getSqlType( typeConfiguration, dialect, metadataCollector );
+			aggregatedColumn.getSqlType( metadataCollector );
 		}
 
 		final String structName = component.getStructName();
@@ -215,7 +215,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			aggregateColumn.getValue().getType();
 			// Make sure this state is initialized
 			aggregateColumn.getSqlTypeCode( metadataCollector );
-			aggregateColumn.getSqlType( typeConfiguration, dialect, metadataCollector );
+			aggregateColumn.getSqlType( metadataCollector );
 			aggregateColumn = aggregateColumn.getComponent().getParentAggregateColumn();
 		} while ( aggregateColumn != null );
 	}

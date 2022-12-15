@@ -21,6 +21,8 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+
 /**
  * The exporter for Cloud Spanner CREATE and DROP table statements.
  *
@@ -74,7 +76,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 
 		for ( Column column : table.getColumns() ) {
-			final String sqlType = column.getSqlType( metadata.getDatabase().getTypeConfiguration(), spannerDialect, metadata );
+			final String sqlType = column.getSqlType( metadata );
 			final String columnDeclaration =
 					column.getName()
 							+ " " + sqlType
@@ -92,7 +94,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 				)
 		);
 
-		return statements.toArray( new String[0] );
+		return statements.toArray(EMPTY_STRING_ARRAY);
 	}
 
 	@Override

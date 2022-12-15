@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,6 +51,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -75,6 +76,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -127,8 +129,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -1565,11 +1565,13 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
 
-	// todo (6.0) : atm there is no way to get a `PluralAttributeMapping` reference except through
-	//  	its declaring `ManagedTypeMapping` attributes.  this is a backhand way of getting access
-	//  	to it for use from the persister
-
-
+	/**
+	 * Allows injection of the corresponding {@linkplain PluralAttributeMapping plural-attribute mapping}.
+	 *
+	 * @implNote Helps solve the chicken-egg problem of which to create first.  Ultimately we could
+	 * make this work in a similar fashion to how this works in the relationship between
+	 * {@link org.hibernate.metamodel.mapping.EmbeddableMappingType} and {@link EmbeddableValuedModelPart}.
+	 */
 	@Override
 	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
 		this.attributeMapping = attributeMapping;

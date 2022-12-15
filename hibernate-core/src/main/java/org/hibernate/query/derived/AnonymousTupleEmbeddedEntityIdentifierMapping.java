@@ -37,7 +37,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				modelParts,
 				domainType,
 				componentName,
-				(EmbeddableValuedModelPart) delegate
+				(EmbeddableValuedModelPart) delegate,
+				-1
 		);
 		this.delegate = delegate;
 	}

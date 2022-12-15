@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.results.graph;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -21,7 +18,9 @@ public abstract class AbstractFetchParent implements FetchParent {
 	private final FetchableContainer fetchContainer;
 	private final NavigablePath navigablePath;
 
-	private List<Fetch> fetches;
+	private ImmutableFetchList fetches = ImmutableFetchList.EMPTY;
+	private boolean hasJoinFetches;
+	private boolean containsCollectionFetches;
 
 	public AbstractFetchParent(FetchableContainer fetchContainer, NavigablePath navigablePath) {
 		this.fetchContainer = fetchContainer;
@@ -29,12 +28,14 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
-		assert fetches == null;
+		assert fetches == ImmutableFetchList.EMPTY;
 		resetFetches( creationState.visitFetches( fetchParent ) );
 	}
 
-	protected void resetFetches(final List<Fetch> newFetches) {
-		this.fetches = Collections.unmodifiableList( newFetches );
+	protected void resetFetches(ImmutableFetchList newFetches) {
+		this.fetches = newFetches;
+		this.hasJoinFetches = newFetches.hasJoinFetches();
+		this.containsCollectionFetches = newFetches.containsCollectionFetches();
 	}
 
 	public FetchableContainer getFetchContainer() {
@@ -57,35 +58,25 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
-		return fetches == null ? Collections.emptyList() : fetches;
+	public ImmutableFetchList getFetches() {
+		return fetches;
 	}
 
 	@Override
 	public Fetch findFetch(final Fetchable fetchable) {
-		if ( fetches == null ) {
-			return null;
-		}
-
-		//Iterate twice so we can perform the cheapest checks on each item first:
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			final Fetch fetch = fetches.get( i );
-			if ( fetchable == fetch.getFetchedMapping() ) {
-				return fetch;
-			}
-		}
-
 		if ( fetchable instanceof EntityVersionMapping ) {
-			//Second iteration performs the slightly more expensive checks, necessary for EntityVersionMapping:
-			final NavigableRole navigableRole = fetchable.getNavigableRole();
-			for ( int i = 0; i < fetches.size(); i++ ) {
-				final Fetch fetch = fetches.get( i );
-				if ( fetch.getFetchedMapping().getNavigableRole().equals( navigableRole ) ) {
-					return fetch;
-				}
-			}
+			return fetches.get( ( (EntityVersionMapping) fetchable ).getVersionAttribute() );
 		}
+		return fetches.get( fetchable );
+	}
 
-		return null;
+	@Override
+	public boolean hasJoinFetches() {
+		return hasJoinFetches;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		return containsCollectionFetches;
 	}
 }

@@ -16,6 +16,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * @author Steve Ebersole
@@ -55,13 +56,23 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch {
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
-		return Collections.emptyList();
+	public ImmutableFetchList getFetches() {
+		return ImmutableFetchList.EMPTY;
 	}
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
 		return null;
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		return false;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		return false;
 	}
 
 	@Override

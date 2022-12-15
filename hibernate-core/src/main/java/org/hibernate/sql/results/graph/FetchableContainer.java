@@ -34,6 +34,13 @@ public interface FetchableContainer extends ModelPartContainer {
 	 */
 	int getNumberOfFetchables();
 
+	/**
+	 * The number of fetchables in the container
+	 */
+	default int getNumberOfFetchableKeys() {
+		return getNumberOfFetchables();
+	}
+
 	default Fetchable getKeyFetchable(int position) {
 		List<Fetchable> fetchables = new ArrayList<>( getNumberOfKeyFetchables() );
 		visitKeyFetchables( fetchable -> fetchables.add( fetchable ), null );

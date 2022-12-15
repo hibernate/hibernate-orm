@@ -383,6 +383,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
@@ -7137,7 +7138,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //				.getOrMakeJavaDescriptor( namedClass );
 	}
 
-	public void addFetch(List<Fetch> fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
+	private void addFetch(ImmutableFetchList.Builder fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 		final Map.Entry<Integer, List<SqlSelection>> sqlSelectionsToTrack = trackedFetchSelectionsForGroup.get( resolvedNavigablePath );
 		final int sqlSelectionStartIndexForFetch;
@@ -7333,28 +7334,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public List<Fetch> visitNestedFetches(FetchParent fetchParent) {
+	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
 		final SqlAstQueryPartProcessingStateImpl processingState = (SqlAstQueryPartProcessingStateImpl) getCurrentProcessingState();
 		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
-		final List<Fetch> fetches = visitFetches( fetchParent );
+		final ImmutableFetchList fetches = visitFetches( fetchParent );
 		processingState.setNestingFetchParent( nestingFetchParent );
 		return fetches;
 	}
 
 	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
+	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
-		final List<Fetch> fetches = CollectionHelper.arrayList( keySize + size );
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( referencedMappingContainer );
 		for ( int i = 0; i < keySize; i++ ) {
 			addFetch( fetches, fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
 		}
 		for ( int i = 0; i < size; i++ ) {
 			addFetch( fetches, fetchParent, referencedMappingContainer.getFetchable( i ), false );
 		}
-		return fetches;
+		return fetches.build();
 	}
 
 	private boolean shouldExplicitFetch(Integer maxDepth, Fetchable fetchable) {

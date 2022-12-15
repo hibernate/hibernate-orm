@@ -107,6 +107,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
 						.append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ),
 				-1,
+				-1,
 				idTable,
 				attributeMetadata,
 				(PropertyAccess) null,

@@ -582,6 +582,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public int getFetchableKey() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}

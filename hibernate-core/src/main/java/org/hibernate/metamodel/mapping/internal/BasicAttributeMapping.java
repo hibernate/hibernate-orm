@@ -69,6 +69,7 @@ public class BasicAttributeMapping
 			String attributeName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			AttributeMetadata attributeMetadata,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
@@ -91,6 +92,7 @@ public class BasicAttributeMapping
 		super(
 				attributeName,
 				stateArrayPosition,
+				fetchableIndex,
 				attributeMetadata,
 				mappedFetchTiming,
 				mappedFetchStyle,
@@ -155,6 +157,7 @@ public class BasicAttributeMapping
 				attributeName,
 				original.getNavigableRole(),
 				stateArrayPosition,
+				original.getFetchableKey(),
 				attributeMetadata,
 				FetchTiming.IMMEDIATE,
 				FetchStyle.JOIN,

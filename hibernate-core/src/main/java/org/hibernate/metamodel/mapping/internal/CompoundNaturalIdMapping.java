@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -19,7 +18,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -48,6 +46,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -453,7 +452,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> arrayJtd;
 
-		private final List<Fetch> fetches;
+		private final ImmutableFetchList fetches;
+		private final boolean hasJoinFetches;
+		private final boolean containsCollectionFetches;
 
 		private final String resultVariable;
 
@@ -468,7 +469,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			this.arrayJtd = arrayJtd;
 			this.resultVariable = resultVariable;
 
-			this.fetches = Collections.unmodifiableList( creationState.visitFetches( this ) );
+			this.fetches = creationState.visitFetches( this );
+			this.hasJoinFetches = this.fetches.hasJoinFetches();
+			this.containsCollectionFetches = this.fetches.containsCollectionFetches();
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -517,22 +520,24 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public List<Fetch> getFetches() {
+		public ImmutableFetchList getFetches() {
 			return fetches;
 		}
 
 		@Override
 		public Fetch findFetch(Fetchable fetchable) {
 			assert fetchable != null;
+			return fetches.get( fetchable );
+		}
 
-			for ( int i = 0; i < fetches.size(); i++ ) {
-				final Fetch fetch = fetches.get( i );
-				if ( fetchable.equals( fetch.getFetchedMapping() ) ) {
-					return fetch;
-				}
-			}
+		@Override
+		public boolean hasJoinFetches() {
+			return hasJoinFetches;
+		}
 
-			return null;
+		@Override
+		public boolean containsCollectionFetches() {
+			return containsCollectionFetches;
 		}
 	}
 
@@ -541,10 +546,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> jtd;
 
-		private final List<DomainResultAssembler<?>> subAssemblers;
+		private final DomainResultAssembler<?>[] subAssemblers;
 
 		private AssemblerImpl(
-				List<Fetch> fetches,
+				ImmutableFetchList fetches,
 				NavigablePath navigablePath,
 				CompoundNaturalIdMapping naturalIdMapping,
 				JavaType<Object[]> jtd,
@@ -557,11 +562,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			// we just "need it" as an impl detail for handling Fetches
 			final InitializerImpl initializer = new InitializerImpl( navigablePath, naturalIdMapping );
 
-			this.subAssemblers = CollectionHelper.arrayList( fetches.size() );
-			for ( int i = 0; i < fetches.size(); i++ ) {
-				final Fetch fetch = fetches.get( i );
-				final DomainResultAssembler<?> fetchAssembler = fetch.createAssembler( initializer, creationState );
-				subAssemblers.add( fetchAssembler );
+			this.subAssemblers = new DomainResultAssembler[fetches.size()];
+			int i = 0;
+			for ( Fetch fetch : fetches ) {
+				subAssemblers[i++] = fetch.createAssembler( initializer, creationState );
 			}
 		}
 
@@ -569,9 +573,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public Object[] assemble(
 				RowProcessingState rowProcessingState,
 				JdbcValuesSourceProcessingOptions options) {
-			final Object[] result = new Object[ subAssemblers.size() ];
-			for ( int i = 0; i < subAssemblers.size(); i++ ) {
-				result[ i ] = subAssemblers.get( i ).assemble( rowProcessingState, options );
+			final Object[] result = new Object[ subAssemblers.length ];
+			for ( int i = 0; i < subAssemblers.length; i++ ) {
+				result[ i ] = subAssemblers[i].assemble( rowProcessingState, options );
 			}
 			return result;
 		}

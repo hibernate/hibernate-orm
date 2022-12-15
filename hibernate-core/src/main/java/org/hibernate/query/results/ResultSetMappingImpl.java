@@ -36,6 +36,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -248,7 +249,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
-						&& !hasJoinFetches( entityResult.getFetches() ) ) {
+						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
 							.getEntityPersister();
@@ -303,25 +304,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		if ( column != null && !aliases.add( column ) ) {
 			knownDuplicateAliases.add( column );
 		}
-	}
-
-	private static boolean hasJoinFetches(List<Fetch> fetches) {
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			final Fetch fetch = fetches.get( i );
-			if ( fetch instanceof BasicFetch<?> || fetch.getTiming() == FetchTiming.DELAYED ) {
-				// That's fine
-			}
-			else if ( fetch instanceof EmbeddableResultGraphNode ) {
-				// Check all these fetches as well
-				if ( hasJoinFetches( ( (EmbeddableResultGraphNode) fetch ).getFetches() ) ) {
-					return true;
-				}
-			}
-			else {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private DomainResult<?> makeImplicitDomainResult(

@@ -59,7 +59,8 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 					attributeName,
 					attributeName,
 					basicType,
-					basicType
+					basicType,
+					-1
 			);
 		}
 		return null;

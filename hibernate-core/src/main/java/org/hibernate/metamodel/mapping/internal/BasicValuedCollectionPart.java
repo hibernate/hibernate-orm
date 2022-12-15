@@ -233,6 +233,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}

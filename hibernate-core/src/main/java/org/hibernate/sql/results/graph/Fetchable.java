@@ -8,7 +8,9 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 
@@ -23,6 +25,16 @@ public interface Fetchable extends ModelPart {
 	 * The name of the fetchable
 	 */
 	String getFetchableName();
+
+	/**
+	 * The key that identifies this {@linkplain Fetchable} within a {@link FetchableContainer}.
+	 * If this {@linkplain Fetchable} is part of {@link FetchableContainer#visitFetchables(IndexedConsumer, EntityMappingType)},
+	 * the values is guaranteed to be between 0 (inclusive) and {@link FetchableContainer#getNumberOfFetchableKeys()} (exclusive).
+	 * Other {@linkplain Fetchable} objects may have a special negative value.
+	 * <p>
+	 * The main intent of this key is to index e.g. {@link Fetch} objects in an array.
+	 */
+	int getFetchableKey();
 
 	/**
 	 * The configured fetch timing and style

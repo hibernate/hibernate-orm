@@ -82,12 +82,14 @@ public class AnonymousTupleEntityValuedModelPart
 	private final String componentName;
 	private final EntityValuedModelPart delegate;
 	private final Set<String> targetKeyPropertyNames;
+	private final int fetchableIndex;
 
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
 			DomainType<?> domainType,
 			String componentName,
-			EntityValuedModelPart delegate) {
+			EntityValuedModelPart delegate,
+			int fetchableIndex) {
 		this.identifierMapping = identifierMapping;
 		this.domainType = domainType;
 		this.componentName = componentName;
@@ -103,6 +105,7 @@ public class AnonymousTupleEntityValuedModelPart
 				persister.getFactory()
 		);
 		this.targetKeyPropertyNames = targetKeyPropertyNames;
+		this.fetchableIndex = fetchableIndex;
 	}
 
 	public ModelPart getForeignKeyPart() {

@@ -6,19 +6,11 @@
  */
 package org.hibernate.query.results.complete;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.MutableObject;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -28,10 +20,10 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * @author Steve Ebersole
@@ -42,12 +34,13 @@ public class EntityResultImpl implements EntityResult {
 
 	private final Fetch identifierFetch;
 	private final BasicFetch<?> discriminatorFetch;
-	private final List<Fetch> fetches;
+	private final ImmutableFetchList fetches;
+	private final boolean hasJoinFetches;
+	private final boolean containsCollectionFetches;
 
 	private final String resultAlias;
 	private final LockMode lockMode;
 
-	@SuppressWarnings( { "PointlessNullCheck" } )
 	public EntityResultImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
@@ -78,49 +71,12 @@ public class EntityResultImpl implements EntityResult {
 				}
 		);
 
+		this.identifierFetch = creationState.visitIdentifierFetch( this );
 		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );
 
-		final List<Fetch> localFetches = creationState.visitFetches( this );
-
-		final EntityIdentifierMapping identifierMapping = entityValuedModelPart
-				.getEntityMappingType()
-				.getIdentifierMapping();
-		final String idAttributeName = identifierMapping instanceof SingleAttributeIdentifierMapping
-				? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
-				: null;
-
-		final MutableObject<Fetch> idFetchRef = new MutableObject<>();
-
-		for ( int i = 0; i < localFetches.size(); i++ ) {
-			final Fetch fetch = localFetches.get( i );
-			final String fetchLocalName = fetch.getNavigablePath().getLocalName();
-
-			if ( fetchLocalName.equals( EntityIdentifierMapping.ROLE_LOCAL_NAME )
-					|| ( idAttributeName != null && fetchLocalName.equals( idAttributeName ) ) ) {
-				// we found the id fetch
-				idFetchRef.set( fetch );
-				localFetches.remove( i );
-				break;
-			}
-		}
-		this.fetches = Collections.unmodifiableList( localFetches );
-
-		if ( idFetchRef.isNotSet() ) {
-			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
-					this,
-					new EntityIdentifierNavigablePath(
-							navigablePath,
-							ResultsHelper.attributeName( identifierMapping )
-					),
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					creationState
-			);
-		}
-		else {
-			this.identifierFetch = idFetchRef.get();
-		}
+		this.fetches = creationState.visitFetches( this );
+		this.hasJoinFetches = fetches.hasJoinFetches();
+		this.containsCollectionFetches = fetches.containsCollectionFetches();
 	}
 
 	@Override
@@ -144,20 +100,23 @@ public class EntityResultImpl implements EntityResult {
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
+	public ImmutableFetchList getFetches() {
 		return fetches;
 	}
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
-		final String name = fetchable.getFetchableName();
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			final Fetch fetch = fetches.get( i );
-			if ( fetch.getFetchedMapping().getFetchableName().equals( name ) ) {
-				return fetch;
-			}
-		}
-		return null;
+		return fetches.get( fetchable );
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		return hasJoinFetches;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		return containsCollectionFetches;
 	}
 
 	@Override

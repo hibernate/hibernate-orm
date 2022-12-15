@@ -191,9 +191,9 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 						assertThat( companyFetch, notNullValue() );
 
 						final EntityResult companyEntityResult = ( (EntityFetchJoinedImpl) companyFetch).getEntityResult();
-						assertThat( companyEntityResult.getFetches(), hasSize( 1 ) );
+						assertThat( companyEntityResult.getFetches().size(), is( 1 ) );
 
-						final Fetch shipAddressesFetch = companyEntityResult.getFetches().get( 0 );
+						final Fetch shipAddressesFetch = companyEntityResult.getFetches().iterator().next();
 						assertThat( shipAddressesFetch.getFetchedMapping().getPartName(), is( "shipAddresses" ) );
 						assertThat( shipAddressesFetch, instanceOf( DelayedCollectionFetch.class ) );
 					} );
@@ -345,9 +345,9 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
-		assertThat( entityResult.getFetches(), hasSize( 1 ) );
+		assertThat( entityResult.getFetches().size(), is( 1 ) );
 
-		final Fetch fetch = entityResult.getFetches().get( 0 );
+		final Fetch fetch = entityResult.getFetches().iterator().next();
 		assertThat( fetch, instanceOf( EntityFetch.class ) );
 
 		final EntityFetch entityFetch = (EntityFetch) fetch;

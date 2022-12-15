@@ -208,6 +208,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return getVersionAttribute().getFetchableKey();
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}

@@ -47,16 +47,19 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	private final String selectionExpression;
 	private final SqmExpressible<?> expressible;
 	private final JdbcMapping jdbcMapping;
+	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
 			String partName,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping jdbcMapping,
+			int fetchableIndex) {
 		this.partName = partName;
 		this.selectionExpression = selectionExpression;
 		this.expressible = expressible;
 		this.jdbcMapping = jdbcMapping;
+		this.fetchableIndex = fetchableIndex;
 	}
 
 	@Override
@@ -162,6 +165,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public String getFetchableName() {
 		return partName;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
 	}
 
 	@Override

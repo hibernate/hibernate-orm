@@ -261,6 +261,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -1797,10 +1798,10 @@ public abstract class AbstractEntityPersister
 		return expression;
 	}
 
-	private List<Fetch> fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
+	private ImmutableFetchList fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
-		final List<Fetch> fetches = new ArrayList<>( size );
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
 
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
@@ -1848,7 +1849,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		return fetches;
+		return fetches.build();
 	}
 
 	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
@@ -4652,6 +4653,7 @@ public abstract class AbstractEntityPersister
 
 		final NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
 		AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
+		int fetchableIndex = getFetchableIndexOffset();
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
 			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
@@ -4664,6 +4666,7 @@ public abstract class AbstractEntityPersister
 								runtimeAttrDefinition,
 								bootProperty,
 								stateArrayPosition++,
+								fetchableIndex++,
 								creationProcess
 						)
 				);
@@ -4701,6 +4704,7 @@ public abstract class AbstractEntityPersister
 					}
 					final ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
 					visitSubTypeAttributeMappings( attributeMapping -> builder.add( attributeMapping ) );
+					assert superMappingType != null || builder.assertFetchableIndexes();
 					staticFetchableList = builder.build();
 					return true;
 				}
@@ -4765,6 +4769,30 @@ public abstract class AbstractEntityPersister
 		else {
 			sqmMultiTableInsertStrategy = null;
 		}
+	}
+
+	private int getFetchableIndexOffset() {
+		if ( superMappingType != null ) {
+			final EntityMappingType rootEntityDescriptor = getRootEntityDescriptor();
+			int offset = rootEntityDescriptor.getNumberOfDeclaredAttributeMappings();
+			for ( EntityMappingType subMappingType : rootEntityDescriptor.getSubMappingTypes() ) {
+				if ( subMappingType == this ) {
+					break;
+				}
+				// Determining the number of attribute mappings unfortunately has to be done this way,
+				// because calling `subMappingType.getNumberOfDeclaredAttributeMappings()` at this point
+				// may produce wrong results because subMappingType might not have completed prepareMappingModel yet
+				final int propertySpan = subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
+				final int superPropertySpan = subMappingType.getSuperMappingType()
+						.getEntityPersister()
+						.getEntityMetamodel()
+						.getPropertySpan();
+				final int numberOfDeclaredAttributeMappings = propertySpan - superPropertySpan;
+				offset += numberOfDeclaredAttributeMappings;
+			}
+			return offset;
+		}
+		return 0;
 	}
 
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -5206,6 +5234,7 @@ public abstract class AbstractEntityPersister
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,
+			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -5229,6 +5258,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
 					stateArrayPosition,
+					fetchableIndex,
 					bootProperty,
 					this,
 					(BasicType<?>) attrType,
@@ -5318,6 +5348,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
 					stateArrayPosition,
+					fetchableIndex,
 					bootProperty,
 					this,
 					(BasicType<?>) attrType,
@@ -5362,6 +5393,7 @@ public abstract class AbstractEntityPersister
 					baseAssociationJtd,
 					this,
 					stateArrayPosition,
+					fetchableIndex,
 					attributeMetadataAccess,
 					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
@@ -5375,6 +5407,7 @@ public abstract class AbstractEntityPersister
 			return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 					attrName,
 					stateArrayPosition,
+					fetchableIndex,
 					bootProperty,
 					this,
 					(CompositeType) attrType,
@@ -5389,6 +5422,7 @@ public abstract class AbstractEntityPersister
 			return MappingModelCreationHelper.buildPluralAttributeMapping(
 					attrName,
 					stateArrayPosition,
+					fetchableIndex,
 					bootProperty,
 					this,
 					propertyAccess,
@@ -5402,6 +5436,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					getNavigableRole().append( attrName ),
 					stateArrayPosition,
+					fetchableIndex,
 					bootProperty,
 					this,
 					this,
@@ -5657,6 +5692,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int getNumberOfFetchables() {
 		return getStaticFetchableList().size();
+	}
+
+	@Override
+	public int getNumberOfFetchableKeys() {
+		return superMappingType == null ? getNumberOfFetchables() : getRootEntityDescriptor().getNumberOfFetchables();
 	}
 
 	@Override

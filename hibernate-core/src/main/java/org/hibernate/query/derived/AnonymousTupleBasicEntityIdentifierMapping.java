@@ -29,7 +29,7 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			BasicEntityIdentifierMapping delegate) {
-		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping );
+		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
 		this.delegate = delegate;
 	}
 

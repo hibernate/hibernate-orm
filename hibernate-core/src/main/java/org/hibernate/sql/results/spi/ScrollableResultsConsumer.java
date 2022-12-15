@@ -12,8 +12,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -74,15 +72,9 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 
 	private boolean containsCollectionFetches(JdbcValuesMapping valuesMapping) {
 		final List<DomainResult<?>> domainResults = valuesMapping.getDomainResults();
-		for ( DomainResult domainResult : domainResults ) {
-			if ( domainResult instanceof EntityResult ) {
-				EntityResult entityResult = (EntityResult) domainResult;
-				final List<Fetch> fetches = entityResult.getFetches();
-				for ( Fetch fetch : fetches ) {
-					if ( fetch instanceof EagerCollectionFetch ) {
-						return true;
-					}
-				}
+		for ( DomainResult<?> domainResult : domainResults ) {
+			if ( domainResult instanceof EntityResult && ( (EntityResult) domainResult ).containsCollectionFetches() ) {
+				return true;
 			}
 		}
 		return false;

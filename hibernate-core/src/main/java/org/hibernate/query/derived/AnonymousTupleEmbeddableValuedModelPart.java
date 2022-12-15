@@ -73,16 +73,19 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	private final DomainType<?> domainType;
 	private final String componentName;
 	private final EmbeddableValuedModelPart existingModelPartContainer;
+	private final int fetchableIndex;
 
 	public AnonymousTupleEmbeddableValuedModelPart(
 			Map<String, ModelPart> modelParts,
 			DomainType<?> domainType,
 			String componentName,
-			EmbeddableValuedModelPart existingModelPartContainer) {
+			EmbeddableValuedModelPart existingModelPartContainer,
+			int fetchableIndex) {
 		this.modelParts = modelParts;
 		this.domainType = domainType;
 		this.componentName = componentName;
 		this.existingModelPartContainer = existingModelPartContainer;
+		this.fetchableIndex = fetchableIndex;
 	}
 
 	@Override
@@ -319,6 +322,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public String getFetchableName() {
 		return getPartName();
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
 	}
 
 	@Override

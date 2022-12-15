@@ -100,6 +100,11 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
+	default int getNumberOfFetchableKeys() {
+		return getNumberOfKeyFetchables() + getNumberOfFetchables();
+	}
+
+	@Override
 	default void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( 0, getElementDescriptor() );
 	}

@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -134,6 +135,31 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		// Custom implementation because CockroachDB uses backslash as default escape character
+		likePredicate.getMatchExpression().accept( this );
+		if ( likePredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		if ( likePredicate.isCaseSensitive() ) {
+			appendSql( " like " );
+		}
+		else {
+			appendSql( WHITESPACE );
+			appendSql( getDialect().getCaseInsensitiveLike() );
+			appendSql( WHITESPACE );
+		}
+		likePredicate.getPattern().accept( this );
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
+		}
+		else {
+			appendSql( " escape ''" );
 		}
 	}
 

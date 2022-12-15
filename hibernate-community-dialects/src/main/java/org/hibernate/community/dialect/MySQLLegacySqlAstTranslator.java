@@ -143,12 +143,50 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		super.visitLikePredicate( likePredicate );
 		// Custom implementation because MySQL uses backslash as the default escape character
-		// We can override this by specifying an empty escape character
-		// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
-		if ( !( (MySQLLegacyDialect) getDialect() ).isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
-			appendSql( " escape ''" );
+		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
+			// From version 8 we can override this by specifying an empty escape character
+			// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
+			super.visitLikePredicate( likePredicate );
+			if ( !getDialect().isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
+				appendSql( " escape ''" );
+			}
+		}
+		else {
+			if ( likePredicate.isCaseSensitive() ) {
+				likePredicate.getMatchExpression().accept( this );
+				if ( likePredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " like " );
+				renderBackslashEscapedLikePattern(
+						likePredicate.getPattern(),
+						likePredicate.getEscapeCharacter(),
+						getDialect().isNoBackslashEscapesEnabled()
+				);
+			}
+			else {
+				appendSql( getDialect().getLowercaseFunction() );
+				appendSql( OPEN_PARENTHESIS );
+				likePredicate.getMatchExpression().accept( this );
+				appendSql( CLOSE_PARENTHESIS );
+				if ( likePredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " like " );
+				appendSql( getDialect().getLowercaseFunction() );
+				appendSql( OPEN_PARENTHESIS );
+				renderBackslashEscapedLikePattern(
+						likePredicate.getPattern(),
+						likePredicate.getEscapeCharacter(),
+						getDialect().isNoBackslashEscapesEnabled()
+				);
+				appendSql( CLOSE_PARENTHESIS );
+			}
+			if ( likePredicate.getEscapeCharacter() != null ) {
+				appendSql( " escape " );
+				likePredicate.getEscapeCharacter().accept( this );
+			}
 		}
 	}
 
@@ -196,5 +234,10 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected String getFromDual() {
 		return " from dual";
+	}
+
+	@Override
+	public MySQLDialect getDialect() {
+		return (MySQLDialect) super.getDialect();
 	}
 }

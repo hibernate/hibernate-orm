@@ -193,7 +193,7 @@ dependencyResolutionManagement {
             alias( "cockroachdb" ).to( "org.postgresql", "postgresql" ).version( "42.2.8" )
             alias( "mysql" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
             alias( "tidb" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
-            alias( "mariadb" ).to( "org.mariadb.jdbc", "mariadb-java-client" ).version( "2.2.3" )
+            alias( "mariadb" ).to( "org.mariadb.jdbc", "mariadb-java-client" ).version( "2.7.7" )
             alias( "oracle" ).to( "com.oracle.database.jdbc", "ojdbc8" ).versionRef( "oracle" )
             alias( "oracleXml" ).to( "com.oracle.database.xml", "xdb" ).versionRef( "oracle" )
             alias( "oracleXmlParser" ).to( "com.oracle.database.xml", "xmlparserv2" ).versionRef( "oracle" )

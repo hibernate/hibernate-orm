@@ -21,21 +21,14 @@ import jakarta.persistence.ParameterMode;
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
-import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
-import org.hibernate.sql.exec.internal.CallbackImpl;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -182,40 +175,7 @@ public class OutputsImpl implements Outputs {
 				}
 		);
 
-		final ExecutionContext executionContext = new ExecutionContext() {
-			private final Callback callback = new CallbackImpl();
-
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return OutputsImpl.this.context.getSession();
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return new QueryOptionsAdapter() {
-					@Override
-					public Boolean isReadOnly() {
-						return false;
-					}
-				};
-			}
-
-			@Override
-			public String getQueryIdentifier(String sql) {
-				return sql;
-			}
-
-			@Override
-			public QueryParameterBindings getQueryParameterBindings() {
-				return QueryParameterBindings.NO_PARAM_BINDINGS;
-			}
-
-			@Override
-			public Callback getCallback() {
-				return callback;
-			}
-
-		};
+		final ExecutionContext executionContext = new OutputsExecutionContext( context.getSession() );
 
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
 				resultSetAccess,

@@ -23,10 +23,10 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -148,43 +148,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final List<T> list = session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public Object getEntityInstance() {
-						return entityInstance;
-					}
-
-					@Override
-					public Object getEntityId() {
-						return restrictedValue;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return queryOptions;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return callback;
-					}
-
-				},
+				new SingleIdExecutionContext( session, entityInstance, restrictedValue, queryOptions, callback ),
 				getRowTransformer(),
 				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -198,5 +162,46 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			callback.invokeAfterLoadActions( session, entity, persister );
 		}
 		return entity;
+	}
+
+	private static class SingleIdExecutionContext extends BaseExecutionContext {
+		private final Object entityInstance;
+		private final Object restrictedValue;
+		private final QueryOptions queryOptions;
+		private final Callback callback;
+
+		public SingleIdExecutionContext(
+				SharedSessionContractImplementor session,
+				Object entityInstance,
+				Object restrictedValue,
+				QueryOptions queryOptions,
+				Callback callback) {
+			super( session );
+			this.entityInstance = entityInstance;
+			this.restrictedValue = restrictedValue;
+			this.queryOptions = queryOptions;
+			this.callback = callback;
+		}
+
+		@Override
+		public Object getEntityInstance() {
+			return entityInstance;
+		}
+
+		@Override
+		public Object getEntityId() {
+			return restrictedValue;
+		}
+
+		@Override
+		public QueryOptions getQueryOptions() {
+			return queryOptions;
+		}
+
+		@Override
+		public Callback getCallback() {
+			return callback;
+		}
+
 	}
 }

@@ -55,8 +55,6 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -65,13 +63,12 @@ import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
+import org.hibernate.result.internal.OutputsExecutionContext;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
@@ -683,40 +680,7 @@ public class ProcedureCallImpl<R>
 				}
 			}
 
-			final ExecutionContext executionContext = new ExecutionContext() {
-				private final Callback callback = new CallbackImpl();
-
-				@Override
-				public SharedSessionContractImplementor getSession() {
-					return ProcedureCallImpl.this.getSession();
-				}
-
-				@Override
-				public QueryOptions getQueryOptions() {
-					return new QueryOptionsAdapter() {
-						@Override
-						public Boolean isReadOnly() {
-							return false;
-						}
-					};
-				}
-
-				@Override
-				public String getQueryIdentifier(String sql) {
-					return sql;
-				}
-
-				@Override
-				public QueryParameterBindings getQueryParameterBindings() {
-					return QueryParameterBindings.NO_PARAM_BINDINGS;
-				}
-
-				@Override
-				public Callback getCallback() {
-					return callback;
-				}
-
-			};
+			final ExecutionContext executionContext = new OutputsExecutionContext( getSession() );
 
 			// Note that this should actually happen in an executor
 
@@ -1251,4 +1215,5 @@ public class ProcedureCallImpl<R>
 	public ResultSetMapping getResultSetMapping() {
 		return resultSetMapping;
 	}
+
 }

@@ -30,9 +30,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 public interface JdbcValuesSourceProcessingState {
 	ExecutionContext getExecutionContext();
 
-	default SharedSessionContractImplementor getSession() {
-		return getExecutionContext().getSession();
-	}
+	SharedSessionContractImplementor getSession();
 
 	default QueryOptions getQueryOptions() {
 		return getExecutionContext().getQueryOptions();

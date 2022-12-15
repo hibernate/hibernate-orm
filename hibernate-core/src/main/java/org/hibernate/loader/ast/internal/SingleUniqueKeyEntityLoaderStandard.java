@@ -23,16 +23,14 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -102,39 +100,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					private final Callback callback = new CallbackImpl();
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return new QueryOptionsAdapter() {
-							@Override
-							public Boolean isReadOnly() {
-								return readOnly;
-							}
-						};
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return callback;
-					}
-
-				},
+				new SingleUKEntityLoaderExecutionContext( session, readOnly ),
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -191,33 +157,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
-					}
-
-				},
+				new NoCallbackExecutionContext( session ),
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -226,4 +166,28 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 		return list.get( 0 );
 	}
+
+	private static class SingleUKEntityLoaderExecutionContext extends BaseExecutionContext {
+		private final Callback callback;
+		private final QueryOptions queryOptions;
+
+		public SingleUKEntityLoaderExecutionContext(SharedSessionContractImplementor session, Boolean readOnly) {
+			super( session );
+			//Careful, readOnly is possibly null
+			this.queryOptions = readOnly == null ? QueryOptions.NONE : readOnly ? QueryOptions.READ_ONLY : QueryOptions.READ_WRITE;
+			callback = new CallbackImpl();
+		}
+
+		@Override
+		public QueryOptions getQueryOptions() {
+			return queryOptions;
+		}
+
+		@Override
+		public Callback getCallback() {
+			return callback;
+		}
+
+	}
+
 }

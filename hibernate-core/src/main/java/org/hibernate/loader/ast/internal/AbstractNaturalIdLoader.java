@@ -44,10 +44,10 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -203,35 +203,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final List<L> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContext() {
-					private final Callback callback = new CallbackImpl();
-
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return queryOptions;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return callback;
-					}
-
-				},
+				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
 				row -> (L) row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -362,33 +334,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final List<Object> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
-					}
-
-				},
+				new NoCallbackExecutionContext( session ),
 				(row) -> {
 					// because we select the natural-id we want to "reduce" the result
 					assert row.length == 1;
@@ -434,5 +380,27 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			fetches.add( fetch );
 		}
 		return fetches.build();
+	}
+
+	private static class NaturalIdLoaderWithOptionsExecutionContext extends BaseExecutionContext {
+		private final Callback callback;
+		private final QueryOptions queryOptions;
+
+		public NaturalIdLoaderWithOptionsExecutionContext(SharedSessionContractImplementor session, QueryOptions queryOptions) {
+			super( session );
+			this.queryOptions = queryOptions;
+			callback = new CallbackImpl();
+		}
+
+		@Override
+		public QueryOptions getQueryOptions() {
+			return queryOptions;
+		}
+
+		@Override
+		public Callback getCallback() {
+			return callback;
+		}
+
 	}
 }

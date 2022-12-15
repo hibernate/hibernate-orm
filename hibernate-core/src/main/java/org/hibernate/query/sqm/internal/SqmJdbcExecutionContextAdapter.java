@@ -6,12 +6,11 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
@@ -19,7 +18,7 @@ import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOption
 /**
  * ExecutionContext adapter delegating to a DomainQueryExecutionContext
  */
-public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
+public class SqmJdbcExecutionContextAdapter extends BaseExecutionContext {
 	/**
 	 * Creates an adapter which drops any locking or paging details from the query options
 	 */
@@ -42,16 +41,13 @@ public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
 	}
 
 	private SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, QueryOptions queryOptions) {
+		super( sqmExecutionContext.getSession() );
 		this.sqmExecutionContext = sqmExecutionContext;
 		this.queryOptions = queryOptions;
 	}
 
 	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, JdbcOperationQuerySelect jdbcSelect) {
 		this( sqmExecutionContext, omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), jdbcSelect ) );
-	}
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return sqmExecutionContext.getSession();
 	}
 
 	@Override
@@ -74,8 +70,4 @@ public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
 		return true;
 	}
 
-	@Override
-	public String getQueryIdentifier(String sql) {
-		return sql;
-	}
 }

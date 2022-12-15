@@ -166,25 +166,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			DomainQueryExecutionContext executionContext,
 			JdbcOperationQuerySelect jdbcSelect,
 			SubselectFetch.RegistrationHandler subSelectFetchKeyHandler) {
-		return new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ) {
-			@Override
-			public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-				subSelectFetchKeyHandler.addKey( entityKey, entry );
-			}
-
-			@Override
-			public String getQueryIdentifier(String sql) {
-				if ( CRITERIA_HQL_STRING.equals( hql ) ) {
-					return "[CRITERIA] " + sql;
-				}
-				return hql;
-			}
-
-			@Override
-			public boolean hasQueryExecutionToBeAddedToStatistics() {
-				return true;
-			}
-		};
+		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
 	private static boolean containsCollectionFetches(QueryOptions queryOptions) {
@@ -482,5 +464,34 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		void setFirstParameterBindings(JdbcParameterBindings firstParameterBindings) {
 			this.firstParameterBindings = firstParameterBindings;
 		}
+	}
+
+	private static class MySqmJdbcExecutionContextAdapter extends SqmJdbcExecutionContextAdapter {
+		private final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler;
+		private final String hql;
+
+		public MySqmJdbcExecutionContextAdapter(
+				DomainQueryExecutionContext executionContext,
+				JdbcOperationQuerySelect jdbcSelect,
+				SubselectFetch.RegistrationHandler subSelectFetchKeyHandler,
+				String hql) {
+			super( executionContext, jdbcSelect );
+			this.subSelectFetchKeyHandler = subSelectFetchKeyHandler;
+			this.hql = hql;
+		}
+
+		@Override
+		public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+			subSelectFetchKeyHandler.addKey( entityKey, entry );
+		}
+
+		@Override
+		public String getQueryIdentifier(String sql) {
+			if ( CRITERIA_HQL_STRING.equals( hql ) ) {
+				return "[CRITERIA] " + sql;
+			}
+			return hql;
+		}
+
 	}
 }

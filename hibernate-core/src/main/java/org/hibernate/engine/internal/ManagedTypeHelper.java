@@ -272,6 +272,14 @@ public final class ManagedTypeHelper {
 		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to PersistentAttributeInterceptable" );
 	}
 
+	public static PersistentAttributeInterceptable asPersistentAttributeInterceptableOrNull(final Object entity) {
+		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
+			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+			return t.asPersistentAttributeInterceptable();
+		}
+		return null;
+	}
+
 	/**
 	 * Cast the object to HibernateProxy
 	 * (using this is highly preferrable over a direct cast)

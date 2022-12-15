@@ -35,7 +35,6 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -44,7 +43,6 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -71,7 +69,6 @@ import org.jboss.logging.Logger;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
@@ -233,8 +230,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 
-		entityEntryContext.processEachEntity( StatefulPersistenceContext::processEntityOnClear );
-
 		final SharedSessionContractImplementor session = getSession();
 		if ( collectionEntries != null ) {
 			IdentityMap.onEachKey( collectionEntries, k -> k.unsetSession( session ) );
@@ -261,18 +256,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			loadContexts.cleanup();
 		}
 		naturalIdResolutions = null;
-	}
-
-	private static void processEntityOnClear(final Object entity) {
-		//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
-		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, StatefulPersistenceContext::unsetSession, null );
-	}
-
-	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable, Object ignoredParam) {
-		final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-			( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
-		}
 	}
 
 	@Override

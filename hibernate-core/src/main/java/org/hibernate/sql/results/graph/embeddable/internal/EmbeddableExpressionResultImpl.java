@@ -6,23 +6,15 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -34,6 +26,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -53,7 +46,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
 
-		final List<Fetch> fetches = new ArrayList<>();
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( modelPart );
 		final EmbeddableMappingType mappingType = modelPart.getEmbeddableTypeDescriptor();
 		final int numberOfAttributeMappings = mappingType.getNumberOfAttributeMappings();
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -81,13 +74,13 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 			);
 		}
 
-		this.containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
-		resetFetches( fetches );
+		resetFetches( fetches.build() );
+		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
-	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			if ( fetches.get( i ).containsAnyNonScalarResults() ) {
+	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+		for ( Fetch fetch : fetches ) {
+			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;
 			}
 		}

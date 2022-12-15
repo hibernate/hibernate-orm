@@ -45,6 +45,11 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	 */
 	IdentifierValueMapper getIdentifierValueMapper();
 
+	@Override
+	default int getFetchableKey() {
+		return -1;
+	}
+
 	/**
 	 * Think of an AttributeConverter for id values to account for representation
 	 * difference between virtual and id-class mappings

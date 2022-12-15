@@ -30,8 +30,9 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			int stateArrayPosition,
+			int fetchableIndex,
 			ManagedMappingType declaringType) {
-		super( name, declaringType );
+		super( name, fetchableIndex, declaringType );
 		this.attributeMetadata = attributeMetadata;
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
@@ -43,6 +44,7 @@ public abstract class AbstractStateArrayContributorMapping
 			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
+			int fetchableIndex,
 			ManagedMappingType declaringType) {
 		this(
 				name,
@@ -50,6 +52,7 @@ public abstract class AbstractStateArrayContributorMapping
 				mappedFetchOptions.getTiming(),
 				mappedFetchOptions.getStyle(),
 				stateArrayPosition,
+				fetchableIndex,
 				declaringType
 		);
 	}

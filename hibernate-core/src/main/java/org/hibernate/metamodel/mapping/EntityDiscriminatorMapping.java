@@ -42,6 +42,11 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 		return getPartName();
 	}
 
+	@Override
+	default int getFetchableKey() {
+		return -2;
+	}
+
 	DiscriminatorType getDiscriminatorType();
 
 	String getConcreteEntityNameForDiscriminatorValue(Object value);

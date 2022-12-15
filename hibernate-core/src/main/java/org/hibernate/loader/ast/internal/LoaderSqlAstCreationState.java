@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * Helper used when generating the database-snapshot select query
@@ -45,7 +46,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 public class LoaderSqlAstCreationState
 		implements SqlAstQueryPartProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
 	public interface FetchProcessor {
-		List<Fetch> visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
+		ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
 	}
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -119,15 +120,15 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
+	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
 		return fetchProcessor.visitFetches( fetchParent, this );
 	}
 
 	@Override
-	public List<Fetch> visitNestedFetches(FetchParent fetchParent) {
+	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
 		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
-		final List<Fetch> fetches = fetchProcessor.visitFetches( fetchParent, this );
+		final ImmutableFetchList fetches = fetchProcessor.visitFetches( fetchParent, this );
 		processingState.setNestingFetchParent( nestingFetchParent );
 		return fetches;
 	}

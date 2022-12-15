@@ -90,6 +90,13 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 			return new ImmutableAttributeMappingList( builderList );
 		}
 
+		public boolean assertFetchableIndexes() {
+			for ( int i = 0; i < builderList.size(); i++ ) {
+				final AttributeMapping attributeMapping = builderList.get( i );
+				assert i == attributeMapping.getFetchableKey();
+			}
+			return true;
+		}
 	}
 
 }

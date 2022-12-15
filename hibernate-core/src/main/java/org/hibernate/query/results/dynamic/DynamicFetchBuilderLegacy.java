@@ -199,13 +199,13 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			}
 		}
 		try {
-			final NavigablePath currentRelativePath = creationState.getCurrentRelativePath();
+			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
 			final String prefix;
 			if ( currentRelativePath == null ) {
 				prefix = "";
 			}
 			else {
-				prefix = currentRelativePath.getFullPath()
+				prefix = currentRelativePath.getKey()
 						.replace( ELEMENT_PREFIX, "" )
 						.replace( INDEX_PREFIX, "" ) + ".";
 			}

@@ -26,6 +26,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -127,13 +128,23 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
-		return Collections.emptyList();
+	public ImmutableFetchList getFetches() {
+		return ImmutableFetchList.EMPTY;
 	}
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
 		return null;
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		return false;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		return false;
 	}
 
 }

@@ -83,6 +83,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
@@ -648,12 +649,12 @@ public class LoaderSelectBuilder {
 		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
-	private List<Fetch> visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
+	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 		}
 
-		final List<Fetch> fetches = new ArrayList<>();
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
 				fetchParent,
 				creationState,
@@ -671,13 +672,13 @@ public class LoaderSelectBuilder {
 		for ( int i = 0; i < size; i++ ) {
 			processor.accept( referencedMappingContainer.getFetchable( i ), false );
 		}
-		return fetches;
+		return fetches.build();
 	}
 
 	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
 			FetchParent fetchParent,
 			LoaderSqlAstCreationState creationState,
-			List<Fetch> fetches) {
+			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
 			final NavigablePath fetchablePath;
 

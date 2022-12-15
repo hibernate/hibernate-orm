@@ -125,6 +125,7 @@ import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.InMemoryGenerator;
@@ -934,7 +935,7 @@ public abstract class AbstractCollectionPersister
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
 				LockOptions.NONE,
-				(fetchParent, creationState) -> new ArrayList<>(),
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				getFactory()
 		);

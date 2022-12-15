@@ -71,6 +71,7 @@ public class DiscriminatedAssociationAttributeMapping
 			JavaType<?> baseAssociationJtd,
 			ManagedMappingType declaringType,
 			int stateArrayPosition,
+			int fetchableIndex,
 			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			PropertyAccess propertyAccess,
@@ -81,6 +82,7 @@ public class DiscriminatedAssociationAttributeMapping
 		super(
 				bootProperty.getName(),
 				stateArrayPosition,
+				fetchableIndex,
 				attributeMetadata,
 				fetchTiming,
 				FetchStyle.SELECT,
@@ -188,8 +190,10 @@ public class DiscriminatedAssociationAttributeMapping
 	public Fetchable getFetchable(int position) {
 		switch ( position ) {
 			case 0:
+				assert getDiscriminatorPart().getFetchableKey() == 0;
 				return getDiscriminatorPart();
 			case 1:
+				assert getKeyPart().getFetchableKey() == 1;
 				return getKeyPart();
 		}
 		throw new IndexOutOfBoundsException(position);

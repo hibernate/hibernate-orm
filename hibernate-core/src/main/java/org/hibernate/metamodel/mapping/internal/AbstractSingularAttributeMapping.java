@@ -27,23 +27,25 @@ public abstract class AbstractSingularAttributeMapping
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
+			int fetchableIndex,
 			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, declaringType );
+		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
 	}
 
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
+			int fetchableIndex,
 			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, declaringType );
+		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
 	}
 

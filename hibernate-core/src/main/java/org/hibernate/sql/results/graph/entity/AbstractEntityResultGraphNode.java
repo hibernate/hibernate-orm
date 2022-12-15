@@ -53,37 +53,20 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		final NavigablePath navigablePath = getNavigablePath();
 		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
 				.getTableGroup( navigablePath );
-		final EntityIdentifierNavigablePath identifierNavigablePath = new EntityIdentifierNavigablePath( navigablePath, attributeName( identifierMapping ) );
 		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
 			identifierFetch = null;
-			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
+			visitIdentifierMapping(
+					new EntityIdentifierNavigablePath( navigablePath, attributeName( identifierMapping ) ),
+					creationState,
+					identifierMapping,
+					entityTableGroup
+			);
 		}
 		else {
-			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
-					fetchParent,
-					identifierNavigablePath,
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					creationState
-			);
+			identifierFetch = creationState.visitIdentifierFetch( this );
 		}
 
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		// No need to fetch the discriminator if this type does not have subclasses
-		if ( discriminatorMapping != null && entityDescriptor.hasSubclasses() ) {
-			discriminatorFetch = discriminatorMapping.generateFetch(
-					fetchParent,
-					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					creationState
-			);
-		}
-		else {
-			discriminatorFetch = null;
-		}
+		discriminatorFetch = creationState.visitDiscriminatorFetch( this );
 
 		final EntityRowIdMapping rowIdMapping = entityDescriptor.getRowIdMapping();
 		if ( rowIdMapping == null ) {

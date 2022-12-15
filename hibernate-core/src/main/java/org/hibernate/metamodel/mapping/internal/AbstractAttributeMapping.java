@@ -17,11 +17,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public abstract class AbstractAttributeMapping implements AttributeMapping {
 	private final String name;
+	private final int fetchableIndex;
 
 	private final ManagedMappingType declaringType;
 
-	public AbstractAttributeMapping(String name, ManagedMappingType declaringType) {
+	public AbstractAttributeMapping(String name, int fetchableIndex, ManagedMappingType declaringType) {
 		this.name = name;
+		this.fetchableIndex = fetchableIndex;
 		this.declaringType = declaringType;
 	}
 
@@ -33,6 +35,11 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	@Override
 	public String getAttributeName() {
 		return name;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
 	}
 
 	@Override

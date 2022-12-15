@@ -119,6 +119,7 @@ public class PluralAttributeMappingImpl
 			AttributeMetadata attributeMetadata,
 			CollectionMappingType<?> collectionMappingType,
 			int stateArrayPosition,
+			int fetchableIndex,
 			CollectionPart elementDescriptor,
 			CollectionPart indexDescriptor,
 			CollectionIdentifierDescriptor identifierDescriptor,
@@ -127,7 +128,7 @@ public class PluralAttributeMappingImpl
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
-		super( attributeName, declaringType );
+		super( attributeName, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.attributeMetadata = attributeMetadata;
 		this.collectionMappingType = collectionMappingType;

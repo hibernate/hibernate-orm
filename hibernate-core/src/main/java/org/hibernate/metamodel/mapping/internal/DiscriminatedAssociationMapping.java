@@ -44,6 +44,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.AnyType;
@@ -413,7 +414,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		private Fetch discriminatorValueFetch;
 		private Fetch keyValueFetch;
-		private List<Fetch> fetches;
+		private ImmutableFetchList fetches;
 
 		public AnyValuedResultGraphNode(
 				NavigablePath navigablePath,
@@ -425,11 +426,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		protected void afterInitialize(DomainResultCreationState creationState) {
-			this.fetches = Collections.unmodifiableList( creationState.visitFetches( this ) );
+			this.fetches = creationState.visitFetches( this );
 			assert fetches.size() == 2;
 
-			discriminatorValueFetch = fetches.get( 0 );
-			keyValueFetch = fetches.get( 1 );
+			discriminatorValueFetch = fetches.get( graphedPart.getDiscriminatorPart() );
+			keyValueFetch = fetches.get( graphedPart.getKeyPart() );
 		}
 
 		public Fetch getDiscriminatorValueFetch() {
@@ -470,7 +471,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public List<Fetch> getFetches() {
+		public ImmutableFetchList getFetches() {
 			return fetches;
 		}
 
@@ -485,6 +486,16 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			}
 
 			throw new IllegalArgumentException( "Given Fetchable [" + fetchable + "] did not match either discriminator nor key mapping" );
+		}
+
+		@Override
+		public boolean hasJoinFetches() {
+			return false;
+		}
+
+		@Override
+		public boolean containsCollectionFetches() {
+			return false;
 		}
 	}
 

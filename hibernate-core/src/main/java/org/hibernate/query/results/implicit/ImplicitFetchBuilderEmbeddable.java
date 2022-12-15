@@ -51,13 +51,13 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
+		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final int size = fetchable.getNumberOfFetchables();
 		final Map<NavigablePath, FetchBuilder> fetchBuilders = CollectionHelper.linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable subFetchable = fetchable.getFetchable( i );
-			final NavigablePath subFetchPath = relativePath.append( subFetchable.getFetchableName() );
+			final NavigablePath subFetchPath = relativePath.getValue().append( subFetchable.getFetchableName() );
 			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchPath.getFullPath() );
 			if ( explicitFetchBuilder == null ) {
 				fetchBuilders.put(

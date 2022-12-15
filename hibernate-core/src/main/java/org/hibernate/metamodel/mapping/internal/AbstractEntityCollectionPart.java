@@ -115,6 +115,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
+	}
+
+	@Override
 	public EntityMappingType getAssociatedEntityMappingType() {
 		return associatedEntityTypeDescriptor;
 	}

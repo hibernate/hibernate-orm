@@ -38,7 +38,8 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 				modelParts,
 				domainType,
 				componentName,
-				delegate
+				delegate,
+				-1
 		);
 		this.delegate = delegate;
 	}

@@ -56,6 +56,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -413,12 +414,12 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return results.get( 0 );
 	}
 
-	private static List<Fetch> visitFetches(
+	private static ImmutableFetchList visitFetches(
 			FetchParent fetchParent,
 			LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
-		final List<Fetch> fetches = new ArrayList<>( size );
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
 			final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
@@ -432,6 +433,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			);
 			fetches.add( fetch );
 		}
-		return fetches;
+		return fetches.build();
 	}
 }

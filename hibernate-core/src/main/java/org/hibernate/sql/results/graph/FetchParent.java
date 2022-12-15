@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -17,6 +15,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * Contract for things that can be the parent of a fetch
@@ -84,9 +83,13 @@ public interface FetchParent extends DomainResultGraphNode {
 	/**
 	 * Retrieve the fetches owned by this fetch source.
 	 */
-	List<Fetch> getFetches();
+	ImmutableFetchList getFetches();
 
 	Fetch findFetch(Fetchable fetchable);
+
+	boolean hasJoinFetches();
+
+	boolean containsCollectionFetches();
 
 	default FetchParent getRoot() {
 		if ( this instanceof Fetch ) {

@@ -41,6 +41,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
@@ -76,7 +77,7 @@ class DatabaseSnapshotExecutor {
 				sqlAliasBaseManager,
 				new FromClauseIndex( null ),
 				LockOptions.NONE,
-				(fetchParent, creationState) -> Collections.emptyList(),
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				sessionFactory
 		);

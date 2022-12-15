@@ -300,6 +300,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						bootPropertyDescriptor.getName(),
 						navigableRole.append( bootPropertyDescriptor.getName() ),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
 						(BasicType<?>) subtype,
@@ -380,6 +381,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						declarer,
 						attributeIndex,
+						attributeIndex,
 						attributeMetadataAccess,
 						bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 						propertyAccess,
@@ -407,6 +409,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
 						subCompositeType,
@@ -426,6 +429,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,
 						propertyAccess,
@@ -441,6 +445,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						navigableRole.append( bootPropertyDescriptor.getName() ),
+						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,

@@ -9,6 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -279,13 +280,13 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		try {
-			final NavigablePath currentRelativePath = creationState.getCurrentRelativePath();
+			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
 			final String prefix;
 			if ( currentRelativePath == null ) {
 				prefix = "";
 			}
 			else {
-				prefix = currentRelativePath.getFullPath()
+				prefix = currentRelativePath.getKey()
 						.replace( ELEMENT_PREFIX, "" )
 						.replace( INDEX_PREFIX, "" ) + ".";
 			}

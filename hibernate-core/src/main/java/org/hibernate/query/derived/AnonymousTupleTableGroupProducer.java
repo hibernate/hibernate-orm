@@ -98,7 +98,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						partName,
 						partName,
 						tableGroup == null ? null : getModelPart( tableGroup ),
-						compatibleTableExpressions
+						compatibleTableExpressions,
+						modelParts.size()
 				);
 			}
 			else {
@@ -108,7 +109,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						selectableNode.getExpressible(),
 						sqlSelection.getExpressionType()
 								.getJdbcMappings()
-								.get( 0 )
+								.get( 0 ),
+						modelParts.size()
 				);
 			}
 			modelParts.put( partName, modelPart );
@@ -136,7 +138,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			String selectionExpression,
 			String partName,
 			ModelPart existingModelPart,
-			Set<String> compatibleTableExpressions) {
+			Set<String> compatibleTableExpressions,
+			int fetchableIndex) {
 		if ( domainType instanceof EntityDomainType<?> ) {
 			final EntityValuedModelPart existingModelPartContainer = (EntityValuedModelPart) existingModelPart;
 			final EntityIdentifierMapping identifierMapping = existingModelPartContainer.getEntityMappingType()
@@ -149,6 +152,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
 					final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 					final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
+					int index = 0;
 					for ( Attribute<?, ?> attribute : attributes ) {
 						if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
 							throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
@@ -162,7 +166,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 								selectionExpression + "_" + attributeName + "_" + attribute.getName(),
 								attribute.getName(),
 								modelPartContainer.findSubPart( attribute.getName(), null ),
-								compatibleTableExpressions
+								compatibleTableExpressions,
+								index++
 						);
 						modelParts.put( modelPart.getPartName(), modelPart );
 					}
@@ -190,6 +195,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
 				final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 				final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) identifierMapping;
+				int index = 0;
 				for ( Attribute<?, ?> attribute : attributes ) {
 					if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
 						throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
@@ -203,7 +209,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 							selectionExpression + "_" + attribute.getName(),
 							attribute.getName(),
 							modelPartContainer.findSubPart( attribute.getName(), null ),
-							compatibleTableExpressions
+							compatibleTableExpressions,
+							index++
 					);
 					modelParts.put( modelPart.getPartName(), modelPart );
 				}
@@ -222,7 +229,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					newIdentifierMapping,
 					domainType,
 					selectionExpression,
-					existingModelPartContainer
+					existingModelPartContainer,
+					fetchableIndex
 			);
 		}
 		else if ( domainType instanceof ManagedDomainType<?> ) {
@@ -230,6 +238,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) domainType ).getAttributes();
 			final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 			final EmbeddableValuedModelPart modelPartContainer = (EmbeddableValuedModelPart) existingModelPart;
+			int index = 0;
 			for ( Attribute<?, ?> attribute : attributes ) {
 				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
 					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
@@ -243,11 +252,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						selectionExpression + "_" + attribute.getName(),
 						attribute.getName(),
 						modelPartContainer.findSubPart( attribute.getName(), null ),
-						compatibleTableExpressions
+						compatibleTableExpressions,
+						index++
 				);
 				modelParts.put( modelPart.getPartName(), modelPart );
 			}
-			return new AnonymousTupleEmbeddableValuedModelPart( modelParts, domainType, selectionExpression, modelPartContainer );
+			return new AnonymousTupleEmbeddableValuedModelPart( modelParts, domainType, selectionExpression, modelPartContainer, fetchableIndex );
 		}
 		else {
 			return new AnonymousTupleBasicValuedModelPart(
@@ -257,7 +267,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					sqlSelections.get( selectionIndex )
 							.getExpressionType()
 							.getJdbcMappings()
-							.get( 0 )
+							.get( 0 ),
+					fetchableIndex
 			);
 		}
 	}

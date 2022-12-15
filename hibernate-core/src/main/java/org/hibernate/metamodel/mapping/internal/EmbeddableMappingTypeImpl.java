@@ -407,6 +407,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						this,
 						(BasicType<?>) subtype,
@@ -488,6 +489,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						this,
 						attributeIndex,
+						attributeIndex,
 						attributeMetadataAccess,
 						bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 						propertyAccess,
@@ -515,6 +517,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						this,
 						subCompositeType,
@@ -533,6 +536,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
@@ -547,6 +551,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,

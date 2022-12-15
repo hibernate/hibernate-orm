@@ -14,4 +14,8 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
  * @author Steve Ebersole
  */
 public interface BasicEntityIdentifierMapping extends SingleAttributeIdentifierMapping, BasicValuedModelPart {
+	@Override
+	default int getFetchableKey() {
+		return -1;
+	}
 }

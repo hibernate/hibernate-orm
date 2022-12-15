@@ -9,12 +9,22 @@ package org.hibernate.sql.results.graph;
 import java.util.List;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
+
+import static org.hibernate.query.results.ResultsHelper.attributeName;
 
 /**
  * Contains state related to building {@link DomainResult} and
@@ -77,6 +87,39 @@ public interface DomainResultCreationState {
 	 */
 	ModelPart resolveModelPart(NavigablePath navigablePath);
 
+	default Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
+		final EntityIdentifierMapping identifierMapping = fetchParent.getEntityValuedModelPart()
+				.getEntityMappingType()
+				.getIdentifierMapping();
+		return fetchParent.generateFetchableFetch(
+				(Fetchable) identifierMapping,
+				new EntityIdentifierNavigablePath( fetchParent.getNavigablePath(), attributeName( identifierMapping ) ),
+				FetchTiming.IMMEDIATE,
+				true,
+				null,
+				this
+		);
+	}
+
+	default BasicFetch<?> visitDiscriminatorFetch(EntityResultGraphNode fetchParent) {
+		final EntityMappingType entityDescriptor = fetchParent.getEntityValuedModelPart().getEntityMappingType();
+		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		// No need to fetch the discriminator if this type does not have subclasses
+		if ( discriminatorMapping != null && entityDescriptor.hasSubclasses() ) {
+			return discriminatorMapping.generateFetch(
+					fetchParent,
+					fetchParent.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					this
+			);
+		}
+		else {
+			return null;
+		}
+	}
+
 	/**
 	 * Visit fetches for the given parent.
 	 *
@@ -108,9 +151,9 @@ public interface DomainResultCreationState {
 	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
 	 * 		along FetchStyle?
  	 */
-	List<Fetch> visitFetches(FetchParent fetchParent);
+	ImmutableFetchList visitFetches(FetchParent fetchParent);
 
-	List<Fetch> visitNestedFetches(FetchParent fetchParent);
+	ImmutableFetchList visitNestedFetches(FetchParent fetchParent);
 
 	boolean isResolvingCircularFetch();
 

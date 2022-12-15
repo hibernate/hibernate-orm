@@ -48,25 +48,25 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
+		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
 		final NavigablePath associationKeyFetchPath;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
-			associationKeyFetchPath = relativePath.append( associationKeyPropertyName );
+			associationKeyFetchPath = relativePath.getValue().append( associationKeyPropertyName );
 		}
 		else {
 			associationKeyPropertyName = fetchable.getReferencedPropertyName();
-			NavigablePath path = relativePath;
+			NavigablePath path = relativePath.getValue();
 			for ( String part : associationKeyPropertyName.split( "\\." ) ) {
 				path = path.append( part );
 			}
 			associationKeyFetchPath = path;
 		}
 		final FetchBuilder explicitAssociationKeyFetchBuilder = fetchBuilderResolver
-				.apply( associationKeyFetchPath.getFullPath() );
+				.apply( relativePath.getKey() + "." + associationKeyPropertyName );
 		final Map<NavigablePath, FetchBuilder> fetchBuilders;
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			final MappingType partMappingType = foreignKeyDescriptor.getPartMappingType();

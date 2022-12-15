@@ -22,13 +22,6 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
  */
 public class PersistentTableInsertStrategy extends PersistentTableStrategy implements SqmMultiTableInsertStrategy {
 
-	public static final String SHORT_NAME = "persistent";
-
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.drop_tables";
-
-	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
-	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
-
 	public PersistentTableInsertStrategy(
 			TemporaryTable entityTable,
 			SessionFactoryImplementor sessionFactory) {

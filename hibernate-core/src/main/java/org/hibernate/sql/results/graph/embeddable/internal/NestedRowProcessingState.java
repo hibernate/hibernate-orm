@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -17,13 +17,14 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
-public class NestedRowProcessingState implements RowProcessingState {
+public class NestedRowProcessingState extends BaseExecutionContext implements RowProcessingState {
 	private final AggregateEmbeddableInitializer aggregateEmbeddableInitializer;
 	final RowProcessingState processingState;
 
 	public NestedRowProcessingState(
 			AggregateEmbeddableInitializer aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
+		super( processingState.getSession() );
 		this.aggregateEmbeddableInitializer = aggregateEmbeddableInitializer;
 		this.processingState = processingState;
 	}
@@ -76,11 +77,6 @@ public class NestedRowProcessingState implements RowProcessingState {
 	@Override
 	public Initializer resolveInitializer(NavigablePath path) {
 		return processingState.resolveInitializer( path );
-	}
-
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return processingState.getSession();
 	}
 
 	@Override

@@ -175,9 +175,25 @@ public interface QueryOptions {
 	default ListResultsConsumer.UniqueSemantic getUniqueSemantic(){
 		return null;
 	}
+
 	/**
-	 * Singleton access
+	 * Provide singleton access for frequently needed options:
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {
 	};
+
+	QueryOptions READ_WRITE = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.FALSE;
+		}
+	};
+
+	QueryOptions READ_ONLY = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.TRUE;
+		}
+	};
+
 }

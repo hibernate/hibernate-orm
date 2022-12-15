@@ -17,18 +17,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
-import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.InDatabaseGeneratedValueResolver;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -161,32 +159,7 @@ public class GeneratedValuesProcessor {
 	}
 
 	private static ExecutionContext createExecutionContext(SharedSessionContractImplementor session) {
-		return new ExecutionContext() {
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return session;
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return QueryOptions.NONE;
-			}
-
-			@Override
-			public String getQueryIdentifier(String sql) {
-				return sql;
-			}
-
-			@Override
-			public QueryParameterBindings getQueryParameterBindings() {
-				return QueryParameterBindings.NO_PARAM_BINDINGS;
-			}
-
-			@Override
-			public Callback getCallback() {
-				throw new UnsupportedMappingException("Follow-on locking not supported yet");
-			}
-		};
+		return new NoCallbackExecutionContext( session );
 	}
 
 	private static class GeneratedValueDescriptor {
@@ -198,4 +171,5 @@ public class GeneratedValuesProcessor {
 			this.attribute = attribute;
 		}
 	}
+
 }

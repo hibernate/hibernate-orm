@@ -565,11 +565,20 @@ therefore reusing its execution plan.
 `*hibernate.query.mutation_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
 Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/sqm/mutation/spi/SqmMultiTableMutationStrategy.html[`org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`] implementation for handling multi-table bulk HQL operations.
 
+`*hibernate.hql.bulk_id_strategy.global_temporary.create_tables*` (e.g. `true` (default value) or `false`)::
+For databases that don't support local tables, but just global ones, this configuration property allows you to control whether to CREATE the global tables used for multi-table bulk HQL operations at `SessionFactory` or the `EntityManagerFactory` startup.
+
 `*hibernate.hql.bulk_id_strategy.global_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
  For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
 
 `*hibernate.hql.bulk_id_strategy.local_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
-This configuration property allows you to DROP the local temporary tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed. This is useful when testing with a single connection pool against different schemas.
+This configuration property allows you to DROP the local temporary tables used for multi-table bulk HQL operations when the `SessionFactory` or `EntityManagerFactory` is closed. This is useful when testing with a single connection pool against different schemas.
+
+`*hibernate.hql.bulk_id_strategy.persistent.create_tables*` (e.g. `true` (default value) or `false`)::
+This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
+It follows a pattern similar to the ANSI SQL definition of the global temporary table using a "session id" column to segment rows from the various sessions.
++
+This configuration property allows you to control whether to CREATE the tables used for multi-table bulk HQL operations  at `SessionFactory` or `EntityManagerFactory` startup.
 
 `*hibernate.hql.bulk_id_strategy.persistent.drop_tables*` (e.g. `true` or `false` (default value))::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.

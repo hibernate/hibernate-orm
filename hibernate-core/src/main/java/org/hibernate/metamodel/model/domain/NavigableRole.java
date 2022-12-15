@@ -22,7 +22,7 @@ import org.hibernate.spi.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public class NavigableRole implements DotIdentifierSequence, Serializable {
+public final class NavigableRole implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 	private final NavigableRole parent;
@@ -111,19 +111,20 @@ public class NavigableRole implements DotIdentifierSequence, Serializable {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( o == null || NavigableRole.class != o.getClass() ) {
 			return false;
 		}
 		NavigableRole that = (NavigableRole) o;
-		return Objects.equals( getFullPath(), that.getFullPath() );
+		return fullPath.equals( that.fullPath );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( getFullPath() );
+		return this.fullPath.hashCode();
 	}
+
 }

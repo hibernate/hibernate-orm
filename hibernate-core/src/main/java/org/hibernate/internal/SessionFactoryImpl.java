@@ -25,14 +25,6 @@ import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import jakarta.persistence.Cache;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PersistenceUnitUtil;
-import jakarta.persistence.Query;
-import jakarta.persistence.SynchronizationType;
-
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -64,7 +56,6 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -78,6 +69,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -91,11 +83,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
@@ -103,6 +94,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -124,12 +116,17 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
 
 import static java.util.Collections.unmodifiableSet;
 
@@ -901,31 +898,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> T unwrap(Class<T> type) {
-		if ( type.isAssignableFrom( SessionFactory.class ) ) {
+		if ( type.isInstance( this ) ) {
 			return type.cast( this );
 		}
 
-		if ( type.isAssignableFrom( SessionFactoryImplementor.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( SessionFactoryImpl.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( EntityManagerFactory.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( SessionFactoryServiceRegistry.class ) ) {
+		if ( type.isInstance( serviceRegistry ) ) {
 			return type.cast( serviceRegistry );
 		}
 
-		if ( type.isAssignableFrom( JdbcServices.class ) ) {
+		if ( type.isInstance( jdbcServices ) ) {
 			return type.cast( jdbcServices );
 		}
 
-		if ( type.isAssignableFrom( Cache.class ) || type.isAssignableFrom( org.hibernate.Cache.class ) ) {
+		if ( type.isInstance( cacheAccess ) ) {
 			return type.cast( cacheAccess );
 		}
 
@@ -937,11 +922,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return type.cast( runtimeMetamodels.getJpaMetamodel() );
 		}
 
-		if ( type.isAssignableFrom( MetamodelImplementor.class ) || type.isAssignableFrom( MetadataImplementor.class ) ) {
+		if ( type.isInstance( runtimeMetamodels.getMappingMetamodel() ) ) {
 			return type.cast( runtimeMetamodels.getMappingMetamodel() );
 		}
 
-		if ( type.isAssignableFrom( QueryEngine.class ) ) {
+		if ( type.isInstance( queryEngine ) ) {
 			return type.cast( queryEngine );
 		}
 

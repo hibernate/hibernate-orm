@@ -6,6 +6,8 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
+
 /**
  * Extends the generic {@link EntityPersister} contract to add
  * operations required by the Hibernate Query Language
@@ -20,20 +22,30 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	/**
 	 * Is this an abstract class?
+	 *
+	 * @see EntityMappingType#isAbstract()
 	 */
 	boolean isAbstract();
 	/**
 	 * Is this class explicit polymorphism only?
+	 *
+	 * @see EntityMappingType#isExplicitPolymorphism()
 	 */
 	boolean isExplicitPolymorphism();
+
 	/**
 	 * Get the class that this class is mapped as a subclass of -
 	 * not necessarily the direct superclass
+	 *
+	 * @see EntityMappingType#getSuperMappingType()
 	 */
 	String getMappedSuperclass();
+
 	/**
 	 * Get the discriminator value for this particular concrete subclass,
 	 * as a string that may be embedded in a select statement
+	 *
+	 * @see EntityMappingType#getDiscriminatorSQLValue()
 	 */
 	String getDiscriminatorSQLValue();
 

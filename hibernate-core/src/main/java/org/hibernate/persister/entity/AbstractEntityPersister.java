@@ -161,6 +161,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -4992,15 +4993,22 @@ public abstract class AbstractEntityPersister
 			}
 			return new ExplicitColumnDiscriminatorMappingImpl (
 					this,
-					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
 					getTableName(),
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
 					isPhysicalDiscriminator(),
-					columnDefinition, length, precision, scale, modelCreationProcess
+					columnDefinition, length, precision, scale,
+					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
+					buildDiscriminatorValueMappings( bootEntityDescriptor, modelCreationProcess ),
+					modelCreationProcess
 			);
 		}
 	}
+
+	protected abstract Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess modelCreationProcess);
+
 
 	protected EntityVersionMapping generateVersionMapping(
 			Supplier<?> templateInstanceCreator,

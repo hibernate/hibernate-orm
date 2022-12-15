@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -39,8 +40,10 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -66,10 +69,11 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
@@ -701,6 +705,35 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected boolean hasMultipleTables() {
 		return getTableSpan() > 1;
+	}
+
+	@Override
+	protected Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess modelCreationProcess) {
+		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
+				.getSessionFactory()
+				.getMappingMetamodel();
+
+		//noinspection unchecked
+		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = (JdbcLiteralFormatter<Object>) discriminatorType.getJdbcLiteralFormatter();
+		final Dialect dialect = modelCreationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+
+		final Map<Object, DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
+
+		subclassesByDiscriminatorValue.forEach( (value, entityName) -> {
+			final String jdbcLiteral = value == NULL_DISCRIMINATOR || value == NOT_NULL_DISCRIMINATOR
+					? null
+					: jdbcLiteralFormatter.toJdbcLiteral( value, dialect, null );
+			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
+					value,
+					jdbcLiteral,
+					mappingModel.findEntityDescriptor( entityName )
+			);
+			valueMappings.put( value, valueMapping );
+		} );
+
+		return valueMappings;
 	}
 
 	@Override

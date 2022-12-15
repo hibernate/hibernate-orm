@@ -27,7 +27,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.NullnessHelper;
@@ -35,6 +34,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -53,7 +54,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -342,32 +342,26 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return entityDescriptor;
 		}
 
-		final Object discriminatorDomainValue = discriminatorAssembler.extractRawValue( rowProcessingState );
-		final String concreteEntityName = entityDescriptor.getDiscriminatorMapping()
-				.getConcreteEntityNameForDiscriminatorValue( discriminatorDomainValue );
+		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		assert discriminatorMapping != null;
 
-		if ( concreteEntityName == null ) {
+		final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
+
+		final DiscriminatorValueDetails discriminatorDetails = discriminatorMapping.resolveDiscriminatorValue( discriminator );
+		if ( discriminatorDetails == null ) {
 			return entityDescriptor;
 		}
 
-		final EntityPersister concreteType = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor( concreteEntityName );
-
-		if ( concreteType == null || !concreteType.isTypeOrSuperType( entityDescriptor ) ) {
+		if ( !discriminatorDetails.getIndicatedEntity().isTypeOrSuperType( entityDescriptor ) ) {
 			throw new WrongClassException(
-					concreteEntityName,
+					discriminatorDetails.getIndicatedEntity().getEntityName(),
 					null,
 					entityDescriptor.getEntityName(),
-					discriminatorDomainValue
+					discriminator
 			);
 		}
 
-		// verify that the `entityDescriptor` is either == concreteType or its super-type
-		assert concreteType.isTypeOrSuperType( entityDescriptor );
-
-		return concreteType;
+		return discriminatorDetails.getIndicatedEntity().getEntityPersister();
 	}
 
 	protected void resolveEntityKey(RowProcessingState rowProcessingState) {

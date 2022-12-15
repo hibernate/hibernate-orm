@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -64,6 +65,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
  * An {@link EntityPersister} implementing the
@@ -326,6 +328,29 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		return subclassByDiscriminatorValue.get( value );
+	}
+
+	@Override
+	protected Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> buildDiscriminatorValueMappings(PersistentClass bootEntityDescriptor, MappingModelCreationProcess modelCreationProcess) {
+		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
+				.getSessionFactory()
+				.getMappingMetamodel();
+
+		//noinspection unchecked
+		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = (JdbcLiteralFormatter<Object>) discriminatorType.getJdbcLiteralFormatter();
+		final Dialect dialect = modelCreationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+
+		final Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
+
+		subclassByDiscriminatorValue.forEach( (value, entityName) -> {
+			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
+					value,
+					jdbcLiteralFormatter.toJdbcLiteral( value, dialect, null ),
+					mappingModel.findEntityDescriptor( entityName )
+			);
+			valueMappings.put( value, valueMapping );
+		} );
+		return valueMappings;
 	}
 
 	@Override

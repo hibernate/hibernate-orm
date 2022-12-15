@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -70,6 +71,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import org.jboss.logging.Logger;
 
@@ -862,6 +864,32 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> buildDiscriminatorValueMappings(PersistentClass bootEntityDescriptor, MappingModelCreationProcess modelCreationProcess) {
+		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
+				.getSessionFactory()
+				.getMappingMetamodel();
+
+		//noinspection unchecked
+		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = (JdbcLiteralFormatter<Object>) discriminatorType.getJdbcLiteralFormatter();
+		final Dialect dialect = modelCreationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+
+		final Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
+
+		subclassesByDiscriminatorValue.forEach( (value, entityName) -> {
+			final String jdbcLiteral = value == NULL_DISCRIMINATOR || value == NOT_NULL_DISCRIMINATOR
+					? null
+					: jdbcLiteralFormatter.toJdbcLiteral( value, dialect, null );
+			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
+					value,
+					jdbcLiteral,
+					mappingModel.findEntityDescriptor( entityName )
+			);
+			valueMappings.put( value, valueMapping );
+		} );
+		return valueMappings;
+	}
+
+	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
@@ -1256,6 +1284,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					discriminatorValues,
 					subclassNameByTableName,
 					discriminatorMetadataType,
+					buildDiscriminatorValueMappings( bootEntityDescriptor, modelCreationProcess ),
 					modelCreationProcess
 			);
 		}

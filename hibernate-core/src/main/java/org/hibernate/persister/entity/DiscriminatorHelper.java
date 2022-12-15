@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,18 +15,18 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
  * Operations needed by persisters for working with discriminators.
  *
  * @author Gavin King
  */
-class DiscriminatorHelper {
+@Internal
+public class DiscriminatorHelper {
 
-	static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
-	static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
+	public static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
+	public static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
 
 	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
 		Type discriminatorType = persistentClass.getDiscriminator().getType();
@@ -51,8 +52,7 @@ class DiscriminatorHelper {
 			return discriminatorSqlLiteral(
 					getDiscriminatorType( persistentClass ),
 					persistentClass,
-					dialect,
-					factory.getWrapperOptions()
+					dialect
 			);
 		}
 	}
@@ -82,16 +82,20 @@ class DiscriminatorHelper {
 	private static <T> String discriminatorSqlLiteral(
 			BasicType<T> discriminatorType,
 			PersistentClass persistentClass,
-			Dialect dialect,
-			WrapperOptions wrapperOptions) {
-		final JavaType<T> javaType = discriminatorType.getJavaTypeDescriptor();
+			Dialect dialect) {
+		return jdbcLiteral(
+				discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() ),
+				discriminatorType.getJdbcLiteralFormatter(),
+				dialect
+		);
+	}
+
+	public static <T> String jdbcLiteral(
+			T value,
+			JdbcLiteralFormatter<T> formatter,
+			Dialect dialect) {
 		try {
-			return discriminatorType.getJdbcLiteralFormatter()
-					.toJdbcLiteral(
-							javaType.fromString( persistentClass.getDiscriminatorValue() ),
-							dialect,
-							wrapperOptions
-					);
+			return formatter.toJdbcLiteral( value, dialect, null );
 		}
 		catch (Exception e) {
 			throw new MappingException( "Could not format discriminator value to SQL string", e );

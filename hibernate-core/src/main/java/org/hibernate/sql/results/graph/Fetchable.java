@@ -12,6 +12,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -22,7 +23,10 @@ import org.hibernate.spi.NavigablePath;
 @Incubating
 public interface Fetchable extends ModelPart {
 	/**
-	 * The name of the fetchable
+	 * The name of the fetchable.  This is the part's "local name".
+	 *
+	 * @see #getNavigableRole()
+	 * @see NavigableRole#getLocalName()
 	 */
 	String getFetchableName();
 

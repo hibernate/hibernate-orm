@@ -34,7 +34,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -103,8 +102,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister
-		extends EntityMappingType, Loadable, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister extends EntityMappingType, RootTableGroupProducer, AttributeSource {
 
 	/**
 	 * Finish the initialization of this object.

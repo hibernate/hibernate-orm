@@ -65,6 +65,8 @@ public abstract class PersistentTableStrategy {
 			return;
 		}
 
+		prepared = true;
+
 		final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
 				.getBootstrapContext()
 				.getServiceRegistry().getService( ConfigurationService.class );
@@ -77,8 +79,6 @@ public abstract class PersistentTableStrategy {
 		if (!createIdTables ) {
 			return;
 		}
-
-		prepared = true;
 
 		log.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
 

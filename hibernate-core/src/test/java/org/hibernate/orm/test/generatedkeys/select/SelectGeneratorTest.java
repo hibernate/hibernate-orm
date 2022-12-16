@@ -6,19 +6,28 @@
  */
 package org.hibernate.orm.test.generatedkeys.select;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.EnumSet;
+
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Steve Ebersole
+ * @author Marco Belladelli
  */
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/generatedkeys/select/MyEntity.hbm.xml"
@@ -32,13 +41,31 @@ public class SelectGeneratorTest {
 		scope.inTransaction(
 				session -> {
 					MyEntity e = new MyEntity( "entity-1" );
-					session.save( e );
+					session.persist( e );
 
 					// this insert should happen immediately!
-					assertEquals( new Long(1), e.getId(), "id not generated through forced insertion" );
+					assertEquals( Long.valueOf( 1L ), e.getId(), "id not generated through forced insertion" );
 
-					session.delete( e );
+					session.remove( e );
 				}
 		);
+	}
+
+	@Test
+	@JiraKey("HHH-15900")
+	public void testGeneratedKeyNotIdentityColumn(SessionFactoryScope scope) throws IOException {
+		File output = File.createTempFile( "schema_export", ".sql" );
+		output.deleteOnExit();
+
+		final SchemaExport schemaExport = new SchemaExport();
+		schemaExport.setOutputFile( output.getAbsolutePath() );
+		schemaExport.execute(
+				EnumSet.of( TargetType.SCRIPT ),
+				SchemaExport.Action.CREATE,
+				scope.getMetadataImplementor()
+		);
+
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		assertFalse( fileContent.toLowerCase().contains( "identity" ), "Column was generated as identity" );
 	}
 }

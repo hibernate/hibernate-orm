@@ -61,7 +61,7 @@ public class UTCNormalizedZonedTest {
 		});
 	}
 
-	@Entity
+	@Entity(name = "Zoned")
 	public static class Zoned {
 		@Id
 		@GeneratedValue Long id;

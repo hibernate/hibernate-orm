@@ -111,6 +111,7 @@ public class SchemaUpdateTest {
 		metadataSources.addAnnotatedClass( InheritanceSecondChildEntity.class );
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		// Databases that use case-insensitive quoted identifiers need to be skipped.

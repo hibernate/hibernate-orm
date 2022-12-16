@@ -112,6 +112,7 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 			metadataSources.addAnnotatedClass( MyEntity.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -154,6 +155,7 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 			metadataSources.addAnnotatedClass( MyEntityUpdated.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

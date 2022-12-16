@@ -214,6 +214,11 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	public void orderColumns(boolean forceOrdering) {
+		delegate.orderColumns( false );
+	}
+
+	@Override
 	public void validate() throws MappingException {
 		delegate.validate();
 	}

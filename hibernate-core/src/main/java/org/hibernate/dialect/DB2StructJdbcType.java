@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -50,9 +51,9 @@ public class DB2StructJdbcType implements AggregateJdbcType {
 		this( null, null );
 	}
 
-	public DB2StructJdbcType(String structTypeName, EmbeddableMappingType embeddableMappingType) {
-		this.structTypeName = structTypeName;
+	public DB2StructJdbcType(EmbeddableMappingType embeddableMappingType, String structTypeName) {
 		this.embeddableMappingType = embeddableMappingType;
+		this.structTypeName = structTypeName;
 		// We cache the extractor for Object[] here
 		// since that is used in AggregateEmbeddableFetchImpl and AggregateEmbeddableResultImpl
 		this.objectArrayExtractor = createBasicExtractor( new UnknownBasicJavaType<>( Object[].class ) );
@@ -69,8 +70,11 @@ public class DB2StructJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
-		return new DB2StructJdbcType( sqlType, mappingType );
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new DB2StructJdbcType( mappingType, sqlType );
 	}
 
 	@Override

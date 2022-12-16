@@ -20,6 +20,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -27,6 +28,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.SqlTypes;
@@ -81,17 +83,19 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 				.toFormatter();
 	}
 
+	private final int[] orderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
 
 	private PostgreSQLStructJdbcType() {
 		// The default instance is for reading only and will return an Object[]
-		this( null, null );
+		this( null, null, null );
 	}
 
-	public PostgreSQLStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName) {
+	public PostgreSQLStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
 		super( typeName, SqlTypes.STRUCT );
 		this.embeddableMappingType = embeddableMappingType;
+		this.orderMapping = orderMapping;
 		// We cache the extractor for Object[] here
 		// since that is used in AggregateEmbeddableFetchImpl and AggregateEmbeddableResultImpl
 		this.objectArrayExtractor = super.getExtractor( new UnknownBasicJavaType<>( Object[].class ) );
@@ -103,8 +107,19 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
-		return new PostgreSQLStructJdbcType( mappingType, sqlType );
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new PostgreSQLStructJdbcType(
+				mappingType,
+				sqlType,
+				creationContext.getBootModel()
+						.getDatabase()
+						.getDefaultNamespace()
+						.locateUserDefinedType( Identifier.toIdentifier( sqlType ) )
+						.getOrderMapping()
+		);
 	}
 
 	@Override
@@ -267,7 +282,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 							continue;
 						}
 						assert repeatsChar( string, i, 1 << quoteLevel, '"' );
-						final JdbcMapping jdbcMapping = embeddableMappingType.getJdbcValueSelectable( column )
+						final JdbcMapping jdbcMapping = getJdbcValueSelectable( column )
 								.getJdbcMapping();
 						switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 							case SqlTypes.DATE:
@@ -381,7 +396,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 						i += expectedQuotes - 1;
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
-							final JdbcMapping jdbcMapping = embeddableMappingType.getJdbcValueSelectable( column )
+							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column )
 									.getJdbcMapping();
 							if ( jdbcMapping.getJdbcType() instanceof PostgreSQLStructJdbcType ) {
 								final PostgreSQLStructJdbcType structJdbcType;
@@ -438,7 +453,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 							values[column] = null;
 						}
 						else {
-							final JdbcMapping jdbcMapping = embeddableMappingType.getJdbcValueSelectable( column ).getJdbcMapping();
+							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 							if ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
 								values[column] = fromRawObject(
 										jdbcMapping,
@@ -467,7 +482,6 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 							}
 							else {
 								values[column] = fromString(
-										embeddableMappingType,
 										column,
 										string,
 										start,
@@ -484,6 +498,13 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		throw new IllegalArgumentException( "Struct not properly formed: " + string.substring( start ) );
 	}
 
+	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
+		if ( orderMapping != null ) {
+			jdbcValueSelectableIndex = orderMapping[jdbcValueSelectableIndex];
+		}
+		return embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex );
+	}
+
 	private static boolean repeatsChar(String string, int start, int times, char c) {
 		final int end = start + times;
 		if ( end < string.length() ) {
@@ -497,14 +518,13 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		return false;
 	}
 
-	private static Object fromString(
-			EmbeddableMappingType embeddableMappingType,
+	private Object fromString(
 			int selectableIndex,
 			String string,
 			int start,
 			int end) {
 		return fromString(
-				embeddableMappingType.getJdbcValueSelectable( selectableIndex ).getJdbcMapping(),
+				getJdbcValueSelectable( selectableIndex ).getJdbcMapping(),
 				string,
 				start,
 				end

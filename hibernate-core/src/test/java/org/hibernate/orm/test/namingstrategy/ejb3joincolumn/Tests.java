@@ -55,6 +55,7 @@ public class Tests {
 			metadataBuilder.applyPhysicalNamingStrategy( PhysicalNamingStrategyImpl.INSTANCE );
 
 			final Metadata metadata = metadataBuilder.build();
+			( (MetadataImplementor) metadata ).orderColumns( false );
 			( (MetadataImplementor) metadata ).validate();
 
 			final PersistentClass languageBinding = metadata.getEntityBinding( Language.class.getName() );

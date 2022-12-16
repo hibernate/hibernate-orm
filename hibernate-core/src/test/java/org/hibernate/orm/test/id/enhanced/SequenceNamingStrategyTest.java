@@ -150,6 +150,7 @@ public class SequenceNamingStrategyTest {
 			metadataSources.addAnnotatedClass( entityClass );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			consumer.accept( metadata );

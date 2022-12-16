@@ -44,6 +44,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 			sources.addAnnotatedClass( ManyToManyTarget.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) sources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaExport().execute(
@@ -84,6 +85,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 			sources.addAnnotatedClass( ManyToManyTarget.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) sources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			// export the schema

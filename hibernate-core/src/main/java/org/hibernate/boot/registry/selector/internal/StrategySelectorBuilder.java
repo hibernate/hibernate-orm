@@ -14,6 +14,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -114,6 +117,7 @@ public class StrategySelectorBuilder {
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
+		addColumnOrderingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
 		addJsonFormatMappers( strategySelector );
 		addXmlFormatMappers( strategySelector );
@@ -240,6 +244,19 @@ public class StrategySelectorBuilder {
 				ImplicitDatabaseObjectNamingStrategy.class,
 				LegacyNamingStrategy.STRATEGY_NAME,
 				LegacyNamingStrategy.class
+		);
+	}
+
+	private static void addColumnOrderingStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"default",
+				ColumnOrderingStrategyStandard.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"legacy",
+				ColumnOrderingStrategyLegacy.class
 		);
 	}
 

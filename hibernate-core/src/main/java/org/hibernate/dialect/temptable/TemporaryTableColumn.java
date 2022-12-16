@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.temptable;
 
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
@@ -19,6 +20,7 @@ public class TemporaryTableColumn {
 	private final String columnName;
 	private final JdbcMapping jdbcMapping;
 	private final String sqlTypeName;
+	private final Size size;
 	private final boolean nullable;
 	private final boolean primaryKey;
 
@@ -27,8 +29,9 @@ public class TemporaryTableColumn {
 			String columnName,
 			JdbcMapping jdbcMapping,
 			String sqlTypeName,
+			Size size,
 			boolean nullable) {
-		this( containingTable, columnName, jdbcMapping, sqlTypeName, nullable, false );
+		this( containingTable, columnName, jdbcMapping, sqlTypeName, size, nullable, false );
 	}
 
 	public TemporaryTableColumn(
@@ -36,12 +39,14 @@ public class TemporaryTableColumn {
 			String columnName,
 			JdbcMapping jdbcMapping,
 			String sqlTypeName,
+			Size size,
 			boolean nullable,
 			boolean primaryKey) {
 		this.containingTable = containingTable;
 		this.columnName = columnName;
 		this.jdbcMapping = jdbcMapping;
 		this.sqlTypeName = sqlTypeName;
+		this.size = size;
 		this.nullable = nullable;
 		this.primaryKey = primaryKey;
 	}
@@ -64,6 +69,10 @@ public class TemporaryTableColumn {
 
 	public String getSqlTypeDefinition() {
 		return sqlTypeName;
+	}
+
+	public Size getSize() {
+		return size;
 	}
 
 	public boolean isNullable() {

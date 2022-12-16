@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 /**
@@ -21,7 +22,10 @@ public class PostgreSQLJsonbJdbcType extends AbstractPostgreSQLJsonJdbcType {
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
 		return new PostgreSQLJsonbJdbcType( mappingType );
 	}
 }

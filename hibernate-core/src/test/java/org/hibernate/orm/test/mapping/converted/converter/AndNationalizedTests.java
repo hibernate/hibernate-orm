@@ -15,9 +15,9 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.PersistentClass;
@@ -42,7 +42,8 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TestEntity.class ).buildMetadata();
-			( (MetadataImpl) metadata ).validate();
+			( (MetadataImplementor) metadata ).orderColumns( false );
+			( (MetadataImplementor) metadata ).validate();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
 			final Dialect dialect = metadata.getDatabase().getDialect();

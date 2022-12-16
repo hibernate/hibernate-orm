@@ -15,11 +15,10 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
@@ -46,7 +45,8 @@ public class GeneratedValueTest {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 		try {
-			MetadataImpl metadata = (MetadataImpl) new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );

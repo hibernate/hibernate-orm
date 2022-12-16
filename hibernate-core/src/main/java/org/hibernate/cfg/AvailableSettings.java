@@ -852,6 +852,25 @@ public interface AvailableSettings {
 	String ID_DB_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
 
 	/**
+	 * Used to specify the {@link org.hibernate.boot.model.relational.ColumnOrderingStrategy}
+	 * class to use. The following shortcut names are defined for this setting:
+	 * <ul>
+	 *     <li>{@code "default"} is an abbreviations for
+	 *     {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard}
+	 *     <li>{@code "legacy"} is an abbreviation for
+	 *     {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy}
+	 * </ul>
+	 * By default, the {@linkplain org.hibernate.boot.model.relational.ColumnOrderingStrategy} registered under the key
+	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
+	 * {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard} is used.
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy
+	 *
+	 * @since 6.2
+	 */
+	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
+
+	/**
 	 * Specifies the order in which metadata sources should be processed, is a delimited list
 	 * of values defined by {@link MetadataSourceType}.
 	 * <p>

@@ -48,6 +48,7 @@ public class SequenceReadingTest extends BaseCoreFunctionalTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( MyEntity.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {

@@ -70,6 +70,7 @@ public class UniqueConstraintDropTest {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 

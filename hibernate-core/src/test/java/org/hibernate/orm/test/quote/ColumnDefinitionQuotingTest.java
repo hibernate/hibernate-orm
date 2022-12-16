@@ -46,6 +46,7 @@ public class ColumnDefinitionQuotingTest {
 						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 								.addAnnotatedClass( E1.class )
 								.buildMetadata();
+						metadata.orderColumns( false );
 						metadata.validate();
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
@@ -72,6 +73,7 @@ public class ColumnDefinitionQuotingTest {
 						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 								.addAnnotatedClass( E1.class )
 								.buildMetadata();
+						metadata.orderColumns( false );
 						metadata.validate();
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
@@ -108,6 +110,7 @@ public class ColumnDefinitionQuotingTest {
 						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 								.addAnnotatedClass( E2.class )
 								.buildMetadata();
+						metadata.orderColumns( false );
 						metadata.validate();
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
@@ -134,6 +137,7 @@ public class ColumnDefinitionQuotingTest {
 						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 								.addAnnotatedClass( E2.class )
 								.buildMetadata();
+						metadata.orderColumns( false );
 						metadata.validate();
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );

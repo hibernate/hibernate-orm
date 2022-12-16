@@ -104,6 +104,7 @@ public class SchemaMigrationToOutputScriptTest {
 				.addAnnotatedClass( MyEntity.class )
 				.addAnnotatedClass( MySecondEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

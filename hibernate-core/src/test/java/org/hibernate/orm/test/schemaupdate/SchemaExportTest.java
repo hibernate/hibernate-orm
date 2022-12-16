@@ -52,6 +52,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
         metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
                 .addResource( "org/hibernate/orm/test/schemaupdate/mapping.hbm.xml" )
                 .buildMetadata();
+		metadata.orderColumns( false );
         metadata.validate();
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
@@ -154,6 +155,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addResource( "org/hibernate/orm/test/schemaupdate/mapping2.hbm.xml" )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final SchemaExport schemaExport = new SchemaExport();

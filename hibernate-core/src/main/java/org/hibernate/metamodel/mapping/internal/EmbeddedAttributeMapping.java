@@ -292,10 +292,7 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		if ( embeddableMappingType.shouldSelectAggregateMapping()
-				// We always want to set the whole aggregate mapping in the SET clause if a single expression is given
-				// This usually happens when we try to set the aggregate to e.g. null or a parameter
-				|| clause == Clause.SET && embeddableMappingType.getAggregateMapping() != null ) {
+		if ( embeddableMappingType.getAggregateMapping() != null ) {
 			final SelectableMapping selection = embeddableMappingType.getAggregateMapping();
 			final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
 			final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );

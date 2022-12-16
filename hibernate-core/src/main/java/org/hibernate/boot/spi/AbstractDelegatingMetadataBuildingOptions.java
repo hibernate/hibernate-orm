@@ -13,6 +13,7 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
@@ -82,6 +83,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 		return delegate.getPhysicalNamingStrategy();
+	}
+
+	@Override
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return delegate.getColumnOrderingStrategy();
 	}
 
 	@Override

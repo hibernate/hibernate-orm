@@ -43,6 +43,7 @@ public class ForeignKeyNameTest extends BaseUnitTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/manytomany/UserGroup.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaExport()

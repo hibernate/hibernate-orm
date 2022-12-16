@@ -53,6 +53,7 @@ public class UniqueConstraintGenerationTest {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addResource( "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml" )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

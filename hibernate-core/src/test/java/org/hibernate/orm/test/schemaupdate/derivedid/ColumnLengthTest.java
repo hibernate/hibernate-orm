@@ -60,6 +60,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Employee.class )
 				.addAnnotatedClass( Dependent.class )
 				.buildMetadata();
+		metadata.orderColumns( true );
 		metadata.validate();
 	}
 
@@ -80,7 +81,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 
 		assertTrue( checkCommandIsGenerated(
 				commands,
-				"create table DEPENDENT (name varchar(255) not null, FK1 varchar(32) not null, FK2 varchar(10) not null, primary key (FK1, FK2, name));"
+				"create table DEPENDENT (FK2 varchar(10) not null, FK1 varchar(32) not null, name varchar(255) not null, primary key (FK1, FK2, name));"
 		) );
 
 	}

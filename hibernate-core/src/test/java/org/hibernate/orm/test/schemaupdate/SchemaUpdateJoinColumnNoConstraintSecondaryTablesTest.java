@@ -64,6 +64,7 @@ public class SchemaUpdateJoinColumnNoConstraintSecondaryTablesTest extends BaseU
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Parent.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

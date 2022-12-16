@@ -240,7 +240,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						aggregateColumn.getSqlTypeCode() == SqlTypes.STRUCT
 								? aggregateColumn.getSqlType()
 								: null,
-						this
+						this,
+						creationContext
 				)
 		);
 		// Register the resolved type under its struct name and java class name

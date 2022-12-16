@@ -14,6 +14,7 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
@@ -79,6 +80,8 @@ public interface MetadataBuildingOptions {
 	ImplicitNamingStrategy getImplicitNamingStrategy();
 
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
+
+	ColumnOrderingStrategy getColumnOrderingStrategy();
 
 	/**
 	 * Access to the SharedCacheMode for determining whether we should perform second level

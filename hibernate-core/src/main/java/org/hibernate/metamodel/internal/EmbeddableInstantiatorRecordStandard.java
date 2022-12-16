@@ -25,19 +25,7 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 		super( javaType );
 
 		final Class<?>[] componentTypes = ReflectHelper.getRecordComponentTypes( javaType );
-		this.constructor = resolveConstructor( javaType, componentTypes );
-	}
-
-	protected static Constructor<?> resolveConstructor(Class<?> recordClass, Class<?>[] componentTypes) {
-		try {
-			return recordClass.getConstructor( componentTypes );
-		}
-		catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(
-					"Could not determine the canonical record constructor for: " + recordClass.getName(),
-					e
-			);
-		}
+		this.constructor = ReflectHelper.getConstructor( javaType, componentTypes );
 	}
 
 	@Override

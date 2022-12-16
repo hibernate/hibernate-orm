@@ -686,6 +686,15 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return identifier == null ? null : identifier.render();
 	}
 
+	@Internal
+	public void reorderColumns(List<Column> columns) {
+		assert this.columns.size() == columns.size() && this.columns.values().containsAll( columns );
+		this.columns.clear();
+		for ( Column column : columns ) {
+			this.columns.put( column.getCanonicalName(), column );
+		}
+	}
+
 	public static class ForeignKeyKey implements Serializable {
 		private final String referencedClassName;
 		private final Column[] columns;

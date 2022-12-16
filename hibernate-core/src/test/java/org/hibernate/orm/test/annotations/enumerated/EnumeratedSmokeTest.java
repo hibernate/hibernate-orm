@@ -59,6 +59,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 		final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( EntityWithEnumeratedAttributes.class )
 				.buildMetadata();
+		mappings.orderColumns( false );
 		mappings.validate();
 
 		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeRegistry();

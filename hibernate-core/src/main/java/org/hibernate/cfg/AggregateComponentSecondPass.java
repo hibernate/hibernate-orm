@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -22,6 +23,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
@@ -88,16 +90,18 @@ public class AggregateComponentSecondPass implements SecondPass {
 				udt.setComment( comment.value() );
 			}
 			for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
-				// Clone the column, since the column name will be changed later on,
-				// but we don't want the DDL to be affected by that
 				udt.addColumn( aggregatedColumn );
 			}
 			final UserDefinedType registeredUdt = defaultNamespace.createUserDefinedType(
 					udtName,
 					name -> udt
 			);
-			addAuxiliaryObjects = registeredUdt == udt;
-			if ( registeredUdt != udt ) {
+			if ( registeredUdt == udt ) {
+				addAuxiliaryObjects = true;
+				orderColumns( registeredUdt );
+			}
+			else {
+				addAuxiliaryObjects = false;
 				validateEqual( registeredUdt, udt );
 			}
 		}
@@ -179,6 +183,67 @@ public class AggregateComponentSecondPass implements SecondPass {
 		}
 
 		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
+	}
+
+	private void orderColumns(UserDefinedType userDefinedType) {
+		final Class<?> componentClass = component.getComponentClass();
+		final int[] originalOrder = component.sortProperties();
+		final int[] propertyMappingIndex;
+		if ( ReflectHelper.isRecord( componentClass ) ) {
+			if ( originalOrder == null ) {
+				propertyMappingIndex = null;
+			}
+			else {
+				final String[] componentNames = ReflectHelper.getRecordComponentNames( componentClass );
+				propertyMappingIndex = determinePropertyMappingIndex( componentNames );
+			}
+		}
+		else {
+			// At some point we could do some byte code analysis to determine the order based on a constructor
+			return;
+		}
+		final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
+		final List<Property> properties = component.getProperties();
+		if ( propertyMappingIndex == null ) {
+			for ( Property property : properties ) {
+				addColumns( orderedColumns, property.getValue() );
+			}
+		}
+		else {
+			for ( int newIndex = 0; newIndex < propertyMappingIndex.length; newIndex++ ) {
+				final int propertyIndex = propertyMappingIndex[newIndex];
+				addColumns( orderedColumns, properties.get( propertyIndex ).getValue() );
+			}
+		}
+		userDefinedType.reorderColumns( orderedColumns );
+	}
+
+	private static void addColumns(ArrayList<Column> orderedColumns, Value value) {
+		if ( value instanceof Component ) {
+			final Component subComponent = (Component) value;
+			if ( subComponent.getAggregateColumn() == null ) {
+				for ( Property property : subComponent.getProperties() ) {
+					addColumns( orderedColumns, property.getValue() );
+				}
+			}
+			else {
+				orderedColumns.add( subComponent.getAggregateColumn() );
+			}
+		}
+		else {
+			orderedColumns.addAll( value.getColumns() );
+		}
+	}
+
+	private static int[] determinePropertyMappingIndex(String[] componentNames) {
+		final String[] sortedComponentNames = componentNames.clone();
+		final int[] index = new int[componentNames.length];
+		Arrays.sort( sortedComponentNames );
+		for ( int i = 0; i < componentNames.length; i++ ) {
+			final int newIndex = Arrays.binarySearch( sortedComponentNames, componentNames[i] );
+			index[newIndex] = i;
+		}
+		return index;
 	}
 
 	private void validateSupportedColumnTypes(String basePath, Component component) {

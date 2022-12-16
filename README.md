@@ -8,8 +8,7 @@ It also provides an implementation of the JPA specification, which is the standa
 
 This is the repository of its source code: see [Hibernate.org](https://hibernate.org/orm/) for additional information.
 
-[![Build Status](https://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon)](https://ci.hibernate.org/job/hibernate-orm-main-h2-main/)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java)
+[![Build Status](https://ci.hibernate.org/job/hibernate-orm-pipeline/job/5.6/badge/icon)](https://ci.hibernate.org/job/hibernate-orm-pipeline/job/5.6/)
 
 Building from sources
 =========

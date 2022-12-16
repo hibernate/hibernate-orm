@@ -133,7 +133,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
-	public boolean isPhysical() {
+	public boolean hasPhysicalColumn() {
 		return isPhysical;
 	}
 }

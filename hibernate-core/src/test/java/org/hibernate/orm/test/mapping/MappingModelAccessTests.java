@@ -83,7 +83,7 @@ public class MappingModelAccessTests {
 				.isSameAs( cardPaymentMapping.getDiscriminatorMapping() )
 				.isSameAs( cashPaymentMapping.getDiscriminatorMapping() );
 
-		assertThat( discriminatorMapping.isPhysical() ).isFalse();
+		assertThat( discriminatorMapping.hasPhysicalColumn() ).isFalse();
 		assertThat( discriminatorMapping.isVirtual() ).isTrue();
 		assertThat( discriminatorMapping.getJavaType().getJavaTypeClass() ).isEqualTo( Class.class );
 		assertThat( discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Class.class );
@@ -113,7 +113,7 @@ public class MappingModelAccessTests {
 				.isSameAs( domesticVendorMapping.getDiscriminatorMapping() )
 				.isSameAs( foreignVendorMapping.getDiscriminatorMapping() );
 
-		assertThat( discriminatorMapping.isPhysical() ).isTrue();
+		assertThat( discriminatorMapping.hasPhysicalColumn() ).isTrue();
 		assertThat( discriminatorMapping.isVirtual() ).isTrue();
 		assertThat( discriminatorMapping.getJavaType().getJavaTypeClass() ).isEqualTo( Class.class );
 		assertThat( discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Class.class );

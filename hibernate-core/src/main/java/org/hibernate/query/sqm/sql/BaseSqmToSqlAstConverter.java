@@ -1337,7 +1337,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
 			versionExpression = new VersionTypeSeedParameterSpecification( entityDescriptor.getVersionMapping() );
 		}
-		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
+		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() ) {
 			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(
 					new ColumnReference(
 							rootTableGroup.resolveTableReference( discriminatorMapping.getContainingTableExpression() ),

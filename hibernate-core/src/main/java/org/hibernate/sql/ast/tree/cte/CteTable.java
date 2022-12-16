@@ -97,7 +97,7 @@ public class CteTable {
 		forEachCteColumn( idName, identifierMapping, columns::add );
 
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() && !discriminatorMapping.isFormula() ) {
+		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
 			forEachCteColumn( "class", discriminatorMapping, columns::add );
 		}
 

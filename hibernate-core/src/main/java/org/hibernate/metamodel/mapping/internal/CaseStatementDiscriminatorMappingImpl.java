@@ -75,7 +75,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public boolean isPhysical() {
+	public boolean hasPhysicalColumn() {
 		return false;
 	}
 

@@ -49,7 +49,7 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	/**
 	 * Is the discriminator defined by a physical column?
 	 */
-	boolean isPhysical();
+	boolean hasPhysicalColumn();
 
 	@Override
 	default int getFetchableKey() {

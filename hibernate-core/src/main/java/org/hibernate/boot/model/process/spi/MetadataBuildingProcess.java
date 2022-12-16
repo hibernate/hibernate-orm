@@ -391,6 +391,11 @@ public class MetadataBuildingProcess {
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
+		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
+		// which has precedence over the fallback and preferred type registrations
+		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );
+		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
+		final JdbcType dialectIntervalDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -400,23 +405,38 @@ public class MetadataBuildingProcess {
 		// add fallback type descriptors
 		final int preferredSqlTypeCodeForUuid = getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
-			adaptToPreferredSqlTypeCode( jdbcTypeRegistry, SqlTypes.UUID, preferredSqlTypeCodeForUuid );
+			adaptToPreferredSqlTypeCode(
+					jdbcTypeRegistry,
+					dialectUuidDescriptor,
+					SqlTypes.UUID,
+					preferredSqlTypeCodeForUuid
+			);
 		}
 		else {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		}
 
 		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );
-		if ( preferredSqlTypeCodeForArray == SqlTypes.ARRAY ) {
-			adaptToPreferredSqlTypeCode( jdbcTypeRegistry, null, SqlTypes.ARRAY, SqlTypes.VARBINARY );
+		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
+			adaptToPreferredSqlTypeCode(
+					jdbcTypeRegistry,
+					dialectArrayDescriptor,
+					SqlTypes.ARRAY,
+					preferredSqlTypeCodeForArray
+			);
 		}
 		else {
-			adaptToPreferredSqlTypeCode( jdbcTypeRegistry, SqlTypes.ARRAY, preferredSqlTypeCodeForArray );
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
-			adaptToPreferredSqlTypeCode( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, preferredSqlTypeCodeForDuration );
+			adaptToPreferredSqlTypeCode(
+					jdbcTypeRegistry,
+					dialectIntervalDescriptor,
+					SqlTypes.INTERVAL_SECOND,
+					preferredSqlTypeCodeForDuration
+			);
 		}
 		else {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.NUMERIC );
@@ -473,18 +493,6 @@ public class MetadataBuildingProcess {
 
 	private static void adaptToPreferredSqlTypeCode(
 			JdbcTypeRegistry jdbcTypeRegistry,
-			int defaultSqlTypeCode,
-			int preferredSqlTypeCode) {
-		adaptToPreferredSqlTypeCode(
-				jdbcTypeRegistry,
-				jdbcTypeRegistry.findDescriptor( defaultSqlTypeCode ),
-				defaultSqlTypeCode,
-				preferredSqlTypeCode
-		);
-	}
-
-	private static void adaptToPreferredSqlTypeCode(
-			JdbcTypeRegistry jdbcTypeRegistry,
 			JdbcType dialectUuidDescriptor,
 			int defaultSqlTypeCode,
 			int preferredSqlTypeCode) {
@@ -494,6 +502,7 @@ public class MetadataBuildingProcess {
 					jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode )
 			);
 		}
+		// else warning?
 	}
 
 	private static void adaptToPreferredSqlTypeCodeForInstant(

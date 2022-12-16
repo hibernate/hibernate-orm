@@ -8,14 +8,16 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
  * A generator that {@code select}s the just-{@code insert}ed row to determine the
- * {@code IDENTITY} column value assigned by the database. The correct row is located
+ * column value assigned by the database. The correct row is located
  * using a unique key of the entity, either:
  * <ul>
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
@@ -32,7 +34,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class SelectGenerator extends IdentityGenerator {
+public class SelectGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override
@@ -65,5 +68,15 @@ public class SelectGenerator extends IdentityGenerator {
 			);
 		}
 		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return false;
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[0];
 	}
 }

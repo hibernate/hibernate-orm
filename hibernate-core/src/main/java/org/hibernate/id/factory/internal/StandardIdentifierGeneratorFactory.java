@@ -108,11 +108,7 @@ public class StandardIdentifierGeneratorFactory
 		generatorTypeStrategyMap.put( GenerationType.SEQUENCE, SequenceGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.TABLE, TableGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.IDENTITY, IdentityGenerationTypeStrategy.INSTANCE );
-		try {
-			generatorTypeStrategyMap.put( GenerationType.valueOf( "UUID" ), UUIDGenerationTypeStrategy.INSTANCE );
-		}
-		catch (IllegalArgumentException ignore) {
-		}
+		generatorTypeStrategyMap.put( GenerationType.UUID, UUIDGenerationTypeStrategy.INSTANCE );
 	}
 
 	private void logOverrides() {

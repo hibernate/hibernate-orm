@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -34,7 +35,10 @@ public class XmlAsStringJdbcType extends XmlJdbcType {
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
 		return new XmlAsStringJdbcType( mappingType );
 	}
 
@@ -95,7 +99,8 @@ public class XmlAsStringJdbcType extends XmlJdbcType {
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
 				return getObject( statement.getString( name ), options );
 			}
 

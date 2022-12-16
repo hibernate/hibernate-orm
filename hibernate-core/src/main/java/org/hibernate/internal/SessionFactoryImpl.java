@@ -300,6 +300,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
+			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
 			LOG.debug( "Instantiated session factory" );

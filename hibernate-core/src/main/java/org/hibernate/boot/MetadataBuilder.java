@@ -16,6 +16,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.metamodel.CollectionClassification;
@@ -92,6 +93,20 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY
 	 */
 	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
+
+	/**
+	 * Specify the {@link ColumnOrderingStrategy}.
+	 * <p>
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}
+	 * setting if using property-based configuration.
+	 *
+	 * @param columnOrderingStrategy The {@link ColumnOrderingStrategy}
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
+	 */
+	MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy);
 
 	/**
 	 * Specify the second-level cache mode.

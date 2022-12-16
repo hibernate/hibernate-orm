@@ -22,6 +22,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -79,6 +80,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		delegate.applyPhysicalNamingStrategy( namingStrategy );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		delegate.applyColumnOrderingStrategy( columnOrderingStrategy );
 		return getThis();
 	}
 

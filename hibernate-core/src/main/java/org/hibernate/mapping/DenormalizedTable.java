@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -22,6 +23,7 @@ import org.hibernate.internal.util.collections.JoinedList;
 public class DenormalizedTable extends Table {
 
 	private final Table includedTable;
+	private List<Column> reorderedColumns;
 
 	public DenormalizedTable(
 			String contributor,
@@ -88,11 +90,17 @@ public class DenormalizedTable extends Table {
 
 	@Override @Deprecated
 	public Iterator<Column> getColumnIterator() {
+		if ( reorderedColumns != null ) {
+			return reorderedColumns.iterator();
+		}
 		return new JoinedIterator<>( includedTable.getColumnIterator(), super.getColumnIterator() );
 	}
 
 	@Override
 	public Collection<Column> getColumns() {
+		if ( reorderedColumns != null ) {
+			return reorderedColumns;
+		}
 		return new JoinedList<>( new ArrayList<>( includedTable.getColumns() ), new ArrayList<>( super.getColumns() ) );
 	}
 
@@ -131,5 +139,15 @@ public class DenormalizedTable extends Table {
 
 	public Table getIncludedTable() {
 		return includedTable;
+	}
+
+	@Internal
+	@Override
+	public void reorderColumns(List<Column> columns) {
+		assert includedTable.getColumns().size() + super.getColumns().size() == columns.size()
+				&& columns.containsAll( includedTable.getColumns() )
+				&& columns.containsAll( super.getColumns() )
+				&& reorderedColumns == null;
+		this.reorderedColumns = columns;
 	}
 }

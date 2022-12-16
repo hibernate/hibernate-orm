@@ -48,6 +48,7 @@ public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Task.class )
 					.addAnnotatedClass( Project.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			// first create the schema...

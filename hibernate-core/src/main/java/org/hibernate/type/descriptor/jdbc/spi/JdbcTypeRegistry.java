@@ -9,10 +9,9 @@ package org.hibernate.type.descriptor.jdbc.spi;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -121,7 +120,8 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public AggregateJdbcType resolveAggregateDescriptor(
 			int jdbcTypeCode,
 			String typeName,
-			EmbeddableMappingType embeddableMappingType) {
+			EmbeddableMappingType embeddableMappingType,
+			RuntimeModelCreationContext creationContext) {
 		final String registrationKey;
 		if ( typeName != null ) {
 			registrationKey = typeName.toLowerCase( Locale.ROOT );
@@ -134,7 +134,11 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 					// which are prefixed with the aggregateMapping.
 					// Since the columnExpression is used as key for mutation parameters, this is important.
 					// We could get rid of this if ColumnValueParameter drops the ColumnReference
-					return aggregateJdbcType.resolveAggregateJdbcType( embeddableMappingType, typeName );
+					return aggregateJdbcType.resolveAggregateJdbcType(
+							embeddableMappingType,
+							typeName,
+							creationContext
+					);
 				}
 				return aggregateJdbcType;
 			}
@@ -154,7 +158,8 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) descriptor;
 		final AggregateJdbcType resolvedJdbcType = aggregateJdbcType.resolveAggregateJdbcType(
 				embeddableMappingType,
-				typeName
+				typeName,
+				creationContext
 		);
 		if ( registrationKey != null ) {
 			aggregateDescriptorMap.put( registrationKey, resolvedJdbcType );

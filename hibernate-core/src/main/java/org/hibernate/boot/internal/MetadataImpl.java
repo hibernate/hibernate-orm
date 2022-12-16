@@ -24,6 +24,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
@@ -48,12 +50,17 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -61,6 +68,8 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -368,6 +377,120 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			namedProcedureCallMap.forEach( (key, value) -> map.put( key, value.resolve( sessionFactory ) ) );
 		}
 		return map;
+	}
+
+	@Override
+	public void orderColumns(boolean forceOrdering) {
+		final ColumnOrderingStrategy columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
+		if ( columnOrderingStrategy == ColumnOrderingStrategyLegacy.INSTANCE ) {
+			// No need to order columns when using the no-op strategy
+			return;
+		}
+
+		final boolean shouldOrderTableColumns = forceOrdering || shouldOrderTableColumns();
+
+		for ( Namespace namespace : database.getNamespaces() ) {
+			if ( shouldOrderTableColumns ) {
+				for ( Table table : namespace.getTables() ) {
+					final List<Column> tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
+					if ( tableColumns != null ) {
+						table.reorderColumns( tableColumns );
+					}
+					final PrimaryKey primaryKey = table.getPrimaryKey();
+					if ( primaryKey != null && primaryKey.getColumns()
+							.size() > 1 && primaryKey.getOriginalOrder() == null ) {
+						final List<Column> primaryKeyColumns = columnOrderingStrategy.orderConstraintColumns(
+								primaryKey,
+								this
+						);
+						if ( primaryKeyColumns != null ) {
+							primaryKey.reorderColumns( primaryKeyColumns );
+						}
+					}
+					for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
+						if ( uniqueKey.getColumns().size() > 1 ) {
+							final List<Column> uniqueKeyColumns = columnOrderingStrategy.orderConstraintColumns(
+									uniqueKey,
+									this
+							);
+							if ( uniqueKeyColumns != null ) {
+								uniqueKey.getColumns().clear();
+								uniqueKey.getColumns().addAll( uniqueKeyColumns );
+							}
+						}
+					}
+					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+						final List<Column> columns = foreignKey.getColumns();
+						if ( columns.size() > 1 ) {
+							if ( foreignKey.getReferencedColumns().isEmpty() ) {
+								final PrimaryKey foreignKeyTargetPrimaryKey = foreignKey.getReferencedTable()
+										.getPrimaryKey();
+								// Make sure we order the columns of the primary key first,
+								// so that foreign key ordering can rely on this
+								if ( foreignKeyTargetPrimaryKey.getOriginalOrder() == null ) {
+									final List<Column> primaryKeyColumns = columnOrderingStrategy.orderConstraintColumns(
+											foreignKeyTargetPrimaryKey,
+											this
+									);
+									if ( primaryKeyColumns != null ) {
+										foreignKeyTargetPrimaryKey.reorderColumns( primaryKeyColumns );
+									}
+								}
+
+								// Patch up the order of foreign keys based on new order of the target primary key
+								final int[] originalPrimaryKeyOrder = foreignKeyTargetPrimaryKey.getOriginalOrder();
+								if ( originalPrimaryKeyOrder != null ) {
+									final ArrayList<Column> foreignKeyColumnsCopy = new ArrayList<>( columns );
+									for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
+										columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
+				if ( userDefinedType.getColumns().size() > 1 ) {
+					final List<Column> userDefinedTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
+							userDefinedType,
+							this
+					);
+					if ( userDefinedTypeColumns != null ) {
+						userDefinedType.reorderColumns( userDefinedTypeColumns );
+					}
+				}
+			}
+		}
+	}
+
+	private boolean shouldOrderTableColumns() {
+		final ConfigurationService configurationService = metadataBuildingOptions.getServiceRegistry()
+				.getService( ConfigurationService.class );
+		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings = SchemaManagementToolCoordinator.ActionGrouping.interpret(
+				this,
+				configurationService.getSettings()
+		);
+		if ( groupings.isEmpty() ) {
+			return false;
+		}
+		for ( SchemaManagementToolCoordinator.ActionGrouping grouping : groupings ) {
+			if ( isColumnOrderingRelevant( grouping.getScriptAction() ) || isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isColumnOrderingRelevant(Action grouping) {
+		switch ( grouping ) {
+			case CREATE:
+			case CREATE_DROP:
+			case CREATE_ONLY:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override

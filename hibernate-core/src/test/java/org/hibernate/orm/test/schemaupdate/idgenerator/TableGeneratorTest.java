@@ -60,6 +60,7 @@ public class TableGeneratorTest extends BaseUnitTestCase {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( true );
 		metadata.validate();
 	}
 
@@ -77,7 +78,7 @@ public class TableGeneratorTest extends BaseUnitTestCase {
 				isCommandGenerated( commands, expectedTestEntityTableCreationCommand )
 		);
 
-		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\);";
+		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(VALUE .*, PK .*, PRIMARY KEY \\(PK\\)\\);";
 
 		assertTrue(
 				"The command '" + expectedIdTableGeneratorCreationCommand + "' has not been correctly generated",

@@ -61,6 +61,7 @@ public class SQLServerNVarCharTypeTest {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		SchemaExport schemaExport = new SchemaExport();
 		schemaExport.setHaltOnError( true )

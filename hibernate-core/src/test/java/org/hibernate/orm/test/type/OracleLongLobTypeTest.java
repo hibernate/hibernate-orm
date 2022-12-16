@@ -103,6 +103,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( entityClass )
 					.buildMetadata();
+			mappings.orderColumns( false );
 			mappings.validate();
 
 			final PersistentClass entityBinding = mappings.getEntityBinding( entityClass.getName() );

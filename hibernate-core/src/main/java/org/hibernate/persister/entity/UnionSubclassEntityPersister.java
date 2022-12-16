@@ -221,7 +221,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				if ( !table.isAbstractUnionTable() ) {
 					tableNames.add( determineTableName( table ) );
 					String[] key = new String[idColumnSpan];
-					List<Column> columns = table.getPrimaryKey().getColumns();
+					List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
 						key[k] = columns.get(k).getQuotedName( dialect );
 					}

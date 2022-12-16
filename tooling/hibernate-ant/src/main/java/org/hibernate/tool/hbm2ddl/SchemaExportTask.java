@@ -265,6 +265,7 @@ public class SchemaExportTask extends MatchingTask {
 		}
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		SchemaManagementToolCoordinator.process(

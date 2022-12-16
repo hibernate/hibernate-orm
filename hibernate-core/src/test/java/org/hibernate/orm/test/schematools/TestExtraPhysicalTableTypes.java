@@ -172,6 +172,7 @@ public class TestExtraPhysicalTableTypes {
 		}
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

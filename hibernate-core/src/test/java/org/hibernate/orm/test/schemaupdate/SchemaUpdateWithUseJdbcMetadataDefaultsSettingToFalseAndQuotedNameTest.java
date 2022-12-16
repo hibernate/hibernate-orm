@@ -62,6 +62,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		metadataSources.addAnnotatedClass( AnotherTestEntity.class );
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

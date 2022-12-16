@@ -61,6 +61,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( MyEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

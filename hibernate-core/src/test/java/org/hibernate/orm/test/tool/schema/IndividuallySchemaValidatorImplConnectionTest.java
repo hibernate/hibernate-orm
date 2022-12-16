@@ -138,6 +138,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		Map<String, Object> settings = new HashMap<>(  );
@@ -170,6 +171,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 			metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			SchemaValidator schemaValidator = new IndividuallySchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE );

@@ -63,6 +63,7 @@ public class SchemaCreationTest {
 		metadataSources.addAnnotatedClass( Element.class );
 		metadataSources.addAnnotatedClass( Category.class );
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		final SchemaExport schemaExport = new SchemaExport(  )
 				.setHaltOnError( true )

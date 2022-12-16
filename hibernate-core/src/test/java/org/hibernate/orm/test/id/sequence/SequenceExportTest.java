@@ -53,6 +53,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Entity1.class )
 				.addAnnotatedClass( Entity2.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		int namespaceCount = 0;
@@ -76,6 +77,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Entity3.class )
 				.addAnnotatedClass( Entity4.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		int namespaceCount = 0;

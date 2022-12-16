@@ -4,21 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jakarta.persistence.TemporalType;
-
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 
@@ -27,20 +27,20 @@ import static org.hibernate.query.sqm.TemporalUnit.DAY;
  *
  * @author Jim Mlodgenski
  */
-public class PostgresPlusDialect extends PostgreSQLDialect {
+public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 
 	/**
 	 * Constructs a PostgresPlusDialect
 	 */
-	public PostgresPlusDialect() {
+	public PostgresPlusLegacyDialect() {
 		super();
 	}
 
-	public PostgresPlusDialect(DialectResolutionInfo info) {
+	public PostgresPlusLegacyDialect(DialectResolutionInfo info) {
 		super( info );
 	}
 
-	public PostgresPlusDialect(DatabaseVersion version) {
+	public PostgresPlusLegacyDialect(DatabaseVersion version) {
 		super( version );
 	}
 

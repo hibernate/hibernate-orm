@@ -334,7 +334,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			List<Column> columns = table.getPrimaryKey().getColumns();
+			List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -354,7 +354,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
-			List<Column> columns = joinTable.getPrimaryKey().getColumns();
+			List<Column> columns = joinTable.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}

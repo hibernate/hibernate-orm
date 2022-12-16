@@ -46,6 +46,7 @@ public class ForeignKeyNameTest extends BaseUnitTestCase {
 					.addResource( "org/hibernate/orm/test/schemaupdate/inheritance/Manager.hbm.xml" )
 					.addResource( "org/hibernate/orm/test/schemaupdate/inheritance/Payment.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -75,6 +76,7 @@ public class ForeignKeyNameTest extends BaseUnitTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/inheritance/Payment.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

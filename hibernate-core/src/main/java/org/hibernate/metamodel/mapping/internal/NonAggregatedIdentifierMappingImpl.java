@@ -107,13 +107,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 	}
 
-	/**
-	 * The entity whose identifier this mapping is the inverse of
-	 */
-	public EntityPersister getIdentifiedEntityDescriptor() {
-		return entityDescriptor;
-	}
-
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;
@@ -207,11 +200,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public String getAttributeName() {
 		return null;
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getIdentifier( entity );
 	}
 
 	@Override

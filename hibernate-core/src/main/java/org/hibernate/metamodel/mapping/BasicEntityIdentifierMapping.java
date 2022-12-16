@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 
 /**
- * Mapping for a simple identifier
+ * Mapping for a simple, single-column identifier
  *
  * @author Steve Ebersole
  */

@@ -5073,10 +5073,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
 						.getIdentifierMapping();
 				associationKeyPart = identifierMapping;
-				associationKey = identifierMapping.getIdentifier(
-						literal.getLiteralValue(),
-						null
-				);
+				associationKey = identifierMapping.getIdentifier( literal.getLiteralValue() );
 			}
 			if ( associationKeyPart instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(

@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -37,7 +36,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				modelParts,
 				domainType,
 				componentName,
-				(EmbeddableValuedModelPart) delegate,
+				delegate,
 				-1
 		);
 		this.delegate = delegate;
@@ -51,11 +50,6 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return delegate.getUnsavedStrategy();
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
 	}
 
 	@Override

@@ -179,11 +179,6 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getIdentifier( entity );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
 		if ( hasContainingClass() ) {
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(

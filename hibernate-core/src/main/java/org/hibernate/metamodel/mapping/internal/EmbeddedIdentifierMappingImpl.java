@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.AggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -29,7 +30,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public class EmbeddedIdentifierMappingImpl
 		extends AbstractCompositeIdentifierMapping
-		implements SingleAttributeIdentifierMapping {
+		implements AggregatedIdentifierMapping {
 	private final String name;
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
@@ -81,15 +82,6 @@ public class EmbeddedIdentifierMappingImpl
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		getEmbeddableTypeDescriptor().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
-		if ( lazyInitializer != null ) {
-			return lazyInitializer.getIdentifier();
-		}
-		return propertyAccess.getGetter().get( entity );
 	}
 
 	@Override

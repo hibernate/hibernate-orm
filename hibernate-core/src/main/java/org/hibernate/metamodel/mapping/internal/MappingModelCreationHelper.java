@@ -64,7 +64,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -1386,12 +1385,12 @@ public class MappingModelCreationHelper {
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
 		final EmbeddableMappingType embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
-		if ( modelPart instanceof NonAggregatedIdentifierMapping ) {
+		if ( modelPart instanceof org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping ) {
 			return new InverseNonAggregatedIdentifierMapping(
 					keyDeclaringType,
 					declaringTableGroupProducer,
 					selectableMappings,
-					(NonAggregatedIdentifierMapping) modelPart,
+					(org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping) modelPart,
 					embeddableTypeDescriptor,
 					creationProcess
 			);

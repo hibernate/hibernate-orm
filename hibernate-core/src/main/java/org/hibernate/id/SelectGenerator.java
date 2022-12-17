@@ -11,14 +11,16 @@ import java.util.Properties;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
  * A generator that {@code select}s the just-{@code insert}ed row to determine the
- * column value assigned by the database. The correct row is located
- * using a unique key of the entity, either:
+ * column value assigned by the database. The correct row is located using a unique
+ * key of the entity, either:
  * <ul>
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
  * <li>a property specified using the parameter named {@code "key"}.
@@ -26,11 +28,32 @@ import org.hibernate.type.Type;
  * The second approach is provided for backward compatibility with older versions of
  * Hibernate.
  * <p>
+ * This generator is intended for use with primary keys assigned by a database trigger
+ * or something similar, for example:
+ * <pre>{@code
+ * @Entity @Table(name="TableWithPKAssignedByTrigger")
+ * @GenericGenerator(name = "triggered", type = SelectGenerator.class)
+ * public class TriggeredEntity {
+ *     @Id @GeneratedValue(generator = "triggered")
+ *     private Long id;
+ *
+ *     @NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * }</pre>
+ * For tables with identity/autoincrement columns, use {@link IdentityGenerator}.
+ * <p>
+ * The actual work involved in retrieving the primary key value is the job of
+ * {@link org.hibernate.id.insert.UniqueKeySelectingDelegate}.
+ * <p>
  * Arguably, this class breaks the natural separation of responsibility between the
- * {@linkplain InDatabaseGenerator generator} and the coordinating
- * code, since it's role is to specify how the generated value is <em>retrieved</em>.
+ * {@linkplain InDatabaseGenerator generator} and the coordinating code, since its
+ * role is to specify how the generated value is <em>retrieved</em>.
  *
  * @see org.hibernate.annotations.NaturalId
+ * @see org.hibernate.id.insert.UniqueKeySelectingDelegate
  *
  * @author Gavin King
  */
@@ -43,8 +66,12 @@ public class SelectGenerator
 		uniqueKeyPropertyName = parameters.getProperty( "key" );
 	}
 
-	@Override
-	public String getUniqueKeyPropertyName(EntityPersister persister) {
+	/**
+	 * The name of a property of the entity which may be used to locate the just-{@code insert}ed
+	 * row containing the generated value. Of course, the columns mapped by this property should
+	 * form a unique key of the entity.
+	 */
+	protected String getUniqueKeyPropertyName(EntityPersister persister) {
 		if ( uniqueKeyPropertyName != null ) {
 			return uniqueKeyPropertyName;
 		}
@@ -68,6 +95,12 @@ public class SelectGenerator
 			);
 		}
 		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+	}
+
+	@Override
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+		return new UniqueKeySelectingDelegate( persister, dialect, getUniqueKeyPropertyName( persister ) );
 	}
 
 	@Override

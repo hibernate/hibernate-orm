@@ -81,6 +81,7 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -98,7 +99,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -489,7 +489,7 @@ public final class AnnotationBinder {
 		else if ( generatorAnnotation instanceof GenericGenerator ) {
 			final GenericGenerator genericGenerator = (GenericGenerator) generatorAnnotation;
 			definitionBuilder.setName( genericGenerator.name() );
-			final String strategy = genericGenerator.type().equals(InMemoryGenerator.class)
+			final String strategy = genericGenerator.type().equals(Generator.class)
 					? genericGenerator.strategy()
 					: genericGenerator.type().getName();
 			definitionBuilder.setStrategy( strategy );

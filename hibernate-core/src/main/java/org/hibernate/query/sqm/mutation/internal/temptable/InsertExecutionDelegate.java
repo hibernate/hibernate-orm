@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -559,10 +560,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 
 		if ( generator.generatedByDatabase() ) {
 			final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
-			final String uniqueKeyPropertyName = databaseGenerator.getUniqueKeyPropertyName( entityPersister );
-			final InsertGeneratedIdentifierDelegate identifierDelegate = uniqueKeyPropertyName == null
-					? entityPersister.getGeneratedIdentifierDelegate()
-					: entityPersister.getGeneratedIdentifierDelegateForProperty( uniqueKeyPropertyName );
+			final InsertGeneratedIdentifierDelegate identifierDelegate =
+					databaseGenerator.getGeneratedIdentifierDelegate( (PostInsertIdentityPersister) entityPersister );
 			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
 			final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 			final ValueBinder jdbcValueBinder = identifierMapping.getJdbcMapping().getJdbcValueBinder();

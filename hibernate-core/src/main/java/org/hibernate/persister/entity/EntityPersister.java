@@ -1015,14 +1015,6 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 
 	boolean canUseReferenceCacheEntries();
 
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate() {
-		return null;
-	}
-
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
-		return null;
-	}
-
 	/**
 	 * The property name of the "special" identifier property in HQL
 	 *

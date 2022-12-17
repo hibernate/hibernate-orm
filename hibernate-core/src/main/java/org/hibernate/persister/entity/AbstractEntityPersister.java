@@ -2743,29 +2743,6 @@ public abstract class AbstractEntityPersister
 		return includeProperty[getVersionProperty()] || entityMetamodel.isVersionGeneratedByDatabase();
 	}
 
-	public boolean useGetGeneratedKeys() {
-		return getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled();
-	}
-
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate() {
-		Dialect dialect = getFactory().getJdbcServices().getDialect();
-		if ( useGetGeneratedKeys() ) {
-			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate(this, dialect );
-		}
-		else if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
-			return new InsertReturningDelegate(this, dialect );
-		}
-		else {
-			return new BasicSelectingDelegate(this, dialect );
-		}
-	}
-
-	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
-		Dialect dialect = getFactory().getJdbcServices().getDialect();
-		return new UniqueKeySelectingDelegate( this, dialect, uniqueKeyPropertyName );
-	}
-
 	@Override
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
@@ -3082,10 +3059,7 @@ public abstract class AbstractEntityPersister
 	private void doLateInit() {
 		if ( isIdentifierAssignedByInsert() ) {
 			final InDatabaseGenerator generator = (InDatabaseGenerator) getGenerator();
-			final String uniqueKeyPropertyName = generator.getUniqueKeyPropertyName(this);
-			identityDelegate = uniqueKeyPropertyName == null
-					? getGeneratedIdentifierDelegate()
-					: getGeneratedIdentifierDelegateForProperty( uniqueKeyPropertyName );
+			identityDelegate = generator.getGeneratedIdentifierDelegate( this );
 		}
 
 		tableMappings = buildTableMappings();

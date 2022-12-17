@@ -431,6 +431,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Deprecated
+	@Override
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		return IdentityGenerator.class.isAssignableFrom(
 				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )

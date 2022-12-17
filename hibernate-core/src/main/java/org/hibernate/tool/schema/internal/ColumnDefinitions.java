@@ -175,10 +175,12 @@ class ColumnDefinitions {
 		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
 		return table.hasPrimaryKey()
 				&& table.getIdentifierValue() != null
-				&& table.getIdentifierValue().isIdentityColumn(
-				metadataImplementor.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-				dialect
-		);
+				&& table.getIdentifierValue()
+						.isIdentityColumn(
+								metadataImplementor.getMetadataBuildingOptions()
+										.getIdentifierGeneratorFactory(),
+								dialect
+						);
 	}
 
 	private static String stripArgs(String string) {

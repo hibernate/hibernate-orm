@@ -680,6 +680,9 @@ public class EntityMetamodel implements Serializable {
 		// Assumptions:
 		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
+		if ( naturalIdPropertyNumbers.length < 1 ) {
+			throw new IllegalStateException( "entity does not have a natural id: " + name );
+		}
 		final Generator strategy = generators[ naturalIdPropertyNumbers[0] ];
 		return strategy != null && strategy.generatesSometimes();
 	}

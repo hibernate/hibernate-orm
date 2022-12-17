@@ -30,5 +30,4 @@ public class IdentityGenerator
 	public String[] getReferencedColumnValues(Dialect dialect) {
 		return new String[] { dialect.getIdentityColumnSupport().getIdentityInsertString() };
 	}
-
 }

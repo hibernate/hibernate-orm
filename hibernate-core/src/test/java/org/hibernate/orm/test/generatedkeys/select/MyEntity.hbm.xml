@@ -23,6 +23,43 @@
 
     <database-object>
         <create>
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION gen_id_my_entity() RETURNS TRIGGER AS $$
+            BEGIN
+                select coalesce( max(id), 0 ) + 1
+                into new.id
+                from my_entity;
+                RETURN new;
+            END $$ LANGUAGE plpgsql;
+            CREATE OR REPLACE TRIGGER t_i_my_entity
+            BEFORE INSERT ON my_entity
+            FOR EACH ROW
+            EXECUTE PROCEDURE gen_id_my_entity();
+            ]]>
+        </create>
+        <drop>
+            <![CDATA[DROP TRIGGER t_i_my_entity ON my_entity; DROP FUNCTION gen_id_my_entity;]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+        <dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[CREATE TRIGGER t_i_my_entity
+            BEFORE INSERT ON my_entity
+            FOR EACH ROW
+            SET new.id = (select coalesce( max(id), 0 ) + 1 from my_entity);]]>
+        </create>
+        <drop>
+            <![CDATA[DROP TRIGGER t_i_my_entity]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.MySQLDialect"/>
+        <dialect-scope name="org.hibernate.dialect.MariaDBDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
             <![CDATA[CREATE OR REPLACE TRIGGER t_i_my_entity
             BEFORE INSERT ON my_entity
             FOR EACH ROW

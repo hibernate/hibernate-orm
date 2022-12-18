@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -33,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 		xmlMappings = "org/hibernate/orm/test/generatedkeys/select/MyEntity.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class)
+@RequiresDialect(OracleDialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(MySQLDialect.class)
 public class SelectGeneratorTest {
 
 	@Test

@@ -6,7 +6,9 @@
  */
 package org.hibernate.orm.test.generatedkeys.selectannotated;
 
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -33,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 		xmlMappings = "org/hibernate/orm/test/generatedkeys/selectannotated/MyEntity.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class)
+@RequiresDialect(OracleDialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(MySQLDialect.class)
 public class SelectGeneratorTest {
 
 	@Test

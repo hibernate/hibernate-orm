@@ -1219,6 +1219,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}

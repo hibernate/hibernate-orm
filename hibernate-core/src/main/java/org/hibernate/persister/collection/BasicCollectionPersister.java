@@ -208,7 +208,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 
-	private RowMutationOperations buildRowMutationOperations() {
+	protected RowMutationOperations buildRowMutationOperations() {
 		final OperationProducer insertRowOperationProducer;
 		final RowMutationOperations.Values insertRowValues;
 		if ( !isInverse() && isRowInsertEnabled() ) {

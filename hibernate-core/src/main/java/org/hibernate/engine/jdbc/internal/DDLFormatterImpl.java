@@ -45,7 +45,7 @@ public class DDLFormatterImpl implements Formatter {
 			return formatAlterTable( sql );
 		}
 		else if ( lowerCaseSql.startsWith( "create" ) ) {
-			return sql;
+			return INITIAL_LINE + sql;
 		}
 		else if ( lowerCaseSql.startsWith( "alter table" ) ) {
 			return formatAlterTable( sql );

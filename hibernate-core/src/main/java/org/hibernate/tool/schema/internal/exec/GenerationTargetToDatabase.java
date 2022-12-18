@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
@@ -65,7 +65,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void accept(String command) {
-		getSqlStatementLogger().logStatement( command, DDLFormatterImpl.INSTANCE );
+		getSqlStatementLogger().logStatement( command, FormatStyle.NONE.getFormatter() );
 
 		try {
 			final Statement jdbcStatement = jdbcStatement();
@@ -83,10 +83,19 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 		}
 		catch (SQLException e) {
 			throw new CommandAcceptanceException(
-					"Error executing DDL \"" + command + "\" via JDBC [" + e.getMessage() + "]",
+					"Error executing DDL \"" + command + "\" via JDBC [" + stripSql(e) + "]",
 					e
 			);
 		}
+	}
+
+	/**
+	 * Strip repetition of the SQL statement from h2 messages.
+	 */
+	private static String stripSql(SQLException e) {
+		final String message = e.getMessage();
+		int index = message.indexOf( " SQL statement:" );
+		return index > 0 ? message.substring( 0, index ) : message;
 	}
 
 	private Statement jdbcStatement() {

@@ -44,13 +44,12 @@ import org.junit.runner.RunWith;
 @RunWith(CustomRunner.class)
 public class SchemaUpdateHaltOnErrorTest {
 
-	private File output;
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
 	@Before
 	public void setUp() throws IOException {
-		output = File.createTempFile( "update_script", ".sql" );
+		File output = File.createTempFile("update_script", ".sql");
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder().build();
 
@@ -74,9 +73,7 @@ public class SchemaUpdateHaltOnErrorTest {
 		}
 		catch ( Exception e ) {
 			SchemaManagementException cause = (SchemaManagementException) e;
-
 			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
-			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
 		}
 	}
 

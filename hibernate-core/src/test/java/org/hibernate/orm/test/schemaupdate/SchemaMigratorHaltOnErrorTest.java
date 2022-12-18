@@ -55,7 +55,6 @@ public class SchemaMigratorHaltOnErrorTest extends BaseEntityManagerFunctionalTe
 		catch ( Exception e ) {
 			SchemaManagementException cause = (SchemaManagementException) e.getCause();
 			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
-			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
 		}
 	}
 

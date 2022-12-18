@@ -3394,10 +3394,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Certain dialects support a subset of {@code ScrollModes}.
+	 * Certain dialects support a subset of {@link ScrollMode}s.
 	 * Provide a default to be used by Criteria and Query.
 	 *
-	 * @return ScrollMode
+	 * @return the default {@link ScrollMode} to use.
 	 */
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.SCROLL_INSENSITIVE;
@@ -3408,7 +3408,7 @@ public abstract class Dialect implements ConversionContext {
 	 * For example:
 	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsOffsetInSubquery() {
 		return false;
@@ -3419,7 +3419,7 @@ public abstract class Dialect implements ConversionContext {
 	 * For example:
 	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsOrderByInSubquery() {
 		return true;
@@ -3430,10 +3430,22 @@ public abstract class Dialect implements ConversionContext {
 	 * For example:
 	 * {@code select col1, (select col2 from Table2 where ...) from Table1}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsSubqueryInSelect() {
 		return true;
+	}
+
+	/**
+	 * Does this dialect fully support {@code insert ... returning ...} in some form?
+	 *
+	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}
+	 *         works for any sort of primary key column (not just identity columns), or
+	 *         {@code false} if {@code InsertReturningDelegate} does not work, or only
+	 *         works for specialized identity/"autoincrement" columns
+	 */
+	public boolean supportsInsertReturning() {
+		return false;
 	}
 
 	/**

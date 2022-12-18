@@ -22,7 +22,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -234,6 +233,11 @@ public class MariaDBDialect extends MySQLDialect {
 	boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
+	}
+
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.generatedkeys.selectannotated;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -38,19 +39,24 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(OracleDialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(H2Dialect.class)
 public class SelectGeneratorTest {
 
 	@Test
 	public void testJDBC3GetGeneratedKeysSupportOnOracle(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					MyEntity e = new MyEntity( "entity-1" );
-					session.persist( e );
-
+					MyEntity e1 = new MyEntity( "entity-1" );
+					session.persist( e1 );
 					// this insert should happen immediately!
-					assertEquals( Long.valueOf( 1L ), e.getId(), "id not generated through forced insertion" );
+					assertEquals( Long.valueOf( 1L ), e1.getId(), "id not generated through forced insertion" );
 
-					session.remove( e );
+					MyEntity e2 = new MyEntity( "entity-2" );
+					session.persist( e2 );
+					assertEquals( Long.valueOf( 2L ), e2.getId(), "id not generated through forced insertion" );
+
+					session.remove( e1 );
+					session.remove( e2 );
 				}
 		);
 	}

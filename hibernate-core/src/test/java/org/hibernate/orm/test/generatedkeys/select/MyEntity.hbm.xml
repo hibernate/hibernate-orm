@@ -23,22 +23,25 @@
 
     <database-object>
         <create>
-            <![CDATA[
-            CREATE OR REPLACE FUNCTION gen_id_my_entity() RETURNS TRIGGER AS $$
-            BEGIN
-                select coalesce( max(id), 0 ) + 1
+            <![CDATA[create or replace function gen_id_my_entity() returns trigger as
+            $$
+            begin
+                select coalesce(max(id), 0) + 1
                 into new.id
                 from my_entity;
-                RETURN new;
-            END $$ LANGUAGE plpgsql;
-            CREATE OR REPLACE TRIGGER t_i_my_entity
-            BEFORE INSERT ON my_entity
-            FOR EACH ROW
-            EXECUTE PROCEDURE gen_id_my_entity();
-            ]]>
+                return new;
+            end
+            $$
+            language plpgsql;
+
+            create or replace trigger t_i_my_entity
+            before insert on my_entity
+            for each row
+            execute procedure gen_id_my_entity();]]>
         </create>
         <drop>
-            <![CDATA[DROP TRIGGER t_i_my_entity ON my_entity; DROP FUNCTION gen_id_my_entity;]]>
+            <![CDATA[drop trigger if exists my_entity_trigger ON my_entity;
+            drop function if exists gen_id_my_entity;]]>
         </drop>
         <dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
         <dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
@@ -46,13 +49,13 @@
 
     <database-object>
         <create>
-            <![CDATA[CREATE TRIGGER t_i_my_entity
-            BEFORE INSERT ON my_entity
-            FOR EACH ROW
-            SET new.id = (select coalesce( max(id), 0 ) + 1 from my_entity);]]>
+            <![CDATA[create trigger my_entity_trigger
+            before insert on my_entity
+            for each row
+            set new.id = (select coalesce(max(id), 0) + 1 from my_entity);]]>
         </create>
         <drop>
-            <![CDATA[DROP TRIGGER t_i_my_entity]]>
+            <![CDATA[drop trigger if exists my_entity_trigger]]>
         </drop>
         <dialect-scope name="org.hibernate.dialect.MySQLDialect"/>
         <dialect-scope name="org.hibernate.dialect.MariaDBDialect"/>
@@ -60,17 +63,17 @@
 
     <database-object>
         <create>
-            <![CDATA[CREATE OR REPLACE TRIGGER t_i_my_entity
-            BEFORE INSERT ON my_entity
-            FOR EACH ROW
-            BEGIN
-                select nvl( max(id), 0 ) + 1
+            <![CDATA[create or replace trigger my_entity_trigger
+            before insert on my_entity
+            for each row
+            begin
+                select nvl(max(id), 0) + 1
                 into :new.id
                 from my_entity;
-            END;]]>
+            end;]]>
         </create>
         <drop>
-            <![CDATA[DROP TRIGGER t_i_my_entity]]>
+            <![CDATA[drop trigger my_entity_trigger]]>
         </drop>
         <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
     </database-object>

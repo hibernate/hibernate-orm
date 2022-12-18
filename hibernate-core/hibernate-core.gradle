@@ -61,6 +61,7 @@ dependencies {
         transitive = true
     }
     testImplementation "joda-time:joda-time:2.3"
+    testImplementation dbLibs.h2
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld

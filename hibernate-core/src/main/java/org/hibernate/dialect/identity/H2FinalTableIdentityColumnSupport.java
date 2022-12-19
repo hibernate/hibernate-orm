@@ -34,6 +34,7 @@ public class H2FinalTableIdentityColumnSupport extends H2IdentityColumnSupport {
 		return "select " + identityColumnName + " from final table ( " + insertString + " )";
 	}
 
+	@Deprecated //TODO: move this logic back to H2SqlAstTranslator
 	public void render(
 			TableInsert tableInsert,
 			Consumer<String> sqlAppender,

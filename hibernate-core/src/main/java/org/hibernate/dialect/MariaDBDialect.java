@@ -40,7 +40,7 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MariaDB
+ * A {@linkplain Dialect SQL dialect} for MariaDB 10.3 and above.
  *
  * @author Vlad Mihalcea
  * @author Gavin King
@@ -235,6 +235,10 @@ public class MariaDBDialect extends MySQLDialect {
 		return false;
 	}
 
+	/**
+	 * @return {@code true} for 10.5 and above because Maria supports
+	 *         {@code insert ... returning} even though MySQL does not
+	 */
 	@Override
 	public boolean supportsInsertReturning() {
 		return getVersion().isSameOrAfter( 10, 5 );

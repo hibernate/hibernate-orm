@@ -107,7 +107,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for CockroachDB.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB 21.1 and above.
  *
  * @author Gavin King
  */

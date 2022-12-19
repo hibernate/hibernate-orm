@@ -120,7 +120,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
+ * A {@linkplain Dialect SQL dialect} for Oracle 11g Release 2 and above.
  *
  * @author Steve Ebersole
  * @author Gavin King

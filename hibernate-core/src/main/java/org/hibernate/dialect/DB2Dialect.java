@@ -96,7 +96,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for DB2.
+ * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
  *
  * @author Gavin King
  */
@@ -840,6 +840,9 @@ public class DB2Dialect extends Dialect {
 		return new DB2IdentityColumnSupport();
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from new table (insert .... )}
+	 */
 	@Override
 	public boolean supportsInsertReturning() {
 		return true;

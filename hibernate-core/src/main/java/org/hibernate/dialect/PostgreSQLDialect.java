@@ -126,7 +126,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 10 and above.
  *
  * @author Gavin King
  */

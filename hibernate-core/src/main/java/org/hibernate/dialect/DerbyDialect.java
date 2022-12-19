@@ -92,7 +92,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Apache Derby.
+ * A {@linkplain Dialect SQL dialect} for Apache Derby 10.14.2 and above.
  *
  * @author Simon Johnston
  * @author Gavin King

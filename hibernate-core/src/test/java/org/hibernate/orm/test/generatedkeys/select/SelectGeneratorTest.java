@@ -15,6 +15,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(DB2Dialect.class)
+@RequiresDialect(SQLServerDialect.class)
 public class SelectGeneratorTest {
 
 	@Test

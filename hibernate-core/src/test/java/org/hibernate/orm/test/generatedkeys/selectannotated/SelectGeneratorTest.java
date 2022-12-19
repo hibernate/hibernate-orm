@@ -11,6 +11,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(DB2Dialect.class)
+@RequiresDialect(SQLServerDialect.class)
 public class SelectGeneratorTest {
 
 	@Test

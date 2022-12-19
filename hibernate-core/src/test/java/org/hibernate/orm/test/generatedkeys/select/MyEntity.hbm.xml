@@ -63,6 +63,22 @@
 
     <database-object>
         <create>
+            <![CDATA[create or alter trigger my_entity_trigger
+            on my_entity
+            instead of insert
+            as
+            begin
+                insert into my_entity (id, name) values ( (select coalesce(max(id), 0) + 1 from my_entity), (select name from inserted) );
+            end]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger if exists my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.SQLServerDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
             <![CDATA[create or replace trigger my_entity_trigger
             before insert on my_entity
             referencing new as new_entity

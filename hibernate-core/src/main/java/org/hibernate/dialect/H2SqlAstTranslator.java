@@ -66,6 +66,10 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		assert tableInsert.getReturningColumns() != null
 				&& !tableInsert.getReturningColumns().isEmpty();
 
+		//TODO: This is a terrible way to solve this problem, please fix it!
+		//      Not every "returning insert" statement has something to do
+		//      with identity columns! (Nor is it an elegant implementation.)
+
 		final H2IdentityColumnSupport  identitySupport = (H2IdentityColumnSupport) getSessionFactory()
 				.getJdbcServices()
 				.getDialect()

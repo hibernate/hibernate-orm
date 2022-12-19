@@ -20,15 +20,15 @@ import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
+import org.hibernate.boot.model.internal.AnnotationBinder;
+import org.hibernate.boot.model.internal.InheritanceState;
+import org.hibernate.boot.model.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 

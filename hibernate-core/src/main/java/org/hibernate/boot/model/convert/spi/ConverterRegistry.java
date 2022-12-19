@@ -6,10 +6,13 @@
  */
 package org.hibernate.boot.model.convert.spi;
 
-import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 
+import jakarta.persistence.AttributeConverter;
+
 /**
+ * AttributeConverter registrations
+ *
  * @author Gavin King
  */
 @Incubating

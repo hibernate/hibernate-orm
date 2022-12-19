@@ -10,9 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -21,7 +18,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -71,6 +67,10 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.FormatMapper;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.PessimisticLockScope;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;

@@ -357,7 +357,10 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
+	 *
+	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this irrelevant
 	 */
+	@Deprecated(since = "6", forRemoval = true)
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
 	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);

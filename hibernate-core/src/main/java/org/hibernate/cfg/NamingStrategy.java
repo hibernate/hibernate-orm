@@ -25,7 +25,7 @@ package org.hibernate.cfg;
  * and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} should
  * be used instead.
  */
-@Deprecated
+@Deprecated(since = "6", forRemoval = true)
 public interface NamingStrategy {
 	/**
 	 * Return a table name for an entity class

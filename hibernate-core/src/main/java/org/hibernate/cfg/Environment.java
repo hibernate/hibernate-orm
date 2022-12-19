@@ -14,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 

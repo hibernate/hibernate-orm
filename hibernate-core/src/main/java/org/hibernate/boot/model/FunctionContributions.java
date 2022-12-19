@@ -7,6 +7,7 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -16,9 +17,19 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Christian Beikov
  */
 public interface FunctionContributions {
-	TypeConfiguration getTypeConfiguration();
 
+	/**
+	 * The registry into which the contributions should be made.
+	 */
 	SqmFunctionRegistry getFunctionRegistry();
 
+	/**
+	 * Access to type information
+	 */
+	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * Access to {@linkplain Service services}
+	 */
 	ServiceRegistry getServiceRegistry();
 }

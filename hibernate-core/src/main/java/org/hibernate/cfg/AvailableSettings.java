@@ -237,19 +237,19 @@ public interface AvailableSettings {
 	 * According to the JPA specification, the {@code BeanManager} should be
 	 * passed at boot time and be ready for immediate use at that time. But
 	 * not all environments can do this (WildFly, for example). To accommodate
-	 * such environments, Hibernate provides two options:
-	 * <ol>
-	 * <li>A proprietary CDI extension SPI (which has been proposed to the CDI
-	 * spec group as a standard option) which can be used to provide delayed
-	 * {@code BeanManager} access: to use this solution, the reference passed
-	 * as the {@code BeanManager} during bootstrap should be typed as
-	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
-	 * <li>Delayed access to the {@code BeanManager} reference: here, Hibernate
-	 * will not access the reference passed as the {@code BeanManager} during
-	 * bootstrap until it is first needed. Note, however, that this has the
-	 * effect of delaying the detection of any deployment problems until after
-	 * bootstrapping.
+	 * such environments, Hibernate provides two options: <ol>
+	 *     <li> A proprietary CDI extension SPI (which has been proposed to the CDI
+	 *          spec group as a standard option) which can be used to provide delayed
+	 *          {@code BeanManager} access: to use this solution, the reference passed
+	 *          as the {@code BeanManager} during bootstrap should be typed as
+	 *          {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
+	 *     <li> Delayed access to the {@code BeanManager} reference: here, Hibernate
+	 *          will not access the reference passed as the {@code BeanManager} during
+	 *          bootstrap until it is first needed. Note, however, that this has the
+	 *          effect of delaying the detection of any deployment problems until after
+	 *          bootstrapping.
 	 * </ol>
+	 *
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
@@ -877,8 +877,12 @@ public interface AvailableSettings {
 	 * The default is {@code "hbm,class"} which that {@code hbm.xml} files should be processed
 	 * first, followed by annotations (combined with {@code orm.xml} mappings).
 	 *
+	 * @see MetadataSourceType
 	 * @see org.hibernate.boot.MetadataBuilder#applySourceProcessOrdering(MetadataSourceType...)
+	 *
+	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
 	 */
+	@Deprecated(since = "6", forRemoval = true)
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 
 	/**
@@ -2983,6 +2987,8 @@ public interface AvailableSettings {
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
+	 *
+	 * @deprecated Use {@link #JAKARTA_CDI_BEAN_MANAGER} instead
 	 */
 	@Deprecated
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";

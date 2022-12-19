@@ -13,10 +13,12 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -39,25 +41,53 @@ import org.jboss.jandex.IndexView;
  */
 @Incubating
 public interface BootstrapContext {
+	/**
+	 * The service-registry available to bootstrapping
+	 */
 	StandardServiceRegistry getServiceRegistry();
 
+	/**
+	 * In-flight form of {@link org.hibernate.jpa.spi.JpaCompliance}
+	 */
 	MutableJpaCompliance getJpaCompliance();
 
+	/**
+	 * @see TypeConfiguration
+	 */
 	TypeConfiguration getTypeConfiguration();
 
-	BeanInstanceProducer getBeanInstanceProducer();
+	/**
+	 * BeanInstanceProducer to use when creating custom type references.
+	 *
+	 * @implNote Generally this will be a {@link TypeBeanInstanceProducer}
+	 * reference
+	 */
+	BeanInstanceProducer getCustomTypeProducer();
 
+	/**
+	 * Options specific to building the {@linkplain Metadata boot metamodel}
+	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return getMetadataBuildingOptions().getIdentifierGeneratorFactory();
 	}
 
+	/**
+	 * Whether the bootstrap was initiated from JPA bootstrapping.
+	 *
+	 * @implSpec This is used
+	 *
+	 * @see #markAsJpaBootstrap()
+	 */
 	boolean isJpaBootstrap();
 
 	/**
-	 * Indicates that bootstrap was initiated from JPA bootstrapping.  Internally {@code false} is
-	 * the assumed value.  We only need to call this to mark that as true.
+	 *
+	 * Indicates that bootstrap was initiated from JPA bootstrapping.
+	 *
+	 * @implSpec Internally, {@code false} is the assumed value.  We
+	 * only need to call this to mark that as {@code true}.
 	 */
 	void markAsJpaBootstrap();
 
@@ -69,6 +99,9 @@ public interface BootstrapContext {
 	 */
 	ClassLoader getJpaTempClassLoader();
 
+	/**
+	 * Access to class loading capabilities
+	 */
 	ClassLoaderAccess getClassLoaderAccess();
 
 	/**
@@ -172,16 +205,13 @@ public interface BootstrapContext {
 	 */
 	Collection<CacheRegionDefinition> getCacheRegionDefinitions();
 
+	/**
+	 * See {@link ManagedTypeRepresentationResolver}
+	 */
 	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	/**
 	 * Releases the "bootstrap only" resources held by this BootstrapContext.
-	 * <p>
-	 * Only one call to this method is supported, after we have completed the process of
-	 * building the (non-inflight) Metadata impl.  We may want to delay this until we
-	 * get into SF building.  Not sure yet.
-	 *
-	 * @todo verify this ^^
 	 */
 	void release();
 

@@ -806,7 +806,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 
 			final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
-			final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
+			final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
 
 			final Properties properties = new Properties();
 			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {

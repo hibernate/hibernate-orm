@@ -8,8 +8,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Locale;
 
-import jakarta.xml.bind.JAXBElement;
-
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
@@ -19,13 +17,14 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
+import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
+
+import jakarta.xml.bind.JAXBElement;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;

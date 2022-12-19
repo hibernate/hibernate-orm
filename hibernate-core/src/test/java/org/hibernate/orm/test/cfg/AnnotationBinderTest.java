@@ -6,24 +6,26 @@
  */
 package org.hibernate.orm.test.cfg;
 
-import static org.junit.Assert.assertTrue;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.internal.EntityBinder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.CoreMessageLogger;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.annotations.EntityBinder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.jboss.logging.Logger;
-import org.junit.Rule;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dominique Toupin

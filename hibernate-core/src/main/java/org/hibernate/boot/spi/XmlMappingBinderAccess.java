@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Poor naming.  Models the binder and a class-loader to be a
- * one-stop-shop in terms of {@link #bind binding} a resource
+ * one-stop-shop in terms of binding mappings.
  *
  * @author Steve Ebersole
  */
@@ -53,6 +53,9 @@ public class XmlMappingBinderAccess {
 		return mappingBinder;
 	}
 
+	/**
+	 * Create a {@linkplain Binding binding} from a named URL resource
+	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(String resource) {
 		LOG.tracef( "reading mappings from resource : %s", resource );
 
@@ -66,6 +69,9 @@ public class XmlMappingBinderAccess {
 		return new UrlXmlSource( origin, url ).doBind( getMappingBinder() );
 	}
 
+	/**
+	 * Create a {@linkplain Binding binding} from a File reference
+	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(File file) {
 		final Origin origin = new Origin( SourceType.FILE, file.getPath() );
 		LOG.tracef( "reading mappings from file : %s", origin.getName() );
@@ -78,6 +84,9 @@ public class XmlMappingBinderAccess {
 		return new FileXmlSource( origin, file ).doBind( getMappingBinder() );
 	}
 
+	/**
+	 * Create a {@linkplain Binding binding} from an input stream
+	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStreamAccess xmlInputStreamAccess) {
 		LOG.tracef( "reading mappings from InputStreamAccess : %s", xmlInputStreamAccess.getStreamName() );
 
@@ -97,6 +106,9 @@ public class XmlMappingBinderAccess {
 		}
 	}
 
+	/**
+	 * Create a {@linkplain Binding binding} from an input stream
+	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(InputStream xmlInputStream) {
 		LOG.trace( "reading mappings from InputStream" );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
@@ -104,6 +116,9 @@ public class XmlMappingBinderAccess {
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );
 	}
 
+	/**
+	 * Create a {@linkplain Binding binding} from a URL
+	 */
 	public <X extends BindableMappingDescriptor> Binding<X> bind(URL url) {
 		final String urlExternalForm = url.toExternalForm();
 		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );

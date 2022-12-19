@@ -6,16 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;

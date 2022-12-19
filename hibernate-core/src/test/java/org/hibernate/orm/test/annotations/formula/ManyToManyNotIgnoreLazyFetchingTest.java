@@ -6,6 +6,26 @@
  */
 package org.hibernate.orm.test.annotations.formula;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.model.internal.AnnotationBinder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,23 +34,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.jboss.logging.Logger;
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

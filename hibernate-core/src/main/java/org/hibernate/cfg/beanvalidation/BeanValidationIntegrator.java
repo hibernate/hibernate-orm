@@ -84,9 +84,10 @@ public class BeanValidationIntegrator implements Integrator {
 	}
 
 	@Override
-	public void integrate(Metadata metadata,
-						  BootstrapContext bootstrapContext,
-						  SessionFactoryImplementor sessionFactory) {
+	public void integrate(
+			Metadata metadata,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...

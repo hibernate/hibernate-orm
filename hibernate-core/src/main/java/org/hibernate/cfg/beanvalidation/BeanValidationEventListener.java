@@ -10,12 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.TraversableResolver;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -32,6 +26,13 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.TraversableResolver;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -109,14 +110,16 @@ public class BeanValidationEventListener
 		return false;
 	}
 
-	private <T> void validate(T object, RepresentationMode mode, EntityPersister persister,
-							  SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
+	private <T> void validate(
+			T object,
+			RepresentationMode mode,
+			EntityPersister persister,
+			SessionFactoryImplementor sessionFactory,
+			GroupsPerOperation.Operation operation) {
 		if ( object == null || mode != RepresentationMode.POJO ) {
 			return;
 		}
-		TraversableResolver tr = new HibernateTraversableResolver(
-				persister, associationsPerEntityPersister, sessionFactory
-		);
+		TraversableResolver tr = new HibernateTraversableResolver( persister, associationsPerEntityPersister, sessionFactory );
 		Validator validator = factory.usingContext()
 				.traversableResolver( tr )
 				.getValidator();

@@ -786,9 +786,12 @@ public class H2Dialect extends Dialect {
 				: H2IdentityColumnSupport.INSTANCE;
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from final table (insert .... )}
+	 */
 	@Override
 	public boolean supportsInsertReturning() {
-		return getVersion().isSameOrAfter( 2 ); // actually 'final table'
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override

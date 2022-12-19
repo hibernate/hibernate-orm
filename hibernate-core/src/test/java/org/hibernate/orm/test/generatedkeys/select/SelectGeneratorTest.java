@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class SelectGeneratorTest {
 
 	@Test
-	public void testJDBC3GetGeneratedKeysSupportOnOracle(SessionFactoryScope scope) {
+	public void test(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					MyEntity e = new MyEntity( "entity-1" );

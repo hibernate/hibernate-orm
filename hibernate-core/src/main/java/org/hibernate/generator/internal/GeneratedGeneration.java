@@ -39,7 +39,7 @@ public class GeneratedGeneration implements InDatabaseGenerator {
 	}
 
 	public GeneratedGeneration(Generated annotation) {
-		eventTypes = annotation.value() == GenerationTime.ALWAYS
+		eventTypes = annotation.value() == GenerationTime.INSERT
 				? fromArray( annotation.event() )
 				: annotation.value().eventTypes();
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };

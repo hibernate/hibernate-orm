@@ -45,7 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  * In the second scenario, we may ask Hibernate to resynchronize the in-memory state
  * with the database after each {@code insert} or {@code update} by annotating the
- * persistent attribute {@link Generated @Generated(value=ALWAYS, writable=true)}.
+ * persistent attribute {@link Generated @Generated(event={INSERT,UPDATE}, writable=true)}.
  * This results in a SQL {@code select} after every {@code insert} or {@code update}.
  *
  * @see ColumnTransformers

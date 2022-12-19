@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
@@ -101,10 +102,10 @@ public class SelectGenerator
 	@Override
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
 		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-		if ( dialect.supportsInsertReturning() ) {
-			//TODO: this is not quite right, since TableInsertReturningBuilder and then TableInsertStandard
-			//      ultimately end up calling the SqlAstTranslator to generate the SQL which on H2 delegates
-			//      back to IdentityColumnSupport, and this just might not be an identity column
+		if ( dialect.supportedInsertReturningGeneratedKeys() ) {
+			return new GetGeneratedKeysDelegate( persister, dialect, false );
+		}
+		else if ( dialect.supportsInsertReturning() ) {
 			return new InsertReturningDelegate( persister, dialect );
 		}
 		else {

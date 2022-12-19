@@ -18,6 +18,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -39,11 +40,13 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
 public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	private final PostInsertIdentityPersister persister;
 	private final Dialect dialect;
+	private final boolean inferredKeys;
 
-	public GetGeneratedKeysDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
+	public GetGeneratedKeysDelegate(PostInsertIdentityPersister persister, Dialect dialect, boolean inferredKeys) {
 		super( persister );
 		this.persister = persister;
 		this.dialect = dialect;
+		this.inferredKeys = inferredKeys;
 	}
 
 	@Override @Deprecated
@@ -78,8 +81,10 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 	@Override
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
-		return session.getJdbcCoordinator().getMutationStatementPreparer()
-				.prepareStatement( insertSql, RETURN_GENERATED_KEYS );
+		MutationStatementPreparer preparer = session.getJdbcCoordinator().getMutationStatementPreparer();
+		return inferredKeys
+				? preparer.prepareStatement( insertSql, RETURN_GENERATED_KEYS )
+				: preparer.prepareStatement( insertSql, persister.getRootTableKeyColumnNames() );
 	}
 
 	@Override

@@ -3448,6 +3448,9 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	public boolean supportedInsertReturningGeneratedKeys() {
+		return false;
+	}
 	/**
 	 * Does this dialect support the given fetch clause type.
 	 *

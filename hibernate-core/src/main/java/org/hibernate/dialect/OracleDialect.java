@@ -323,6 +323,10 @@ public class OracleDialect extends Dialect {
 		return "current_timestamp";
 	}
 
+	@Override
+	public boolean supportedInsertReturningGeneratedKeys() {
+		return true;
+	}
 
 	/**
 	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
@@ -423,7 +427,7 @@ public class OracleDialect extends Dialect {
 	 * Oracle supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by
 	 * using to_char() with a format string instead of extract().
-	 *
+	 * <p>
 	 * Thus, the additional supported fields are
 	 * {@link TemporalUnit#DAY_OF_YEAR},
 	 * {@link TemporalUnit#DAY_OF_MONTH},

@@ -25,7 +25,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -488,21 +487,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	protected String generateSubquery(PersistentClass model, Metadata mapping) {
 
-		Dialect dialect = getFactory().getJdbcServices().getDialect();
-		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
+		final Dialect dialect = getFactory().getJdbcServices().getDialect();
 
 		if ( !model.hasSubclasses() ) {
-			return model.getTable().getQualifiedName( sqlStringGenerationContext );
+			return model.getTable().getQualifiedName( getFactory().getSqlStringGenerationContext() );
 		}
 
-		Set<Column> columns = new LinkedHashSet<>();
+		final Set<Column> columns = new LinkedHashSet<>();
 		for ( Table table : model.getSubclassTableClosure() ) {
 			if ( !table.isAbstractUnionTable() ) {
 				columns.addAll( table.getColumns() );
 			}
 		}
 
-		StringBuilder buf = new StringBuilder()
+		final StringBuilder subquery = new StringBuilder()
 				.append( "( " );
 
 		List<PersistentClass> classes = new JoinedList<>(
@@ -514,37 +512,29 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			Table table = clazz.getTable();
 			if ( !table.isAbstractUnionTable() ) {
 				//TODO: move to .sql package!!
-				buf.append( "select " );
+				if ( subquery.length() > 2 ) {
+					subquery.append( " union " );
+					if ( dialect.supportsUnionAll() ) {
+						subquery.append( "all " );
+					}
+				}
+				subquery.append( "select " );
 				for ( Column col : columns ) {
-					if ( !table.containsColumn(col) ) {
+					if ( !table.containsColumn( col ) ) {
 						int sqlType = col.getSqlTypeCode( mapping );
-						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
+						subquery.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
 								.append(" as ");
 					}
-					buf.append(col.getQuotedName(dialect));
-					buf.append(", ");
+					subquery.append( col.getQuotedName( dialect ) )
+							.append(", ");
 				}
-				buf.append( clazz.getSubclassId() )
-						.append( " as clazz_" );
-				buf.append( " from " )
-						.append(
-								table.getQualifiedName(
-										sqlStringGenerationContext
-								)
-						);
-				buf.append( " union " );
-				if ( dialect.supportsUnionAll() ) {
-					buf.append( "all " );
-				}
+				subquery.append( clazz.getSubclassId() )
+						.append( " as clazz_ from " )
+						.append( table.getQualifiedName( getFactory().getSqlStringGenerationContext() ) );
 			}
 		}
 
-		if ( buf.length() > 2 ) {
-			//chop the last union (all)
-			buf.setLength( buf.length() - ( dialect.supportsUnionAll() ? 11 : 7 ) );
-		}
-
-		return buf.append( " )" ).toString();
+		return subquery.append( " )" ).toString();
 	}
 
 	protected String generateSubquery(Set<String> treated) {
@@ -557,10 +547,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
-		final SelectableConsumer selectableConsumer = (i, selectable) -> {
+		final SelectableConsumer selectableConsumer = (i, selectable) ->
 			selectables.computeIfAbsent( selectable.getSelectionExpression(), k -> new HashMap<>() )
 					.put( selectable.getContainingTableExpression(), selectable );
-		};
 		// Collect the concrete subclass table names for the treated entity names
 		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
 		for ( String subclassName : treated ) {
@@ -589,6 +578,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( name );
 			final String subclassTableName = persister.getTableName();
 			if ( treatedTableNames.contains( subclassTableName ) ) {
+				if ( buf.length() > 2 ) {
+					buf.append(" union ");
+					if ( dialect.supportsUnionAll() ) {
+						buf.append("all ");
+					}
+				}
 				buf.append( "select " );
 				for ( Map<String, SelectableMapping> selectableMappings : selectables.values() ) {
 					SelectableMapping selectableMapping = selectableMappings.get( subclassTableName );
@@ -603,20 +598,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					new ColumnReference( (String) null, selectableMapping ).appendReadExpression( sqlAppender );
 					buf.append( ", " );
 				}
-				buf.append( persister.getDiscriminatorSQLValue() ).append( " as clazz_" );
-				buf.append( " from " ).append( subclassTableName );
-				buf.append( " union " );
-				if ( dialect.supportsUnionAll() ) {
-					buf.append( "all " );
-				}
+				buf.append( persister.getDiscriminatorSQLValue() )
+						.append( " as clazz_ from " )
+						.append( subclassTableName );
 			}
 		}
-
-		if ( buf.length() > 2 ) {
-			//chop the last union (all)
-			buf.setLength( buf.length() - ( dialect.supportsUnionAll() ? 11 : 7 ) );
-		}
-
 		return buf.append( " )" ).toString();
 	}
 

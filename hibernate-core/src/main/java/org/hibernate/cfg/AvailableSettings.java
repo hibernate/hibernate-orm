@@ -1884,7 +1884,7 @@ public interface AvailableSettings {
 	/**
 	 * JPA-standard variant of {@link #HBM2DDL_IMPORT_FILES} for specifying a database
 	 * initialization script to be run as part of schema-export
-	 *
+	 * <p>
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script
 	 * or a string designating the {@link java.net.URL} for the SQL load script.
 	 */
@@ -1894,7 +1894,7 @@ public interface AvailableSettings {
 	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES} used to specify whether database
 	 * schemas used in the mapping model should be created on export in addition to creating
 	 * the tables, sequences, etc.
-	 *
+	 * <p>
 	 * The default is {@code false}, meaning to not create schemas
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCHEMAS = "jakarta.persistence.create-database-schemas";

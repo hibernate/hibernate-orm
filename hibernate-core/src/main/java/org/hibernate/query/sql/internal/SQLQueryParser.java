@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
@@ -70,11 +71,14 @@ public class SQLQueryParser {
 			return sqlQuery;
 		}
 
+		final SqlStringGenerationContext sqlStringGenerationContext = factory.getSqlStringGenerationContext();
+		final Identifier defaultCatalog = sqlStringGenerationContext.getDefaultCatalog();
+		final Identifier defaultSchema = sqlStringGenerationContext.getDefaultSchema();
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
+
 		final StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
+
 		int left, right;
-
-		SqlStringGenerationContext sqlStringGenerationContext = factory.getSqlStringGenerationContext();
-
 		// replace {....} with corresponding column aliases
 		for ( int curr = 0; curr < sqlQuery.length(); curr = right + 1 ) {
 			if ( ( left = sqlQuery.indexOf( '{', curr ) ) < 0 ) {
@@ -98,32 +102,28 @@ public class SQLQueryParser {
 				// Domain replacement
 				switch ( aliasPath ) {
 					case DOMAIN_PLACEHOLDER: {
-						final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
-						if ( catalogName != null ) {
-							result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
+						if ( defaultCatalog != null ) {
+							result.append( defaultCatalog.render(dialect) );
 							result.append( "." );
 						}
-						final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
-						if ( schemaName != null ) {
-							result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
+						if ( defaultSchema != null ) {
+							result.append( defaultSchema.render(dialect) );
 							result.append( "." );
 						}
 						break;
 					}
 					// Schema replacement
 					case SCHEMA_PLACEHOLDER: {
-						final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
-						if ( schemaName != null ) {
-							result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
+						if ( defaultSchema != null ) {
+							result.append( defaultSchema.render(dialect) );
 							result.append( "." );
 						}
 						break;
 					}
 					// Catalog replacement
 					case CATALOG_PLACEHOLDER: {
-						final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
-						if ( catalogName != null ) {
-							result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
+						if ( defaultCatalog != null ) {
+							result.append( defaultCatalog.render(dialect) );
 							result.append( "." );
 						}
 						break;

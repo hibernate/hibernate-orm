@@ -18,6 +18,8 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -404,6 +406,27 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		}
 	}
 
+	@Internal
+	public boolean queuedRemove(Object element) {
+		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentBag.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+		}
+		else {
+			final CollectionPersister persister = entry.getLoadedPersister();
+			if ( hasQueuedOperations() ) {
+				getSession().flush();
+			}
+			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
+				elementRemoved = true;
+				queueOperation( new PersistentBag.SimpleRemove( (E) element ) );
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		read();
@@ -631,6 +654,18 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		@Override
 		public void operate() {
 			bag.add( getAddedInstance() );
+		}
+	}
+
+	final class SimpleRemove extends AbstractValueDelayedOperation {
+
+		public SimpleRemove(E orphan) {
+			super( null, orphan );
+		}
+
+		@Override
+		public void operate() {
+			bag.remove( getOrphan() );
 		}
 	}
 }

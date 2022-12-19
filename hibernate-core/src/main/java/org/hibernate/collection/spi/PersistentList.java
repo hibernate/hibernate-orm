@@ -15,6 +15,8 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -215,6 +217,27 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		else {
 			return false;
 		}
+	}
+
+	@Internal
+	public boolean queuedRemove(Object element) {
+		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentList.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+		}
+		else {
+			final CollectionPersister persister = entry.getLoadedPersister();
+			if ( hasQueuedOperations() ) {
+				getSession().flush();
+			}
+			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
+				elementRemoved = true;
+				queueOperation( new PersistentList.SimpleRemove( (E) element ) );
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

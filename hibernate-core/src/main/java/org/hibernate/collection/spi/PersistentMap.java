@@ -15,8 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -190,6 +193,28 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 			dirty();
 		}
 		return map.remove( key );
+	}
+
+	@Internal
+	public E queuedRemove(Object key) {
+		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentMap.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+		}
+		else {
+			final CollectionPersister persister = entry.getLoadedPersister();
+			if ( hasQueuedOperations() ) {
+				getSession().flush();
+			}
+			Object element = persister.getElementByIndex( entry.getLoadedKey(), key, getSession(), getOwner() );
+			if ( element != null ) {
+				elementRemoved = true;
+				queueOperation( new Remove( (K) key, (E) element ) );
+				return (E) element;
+			}
+		}
+		return null;
 	}
 
 	@Override

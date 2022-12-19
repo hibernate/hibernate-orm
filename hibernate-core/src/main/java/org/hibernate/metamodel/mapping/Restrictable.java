@@ -17,7 +17,9 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Things that can have {@link org.hibernate.annotations.Where},
- * and/or {@link org.hibernate.annotations.Filter} applied to them
+ * and/or {@link org.hibernate.annotations.Filter} applied to them.
+ * This is effectively {@linkplain EntityMappingType entities} and
+ * {@linkplain PluralAttributeMapping plural attributes}.
  */
 public interface Restrictable extends FilterRestrictable, WhereRestrictable {
 	/**

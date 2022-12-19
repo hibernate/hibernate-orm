@@ -14,9 +14,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Mapping-model corollary to JPA's {@link jakarta.persistence.metamodel.ManagedType}
- *
- * @see jakarta.persistence.metamodel.ManagedType
+ * Mapping-model corollary to {@link jakarta.persistence.metamodel.ManagedType}
  *
  * @author Steve Ebersole
  */

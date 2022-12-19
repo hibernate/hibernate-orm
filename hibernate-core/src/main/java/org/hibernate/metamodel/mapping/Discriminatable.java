@@ -14,10 +14,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Things that have a discriminator associated with it.
- *
- * @apiNote Plural-attributes are considered discriminatable, which only
- * has an effect for to-many collections and applies the discriminator from
- * the associated entity
  */
 public interface Discriminatable {
 	/**

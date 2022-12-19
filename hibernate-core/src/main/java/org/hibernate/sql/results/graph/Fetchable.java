@@ -16,7 +16,8 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 
 /**
- * Parts of the domain model that can be fetched
+ * Parts of the domain model that can be fetched.  In other words,
+ * a {@link ModelPart} which can produce {@link Fetch} references.
  *
  * @author Steve Ebersole
  */

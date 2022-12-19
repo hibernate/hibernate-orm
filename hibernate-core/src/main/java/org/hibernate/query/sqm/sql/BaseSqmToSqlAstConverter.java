@@ -6061,7 +6061,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static Expression getActualExpression(Expression expression) {
 		if ( expression.getExpressionType() instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) expression.getExpressionType();
-			if ( embeddableValuedModelPart.getJavaType() instanceof TemporalJavaType<?> ) {
+			if ( embeddableValuedModelPart.getJavaType().isTemporalType() ) {
 				return ( (SqlTupleContainer) expression ).getSqlTuple().getExpressions().get( 0 );
 			}
 		}

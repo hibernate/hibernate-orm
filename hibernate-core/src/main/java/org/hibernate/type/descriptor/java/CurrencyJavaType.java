@@ -61,4 +61,13 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		return 3;
 	}
 
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.lang.String":
+				return true;
+			default:
+				return false;
+		}
+	}
 }

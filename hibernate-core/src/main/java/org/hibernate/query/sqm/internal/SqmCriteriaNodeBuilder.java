@@ -42,6 +42,9 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -229,6 +232,42 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory.get();
+	}
+
+	public boolean areTypesComparable(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
+		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
+			return true;
+		}
+
+		if ( !lhsType.checkTypeComparability() || !rhsType.checkTypeComparability() ) {
+			return true;
+		}
+
+		final JavaType<?> lhsJavaType = lhsType.getExpressibleJavaType();
+		final JavaType<?> rhsJavaType = rhsType.getExpressibleJavaType();
+
+		if ( lhsJavaType.isTemporalType() || rhsJavaType.isTemporalType() ) {
+			return true;
+		}
+
+		if ( lhsJavaType.isUnknownType() || rhsJavaType.isUnknownType() ) {
+			return true;
+		}
+
+		if ( lhsJavaType == rhsJavaType
+				|| lhsJavaType.isWider( rhsJavaType )
+				|| rhsJavaType.isWider( lhsJavaType ) ) {
+			// Assume we can coerce one to another
+			return true;
+		}
+
+		if ( lhsJavaType.getJavaTypeClass().isAssignableFrom( rhsJavaType.getJavaTypeClass() )
+				|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() ) ) {
+			// Polymorphic entity comparison
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -1253,6 +1292,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		public Class<T> getBindableJavaType() {
 			return javaType.getJavaTypeClass();
 		}
+
+		@Override
+		public boolean checkTypeComparability() {
+			return false;
+		}
 	}
 
 	@Override
@@ -1996,6 +2040,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Expression<? extends Y> lower, Expression<? extends Y> upper) {
+		assertComparable( value, lower );
+		assertComparable( value, upper );
 		//noinspection unchecked
 		return new SqmBetweenPredicate(
 				(SqmExpression<? extends Y>) value,
@@ -2010,17 +2056,36 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@SuppressWarnings("unchecked")
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
 		final SqmExpression<? extends Y> valueExpression = (SqmExpression<? extends Y>) value;
+		final SqmExpression<?> lowerExpr = value( lower, valueExpression );
+		final SqmExpression<?> upperExpr = value( upper, valueExpression );
+		assertComparable( valueExpression, lowerExpr );
+		assertComparable( valueExpression, upperExpr );
 		return new SqmBetweenPredicate(
 				valueExpression,
-				value( lower, valueExpression ),
-				value( upper, valueExpression ),
+				lowerExpr,
+				upperExpr,
 				false,
 				this
 		);
 	}
 
+	public void assertComparable(Expression<?> x, Expression<?> y) {
+		final SqmExpressible<?> lhsType = ((SqmExpression<?>) x).getNodeType();
+		final SqmExpressible<?> rhsType = ((SqmExpression<?>) y).getNodeType();
+		if ( !areTypesComparable( lhsType, rhsType ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Can't compare test expression of type [%s] with element of type [%s]",
+							lhsType,
+							rhsType
+					)
+			);
+		}
+	}
+
 	@Override
 	public SqmPredicate equal(Expression<?> x, Expression<?> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2031,16 +2096,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate equal(Expression<?> x, Object y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Expression<?> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2051,16 +2119,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Object y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Expression<?> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
@@ -2071,16 +2142,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Object y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
@@ -2091,16 +2165,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Object y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2112,16 +2189,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Y y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
-				value( y, (SqmExpression) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Expression<? extends Y> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2133,16 +2213,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				value( y, (SqmExpression) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2153,10 +2236,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Y y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
@@ -2173,16 +2258,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2193,16 +2281,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Number y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2213,16 +2304,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Number y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2233,16 +2327,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Number y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}
 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
+		assertComparable( x, y );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2253,10 +2350,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Number y) {
+		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
+		assertComparable( x, yExpr );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				value( y, (SqmExpression<?>) x ),
+				yExpr,
 				this
 		);
 	}

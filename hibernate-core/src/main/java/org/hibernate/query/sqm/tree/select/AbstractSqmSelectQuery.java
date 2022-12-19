@@ -27,10 +27,12 @@ import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -373,4 +375,37 @@ public abstract class AbstractSqmSelectQuery<T>
 		}
 		sqmQueryPart.appendHqlString( sb );
 	}
+
+	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
+		final Selection<? extends T> resultSelection;
+		Class<T> resultType = getResultType();
+		if ( resultType == null || resultType == Object.class ) {
+			switch ( selections.length ) {
+				case 0: {
+					throw new IllegalArgumentException(
+							"empty selections passed to criteria query typed as Object"
+					);
+				}
+				case 1: {
+					resultSelection = ( Selection<? extends T> ) selections[0];
+					break;
+				}
+				default: {
+					setResultType( (Class<T>) Object[].class );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+				}
+			}
+		}
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, selections );
+		}
+		return resultSelection;
+	}
+
 }

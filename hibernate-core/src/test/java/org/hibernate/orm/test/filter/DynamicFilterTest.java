@@ -378,8 +378,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Department> criteria = criteriaBuilder.createQuery( Department.class );
-					criteria.where( criteriaBuilder.in( criteria.from( Department.class ).get( "id" ) )
-											.value( subquery ) );
+					criteria.where( criteriaBuilder.in( criteria.from( Department.class ) ).value( subquery ) );
 
 					Query<Department> departmentsQuery = session.createQuery( criteria );
 					List<Department> departments = departmentsQuery.list();
@@ -440,7 +439,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "region" ).setParameter( "region", "APAC" );
 					session.enableFilter( "effectiveDate" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 
-					Subquery<Product> productSubquery = detachedCriteriaBuilder.createQuery().subquery( Product.class );
+					Subquery<Long> productSubquery = detachedCriteriaBuilder.createQuery().subquery( Long.class );
 					Root<Product> productRoot = productSubquery.from( Product.class );
 					productSubquery.select( productRoot.get( "id" ) );
 					productSubquery.where( detachedCriteriaBuilder.equal(
@@ -549,7 +548,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "region" ).setParameter( "region", "APAC" );
 
 					List orders = session.createQuery(
-							"select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3" )
+							"select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product.id and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3" )
 							.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 					assertEquals( "Incorrect orders count", 1, orders.size() );

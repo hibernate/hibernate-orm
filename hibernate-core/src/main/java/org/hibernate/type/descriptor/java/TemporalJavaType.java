@@ -45,4 +45,9 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 	<X> TemporalJavaType<X> resolveTypeForPrecision(
 			TemporalType precision,
 			TypeConfiguration typeConfiguration);
+
+	@Override
+	default boolean isTemporalType() {
+		return true;
+	}
 }

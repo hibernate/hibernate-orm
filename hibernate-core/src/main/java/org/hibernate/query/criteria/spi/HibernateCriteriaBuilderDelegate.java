@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -1255,6 +1256,339 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return criteriaBuilder.desc( x, nullsFirst );
+	}
+
+	@Override
+	public <T> JpaExpression<T> sql(String pattern, Class<T> type, Expression<?>... arguments) {
+		return criteriaBuilder.sql( pattern, type, arguments );
+	}
+
+	@Override
+	public JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
+		return criteriaBuilder.format( datetime, pattern );
+	}
+
+	@Override
+	public JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.year( datetime );
+	}
+
+	@Override
+	public JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.month( datetime );
+	}
+
+	@Override
+	public JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.day( datetime );
+	}
+
+	@Override
+	public JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.hour( datetime );
+	}
+
+	@Override
+	public JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.minute( datetime );
+	}
+
+	@Override
+	public JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime) {
+		return criteriaBuilder.second( datetime );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(Expression<String> string, String replacement, int start) {
+		return criteriaBuilder.overlay( string, replacement, start );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start) {
+		return criteriaBuilder.overlay( string, replacement, start );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start) {
+		return criteriaBuilder.overlay( string, replacement, start );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start) {
+		return criteriaBuilder.overlay( string, replacement, start );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(Expression<String> string, String replacement, int start, int length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			int start,
+			int length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			Expression<Integer> start,
+			int length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			int length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			int start,
+			Expression<Integer> length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			int start,
+			Expression<Integer> length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			Expression<Integer> start,
+			Expression<Integer> length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			Expression<Integer> length) {
+		return criteriaBuilder.overlay( string, replacement, start, length );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, int length) {
+		return criteriaBuilder.pad( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length) {
+		return criteriaBuilder.pad( ts, x, length );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, Expression<Integer> length) {
+		return criteriaBuilder.pad( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length) {
+		return criteriaBuilder.pad( ts, x, length );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, int length, char padChar) {
+		return criteriaBuilder.pad( x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, char padChar) {
+		return criteriaBuilder.pad( ts, x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, char padChar) {
+		return criteriaBuilder.pad( x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length, char padChar) {
+		return criteriaBuilder.pad( ts, x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, int length, Expression<Character> padChar) {
+		return criteriaBuilder.pad( x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, Expression<Character> padChar) {
+		return criteriaBuilder.pad( ts, x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, Expression<Character> padChar) {
+		return criteriaBuilder.pad( x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> pad(
+			Trimspec ts,
+			Expression<String> x,
+			Expression<Integer> length,
+			Expression<Character> padChar) {
+		return criteriaBuilder.pad( ts, x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> left(Expression<String> x, int length) {
+		return criteriaBuilder.left( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> left(Expression<String> x, Expression<Integer> length) {
+		return criteriaBuilder.left( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> right(Expression<String> x, int length) {
+		return criteriaBuilder.right( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> right(Expression<String> x, Expression<Integer> length) {
+		return criteriaBuilder.right( x, length );
+	}
+
+	@Override
+	public JpaFunction<String> replace(Expression<String> x, String pattern, String replacement) {
+		return criteriaBuilder.replace( x, pattern, replacement );
+	}
+
+	@Override
+	public JpaFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement) {
+		return criteriaBuilder.replace( x, pattern, replacement );
+	}
+
+	@Override
+	public JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement) {
+		return criteriaBuilder.replace( x, pattern, replacement );
+	}
+
+	@Override
+	public JpaFunction<String> replace(
+			Expression<String> x,
+			Expression<String> pattern,
+			Expression<String> replacement) {
+		return criteriaBuilder.replace( x, pattern, replacement );
+	}
+
+	@Override
+	public JpaFunction<String> collate(Expression<String> x, String collation) {
+		return criteriaBuilder.collate( x, collation );
+	}
+
+	@Override
+	public JpaExpression<Double> log10(Expression<? extends Number> x) {
+		return criteriaBuilder.log10( x );
+	}
+
+	@Override
+	public JpaExpression<Double> log(Number b, Expression<? extends Number> x) {
+		return criteriaBuilder.log( b, x );
+	}
+
+	@Override
+	public JpaExpression<Double> log(Expression<? extends Number> b, Expression<? extends Number> x) {
+		return criteriaBuilder.log( b, x );
+	}
+
+	@Override
+	public JpaExpression<Double> pi() {
+		return criteriaBuilder.pi();
+	}
+
+	@Override
+	public JpaExpression<Double> sin(Expression<? extends Number> x) {
+		return criteriaBuilder.sin( x );
+	}
+
+	@Override
+	public JpaExpression<Double> cos(Expression<? extends Number> x) {
+		return criteriaBuilder.cos( x );
+	}
+
+	@Override
+	public JpaExpression<Double> tan(Expression<? extends Number> x) {
+		return criteriaBuilder.tan( x );
+	}
+
+	@Override
+	public JpaExpression<Double> asin(Expression<? extends Number> x) {
+		return criteriaBuilder.asin( x );
+	}
+
+	@Override
+	public JpaExpression<Double> acos(Expression<? extends Number> x) {
+		return criteriaBuilder.acos( x );
+	}
+
+	@Override
+	public JpaExpression<Double> atan(Expression<? extends Number> x) {
+		return criteriaBuilder.atan( x );
+	}
+
+	@Override
+	public JpaExpression<Double> atan2(Number y, Expression<? extends Number> x) {
+		return criteriaBuilder.atan2( y, x );
+	}
+
+	@Override
+	public JpaExpression<Double> atan2(Expression<? extends Number> y, Number x) {
+		return criteriaBuilder.atan2( y, x );
+	}
+
+	@Override
+	public JpaExpression<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x) {
+		return criteriaBuilder.atan2( y, x );
+	}
+
+	@Override
+	public JpaExpression<Double> sinh(Expression<? extends Number> x) {
+		return criteriaBuilder.sinh( x );
+	}
+
+	@Override
+	public JpaExpression<Double> cosh(Expression<? extends Number> x) {
+		return criteriaBuilder.cosh( x );
+	}
+
+	@Override
+	public JpaExpression<Double> tanh(Expression<? extends Number> x) {
+		return criteriaBuilder.tanh( x );
+	}
+
+	@Override
+	public JpaExpression<Double> degrees(Expression<? extends Number> x) {
+		return criteriaBuilder.degrees( x );
+	}
+
+	@Override
+	public JpaExpression<Double> radians(Expression<? extends Number> x) {
+		return criteriaBuilder.radians( x );
 	}
 
 	@Override

@@ -829,11 +829,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitSelectStatement(SelectStatement statement) {
 		MutationStatement oldDmlStatement = dmlStatement;
 		dmlStatement = null;
+		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
 		try {
+			parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
+
 			visitCteContainer( statement );
 			statement.getQueryPart().accept( this );
 		}
 		finally {
+			parameterRenderingMode = oldParameterRenderingMode;
 			dmlStatement = oldDmlStatement;
 		}
 	}

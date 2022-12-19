@@ -21,7 +21,7 @@ import static org.hibernate.generator.EventType.INSERT;
  */
 @Entity @Table(name="my_entity")
 public class MyEntity {
-	@Id @Generated(event = INSERT)
+	@Id @Generated
 	@ColumnDefault("-666") //workaround for h2 'before insert' triggers being crap
 	private Long id;
 

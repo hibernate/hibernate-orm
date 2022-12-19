@@ -49,7 +49,7 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * <pre>{@code
  * @Entity @Table(name="TableWithPKAssignedByTrigger")
  * public class TriggeredEntity {
- *     @Id @Generated(event = INSERT)
+ *     @Id @Generated
  *     private Long id;
  *
  *     @NaturalId

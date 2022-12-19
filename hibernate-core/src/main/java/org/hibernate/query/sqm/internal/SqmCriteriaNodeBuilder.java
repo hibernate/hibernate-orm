@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +59,6 @@ import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.hibernate.query.spi.QueryEngine;
@@ -71,6 +71,7 @@ import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
@@ -98,9 +99,11 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -143,7 +146,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
@@ -2567,6 +2569,498 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Non-standard HQL functions
+
+	@Override
+	public <T> SqmFunction<T> sql(String pattern, Class<T> type, Expression<?>... arguments) {
+		List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
+		sqmArguments.add( 0, literal( pattern ) );
+		return getFunctionDescriptor( "sql" ).generateSqmExpression(
+				sqmArguments,
+				getTypeConfiguration().getBasicTypeForJavaType( type ),
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
+		SqmExpression<String> patternLiteral = value( pattern );
+		return getFunctionDescriptor( "format" ).generateSqmExpression(
+				asList( (SqmExpression<?>) datetime, patternLiteral ),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	private <T> SqmFunction<T> extract(
+			Expression<? extends TemporalAccessor> datetime,
+			TemporalUnit temporalUnit,
+			Class<T> type) {
+		return getFunctionDescriptor( "extract" ).generateSqmExpression(
+				asList(
+						new SqmExtractUnit<>(
+								temporalUnit,
+								getTypeConfiguration().standardBasicTypeForJavaType( type ),
+								this
+						),
+						(SqmTypedNode<?>) datetime
+				),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Integer> year(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.YEAR, Integer.class );
+	}
+
+	@Override
+	public SqmFunction<Integer> month(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.MONTH, Integer.class );
+	}
+
+	@Override
+	public SqmFunction<Integer> day(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.DAY, Integer.class );
+	}
+
+	@Override
+	public SqmFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.HOUR, Integer.class );
+	}
+
+	@Override
+	public SqmFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.MINUTE, Integer.class );
+	}
+
+	@Override
+	public SqmFunction<Float> second(Expression<? extends TemporalAccessor> datetime) {
+		return extract( datetime, TemporalUnit.SECOND, Float.class );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(Expression<String> string, String replacement, int start) {
+		return overlay( string, replacement, value( start ), null );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start) {
+		return overlay( string, replacement, value( start ), null );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start) {
+		return overlay( string, value( replacement ), start, null );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start) {
+		return overlay( string, replacement, start, null );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(Expression<String> string, String replacement, int start, int length) {
+		return overlay( string, value( replacement ), value( start ), value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			int start,
+			int length) {
+		return overlay( string, replacement, value( start ), value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			Expression<Integer> start,
+			int length) {
+		return overlay( string, value( replacement ), start, value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			int length) {
+		return overlay( string, replacement, start, value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			int start,
+			Expression<Integer> length) {
+		return overlay( string, value( replacement ), value( start ), length );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			int start,
+			Expression<Integer> length) {
+		return overlay( string, replacement, value( start ), length );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			Expression<Integer> start,
+			Expression<Integer> length) {
+		return overlay( string, value( replacement ), start, length );
+	}
+
+	@Override
+	public SqmFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			Expression<Integer> length) {
+		SqmExpression<String> sqmString = (SqmExpression<String>) string;
+		SqmExpression<String> sqmReplacement = (SqmExpression<String>) replacement;
+		SqmExpression<Integer> sqmStart = (SqmExpression<Integer>) start;
+		return getFunctionDescriptor( "overlay" ).generateSqmExpression(
+				( length == null
+						? asList( sqmString, sqmReplacement, sqmStart )
+						: asList( sqmString, sqmReplacement, sqmStart, (SqmExpression<Integer>) length ) ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, int length) {
+		return pad( null, x, value( length ), null );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Trimspec ts, Expression<String> x, int length) {
+		return pad( ts, x, value( length ), null );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, Expression<Integer> length) {
+		return pad( null, x, length, null );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length) {
+		return pad( ts, x, length, null );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, int length, char padChar) {
+		return pad( null, x, value( length ), value( padChar ) );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Trimspec ts, Expression<String> x, int length, char padChar) {
+		return pad( ts, x, value( length ), value( padChar ) );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, int length, Expression<Character> padChar) {
+		return pad( null, x, value( length ), padChar );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Trimspec ts, Expression<String> x, int length, Expression<Character> padChar) {
+		return pad( ts, x, value( length ), padChar );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, Expression<Integer> length, char padChar) {
+		return pad( null, x, length, value( padChar ) );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length, char padChar) {
+		return pad( ts, x, length, value( padChar ) );
+	}
+
+	@Override
+	public SqmFunction<String> pad(Expression<String> x, Expression<Integer> length, Expression<Character> padChar) {
+		return pad( null, x, length, padChar );
+	}
+
+	@Override
+	public SqmFunction<String> pad(
+			Trimspec ts,
+			Expression<String> x,
+			Expression<Integer> length,
+			Expression<Character> padChar) {
+		SqmExpression<String> source = (SqmExpression<String>) x;
+		SqmExpression<Integer> sqmLength = (SqmExpression<Integer>) length;
+		SqmTrimSpecification padSpec = new SqmTrimSpecification(
+				ts == null ? TrimSpec.TRAILING : convertTrimSpec( ts ),
+				this
+		);
+		return getFunctionDescriptor( "pad" ).generateSqmExpression(
+				padChar != null
+						? asList( source, sqmLength, padSpec, (SqmExpression<Character>) padChar )
+						: asList( source, sqmLength, padSpec ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> left(Expression<String> x, int length) {
+		return left( x, value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> left(Expression<String> x, Expression<Integer> length) {
+		return getFunctionDescriptor( "left" ).generateSqmExpression(
+				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> right(Expression<String> x, int length) {
+		return right( x, value( length ) );
+	}
+
+	@Override
+	public SqmFunction<String> right(Expression<String> x, Expression<Integer> length) {
+		return getFunctionDescriptor( "right" ).generateSqmExpression(
+				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> replace(Expression<String> x, String pattern, String replacement) {
+		SqmExpression<String> sqmPattern = value( pattern );
+		return replace( x, sqmPattern, value( replacement, sqmPattern ) );
+	}
+
+	@Override
+	public SqmFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement) {
+		return replace( x, value( pattern ), replacement );
+	}
+
+	@Override
+	public SqmFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement) {
+		return replace( x, pattern, value( replacement ) );
+	}
+
+	@Override
+	public SqmFunction<String> replace(
+			Expression<String> x,
+			Expression<String> pattern,
+			Expression<String> replacement) {
+		return getFunctionDescriptor( "replace" ).generateSqmExpression(
+				asList(
+						(SqmExpression<String>) x,
+						(SqmExpression<String>) pattern,
+						(SqmExpression<String>) replacement
+				),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<String> collate(Expression<String> x, String collation) {
+		SqmCollation sqmCollation = new SqmCollation( collation, null, this );
+		return getFunctionDescriptor( "collate" ).generateSqmExpression(
+				asList( (SqmExpression<String>) x, sqmCollation ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+
+	@Override
+	public SqmFunction<Double> log10(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "log10" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> log(Number b, Expression<? extends Number> x) {
+		return log( value( b ), x );
+	}
+
+	@Override
+	public SqmFunction<Double> log(Expression<? extends Number> b, Expression<? extends Number> x) {
+		return getFunctionDescriptor( "log" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) b, (SqmTypedNode<?>) x ),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> pi() {
+		return getFunctionDescriptor( "pi" ).generateSqmExpression(
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> sin(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "sin" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> cos(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "cos" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> tan(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "tan" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> asin(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "asin" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> acos(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "acos" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> atan(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "atan" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> atan2(Number y, Expression<? extends Number> x) {
+		return atan2( value( y ), x );
+	}
+
+	@Override
+	public SqmFunction<Double> atan2(Expression<? extends Number> y, Number x) {
+		return atan2( y, value( x ) );
+	}
+
+	@Override
+	public SqmFunction<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x) {
+		return getFunctionDescriptor( "atan2" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) y, (SqmTypedNode<?>) x ),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> sinh(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "sinh" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> cosh(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "cosh" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> tanh(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "tanh" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> degrees(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "degrees" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public SqmFunction<Double> radians(Expression<? extends Number> x) {
+		return getFunctionDescriptor( "radians" ).generateSqmExpression(
+				(SqmTypedNode<?>) x,
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

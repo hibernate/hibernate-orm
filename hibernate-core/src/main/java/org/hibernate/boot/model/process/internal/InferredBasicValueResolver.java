@@ -81,7 +81,7 @@ public class InferredBasicValueResolver {
 						typeConfiguration
 				);
 			}
-			else if ( explicitJavaType instanceof TemporalJavaType ) {
+			else if ( explicitJavaType.isTemporalType() ) {
 				return fromTemporal(
 						(TemporalJavaType<T>) explicitJavaType,
 						null,
@@ -133,7 +133,7 @@ public class InferredBasicValueResolver {
 						typeConfiguration
 				);
 			}
-			else if ( reflectedJtd instanceof TemporalJavaType ) {
+			else if ( reflectedJtd.isTemporalType() ) {
 				return fromTemporal(
 						(TemporalJavaType<T>) reflectedJtd,
 						null,
@@ -170,7 +170,7 @@ public class InferredBasicValueResolver {
 						);
 						registeredElementType = resolution.getLegacyResolvedBasicType();
 					}
-					else if ( elementJtd instanceof TemporalJavaType ) {
+					else if ( elementJtd.isTemporalType() ) {
 						final InferredBasicValueResolution resolution = InferredBasicValueResolver.fromTemporal(
 								(TemporalJavaType<T>) elementJtd,
 								null,
@@ -492,7 +492,7 @@ public class InferredBasicValueResolver {
 		// Case #1 - explicit JavaType
 
 		if ( explicitJavaType != null ) {
-			if ( !(explicitJavaType instanceof TemporalJavaType) ) {
+			if ( !explicitJavaType.isTemporalType() ) {
 				throw new MappingException(
 						"Explicit JavaType [" + explicitJavaType +
 								"] defined for temporal value must implement TemporalJavaType"

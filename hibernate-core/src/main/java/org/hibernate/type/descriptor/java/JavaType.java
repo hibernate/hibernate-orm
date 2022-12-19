@@ -21,6 +21,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -321,6 +322,24 @@ public interface JavaType<T> extends Serializable {
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
 		return createJavaType( parameterizedType );
+	}
+
+	/**
+	 * Return true if the implementation is an instance of {@link  TemporalJavaType}
+	 *
+	 * @return true if it is an instance of {@link  TemporalJavaType}; false otherwise
+	 */
+	default boolean isTemporalType() {
+		return false;
+	}
+
+	/**
+	 * Return true if the implementation is an instance of {@link  org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType}
+	 *
+	 * @return true if it is an instance of {@link  UnknownBasicJavaType}; false otherwise
+	 */
+	default boolean isUnknownType(){
+		return false;
 	}
 
 }

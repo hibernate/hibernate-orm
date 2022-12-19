@@ -227,4 +227,23 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		}
 		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
 	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+			case "int":
+			case "java.lang.Integer":
+			case "long":
+			case "java.lang.Long":
+			case "java.lang.String":
+			case "java.lang.Character":
+				return true;
+			default:
+				return false;
+		}
+	}
 }

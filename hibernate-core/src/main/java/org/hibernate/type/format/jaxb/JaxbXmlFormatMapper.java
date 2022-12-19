@@ -27,7 +27,6 @@ import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
@@ -450,7 +449,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				.getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.findDescriptor( elementClass );
-		if ( exampleElement == null && ( elementJavaType == null || elementJavaType instanceof UnknownBasicJavaType<?> ) ) {
+		if ( exampleElement == null && ( elementJavaType == null || elementJavaType.isUnknownType() ) ) {
 			try {
 				final Constructor<?> declaredConstructor = elementClass.getDeclaredConstructor();
 				exampleElement = declaredConstructor.newInstance();
@@ -480,7 +479,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
-		if ( exampleElement == null && elementJavaType instanceof UnknownBasicJavaType<?> ) {
+		if ( exampleElement == null && elementJavaType.isUnknownType() ) {
 			try {
 				final Constructor<?> declaredConstructor = elementJavaType.getJavaTypeClass().getDeclaredConstructor();
 				exampleElement = declaredConstructor.newInstance();

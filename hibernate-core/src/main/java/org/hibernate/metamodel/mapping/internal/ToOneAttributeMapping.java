@@ -277,9 +277,10 @@ public class ToOneAttributeMapping
 			else {
 				final String targetTableName = MappingModelCreationHelper.getTableIdentifierExpression( manyToOne.getTable(), declaringEntityPersister.getFactory() );
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
-					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.resolveSubPart(
-							navigableRole.getParent().getParent()
-					);
+					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.findByPath(
+							navigableRole.getParent().getParent().getFullPath().substring( declaringEntityPersister.getNavigableRole().getFullPath().length() + 1 )  );
+					assert pluralAttribute != null;
+
 					final QueryableCollection persister = (QueryableCollection) pluralAttribute.getCollectionDescriptor();
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}

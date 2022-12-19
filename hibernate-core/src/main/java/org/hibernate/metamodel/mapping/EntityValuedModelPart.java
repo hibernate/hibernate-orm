@@ -29,6 +29,9 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface EntityValuedModelPart extends FetchableContainer {
+	/**
+	 * The descriptor of the entity that is the type for this part
+	 */
 	EntityMappingType getEntityMappingType();
 
 	default ModelPart findSubPart(String name) {

@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -19,12 +18,12 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Contract for things that can produce the {@link TableGroup} that is the root of a
- * from-clause
+ * Contract for things that can produce the {@link TableGroup} that is a root of a
+ * {@link FromClause#getRoots() from-clause}
  *
  * @author Steve Ebersole
  */
-public interface RootTableGroupProducer extends TableGroupProducer, ModelPartContainer {
+public interface RootTableGroupProducer extends TableGroupProducer {
 	/**
 	 * Create a root TableGroup as defined by this producer
 	 */

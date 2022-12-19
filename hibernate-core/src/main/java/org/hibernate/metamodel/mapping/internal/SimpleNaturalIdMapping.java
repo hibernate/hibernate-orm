@@ -20,6 +20,7 @@ import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -55,6 +56,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 				.getSessionFactory()
 				.getTypeConfiguration();
 
+	}
+
+	public SingularAttributeMapping getAttribute() {
+		return attribute;
 	}
 
 	@Override
@@ -165,10 +170,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		return getJavaType().coerce( normalizedValue, this );
 	}
 
-	public SingularAttributeMapping getAttribute() {
-		return attribute;
-	}
-
 	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
@@ -268,5 +269,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public AttributeMapping asAttributeMapping() {
+		return getAttribute();
 	}
 }

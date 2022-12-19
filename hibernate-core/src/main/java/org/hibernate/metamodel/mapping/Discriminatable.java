@@ -20,6 +20,9 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * the associated entity
  */
 public interface Discriminatable {
+	/**
+	 * Apply the discriminator as a predicate via the {@code predicateConsumer}
+	 */
 	void applyDiscriminator(
 			Consumer<Predicate> predicateConsumer,
 			String alias,

@@ -20,8 +20,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Describes a mapping related to any part of the app's domain model - e.g.
- * an attribute, an entity identifier, collection elements, etc
+ * Base descriptor, within the mapping model, for any part of the
+ * application's domain model - an attribute,
+ * an entity identifier, collection elements, etc
  *
  * @see DomainResultProducer
  * @see jakarta.persistence.metamodel.Bindable
@@ -80,15 +81,9 @@ public interface ModelPart extends MappingModelExpressible {
 	 * Whether this model part describes something that physically
 	 * exists in the domain model.
 	 * <p/>
-	 * For example, take an entity defining its identifier with multiple
-	 * {@link jakarta.persistence.Id} attributes; a "non-aggregated" identifier.
-	 * Internally, Hibernate models the
-	 * {@linkplain EntityMappingType#getIdentifierMapping() identifier mapping}
-	 * for that entity as a virtual {@link EmbeddableMappingType}.  The entity
-	 * might also define an {@link jakarta.persistence.IdClass}, but that is a
-	 * different mapping; in this case, the entity will have 2 mappings - one
-	 * physical (the {@link jakarta.persistence.IdClass}) and the other virtual
-	 * (the "non-aggregated" embeddable)
+	 * For example, an entity's {@linkplain EntityDiscriminatorMapping discriminator}
+	 * is part of the model, but is not a physical part of the domain model - there
+	 * is no "discriminator attribute".
 	 * <p/>
 	 * Also indicates whether the part is castable to {@link VirtualModelPart}
 	 */

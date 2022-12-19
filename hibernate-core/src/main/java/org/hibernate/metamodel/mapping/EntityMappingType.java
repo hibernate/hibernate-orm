@@ -11,42 +11,42 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
+import org.hibernate.Internal;
+import org.hibernate.boot.jaxb.mapping.JaxbEntity;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.mapping.Contributable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.Entity;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
@@ -54,31 +54,38 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  * Mapping of an entity
  *
  * @see jakarta.persistence.Entity
+ * @see jakarta.persistence.metamodel.EntityType
  *
  * @author Steve Ebersole
  */
 public interface EntityMappingType
 		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminatable {
+
 	/**
-	 * Safety-net.
+	 * The entity name.
+	 * <p/>
+	 * For most entities, this will be the fully-qualified name
+	 * of the entity class.  The alternative is an explicit
+	 * {@linkplain JaxbEntity#getName() entity-name} which takes precedence if provided
 	 *
-	 * todo (6.0) : do we really need to expose?
+	 * @apiNote Different from {@link Entity#name()}, which is just a glorified
+	 * SQM "import" name
 	 */
-	EntityPersister getEntityPersister();
+	String getEntityName();
 
-	default String getContributor() {
-		// todo (6.0) : needed for the HHH-14470 half related to HHH-14469
-		return "orm";
-	}
-
+	/**
+	 * Describes how the entity is represented in the application's domain model.
+	 */
 	default EntityRepresentationStrategy getRepresentationStrategy() {
 		return getEntityPersister().getRepresentationStrategy();
 	}
 
-	String getEntityName();
-
 	/**
-	 * Details for the table this persister maps.
+	 * Details for the table this entity maps.  Generally this is the
+	 * same as {@link #getIdentifierTableDetails()}, though may be different
+	 * for subtypes in {@linkplain jakarta.persistence.InheritanceType#JOINED joined}
+	 * and{@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS union}
+	 * inheritance hierarchies
 	 *
 	 * @see #getIdentifierTableDetails()
 	 */
@@ -96,16 +103,6 @@ public interface EntityMappingType
 	}
 
 	@Override
-	default String getPartName() {
-		return getEntityName();
-	}
-
-	@Override
-	default String getRootPathName() {
-		return getEntityName();
-	}
-
-	@Override
 	default JavaType<?> getJavaType() {
 		return getMappedJavaType();
 	}
@@ -115,6 +112,12 @@ public interface EntityMappingType
 		return this;
 	}
 
+	/**
+	 * Visit each "query space" for the mapped entity.
+	 *
+	 * @apiNote "Query space" is simply the table expressions to
+	 * which the entity is mapped; the name is historical.
+	 */
 	void visitQuerySpaces(Consumer<String> querySpaceConsumer);
 
 
@@ -131,60 +134,41 @@ public interface EntityMappingType
 	}
 
 	@Override
-	ModelPart findSubPart(String name, EntityMappingType targetType);
-
-	@Override
-	void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType targetType);
-
-	@Override
-	<T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
-
-	@Override
-	void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState);
-
-	@Override
-	void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
-
-	@Override
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
 	}
 
-	@Override
-	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
-
-	@Override
-	Object disassemble(Object value, SharedSessionContractImplementor session);
-
-	@Override
-	int forEachDisassembledJdbcValue(
-			Object value,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session);
-
-	@Override
-	default int forEachJdbcValue(
-			Object value,
-			int offset,
-			JdbcValuesConsumer consumer,
-			SharedSessionContractImplementor session) {
-		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, consumer, session );
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
+
+	/**
+	 * Whether this entity is defined as abstract using the Java {@code abstract} keyword
+	 */
+	default boolean isAbstract() {
+		return getEntityPersister().getEntityMetamodel().isAbstract();
+	}
+
+	/**
+	 * Whether this entity mapping has any subtype mappings
+	 */
+	default boolean hasSubclasses() {
+		return getEntityPersister().getEntityMetamodel().hasSubclasses();
+	}
+
+	/**
+	 * The mapping for the entity which is the supertype for this entity
+	 * mapping.
+	 *
+	 * @return The supertype mapping, or {@code null} if there is no
+	 * supertype
+	 *
+	 * @apiNote This need not be the direct superclass of the entity as it
+	 * is driven by mapping.
+	 */
+	default EntityMappingType getSuperMappingType() {
+		return null;
+	}
 
 	/**
 	 * Get the name of the entity that is the "super class" for this entity
@@ -195,12 +179,47 @@ public interface EntityMappingType
 		return getSuperMappingType().getEntityName();
 	}
 
-	default int getSubclassId() {
-		return getEntityPersister().getEntityMetamodel().getSubclassId();
+	/**
+	 * Retrieve mappings for all subtypes
+	 */
+	default Collection<EntityMappingType> getSubMappingTypes() {
+		final MappingMetamodelImplementor mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
+		final Set<String> subclassEntityNames = getSubclassEntityNames();
+		final List<EntityMappingType> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
+		for ( String subclassEntityName : subclassEntityNames ) {
+			mappingTypes.add( mappingMetamodel.getEntityDescriptor( subclassEntityName ) );
+		}
+		return mappingTypes;
 	}
 
-	default boolean hasSubclasses() {
-		return getEntityPersister().getEntityMetamodel().hasSubclasses();
+	/**
+	 * Whether the passed entity mapping is the same as or is a supertype of
+	 * this entity mapping
+	 */
+	default boolean isTypeOrSuperType(EntityMappingType targetType) {
+		return targetType == this;
+	}
+
+	/**
+	 * Whether the passed mapping is (1) an entity mapping and (2) the same as or
+	 * a supertype of this entity mapping
+	 *
+	 * @see #isTypeOrSuperType(EntityMappingType)
+	 */
+	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
+		if ( targetType instanceof EntityMappingType ) {
+			return isTypeOrSuperType( (EntityMappingType) targetType );
+		}
+
+		return false;
+	}
+
+	/**
+	 * A value that uniquely identifies an entity mapping relative to its
+	 * inheritance hierarchy
+	 */
+	default int getSubclassId() {
+		return getEntityPersister().getEntityMetamodel().getSubclassId();
 	}
 
 	default Set<String> getSubclassEntityNames() {
@@ -212,110 +231,14 @@ public interface EntityMappingType
 	 */
 	boolean isExplicitPolymorphism();
 
+	/**
+	 * The discriminator value which indicates this entity mapping
+	 */
 	Object getDiscriminatorValue();
 
 	default String getDiscriminatorSQLValue() {
 		return getDiscriminatorValue().toString();
 	}
-
-	String getSubclassForDiscriminatorValue(Object value);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Attribute mappings
-
-	AttributeMapping findDeclaredAttributeMapping(String name);
-
-	/**
-	 * Get the number of attributes defined on this class - do not access attributes defined on the super
-	 */
-	default int getNumberOfDeclaredAttributeMappings() {
-		return getDeclaredAttributeMappings().size();
-	}
-
-	/**
-	 * Get access to the attributes defined on this class - do not access attributes defined on the super
-	 */
-	AttributeMappingsMap getDeclaredAttributeMappings();
-
-	/**
-	 * Visit attributes defined on this class - do not visit attributes defined on the super
-	 */
-	void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action);
-
-	default EntityMappingType getSuperMappingType() {
-		return null;
-	}
-
-	default Collection<EntityMappingType> getSubMappingTypes() {
-		final MappingMetamodelImplementor mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
-		final Set<String> subclassEntityNames = getSubclassEntityNames();
-		final List<EntityMappingType> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
-		for ( String subclassEntityName : subclassEntityNames ) {
-			mappingTypes.add( mappingMetamodel.getEntityDescriptor( subclassEntityName ) );
-		}
-		return mappingTypes;
-	}
-
-	default boolean isTypeOrSuperType(EntityMappingType targetType) {
-		return targetType == this;
-	}
-
-	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
-		if ( targetType instanceof EntityMappingType ) {
-			return isTypeOrSuperType( (EntityMappingType) targetType );
-		}
-
-		return false;
-	}
-
-	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
-		return getEntityPersister().getSqmMultiTableMutationStrategy();
-	}
-
-	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
-		return getEntityPersister().getSqmMultiTableInsertStrategy();
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Special model parts - identifier, discriminator, etc
-
-	EntityIdentifierMapping getIdentifierMapping();
-
-	EntityDiscriminatorMapping getDiscriminatorMapping();
-
-	EntityVersionMapping getVersionMapping();
-
-	NaturalIdMapping getNaturalIdMapping();
-
-	EntityRowIdMapping getRowIdMapping();
-
-	/**
-	 * Visit the mappings, but limited to just attributes defined
-	 * in the targetType or its super-type(s) if any.
-	 *
-	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
-	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
-	 */
-	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
-		getAttributeMappings().forEach( action );
-	}
-
-	/**
-	 * Walk this type's attributes as well as its sub-type's
-	 */
-	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
-		// by default do nothing
-	}
-
-	/**
-	 * Walk this type's attributes as well as its super-type's
-	 */
-	default void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
-		// by default do nothing
-	}
-
-	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
 
 
 	default EntityMappingType getRootEntityDescriptor() {
@@ -354,18 +277,147 @@ public interface EntityMappingType
 	default void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
 	}
 
-	default boolean isAbstract() {
-		return getEntityPersister().getEntityMetamodel().isAbstract();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Special model parts - identifier, discriminator, etc
+
+	/**
+	 * Mapping details for the entity's identifier.  This is shared across all
+	 * entity mappings within an inheritance hierarchy.
+	 */
+	EntityIdentifierMapping getIdentifierMapping();
+
+	/**
+	 * Mapping details for the entity's discriminator.  This is shared across all
+	 * entity mappings within an inheritance hierarchy.
+	 */
+	EntityDiscriminatorMapping getDiscriminatorMapping();
+
+	/**
+	 * Mapping details for the entity's version when using the
+	 * {@linkplain OptimisticLockStyle#VERSION version strategy}.
+	 * This is shared across all entity mappings within an inheritance
+	 * hierarchy.
+	 *
+	 * @return The version mapping, or null if the entity is (1) defined
+	 * with a strategy other than {@link OptimisticLockStyle#VERSION} or
+	 * (2) defined without optimistic locking
+	 *
+	 * @see #optimisticLockStyle
+	 */
+	EntityVersionMapping getVersionMapping();
+
+	/**
+	 * The type of optimistic locking, if any, defined for this entity mapping
+	 */
+	default OptimisticLockStyle optimisticLockStyle() {
+		return OptimisticLockStyle.NONE;
 	}
+
+	/**
+	 * The mapping for the natural-id of the entity, if one is defined
+	 */
+	NaturalIdMapping getNaturalIdMapping();
+
+	/**
+	 * The mapping for the row-id of the entity, if one is defined.
+	 */
+	EntityRowIdMapping getRowIdMapping();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Attribute mappings
+
+	/**
+	 * The total number of attributes for this entity, including those
+	 * declared on supertype mappings
+	 */
+	@Override
+	default int getNumberOfAttributeMappings() {
+		return getEntityPersister().getNumberOfAttributeMappings();
+	}
+
+	/**
+	 * The attributes mapping for this entity, including those
+	 * declared on supertype mappings
+	 */
+	@Override
+	default AttributeMappingsList getAttributeMappings() {
+		return getEntityPersister().getAttributeMappings();
+	}
+
+	/**
+	 * Visit each {@linkplain #getAttributeMappings() attribute mapping}
+	 *
+	 * @see #getAttributeMappings()
+	 */
+	@Override
+	default void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+		getAttributeMappings().forEach( action );
+	}
+
+	/**
+	 * Retrieve an attribute mapping by position, relative to
+	 * {@linkplain #getAttributeMappings() all attributes}
+	 */
+	@Override
+	default AttributeMapping getAttributeMapping(int position) {
+		return getEntityPersister().getAttributeMapping( position );
+	}
+
+	/**
+	 * Find an attribute-mapping, declared on this entity mapping (not super or
+	 * subs), by name
+	 */
+	AttributeMapping findDeclaredAttributeMapping(String name);
+
+	/**
+	 * Get the number of attributes defined on this entity mapping - do not access
+	 * attributes defined on the super
+	 */
+	default int getNumberOfDeclaredAttributeMappings() {
+		return getDeclaredAttributeMappings().size();
+	}
+
+	/**
+	 * Get access to the attributes defined on this class - do not access attributes defined on the super
+	 */
+	AttributeMappingsMap getDeclaredAttributeMappings();
+
+	/**
+	 * Visit attributes defined on this class - do not visit attributes defined on the super
+	 */
+	void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action);
+
+	/**
+	 * Visit the mappings, but limited to just attributes defined
+	 * in the targetType or its super-type(s) if any.
+	 *
+	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
+	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
+	 */
+	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
+		getAttributeMappings().forEach( action );
+	}
+
+	/**
+	 * Walk this type's attributes as well as its sub-type's
+	 */
+	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+		// by default do nothing
+	}
+
+	/**
+	 * Walk this type's attributes as well as its super-type's
+	 */
+	default void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+		// by default do nothing
+	}
+
+	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
 
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
-	}
-
-
-	@Override
-	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		getAttributeMappings().forEach( action );
 	}
 
 	// Customer <- DomesticCustomer <- OtherCustomer
@@ -377,9 +429,9 @@ public interface EntityMappingType
 		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
 		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 
-		visitAttributeMappings(
+		forEachAttributeMapping(
 				attribute -> {
-					final DomainResultAssembler assembler = assemblerMapping.get( attribute );
+					final DomainResultAssembler<?> assembler = assemblerMapping.get( attribute );
 					final Object value;
 					if ( assembler == null ) {
 						value = UNFETCHED_PROPERTY;
@@ -428,6 +480,27 @@ public interface EntityMappingType
 	@Override
 	default boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
 		return getEntityPersister().isAffectedByEnabledFetchProfiles( influencers );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SQM handling
+
+	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
+		return getEntityPersister().getSqmMultiTableMutationStrategy();
+	}
+
+	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
+		return getEntityPersister().getSqmMultiTableInsertStrategy();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SQL AST generation
+
+	@Override
+	default String getSqlAliasStem() {
+		return getEntityPersister().getSqlAliasStem();
 	}
 
 	@Override
@@ -495,28 +568,8 @@ public interface EntityMappingType
 	}
 
 	@Override
-	default int getNumberOfAttributeMappings() {
-		return getEntityPersister().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	default AttributeMappingsList getAttributeMappings() {
-		return getEntityPersister().getAttributeMappings();
-	}
-
-	@Override
-	default AttributeMapping getAttributeMapping(int position) {
-		return getEntityPersister().getAttributeMapping( position );
-	}
-
-	@Override
-	default JavaType getMappedJavaType() {
+	default JavaType<?> getMappedJavaType() {
 		return getEntityPersister().getMappedJavaType();
-	}
-
-	@Override
-	default String getSqlAliasStem() {
-		return getEntityPersister().getSqlAliasStem();
 	}
 
 	@Override
@@ -566,5 +619,31 @@ public interface EntityMappingType
 			boolean useQualifier,
 			SqlAstCreationState creationState) {
 		getEntityPersister().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
+
+	/**
+	 * Safety-net.
+	 */
+	// todo (6.0) : look to remove need for this.  at the very least, move it to an SPI contract
+	@Internal
+	EntityPersister getEntityPersister();
+
+	/**
+	 * @deprecated See {@link Contributable#getContributor()}
+	 */
+	@Deprecated
+	default String getContributor() {
+		// todo (6.0) : needed for the HHH-14470 half related to HHH-14469
+		return "orm";
+	}
+
+	@Override
+	default String getPartName() {
+		return getEntityName();
+	}
+
+	@Override
+	default String getRootPathName() {
+		return getEntityName();
 	}
 }

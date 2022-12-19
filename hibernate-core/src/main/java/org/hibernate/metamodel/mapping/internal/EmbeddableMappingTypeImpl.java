@@ -49,8 +49,8 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -655,7 +655,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void visitFetchables(Consumer<? super Fetchable> consumer, EntityMappingType treatTargetType) {
-		visitAttributeMappings( consumer );
+		forEachAttributeMapping( consumer );
 	}
 
 	@Override
@@ -880,7 +880,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void visitAttributeMappings(final Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(final Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 
@@ -898,7 +898,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		visitAttributeMappings( consumer );
+		forEachAttributeMapping( consumer );
 	}
 
 	@Override

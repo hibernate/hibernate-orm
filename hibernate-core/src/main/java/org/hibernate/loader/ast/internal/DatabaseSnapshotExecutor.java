@@ -130,7 +130,7 @@ class DatabaseSnapshotExecutor {
 		);
 
 
-		entityDescriptor.visitAttributeMappings(
+		entityDescriptor.forEachAttributeMapping(
 				attributeMapping -> {
 					final NavigablePath navigablePath = rootPath.append( attributeMapping.getAttributeName() );
 					domainResults.add(

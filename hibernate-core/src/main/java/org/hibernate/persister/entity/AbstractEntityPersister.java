@@ -871,7 +871,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		if ( getSubMappingTypes().size() == 1 ) {
+		if ( getSubclassEntityNames().size() == 1 ) {
 			return getDiscriminatorSQLValue();
 		}
 		else {
@@ -4575,7 +4575,7 @@ public abstract class AbstractEntityPersister
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 		this.attributeMappings.forEach( action );
 	}
 
@@ -5472,7 +5472,7 @@ public abstract class AbstractEntityPersister
 			ImmutableAttributeMappingList.Builder builder = new ImmutableAttributeMappingList.Builder( sizeHint );
 
 			if ( superMappingType != null ) {
-				superMappingType.visitAttributeMappings( builder::add );
+				superMappingType.forEachAttributeMapping( builder::add );
 			}
 
 			for ( AttributeMapping am : declaredAttributeMappings.valueIterator() ) {
@@ -5766,7 +5766,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
-		visitAttributeMappings( action );
+		forEachAttributeMapping( action );
 		if ( subclassMappingTypes != null ) {
 			for ( EntityMappingType subType : subclassMappingTypes.values() ) {
 				subType.visitDeclaredAttributeMappings( action );

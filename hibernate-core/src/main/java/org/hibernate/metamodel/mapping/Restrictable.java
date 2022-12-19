@@ -21,8 +21,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  */
 public interface Restrictable extends FilterRestrictable, WhereRestrictable {
 	/**
-	 * Applies the base set of restrictions.  The impact varies based on
-	 * Restrictable type - some apply restrictions for filter, where and/or discriminator
+	 * Applies the base set of restrictions.
 	 */
 	void applyBaseRestrictions(
 			Consumer<Predicate> predicateConsumer,

@@ -54,9 +54,9 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -813,11 +813,6 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return null;
-	}
-
-	@Override
 	public NaturalIdMapping getNaturalIdMapping() {
 		return null;
 	}
@@ -863,7 +858,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 
 	}
 

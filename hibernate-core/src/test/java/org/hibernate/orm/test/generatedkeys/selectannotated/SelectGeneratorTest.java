@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.generatedkeys.selectannotated;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(H2Dialect.class)
+@RequiresDialect(DB2Dialect.class)
 public class SelectGeneratorTest {
 
 	@Test

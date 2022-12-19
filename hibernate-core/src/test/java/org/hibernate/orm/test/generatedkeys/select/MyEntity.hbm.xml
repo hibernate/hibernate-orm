@@ -52,13 +52,29 @@
             <![CDATA[create trigger my_entity_trigger
             before insert on my_entity
             for each row
-            set new.id = (select coalesce(max(id), 0) + 1 from my_entity);]]>
+            set new.id = (select coalesce(max(id), 0) + 1 from my_entity)]]>
         </create>
         <drop>
             <![CDATA[drop trigger if exists my_entity_trigger]]>
         </drop>
         <dialect-scope name="org.hibernate.dialect.MySQLDialect"/>
         <dialect-scope name="org.hibernate.dialect.MariaDBDialect"/>
+    </database-object>
+
+    <database-object>
+        <create>
+            <![CDATA[create or replace trigger my_entity_trigger
+            before insert on my_entity
+            referencing new as new_entity
+            for each row
+            begin
+                set new_entity.id = (select coalesce(max(id), 0) + 1 from my_entity);
+            end]]>
+        </create>
+        <drop>
+            <![CDATA[drop trigger my_entity_trigger]]>
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.DB2Dialect"/>
     </database-object>
 
     <database-object>

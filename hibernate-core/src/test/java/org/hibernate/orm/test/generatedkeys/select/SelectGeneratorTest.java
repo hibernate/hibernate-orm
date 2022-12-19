@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(OracleDialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(DB2Dialect.class)
 public class SelectGeneratorTest {
 
 	@Test

@@ -63,7 +63,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -99,7 +98,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
@@ -786,6 +784,11 @@ public class H2Dialect extends Dialect {
 		return getVersion().isSameOrAfter( 2 )
 				? H2FinalTableIdentityColumnSupport.INSTANCE
 				: H2IdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsInsertReturning() {
+		return getVersion().isSameOrAfter( 2 ); // actually 'final table'
 	}
 
 	@Override

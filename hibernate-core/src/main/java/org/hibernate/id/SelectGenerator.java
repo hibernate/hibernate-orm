@@ -11,13 +11,11 @@ import java.util.Properties;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.InDatabaseGenerator;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.id.insert.GetGeneratedKeysDelegate;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.InsertReturningDelegate;
-import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+
+import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyName;
 
 /**
  * A generator that {@code select}s the just-{@code insert}ed row to determine the
@@ -37,6 +35,21 @@ import org.hibernate.type.Type;
  * @GenericGenerator(name = "triggered", type = SelectGenerator.class)
  * public class TriggeredEntity {
  *     @Id @GeneratedValue(generator = "triggered")
+ *     private Long id;
+ *
+ *     @NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * }</pre>
+ * However, after a very long working life, this generator is now handing over its
+ * work to {@link org.hibernate.generator.internal.GeneratedGeneration}, and the
+ * above code may be written as:
+ * <pre>{@code
+ * @Entity @Table(name="TableWithPKAssignedByTrigger")
+ * public class TriggeredEntity {
+ *     @Id @Generated(event = INSERT)
  *     private Long id;
  *
  *     @NaturalId
@@ -68,49 +81,11 @@ public class SelectGenerator
 		uniqueKeyPropertyName = parameters.getProperty( "key" );
 	}
 
-	/**
-	 * The name of a property of the entity which may be used to locate the just-{@code insert}ed
-	 * row containing the generated value. Of course, the columns mapped by this property should
-	 * form a unique key of the entity.
-	 */
-	protected String getUniqueKeyPropertyName(EntityPersister persister) {
-		if ( uniqueKeyPropertyName != null ) {
-			return uniqueKeyPropertyName;
-		}
-		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndices == null ) {
-			throw new IdentifierGenerationException(
-					"no natural-id property defined; need to specify [key] in " +
-							"generator parameters"
-			);
-		}
-		if ( naturalIdPropertyIndices.length > 1 ) {
-			throw new IdentifierGenerationException(
-					"select generator does not currently support composite " +
-							"natural-id properties; need to specify [key] in generator parameters"
-			);
-		}
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			throw new IdentifierGenerationException(
-					"natural-id also defined as insert-generated; need to specify [key] " +
-							"in generator parameters"
-			);
-		}
-		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
-	}
-
 	@Override
-	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
-		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-		if ( dialect.supportedInsertReturningGeneratedKeys() ) {
-			return new GetGeneratedKeysDelegate( persister, dialect, false );
-		}
-		else if ( dialect.supportsInsertReturning() ) {
-			return new InsertReturningDelegate( persister, dialect );
-		}
-		else {
-			return new UniqueKeySelectingDelegate( persister, dialect, getUniqueKeyPropertyName( persister ) );
-		}
+	public String getUniqueKeyPropertyName(EntityPersister persister) {
+		return uniqueKeyPropertyName != null
+				? uniqueKeyPropertyName
+				: getNaturalIdPropertyName( persister );
 	}
 
 	@Override
@@ -120,6 +95,6 @@ public class SelectGenerator
 
 	@Override
 	public String[] getReferencedColumnValues(Dialect dialect) {
-		return new String[0];
+		return null;
 	}
 }

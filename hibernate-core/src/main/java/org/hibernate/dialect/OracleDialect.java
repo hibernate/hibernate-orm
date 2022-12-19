@@ -324,7 +324,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportedInsertReturningGeneratedKeys() {
+	public boolean supportsInsertReturningGeneratedKeys() {
 		return true;
 	}
 

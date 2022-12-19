@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.generatedkeys.selectannotated;
+package org.hibernate.orm.test.generatedkeys.generated;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(DB2Dialect.class)
 @RequiresDialect(SQLServerDialect.class)
-public class SelectGeneratorTest {
+public class GeneratedTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {

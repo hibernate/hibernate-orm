@@ -27,7 +27,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
@@ -809,7 +808,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		public CollectionType getCollectionType() {
-			throw new NotYetImplementedException();
+			throw new UnsupportedOperationException();
 		}
 
 		public Type getKeyType() {

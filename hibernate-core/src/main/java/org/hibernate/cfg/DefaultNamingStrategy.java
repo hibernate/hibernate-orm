@@ -16,6 +16,8 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @see ImprovedNamingStrategy a better alternative
  * @author Gavin King
+ *
+ * @deprecated {@link NamingStrategy} itself has been deprecated
  */
 @Deprecated
 public class DefaultNamingStrategy implements NamingStrategy, Serializable {
@@ -54,9 +56,11 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the unqualified property name, not the best strategy but a backward compatible one
 	 */
 	public String collectionTableName(
-			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
-			String propertyName
-	) {
+			String ownerEntity,
+			String ownerEntityTable,
+			String associatedEntity,
+			String associatedEntityTable,
+			String propertyName) {
 		//use a degenerated strategy for backward compatibility
 		return StringHelper.unqualify(propertyName);
 	}
@@ -72,10 +76,14 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the property name or propertyTableName
 	 */
 	public String foreignKeyColumnName(
-			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
-	) {
-		String header = propertyName != null ? StringHelper.unqualify( propertyName ) : propertyTableName;
-		if (header == null) throw new AssertionFailure("NammingStrategy not properly filled");
+			String propertyName,
+			String propertyEntityName,
+			String propertyTableName,
+			String referencedColumnName) {
+		final String header = propertyName != null ? StringHelper.unqualify( propertyName ) : propertyTableName;
+		if (header == null) {
+			throw new AssertionFailure("NammingStrategy not properly filled");
+		}
 		return columnName( header ); //+ "_" + referencedColumnName not used for backward compatibility
 	}
 
@@ -91,14 +99,16 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 	 * if there is an associated table, the concatenation of owner entity table and associated table
 	 * otherwise the concatenation of owner entity table and the unqualified property name
 	 */
-	public String logicalCollectionTableName(String tableName,
-			String ownerEntityTable, String associatedEntityTable, String propertyName
-	) {
+	public String logicalCollectionTableName(
+			String tableName,
+			String ownerEntityTable,
+			String associatedEntityTable,
+			String propertyName) {
 		if ( tableName != null ) {
 			return tableName;
 		}
 		else {
-			String entityTableName = associatedEntityTable != null
+			final String entityTableName = associatedEntityTable != null
 					? associatedEntityTable
 					: StringHelper.unqualify(propertyName);
 			return ownerEntityTable + "_" + entityTableName;

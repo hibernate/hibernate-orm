@@ -7,12 +7,12 @@
 package org.hibernate.boot;
 
 /**
- * Models the definition of caching settings for a particular region.  Generally as found in either:<ul>
+ * Models the definition of caching settings for a particular region.  Generally found in:<ul>
  *     <li>{@code cfg.xml}</li>
+ *     <li>annotations</li>
+ *     <li>{@code orm.xml}</li>
  *     <li>{@code hbm.xml}</li>
- *     <li>annotation</li>
  * </ul>
- * Though certainly other custom sources are acceptable too.
  *
  * @author Steve Ebersole
  */

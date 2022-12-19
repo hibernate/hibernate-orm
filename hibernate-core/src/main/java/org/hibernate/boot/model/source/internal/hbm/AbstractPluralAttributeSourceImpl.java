@@ -33,7 +33,6 @@ import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
 import org.hibernate.boot.model.source.spi.PluralAttributeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
@@ -265,7 +264,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 			case MANY_TO_MANY:
 				return true;
 			case MANY_TO_ANY:
-				throw new NotYetImplementedException(
+				throw new AssertionFailure(
 						String.format( "%s is not implemented yet.", elementSource.getNature() )
 				);
 			default:

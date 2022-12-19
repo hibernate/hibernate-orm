@@ -9,6 +9,8 @@ package org.hibernate.boot;
 import org.hibernate.boot.jaxb.Origin;
 
 /**
+ * Specialized exception indicating that an unsupported {@code orm.xml} XSD version was specified
+ *
  * @author Steve Ebersole
  */
 public class UnsupportedOrmXsdVersionException extends MappingException {

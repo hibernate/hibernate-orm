@@ -14,8 +14,12 @@
 
 package org.hibernate.boot.model;
 
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+
 /**
  * Contract for contributing functions
+ *
+ * @see SqmFunctionRegistry
  *
  * @author Karel Maesen
  */

@@ -20,10 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;

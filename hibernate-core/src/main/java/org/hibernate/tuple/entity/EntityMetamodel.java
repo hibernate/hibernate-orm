@@ -25,7 +25,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -558,7 +557,7 @@ public class EntityMetamodel implements Serializable {
 				);
 			}
 			else if ( hadInMemoryGeneration ) {
-				throw new NotYetImplementedException( "Still need to wire in composite in-memory value generation" );
+				throw new UnsupportedOperationException( "Composite in-memory value generation not supported" );
 
 			}
 			else if ( hadInDatabaseGeneration ) {

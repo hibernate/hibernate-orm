@@ -7,11 +7,16 @@
 
 /**
  * Package defining Hibernate's boot-time metamodel, which is an
- * incrementally built understanding of the application's domain
- * model (its entities, attributes, etc).
+ * understanding of the application's domain model (its entities,
+ * attributes, etc.) and the mapping of those "domain model parts"
+ * to the database.
+ * <p/>
+ * It is {@linkplain org.hibernate.boot.model.process incrementally built}
+ * from {@linkplain org.hibernate.annotations annotations} and XML mappings
  *
- * Ultimately, as part of the process of creating the
+ * @implNote Ultimately, as part of the process of creating the
  * {@link org.hibernate.SessionFactory}, Hibernate will interpret
- * this boot metamodel to its runtime metamodel.
+ * this boot metamodel to its runtime
+ * {@linkplain org.hibernate.metamodel.mapping mapping metamodel}
  */
 package org.hibernate.boot.model;

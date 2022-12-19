@@ -19,12 +19,16 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -33,12 +37,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
-import org.hibernate.cfg.AnnotatedClassType;
-import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.PropertyData;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -55,9 +53,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.usertype.UserType;
 
 /**
  * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.

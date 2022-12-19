@@ -6,9 +6,6 @@
  */
 package org.hibernate.graph.internal;
 
-import jakarta.persistence.EntityGraph;
-
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -17,6 +14,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+
+import jakarta.persistence.EntityGraph;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -75,7 +74,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public <T1> SubGraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type) {
-		throw new NotYetImplementedException(  );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

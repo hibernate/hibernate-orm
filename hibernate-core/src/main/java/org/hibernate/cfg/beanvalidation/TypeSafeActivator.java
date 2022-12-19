@@ -14,16 +14,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.metadata.BeanDescriptor;
-import jakarta.validation.metadata.ConstraintDescriptor;
-import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -50,6 +40,17 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 
 import org.jboss.logging.Logger;
+
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
 
 /**
  * @author Emmanuel Bernard
@@ -222,12 +223,14 @@ class TypeSafeActivator {
 					final boolean canSetNotNullOnColumns = activateNotNull && hasNotNull;
 					applyDDL(
 							prefix + propertyDesc.getPropertyName() + ".",
-							persistentClass, componentClass, factory, groups,
+							persistentClass,
+							componentClass,
+							factory,
+							groups,
 							canSetNotNullOnColumns,
-                            dialect
+							dialect
 					);
 				}
-				//FIXME add collection of components
 			}
 		}
 	}

@@ -138,7 +138,7 @@ public class TypeDefinition implements Serializable {
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
+		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
 		final boolean isKnownType = Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 

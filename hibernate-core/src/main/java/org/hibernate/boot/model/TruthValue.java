@@ -8,9 +8,10 @@ package org.hibernate.boot.model;
 
 /**
  * An enumeration of truth values.
- * <p>
- * Yes this *could* be handled with Boolean, but then you run into potential
- * problems with unwanted auto-unboxing.
+ *
+ * @implNote Yes this *could* be handled with Boolean, but then
+ * you run into potential problems with unwanted auto-unboxing
+ * and {@linkplain NullPointerException NPE}.
  *
  * @author Steve Ebersole
  */

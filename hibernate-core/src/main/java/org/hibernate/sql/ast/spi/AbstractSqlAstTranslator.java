@@ -943,8 +943,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSelectStatement(SelectStatement statement) {
+		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
 		try {
 			statementStack.push( statement );
+			parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			final boolean needsParenthesis = !statement.getQueryPart().isRoot();
 			if ( needsParenthesis ) {
 				appendSql( OPEN_PARENTHESIS );
@@ -956,6 +958,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		finally {
+			parameterRenderingMode = oldParameterRenderingMode;
 			statementStack.pop();
 		}
 	}

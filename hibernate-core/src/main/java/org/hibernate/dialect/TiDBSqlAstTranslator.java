@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -188,5 +189,16 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	public TiDBDialect getDialect() {
 		return this.dialect;
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
+		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, dialect );
+		if ( sqlType != null ) {
+			appendSql( sqlType );
+		}
+		else {
+			super.visitCastTarget( castTarget );
+		}
 	}
 }

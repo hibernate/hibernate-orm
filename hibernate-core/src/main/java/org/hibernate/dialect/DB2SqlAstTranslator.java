@@ -39,6 +39,10 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for DB2.
@@ -349,16 +353,15 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	protected boolean renderReturningClause(MutationStatement statement) {
 		final List<ColumnReference> returningColumns = statement.getReturningColumns();
-		final int size = returningColumns.size();
-		if ( size == 0 ) {
+		if ( isEmpty( returningColumns ) ) {
 			return false;
 		}
 		appendSql( "select " );
-		String separator = "";
-		for ( int i = 0; i < size; i++ ) {
-			appendSql( separator );
+		for ( int i = 0; i < returningColumns.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
 			appendSql( returningColumns.get( i ).getColumnExpression() );
-			separator = ",";
 		}
 		if ( statement instanceof DeleteStatement ) {
 			appendSql( " from old table (" );
@@ -367,6 +370,28 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			appendSql( " from final table (" );
 		}
 		return true;
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		final List<ColumnReference> returningColumns = tableInsert.getReturningColumns();
+		if ( isNotEmpty( returningColumns ) ) {
+			appendSql( "select " );
+
+			for ( int i = 0; i < returningColumns.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ", " );
+				}
+				appendSql( returningColumns.get( i ).getColumnExpression() );
+			}
+
+			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			super.visitStandardTableInsert( tableInsert );
+			appendSql( ")" );
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
 	}
 
 	@Override

@@ -45,8 +45,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.procedure.internal.DB2CallableStatementSupport;
-import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
@@ -840,6 +838,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2IdentityColumnSupport();
+	}
+
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
 	}
 
 	@Override

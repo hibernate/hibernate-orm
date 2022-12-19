@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 public class ImprovedExtractionContextImpl implements ExtractionContext {
 	private final ServiceRegistry serviceRegistry;
 	private final JdbcEnvironment jdbcEnvironment;
-	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final SqlStringGenerationContext context;
 	private final DdlTransactionIsolator ddlTransactionIsolator;
 
 	private final DatabaseObjectAccess databaseObjectAccess;
@@ -33,12 +33,12 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	public ImprovedExtractionContextImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			DatabaseObjectAccess databaseObjectAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.sqlStringGenerationContext = sqlStringGenerationContext;
+		this.context = context;
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
 		this.databaseObjectAccess = databaseObjectAccess;
 	}
@@ -55,7 +55,7 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
-		return sqlStringGenerationContext;
+		return context;
 	}
 
 	@Override
@@ -81,12 +81,12 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public Identifier getDefaultCatalog() {
-		return sqlStringGenerationContext.getDefaultCatalog();
+		return context.getDefaultCatalog();
 	}
 
 	@Override
 	public Identifier getDefaultSchema() {
-		return sqlStringGenerationContext.getDefaultSchema();
+		return context.getDefaultSchema();
 	}
 
 	@Override

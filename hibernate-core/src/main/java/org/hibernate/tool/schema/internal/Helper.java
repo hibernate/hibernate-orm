@@ -48,7 +48,7 @@ public class Helper {
 	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
-			Object scriptSourceSetting,
+			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
 		if ( scriptSourceSetting instanceof Reader ) {
@@ -169,14 +169,14 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					sqlStringGenerationContext,
+					context,
 					ddlTransactionIsolator,
 					tool
 			);

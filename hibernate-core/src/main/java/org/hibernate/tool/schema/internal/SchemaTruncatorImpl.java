@@ -49,6 +49,8 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SO
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 
 /**
+ * Basic implementation of {@link SchemaTruncator}.
+ *
  * @author Gavin King
  */
 public class SchemaTruncatorImpl implements SchemaTruncator {
@@ -119,7 +121,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Formatter formatter,
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
-		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
 				metadata.getDatabase().getJdbcEnvironment(), database, options.getConfigurationValues() );
 
 
@@ -131,7 +133,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				continue;
 			}
 
-			disableConstraints( namespace, metadata, formatter, options, sqlStringGenerationContext,
+			disableConstraints( namespace, metadata, formatter, options, context,
 					contributableInclusionFilter, targets );
 			applySqlString( dialect.getTableCleaner().getSqlBeforeString(), formatter, options,targets );
 
@@ -151,7 +153,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				list.add( table );
 			}
 			applySqlStrings( dialect.getTableCleaner().getSqlTruncateStrings( list, metadata,
-					sqlStringGenerationContext
+					context
 			), formatter, options,targets );
 
 			//TODO: reset the sequences?
@@ -165,12 +167,12 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 //				checkExportIdentifier( sequence, exportIdentifiers );
 //
 //				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata,
-//						sqlStringGenerationContext
+//						context
 //				), formatter, options, targets );
 //			}
 
 			applySqlString( dialect.getTableCleaner().getSqlAfterString(), formatter, options,targets );
-			enableConstraints( namespace, metadata, formatter, options, sqlStringGenerationContext,
+			enableConstraints( namespace, metadata, formatter, options, context,
 					contributableInclusionFilter, targets );
 		}
 
@@ -184,7 +186,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
@@ -204,7 +206,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
 							dialect.getTableCleaner().getSqlDisableConstraintString( foreignKey, metadata,
-									sqlStringGenerationContext
+									context
 							),
 							formatter,
 							options,
@@ -214,7 +216,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				else if ( !dialect.canBatchTruncate() ) {
 					applySqlStrings(
 							dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata,
-									sqlStringGenerationContext
+									context
 							),
 							formatter,
 							options,
@@ -230,7 +232,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
@@ -250,7 +252,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
 							dialect.getTableCleaner().getSqlEnableConstraintString( foreignKey, metadata,
-									sqlStringGenerationContext
+									context
 							),
 							formatter,
 							options,
@@ -260,7 +262,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				else if ( !dialect.canBatchTruncate() ) {
 					applySqlStrings(
 							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
-									sqlStringGenerationContext
+									context
 							),
 							formatter,
 							options,

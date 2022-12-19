@@ -32,7 +32,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 public class DatabaseInformationImpl
 		implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final JdbcEnvironment jdbcEnvironment;
-	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final SqlStringGenerationContext context;
 	private final ExtractionContext extractionContext;
 	private final InformationExtractor extractor;
 
@@ -41,15 +41,15 @@ public class DatabaseInformationImpl
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.sqlStringGenerationContext = sqlStringGenerationContext;
+		this.context = context;
 		this.extractionContext = tool.getExtractionTool().createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
-				sqlStringGenerationContext,
+				context,
 				ddlTransactionIsolator,
 				this
 		);
@@ -80,13 +80,13 @@ public class DatabaseInformationImpl
 
 	@Override
 	public boolean catalogExists(Identifier catalog) {
-		return extractor.catalogExists( sqlStringGenerationContext.catalogWithDefault( catalog ) );
+		return extractor.catalogExists( context.catalogWithDefault( catalog ) );
 	}
 
 	@Override
 	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( sqlStringGenerationContext.catalogWithDefault( namespace.getCatalog() ),
-				sqlStringGenerationContext.schemaWithDefault( namespace.getSchema() ) );
+		return extractor.schemaExists( context.catalogWithDefault( namespace.getCatalog() ),
+				context.schemaWithDefault( namespace.getSchema() ) );
 	}
 
 	@Override
@@ -111,16 +111,16 @@ public class DatabaseInformationImpl
 		}
 
 		return extractor.getTable(
-				sqlStringGenerationContext.catalogWithDefault( tableName.getCatalogName() ),
-				sqlStringGenerationContext.schemaWithDefault( tableName.getSchemaName() ),
+				context.catalogWithDefault( tableName.getCatalogName() ),
+				context.schemaWithDefault( tableName.getSchemaName() ),
 				tableName.getTableName()
 		);
 	}
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() ),
-				sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() ) );
+		return extractor.getTables( context.catalogWithDefault( namespace.getPhysicalName().getCatalog() ),
+				context.schemaWithDefault( namespace.getPhysicalName().getSchema() ) );
 	}
 
 	@Override

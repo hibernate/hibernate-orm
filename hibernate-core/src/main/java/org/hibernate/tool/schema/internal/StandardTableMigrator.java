@@ -50,8 +50,8 @@ public class StandardTableMigrator implements TableMigrator {
 			Table table,
 			Metadata metadata,
 			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext) {
-		return sqlAlterStrings( table, dialect, metadata, tableInfo, sqlStringGenerationContext )
+			SqlStringGenerationContext context) {
+		return sqlAlterStrings( table, dialect, metadata, tableInfo, context )
 				.toArray( EMPTY_STRING_ARRAY );
 	}
 
@@ -61,9 +61,9 @@ public class StandardTableMigrator implements TableMigrator {
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInformation,
-			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
+			SqlStringGenerationContext context) throws HibernateException {
 
-		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName(
+		final String tableName = context.format( new QualifiedTableName(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier() )
@@ -80,7 +80,7 @@ public class StandardTableMigrator implements TableMigrator {
 			if ( columnInformation == null ) {
 				// the column doesn't exist at all.
 				final String addColumn = dialect.getAddColumnString() + ' '
-						+ getFullColumnDeclaration( column, table, metadata, dialect, sqlStringGenerationContext )
+						+ getFullColumnDeclaration( column, table, metadata, dialect, context )
 						+ dialect.getAddColumnSuffixString();
 				results.add( alterTable + addColumn );
 			}

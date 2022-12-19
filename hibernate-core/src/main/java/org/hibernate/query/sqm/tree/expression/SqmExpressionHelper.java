@@ -111,7 +111,7 @@ public class SqmExpressionHelper {
 	public static boolean isCompositeTemporal(SqmExpression<?> expression) {
 		// When TimeZoneStorageStrategy.COLUMN is used, that implies using a composite user type
 		return expression instanceof SqmPath<?> && expression.getNodeType() instanceof EmbeddedSqmPathSource<?>
-				&& expression.getJavaTypeDescriptor() instanceof TemporalJavaType<?>;
+				&& expression.getJavaTypeDescriptor().isTemporalType();
 	}
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {

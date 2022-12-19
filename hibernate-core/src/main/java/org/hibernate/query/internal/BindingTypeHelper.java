@@ -41,7 +41,7 @@ public class BindingTypeHelper {
 			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
 			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
-			if ( !( sqmExpressible.getExpressibleJavaType() instanceof TemporalJavaType ) ) {
+			if ( !( sqmExpressible.getExpressibleJavaType().isTemporalType() ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
 				);
@@ -64,7 +64,7 @@ public class BindingTypeHelper {
 			Object value,
 			JdbcMapping baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( value == null || !( baseType.getJdbcJavaType() instanceof TemporalJavaType<?> ) ) {
+		if ( value == null || !baseType.getJdbcJavaType().isTemporalType() ) {
 			return baseType;
 		}
 

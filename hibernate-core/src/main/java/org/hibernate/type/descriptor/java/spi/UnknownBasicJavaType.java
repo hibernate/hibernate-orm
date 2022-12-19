@@ -76,4 +76,9 @@ public class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	public String toString() {
 		return "BasicJavaType(" + getJavaType().getTypeName() + ")";
 	}
+
+	@Override
+	public boolean isUnknownType() {
+		return true;
+	}
 }

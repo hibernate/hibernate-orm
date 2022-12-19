@@ -389,8 +389,7 @@ public class MappingModelCreationHelper {
 
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final SqlStringGenerationContext sqlStringGenerationContext = sessionFactory.getSqlStringGenerationContext();
-		final Dialect dialect = sqlStringGenerationContext.getDialect();
+		final Dialect dialect = sessionFactory.getSqlStringGenerationContext().getDialect();
 		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );

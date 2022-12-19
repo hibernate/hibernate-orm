@@ -237,7 +237,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsInsertReturning() {
-		return true;
+		return getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override

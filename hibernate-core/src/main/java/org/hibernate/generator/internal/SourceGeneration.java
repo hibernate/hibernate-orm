@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.tuple.TimestampGenerators;
 import org.hibernate.tuple.ValueGenerator;
@@ -52,7 +52,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  */
 @Deprecated(since = "6.2")
 @Internal
-public class SourceGeneration implements InMemoryGenerator {
+public class SourceGeneration implements BeforeExecutionGenerator {
 
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,

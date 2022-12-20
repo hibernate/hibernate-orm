@@ -42,7 +42,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -1355,7 +1355,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		}
 		// This uses identity generation, so we don't need to list the column
-		if ( identifierGenerator != null && identifierGenerator.generatedByDatabase()
+		if ( identifierGenerator != null && identifierGenerator.generatedOnExecute()
 				|| identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) {
 			identifierGenerator = null;
 		}
@@ -1440,10 +1440,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( discriminatorExpression != null ) {
 				expressions.add( discriminatorExpression );
 			}
-			if ( identifierGenerator != null && !identifierGenerator.generatedByDatabase() ) {
+			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecute() ) {
 				if ( identifierGeneratorParameter == null ) {
 					identifierGeneratorParameter =
-							new IdGeneratorParameter( identifierMapping, (InMemoryGenerator) identifierGenerator );
+							new IdGeneratorParameter( identifierMapping, (BeforeExecutionGenerator) identifierGenerator );
 				}
 				expressions.add( identifierGeneratorParameter );
 			}
@@ -1517,9 +1517,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static class IdGeneratorParameter extends AbstractJdbcParameter {
 
-		private final InMemoryGenerator generator;
+		private final BeforeExecutionGenerator generator;
 
-		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, InMemoryGenerator generator) {
+		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, BeforeExecutionGenerator generator) {
 			super( identifierMapping.getJdbcMapping() );
 			this.generator = generator;
 		}

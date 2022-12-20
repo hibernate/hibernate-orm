@@ -33,7 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -241,7 +241,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
-	default InMemoryGenerator getGenerator() {
+	default BeforeExecutionGenerator getGenerator() {
 		return getIdentifierGenerator();
 	}
 

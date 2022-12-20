@@ -9,7 +9,7 @@ package org.hibernate.id;
 import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
@@ -64,7 +64,7 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * {@link org.hibernate.id.insert.UniqueKeySelectingDelegate}.
  * <p>
  * Arguably, this class breaks the natural separation of responsibility between the
- * {@linkplain InDatabaseGenerator generator} and the coordinating code, since its
+ * {@linkplain OnExecutionGenerator generator} and the coordinating code, since its
  * role is to specify how the generated value is <em>retrieved</em>.
  *
  * @see org.hibernate.annotations.NaturalId

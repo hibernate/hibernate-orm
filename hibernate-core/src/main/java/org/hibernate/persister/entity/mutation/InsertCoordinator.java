@@ -23,10 +23,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -37,8 +34,8 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -114,9 +111,9 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedByDatabase()
+						&& !generator.generatedOnExecute()
 						&& generator.generatesOnInsert() ) {
-					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i], EventType.INSERT );
+					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], EventType.INSERT );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}
@@ -404,7 +401,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				if ( !attributeInclusions[ attributeIndex ] ) {
 					final Generator generator = attributeMapping.getGenerator();
 					if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect()) ) {
-						handleValueGeneration( attributeMapping, insertGroupBuilder, (InDatabaseGenerator) generator );
+						handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
 					}
 					continue;
 				}
@@ -434,7 +431,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.generatesOnInsert()
-			&& generator.generatedByDatabase()
-			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql(dialect);
+			&& generator.generatedOnExecute()
+			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
 	}
 }

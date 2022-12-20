@@ -75,8 +75,8 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.ValueBinder;
 
 /**
@@ -308,7 +308,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final Generator generator = entityPersister.getGenerator();
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( ( assignments == null || assignments.isEmpty() )
-				&& !generator.generatedByDatabase()
+				&& !generator.generatedOnExecute()
 				&& ( !( generator instanceof BulkInsertionCapableIdentifierGenerator )
 					|| ( (BulkInsertionCapableIdentifierGenerator) generator ).supportsBulkInsertionIdentifierGeneration() ) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
@@ -356,7 +356,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		}
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final Map<Object, Object> entityTableToRootIdentity;
-		if ( generator.generatedByDatabase() ) {
+		if ( generator.generatedOnExecute() ) {
 			final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 			final QuerySpec idSelectQuerySpec = new QuerySpec( true );
 			idSelectQuerySpec.getFromClause().addRoot( temporaryTableGroup );
@@ -510,7 +510,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							rootIdentity,
 							new JdbcParameterBindingImpl(
 									identifierMapping.getJdbcMapping(),
-									( (InMemoryGenerator) generator ).generate( executionContext.getSession(), null, null, EventType.INSERT )
+									( (BeforeExecutionGenerator) generator ).generate( executionContext.getSession(), null, null, EventType.INSERT )
 							)
 					);
 					jdbcServices.getJdbcMutationExecutor().execute(
@@ -558,8 +558,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				.buildInsertTranslator( sessionFactory, insertStatement )
 				.translate( null, executionContext.getQueryOptions() );
 
-		if ( generator.generatedByDatabase() ) {
-			final InDatabaseGenerator databaseGenerator = (InDatabaseGenerator) generator;
+		if ( generator.generatedOnExecute() ) {
+			final OnExecutionGenerator databaseGenerator = (OnExecutionGenerator) generator;
 			final InsertGeneratedIdentifierDelegate identifierDelegate =
 					databaseGenerator.getGeneratedIdentifierDelegate( (PostInsertIdentityPersister) entityPersister );
 			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
@@ -719,7 +719,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
 		final Generator identifierGenerator = entityPersister.getGenerator();
 		final boolean needsKeyInsert;
-		if ( identifierGenerator.generatedByDatabase() ) {
+		if ( identifierGenerator.generatedOnExecute() ) {
 			needsKeyInsert = true;
 		}
 		else if ( identifierGenerator instanceof OptimizableGenerator ) {

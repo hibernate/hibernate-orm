@@ -33,7 +33,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
@@ -101,8 +101,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object id;
 		final Object[] state = persister.getValues( entity );
 		final Generator generator = persister.getGenerator();
-		if ( !generator.generatedByDatabase() ) {
-			id = ( (InMemoryGenerator) generator).generate( this, entity, null, INSERT );
+		if ( !generator.generatedOnExecute() ) {
+			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
 			if ( persister.isVersioned() ) {
 				if ( seedVersion( entity, state, persister, this ) ) {
 					persister.setValues( entity, state );

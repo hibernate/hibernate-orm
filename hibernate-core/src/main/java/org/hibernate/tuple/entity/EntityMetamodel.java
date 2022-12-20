@@ -34,8 +34,8 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -141,7 +141,7 @@ public class EntityMetamodel implements Serializable {
 	private final Set<String> subclassEntityNames;
 	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
 
-	private final InMemoryGenerator versionGenerator;
+	private final BeforeExecutionGenerator versionGenerator;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
@@ -237,7 +237,7 @@ public class EntityMetamodel implements Serializable {
 		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
-		InMemoryGenerator tempVersionGenerator = null;
+		BeforeExecutionGenerator tempVersionGenerator = null;
 
 		List<Property> props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
@@ -312,12 +312,12 @@ public class EntityMetamodel implements Serializable {
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			final Generator generator = buildGenerator( property, creationContext );
 			if ( generator != null ) {
-				if ( i == tempVersionProperty && !generator.generatedByDatabase() ) {
+				if ( i == tempVersionProperty && !generator.generatedOnExecute() ) {
 					// when we have an in-memory generator for the version, we
 					// want to plug it in to the older infrastructure specific
 					// to version generation, instead of treating it like a
 					// plain "value" generator for a regular attribute
-					tempVersionGenerator = (InMemoryGenerator) generator;
+					tempVersionGenerator = (BeforeExecutionGenerator) generator;
 				}
 				else {
 					generators[i] = generator;
@@ -326,7 +326,7 @@ public class EntityMetamodel implements Serializable {
 						propertyUpdateability[i] = false;
 					}
 					if ( generator.generatesOnInsert() ) {
-						if ( generator.generatedByDatabase() ) {
+						if ( generator.generatedOnExecute() ) {
 							foundPostInsertGeneratedValues = true;
 						}
 						else {
@@ -334,7 +334,7 @@ public class EntityMetamodel implements Serializable {
 						}
 					}
 					if ( generator.generatesOnUpdate() ) {
-						if ( generator.generatedByDatabase() ) {
+						if ( generator.generatedOnExecute() ) {
 							foundPostUpdateGeneratedValues = true;
 						}
 						else {
@@ -464,8 +464,8 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static boolean generatedWithNoParameter(Generator generator) {
-		return generator.generatedByDatabase()
-			&& !((InDatabaseGenerator) generator).writePropertyValue();
+		return generator.generatedOnExecute()
+			&& !((OnExecutionGenerator) generator).writePropertyValue();
 	}
 
 	private static Generator buildGenerator(
@@ -494,7 +494,7 @@ public class EntityMetamodel implements Serializable {
 		return generators;
 	}
 
-	public InMemoryGenerator getVersionGenerator() {
+	public BeforeExecutionGenerator getVersionGenerator() {
 		return versionGenerator;
 	}
 
@@ -511,7 +511,7 @@ public class EntityMetamodel implements Serializable {
 		private boolean hadInMemoryGeneration;
 		private boolean hadInDatabaseGeneration;
 
-		private List<InDatabaseGenerator> inDatabaseStrategies;
+		private List<OnExecutionGenerator> inDatabaseStrategies;
 
 		public CompositeGeneratorBuilder(Property mappingProperty, Dialect dialect) {
 			this.mappingProperty = mappingProperty;
@@ -520,26 +520,26 @@ public class EntityMetamodel implements Serializable {
 
 		public void addPair(Generator generator) {
 			if ( generator != null ) {
-				if ( generator.generatedByDatabase() ) {
-					if ( generator instanceof InDatabaseGenerator ) {
-						add( (InDatabaseGenerator) generator );
+				if ( generator.generatedOnExecute() ) {
+					if ( generator instanceof OnExecutionGenerator ) {
+						add( (OnExecutionGenerator) generator );
 					}
 				}
 				else {
-					if ( generator instanceof InMemoryGenerator ) {
-						add( (InMemoryGenerator) generator );
+					if ( generator instanceof BeforeExecutionGenerator ) {
+						add( (BeforeExecutionGenerator) generator );
 					}
 				}
 			}
 		}
 
-		private void add(InMemoryGenerator inMemoryStrategy) {
+		private void add(BeforeExecutionGenerator inMemoryStrategy) {
 			if ( inMemoryStrategy.generatesSometimes() ) {
 				hadInMemoryGeneration = true;
 			}
 		}
 
-		private void add(InDatabaseGenerator inDatabaseStrategy) {
+		private void add(OnExecutionGenerator inDatabaseStrategy) {
 			if ( inDatabaseStrategies == null ) {
 				inDatabaseStrategies = new ArrayList<>();
 			}
@@ -582,7 +582,7 @@ public class EntityMetamodel implements Serializable {
 				int columnIndex = 0;
 				for ( Property property : composite.getProperties() ) {
 					propertyIndex++;
-					final InDatabaseGenerator generator = inDatabaseStrategies.get( propertyIndex );
+					final OnExecutionGenerator generator = inDatabaseStrategies.get( propertyIndex );
 					eventTypes.addAll( generator.getEventTypes() );
 					if ( generator.referenceColumnsInSql(dialect) ) {
 						// override base-line value
@@ -607,7 +607,7 @@ public class EntityMetamodel implements Serializable {
 				}
 
 				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
-				return new InDatabaseGeneratorImpl( eventTypes, referenceColumns, columnValues );
+				return new OnExecutionGeneratorImpl( eventTypes, referenceColumns, columnValues );
 			}
 			else {
 				return new Generator() {
@@ -615,7 +615,8 @@ public class EntityMetamodel implements Serializable {
 					public EnumSet<EventType> getEventTypes() {
 						return NONE;
 					}
-					public boolean generatedByDatabase() {
+					@Override
+					public boolean generatedOnExecute() {
 						return false;
 					}
 				};
@@ -623,12 +624,12 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private static class InDatabaseGeneratorImpl implements InDatabaseGenerator {
+	private static class OnExecutionGeneratorImpl implements OnExecutionGenerator {
 		private final EnumSet<EventType> eventTypes;
 		private final boolean referenceColumnInSql;
 		private final String[] referencedColumnValues;
 
-		private InDatabaseGeneratorImpl(
+		private OnExecutionGeneratorImpl(
 				EnumSet<EventType> eventTypes,
 				boolean referenceColumnInSql,
 				String[] referencedColumnValues) {
@@ -691,12 +692,12 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean isVersionGeneratedByDatabase() {
 		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.generatesSometimes() && strategy.generatedByDatabase();
+		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecute();
 	}
 
 	public boolean isVersionGeneratedInMemory() {
 		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.generatesSometimes() && !strategy.generatedByDatabase();
+		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecute();
 	}
 
 	public int[] getNaturalIdentifierProperties() {

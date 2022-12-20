@@ -27,7 +27,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -38,7 +37,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
@@ -640,8 +639,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subgenerator.generatedByDatabase() ) {
-				Object generatedId = ( (InMemoryGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
+			if ( !subgenerator.generatedOnExecute() ) {
+				Object generatedId = ( (BeforeExecutionGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
 				injector.set( injectionContext, generatedId );
 			}
 			else {

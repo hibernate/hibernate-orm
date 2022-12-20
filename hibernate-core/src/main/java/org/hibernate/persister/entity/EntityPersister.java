@@ -28,7 +28,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -472,7 +472,7 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 		return getIdentifierGenerator();
 	}
 
-	default InMemoryGenerator getVersionGenerator() {
+	default BeforeExecutionGenerator getVersionGenerator() {
 		return new VersionGeneration( getVersionMapping() );
 	}
 

@@ -52,7 +52,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -226,7 +226,7 @@ public abstract class AbstractCollectionPersister
 	protected final SqlExceptionHelper sqlExceptionHelper;
 	private final SessionFactoryImplementor factory;
 	private final EntityPersister ownerPersister;
-	private final InMemoryGenerator identifierGenerator;
+	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
@@ -622,19 +622,19 @@ public abstract class AbstractCollectionPersister
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
 	}
 
-	private InMemoryGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
+	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
 		final Generator generator = collection.getIdentifier().createGenerator(
 				context.getBootstrapContext().getIdentifierGeneratorFactory(),
 				factory.getJdbcServices().getDialect(),
 				null
 		);
-		if ( generator.generatedByDatabase() ) {
-			throw new MappingException("must be an InMemoryGenerator"); //TODO fix message
+		if ( generator.generatedOnExecute() ) {
+			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
 		if ( generator instanceof IdentifierGenerator ) {
 			( (IdentifierGenerator) generator ).initialize( context.getSessionFactory().getSqlStringGenerationContext() );
 		}
-		return (InMemoryGenerator) generator;
+		return (BeforeExecutionGenerator) generator;
 	}
 
 	@Override
@@ -1162,7 +1162,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public InMemoryGenerator getGenerator() {
+	public BeforeExecutionGenerator getGenerator() {
 		return identifierGenerator;
 	}
 

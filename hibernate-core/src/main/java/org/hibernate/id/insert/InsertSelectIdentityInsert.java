@@ -8,7 +8,7 @@ package org.hibernate.id.insert;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.Insert;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 
 /**
  * Specialized {@link IdentifierGeneratingInsert} which appends the database
@@ -26,7 +26,7 @@ public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 	}
 
 	@Override
-	public Insert addGeneratedColumns(String[] columnNames, InDatabaseGenerator generator) {
+	public Insert addGeneratedColumns(String[] columnNames, OnExecutionGenerator generator) {
 		if ( columnNames.length != 1 ) {
 			//TODO: Should this allow multiple columns? Would require changing
 			//      IdentityColumnSupport.appendIdentitySelectToInsert()

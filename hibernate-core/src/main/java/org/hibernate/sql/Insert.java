@@ -14,7 +14,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 
 /**
  * An SQL {@code INSERT} statement
@@ -98,7 +98,7 @@ public class Insert {
 		return this;
 	}
 
-	public Insert addGeneratedColumns(String[] columnNames, InDatabaseGenerator generator) {
+	public Insert addGeneratedColumns(String[] columnNames, OnExecutionGenerator generator) {
 		if ( generator.referenceColumnsInSql( dialect ) ) {
 			String[] columnValues = generator.getReferencedColumnValues( dialect );
 			if ( columnNames.length != columnValues.length ) {

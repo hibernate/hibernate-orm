@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
@@ -26,15 +26,15 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 /**
  * A classic extension point from the very earliest days of Hibernate,
  * this interface is no longer the only way to generate identifiers. Any
- * {@link InMemoryGenerator} with timing {@link EventTypeSets#INSERT_ONLY}
+ * {@link BeforeExecutionGenerator} with timing {@link EventTypeSets#INSERT_ONLY}
  * may now be used.
  * <p>
- * This interface extends {@code InMemoryGenerator} with some additional
+ * This interface extends {@code BeforeExecutionGenerator} with some additional
  * machinery for {@linkplain #configure configuration}, and for caching
  * {@linkplain #initialize(SqlStringGenerationContext) generated SQL}.
  * <p>
  * Any identifier generator, including a generator which directly implements
- * {@code InMemoryGenerator}, may also implement {@link ExportableProducer}.
+ * {@code BeforeExecutionGenerator}, may also implement {@link ExportableProducer}.
  * For the sake of convenience, {@code PersistentIdentifierGenerator} extends
  * {@code ExportableProducer}, in case the implementation needs to export
  * objects to the database as part of the process of schema export.
@@ -60,7 +60,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  * @see PostInsertIdentifierGenerator
  * @see PersistentIdentifierGenerator
  */
-public interface IdentifierGenerator extends InMemoryGenerator, ExportableProducer, Configurable {
+public interface IdentifierGenerator extends BeforeExecutionGenerator, ExportableProducer, Configurable {
 	/**
 	 * The configuration parameter holding the entity name
 	 */

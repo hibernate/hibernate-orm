@@ -97,8 +97,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -432,7 +432,7 @@ public abstract class AbstractEntityPersister
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
 	protected AttributeMappingsList staticFetchableList;
 
-	private InMemoryGenerator versionGenerator;
+	private BeforeExecutionGenerator versionGenerator;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -3066,7 +3066,7 @@ public abstract class AbstractEntityPersister
 
 	private void doLateInit() {
 		if ( isIdentifierAssignedByInsert() ) {
-			final InDatabaseGenerator generator = (InDatabaseGenerator) getGenerator();
+			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
 			identityDelegate = generator.getGeneratedIdentifierDelegate( this );
 		}
 
@@ -3840,7 +3840,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public InMemoryGenerator getVersionGenerator() {
+	public BeforeExecutionGenerator getVersionGenerator() {
 		return versionGenerator;
 	}
 
@@ -4627,7 +4627,7 @@ public abstract class AbstractEntityPersister
 		final EntityMetamodel currentEntityMetamodel = getEntityMetamodel();
 
 		if ( currentEntityMetamodel.isVersioned() ) {
-			final InMemoryGenerator generator = currentEntityMetamodel.getVersionGenerator();
+			final BeforeExecutionGenerator generator = currentEntityMetamodel.getVersionGenerator();
 			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
 			versionGenerator = generator == null ? new VersionGeneration( versionMapping ) : generator;
 		}

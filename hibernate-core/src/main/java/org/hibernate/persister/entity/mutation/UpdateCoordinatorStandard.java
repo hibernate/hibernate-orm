@@ -32,11 +32,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
@@ -49,15 +46,14 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.ALL;
@@ -351,16 +347,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.generatesOnUpdate()
-			&& generator.generatedByDatabase()
-			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect);
+			&& generator.generatedOnExecute()
+			&& ((OnExecutionGenerator) generator).referenceColumnsInSql(dialect);
 	}
 
 	private boolean isValueGenerationInSqlNoWrite(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.generatesOnUpdate()
-			&& generator.generatedByDatabase()
-			&& ((InDatabaseGenerator) generator).referenceColumnsInSql(dialect)
-			&& !((InDatabaseGenerator) generator).writePropertyValue();
+			&& generator.generatedOnExecute()
+			&& ((OnExecutionGenerator) generator).referenceColumnsInSql(dialect)
+			&& !((OnExecutionGenerator) generator).writePropertyValue();
 	}
 
 	/**
@@ -463,9 +459,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			for ( int i = 0; i < generators.length; i++ ) {
 				Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedByDatabase()
+						&& !generator.generatedOnExecute()
 						&& generator.generatesOnUpdate() ) {
-					newValues[i] = ( (InMemoryGenerator) generator ).generate( session, object, newValues[i], UPDATE );
+					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}
@@ -947,7 +943,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 					final Generator generator = attributeMapping.getGenerator();
 					if ( isValueGenerationInSql( generator, dialect() ) ) {
-						handleValueGeneration( attributeMapping, updateGroupBuilder, (InDatabaseGenerator) generator );
+						handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
 					}
 					else if ( versionMapping != null
 							&& versionMapping.getVersionAttribute() == attributeMapping ) {

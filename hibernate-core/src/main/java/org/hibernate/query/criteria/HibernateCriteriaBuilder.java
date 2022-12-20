@@ -910,6 +910,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return native SQL expression
 	 */
+	@Incubating
 	<T> JpaExpression<T> sql(String pattern, Class<T> type, Expression<?>... arguments);
 
 	/**
@@ -925,6 +926,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return format expression
 	 */
+	@Incubating
 	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
 
 	/**
@@ -934,6 +936,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -943,6 +946,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -952,6 +956,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -961,6 +966,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -970,6 +976,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -979,46 +986,55 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
+	@Incubating
 	JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, Expression<Integer> start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -1028,11 +1044,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, Expression<Integer> length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -1042,6 +1060,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			String replacement,
@@ -1061,6 +1080,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return overlay expression
 	 */
+	@Incubating
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -1070,56 +1090,67 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, int length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, int length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, int length, Expression<Character> padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, Expression<Character> padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, Expression<Character> padChar);
 
 	/**
@@ -1134,6 +1165,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return pad expression
 	 */
+	@Incubating
 	JpaFunction<String> pad(
 			Trimspec ts,
 			Expression<String> x,
@@ -1143,6 +1175,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #left(Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> left(Expression<String> x, int length);
 
 	/**
@@ -1153,11 +1186,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return left expression
 	 */
+	@Incubating
 	JpaFunction<String> left(Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #right(Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> right(Expression<String> x, int length);
 
 	/**
@@ -1168,21 +1203,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return left expression
 	 */
+	@Incubating
 	JpaFunction<String> right(Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> replace(Expression<String> x, String pattern, String replacement);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
+	@Incubating
 	JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement);
 
 	/**
@@ -1194,8 +1233,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return replace expression
 	 */
+	@Incubating
 	JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, Expression<String> replacement);
 
+	@Incubating
 	JpaFunction<String> collate(Expression<String> x, String collation);
 
 	/**
@@ -1206,11 +1247,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return base-10 logarithm
 	 */
+	@Incubating
 	JpaExpression<Double> log10(Expression<? extends Number> x);
 
 	/**
 	 * @see #log(Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<Double> log(Number b, Expression<? extends Number> x);
 
 	/**
@@ -1221,6 +1264,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return arbitrary-base logarithm
 	 */
+	@Incubating
 	JpaExpression<Double> log(Expression<? extends Number> b, Expression<? extends Number> x);
 
 	/**
@@ -1228,6 +1272,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return pi expression
 	 */
+	@Incubating
 	JpaExpression<Double> pi();
 
 	/**
@@ -1237,6 +1282,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return sine
 	 */
+	@Incubating
 	JpaExpression<Double> sin(Expression<? extends Number> x);
 
 	/**
@@ -1246,6 +1292,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return cosine
 	 */
+	@Incubating
 	JpaExpression<Double> cos(Expression<? extends Number> x);
 
 	/**
@@ -1255,6 +1302,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return tangent
 	 */
+	@Incubating
 	JpaExpression<Double> tan(Expression<? extends Number> x);
 
 	/**
@@ -1264,6 +1312,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return inverse sine
 	 */
+	@Incubating
 	JpaExpression<Double> asin(Expression<? extends Number> x);
 
 	/**
@@ -1273,6 +1322,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return inverse cosine
 	 */
+	@Incubating
 	JpaExpression<Double> acos(Expression<? extends Number> x);
 
 	/**
@@ -1282,16 +1332,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return inverse tangent
 	 */
+	@Incubating
 	JpaExpression<Double> atan(Expression<? extends Number> x);
 
 	/**
 	 * @see #atan2(Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<Double> atan2(Number y, Expression<? extends Number> x);
 
 	/**
 	 * @see #atan2(Expression, Expression)
 	 */
+	@Incubating
 	JpaExpression<Double> atan2(Expression<? extends Number> y, Number x);
 
 	/**
@@ -1302,6 +1355,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return 2-argument inverse tangent
 	 */
+	@Incubating
 	JpaExpression<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x);
 
 	/**
@@ -1311,6 +1365,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return hyperbolic sine
 	 */
+	@Incubating
 	JpaExpression<Double> sinh(Expression<? extends Number> x);
 
 	/**
@@ -1320,6 +1375,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return hyperbolic cosine
 	 */
+	@Incubating
 	JpaExpression<Double> cosh(Expression<? extends Number> x);
 
 	/**
@@ -1329,6 +1385,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return hyperbolic tangent
 	 */
+	@Incubating
 	JpaExpression<Double> tanh(Expression<? extends Number> x);
 
 	/**
@@ -1339,6 +1396,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return degrees
 	 */
+	@Incubating
 	JpaExpression<Double> degrees(Expression<? extends Number> x);
 
 	/**
@@ -1349,6 +1407,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return radians
 	 */
+	@Incubating
 	JpaExpression<Double> radians(Expression<? extends Number> x);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

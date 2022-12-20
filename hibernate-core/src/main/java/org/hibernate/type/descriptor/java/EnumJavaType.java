@@ -54,7 +54,8 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	public boolean hasManyValues() {
-		return getJavaTypeClass().getEnumConstants().length > 128; // a bit arbitrary, but gives us some headroom
+		// a bit arbitrary, but gives us some headroom
+		return getJavaTypeClass().getEnumConstants().length > 128; 
 	}
 
 	@Override

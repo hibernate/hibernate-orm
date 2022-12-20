@@ -15,15 +15,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,9 +50,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
-public class HibernateCriteriaBuilderFunctionsTest {
+public class CriteriaBuilderNonStandardFunctionsTest {
 
-	private final static String DATETIME_PATTERN = "yyyy-MM-dd";
+	private final static String DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -150,6 +154,7 @@ public class HibernateCriteriaBuilderFunctionsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testFormatWithJavaUtilDate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -171,6 +176,7 @@ public class HibernateCriteriaBuilderFunctionsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testFormatWithJavaTimeLocalDateTime(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -239,6 +245,7 @@ public class HibernateCriteriaBuilderFunctionsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPadWithChar.class)
 	public void testPad(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -279,6 +286,7 @@ public class HibernateCriteriaBuilderFunctionsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplace(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -361,9 +369,7 @@ public class HibernateCriteriaBuilderFunctionsTest {
 					cb.tan( theDouble ),
 					cb.asin( theDouble ),
 					cb.acos( theDouble ),
-					cb.atan( theDouble ),
-					cb.atan2( cb.sin( theDouble ), 0 ),
-					cb.atan2( cb.sin( theDouble ), cb.cos( theDouble ) )
+					cb.atan( theDouble )
 			).where( cb.equal( from.get( "id" ), 1 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
@@ -373,8 +379,26 @@ public class HibernateCriteriaBuilderFunctionsTest {
 			assertEquals( Math.asin( 1.0 ), result.get( 3, Double.class ), 1e-6 );
 			assertEquals( Math.acos( 1.0 ), result.get( 4, Double.class ), 1e-6 );
 			assertEquals( Math.atan( 1.0 ), result.get( 5, Double.class ), 1e-6 );
-			assertEquals( Math.atan2( Math.sin( 1.0 ), 0 ), result.get( 6, Double.class ), 1e-6 );
-			assertEquals( Math.atan2( Math.sin( 1.0 ), Math.cos( 1.0 ) ), result.get( 7, Double.class ), 1e-6 );
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 atan2 function expects the arguments in inverted order")
+	public void testAtan2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
+
+			Path<Double> theDouble = from.get( "theDouble" );
+			query.multiselect(
+					cb.atan2( cb.sin( theDouble ), 0 ),
+					cb.atan2( cb.sin( theDouble ), cb.cos( theDouble ) )
+			).where( cb.equal( from.get( "id" ), 1 ) );
+
+			Tuple result = session.createQuery( query ).getSingleResult();
+			assertEquals( Math.atan2( Math.sin( 1.0 ), 0 ), result.get( 0, Double.class ), 1e-6 );
+			assertEquals( Math.atan2( Math.sin( 1.0 ), Math.cos( 1.0 ) ), result.get( 1, Double.class ), 1e-6 );
 		} );
 	}
 

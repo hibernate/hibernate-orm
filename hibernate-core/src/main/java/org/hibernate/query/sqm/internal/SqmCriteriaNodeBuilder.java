@@ -104,6 +104,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -2588,11 +2589,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
-		SqmExpression<String> patternLiteral = value( pattern );
+		SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
 		return getFunctionDescriptor( "format" ).generateSqmExpression(
-				asList( (SqmExpression<?>) datetime, patternLiteral ),
+				asList( (SqmExpression<?>) datetime, sqmFormat ),
 				null,
-				queryEngine,
+				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
 	}

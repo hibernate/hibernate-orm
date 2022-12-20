@@ -1077,19 +1077,16 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public List<R> list() {
-		//noinspection unchecked
 		return super.list();
 	}
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll() {
-		//noinspection unchecked
 		return super.scroll();
 	}
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		//noinspection unchecked
 		return super.scroll( scrollMode );
 	}
 
@@ -1101,19 +1098,16 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public R uniqueResult() {
-		//noinspection unchecked
-		return (R) super.uniqueResult();
+		return super.uniqueResult();
 	}
 
 	@Override
 	public R getSingleResult() {
-		//noinspection unchecked
-		return (R) super.getSingleResult();
+		return super.getSingleResult();
 	}
 
 	@Override
 	public Optional<R> uniqueResultOptional() {
-		//noinspection unchecked
 		return super.uniqueResultOptional();
 	}
 

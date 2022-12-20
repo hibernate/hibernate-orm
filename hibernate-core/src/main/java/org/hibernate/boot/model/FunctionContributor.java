@@ -14,9 +14,6 @@
 
 package org.hibernate.boot.model;
 
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.service.ServiceRegistry;
-
 /**
  * Contract for contributing functions
  *

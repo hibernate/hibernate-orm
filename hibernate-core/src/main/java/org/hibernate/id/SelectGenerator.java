@@ -15,7 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
-import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyName;
+import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 
 /**
  * A generator that {@code select}s the just-{@code insert}ed row to determine the
@@ -82,10 +82,10 @@ public class SelectGenerator
 	}
 
 	@Override
-	public String getUniqueKeyPropertyName(EntityPersister persister) {
+	public String[] getUniqueKeyPropertyNames(EntityPersister persister) {
 		return uniqueKeyPropertyName != null
-				? uniqueKeyPropertyName
-				: getNaturalIdPropertyName( persister );
+				? new String[] { uniqueKeyPropertyName }
+				: getNaturalIdPropertyNames( persister );
 	}
 
 	@Override

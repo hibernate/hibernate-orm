@@ -22,25 +22,30 @@ import java.sql.SQLException;
 
 /**
  * Uses a unique key of the inserted entity to locate the newly inserted row.
+ *
+ * @author Gavin King
  */
 public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 	private final PostInsertIdentityPersister persister;
 	private final Dialect dialect;
 
-	private final String uniqueKeyPropertyName;
-	private final Type uniqueKeyType;
+	private final String[] uniqueKeyPropertyNames;
+	private final Type[] uniqueKeyTypes;
 
 	private final String idSelectString;
 
-	public UniqueKeySelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect, String uniqueKeyPropertyName) {
+	public UniqueKeySelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect, String[] uniqueKeyPropertyNames) {
 		super( persister );
 
 		this.persister = persister;
 		this.dialect = dialect;
-		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
+		this.uniqueKeyPropertyNames = uniqueKeyPropertyNames;
 
-		idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-		uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
+		idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyNames );
+		uniqueKeyTypes = new Type[ uniqueKeyPropertyNames.length ];
+		for (int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
+			uniqueKeyTypes[i] = persister.getPropertyType( uniqueKeyPropertyNames[i] );
+		}
 	}
 
 	protected String getSelectSQL() {
@@ -62,6 +67,10 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 
 	protected void bindParameters(Object entity, PreparedStatement ps, SharedSessionContractImplementor session)
 			throws SQLException {
-		uniqueKeyType.nullSafeSet( ps, persister.getPropertyValue( entity, uniqueKeyPropertyName ), 1, session );
+		int index = 1;
+		for ( int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
+			uniqueKeyTypes[i].nullSafeSet( ps, persister.getPropertyValue( entity, uniqueKeyPropertyNames[i] ), index, session );
+			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory() );
+		}
 	}
 }

@@ -672,19 +672,21 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
+	/**
+	 * @return {@code true} if one of the properties belonging to the natural id
+	 *         is generated during the execution of an {@code insert} statement
+	 */
 	public boolean isNaturalIdentifierInsertGenerated() {
-		// the intention is for this call to replace the usage of the old ValueInclusion stuff (as exposed from
-		// persister) in SelectGenerator to determine if it is safe to use the natural identifier to find the
-		// insert-generated identifier.  That wont work if the natural-id is also insert-generated.
-		//
-		// Assumptions:
-		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
-		// 		* That code assumes a non-composite natural-id, so we assume the same here
-		if ( naturalIdPropertyNumbers.length < 1 ) {
+		if ( naturalIdPropertyNumbers.length == 0 ) {
 			throw new IllegalStateException( "entity does not have a natural id: " + name );
 		}
-		final Generator strategy = generators[ naturalIdPropertyNumbers[0] ];
-		return strategy != null && strategy.generatesSometimes();
+		for ( int i = 0; i < naturalIdPropertyNumbers.length; i++ ) {
+			final Generator strategy = generators[ naturalIdPropertyNumbers[i] ];
+			if ( strategy != null && strategy.generatesOnInsert() && strategy.generatedOnExecute() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isVersionGeneratedByDatabase() {

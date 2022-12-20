@@ -7,7 +7,6 @@
 package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Session;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;

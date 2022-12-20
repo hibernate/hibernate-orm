@@ -9,27 +9,25 @@ package org.hibernate.generator.internal;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.persister.entity.EntityPersister;
 
+/**
+ * @author Gavin King
+ */
 public class NaturalIdHelper {
-	public static String getNaturalIdPropertyName(EntityPersister persister) {
-		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
+	public static String[] getNaturalIdPropertyNames(EntityPersister persister) {
+		final int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
 		if ( naturalIdPropertyIndices == null ) {
-			throw new IdentifierGenerationException(
-					"no natural-id property defined; " +
-							"need to specify [key] in generator parameters"
-			);
-		}
-		if ( naturalIdPropertyIndices.length > 1 ) {
-			throw new IdentifierGenerationException(
-					"generator does not currently support composite natural-id properties;" +
-							" need to specify [key] in generator parameters"
-			);
+			throw new IdentifierGenerationException( "entity '" + persister.getEntityName()
+					+ "' has no '@NaturalId' property" );
 		}
 		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			throw new IdentifierGenerationException(
-					"natural-id also defined as insert-generated; " +
-							"need to specify [key] in generator parameters"
-			);
+			throw new IdentifierGenerationException( "entity '" + persister.getEntityName()
+					+ "' has a '@NaturalId' property which is also defined as insert-generated" );
 		}
-		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+		final String[] allPropertyNames = persister.getPropertyNames();
+		final String[] propertyNames = new String[naturalIdPropertyIndices.length];
+		for ( int i = 0; i < naturalIdPropertyIndices.length; i++ ) {
+			propertyNames[i] = allPropertyNames[naturalIdPropertyIndices[i]];
+		}
+		return propertyNames;
 	}
 }

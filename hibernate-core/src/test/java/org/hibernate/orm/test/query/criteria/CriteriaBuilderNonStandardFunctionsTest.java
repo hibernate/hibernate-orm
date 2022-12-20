@@ -383,7 +383,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 atan2 function expects the arguments in inverted order")
 	public void testAtan2(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

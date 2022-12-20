@@ -2756,11 +2756,19 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getSelectByUniqueKeyString(String propertyName) {
-		return new SimpleSelect( getFactory().getJdbcServices().getDialect() )
-				.setTableName( getTableName( 0 ) )
-				.addColumns( getKeyColumns( 0 ) )
-				.addCondition( getPropertyColumnNames( propertyName ), "=?" )
-				.toStatementString();
+		return getSelectByUniqueKeyString( new String[] { propertyName } );
+	}
+
+	@Override
+	public String getSelectByUniqueKeyString(String[] propertyNames) {
+		final SimpleSelect select =
+				new SimpleSelect( getFactory().getJdbcServices().getDialect() )
+						.setTableName( getTableName(0) )
+						.addColumns( getKeyColumns(0) );
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			select.addCondition( getPropertyColumnNames( propertyNames[i] ), "= ?" );
+		}
+		return select.toStatementString();
 	}
 
 	/**

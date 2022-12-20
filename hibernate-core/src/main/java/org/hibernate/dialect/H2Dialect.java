@@ -276,6 +276,8 @@ public class H2Dialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
+		functionFactory.trunc();
+		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();

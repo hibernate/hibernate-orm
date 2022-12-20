@@ -8,10 +8,16 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 
 import org.hibernate.testing.TestForIssue;
@@ -469,6 +475,46 @@ public class FunctionTests {
 					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sqrt(9.0)").getSingleResult(), is(3.0d) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	public void testTruncFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select trunc(32.92345)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select trunc(32.92345,3)").getSingleResult(), is(32.923d) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(H2Dialect.class)
+	public void testTruncateFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select truncate(32.92345,3)").getSingleResult(), is(32.923d) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void testDateTruncFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select date_trunc(year,current_timestamp)").getSingleResult();
 				}
 		);
 	}

@@ -371,6 +371,14 @@ public class DB2LegacyDialect extends Dialect {
 				new DB2FormatEmulation( queryEngine.getTypeConfiguration() )
 		);
 
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "atan2", "atan2(?2,?1)" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "posstr" )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )

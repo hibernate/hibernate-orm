@@ -17,6 +17,9 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.Test;
@@ -44,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(DB2Dialect.class)
 @RequiresDialect(SQLServerDialect.class)
+@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB does not support triggers")
 public class GeneratedTest {
 
 	@Test

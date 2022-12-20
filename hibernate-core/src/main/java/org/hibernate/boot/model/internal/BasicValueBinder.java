@@ -28,6 +28,7 @@ import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
+import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -148,6 +149,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private EnumType enumType;
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
+	private boolean partitionKey;
 
 	private Table table;
 	private AnnotatedColumns columns;
@@ -983,6 +985,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 		}
+		final PartitionKey partitionKey = attributeXProperty.getAnnotation( PartitionKey.class );
+		if ( partitionKey != null ) {
+			this.partitionKey = true;
+		}
 	}
 
 	private static Class<? extends UserType<?>> normalizeUserType(Class<? extends UserType<?>> userType) {
@@ -1102,6 +1108,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( timeZoneStorageType != null ) {
 			basicValue.setTimeZoneStorageType( timeZoneStorageType );
 		}
+
+		basicValue.setPartitionKey( partitionKey );
 
 		if ( temporalPrecision != null ) {
 			basicValue.setTemporalPrecision( temporalPrecision );

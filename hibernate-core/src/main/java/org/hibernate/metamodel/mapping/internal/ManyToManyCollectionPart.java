@@ -255,6 +255,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		return join;
 	}
 
+	@Override
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -327,6 +328,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		return lazyTableGroup;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return foreignKey.hasPartitionedSelectionMapping();
 	}
 
 
@@ -463,6 +469,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					targetModelPart.getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					true,
+					false,
 					false,
 					creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
 					creationProcess.getSqmFunctionRegistry()
@@ -630,6 +637,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				creationProcess.getCreationContext().getTypeConfiguration(),
 				columnInsertable,
 				columnUpdateable,
+				((SimpleValue) fkBootDescriptorSource).isPartitionKey(),
 				dialect,
 				creationProcess.getSqmFunctionRegistry()
 		);

@@ -10,7 +10,10 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -110,5 +113,33 @@ public abstract class AbstractMutationCoordinator {
 					mapping.getJdbcMapping()
 			);
 		} );
+	}
+
+	protected void bindPartitionColumnValueBindings(
+			Object[] loadedState,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings) {
+		if ( entityPersister().hasPartitionedSelectionMapping() ) {
+			entityPersister().forEachAttributeMapping(
+					(index, attributeMapping) -> {
+						if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+							attributeMapping.decompose(
+									loadedState[index],
+									(value, jdbcValueMapping) -> {
+										if ( jdbcValueMapping.isPartitioned() ) {
+											jdbcValueBindings.bindValue(
+													value,
+													jdbcValueMapping,
+													ParameterUsage.RESTRICT,
+													session
+											);
+										}
+									},
+									session
+							);
+						}
+					}
+			);
+		}
 	}
 }

@@ -123,6 +123,11 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		return fetchAssociationKey;
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TableGroupJoinProducer

@@ -332,6 +332,11 @@ public class EntityTableMapping implements TableMapping {
 		}
 
 		@Override
+		public boolean isPartitioned() {
+			return false;
+		}
+
+		@Override
 		public String getColumnDefinition() {
 			return null;
 		}

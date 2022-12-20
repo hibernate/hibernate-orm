@@ -215,6 +215,11 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

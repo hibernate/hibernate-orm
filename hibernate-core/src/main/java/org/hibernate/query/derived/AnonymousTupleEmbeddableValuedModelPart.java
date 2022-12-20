@@ -361,6 +361,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

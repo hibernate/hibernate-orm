@@ -298,6 +298,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					id,
 					rowId,
 					values,
+					incomingOldValues,
 					valuesAnalysis,
 					session
 			);
@@ -625,6 +626,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object id,
 			Object rowId,
 			Object[] values,
+			Object[] oldValues,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final MutationExecutorService mutationExecutorService = session.getSessionFactory()
@@ -648,6 +650,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(position, attribute) -> true,
 				session
 		);
+		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			//noinspection SuspiciousMethodCalls
@@ -836,6 +839,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(attributeIndex, attribute) -> dirtinessChecker.include( attributeIndex, (SingularAttributeMapping) attribute ),
 				session
 		);
+		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			mutationExecutor.execute(
@@ -1028,6 +1032,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						"?",
 						keyColumn.getJdbcMapping()
 				) );
+
+			}
+			if ( entityPersister().hasPartitionedSelectionMapping() ) {
+				entityPersister().forEachSelectable(
+						(selectionIndex, selectableMapping) -> {
+							if ( selectableMapping.isPartitioned() ) {
+								tableUpdateBuilder.addKeyRestrictionLeniently( selectableMapping );
+							}
+						}
+				);
 			}
 		} );
 	}
@@ -1429,6 +1443,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 
 		updateBuilder.addOptimisticLockRestriction( versionMapping );
+		if ( entityPersister().hasPartitionedSelectionMapping() ) {
+			entityPersister().forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( selectableMapping.isPartitioned() ) {
+							updateBuilder.addKeyRestrictionLeniently( selectableMapping );
+						}
+					}
+			);
+		}
 
 		final RestrictedTableMutation<MutationOperation> mutation = updateBuilder.buildMutation();
 

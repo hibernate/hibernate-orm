@@ -716,6 +716,11 @@ public class ToOneAttributeMapping
 		return canUseParentTableGroup;
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return foreignKeyDescriptor.hasPartitionedSelectionMapping();
+	}
+
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
 	}

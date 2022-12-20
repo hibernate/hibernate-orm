@@ -221,6 +221,16 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public String getContainingTableExpression() {
 		throw new UnsupportedOperationException();
 //		// this *should* only be used to create the sql-expression key, so just

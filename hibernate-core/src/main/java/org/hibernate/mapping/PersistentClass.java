@@ -1115,6 +1115,19 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
 	}
 
+	public boolean hasPartitionedSelectionMapping() {
+		if ( getSuperclass() != null && getSuperclass().hasPartitionedSelectionMapping() ) {
+			return true;
+		}
+		for ( Property property : getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof BasicValue && ( (BasicValue) value ).isPartitionKey() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public Component getIdentifierMapper() {
 		return identifierMapper;
 	}

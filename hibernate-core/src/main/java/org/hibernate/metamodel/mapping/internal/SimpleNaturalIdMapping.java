@@ -276,4 +276,9 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	public AttributeMapping asAttributeMapping() {
 		return getAttribute();
 	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return attribute.hasPartitionedSelectionMapping();
+	}
 }

@@ -362,6 +362,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -662,6 +667,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
 		this.fkDescriptor = fkDescriptor;
 	}

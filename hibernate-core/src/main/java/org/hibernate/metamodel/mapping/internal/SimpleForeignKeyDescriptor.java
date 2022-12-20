@@ -547,6 +547,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public boolean isPartitioned() {
+		return keySide.getModelPart().isPartitioned();
+	}
+
+	@Override
 	public String getCustomReadExpression() {
 		return keySide.getModelPart().getCustomReadExpression();
 	}

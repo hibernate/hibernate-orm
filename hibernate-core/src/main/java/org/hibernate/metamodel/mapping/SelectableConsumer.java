@@ -105,6 +105,11 @@ public interface SelectableConsumer {
 		}
 
 		@Override
+		public boolean isPartitioned() {
+			return false;
+		}
+
+		@Override
 		public String getColumnDefinition() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
@@ -215,6 +220,11 @@ public interface SelectableConsumer {
 			@Override
 			public boolean isUpdateable() {
 				return true;
+			}
+
+			@Override
+			public boolean isPartitioned() {
+				return false;
 			}
 
 			@Override

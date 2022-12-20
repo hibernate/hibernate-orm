@@ -336,6 +336,7 @@ public abstract class AbstractEntityPersister
 	private final boolean hasFormulaProperties;
 	protected final int batchSize;
 	private final boolean hasSubselectLoadableCollections;
+	private final boolean hasPartitionedSelectionMapping;
 	protected final String rowIdName;
 
 	// The optional SQL string defined in the where attribute
@@ -508,6 +509,7 @@ public abstract class AbstractEntityPersister
 		}
 		batchSize = batch;
 		hasSubselectLoadableCollections = bootDescriptor.hasSubselectLoadableCollections();
+		hasPartitionedSelectionMapping = bootDescriptor.hasPartitionedSelectionMapping();
 
 		propertyMapping = new BasicEntityPropertyMapping( this );
 
@@ -5841,6 +5843,10 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return hasPartitionedSelectionMapping;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations

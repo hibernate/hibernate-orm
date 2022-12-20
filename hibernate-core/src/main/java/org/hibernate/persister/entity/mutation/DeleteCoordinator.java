@@ -79,7 +79,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			doDynamicDelete( entity, id, rowId, loadedState, session );
 		}
 		else {
-			doStaticDelete( entity, id, version, session );
+			doStaticDelete( entity, id, entry == null ? null : entry.getLoadedState(), version, session );
 		}
 	}
 
@@ -253,6 +253,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 	protected void doStaticDelete(
 			Object entity,
 			Object id,
+			Object[] loadedState,
 			Object version,
 			SharedSessionContractImplementor session) {
 		final MutationExecutorService mutationExecutorService = session
@@ -287,6 +288,9 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		if ( applyVersion ) {
 			applyLocking( version, null, mutationExecutor, session );
 		}
+		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+
+		bindPartitionColumnValueBindings( loadedState, session, jdbcValueBindings );
 
 		applyId( id, null, mutationExecutor, staticOperationGroup, session );
 
@@ -365,8 +369,20 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		if ( applyVersion ) {
 			// apply any optimistic locking
 			applyOptimisticLocking( deleteGroupBuilder, loadedState, session );
+			if ( entityPersister().hasPartitionedSelectionMapping() ) {
+				entityPersister().forEachSelectable(
+						(selectionIndex, selectableMapping) -> {
+							if ( selectableMapping.isPartitioned() ) {
+								final String tableNameForMutation =
+										entityPersister().physicalTableNameForMutation( selectableMapping );
+								final RestrictedTableMutationBuilder<?, ?> rootTableMutationBuilder =
+										deleteGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
+								rootTableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
+							}
+						}
+				);
+			}
 		}
-
 		// todo (6.2) : apply where + where-fragments
 	}
 

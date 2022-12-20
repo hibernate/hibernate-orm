@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -377,7 +378,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return value;
+		BasicValueConverter valueConverter = getJdbcMapping().getValueConverter();
+
+		return valueConverter == null ? value : valueConverter.toRelationalValue( value );
 	}
 
 	@Override
@@ -420,7 +423,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, keySide.getModelPart() );
+		valueConsumer.consume( disassemble( domainValue, session ), keySide.getModelPart() );
 	}
 
 	@Override
@@ -467,7 +470,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, targetSide.getModelPart().getJdbcMapping() );
+		valuesConsumer.consume( offset, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 

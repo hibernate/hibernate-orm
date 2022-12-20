@@ -918,7 +918,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * The pattern must be written in a subset of the pattern language defined by
 	 * Java’s {@link java.time.format.DateTimeFormatter}.
 	 * <p>
-	 * See {@link org.hibernate.dialect.Dialect#appendDatetimeFormat Dialect#appendDatetimeFormat}
+	 * See {@link org.hibernate.dialect.Dialect#appendDatetimeFormat}
 	 * for a full list of pattern elements.
 	 *
 	 * @param datetime the datetime expression to format

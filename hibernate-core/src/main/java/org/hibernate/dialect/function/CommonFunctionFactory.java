@@ -2448,4 +2448,13 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void dateTrunc_trunc() {
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc(?2,'?1')" )
+				.setInvariantType(timestampType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.register();
+	}
+
 }

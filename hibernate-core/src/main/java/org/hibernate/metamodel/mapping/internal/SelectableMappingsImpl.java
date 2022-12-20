@@ -90,6 +90,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					typeConfiguration,
 					insertable[i],
 					updateable[i],
+					false,
 					dialect,
 					sqmFunctionRegistry
 			);
@@ -118,6 +119,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					selectables.get( i ),
 					jdbcMappings.get( propertyOrder[i] ),
 					typeConfiguration,
+					false,
 					false,
 					false,
 					dialect,

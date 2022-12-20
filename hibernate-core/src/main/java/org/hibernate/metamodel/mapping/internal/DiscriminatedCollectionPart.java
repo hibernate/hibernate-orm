@@ -128,6 +128,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+				|| discriminatorMapping.getKeyPart().isPartitioned();
+	}
+
+	@Override
 	public String toString() {
 		return "DiscriminatedCollectionPart(" + getNavigableRole() + ")@" + System.identityHashCode( this );
 	}

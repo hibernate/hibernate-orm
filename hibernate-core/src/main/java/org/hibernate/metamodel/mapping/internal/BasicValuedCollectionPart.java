@@ -99,6 +99,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public boolean isPartitioned() {
+		return selectableMapping.isPartitioned();
+	}
+
+	@Override
 	public boolean isUpdateable() {
 		return selectableMapping.isUpdateable();
 	}

@@ -288,4 +288,9 @@ public abstract class AbstractCompositeIdentifierMapping
 		return entityMapping;
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
 }

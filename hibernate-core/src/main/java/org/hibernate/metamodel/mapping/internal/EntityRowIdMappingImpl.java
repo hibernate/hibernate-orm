@@ -77,6 +77,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -202,6 +207,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 
 	@Override
 	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
 		return false;
 	}
 

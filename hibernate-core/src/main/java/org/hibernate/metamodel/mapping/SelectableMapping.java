@@ -65,4 +65,6 @@ public interface SelectableMapping extends SqlTypedMapping {
 	boolean isInsertable();
 
 	boolean isUpdateable();
+
+	boolean isPartitioned();
 }

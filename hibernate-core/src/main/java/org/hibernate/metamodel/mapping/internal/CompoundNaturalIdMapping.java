@@ -24,6 +24,7 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -263,6 +264,16 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		for ( AttributeMapping attributeMapping : attributes ) {
+			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 

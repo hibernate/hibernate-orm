@@ -31,6 +31,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean partitioned;
 	private final boolean isFormula;
 
 	public SelectableMappingImpl(
@@ -46,6 +47,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			boolean isFormula,
 			JdbcMapping jdbcMapping) {
 		super( columnDefinition, length, precision, scale, jdbcMapping );
@@ -59,6 +61,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.isFormula = isFormula;
 	}
 
@@ -69,6 +72,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		return from(
@@ -79,6 +83,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				typeConfiguration,
 				insertable,
 				updateable,
+				partitioned,
 				dialect,
 				sqmFunctionRegistry
 		);
@@ -92,6 +97,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		return from(
@@ -105,6 +111,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				typeConfiguration,
 				insertable,
 				updateable,
+				partitioned,
 				dialect,
 				sqmFunctionRegistry
 		);
@@ -119,6 +126,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		final String columnExpression;
@@ -160,6 +168,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				isNullable,
 				insertable,
 				updateable,
+				partitioned,
 				selectable.isFormula(),
 				jdbcMapping
 		);
@@ -223,5 +232,10 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	@Override
 	public boolean isUpdateable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 }

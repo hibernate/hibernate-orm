@@ -63,6 +63,7 @@ public class BasicAttributeMapping
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean partitioned;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -87,6 +88,7 @@ public class BasicAttributeMapping
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
@@ -117,6 +119,7 @@ public class BasicAttributeMapping
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 
@@ -175,6 +178,7 @@ public class BasicAttributeMapping
 				selectableMapping.isNullable(),
 				insertable,
 				updateable,
+				selectableMapping.isPartitioned(),
 				original.getJdbcMapping(),
 				declaringType,
 				propertyAccess
@@ -229,6 +233,11 @@ public class BasicAttributeMapping
 	@Override
 	public boolean isUpdateable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override

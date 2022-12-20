@@ -6,11 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -98,6 +95,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				metaColumn.getScale(),
 				bootValueMapping.isColumnInsertable( 0 ),
 				bootValueMapping.isColumnUpdateable( 0 ),
+				bootValueMapping.isPartitionKey(),
 				(MetaType) anyType.getDiscriminatorType()
 		);
 
@@ -115,6 +113,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isNullable(),
 				bootValueMapping.isColumnInsertable( 1 ),
 				bootValueMapping.isColumnUpdateable( 1 ),
+				bootValueMapping.isPartitionKey(),
 				keyType
 		);
 

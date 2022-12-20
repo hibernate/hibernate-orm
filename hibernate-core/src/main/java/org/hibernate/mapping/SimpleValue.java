@@ -80,6 +80,7 @@ public abstract class SimpleValue implements KeyValue {
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
 	private final List<Boolean> updatability = new ArrayList<>();
+	private boolean partitionKey;
 
 	private String typeName;
 	private Properties typeParameters;
@@ -120,6 +121,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.columns.addAll( original.columns );
 		this.insertability.addAll( original.insertability );
 		this.updatability.addAll( original.updatability );
+		this.partitionKey = original.partitionKey;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
 		this.isVersion = original.isVersion;
@@ -864,6 +866,14 @@ public abstract class SimpleValue implements KeyValue {
 			return updatability.get( index );
 		}
 		return false;
+	}
+
+	public boolean isPartitionKey() {
+		return partitionKey;
+	}
+
+	public void setPartitionKey(boolean partitionColumn) {
+		this.partitionKey = partitionColumn;
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {

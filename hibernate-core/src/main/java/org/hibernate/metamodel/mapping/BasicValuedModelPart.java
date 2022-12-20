@@ -51,4 +51,9 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 		consumer.accept( 0, this );
 		return getJdbcTypeCount();
 	}
+
+	@Override
+	default boolean hasPartitionedSelectionMapping() {
+		return isPartitioned();
+	}
 }

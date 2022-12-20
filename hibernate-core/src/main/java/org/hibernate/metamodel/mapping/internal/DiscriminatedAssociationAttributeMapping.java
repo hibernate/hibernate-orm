@@ -357,6 +357,12 @@ public class DiscriminatedAssociationAttributeMapping
 		consumer.accept( getKeyPart() );
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+				|| discriminatorMapping.getKeyPart().isPartitioned();
+	}
+
 	public static class MutabilityPlanImpl implements MutabilityPlan<Object> {
 		// for now use the AnyType for consistency with write-operations
 		private final AnyType anyType;

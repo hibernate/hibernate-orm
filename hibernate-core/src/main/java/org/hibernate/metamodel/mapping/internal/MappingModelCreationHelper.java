@@ -17,7 +17,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -197,7 +196,7 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final Value value = bootProperty.getValue();
+		final SimpleValue value = (SimpleValue) bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
 		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
@@ -240,6 +239,7 @@ public class MappingModelCreationHelper {
 				nullable,
 				insertable,
 				updateable,
+				value.isPartitionKey(),
 				attrType,
 				declaringType,
 				propertyAccess
@@ -430,6 +430,7 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						index.isColumnInsertable( 0 ),
 						index.isColumnUpdateable( 0 ),
+						false,
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -482,6 +483,7 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						index.isColumnInsertable( 0 ),
 						index.isColumnUpdateable( 0 ),
+						false,
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -685,6 +687,7 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					bootValueMappingKey.isColumnInsertable( 0 ),
 					bootValueMappingKey.isColumnUpdateable( 0 ),
+					false,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -859,6 +862,7 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( i ),
 						value.isColumnUpdateable( i ),
+						((SimpleValue) value).isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -873,6 +877,7 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),
+						((SimpleValue) value).isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -1181,6 +1186,7 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updatable,
+					false,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1280,6 +1286,7 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					basicElement.isColumnInsertable( 0 ),
 					basicElement.isColumnUpdateable( 0 ),
+					basicElement.isPartitionKey(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);

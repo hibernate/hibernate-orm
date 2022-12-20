@@ -91,6 +91,8 @@ public interface ModelPart extends MappingModelExpressible {
 		return false;
 	}
 
+	boolean hasPartitionedSelectionMapping();
+
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
 	 */

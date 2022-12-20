@@ -203,6 +203,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					creationContext.getTypeConfiguration(),
 					insertable,
 					updatable,
+					false,
 					dialect,
 					null
 			);

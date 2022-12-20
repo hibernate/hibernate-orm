@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -24,7 +25,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
 /**
  * @author Steve Ebersole
  */
-public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T, T> {
+public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJoin<T>, SqmJoin<T, T> {
 	private final SqmRoot<?> sqmRoot;
 
 	public SqmCrossJoin(

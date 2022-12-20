@@ -10,13 +10,8 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
-import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.From;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
 import jakarta.persistence.metamodel.ListAttribute;
@@ -61,6 +56,12 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	@Incubating
 	<X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType);
+
+	@Incubating
+	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);
+
+	@Incubating
+	<X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity);
 
 	// Covariant overrides
 

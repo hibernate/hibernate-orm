@@ -15,7 +15,9 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
@@ -309,17 +311,16 @@ public class CriteriaOrderedSetAggregateTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
 	@RequiresDialect(H2Dialect.class)
 	public void testHypotheticalSetRankWithGroupByHavingOrderByLimit(SessionFactoryScope scope) {
-		// note : cross joins are not supported in criteria and this query structure causes problems with many dbs
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
-			Root<EntityOfBasics> root1 = cr.from( EntityOfBasics.class );
-			Root<EntityOfBasics> root2 = cr.from( EntityOfBasics.class );
+			JpaRoot<EntityOfBasics> e1 = (JpaRoot<EntityOfBasics>) cr.from( EntityOfBasics.class );
+			JpaCrossJoin<EntityOfBasics> e2 = e1.crossJoin( EntityOfBasics.class );
 
-			JpaExpression<Long> function = cb.rank( cb.asc( root1.get( "theInt" ) ), cb.literal( 5 ) );
+			JpaExpression<Long> function = cb.rank( cb.asc( e1.get( "theInt" ) ), cb.literal( 5 ) );
 
-			cr.multiselect( root2.get( "id" ), function )
-					.groupBy( root2.get( "id" ) ).having( cb.gt( root2.get( "id" ), cb.literal( 1 ) ) )
+			cr.multiselect( e2.get( "id" ), function )
+					.groupBy( e2.get( "id" ) ).having( cb.gt( e2.get( "id" ), cb.literal( 1 ) ) )
 					.orderBy( cb.asc( cb.literal( 1 ) ), cb.asc( cb.literal( 2 ) ) );
 
 			List<Tuple> resultList = session.createQuery( cr ).setFirstResult( 1 ).getResultList();

@@ -3436,17 +3436,47 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect fully support {@code insert ... returning ...} in some form?
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code insert} statement, using native SQL syntax?
+	 * <p>
+	 * Support for identity columns is insufficient here, we require something like:
+	 * <ol>
+	 * <li>{@code insert ... returning ...}
+	 * <li>{@code select from final table (insert ... )}
+	 * </ol>
 	 *
 	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}
 	 *         works for any sort of primary key column (not just identity columns), or
 	 *         {@code false} if {@code InsertReturningDelegate} does not work, or only
 	 *         works for specialized identity/"autoincrement" columns
+	 *
+	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
+	 * @see org.hibernate.id.insert.InsertReturningDelegate
+	 *
+	 * @since 6.2
 	 */
 	public boolean supportsInsertReturning() {
 		return false;
 	}
 
+	/**
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code insert} statement, using the JDBC method
+	 * {@link Connection#prepareStatement(String, String[])}.
+	 * <p>
+	 * Support for returning the generated value of an identity column via the JDBC
+	 * method {@link Connection#prepareStatement(String, int)} is insufficient here.
+	 *
+	 * @return {@code true} if {@link org.hibernate.id.insert.GetGeneratedKeysDelegate}
+	 *         works for any sort of primary key column (not just identity columns), or
+	 *         {@code false} if {@code GetGeneratedKeysDelegate} does not work, or only
+	 *         works for specialized identity/"autoincrement" columns
+	 *
+	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
+	 * @see org.hibernate.id.insert.GetGeneratedKeysDelegate
+	 *
+	 * @since 6.2
+	 */
 	public boolean supportsInsertReturningGeneratedKeys() {
 		return false;
 	}

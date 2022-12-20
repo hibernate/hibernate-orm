@@ -28,7 +28,7 @@ public interface GeneratedValueResolver {
 //		else {
 //			return generator.generatedByDatabase()
 //					? new InDatabaseGeneratedValueResolver( requestedTiming, dbSelectionPosition ) // in-db generation (column-default, function, etc)
-//					: new InMemoryGeneratedValueResolver( (InMemoryGenerator) generator, requestedTiming );
+//					: new InMemoryGeneratedValueResolver( (BeforeExecutionGenerator) generator, requestedTiming );
 //		}
 //	}
 

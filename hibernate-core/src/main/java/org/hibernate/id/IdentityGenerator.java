@@ -8,13 +8,13 @@ package org.hibernate.id;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 
 /**
- * An {@link InDatabaseGenerator} that handles {@code IDENTITY}/"autoincrement" columns
+ * An {@link OnExecutionGenerator} that handles {@code IDENTITY}/"autoincrement" columns
  * on those databases which support them.
  * <p>
  * Delegates to the {@link org.hibernate.dialect.identity.IdentityColumnSupport} provided

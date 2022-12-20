@@ -22,7 +22,7 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -85,7 +85,7 @@ public class GeneratedUuidTests {
 	//end::mapping-generated-custom-ex2[]
 
 	//tag::mapping-generated-custom-ex3[]
-	public static class UuidValueGeneration implements InMemoryGenerator {
+	public static class UuidValueGeneration implements BeforeExecutionGenerator {
 		private final EnumSet<EventType> eventTypes;
 
 		public UuidValueGeneration(GeneratedUuidValue annotation) {

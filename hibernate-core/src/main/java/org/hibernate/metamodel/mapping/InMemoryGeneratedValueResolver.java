@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 
 /**
  * GeneratedValueResolver impl for in-memory generation
@@ -19,9 +19,9 @@ import org.hibernate.generator.InMemoryGenerator;
 @Internal
 public class InMemoryGeneratedValueResolver implements GeneratedValueResolver {
 	private final EventType eventType;
-	private final InMemoryGenerator generator;
+	private final BeforeExecutionGenerator generator;
 
-	public InMemoryGeneratedValueResolver(InMemoryGenerator generator, EventType eventType) {
+	public InMemoryGeneratedValueResolver(BeforeExecutionGenerator generator, EventType eventType) {
 		this.generator = generator;
 		this.eventType = eventType;
 	}

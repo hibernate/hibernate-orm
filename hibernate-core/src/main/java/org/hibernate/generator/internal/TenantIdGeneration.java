@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
  *
  * @author Gavin King
  */
-public class TenantIdGeneration implements InMemoryGenerator {
+public class TenantIdGeneration implements BeforeExecutionGenerator {
 
 	private final String entityName;
 	private final String propertyName;

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * database via a parameter of a JDBC prepared statement, just like any other field or property
  * value.
  * <p>
- * Any {@link InMemoryGenerator} with {@linkplain #getEventTypes() generation event types}
+ * Any {@link BeforeExecutionGenerator} with {@linkplain #getEventTypes() generation event types}
  * {@link EventTypeSets#INSERT_ONLY} may be used to produce {@linkplain jakarta.persistence.Id
  * identifiers}. The built-in identifier generators all implement the older extension point
  * {@link org.hibernate.id.IdentifierGenerator}, which is a subtype of this interface, but that
@@ -30,10 +30,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * {@link org.hibernate.annotations.ValueGenerationType}, as for any {@link Generator}.
  *
  * @author Steve Ebersole
+ * @author Gavin King
  *
  * @since 6.2
  */
-public interface InMemoryGenerator extends Generator {
+public interface BeforeExecutionGenerator extends Generator {
 	/**
 	 * Generate a value.
 	 *
@@ -45,7 +46,8 @@ public interface InMemoryGenerator extends Generator {
 	 */
 	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType);
 
-	default boolean generatedByDatabase() {
+	@Override
+	default boolean generatedOnExecute() {
 		return false;
 	}
 }

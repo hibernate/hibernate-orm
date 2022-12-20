@@ -29,8 +29,8 @@ import java.lang.reflect.Member;
  * {@code AnnotationType} is the generator annotation type used to configure the
  * generator.
  * <p>
- * Every instance of this class must implement either {@link InMemoryGenerator} or
- * {@link InDatabaseGenerator}.
+ * Every instance of this class must implement either {@link BeforeExecutionGenerator} or
+ * {@link OnExecutionGenerator}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *

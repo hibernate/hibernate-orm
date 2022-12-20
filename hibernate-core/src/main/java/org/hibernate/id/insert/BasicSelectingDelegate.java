@@ -15,7 +15,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 
 /**
  * Delegate for dealing with {@code IDENTITY} columns where the dialect requires an
@@ -34,7 +34,7 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
-		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (InDatabaseGenerator) persister.getGenerator() );
+		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (OnExecutionGenerator) persister.getGenerator() );
 		return insert;
 	}
 
@@ -46,7 +46,7 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 		final TableInsertBuilder builder =
 				new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), factory );
 
-		final InDatabaseGenerator generator = (InDatabaseGenerator) persister.getGenerator();
+		final OnExecutionGenerator generator = (OnExecutionGenerator) persister.getGenerator();
 		if ( generator.referenceColumnsInSql( dialect ) ) {
 			final String[] columnNames = persister.getRootTableKeyColumnNames();
 			final String[] columnValues = generator.getReferencedColumnValues( dialect );

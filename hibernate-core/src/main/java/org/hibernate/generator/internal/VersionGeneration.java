@@ -8,7 +8,7 @@ package org.hibernate.generator.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 
 import java.util.EnumSet;
@@ -31,7 +31,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
  *
  * @author Gavin King
  */
-public class VersionGeneration implements InMemoryGenerator {
+public class VersionGeneration implements BeforeExecutionGenerator {
 	private final EntityVersionMapping versionMapping;
 
 	public VersionGeneration(EntityVersionMapping versionMapping) {

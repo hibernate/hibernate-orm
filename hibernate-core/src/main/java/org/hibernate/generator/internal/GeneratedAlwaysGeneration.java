@@ -9,7 +9,7 @@ package org.hibernate.generator.internal;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 
 import java.util.EnumSet;
 
@@ -20,7 +20,7 @@ import static org.hibernate.generator.EventTypeSets.ALL;
  *
  * @author Gavin King
  */
-public class GeneratedAlwaysGeneration implements InDatabaseGenerator {
+public class GeneratedAlwaysGeneration implements OnExecutionGenerator {
 
 	public GeneratedAlwaysGeneration() {}
 

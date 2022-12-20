@@ -49,8 +49,8 @@ import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
@@ -452,10 +452,10 @@ public class PropertyBinder {
 	}
 
 	private static void checkGeneratorClass(Class<? extends Generator> generatorClass) {
-		if ( !InMemoryGenerator.class.isAssignableFrom( generatorClass )
-				&& !InDatabaseGenerator.class.isAssignableFrom( generatorClass ) ) {
+		if ( !BeforeExecutionGenerator.class.isAssignableFrom( generatorClass )
+				&& !OnExecutionGenerator.class.isAssignableFrom( generatorClass ) ) {
 			throw new MappingException("Generator class '" + generatorClass.getName()
-					+ "' must implement either 'InMemoryGenerator' or 'InDatabaseGenerator'");
+					+ "' must implement either 'BeforeExecutionGenerator' or 'OnExecutionGenerator'");
 		}
 	}
 

@@ -1326,7 +1326,6 @@ public abstract class Dialect implements ConversionContext {
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-			|| isSmallOrTinyInt(typeCode1) && isSmallOrTinyInt(typeCode2) //special case for HHH-15288 migration
 //			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)

@@ -7,6 +7,11 @@ pipeline {
     tools {
         jdk 'OpenJDK 8 Latest'
     }
+    options {
+  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
+        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+        disableConcurrentBuilds(abortPrevious: true)
+    }
     parameters {
         booleanParam(name: 'NO_SLEEP', defaultValue: true, description: 'Whether the NO_SLEEP patch should be applied to speed up the TCK execution')
 	}

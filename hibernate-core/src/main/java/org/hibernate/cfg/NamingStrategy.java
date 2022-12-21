@@ -13,9 +13,6 @@ package org.hibernate.cfg;
  * document. May be used to implement project-scoped
  * naming standards for database objects.
  *
- * #propertyToTableName(String, String) should be replaced by
- * {@link #collectionTableName(String,String,String,String,String)}
- *
  * @see DefaultNamingStrategy
  * @see ImprovedNamingStrategy
  * @author Gavin King

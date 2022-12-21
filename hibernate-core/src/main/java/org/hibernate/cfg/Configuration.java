@@ -62,14 +62,10 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
 /**
- * A convenience API making it easier to bootstrap an instance of Hibernate
- * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
- * under the covers.
+ * A convenience API making it easier to bootstrap an instance of Hibernate.
  * <p>
  * An instance of {@code Configuration} may be obtained simply by
- * {@linkplain #Configuration() instantiation}.
- * <p>
- * A {@code Configuration} may be used to aggregate:
+ * {@linkplain #Configuration() instantiation}, and may be used to aggregate:
  * <ul>
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
@@ -79,6 +75,20 @@ import jakarta.persistence.SharedCacheMode;
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <pre>{@code
+ *  SessionFactory factory = new Configuration()
+ *     // scan classes for mapping annotations
+ *     .addAnnotatedClass(Item.class)
+ *     .addAnnotatedClass(Bid.class)
+ *     .addAnnotatedClass(User.class)
+ *     // read package-level annotations of the named package
+ *     .addPackage("org.hibernate.auction")
+ *     // set a configuration property
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .getSessionFactory();
+ * }</pre>
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
  * {@link #registerTypeContributor type contributors},
@@ -95,8 +105,8 @@ import jakarta.persistence.SharedCacheMode;
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
  * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
- * <p>
- * Configuration properties are enumerated by {@link AvailableSettings}.
+ * Programs may use these APIs directly as an alternative to using an
+ * instance of this class.
  *
  * @author Gavin King
  * @author Steve Ebersole

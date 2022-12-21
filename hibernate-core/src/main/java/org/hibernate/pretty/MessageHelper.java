@@ -6,6 +6,7 @@
  */
 package org.hibernate.pretty;
 
+import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,6 +22,7 @@ import org.hibernate.type.Type;
  *
  * @author Max Andersen, Gavin King
  */
+@Internal
 public final class MessageHelper {
 
 	private MessageHelper() {

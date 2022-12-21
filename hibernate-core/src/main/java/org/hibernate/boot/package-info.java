@@ -6,9 +6,11 @@
  */
 
 /**
- * This package contains the contracts that make up the Hibernate native
- * bootstrapping API (building a SessionFactory).
- *
- * See the <i>Native Bootstrapping</i> guide for details.
+ * This package contains the contracts that make up the bootstrap API
+ * for Hibernate. That is, they collectively provide a way to specify
+ * configuration information and construct a new instance of
+ * {@link org.hibernate.SessionFactory}.
+ * <p>
+ * See the <i>Native Bootstrapping</i> guide for more details.
  */
 package org.hibernate.boot;

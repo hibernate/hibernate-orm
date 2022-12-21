@@ -22,7 +22,10 @@ import org.hibernate.query.TypedTupleTransformer;
  * methods or fields matching the alias names.
  *
  * @author max
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
+@Deprecated
 public class AliasToBeanResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached

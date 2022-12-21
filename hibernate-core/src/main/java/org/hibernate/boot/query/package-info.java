@@ -6,7 +6,7 @@
  */
 
 /**
- * Support for handling named-queries
+ * Support for handling named queries during the bootstrap process.
  *
  * @author Steve Ebersole
  */

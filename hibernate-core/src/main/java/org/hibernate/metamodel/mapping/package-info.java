@@ -6,9 +6,9 @@
  */
 
 /**
- * Hibernate's run-time mapping metamodel which defines the mapping
- * of the application's domain model parts (entity, attribute, etc)
- * to database objects (tables, columns, etc).
+ * Defines the runtime mapping metamodel, which describes the mapping
+ * of the application's domain model parts (entities, attributes) to
+ * relational database objects (tables, columns).
  *
  * @implNote Built on top of the {@link org.hibernate.persister} package.
  *

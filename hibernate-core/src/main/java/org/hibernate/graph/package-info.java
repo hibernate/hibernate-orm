@@ -6,7 +6,7 @@
  */
 
 /**
- * Hibernate's (extended) support for JPA's entity graphs
+ * Implements and extends the JPA-defined {@link jakarta.persistence.EntityGraph entity graph} API.
  *
  * @apiNote This entire package (including sub-packages) is considered incubating
  */

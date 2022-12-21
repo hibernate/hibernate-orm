@@ -13,7 +13,10 @@ import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Transforms each result row from a tuple into a {@link List} whose elements are each tuple value
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
+@Deprecated
 public class ToListResultTransformer implements ResultTransformer<List<Object>>, TypedTupleTransformer<List<Object>> {
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 

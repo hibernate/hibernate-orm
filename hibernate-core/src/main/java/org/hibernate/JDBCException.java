@@ -9,7 +9,8 @@ package org.hibernate;
 import java.sql.SQLException;
 
 /**
- * Wraps a {@link SQLException}.  Indicates that an exception occurred during a JDBC call.
+ * Wraps a {@link SQLException} arising from the JDBC driver.
+ * Indicates that an error occurred during a JDBC call.
  *
  * @author Gavin King
  *

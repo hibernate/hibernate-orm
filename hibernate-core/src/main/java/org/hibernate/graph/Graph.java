@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * A container for {@link AttributeNode} references.
- *
+ * <p>
  * Acts as a "bridge" between JPA's {@link jakarta.persistence.EntityGraph} and {@link jakarta.persistence.Subgraph}
  *
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>

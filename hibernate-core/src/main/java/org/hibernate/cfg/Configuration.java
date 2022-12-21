@@ -105,14 +105,15 @@ import jakarta.persistence.SharedCacheMode;
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
  * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
- * Programs may use these APIs directly as an alternative to using an
- * instance of this class.
+ * Programs may directly use the APIs defined under {@link org.hibernate.boot},
+ * as an alternative to using an instance of this class.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
+ * @see org.hibernate.boot
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );

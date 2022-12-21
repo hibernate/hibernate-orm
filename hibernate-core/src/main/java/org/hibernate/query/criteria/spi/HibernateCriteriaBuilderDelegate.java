@@ -263,6 +263,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n) {
+		return criteriaBuilder.truncate( x, n );
+	}
+
+	@Override
 	public JpaExpression<LocalDate> localDate() {
 		return criteriaBuilder.localDate();
 	}

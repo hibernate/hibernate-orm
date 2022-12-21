@@ -1943,7 +1943,7 @@ public abstract class AbstractEntityPersister
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
 		}
 
-		if ( entityMetamodel.isVersionGeneratedByDatabase() ) {
+		if ( entityMetamodel.isVersionGeneratedOnExecute() ) {
 			// the difficulty here is exactly what we update in order to
 			// force the version to be incremented in the db...
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
@@ -2737,7 +2737,7 @@ public abstract class AbstractEntityPersister
 	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
 
 	public final boolean checkVersion(final boolean[] includeProperty) {
-		return includeProperty[getVersionProperty()] || entityMetamodel.isVersionGeneratedByDatabase();
+		return includeProperty[getVersionProperty()] || entityMetamodel.isVersionGeneratedOnExecute();
 	}
 
 	@Override
@@ -3945,8 +3945,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isVersionPropertyGenerated() {
 		return isVersioned()
-			&& ( getEntityMetamodel().isVersionGeneratedByDatabase()
-				|| getEntityMetamodel().isVersionGeneratedInMemory() );
+			&& ( getEntityMetamodel().isVersionGeneratedOnExecute()
+				|| getEntityMetamodel().isVersionGeneratedBeforeExecute() );
 	}
 
 	@Override

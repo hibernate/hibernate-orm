@@ -34,7 +34,9 @@
             $$
             language plpgsql;
 
-            create or replace trigger t_i_my_entity
+            drop trigger if exists my_entity_trigger on my_entity;
+
+            create trigger my_entity_trigger
             before insert on my_entity
             for each row
             execute procedure gen_id_my_entity();]]>

@@ -716,7 +716,9 @@ public class QuerySplitter {
 			return new SqmLikePredicate(
 					(SqmExpression<?>) predicate.getMatchExpression().accept( this ),
 					(SqmExpression<?>) predicate.getPattern().accept( this ),
-					(SqmExpression<?>) predicate.getEscapeCharacter().accept( this ),
+					predicate.getEscapeCharacter() == null ?
+							null :
+							(SqmExpression<?>) predicate.getEscapeCharacter().accept( this ),
 					predicate.nodeBuilder()
 			);
 		}

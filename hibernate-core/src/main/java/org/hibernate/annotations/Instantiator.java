@@ -15,7 +15,7 @@ import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Marks the canonical constructor to be used for instantation of an embeddable.
+ * Marks the canonical constructor to be used for instantiation of an embeddable.
  * This will implicitly add a special {@link EmbeddableInstantiator}.
  *
  * @since 6.2

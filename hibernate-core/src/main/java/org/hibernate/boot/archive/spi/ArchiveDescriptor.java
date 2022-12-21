@@ -7,7 +7,14 @@
 package org.hibernate.boot.archive.spi;
 
 /**
- * Contract for visiting an archive, which might be a jar, a zip, an exploded directory, etc.
+ * Models a logical archive, which might be <ul>
+ *     <li>a jar file</li>
+ *     <li>a zip file</li>
+ *     <li>an exploded directory</li>
+ *     <li>etc</li>
+ * </ul>
+ * <p/>
+ * Used mainly for scanning purposes via {@linkplain #visitArchive visitation}
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard

@@ -2,15 +2,14 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.cfg.beanvalidation;
+package org.hibernate.boot.beanvalidation;
+
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import jakarta.validation.Path;
-import jakarta.validation.TraversableResolver;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -19,6 +18,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import jakarta.validation.Path;
+import jakarta.validation.TraversableResolver;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.

@@ -555,7 +555,7 @@ public class MySQLLegacyDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		functionFactory.position();
 		functionFactory.nowCurdateCurtime();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.insert();
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();

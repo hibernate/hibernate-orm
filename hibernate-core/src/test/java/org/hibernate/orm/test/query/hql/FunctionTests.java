@@ -16,8 +16,6 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 
 import org.hibernate.testing.TestForIssue;
@@ -480,28 +478,30 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass = SQLServerDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass = DerbyDialect.class)
-	public void testTruncFunction(SessionFactoryScope scope) {
+	public void testRoundTruncFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery("select trunc(32.92345)").getSingleResult(), is(32d) );
-					assertThat( session.createQuery("select trunc(32.92345,3)").getSingleResult(), is(32.923d) );
-				}
-		);
-	}
+					assertThat( session.createQuery("select trunc(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select trunc(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select trunc(-32.92345f)").getSingleResult(), is(-32f) );
+					assertThat( session.createQuery("select trunc(-32.92345f,3)").getSingleResult(), is(-32.923f) );
+					assertThat( session.createQuery("select truncate(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select truncate(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.92345f)").getSingleResult(), is(33f) );
+					assertThat( session.createQuery("select round(32.92345f,1)").getSingleResult(), is(32.9f) );
+					assertThat( session.createQuery("select round(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.923451f,4)").getSingleResult(), is(32.9235f) );
 
-	@Test
-	@RequiresDialect(MySQLDialect.class)
-	@RequiresDialect(SQLServerDialect.class)
-	@RequiresDialect(DB2Dialect.class)
-	@RequiresDialect(H2Dialect.class)
-	public void testTruncateFunction(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					assertThat( session.createQuery("select truncate(32.92345,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select trunc(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select trunc(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select trunc(-32.92345d)").getSingleResult(), is(-32d) );
+					assertThat( session.createQuery("select trunc(-32.92345d,3)").getSingleResult(), is(-32.923d) );
+					assertThat( session.createQuery("select truncate(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select truncate(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.92345d)").getSingleResult(), is(33d) );
+					assertThat( session.createQuery("select round(32.92345d,1)").getSingleResult(), is(32.9d) );
+					assertThat( session.createQuery("select round(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.923451d,4)").getSingleResult(), is(32.9235d) );
 				}
 		);
 	}

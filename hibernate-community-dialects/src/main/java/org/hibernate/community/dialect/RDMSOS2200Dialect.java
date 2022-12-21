@@ -213,7 +213,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.rand();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.soundex();
 		functionFactory.trim2();
 		functionFactory.space();

@@ -20,6 +20,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * Defines a registry for {@link SqmFunctionDescriptor} instances
@@ -326,6 +327,27 @@ public class SqmFunctionRegistry {
 	 */
 	public MultipatternSqmFunctionDescriptor registerUnaryBinaryPattern(
 			String name,
+			String pattern1,
+			String pattern2,
+			FunctionParameterType parameterType1,
+			FunctionParameterType parameterType2,
+			TypeConfiguration typeConfiguration) {
+		return registerPatterns(
+				name,
+				new FunctionParameterType[] { parameterType1, parameterType2 },
+				typeConfiguration,
+				null,
+				pattern1,
+				pattern2
+		);
+	}
+	/**
+	 * Register a unary/binary function.
+	 *
+	 * i.e. a function which accepts 1-2 arguments.
+	 */
+	public MultipatternSqmFunctionDescriptor registerUnaryBinaryPattern(
+			String name,
 			BasicType<?> type,
 			String pattern1,
 			String pattern2,
@@ -400,6 +422,31 @@ public class SqmFunctionRegistry {
 				pattern3,
 				pattern4
 		);
+	}
+
+	private MultipatternSqmFunctionDescriptor registerPatterns(
+			String name,
+			FunctionParameterType[] parameterTypes,
+			TypeConfiguration typeConfiguration,
+			String... patterns) {
+		SqmFunctionDescriptor[] descriptors =
+				new SqmFunctionDescriptor[patterns.length];
+		for ( int i = 0; i < patterns.length; i++ ) {
+			String pattern = patterns[i];
+			if ( pattern != null ) {
+				descriptors[i] =
+						patternDescriptorBuilder( name, pattern )
+								.setExactArgumentCount( i )
+								.setParameterTypes( parameterTypes )
+								.setReturnTypeResolver( useArgType(1) )
+								.descriptor();
+			}
+		}
+
+		MultipatternSqmFunctionDescriptor function =
+				new MultipatternSqmFunctionDescriptor( name, descriptors, typeConfiguration, parameterTypes );
+		register( name, function );
+		return function;
 	}
 
 	private MultipatternSqmFunctionDescriptor registerPatterns(

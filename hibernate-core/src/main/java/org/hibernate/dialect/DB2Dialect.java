@@ -282,7 +282,7 @@ public class DB2Dialect extends Dialect {
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.insert();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.stddev();

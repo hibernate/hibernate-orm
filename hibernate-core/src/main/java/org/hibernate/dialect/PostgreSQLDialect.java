@@ -517,11 +517,11 @@ public class PostgreSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
+		functionFactory.round_roundFloor(); //Postgres round(x,n) does not accept double
+		functionFactory.trunc_truncFloor();
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.mod_operator();
 		if ( getVersion().isSameOrAfter( 12 ) ) {

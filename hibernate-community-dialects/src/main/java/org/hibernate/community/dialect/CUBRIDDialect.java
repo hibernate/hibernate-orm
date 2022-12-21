@@ -232,7 +232,7 @@ public class CUBRIDDialect extends Dialect {
 		functionFactory.bitLength();
 		functionFactory.md5();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.substr();
 		//also natively supports ANSI-style substring()

@@ -217,6 +217,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T extends Number> JpaExpression<T> round(Expression<T> x, Integer n);
 
 	/**
+	 * Create an expression that returns the first argument
+	 * truncated to the number of decimal places given by the
+	 * second argument.
+	 * @param x base
+	 * @param n number of decimal places
+	 * @return the truncated value
+	 */
+	<T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n);
+
+	/**
 	 *  Create expression to return current local date.
 	 *  @return expression for current date
 	 */

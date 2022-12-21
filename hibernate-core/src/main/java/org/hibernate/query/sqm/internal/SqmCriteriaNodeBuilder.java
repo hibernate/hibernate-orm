@@ -921,6 +921,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n) {
+		return getFunctionDescriptor( "truncate" ).generateSqmExpression(
+				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public <N extends Number> SqmExpression<N> neg(Expression<N> x) {
 		final SqmExpression<N> sqmExpression = (SqmExpression<N>) x;
 		return new SqmUnaryOperation<>(

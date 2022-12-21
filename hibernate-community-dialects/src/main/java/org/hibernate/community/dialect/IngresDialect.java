@@ -252,7 +252,7 @@ public class IngresDialect extends Dialect {
 		functionFactory.repeat();
 		functionFactory.trim2();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();

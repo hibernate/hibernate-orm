@@ -303,7 +303,8 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 		functionFactory.log_log();
 
-		functionFactory.truncate_round();
+		functionFactory.trunc_round();
+		functionFactory.round_round();
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );

@@ -317,6 +317,7 @@ public class DerbyLegacyDialect extends Dialect {
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.power_expLn();
 		functionFactory.round_floor();
+		functionFactory.trunc_floor();
 		functionFactory.octetLength_pattern( "length(?1)" );
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 

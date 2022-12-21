@@ -759,7 +759,8 @@ public abstract class Dialect implements ConversionContext {
 	 * <li> <code>acos(arg)</code>
 	 * <li> <code>atan(arg)</code>
 	 * <li> <code>atan2(arg0, arg1)</code>
-	 * <li> <code>round(arg0, arg1)</code>
+	 * <li> <code>round(arg0[, arg1])</code>
+	 * <li> <code>truncate(arg0[, arg1])</code>
 	 * <li> <code>sinh(arg)</code>
 	 * <li> <code>tanh(arg)</code>
 	 * <li> <code>cosh(arg)</code>
@@ -833,6 +834,8 @@ public abstract class Dialect implements ConversionContext {
 		//to implement such a silly thing, it would be dog slow.
 
 		functionFactory.math();
+		functionFactory.round();
+
 
 		//trig functions supported on almost every database
 

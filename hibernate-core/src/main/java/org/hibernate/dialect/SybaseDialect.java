@@ -220,6 +220,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp_varp();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
+		functionFactory.trunc_floorPower();
+		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(

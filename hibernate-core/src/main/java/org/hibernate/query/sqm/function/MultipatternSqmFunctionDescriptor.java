@@ -11,13 +11,15 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
+
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.invariant;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
  * Support for overloaded functions defined in terms of a
@@ -72,8 +74,39 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 						),
 						parameterTypes
 				),
-				StandardFunctionReturnTypeResolvers.invariant( type ),
-				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, parameterTypes )
+				invariant( type ),
+				invariant( typeConfiguration, parameterTypes )
+		);
+		this.functions = functions;
+	}
+
+	/**
+	 * Construct an instance with the given function templates
+	 * where the position of each function template in the
+	 * given array corresponds to the arity of the function
+	 * template. The array must be padded with leading nulls
+	 * where there is no overloaded form corresponding to
+	 * lower arities.
+	 *
+	 * @param name
+	 * @param functions the function templates to delegate to,
+	 */
+	public MultipatternSqmFunctionDescriptor(
+			String name,
+			SqmFunctionDescriptor[] functions,
+			TypeConfiguration typeConfiguration,
+			FunctionParameterType... parameterTypes) {
+		super(
+				name,
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.between(
+								first(functions),
+								last(functions)
+						),
+						parameterTypes
+				),
+				useArgType( 1 ),
+				invariant( typeConfiguration, parameterTypes )
 		);
 		this.functions = functions;
 	}

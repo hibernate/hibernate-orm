@@ -296,7 +296,6 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.log10();
 		functionFactory.mod_operator();
 		functionFactory.rand();
-		functionFactory.truncate();
 		functionFactory.soundex();
 		functionFactory.translate();
 		functionFactory.bitand();
@@ -311,6 +310,9 @@ public class H2LegacyDialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
+		functionFactory.trunc();
+//		functionFactory.truncate();
+		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();

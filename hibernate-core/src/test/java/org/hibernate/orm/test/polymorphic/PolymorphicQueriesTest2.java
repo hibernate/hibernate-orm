@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
 package org.hibernate.orm.test.polymorphic;
 
 import org.hibernate.query.spi.QueryImplementor;
@@ -13,13 +19,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @DomainModel(
 		annotatedClasses = PolymorphicQueriesTest2.Human.class
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15744")
 public class PolymorphicQueriesTest2 {
-
 
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -31,6 +37,7 @@ public class PolymorphicQueriesTest2 {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15744")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -42,6 +49,17 @@ public class PolymorphicQueriesTest2 {
 					query.list();
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15850")
+	public void testQueryLike(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( "Fab", session.createQuery(
+					"from org.hibernate.orm.test.polymorphic.PolymorphicQueriesTest2$Animal u where (u.name like ?1)",
+					Animal.class
+			).setParameter( 1, "F%" ).getSingleResult().getName() );
+		} );
 	}
 
 	public interface Animal {

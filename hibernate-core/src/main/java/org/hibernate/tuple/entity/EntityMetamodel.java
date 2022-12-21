@@ -689,12 +689,12 @@ public class EntityMetamodel implements Serializable {
 		return false;
 	}
 
-	public boolean isVersionGeneratedByDatabase() {
+	public boolean isVersionGeneratedOnExecute() {
 		final Generator strategy = generators[ versionPropertyIndex ];
 		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecute();
 	}
 
-	public boolean isVersionGeneratedInMemory() {
+	public boolean isVersionGeneratedBeforeExecute() {
 		final Generator strategy = generators[ versionPropertyIndex ];
 		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecute();
 	}

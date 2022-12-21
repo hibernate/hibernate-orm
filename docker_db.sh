@@ -176,7 +176,7 @@ db2_11_5() {
     while [[ $OUTPUT != *"INSTANCE"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2 2>&1)
     done
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
@@ -190,7 +190,7 @@ db2_10_5() {
     while [[ $OUTPUT != *"DB2START"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2 2>&1)
     done
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - db2inst1 bash -c "/home/db2inst1/sqllib/bin/db2 create database orm_test &&
     /home/db2inst1/sqllib/bin/db2 'connect to orm_test' &&
@@ -252,7 +252,7 @@ EOF
     while [[ $OUTPUT != *"Setup has completed."* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2spatial)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2spatial 2>&1)
     done
     sleep 10
     echo "Enabling spatial extender"
@@ -579,15 +579,15 @@ hana() {
     temp_dir=$(mktemp -d)
     echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
     chmod 777 -R $temp_dir
-    $CONTAINER_CLI rm -f hana || true
-    $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f hana || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
       --memory=8g \
       --ulimit nofile=1048576:1048576 \
       --sysctl kernel.shmmax=1073741824 \
       --sysctl net.ipv4.ip_local_port_range='40000 60999' \
       --sysctl kernel.shmmni=4096 \
       --sysctl kernel.shmall=8388608 \
-      -v $temp_dir:/config \
+      -v $temp_dir:/config:Z \
       docker.io/saplabs/hanaexpress:2.00.061.00.20220519.1 \
       --passwords-url file:///config/password.json \
       --agree-to-sap-license
@@ -596,7 +596,7 @@ hana() {
     while [[ $OUTPUT != *"Startup finished"* ]]; do
         echo "Waiting for HANA to start..."
         sleep 10
-        OUTPUT=$($CONTAINER_CLI logs hana)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs hana 2>&1)
     done
     echo "HANA successfully started"
 }

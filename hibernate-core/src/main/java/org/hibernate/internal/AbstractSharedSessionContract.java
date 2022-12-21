@@ -824,7 +824,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else if ( getFactory().getMappingMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
-		else {
+		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			query.addScalar( 1, resultClass );
 		}
 		return query;

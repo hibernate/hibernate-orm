@@ -31,6 +31,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
@@ -189,41 +190,57 @@ public class AggregateComponentSecondPass implements SecondPass {
 	private void orderColumns(UserDefinedType userDefinedType) {
 		final Class<?> componentClass = component.getComponentClass();
 		final int[] originalOrder = component.sortProperties();
-		final int[] propertyMappingIndex;
-		if ( ReflectHelper.isRecord( componentClass ) ) {
-			if ( originalOrder == null ) {
-				propertyMappingIndex = null;
+		final String[] structColumnNames = component.getStructColumnNames();
+		if ( structColumnNames == null || structColumnNames.length == 0 ) {
+			final int[] propertyMappingIndex;
+			if ( ReflectHelper.isRecord( componentClass ) ) {
+				if ( originalOrder == null ) {
+					propertyMappingIndex = null;
+				}
+				else {
+					final String[] componentNames = ReflectHelper.getRecordComponentNames( componentClass );
+					propertyMappingIndex = EmbeddableHelper.determineMappingIndex(
+							component.getPropertyNames(),
+							componentNames
+					);
+				}
 			}
-			else {
-				final String[] componentNames = ReflectHelper.getRecordComponentNames( componentClass );
-				propertyMappingIndex = EmbeddableHelper.determinePropertyMappingIndex(
+			else if ( component.getInstantiatorPropertyNames() != null ) {
+				propertyMappingIndex = EmbeddableHelper.determineMappingIndex(
 						component.getPropertyNames(),
-						componentNames
+						component.getInstantiatorPropertyNames()
 				);
 			}
+			else {
+				propertyMappingIndex = null;
+			}
+			if ( propertyMappingIndex == null ) {
+				// If there is default ordering possible, assume alphabetical ordering
+				final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
+				final List<Property> properties = component.getProperties();
+				for ( Property property : properties ) {
+					addColumns( orderedColumns, property.getValue() );
+				}
+				userDefinedType.reorderColumns( orderedColumns );
+			}
+			else {
+				final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
+				final List<Property> properties = component.getProperties();
+				for ( final int propertyIndex : propertyMappingIndex ) {
+					addColumns( orderedColumns, properties.get( propertyIndex ).getValue() );
+				}
+				userDefinedType.reorderColumns( orderedColumns );
+			}
 		}
 		else {
-			if ( component.getInstantiatorPropertyNames() == null ) {
-				return;
+			final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
+			for ( String structColumnName : structColumnNames ) {
+				if ( !addColumns( orderedColumns, component, structColumnName ) ) {
+					throw new MappingException( "Couldn't find column [" + structColumnName + "] that was defined in @Struct(attributes) in the component [" + component.getComponentClassName() + "]" );
+				}
 			}
-			propertyMappingIndex = EmbeddableHelper.determinePropertyMappingIndex(
-					component.getPropertyNames(),
-					component.getInstantiatorPropertyNames()
-			);
+			userDefinedType.reorderColumns( orderedColumns );
 		}
-		final ArrayList<Column> orderedColumns = new ArrayList<>( userDefinedType.getColumnSpan() );
-		final List<Property> properties = component.getProperties();
-		if ( propertyMappingIndex == null ) {
-			for ( Property property : properties ) {
-				addColumns( orderedColumns, property.getValue() );
-			}
-		}
-		else {
-			for ( final int propertyIndex : propertyMappingIndex ) {
-				addColumns( orderedColumns, properties.get( propertyIndex ).getValue() );
-			}
-		}
-		userDefinedType.reorderColumns( orderedColumns );
 	}
 
 	private static void addColumns(ArrayList<Column> orderedColumns, Value value) {
@@ -241,6 +258,33 @@ public class AggregateComponentSecondPass implements SecondPass {
 		else {
 			orderedColumns.addAll( value.getColumns() );
 		}
+	}
+
+	private static boolean addColumns(ArrayList<Column> orderedColumns, Component component, String structColumnName) {
+		for ( Property property : component.getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof Component ) {
+				final Component subComponent = (Component) value;
+				if ( subComponent.getAggregateColumn() == null ) {
+					if ( addColumns( orderedColumns, subComponent, structColumnName ) ) {
+						return true;
+					}
+				}
+				else if ( structColumnName.equals( subComponent.getAggregateColumn().getName() ) ) {
+					orderedColumns.add( subComponent.getAggregateColumn() );
+					return true;
+				}
+			}
+			else {
+				for ( Selectable selectable : value.getSelectables() ) {
+					if ( selectable instanceof Column && structColumnName.equals( ( (Column) selectable ).getName() ) ) {
+						orderedColumns.add( (Column) selectable );
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private void validateSupportedColumnTypes(String basePath, Component component) {

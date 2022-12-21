@@ -9,11 +9,11 @@ package org.hibernate.metamodel.internal;
 import java.util.Arrays;
 
 public class EmbeddableHelper {
-	public static int[] determinePropertyMappingIndex(String[] propertyNames, String[] componentNames) {
-		final int[] index = new int[propertyNames.length];
+	public static int[] determineMappingIndex(String[] sortedNames, String[] names) {
+		final int[] index = new int[sortedNames.length];
 		int i = 0;
-		for ( String componentName : componentNames ) {
-			final int mappingIndex = Arrays.binarySearch( propertyNames, componentName );
+		for ( String name : names ) {
+			final int mappingIndex = Arrays.binarySearch( sortedNames, name );
 			if ( mappingIndex != -1 ) {
 				index[i++] = mappingIndex;
 			}

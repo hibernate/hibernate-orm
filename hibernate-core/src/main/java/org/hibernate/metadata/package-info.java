@@ -6,8 +6,8 @@
  */
 
 /**
- * This package defines an API for accessing the Hibernate runtime metamodel.
+ * This package defines an API for accessing details about model mapping
  *
- * deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
+ * Deprecated since 6.x in favor of the {@linkplain  org.hibernate.metamodel.MappingMetamodel mapping-metamodel}
  */
 package org.hibernate.metadata;

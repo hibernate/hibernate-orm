@@ -6,7 +6,9 @@
  */
 
 /**
- * Hibernate extensions to and implementations of the JPA metamodel
+ * Extension to and implementation of the
+ * {@linkplain jakarta.persistence.metamodel Jakarta Persistence metamodel}.
+ * This metamodel is used in {@linkplain org.hibernate.query query} handling.
  *
  * @see jakarta.persistence.metamodel
  */

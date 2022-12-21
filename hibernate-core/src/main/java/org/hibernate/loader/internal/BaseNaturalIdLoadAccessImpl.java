@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.loader.access;
+package org.hibernate.loader.internal;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,6 +28,8 @@ import org.hibernate.proxy.LazyInitializer;
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 
 /**
+ * Base support for load-by-natural-id
+ *
  * @author Steve Ebersole
  */
 public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOptions {

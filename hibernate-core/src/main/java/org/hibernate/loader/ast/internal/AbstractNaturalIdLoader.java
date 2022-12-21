@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -30,7 +29,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -87,7 +85,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
-	public Loadable getLoadable() {
+	public EntityMappingType getLoadable() {
 		return entityDescriptor();
 	}
 
@@ -177,17 +175,13 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 		final SelectStatement sqlSelect = new SelectStatement( rootQuerySpec, Collections.singletonList( domainResult ) );
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>( naturalIdMapping.getJdbcTypeCount() );
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 
 		applyNaturalIdRestriction(
 				bindValue,
 				rootTableGroup,
 				rootQuerySpec::applyPredicate,
-				(jdbcParameter, jdbcParameterBinding) -> {
-					jdbcParameters.add( jdbcParameter );
-					jdbcParamBindings.addBinding( jdbcParameter, jdbcParameterBinding );
-				},
+				jdbcParamBindings::addBinding,
 				sqlAstCreationState,
 				session
 		);
@@ -250,7 +244,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			TableGroup rootTableGroup,
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver,
-			SessionFactoryImplementor sessionFactory) {
+			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
 		final TableReference tableReference = rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(), selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
 			throw new IllegalStateException(

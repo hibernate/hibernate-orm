@@ -40,7 +40,7 @@ public class BeanValidationIntegrator implements Integrator {
 	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
 	public static final String JAKARTA_MODE_PROPERTY = "jakarta.persistence.validation.mode";
 
-	private static final String ACTIVATOR_CLASS_NAME = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
+	private static final String ACTIVATOR_CLASS_NAME = "org.hibernate.boot.beanvalidation.TypeSafeActivator";
 	private static final String VALIDATE_SUPPLIED_FACTORY_METHOD_NAME = "validateSuppliedFactory";
 	private static final String ACTIVATE_METHOD_NAME = "activate";
 

@@ -78,7 +78,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
@@ -96,6 +95,7 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.NavigablePath;
 
 import org.jboss.logging.Logger;
 
@@ -382,7 +382,7 @@ public class EntityBinder {
 				propertyAccessor
 		);
 		final Property mapperProperty = new Property();
-		mapperProperty.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
+		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		mapperProperty.setUpdateable( false );
 		mapperProperty.setInsertable( false );
 		mapperProperty.setPropertyAccessorName( "embedded" );
@@ -404,7 +404,7 @@ public class EntityBinder {
 				propertyHolder,
 				new PropertyPreloadedData(
 						propertyAccessor,
-						PropertyPath.IDENTIFIER_MAPPER_PROPERTY,
+						NavigablePath.IDENTIFIER_MAPPER_PROPERTY,
 						compositeClass
 				),
 				baseInferredData,

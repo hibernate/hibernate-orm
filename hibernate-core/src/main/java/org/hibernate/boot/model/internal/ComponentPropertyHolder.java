@@ -15,13 +15,13 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -352,7 +352,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			}
 		}
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
+			String userPropertyName = extractUserPropertyName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
 			}

@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.procedure;
 
 /**
  * Defines support for executing database stored procedures and functions and accessing its outputs.
@@ -33,7 +32,7 @@ package org.hibernate.procedure;
  *     }
  * </code>
  * <p>
- * Finally output parameters can be accessed using the overloaded {@link org.hibernate.procedure.ProcedureOutputs#getOutputParameterValue} methods.
+ * Finally, output parameters can be accessed using the overloaded {@link org.hibernate.procedure.ProcedureOutputs#getOutputParameterValue} methods.
  * For portability amongst databases, it is advised to access the output parameters after all returns have been
  * processed.
  *
@@ -41,3 +40,4 @@ package org.hibernate.procedure;
  * @see org.hibernate.Session#createStoredProcedureCall(String, Class[])
  * @see org.hibernate.Session#createStoredProcedureCall(String, String...)
  */
+package org.hibernate.procedure;

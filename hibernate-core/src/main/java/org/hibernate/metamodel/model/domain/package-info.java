@@ -6,8 +6,12 @@
  */
 
 /**
- * Extension to and implementation of the
- * {@linkplain jakarta.persistence.metamodel Jakarta Persistence metamodel}.
+ * Defines the runtime domain metamodel, which describes the Java aspect of
+ * the application's domain model parts (entities, attributes).
+ * <p>
+ * The API defined here extends and implements the standard
+ * {@linkplain jakarta.persistence.metamodel JPA metamodel}.
+ * <p>
  * This metamodel is used in {@linkplain org.hibernate.query query} handling.
  *
  * @see jakarta.persistence.metamodel

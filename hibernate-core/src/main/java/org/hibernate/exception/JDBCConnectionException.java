@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating problems with communicating with the
+ * A {@link JDBCException} indicating a problem communicating with the
  * database (can also include incorrect JDBC setup).
  *
  * @author Steve Ebersole

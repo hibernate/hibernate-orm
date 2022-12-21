@@ -10,7 +10,8 @@
  *
  * <h2 id="basic-value-mapping">Basic value mapping</h2>
  *
- * Hibernate supports 2 approaches to defining a mapping strategy for basic values:<ul>
+ * Hibernate supports two approaches to defining a mapping strategy for basic values:
+ * <ul>
  *     <li>
  *         A "compositional" approach using a combination of the following influencers for
  *         various parts of mapping<ul>
@@ -36,11 +37,10 @@
  *          custom-types as well.
  *     </li>
  * </ul>
- *
- * These 2 approaches are not intended to be mixed.  Specifying a custom-type takes precedence over
- * the compositional approach.  Though the compositional approach is recommended, both forms are
+ * These two approaches are not intended to be mixed. Specifying a custom-type takes precedence over
+ * the compositional approach. Although the compositional approach is recommended, both forms are
  * fully supported.
- *
+ * <p>
  * Please see the user guide for a more in-depth discussion.
  */
 package org.hibernate.annotations;

@@ -6,6 +6,6 @@
  */
 
 /**
- * SPI definitions for persistent collections
+ * SPI definitions for persistent collections.
  */
 package org.hibernate.collection.spi;

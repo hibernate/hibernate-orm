@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.exception;
+
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating that evaluation of the
+ * Extends {@link JDBCException} indicating that evaluation of the
  * valid SQL statement against the given data resulted in some
  * illegal operation, mismatched types or incorrect cardinality.
  *

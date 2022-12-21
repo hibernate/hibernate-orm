@@ -47,4 +47,12 @@ public @interface Struct {
 	 * The name of the UDT (user defined type).
 	 */
 	String name();
+
+	/**
+	 * The ordered set of attributes of the UDT, as they appear physically in the DDL.
+	 * It is important to specify the attributes in the same order for JDBC interactions to work correctly.
+	 * If the annotated type is a record, the order of record components is used as the default order.
+	 * If no default order can be inferred, attributes are assumed to be in alphabetical order.
+	 */
+	String[] attributes() default {};
 }

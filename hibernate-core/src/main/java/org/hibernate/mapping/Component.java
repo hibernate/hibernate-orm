@@ -82,6 +82,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
 	private String structName;
+	private String[] structColumnNames;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private transient List<Selectable> cachedSelectables;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
@@ -807,4 +808,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.instantiatorPropertyNames = instantiatorPropertyNames;
 	}
 
+	public String[] getStructColumnNames() {
+		return structColumnNames;
+	}
+
+	public void setStructColumnNames(String[] structColumnNames) {
+		this.structColumnNames = structColumnNames;
+	}
 }

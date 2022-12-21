@@ -178,7 +178,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		}
 		assert end == string.length();
 		if ( returnEmbeddable ) {
-			final Object[] attributeValues = getAttributeValues( embeddableMappingType, array, options );
+			final Object[] attributeValues = getAttributeValues( embeddableMappingType, orderMapping, array, options );
 			//noinspection unchecked
 			return (X) embeddableMappingType.getRepresentationStrategy().getInstantiator().instantiate(
 					() -> attributeValues,
@@ -420,8 +420,9 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 										options
 								);
 								if ( returnEmbeddable ) {
-									final Object[] attributeValues = getAttributeValues(
+									final Object[] attributeValues = structJdbcType.getAttributeValues(
 											structJdbcType.embeddableMappingType,
+											structJdbcType.orderMapping,
 											subValues,
 											options
 									);
@@ -827,6 +828,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 
 	private Object[] getAttributeValues(
 			EmbeddableMappingType embeddableMappingType,
+			int[] orderMapping,
 			Object[] rawJdbcValues,
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
@@ -879,7 +881,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 				jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 				final Object[] subJdbcValues = new Object[jdbcValueCount];
 				System.arraycopy( rawJdbcValues, jdbcIndex, subJdbcValues, 0, subJdbcValues.length );
-				final Object[] subValues = getAttributeValues( embeddableMappingType, subJdbcValues, options );
+				final Object[] subValues = getAttributeValues( embeddableMappingType, null, subJdbcValues, options );
 				attributeValues[attributeIndex] = embeddableMappingType.getRepresentationStrategy()
 						.getInstantiator()
 						.instantiate(

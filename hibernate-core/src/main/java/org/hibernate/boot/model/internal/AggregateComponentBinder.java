@@ -55,6 +55,7 @@ public final class AggregateComponentBinder {
 					() -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), structName )
 			);
 			component.setStructName( structName );
+			component.setStructColumnNames( determineStructAttributeNames( inferredData, returnedClassOrElement ) );
 
 			// Determine the aggregate column
 			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
@@ -131,6 +132,21 @@ public final class AggregateComponentBinder {
 		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
 		if ( struct != null ) {
 			return struct.name();
+		}
+		return null;
+	}
+
+	private static String[] determineStructAttributeNames(PropertyData inferredData, XClass returnedClassOrElement) {
+		final XProperty property = inferredData.getProperty();
+		if ( property != null ) {
+			final Struct struct = property.getAnnotation( Struct.class );
+			if ( struct != null ) {
+				return struct.attributes();
+			}
+		}
+		final Struct struct = returnedClassOrElement.getAnnotation( Struct.class );
+		if ( struct != null ) {
+			return struct.attributes();
 		}
 		return null;
 	}

@@ -26,6 +26,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -84,6 +85,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 	}
 
 	private final int[] orderMapping;
+	private final int[] inverseOrderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
 
@@ -96,6 +98,17 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		super( typeName, SqlTypes.STRUCT );
 		this.embeddableMappingType = embeddableMappingType;
 		this.orderMapping = orderMapping;
+		if ( orderMapping == null ) {
+			this.inverseOrderMapping = null;
+		}
+		else {
+			final int[] inverseOrderMapping = new int[orderMapping.length];
+			for ( int i = 0; i < orderMapping.length; i++ ) {
+				inverseOrderMapping[orderMapping[i]] = i;
+			}
+			this.inverseOrderMapping = inverseOrderMapping;
+		}
+		// We cache the extractor for Obje
 		// We cache the extractor for Object[] here
 		// since that is used in AggregateEmbeddableFetchImpl and AggregateEmbeddableResultImpl
 		this.objectArrayExtractor = super.getExtractor( new UnknownBasicJavaType<>( Object[].class ) );
@@ -170,12 +183,15 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		}
 		assert end == string.length();
 		if ( returnEmbeddable ) {
-			final Object[] attributeValues = StructHelper.getAttributeValues( embeddableMappingType, array, options );
+			final Object[] attributeValues = getAttributeValues( embeddableMappingType, array, options );
 			//noinspection unchecked
 			return (X) embeddableMappingType.getRepresentationStrategy().getInstantiator().instantiate(
 					() -> attributeValues,
 					options.getSessionFactory()
 			);
+		}
+		else if ( inverseOrderMapping != null ) {
+			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
 		}
 		//noinspection unchecked
 		return (X) array;
@@ -282,8 +298,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 							continue;
 						}
 						assert repeatsChar( string, i, 1 << quoteLevel, '"' );
-						final JdbcMapping jdbcMapping = getJdbcValueSelectable( column )
-								.getJdbcMapping();
+						final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 						switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 							case SqlTypes.DATE:
 								values[column] = fromRawObject(
@@ -396,8 +411,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 						i += expectedQuotes - 1;
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
-							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column )
-									.getJdbcMapping();
+							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 							if ( jdbcMapping.getJdbcType() instanceof PostgreSQLStructJdbcType ) {
 								final PostgreSQLStructJdbcType structJdbcType;
 								structJdbcType = (PostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
@@ -411,7 +425,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 										options
 								);
 								if ( returnEmbeddable ) {
-									final Object[] attributeValues = StructHelper.getAttributeValues(
+									final Object[] attributeValues = getAttributeValues(
 											structJdbcType.embeddableMappingType,
 											subValues,
 											options
@@ -422,6 +436,14 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 									values[column] = subValue;
 								}
 								else {
+									if ( structJdbcType.inverseOrderMapping != null ) {
+										StructHelper.orderJdbcValues(
+												structJdbcType.embeddableMappingType,
+												structJdbcType.inverseOrderMapping,
+												subValues.clone(),
+												subValues
+										);
+									}
 									values[column] = subValues;
 								}
 								column++;
@@ -500,7 +522,36 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 
 	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
 		if ( orderMapping != null ) {
-			jdbcValueSelectableIndex = orderMapping[jdbcValueSelectableIndex];
+			final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
+			int count = 0;
+			for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( orderMapping[i] );
+				final MappingType mappedType = attributeMapping.getMappedType();
+				if ( mappedType instanceof EmbeddableMappingType ) {
+					final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
+					if ( aggregateMapping == null ) {
+						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
+						if ( subSelectable != null ) {
+							return subSelectable;
+						}
+						count += embeddableMappingType.getJdbcValueCount();
+					}
+					else {
+						if ( count == jdbcValueSelectableIndex ) {
+							return aggregateMapping;
+						}
+						count++;
+					}
+				}
+				else {
+					if ( count == jdbcValueSelectableIndex ) {
+						return (SelectableMapping) attributeMapping;
+					}
+					count += attributeMapping.getJdbcTypeCount();
+				}
+			}
+			return null;
 		}
 		return embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex );
 	}
@@ -602,6 +653,9 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		assert embeddableMappingType != null;
 		final Object[] array = new Object[embeddableMappingType.getJdbcValueCount()];
 		deserializeStruct( (String) rawJdbcValue, 0, 0, array, true, options );
+		if ( inverseOrderMapping != null ) {
+			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
+		}
 		return array;
 	}
 
@@ -629,15 +683,24 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 			char separator) {
 		final int end = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < end; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final AttributeMapping attributeMapping;
+			final Object attributeValue;
+			if ( orderMapping == null ) {
+				attributeMapping = embeddableMappingType.getAttributeMapping( i );
+				attributeValue = array == null ? null : array[i];
+			}
+			else {
+				attributeMapping = embeddableMappingType.getAttributeMapping( orderMapping[i] );
+				attributeValue = array == null ? null : array[orderMapping[i]];
+			}
 			if ( attributeMapping instanceof BasicValuedMapping ) {
 				appender.append( separator );
 				separator = ',';
-				if ( array == null || array[i] == null ) {
+				if ( attributeValue == null ) {
 					continue;
 				}
 				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) attributeMapping ).getJdbcMapping();
-				serializeBasicTo( appender, options, jdbcMapping, array[i] );
+				serializeBasicTo( appender, options, jdbcMapping, attributeValue );
 			}
 			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
 				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
@@ -647,7 +710,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 							appender,
 							options,
 							mappingType,
-							array == null || array[i] == null ? null : mappingType.getValues( array[i] ),
+							attributeValue == null ? null : mappingType.getValues( attributeValue ),
 							separator
 					);
 					separator = ',';
@@ -655,13 +718,13 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 				else {
 					appender.append( separator );
 					separator = ',';
-					if ( array == null || array[i] == null ) {
+					if ( attributeValue == null ) {
 						continue;
 					}
 					appender.quoteStart();
 					( (PostgreSQLStructJdbcType) aggregateMapping.getJdbcMapping().getJdbcType() ).serializeStructTo(
 							appender,
-							array[i],
+							attributeValue,
 							options
 					);
 					appender.quoteEnd();
@@ -765,6 +828,84 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 			default:
 				throw new UnsupportedOperationException( "Unsupported JdbcType nested in struct: " + jdbcMapping.getJdbcType() );
 		}
+	}
+
+	private Object[] getAttributeValues(
+			EmbeddableMappingType embeddableMappingType,
+			Object[] rawJdbcValues,
+			WrapperOptions options) throws SQLException {
+		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
+		final Object[] attributeValues;
+		if ( numberOfAttributeMappings != rawJdbcValues.length || orderMapping != null ) {
+			attributeValues = new Object[numberOfAttributeMappings];
+		}
+		else {
+			attributeValues = rawJdbcValues;
+		}
+		int jdbcIndex = 0;
+		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+			final int attributeIndex;
+			if ( orderMapping == null ) {
+				attributeIndex = i;
+			}
+			else {
+				attributeIndex = orderMapping[i];
+			}
+			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( attributeIndex );
+			jdbcIndex += injectAttributeValue(
+					attributeMapping,
+					attributeValues,
+					attributeIndex,
+					rawJdbcValues,
+					jdbcIndex,
+					options
+			);
+		}
+		return attributeValues;
+	}
+
+	private int injectAttributeValue(
+			AttributeMapping attributeMapping,
+			Object[] attributeValues,
+			int attributeIndex,
+			Object[] rawJdbcValues,
+			int jdbcIndex,
+			WrapperOptions options) throws SQLException {
+		final MappingType mappedType = attributeMapping.getMappedType();
+		final int jdbcValueCount;
+		final Object rawJdbcValue = rawJdbcValues[jdbcIndex];
+		if ( mappedType instanceof EmbeddableMappingType ) {
+			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+			if ( embeddableMappingType.getAggregateMapping() != null ) {
+				jdbcValueCount = 1;
+				attributeValues[attributeIndex] = rawJdbcValue;
+			}
+			else {
+				jdbcValueCount = embeddableMappingType.getJdbcValueCount();
+				final Object[] subJdbcValues = new Object[jdbcValueCount];
+				System.arraycopy( rawJdbcValues, jdbcIndex, subJdbcValues, 0, subJdbcValues.length );
+				final Object[] subValues = getAttributeValues( embeddableMappingType, subJdbcValues, options );
+				attributeValues[attributeIndex] = embeddableMappingType.getRepresentationStrategy()
+						.getInstantiator()
+						.instantiate(
+								() -> subValues,
+								embeddableMappingType.findContainingEntityMapping()
+										.getEntityPersister()
+										.getFactory()
+						);
+			}
+		}
+		else {
+			assert attributeMapping.getJdbcTypeCount() == 1;
+			jdbcValueCount = 1;
+			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+			final Object jdbcValue = jdbcMapping.getJdbcJavaType().wrap(
+					rawJdbcValue,
+					options
+			);
+			attributeValues[attributeIndex] = jdbcMapping.convertToDomainValue( jdbcValue );
+		}
+		return jdbcValueCount;
 	}
 
 	private void appendTemporal(SqlAppender appender, JdbcMapping jdbcMapping, Object value, WrapperOptions options) {

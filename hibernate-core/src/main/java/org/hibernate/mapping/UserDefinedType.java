@@ -266,7 +266,7 @@ public class UserDefinedType implements Serializable, ContributableDatabaseObjec
 		orderMapping = new int[columns.size()];
 		int i = 0;
 		for ( Column column : this.columns.values() ) {
-			orderMapping[i++] = columns.indexOf( column );
+			orderMapping[columns.indexOf( column )] = i++;
 		}
 		this.columns.clear();
 		for ( Column column : columns ) {

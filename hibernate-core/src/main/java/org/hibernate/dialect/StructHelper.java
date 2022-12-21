@@ -90,11 +90,12 @@ public class StructHelper {
 
 	public static Object[] getJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
+			int[] orderMapping,
 			Object[] attributeValues,
 			WrapperOptions options) throws SQLException {
 		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 		final Object[] jdbcValues;
-		if ( jdbcValueCount != attributeValues.length ) {
+		if ( jdbcValueCount != attributeValues.length || orderMapping != null ) {
 			jdbcValues = new Object[jdbcValueCount];
 		}
 		else {
@@ -102,11 +103,17 @@ public class StructHelper {
 		}
 		int jdbcIndex = 0;
 		for ( int i = 0; i < attributeValues.length; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final int attributeIndex;
+			if ( orderMapping == null ) {
+				attributeIndex = i;
+			}
+			else {
+				attributeIndex = orderMapping[i];
+			}
 			jdbcIndex += injectJdbcValue(
-					attributeMapping,
+					embeddableMappingType.getAttributeMapping( attributeIndex ),
 					attributeValues,
-					i,
+					attributeIndex,
 					jdbcValues,
 					jdbcIndex,
 					options
@@ -182,6 +189,54 @@ public class StructHelper {
 						options
 				);
 			}
+		}
+		return jdbcValueCount;
+	}
+
+	/**
+	 * The <code>sourceJdbcValues</code> array is ordered according to the expected physical order,
+	 * as given through the argument order of @Instantiator.
+	 * The <code>targetJdbcValues</code> array should be ordered according to the Hibernate internal ordering,
+	 * which is based on property name.
+	 * This method copies from <code>sourceJdbcValues</code> to <code>targetJdbcValues</code> according to the ordering.
+	 */
+	public static void orderJdbcValues(
+			EmbeddableMappingType embeddableMappingType,
+			int[] inverseMapping,
+			Object[] sourceJdbcValues,
+			Object[] targetJdbcValues) {
+		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
+		int targetJdbcOffset = 0;
+		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final MappingType mappedType = attributeMapping.getMappedType();
+			final int jdbcValueCount = getJdbcValueCount( mappedType );
+
+			final int attributeIndex = inverseMapping[i];
+			int sourceJdbcIndex = 0;
+			for ( int j = 0; j < attributeIndex; j++ ) {
+				sourceJdbcIndex += getJdbcValueCount( embeddableMappingType.getAttributeMapping( j ).getMappedType() );
+			}
+
+			for ( int j = 0; j < jdbcValueCount; j++ ) {
+				targetJdbcValues[targetJdbcOffset++] = sourceJdbcValues[sourceJdbcIndex + j];
+			}
+		}
+	}
+
+	public static int getJdbcValueCount(MappingType mappedType) {
+		final int jdbcValueCount;
+		if ( mappedType instanceof EmbeddableMappingType ) {
+			final EmbeddableMappingType subMappingType = (EmbeddableMappingType) mappedType;
+			if ( subMappingType.getAggregateMapping() != null ) {
+				jdbcValueCount = 1;
+			}
+			else {
+				jdbcValueCount = subMappingType.getJdbcValueCount();
+			}
+		}
+		else {
+			jdbcValueCount = 1;
 		}
 		return jdbcValueCount;
 	}

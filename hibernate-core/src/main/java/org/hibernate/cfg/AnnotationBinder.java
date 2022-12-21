@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
@@ -42,6 +43,7 @@ import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
 import org.hibernate.annotations.JdbcTypeRegistration;
@@ -2330,6 +2332,10 @@ public final class AnnotationBinder {
 			component.setComponentClassName( inferredData.getClassOrElementName() );
 		}
 		component.setCustomInstantiator( customInstantiatorImpl );
+		final Constructor<?> constructor = resolveInstantiator( inferredData.getClassOrElement(), context );
+		if ( constructor != null ) {
+			component.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+		}
 		return component;
 	}
 
@@ -2577,5 +2583,25 @@ public final class AnnotationBinder {
 					return false;
 			}
 		}
+	}
+
+	public static Constructor<?> resolveInstantiator(XClass embeddableClass, MetadataBuildingContext buildingContext) {
+		if ( embeddableClass != null ) {
+			final Constructor<?>[] declaredConstructors = buildingContext.getBootstrapContext().getReflectionManager()
+					.toClass( embeddableClass )
+					.getDeclaredConstructors();
+			Constructor<?> constructor = null;
+			for ( Constructor<?> declaredConstructor : declaredConstructors ) {
+				if ( declaredConstructor.isAnnotationPresent( Instantiator.class ) ) {
+					if ( constructor != null ) {
+						throw new MappingException(
+								"Multiple constructors annotated with @Instantiator but only one constructor can be the canonical constructor in class: " + embeddableClass.getName() );
+					}
+					constructor = declaredConstructor;
+				}
+			}
+			return constructor;
+		}
+		return null;
 	}
 }

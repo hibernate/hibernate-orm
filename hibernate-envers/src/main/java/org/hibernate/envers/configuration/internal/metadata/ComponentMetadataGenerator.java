@@ -19,6 +19,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
@@ -68,6 +69,13 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 					)
 					.getBeanInstance();
 			instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+		}
+		else if ( propComponent.getInstantiator() != null ) {
+			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
+					propComponent.getPropertyNames(),
+					propComponent.getInstantiator(),
+					propComponent.getInstantiatorPropertyNames()
+			);
 		}
 		else {
 			instantiator = null;

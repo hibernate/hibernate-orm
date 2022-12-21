@@ -186,7 +186,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			return null;
 		}
 
-		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null ) {
+		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null || bootDescriptor.getInstantiator() != null ) {
 			return null;
 		}
 

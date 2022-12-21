@@ -326,7 +326,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsInsertReturningGeneratedKeys() {
-		return true;
+		return getVersion().isSameOrAfter( 12 );
 	}
 
 	/**

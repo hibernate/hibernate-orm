@@ -6,40 +6,43 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.lang.reflect.Constructor;
+
 import org.hibernate.InstantiationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
- * Support for instantiating embeddables as record representation
+ * Support for instantiating embeddables as POJO representation through a constructor
  */
-public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantiatorRecordStandard {
-
+public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
+	protected final Constructor<?> constructor;
 	protected final int[] index;
 
-	public EmbeddableInstantiatorRecordIndirecting(Class<?> javaType, int[] index) {
-		super( javaType );
+	protected EmbeddableInstantiatorPojoIndirecting(Constructor<?> constructor, int[] index) {
+		super( constructor.getDeclaringClass() );
+		this.constructor = constructor;
 		this.index = index;
 	}
 
-	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
-		final String[] componentNames = ReflectHelper.getRecordComponentNames( javaType );
+	public static EmbeddableInstantiatorPojoIndirecting of(
+			String[] propertyNames,
+			Constructor<?> constructor,
+			String[] componentNames) {
+		if ( componentNames == null ) {
+			throw new IllegalArgumentException( "Can't determine field assignment for constructor: " + constructor );
+		}
 		final int[] index = new int[componentNames.length];
 		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
-			return new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index );
+			return new EmbeddableInstantiatorPojoIndirecting.EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index );
 		}
 		else {
-			return new EmbeddableInstantiatorRecordIndirecting(javaType, index);
+			return new EmbeddableInstantiatorPojoIndirecting( constructor, index );
 		}
 	}
 
 	@Override
 	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
-		if ( constructor == null ) {
-			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
-		}
-
 		try {
 			final Object[] originalValues = valuesAccess.getValues();
 			final Object[] values = new Object[originalValues.length];
@@ -54,18 +57,14 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	// Handles gaps, by leaving the value null for that index
-	private static class EmbeddableInstantiatorRecordIndirectingWithGap extends EmbeddableInstantiatorRecordIndirecting {
+	private static class EmbeddableInstantiatorPojoIndirectingWithGap extends EmbeddableInstantiatorPojoIndirecting {
 
-		public EmbeddableInstantiatorRecordIndirectingWithGap(Class<?> javaType, int[] index) {
-			super( javaType, index );
+		public EmbeddableInstantiatorPojoIndirectingWithGap(Constructor<?> constructor, int[] index) {
+			super( constructor, index );
 		}
 
 		@Override
 		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
-			if ( constructor == null ) {
-				throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
-			}
-
 			try {
 				final Object[] originalValues = valuesAccess.getValues();
 				final Object[] values = new Object[index.length];

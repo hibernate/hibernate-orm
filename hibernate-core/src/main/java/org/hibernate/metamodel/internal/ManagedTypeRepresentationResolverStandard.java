@@ -110,8 +110,19 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 				customInstantiator = new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}
 			else {
-				customInstantiator = EmbeddableInstantiatorRecordIndirecting.of( bootDescriptor.getComponentClass() );
+				customInstantiator = EmbeddableInstantiatorRecordIndirecting.of(
+						bootDescriptor.getComponentClass(),
+						bootDescriptor.getPropertyNames()
+				);
 			}
+		}
+		else if ( bootDescriptor.getInstantiator() != null ) {
+			bootDescriptor.sortProperties();
+			customInstantiator = EmbeddableInstantiatorPojoIndirecting.of(
+					bootDescriptor.getPropertyNames(),
+					bootDescriptor.getInstantiator(),
+					bootDescriptor.getInstantiatorPropertyNames()
+			);
 		}
 		else {
 			customInstantiator = null;

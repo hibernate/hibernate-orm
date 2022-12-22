@@ -628,7 +628,7 @@ public abstract class AbstractCollectionPersister
 				factory.getJdbcServices().getDialect(),
 				null
 		);
-		if ( generator.generatedOnExecute() ) {
+		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
 		if ( generator instanceof IdentifierGenerator ) {

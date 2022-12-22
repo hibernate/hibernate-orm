@@ -274,7 +274,7 @@ public class TemporaryTable implements Exportable, Contributable {
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
 					final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
-					final boolean identityColumn = identifierGenerator.generatedOnExecute();
+					final boolean identityColumn = identifierGenerator.generatedOnExecution();
 					final boolean hasOptimizer;
 					if ( identityColumn ) {
 						hasOptimizer = false;

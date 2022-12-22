@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.MutationGroup;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -26,6 +27,10 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 	public MutationOperationGroupSingle(MutationType mutationType, MutationTarget<?> mutationTarget, MutationOperation operation) {
 		super( mutationType, mutationTarget );
 		this.operation = operation;
+	}
+
+	public MutationOperationGroupSingle(MutationGroup mutationGroup, MutationOperation operation) {
+		this( mutationGroup.getMutationType(), mutationGroup.getMutationTarget(), operation );
 	}
 
 	@Override

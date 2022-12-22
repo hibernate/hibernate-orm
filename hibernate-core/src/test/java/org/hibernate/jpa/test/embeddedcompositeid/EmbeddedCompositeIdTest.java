@@ -31,7 +31,7 @@ public class EmbeddedCompositeIdTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-15931")
-	public void testFlushTransientOneToOneNoCascade() throws Exception {
+	public void testEmbeddedCompositeId() throws Exception {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		try {

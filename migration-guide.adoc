@@ -11,16 +11,14 @@
 This guide discusses migration to Hibernate ORM version 6.2. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-https://docs.jboss.org/hibernate/orm/6.0/migration-guide/migration-guide.html
-
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
 
 [[ddl-changes]]
-== Default DDL type changes
+== DDL type changes
 
-[[uuid-mariadv]]
+[[ddl-uuid-mariadv]]
 === UUID mapping changes on MariaDB
 
 On MariaDB, the type code `SqlTypes.UUID` now by default refers to the DDL type `uuid`, whereas before it was using `binary(16)`.
@@ -30,7 +28,7 @@ The migration to `uuid` requires a migration expression like `cast(old as uuid)`
 
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
 
-[[uuid-sqlserver]]
+[[ddl-uuid-sqlserver]]
 === UUID mapping changes on SQL Server
 
 On SQL Server, the type code `SqlTypes.UUID` now by default refers to the DDL type `uniqueidentifier`, whereas before it was using `binary(16)`.
@@ -40,7 +38,7 @@ The migration to `uuid` requires a migration expression like `cast(old as uuid)`
 
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_uuid_jdbc_type` to `BINARY`.
 
-[[json-oracle]]
+[[ddl-json-oracle]]
 === JSON mapping changes on Oracle
 
 On Oracle 12.1+, the type code `SqlTypes.JSON` now by default refers to the DDL type `blob` and on 21+ to `json`, whereas before it was using `clob`.
@@ -52,14 +50,27 @@ To get the old behavior, annotate the column with `@Column(definition = "clob")`
 
 This change was done because `blob` and `json` are way more efficient and because we don't expect wide usage of `SqlTypes.JSON` yet.
 
-[[implicit-datatype-enum]]
-=== Implicit SQL datatype for enums
+[[ddl-implicit-datatype-enum]]
+=== Datatype for enums
 
 Hibernate 6.1 changed the implicit SQL datatype for mapping enums from `TINYINT` to `SMALLINT` to account for
 Java supporting up to 32K enum entries which would overflow a `TINYINT`.  However, almost no one is developing
 enums with that many entries.  Starting in 6.2, the choice of implicit SQL datatype for storing enums is sensitive
 to the number of entries defined on the enum class.  Enums with more than 128 entries are stored as `SMALLINT` implicitly,
 otherwise `TINYINT` is used.
+
+NOTE:: On MySQL, enums are now stored using the `ENUM` datatype by default
+
+
+[[ddl-timezones]]
+=== Timezone and offset storage
+
+`OffsetDateTime` and `ZonedDateTime` now always map to `TIMESTAMP WITH TIME ZONE` by default
+
+
+[[ddl-check]]
+=== Check constraints for boolean and enum mappings
+Check constraints now correctly generated for boolean and enum mappings
 
 
 [[logical-1-1-unique]]
@@ -75,10 +86,7 @@ using `@jakarta.persistence.ForeignKey(NO_CONSTRAINT)`.
 
 Often the association can also be remapped using `@ManyToOne` + `@UniqueConstraint` instead.
 
-[[tz-offset]]
-== Timezone and offset storage
-
-
+[[oracle-number]]
 == Column type inference for `number(n,0)` in native SQL queries on Oracle
 
 Since Hibernate 6.0, columns of type `number` with scale 0 on Oracle were interpreted as `boolean`, `tinyint`, `smallint`, `int`, or `bigint`,
@@ -136,6 +144,7 @@ The minimum supported dialect versions are as follows:
 |2.6.1
 |===
 
+[[enhancement]]
 == Change enhancement defaults and deprecation
 
 The `enableLazyInitialization` and `enableDirtyTracking` enhancement tooling options in the ANT task, Maven Plugin and Gradle Plugin,

@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * to be used by default for all references to a particular basic type.
  * <p>
  * May be overridden for a specific entity field or property using
- * {@link Type}.
+ * {@link Type @Type}.
  *
  * @see UserType
  * @see Type

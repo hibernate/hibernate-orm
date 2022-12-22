@@ -155,6 +155,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverridd
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.makeIdGenerator;
+import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotation;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
@@ -1804,7 +1805,7 @@ public final class AnnotationBinder {
 		final XClass returnedClass = inferredData.getClassOrElement();
 
 		if ( property != null ) {
-			final CompositeType compositeType = property.getAnnotation( CompositeType.class );
+			final CompositeType compositeType = findAnnotation( property, CompositeType.class );
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}

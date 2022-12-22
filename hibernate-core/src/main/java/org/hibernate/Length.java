@@ -50,14 +50,16 @@ public final class Length {
 	/**
 	 * The maximum length that fits in 16 bits.
 	 * Used to select a variable-length SQL type large
-	 * enough to contain values of maximum length 32767.
+	 * enough to accommodate values of maximum length
+	 * {@value Short#MAX_VALUE}.
 	 */
 	public static final int LONG16 = Short.MAX_VALUE;
 	/**
-	 * The maximum length of a Java string, that is,
-	 * the maximum length that fits in 32 bits.
+	 * The maximum length of a Java string or array,
+	 * that is, the maximum length that fits in 32 bits.
 	 * Used to select a variable-length SQL type large
-	 * enough to contain any Java string.
+	 * enough to accommodate any Java string up to the
+	 * maximum possible length {@value Integer#MAX_VALUE}.
 	 * <p>
 	 * This is also the default length for a column
 	 * declared using

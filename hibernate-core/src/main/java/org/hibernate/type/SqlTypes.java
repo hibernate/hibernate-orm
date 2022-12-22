@@ -137,6 +137,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as a {@link #VARCHAR}-like type large enough
 	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #VARCHAR}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -149,6 +152,10 @@ public class SqlTypes {
 	 * A type code used internally by the Hibernate
 	 * {@link org.hibernate.dialect.Dialect} to identify a
 	 * {@link #VARCHAR}-like type large enough to hold any Java string.
+	 * <p>
+	 * In principle, the type must accommodate strings of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large strings do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */
@@ -199,6 +206,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as a {@link #VARBINARY}-like type large enough
 	 * to hold a byte array of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #VARBINARY}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -208,9 +218,13 @@ public class SqlTypes {
 	public final static int LONGVARBINARY = Types.LONGVARBINARY;
 
 	/**
-	 * A type code used internally by the Hibernate SQL
+	 * A type code used by the Hibernate SQL
 	 * {@linkplain org.hibernate.dialect.Dialect dialect} to identify a
 	 * {@link #VARBINARY}-like type large enough to hold any Java byte array.
+	 * <p>
+	 * In principle, the type must accommodate arrays of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large arrays do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */
@@ -330,6 +344,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as an {@link #NVARCHAR}-like type large enough
 	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #NVARCHAR}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -342,6 +359,10 @@ public class SqlTypes {
 	 * A type code used internally by the Hibernate
 	 * {@link org.hibernate.dialect.Dialect} to identify an
 	 * {@link #NVARCHAR}-like type large enough to hold any Java string.
+	 * <p>
+	 * In principle, the type must accommodate strings of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large strings do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */

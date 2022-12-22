@@ -287,11 +287,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheStoreMode getCacheStoreMode();
 
 	/**
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheRetrieveMode getCacheRetrieveMode();
 
@@ -308,11 +312,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	/**
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 

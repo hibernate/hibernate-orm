@@ -869,6 +869,8 @@ public class Configuration {
 
 	/**
 	 * Add an {@link EntityNameResolver} to this configuration.
+	 *
+	 * @since 6.2
 	 */
 	public void addEntityNameResolver(EntityNameResolver entityNameResolver) {
 		if ( entityNameResolvers == null ) {

@@ -10,7 +10,7 @@ import java.util.Locale;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * Exception for {@link org.hibernate.annotations.NotFoundAction#EXCEPTION}
+ * Exception for {@link org.hibernate.annotations.NotFoundAction#EXCEPTION}.
  *
  * @see org.hibernate.annotations.NotFound
  *

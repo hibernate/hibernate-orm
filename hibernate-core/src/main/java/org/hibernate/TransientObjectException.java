@@ -7,13 +7,14 @@
 package org.hibernate;
 
 /**
- * Thrown when the user passes a transient instance to a Session method that expects a persistent instance.
+ * Thrown when the user passes a transient instance to a {@link Session}
+ * method that expects a persistent instance.
  *
  * @author Gavin King
  */
 public class TransientObjectException extends HibernateException {
 	/**
-	 * Constructs a TransientObjectException using the supplied message.
+	 * Constructs a {@code TransientObjectException} using the supplied message.
 	 *
 	 * @param message The message explaining the exception condition
 	 */

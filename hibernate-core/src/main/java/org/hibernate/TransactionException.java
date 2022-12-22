@@ -14,7 +14,7 @@ package org.hibernate;
  */
 public class TransactionException extends HibernateException {
 	/**
-	 * Constructs a TransactionException using the specified information.
+	 * Constructs a {@code TransactionException} using the specified information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param cause The underlying cause
@@ -24,7 +24,7 @@ public class TransactionException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a TransactionException using the specified information.
+	 * Constructs a {@code TransactionException} using the specified information.
 	 *
 	 * @param message The message explaining the exception condition
 	 */

@@ -13,7 +13,7 @@ import java.util.Collection;
  */
 public class PropertySetterAccessException extends PropertyAccessException {
 	/**
-	 * Constructs a PropertyAccessException using the specified information.
+	 * Constructs a {@code PropertyAccessException} using the specified information.
 	 *
 	 * @param cause The underlying cause
 	 * @param persistentClass The class which is supposed to contain the property in question

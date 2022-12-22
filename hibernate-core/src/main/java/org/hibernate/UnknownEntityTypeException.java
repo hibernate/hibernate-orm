@@ -7,11 +7,11 @@
 package org.hibernate;
 
 /**
- * Indicates an attempt was made to refer to an unknown entity name/class.
+ * Indicates an attempt was made to refer to an unknown entity name or class.
  * <p>
- * NOTE : extends MappingException because that's what core used to do and that's how
- * HEM expects it.  Longer term I think it makes more sense to have a different
- * hierarchy for runtime-"mapping" exceptions.
+ * @implNote This class extends {@link MappingException} for legacy reasons.
+ * Longer term I think it makes more sense to have a different hierarchy for
+ * runtime-"mapping" exceptions.
  *
  * @author Steve Ebersole
  */

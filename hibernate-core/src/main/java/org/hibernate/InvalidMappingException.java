@@ -10,9 +10,9 @@ import org.hibernate.boot.jaxb.Origin;
 
 /**
  * Thrown when a mapping is found to be invalid.
- *
- * Similar to MappingException, but this contains more info about the path and type of
- * mapping (e.g. file, resource or url)
+ * <p>
+ * Similar to {@link MappingException}, but contains more information
+ * about the path and type of mapping (e.g. file, resource or URL).
  * 
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
@@ -36,7 +36,7 @@ public class InvalidMappingException extends MappingException {
 	}
 
 	/**
-	 * Constructs an InvalidMappingException using the given information.
+	 * Constructs an {@code InvalidMappingException} using the given information.
 	 *
 	 * @param customMessage The custom message explaining the exception condition
 	 * @param type The type of invalid mapping document
@@ -49,7 +49,7 @@ public class InvalidMappingException extends MappingException {
 	}
 
 	/**
-	 * Constructs an InvalidMappingException using the given information.
+	 * Constructs an {@code InvalidMappingException} using the given information.
 	 *
 	 * @param customMessage The custom message explaining the exception condition
 	 * @param origin The origin of the invalid mapping document

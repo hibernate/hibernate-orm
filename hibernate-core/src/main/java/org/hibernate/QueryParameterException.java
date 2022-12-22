@@ -13,7 +13,7 @@ package org.hibernate;
  */
 public class QueryParameterException extends QueryException {
 	/**
-	 * Constructs a QueryParameterException using the supplied exception message.
+	 * Constructs a {@code QueryParameterException} using the supplied exception message.
 	 *
 	 * @param message The message explaining the exception condition
 	 */
@@ -22,7 +22,7 @@ public class QueryParameterException extends QueryException {
 	}
 
 	/**
-	 * Constructs a QueryParameterException
+	 * Constructs a {@code QueryParameterException}
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param queryString The query that led to the exception

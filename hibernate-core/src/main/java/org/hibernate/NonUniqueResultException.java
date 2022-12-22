@@ -9,15 +9,16 @@ package org.hibernate;
 import org.hibernate.query.Query;
 
 /**
- * Thrown when the application calls {@link Query#uniqueResult()}
- * and the query returned more than one result.  Unlike all other Hibernate exceptions,
+ * Thrown when the application calls {@link Query#getSingleResult()} or
+ * {@link Query#uniqueResult()} and the query returns more than one row
+ * from the database. Unlike every other exception thrown by Hibernate,
  * this one is recoverable!
  *
  * @author Gavin King
  */
 public class NonUniqueResultException extends HibernateException {
 	/**
-	 * Constructs a NonUniqueResultException.
+	 * Constructs a {@code NonUniqueResultException}.
 	 *
 	 * @param resultCount The number of actual results.
 	 */

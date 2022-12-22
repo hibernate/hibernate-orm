@@ -15,7 +15,7 @@ public class UnknownProfileException extends HibernateException {
 	private final String name;
 
 	/**
-	 * Constructs an UnknownProfileException for the given name.
+	 * Constructs an {@code UnknownProfileException} for the given name.
 	 *
 	 * @param name The profile name that was unknown.
 	 */

@@ -13,7 +13,7 @@ package org.hibernate;
  */
 public class HibernateError extends HibernateException {
 	/**
-	 * Constructs HibernateError with the condition message.
+	 * Constructs {@code HibernateError} with the condition message.
 	 *
 	 * @param message Message explaining the exception/error condition
 	 */
@@ -22,7 +22,7 @@ public class HibernateError extends HibernateException {
 	}
 
 	/**
-	 * Constructs HibernateError with the condition message and cause.
+	 * Constructs {@code HibernateError} with the condition message and cause.
 	 *
 	 * @param message Message explaining the exception/error condition
 	 * @param cause The underlying cause.

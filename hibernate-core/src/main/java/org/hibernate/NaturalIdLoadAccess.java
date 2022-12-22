@@ -10,7 +10,7 @@ import java.util.Optional;
 
 /**
  * Loads an entity by its natural identifier.
- *
+ * <p>
  * This is a generic form of load-by-natural-id covering both a single attribute
  * and multiple attributes as the natural-id.  For natural-ids defined by a single
  * attribute, {@link SimpleNaturalIdLoadAccess} offers simplified access.

@@ -12,8 +12,10 @@ import org.hibernate.internal.util.StringHelper;
  * Thrown when the (illegal) value of a property can not be persisted.
  * There are two main causes:
  * <ul>
- * <li>a property declared {@code not-null="true"} is null
- * <li>an association references an unsaved transient instance
+ * <li>a property declared
+ *     {@link jakarta.persistence.Basic#optional() @Basic(optional=false)}
+ *     is null, or
+ * <li>an association references an unsaved transient instance.
  * </ul>
  * @author Gavin King
  */
@@ -22,7 +24,7 @@ public class PropertyValueException extends HibernateException {
 	private final String propertyName;
 
 	/**
-	 * Constructs a PropertyValueException using the specified information.
+	 * Constructs a {@code PropertyValueException} using the specified information.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param entityName The name of the entity, containing the property

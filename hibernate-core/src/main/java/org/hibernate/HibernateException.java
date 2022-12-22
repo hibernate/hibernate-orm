@@ -18,7 +18,7 @@ import jakarta.persistence.PersistenceException;
  */
 public class HibernateException extends PersistenceException {
 	/**
-	 * Constructs a HibernateException using the given exception message.
+	 * Constructs a {@code HibernateException} using the given exception message.
 	 *
 	 * @param message The message explaining the reason for the exception
 	 */
@@ -27,7 +27,7 @@ public class HibernateException extends PersistenceException {
 	}
 
 	/**
-	 * Constructs a HibernateException using the given message and underlying cause.
+	 * Constructs a {@code HibernateException} using the given message and underlying cause.
 	 *
 	 * @param cause The underlying cause.
 	 */
@@ -36,7 +36,7 @@ public class HibernateException extends PersistenceException {
 	}
 
 	/**
-	 * Constructs a HibernateException using the given message and underlying cause.
+	 * Constructs a {@code HibernateException} using the given message and underlying cause.
 	 *
 	 * @param message The message explaining the reason for the exception.
 	 * @param cause The underlying cause.

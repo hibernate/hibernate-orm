@@ -11,13 +11,16 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * A problem occurred accessing a property of an instance of a
  * persistent class by reflection, or via enhanced entities.
- * There are a number of possible underlying causes, including
+ * There are a number of possible underlying causes, including:
  * <ul>
- * <li>failure of a security check
- * <li>an exception occurring inside the getter or setter method
- * <li>a nullable database column was mapped to a primitive-type property
- * <li>the Hibernate type was not castable to the property type (or vice-versa)
+ * <li>failure of a security check,
+ * <li>an exception occurring inside the getter or setter method,
+ * <li>a nullable database column was mapped to a primitive-type
+ *     property, or
+ * <li>the Hibernate type was not castable to the property type
+ *     (or vice-versa)
  * </ul>
+ *
  * @author Gavin King
  */
 public class PropertyAccessException extends HibernateException {
@@ -26,7 +29,7 @@ public class PropertyAccessException extends HibernateException {
 	private final boolean wasSetter;
 
 	/**
-	 * Constructs a PropertyAccessException using the specified information.
+	 * Constructs a {@code PropertyAccessException} using the specified information.
 	 *
 	 * @param cause The underlying cause
 	 * @param message A message explaining the exception condition

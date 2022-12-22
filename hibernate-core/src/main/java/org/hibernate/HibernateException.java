@@ -9,10 +9,10 @@ package org.hibernate;
 import jakarta.persistence.PersistenceException;
 
 /**
- * The base exception type for Hibernate exceptions.
+ * The base type for exceptions thrown by Hibernate.
  * <p>
- * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
- * {@link JDBCException}.
+ * Note that every {@linkplain java.sql.SQLException exception arising
+ * from the JDBC layer} is wrapped in some form of {@link JDBCException}.
  * 
  * @author Gavin King
  */

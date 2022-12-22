@@ -840,7 +840,9 @@ public class FunctionTests {
 
 					assertThat( session.createQuery("select cast(1 as Boolean)").getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast(0 as Boolean)").getSingleResult(), is(false) );
-					assertThat( session.createQuery("select cast('123' as Integer)").getSingleResult(), is(123) );
+					assertThat( session.createQuery("select cast('1234' as Integer)").getSingleResult(), is(1234) );
+					assertThat( session.createQuery("select cast('1234' as Short)").getSingleResult(), is((short) 1234) );
+					assertThat( session.createQuery("select cast('123' as Byte)").getSingleResult(), is((byte) 123) );
 					assertThat( session.createQuery("select cast('123' as Long)").getSingleResult(), is(123l) );
 					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
 
@@ -852,6 +854,14 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09' as LocalDate)").getSingleResult(), is(LocalDate.of(1911,10,9)) );
 					assertThat( session.createQuery("select cast('12:13:14' as LocalTime)").getSingleResult(), is(LocalTime.of(12,13,14)) );
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14' as LocalDateTime)").getSingleResult(), is(LocalDateTime.of(1911,10,9,12,13,14)) );
+
+					assertThat( session.createQuery("select cast(local datetime as LocalTime)").getSingleResult(), instanceOf(LocalTime.class) );
+					assertThat( session.createQuery("select cast(local datetime as LocalDate)").getSingleResult(), instanceOf(LocalDate.class) );
+					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime)").getSingleResult(), instanceOf(LocalDateTime.class) );
+
+					assertThat( session.createQuery("select cast('12:13:14' as Time)").getSingleResult(), instanceOf(Time.class) );
+					assertThat( session.createQuery("select cast('1911-10-09' as Date)").getSingleResult(), instanceOf(Date.class) );
+					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)").getSingleResult(), instanceOf(Timestamp.class) );
 
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000") ) );

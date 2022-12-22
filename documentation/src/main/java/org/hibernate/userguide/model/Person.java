@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -41,7 +42,8 @@ import jakarta.persistence.Version;
     name = "find_person_name",
     query =
         "SELECT name " +
-        "FROM Person "
+        "FROM Person ",
+        resultClass = String.class
 )
 //end::sql-scalar-NamedNativeQuery-example[]
 //tag::sql-multiple-scalar-values-NamedNativeQuery-example[]

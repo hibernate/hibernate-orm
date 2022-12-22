@@ -10,8 +10,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import jakarta.persistence.EnumType;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,6 +19,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.EnumType;
 
 /**
  * Access to a JDBC ResultSet and information about it.
@@ -72,11 +72,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	}
 
 	@Override
-	default <J> BasicType<J> resolveType(
-			int position,
-			JavaType<J> explicitJavaType,
-			SessionFactoryImplementor sessionFactory) {
-		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
+	default <J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaType, TypeConfiguration typeConfiguration) {
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
 			final ResultSetMetaData metaData = getResultSet().getMetaData();

@@ -64,6 +64,7 @@ import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -565,14 +566,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		public <J> BasicType<J> resolveType(
 				int position,
 				JavaType<J> explicitJavaType,
-				SessionFactoryImplementor sessionFactory) {
+				TypeConfiguration typeConfiguration) {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
 			final BasicType<J> basicType = resultSetAccess.resolveType(
 					position,
 					explicitJavaType,
-					sessionFactory
+					typeConfiguration
 			);
 			types[position - 1] = basicType;
 			return basicType;
@@ -622,7 +623,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		public <J> BasicType<J> resolveType(
 				int position,
 				JavaType<J> explicitJavaType,
-				SessionFactoryImplementor sessionFactory) {
+				TypeConfiguration typeConfiguration) {
 			final BasicType<?> type = types[position - 1];
 			if ( type == null ) {
 				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
@@ -632,7 +633,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				return (BasicType<J>) type;
 			}
 			else {
-				return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve(
+				return typeConfiguration.getBasicTypeRegistry().resolve(
 						explicitJavaType,
 						type.getJdbcType()
 				);

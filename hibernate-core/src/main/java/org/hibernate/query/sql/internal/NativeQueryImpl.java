@@ -20,8 +20,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -31,7 +29,6 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -92,6 +89,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FlushModeType;
@@ -103,6 +102,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.query.results.Builders.resultClassBuilder;
 
 /**
  * @author Steve Ebersole
@@ -157,7 +157,7 @@ public class NativeQueryImpl<R>
 
 					if ( memento.getResultMappingClass() != null ) {
 						resultSetMapping.addResultBuilder(
-								Builders.implicitEntityResultBuilder(
+								resultClassBuilder(
 										memento.getResultMappingClass(),
 										context
 								)
@@ -239,36 +239,18 @@ public class NativeQueryImpl<R>
 					}
 
 					if ( memento.getResultMappingClass() != null ) {
-						resultSetMapping.addResultBuilder(
-								Builders.implicitEntityResultBuilder(
-										memento.getResultMappingClass(),
-										context
-								)
-						);
+						resultSetMapping.addResultBuilder( resultClassBuilder(
+								memento.getResultMappingClass(),
+								context
+						) );
 						return true;
 					}
-//					if ( resultJavaType != null && resultJavaType != Tuple.class ) {
-						// todo (6.0): in 5.x we didn't add implicit result builders and by doing so,
-						//  the result type check at the end of the constructor will fail like in 5.x
-//						final JpaMetamodel jpaMetamodel = context.getSessionFactory().getJpaMetamodel();
-//						if ( jpaMetamodel.findEntityType( resultJavaType ) != null ) {
-//							resultSetMapping.addResultBuilder(
-//									Builders.implicitEntityResultBuilder( resultJavaType, context )
-//							);
-//						}
-//						else {
-//							resultSetMapping.addResultBuilder(
-//									Builders.scalar(
-//											1,
-//											context.getSessionFactory()
-//													.getTypeConfiguration()
-//													.getBasicTypeForJavaType( resultJavaType )
-//									)
-//							);
-//						}
-//
+
+					if ( resultJavaType != null && resultJavaType != Tuple.class && !resultJavaType.isArray() ) {
+						// todo : allow the expected Java type imply a builder to use
+//						resultSetMapping.addResultBuilder( resultClassBuilder( resultJavaType, context ) );
 //						return true;
-//					}
+					}
 
 					return false;
 				},
@@ -281,8 +263,9 @@ public class NativeQueryImpl<R>
 		else if ( resultJavaType != null && resultJavaType != Object[].class ) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
 				case 0:
-					throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
+					throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
 				case 1:
+					// would be nice to support types that are "wrappable", as in `JavaType#wrap`
 					final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
 					if ( actualResultJavaType != null && !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
 						throw buildIncompatibleException( resultJavaType, actualResultJavaType );

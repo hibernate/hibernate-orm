@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -40,6 +41,7 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntityPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.query.results.implicit.ImplicitResultClassBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -241,14 +243,23 @@ public class Builders {
 		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, new ArrayList<>(), new HashMap<>() );
 	}
 
-	public static ResultBuilder implicitEntityResultBuilder(
+	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			ResultSetMappingResolutionContext resolutionContext) {
-		final EntityMappingType entityMappingType = resolutionContext
+		final MappingMetamodelImplementor mappingMetamodel = resolutionContext
 				.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( resultMappingClass );
-		return new ImplicitModelPartResultBuilderEntity( entityMappingType );
+				.getMappingMetamodel();
+		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
+		if ( entityMappingType != null ) {
+			// the resultClass is an entity
+			return new ImplicitModelPartResultBuilderEntity( entityMappingType );
+		}
+
+		// todo : support for known embeddables might be nice
+
+		// otherwise, assume it's a "basic" mapping
+		return new ImplicitResultClassBuilder( resultMappingClass );
 	}
 
 	public static ImplicitFetchBuilder implicitFetchBuilder(

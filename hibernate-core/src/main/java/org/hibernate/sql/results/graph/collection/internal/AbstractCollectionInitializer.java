@@ -93,6 +93,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 		if ( collectionKey != null ) {
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			final FetchParentAccess fetchParentAccess = parentAccess.findFirstEntityDescriptorAccess();
 
 			final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
 					.findLoadingCollectionEntry( collectionKey );
@@ -100,7 +101,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			if ( loadingEntry != null ) {
 				collectionInstance = loadingEntry.getCollectionInstance();
 				if ( collectionInstance.getOwner() == null ) {
-					parentAccess.registerResolutionListener(
+					fetchParentAccess.registerResolutionListener(
 							owner -> collectionInstance.setOwner( owner )
 					);
 				}
@@ -112,7 +113,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			if ( existing != null ) {
 				collectionInstance = existing;
 				if ( collectionInstance.getOwner() == null ) {
-					parentAccess.registerResolutionListener(
+					fetchParentAccess.registerResolutionListener(
 							owner -> collectionInstance.setOwner( owner )
 					);
 				}
@@ -129,7 +130,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 					session
 			);
 
-			parentAccess.registerResolutionListener(
+			fetchParentAccess.registerResolutionListener(
 					owner -> collectionInstance.setOwner( owner )
 			);
 

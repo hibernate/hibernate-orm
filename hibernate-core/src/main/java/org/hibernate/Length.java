@@ -42,6 +42,9 @@ public final class Length {
 	 * {@code @JdbcTypeCode(Types.LONGVARBINARY)}.
 	 *
 	 * @see org.hibernate.type.descriptor.java.JavaType#getLongSqlLength
+	 *
+	 * @see org.hibernate.type.SqlTypes#LONGVARCHAR
+	 * @see org.hibernate.type.SqlTypes#LONGVARBINARY
 	 */
 	public static final int LONG = 32_600;
 	/**
@@ -60,12 +63,19 @@ public final class Length {
 	 * declared using
 	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARCHAR)} or
 	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARBINARY)}.
+	 *
+	 * @see org.hibernate.type.SqlTypes#LONG32VARCHAR
+	 * @see org.hibernate.type.SqlTypes#LONG32VARBINARY
 	 */
 	public static final int LONG32 = Integer.MAX_VALUE;
 	/**
-	 * The default length for a LOB column.
+	 * The default length for a LOB column, on databases
+	 * where LOB columns have a length.
 	 *
 	 * @see org.hibernate.dialect.Dialect#getDefaultLobLength
+	 *
+	 * @see org.hibernate.type.SqlTypes#CLOB
+	 * @see org.hibernate.type.SqlTypes#BLOB
 	 */
 	public static final int LOB_DEFAULT = 1_048_576;
 

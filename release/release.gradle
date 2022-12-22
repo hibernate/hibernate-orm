@@ -283,6 +283,16 @@ task stageOrmInternalsReport(type: Copy) { task ->
     into "${buildDir}/documentation/internals"
 }
 
+task stageOrmDeprecationReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:generateDeprecationReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.generateDeprecationReport.reportFileReferenceAccess
+    into "${buildDir}/documentation/deprecated"
+}
+
 task stageOrmLoggingReport(type: Copy) { task ->
     group 'Release'
 

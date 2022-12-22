@@ -256,6 +256,7 @@ task renderOrmReports { task ->
 
 	dependsOn tasks.generateIncubationReport
 	dependsOn tasks.generateInternalsReport
+	dependsOn tasks.generateDeprecationReport
 
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task

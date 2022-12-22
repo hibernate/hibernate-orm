@@ -43,6 +43,14 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		incubatingTask.dependsOn( indexerTask );
 		groupingTask.dependsOn( incubatingTask );
 
+		final DeprecationReportTask deprecationTask = project.getTasks().create(
+				"generateDeprecationReport",
+				DeprecationReportTask.class,
+				indexManager
+		);
+		deprecationTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( deprecationTask );
+
 		final InternalsReportTask internalsTask = project.getTasks().create(
 				"generateInternalsReport",
 				InternalsReportTask.class,

@@ -34,16 +34,22 @@ public enum OnDeleteAction {
 
 	/**
 	 * Prevents deletion of the parent by raising an error immediately.
+	 *
+	 * @since 6.2
 	 */
 	RESTRICT,
 
 	/**
 	 * Set the referencing foreign key to null.
+	 *
+	 * @since 6.2
 	 */
 	SET_NULL,
 
 	/**
 	 * Set the referencing foreign key to its default value.
+	 *
+	 * @since 6.2
 	 */
 	SET_DEFAULT;
 

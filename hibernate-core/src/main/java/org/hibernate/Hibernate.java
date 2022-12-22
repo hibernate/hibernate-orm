@@ -233,7 +233,7 @@ public final class Hibernate {
 				: list.get(key);
 	}
 
-	/*
+	/**
 	 * Remove the value associated with the given key by the given persistent
 	 * map, without fetching the state of the map from the database.
 	 *
@@ -250,7 +250,7 @@ public final class Hibernate {
 				: map.remove( key );
 	}
 
-	/*
+	/**
 	 * Remove the specified element of the given persistent set,
 	 * without fetching the state of the set from the database.
 	 *
@@ -266,7 +266,7 @@ public final class Hibernate {
 				: set.remove( element );
 	}
 
-	/*
+	/**
 	 * Remove the specified element of the given persistent list,
 	 * without fetching the state of the list from the database.
 	 *

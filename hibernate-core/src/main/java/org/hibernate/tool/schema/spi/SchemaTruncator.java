@@ -11,6 +11,10 @@ import org.hibernate.boot.Metadata;
 
 /**
  * Service delegate for handling schema truncation.
+ *
+ * @author Gavin King
+ *
+ * @since 6.2
  */
 @Incubating
 public interface SchemaTruncator {

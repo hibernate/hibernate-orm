@@ -22,20 +22,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Marco Belladelli
  */
-@JiraKey("HHH-15864")
 @Jpa(annotatedClasses = {
-		DeleteOneToManyOrphansEmbeddedTest.ChildEntity.class, DeleteOneToManyOrphansEmbeddedTest.ParentEntity.class
+		OneToManyInEmbeddedTest.ChildEntity.class,
+		OneToManyInEmbeddedTest.ParentEntity.class
 })
-public class DeleteOneToManyOrphansEmbeddedTest {
+@JiraKey("HHH-15864")
+public class OneToManyInEmbeddedTest {
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			ParentEntity parentEntity = new ParentEntity( 1, new ChildEntityWrapper( List.of( new ChildEntity() ) ) );
+			ParentEntity parentEntity = new ParentEntity( new ChildEntityWrapper( List.of( new ChildEntity() ) ) );
 			entityManager.persist( parentEntity );
 		} );
 	}
@@ -49,11 +53,17 @@ public class DeleteOneToManyOrphansEmbeddedTest {
 	}
 
 	@Test
-	public void testOrphanRemoval(EntityManagerFactoryScope scope) {
+	public void testOrphanRemovalInEmbedded(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			ParentEntity parentEntity = entityManager.find( ParentEntity.class, 1 );
+			parentEntity.getChildEntityWrapper().getChildEntities().clear();
 			entityManager.remove( parentEntity );
 		} );
+
+		scope.inTransaction( entityManager -> assertTrue(
+				entityManager.createQuery( "from ChildEntity" ).getResultList().isEmpty(),
+				"Orphan entity was not removed"
+		) );
 	}
 
 	@Entity(name = "ChildEntity")
@@ -74,7 +84,7 @@ public class DeleteOneToManyOrphansEmbeddedTest {
 	@Embeddable
 	public static class ChildEntityWrapper {
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-		// @JoinColumn(name = "parent_entity_id", referencedColumnName = "id")
+		@JoinColumn(name = "parent_entity_id", referencedColumnName = "id")
 		private List<ChildEntity> childEntities;
 
 		public ChildEntityWrapper() {
@@ -96,7 +106,7 @@ public class DeleteOneToManyOrphansEmbeddedTest {
 	@Entity(name = "ParentEntity")
 	public static class ParentEntity {
 		@Id
-		// @GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private int id;
 
 		@Embedded
@@ -105,8 +115,7 @@ public class DeleteOneToManyOrphansEmbeddedTest {
 		public ParentEntity() {
 		}
 
-		public ParentEntity(int id, ChildEntityWrapper childEntityWrapper) {
-			this.id = id;
+		public ParentEntity(ChildEntityWrapper childEntityWrapper) {
 			this.childEntityWrapper = childEntityWrapper;
 		}
 

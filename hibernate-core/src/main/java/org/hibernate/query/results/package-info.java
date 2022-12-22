@@ -10,7 +10,7 @@
  * and {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}.
  * These result-set mappings are used to map the values in the JDBC {@link java.sql.ResultSet}
  * into the query result graph.
- *
+ * <p>
  * NOTE : Handling the different sources of results and fetches is split into multiple packages
  * and multiple impls for performance reasons.  The classes in {@link org.hibernate.query.results.complete}
  * represent result/fetch definitions that are completely known up-front and are faster to

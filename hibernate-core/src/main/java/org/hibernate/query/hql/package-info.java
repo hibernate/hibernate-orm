@@ -8,7 +8,7 @@
 /**
  * Package defining support for HQL queries (including supprt for JPQL
  * as a subset of HQL).
- *
+ * <p>
  * This includes transformation via Antlr, {@link org.hibernate.query.Query}
  * manipulation and execution
  *

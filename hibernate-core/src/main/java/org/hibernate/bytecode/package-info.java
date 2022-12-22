@@ -6,9 +6,9 @@
  */
 
 /**
- *	This package defines an SPI for integrating bytecode libraries with Hibernate.
- *	A bytecode library is used for:
- * 	<ol>
+ * This package defines an SPI for integrating bytecode libraries with Hibernate.
+ * A bytecode library is used for:
+ * <ol>
  * 		<li>
  * 			<b>Reflection optimization</b> - to speed up the performance of entity
  * 			and component construction and field/property access,
@@ -22,6 +22,6 @@
  * 			classes for the purpose of intercepting field-level access, for both
  * 			lazy loading and dirty tracking.
  * 		</li>
- * 	</ol>
+ * </ol>
  */
 package org.hibernate.bytecode;

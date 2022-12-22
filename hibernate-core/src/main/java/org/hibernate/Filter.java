@@ -44,7 +44,7 @@ public interface Filter {
 	 *             should be avoided since {@link FilterDefinition} is an
 	 *             SPI type, and so this operation is a layer-breaker.
 	 */
-	@Deprecated
+	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition();
 
 	/**

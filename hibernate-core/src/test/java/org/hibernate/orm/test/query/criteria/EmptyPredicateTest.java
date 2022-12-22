@@ -48,7 +48,8 @@ public class EmptyPredicateTest {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<BasicEntity> query = cb.createQuery( BasicEntity.class );
 			final Root<BasicEntity> root = query.from( BasicEntity.class );
-			query.select( root ).where( new Predicate[] {} );
+			query.select( root ).where( cb.equal( cb.literal( 1 ), 2 ) );
+			query.where( new Predicate[] {} ); // this should remove previous restrictions
 			assertEquals( 1, session.createQuery( query ).getResultList().size() );
 		} );
 	}

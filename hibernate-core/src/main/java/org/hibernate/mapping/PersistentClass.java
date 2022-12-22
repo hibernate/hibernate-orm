@@ -697,7 +697,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	/**
 	 * @deprecated prefer {@link #getOptimisticLockStyle}
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public int getOptimisticLockMode() {
 		return getOptimisticLockStyle().getOldCode();
 	}
@@ -705,7 +705,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	/**
 	 * @deprecated prefer {@link #setOptimisticLockStyle}
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void setOptimisticLockMode(int optimisticLockMode) {
 		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
 	}

@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain jakarta.persistence.Embeddable embeddable} class.
  * <p>
  * May be overridden for a specific entity field or property using
- * {@link CompositeType}.
+ * {@link CompositeType @CompositeType}.
  *
  * @see CompositeUserType
  * @see CompositeType

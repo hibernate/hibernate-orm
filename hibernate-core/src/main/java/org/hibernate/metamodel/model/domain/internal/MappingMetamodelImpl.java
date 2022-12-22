@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -409,7 +408,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -423,7 +422,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public EntityPersister getEntityDescriptor(NavigableRole name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -650,12 +649,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public CollectionPersister getCollectionDescriptor(NavigableRole role) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public CollectionPersister findCollectionDescriptor(NavigableRole role) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -705,22 +704,22 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public void forEachNamedGraph(Consumer<RootGraph<?>> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(String entityName) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(Class entityJavaType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(EntityPersister entityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -730,12 +729,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<RootGraph<?>> findRootGraphsForType(String baseEntityName) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -824,7 +823,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		}
 
 		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
+			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
 		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {

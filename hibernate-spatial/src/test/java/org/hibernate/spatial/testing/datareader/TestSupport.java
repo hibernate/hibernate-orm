@@ -19,16 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.geolatte.geom.GeometryEquality;
-import org.geolatte.geom.GeometryPositionEquality;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryEquality;
+import org.geolatte.geom.GeometryPositionEquality;
 
 import static org.geolatte.geom.builder.DSL.g;
 import static org.geolatte.geom.builder.DSL.polygon;
@@ -72,7 +70,7 @@ public abstract class TestSupport {
 	public abstract TestData createTestData(TestDataPurpose purpose);
 
 	public GeomCodec codec() {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	public Geometry<?> getFilterGeometry() {

@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
@@ -442,7 +441,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return parentEntityInitializer.getEntityInstance();
 		}
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

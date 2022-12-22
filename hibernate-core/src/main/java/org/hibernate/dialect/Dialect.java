@@ -42,7 +42,6 @@ import java.util.regex.Pattern;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
@@ -158,8 +157,8 @@ import org.hibernate.tool.schema.internal.StandardTableCleaner;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
-import org.hibernate.tool.schema.internal.TableMigrator;
 import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
+import org.hibernate.tool.schema.internal.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -194,7 +193,39 @@ import jakarta.persistence.TemporalType;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.REAL;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
+import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
+import static org.hibernate.type.SqlTypes.isVarbinaryType;
+import static org.hibernate.type.SqlTypes.isVarcharType;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -1289,7 +1320,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param toTemporalType true if the second argument is
 	 */
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampdiffPattern" );
 	}
 
 	/**
@@ -1302,7 +1333,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param intervalType The type of interval to add or null if it's not a native interval
 	 */
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampaddPattern" );
 	}
 
 	/**

@@ -9,7 +9,6 @@ package org.hibernate.spatial.testing.dialects.db2;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.dialect.db2.DB2GeometryType;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -41,7 +40,7 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExtent() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	public NativeSQLStatement createNativeExtentStatement() {

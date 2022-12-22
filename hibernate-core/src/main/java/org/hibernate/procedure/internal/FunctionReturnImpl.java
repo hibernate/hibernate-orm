@@ -9,19 +9,16 @@ package org.hibernate.procedure.internal;
 
 import java.sql.Types;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.OutputableType;
-import org.hibernate.query.BindableType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.internal.BindingTypeHelper;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -110,9 +107,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public Class getParameterType() {
-
-//		return ormType == null ? null : ormType.getJavaType();
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -122,7 +117,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public void applyAnticipatedType(BindableType type) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

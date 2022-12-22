@@ -10,7 +10,6 @@ package org.hibernate.spatial.testing.dialects.hana;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.dialect.hana.HANASpatialUtils;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
@@ -283,7 +282,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getAlphaShape(double radius) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAlphaShapeStatement(double radius) {
@@ -301,7 +300,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getArea() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAreaStatement() {
@@ -317,7 +316,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsEWKB() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsEWKBStatement() {
@@ -332,7 +331,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsEWKT() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsEWKTStatement() {
@@ -347,7 +346,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsGeoJSON() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsGeoJSONStatement() {
@@ -362,7 +361,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVG() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsSVGStatement() {
@@ -377,7 +376,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVGAggr() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsSVGAggrStatement() {
@@ -392,7 +391,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsWKB() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsWKBStatement() {
@@ -407,7 +406,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsWKT() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeAsWKTStatement() {
@@ -422,7 +421,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getCentroid() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeCentroidStatement() {
@@ -438,7 +437,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getConvexHullAggr() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeConvexHullAggrStatement() {
@@ -453,7 +452,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getCoordDim() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeCoordDimStatement() {
@@ -468,7 +467,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCoveredBy(Geometry geom) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeCoveredByStatement(Geometry geom) {
@@ -487,7 +486,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCovers(Geometry geom) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeCoversStatement(Geometry geom) {
@@ -506,7 +505,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEndPoint() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeEndPointStatement() {
@@ -522,7 +521,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEnvelopeAggr() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeEnvelopeAggrStatement() {
@@ -537,7 +536,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExteriorRing() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeExteriorRingStatement() {
@@ -553,7 +552,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKB(byte[] ewkb) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKBStatement(byte[] ewkb) {
@@ -568,7 +567,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKT(String ewkt) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKTStatement(String ewkt) {
@@ -583,7 +582,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromText(String text) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeomFromTextStatement(String text) {
@@ -598,7 +597,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKB(byte[] wkb) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKBStatement(byte[] wkb) {
@@ -613,7 +612,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKT(String wkt) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKTStatement(String wkt) {
@@ -628,7 +627,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeometryN(int n) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeGeometryNStatement(int n) {
@@ -646,7 +645,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getInteriorRingN(int n) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -665,7 +664,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getIntersectionAggr() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIntersectionAggrStatement() {
@@ -680,7 +679,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIntersectsRect(Point pmin, Point pmax) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIntersectsRectStatement(Point pmin, Point pmax) {
@@ -700,7 +699,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIs3D() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIs3DStatement() {
@@ -716,7 +715,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsClosed() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIsClosedStatement() {
@@ -733,7 +732,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsMeasured() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIsMeasuredStatement() {
@@ -750,7 +749,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsRing() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIsRingStatement() {
@@ -767,7 +766,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsValid() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeIsValidStatement() {
@@ -784,7 +783,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getLength() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeLengthStatement() {
@@ -801,7 +800,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getM() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -819,7 +818,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMax() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -837,7 +836,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMin() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -855,7 +854,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumGeometries() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -873,7 +872,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRing() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -891,7 +890,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRings() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -909,7 +908,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumPoints() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -927,7 +926,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getOrderingEquals(Geometry geom) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -947,7 +946,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getPerimeter() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -965,7 +964,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointOnSurface() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -983,7 +982,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointN(int n) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1003,7 +1002,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getSnapToGrid() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1021,7 +1020,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getStartPoint() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1038,7 +1037,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getUnionAggr() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1054,7 +1053,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getX() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1072,7 +1071,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMax() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1090,7 +1089,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMin() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1108,7 +1107,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getY() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1126,7 +1125,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMax() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 	}
 
@@ -1144,7 +1143,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMin() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeYMinStatement() {
@@ -1161,7 +1160,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZ() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeZStatement() {
@@ -1178,7 +1177,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMax() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeZMaxStatement() {
@@ -1195,7 +1194,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMin() throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeZMinStatement() {
@@ -1212,7 +1211,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionInner(Geometry geom) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeNestedFunctionInnerStatement(Geometry geom) {
@@ -1231,7 +1230,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionOuter(Geometry geom) throws SQLException {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	private NativeSQLStatement createNativeNestedFunctionOuterStatement(Geometry geom) {

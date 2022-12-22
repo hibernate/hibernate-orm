@@ -14,7 +14,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -258,7 +257,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public JavaType<?> getJavaType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// the JavaType is the entity itself
+		return getDeclaringType().getJavaType();
 	}
 
 	@Override

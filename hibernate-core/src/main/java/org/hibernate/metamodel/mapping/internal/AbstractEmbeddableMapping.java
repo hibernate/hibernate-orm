@@ -11,7 +11,6 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.dialect.Dialect;
@@ -353,12 +352,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 						@Override
 						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 
 						@Override
 						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 					};
 				}

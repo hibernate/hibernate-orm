@@ -9,18 +9,16 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
+import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -101,7 +99,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			// sure it can happen
-			throw new NotYetImplementedFor6Exception( "Ordering for " + referenceModelPart + " not supported" );
+			throw new UnsupportedOperationException( "Ordering for " + referenceModelPart + " not supported" );
 		}
 	}
 
@@ -191,7 +189,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			// sure it can happen
-			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + " not supported" );
+			throw new UnsupportedOperationException( "Ordering for " + getReferenceModelPart() + " not supported" );
 		}
 	}
 

@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -32,6 +30,8 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -414,7 +414,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(String, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
@@ -422,8 +421,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, BindableType<P> type);
 
@@ -465,7 +462,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(int, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
@@ -473,8 +469,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, BindableType<P> type);
 
@@ -524,7 +518,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
@@ -582,7 +575,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -623,7 +615,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -664,7 +655,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -704,7 +694,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use. If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -746,7 +735,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * appropriate {@link BindableType}, {@link #setParameterList(String, Collection)}
 	 * is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such
@@ -792,7 +780,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such

@@ -7,13 +7,13 @@
 
 package org.hibernate.sql.ast.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -22,7 +22,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -543,31 +542,31 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

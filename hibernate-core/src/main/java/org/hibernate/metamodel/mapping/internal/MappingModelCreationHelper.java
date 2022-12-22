@@ -15,7 +15,6 @@ import java.util.SortedSet;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
@@ -346,12 +345,12 @@ public class MappingModelCreationHelper {
 
 				@Override
 				public Serializable disassemble(Object value, SharedSessionContract session) {
-					throw new NotYetImplementedFor6Exception( getClass() );
+					throw new UnsupportedOperationException();
 				}
 
 				@Override
 				public Object assemble(Serializable cached, SharedSessionContract session) {
-					throw new NotYetImplementedFor6Exception( getClass() );
+					throw new UnsupportedOperationException();
 				}
 			};
 		}
@@ -719,7 +718,7 @@ public class MappingModelCreationHelper {
 			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Support for " + fkTargetPart.getClass() + " foreign keys not yet implemented: " + bootValueMapping.getRole()
 			);
 		}
@@ -809,7 +808,7 @@ public class MappingModelCreationHelper {
 						.getEntityName() + " -> " + bootProperty.getName() );
 			}
 			else {
-				throw new NotYetImplementedFor6Exception(
+				throw new UnsupportedOperationException(
 						"Support for foreign-keys based on `" + modelPart + "` not yet implemented: " +
 								bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 				);
@@ -912,7 +911,7 @@ public class MappingModelCreationHelper {
 			creationProcess.registerForeignKey( attributeMapping, embeddedForeignKeyDescriptor );
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Support for " + fkTarget.getClass() + " foreign-keys not yet implemented: " +
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
@@ -1263,7 +1262,7 @@ public class MappingModelCreationHelper {
 			return indexDescriptor;
 		}
 
-		throw new NotYetImplementedFor6Exception(
+		throw new UnsupportedOperationException(
 				"Support for plural attributes with index type [" + bootMapKeyDescriptor + "] not yet implemented"
 		);
 	}
@@ -1591,7 +1590,7 @@ public class MappingModelCreationHelper {
 			return attributeMapping;
 		}
 		else {
-			throw new NotYetImplementedFor6Exception( "AnyType support has not yet been implemented" );
+			throw new UnsupportedOperationException( "AnyType support has not yet been implemented" );
 		}
 	}
 }

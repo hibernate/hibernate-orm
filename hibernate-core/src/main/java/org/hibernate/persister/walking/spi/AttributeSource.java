@@ -6,13 +6,11 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-
 /**
 * @author Steve Ebersole
 */
 public interface AttributeSource {
 	default int getPropertyIndex(String propertyName) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

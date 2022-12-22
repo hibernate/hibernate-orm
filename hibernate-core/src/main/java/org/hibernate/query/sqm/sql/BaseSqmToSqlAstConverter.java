@@ -32,7 +32,6 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.function.TimestampaddFunction;
@@ -41,8 +40,8 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -5440,7 +5439,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredValueMapping != null ) {
 				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
-			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
+			throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
 		}
 
 		if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource ) {
@@ -7116,7 +7115,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitFullyQualifiedClass(Class<?> namedClass) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 		// what exactly is the expected end result here?
 
@@ -7126,7 +7125,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		// see if it is an entity-type
 //		final EntityTypeDescriptor entityDescriptor = metamodel.findEntityDescriptor( namedClass );
 //		if ( entityDescriptor != null ) {
-//			throw new NotYetImplementedFor6Exception( "Add support for entity type literals as SqlExpression" );
+//			throw new UnsupportedOperationException( "Add support for entity type literals as SqlExpression" );
 //		}
 //
 //

@@ -238,9 +238,6 @@ public class BinderHelper {
 		if ( properties.size() == 1
 				// necessary to handle the case where the columnOwner is a supertype
 				&& ownerEntity == columnOwner
-				//TODO: this is only necessary because of a NotYetImplementedFor6Exception
-				//      in MappingMetamodelCreationHelper.interpretToOneKeyDescriptor
-				//      and ideally we should remove this last condition once that is fixed
 				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
 			// no need to make a synthetic property
 			return properties.get(0);

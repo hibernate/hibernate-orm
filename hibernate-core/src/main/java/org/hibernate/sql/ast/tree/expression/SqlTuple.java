@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -87,7 +86,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	public static class Builder {

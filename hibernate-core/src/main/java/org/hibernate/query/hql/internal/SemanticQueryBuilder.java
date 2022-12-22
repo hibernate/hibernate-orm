@@ -31,11 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.Bindable;
-import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -211,6 +207,9 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -2752,9 +2751,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( ctx.getChildCount() != 5 ) {
 				return idPath;
 			}
-//			final HqlParser.PathContinuationContext pathContinuationContext = (HqlParser.PathContinuationContext) ctx.getChild( 4 );
 
-			throw new NotYetImplementedFor6Exception( "Path continuation from `id()` reference not yet implemented" );
+			throw new UnsupportedOperationException( "Path continuation from `id()` reference not yet implemented" );
 		}
 
 		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
@@ -3264,7 +3262,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitGeneralizedLiteral(HqlParser.GeneralizedLiteralContext ctx) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

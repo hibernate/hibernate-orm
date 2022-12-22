@@ -22,7 +22,6 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -389,8 +388,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			// TODO: Fix this so it will work for non-POJO entity mode
 			Type keyType = getPersister( session ).getKeyType();
 			if ( !keyType.getReturnedClass().isInstance( id ) ) {
-				// todo (6.0) :
-				throw new NotYetImplementedFor6Exception( "Re-work support for semi-resolve" );
+				throw new UnsupportedOperationException( "Re-work support for semi-resolve" );
 //				id = keyType.semiResolve(
 //						entityEntry.getLoadedValue( foreignKeyPropertyName ),
 //						session,

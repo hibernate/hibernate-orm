@@ -15,11 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-
-import jakarta.persistence.ParameterMode;
-
 import org.hibernate.JDBCException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -44,6 +40,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
@@ -159,21 +157,18 @@ public class OutputsImpl implements Outputs {
 		final JavaTypeRegistry javaTypeRegistry = context.getSession()
 				.getTypeConfiguration()
 				.getJavaTypeRegistry();
-		procedureCall.getParameterBindings().visitBindings(
-				(parameterImplementor, queryParameterBinding) -> {
-					final ProcedureParameter<?> parameter = (ProcedureParameter<?>) parameterImplementor;
-					if ( parameter.getMode() == ParameterMode.INOUT ) {
-						final JavaType<?> basicType = javaTypeRegistry.getDescriptor(
-								parameterImplementor.getParameterType() );
-						if ( basicType != null ) {
-							resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
-						}
-						else {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-					}
+		procedureCall.getParameterBindings().visitBindings( (parameterImplementor, queryParameterBinding) -> {
+			final ProcedureParameter<?> parameter = (ProcedureParameter<?>) parameterImplementor;
+			if ( parameter.getMode() == ParameterMode.INOUT ) {
+				final JavaType<?> basicType = javaTypeRegistry.getDescriptor( parameterImplementor.getParameterType() );
+				if ( basicType != null ) {
+					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
 				}
-		);
+				else {
+					throw new UnsupportedOperationException();
+				}
+			}
+		} );
 
 		final ExecutionContext executionContext = new OutputsExecutionContext( context.getSession() );
 

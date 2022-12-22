@@ -40,7 +40,6 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
@@ -2152,8 +2151,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public int getSubclassPropertyTableNumber(String propertyPath) {
-		// todo (PropertyMapping) : clean this up
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 //		String rootPropertyName = StringHelper.root( propertyPath );
 //		Type type = propertyMapping.toType( rootPropertyName );
 //		if ( type.isAssociationType() ) {

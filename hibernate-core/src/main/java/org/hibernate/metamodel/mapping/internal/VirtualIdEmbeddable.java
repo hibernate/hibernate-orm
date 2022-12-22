@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
@@ -290,7 +289,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

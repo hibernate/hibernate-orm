@@ -25,7 +25,6 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
@@ -51,8 +50,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -819,11 +818,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getSQLOrderByString(String alias) {
-//		return hasOrdering()
-//				? orderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-//				: "";
 		if ( hasOrdering() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException();
 		}
 
 		return "";
@@ -831,11 +827,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getManyToManyOrderByString(String alias) {
-//		return hasManyToManyOrdering()
-//				? manyToManyOrderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-//				: "";
 		if ( hasManyToManyOrdering() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException();
 		}
 
 		return "";

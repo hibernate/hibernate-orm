@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -463,12 +462,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 						@Override
 						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 
 						@Override
 						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 					};
 				}

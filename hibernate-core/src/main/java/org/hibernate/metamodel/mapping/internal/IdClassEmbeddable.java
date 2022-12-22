@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
@@ -438,7 +437,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -451,7 +450,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

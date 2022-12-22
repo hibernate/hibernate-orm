@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.IndexedConsumer;
@@ -213,6 +212,6 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

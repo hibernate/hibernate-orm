@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaJoinedFrom;
@@ -112,9 +111,7 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 
 	@Override
 	public SqmCorrelatedEntityJoin<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception(getClass());
-//		return new SqmCorrelatedEntityJoin<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

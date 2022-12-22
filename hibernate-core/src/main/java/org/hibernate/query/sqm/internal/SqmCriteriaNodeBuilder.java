@@ -31,7 +31,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -1696,12 +1695,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <K, L extends List<?>> SqmExpression<Set<K>> indexes(L list) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -1802,12 +1801,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

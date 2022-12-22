@@ -7,11 +7,10 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -95,9 +94,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception( getClass());
-//		return new SqmCorrelatedRoot<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

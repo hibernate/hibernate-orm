@@ -47,7 +47,7 @@ public interface BeforeExecutionGenerator extends Generator {
 	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType);
 
 	@Override
-	default boolean generatedOnExecute() {
+	default boolean generatedOnExecution() {
 		return false;
 	}
 }

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -59,7 +57,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.generator.EventTypeSets.NONE;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -311,7 +308,7 @@ public class EntityMetamodel implements Serializable {
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			final Generator generator = buildGenerator( property, creationContext );
 			if ( generator != null ) {
-				if ( i == tempVersionProperty && !generator.generatedOnExecute() ) {
+				if ( i == tempVersionProperty && !generator.generatedOnExecution() ) {
 					// when we have an in-memory generator for the version, we
 					// want to plug it in to the older infrastructure specific
 					// to version generation, instead of treating it like a
@@ -325,7 +322,7 @@ public class EntityMetamodel implements Serializable {
 						propertyUpdateability[i] = false;
 					}
 					if ( generator.generatesOnInsert() ) {
-						if ( generator.generatedOnExecute() ) {
+						if ( generator.generatedOnExecution() ) {
 							foundPostInsertGeneratedValues = true;
 						}
 						else {
@@ -333,7 +330,7 @@ public class EntityMetamodel implements Serializable {
 						}
 					}
 					if ( generator.generatesOnUpdate() ) {
-						if ( generator.generatedOnExecute() ) {
+						if ( generator.generatedOnExecution() ) {
 							foundPostUpdateGeneratedValues = true;
 						}
 						else {
@@ -463,7 +460,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static boolean generatedWithNoParameter(Generator generator) {
-		return generator.generatedOnExecute()
+		return generator.generatedOnExecution()
 			&& !((OnExecutionGenerator) generator).writePropertyValue();
 	}
 
@@ -482,7 +479,7 @@ public class EntityMetamodel implements Serializable {
 			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
 			final Component component = (Component) mappingProperty.getValue();
 			for ( Property property : component.getProperties() ) {
-				builder.addPair( property.createGenerator( context ) );
+				builder.add( property.createGenerator( context ) );
 			}
 			return builder.build();
 		}
@@ -497,175 +494,13 @@ public class EntityMetamodel implements Serializable {
 		return versionGenerator;
 	}
 
-	public static class ValueGenerationStrategyException extends HibernateException {
-		public ValueGenerationStrategyException(String message) {
-			super( message );
-		}
-	}
-
-	private static class CompositeGeneratorBuilder {
-		private final Property mappingProperty;
-		private final Dialect dialect;
-
-		private boolean hadInMemoryGeneration;
-		private boolean hadInDatabaseGeneration;
-
-		private List<OnExecutionGenerator> inDatabaseStrategies;
-
-		public CompositeGeneratorBuilder(Property mappingProperty, Dialect dialect) {
-			this.mappingProperty = mappingProperty;
-			this.dialect = dialect;
-		}
-
-		public void addPair(Generator generator) {
-			if ( generator != null ) {
-				if ( generator.generatedOnExecute() ) {
-					if ( generator instanceof OnExecutionGenerator ) {
-						add( (OnExecutionGenerator) generator );
-					}
-				}
-				else {
-					if ( generator instanceof BeforeExecutionGenerator ) {
-						add( (BeforeExecutionGenerator) generator );
-					}
-				}
-			}
-		}
-
-		private void add(BeforeExecutionGenerator inMemoryStrategy) {
-			if ( inMemoryStrategy.generatesSometimes() ) {
-				hadInMemoryGeneration = true;
-			}
-		}
-
-		private void add(OnExecutionGenerator inDatabaseStrategy) {
-			if ( inDatabaseStrategies == null ) {
-				inDatabaseStrategies = new ArrayList<>();
-			}
-			inDatabaseStrategies.add( inDatabaseStrategy );
-
-			if ( inDatabaseStrategy.generatesSometimes() ) {
-				hadInDatabaseGeneration = true;
-			}
-		}
-
-		public Generator build() {
-			if ( hadInMemoryGeneration && hadInDatabaseGeneration ) {
-				throw new ValueGenerationStrategyException(
-						"Composite attribute [" + mappingProperty.getName() + "] contained both in-memory"
-								+ " and in-database value generation"
-				);
-			}
-			else if ( hadInMemoryGeneration ) {
-				throw new UnsupportedOperationException( "Composite in-memory value generation not supported" );
-
-			}
-			else if ( hadInDatabaseGeneration ) {
-				final Component composite = (Component) mappingProperty.getValue();
-
-				// we need the numbers to match up so that we can properly handle 'referenced sql column values'
-				if ( inDatabaseStrategies.size() != composite.getPropertySpan() ) {
-					throw new ValueGenerationStrategyException(
-							"Internal error : mismatch between number of collected in-db generation strategies" +
-									" and number of attributes for composite attribute : " + mappingProperty.getName()
-					);
-				}
-
-				// the base-line values for the aggregated InDatabaseValueGenerationStrategy we will build here.
-				EnumSet<EventType> eventTypes = EnumSet.noneOf(EventType.class);
-				boolean referenceColumns = false;
-				String[] columnValues = new String[ composite.getColumnSpan() ];
-
-				// start building the aggregate values
-				int propertyIndex = -1;
-				int columnIndex = 0;
-				for ( Property property : composite.getProperties() ) {
-					propertyIndex++;
-					final OnExecutionGenerator generator = inDatabaseStrategies.get( propertyIndex );
-					eventTypes.addAll( generator.getEventTypes() );
-					if ( generator.referenceColumnsInSql(dialect) ) {
-						// override base-line value
-						referenceColumns = true;
-					}
-					if ( generator.getReferencedColumnValues(dialect) != null ) {
-						if ( generator.getReferencedColumnValues(dialect).length != property.getColumnSpan() ) {
-							throw new ValueGenerationStrategyException(
-									"Internal error : mismatch between number of collected 'referenced column values'" +
-											" and number of columns for composite attribute : " + mappingProperty.getName() +
-											'.' + property.getName()
-							);
-						}
-						System.arraycopy(
-								generator.getReferencedColumnValues(dialect),
-								0,
-								columnValues,
-								columnIndex,
-								property.getColumnSpan()
-						);
-					}
-				}
-
-				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
-				return new OnExecutionGeneratorImpl( eventTypes, referenceColumns, columnValues );
-			}
-			else {
-				return new Generator() {
-					@Override
-					public EnumSet<EventType> getEventTypes() {
-						return NONE;
-					}
-					@Override
-					public boolean generatedOnExecute() {
-						return false;
-					}
-				};
-			}
-		}
-	}
-
-	private static class OnExecutionGeneratorImpl implements OnExecutionGenerator {
-		private final EnumSet<EventType> eventTypes;
-		private final boolean referenceColumnInSql;
-		private final String[] referencedColumnValues;
-
-		private OnExecutionGeneratorImpl(
-				EnumSet<EventType> eventTypes,
-				boolean referenceColumnInSql,
-				String[] referencedColumnValues) {
-			this.eventTypes = eventTypes;
-			this.referenceColumnInSql = referenceColumnInSql;
-			this.referencedColumnValues = referencedColumnValues;
-		}
-
-		@Override
-		public EnumSet<EventType> getEventTypes() {
-			return eventTypes;
-		}
-
-		@Override
-		public boolean referenceColumnsInSql(Dialect dialect) {
-			return referenceColumnInSql;
-		}
-
-		@Override
-		public String[] getReferencedColumnValues(Dialect dialect) {
-			return referencedColumnValues;
-		}
-
-		@Override
-		public boolean writePropertyValue() {
-			return false;
-		}
-	}
-
-
-	private void mapPropertyToIndex(Property prop, int i) {
-		propertyIndexes.put( prop.getName(), i );
-		if ( prop.getValue() instanceof Component ) {
-			Component composite = (Component) prop.getValue();
-			for ( Property subprop : composite.getProperties() ) {
+	private void mapPropertyToIndex(Property property, int i) {
+		propertyIndexes.put( property.getName(), i );
+		if ( property.getValue() instanceof Component ) {
+			Component composite = (Component) property.getValue();
+			for ( Property subproperty : composite.getProperties() ) {
 				propertyIndexes.put(
-						prop.getName() + '.' + subprop.getName(),
+						property.getName() + '.' + subproperty.getName(),
 						i
 					);
 			}
@@ -682,21 +517,11 @@ public class EntityMetamodel implements Serializable {
 		}
 		for ( int i = 0; i < naturalIdPropertyNumbers.length; i++ ) {
 			final Generator strategy = generators[ naturalIdPropertyNumbers[i] ];
-			if ( strategy != null && strategy.generatesOnInsert() && strategy.generatedOnExecute() ) {
+			if ( strategy != null && strategy.generatesOnInsert() && strategy.generatedOnExecution() ) {
 				return true;
 			}
 		}
 		return false;
-	}
-
-	public boolean isVersionGeneratedOnExecute() {
-		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecute();
-	}
-
-	public boolean isVersionGeneratedBeforeExecute() {
-		final Generator strategy = generators[ versionPropertyIndex ];
-		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecute();
 	}
 
 	public int[] getNaturalIdentifierProperties() {

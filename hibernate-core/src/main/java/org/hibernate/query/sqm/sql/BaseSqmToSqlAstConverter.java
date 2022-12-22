@@ -1355,7 +1355,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		}
 		// This uses identity generation, so we don't need to list the column
-		if ( identifierGenerator != null && identifierGenerator.generatedOnExecute()
+		if ( identifierGenerator != null && identifierGenerator.generatedOnExecution()
 				|| identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) {
 			identifierGenerator = null;
 		}
@@ -1440,7 +1440,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( discriminatorExpression != null ) {
 				expressions.add( discriminatorExpression );
 			}
-			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecute() ) {
+			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecution() ) {
 				if ( identifierGeneratorParameter == null ) {
 					identifierGeneratorParameter =
 							new IdGeneratorParameter( identifierMapping, (BeforeExecutionGenerator) identifierGenerator );

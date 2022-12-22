@@ -83,7 +83,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 
 	/**
 	 * A SQL expression indicating how to calculate the generated value when the property value
-	 * is {@linkplain #generatedOnExecute() generated in the database} and the mapped column is
+	 * is {@linkplain #generatedOnExecution() generated in the database} and the mapped column is
 	 * {@linkplain #referenceColumnInSql() included in the SQL statement}. The SQL expression
 	 * might be:
 	 * <ul>
@@ -100,7 +100,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 
 	/**
 	 * A SQL expression indicating how to calculate the generated value when the property value
-	 * is {@linkplain #generatedOnExecute() generated in the database} and the mapped column is
+	 * is {@linkplain #generatedOnExecution() generated in the database} and the mapped column is
 	 * {@linkplain #referenceColumnInSql() included in the SQL statement}. The SQL expression
 	 * might be:
 	 * <ul>
@@ -140,7 +140,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 	 *         generated in Java using a {@link ValueGenerator}.
 	 */
 	@Override
-	default boolean generatedOnExecute() {
+	default boolean generatedOnExecution() {
 		return getValueGenerator() == null;
 	}
 
@@ -157,7 +157,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 	 */
 	@Override
 	default boolean writePropertyValue() {
-		return !this.generatedOnExecute() // value generated in memory and then written as normal
+		return !this.generatedOnExecution() // value generated in memory and then written as normal
 			// current value of property of entity instance written completely as normal
 			|| referenceColumnInSql() && getDatabaseGeneratedReferencedColumnValue()==null;
 	}

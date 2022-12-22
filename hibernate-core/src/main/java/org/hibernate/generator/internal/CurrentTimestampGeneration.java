@@ -80,7 +80,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	}
 
 	@Override
-	public boolean generatedOnExecute() {
+	public boolean generatedOnExecution() {
 		return generator == null;
 	}
 

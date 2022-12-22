@@ -142,7 +142,7 @@ public interface OnExecutionGenerator extends Generator {
 	}
 
 	@Override
-	default boolean generatedOnExecute() {
+	default boolean generatedOnExecution() {
 		return true;
 	}
 }

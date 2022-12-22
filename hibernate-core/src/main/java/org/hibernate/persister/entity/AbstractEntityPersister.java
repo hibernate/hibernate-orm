@@ -150,7 +150,6 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -280,6 +279,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -870,12 +870,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getDiscriminatorColumnReaderTemplate() {
-		if ( getSubclassEntityNames().size() == 1 ) {
-			return getDiscriminatorSQLValue();
-		}
-		else {
-			return Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
-		}
+		return getSubclassEntityNames().size() == 1
+				? getDiscriminatorSQLValue()
+				: Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 	}
 
 	public String getDiscriminatorAlias() {
@@ -1017,11 +1014,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean determineCanWriteToCache(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy) {
-		if ( cacheAccessStrategy == null ) {
-			return false;
-		}
-
-		return persistentClass.isCached();
+		return cacheAccessStrategy != null && persistentClass.isCached();
 	}
 
 	private boolean determineCanReadFromCache(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy) {
@@ -1576,8 +1569,8 @@ public abstract class AbstractEntityPersister
 			final Serializable cachedValue = disassembledValues[lazyPropertyNumbers[j]];
 			final Type lazyPropertyType = lazyPropertyTypes[j];
 			final String propertyName = lazyPropertyNames[j];
-			if (cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY) {
-				if (fieldName.equals(propertyName)) {
+			if ( cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				if ( fieldName.equals(propertyName) ) {
 					result = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				// don't try to initialize the unfetched property
@@ -1945,7 +1938,7 @@ public abstract class AbstractEntityPersister
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
 		}
 
-		if ( entityMetamodel.isVersionGeneratedOnExecute() ) {
+		if ( isVersionGeneratedOnExecution() ) {
 			// the difficulty here is exactly what we update in order to
 			// force the version to be incremented in the db...
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
@@ -2739,7 +2732,7 @@ public abstract class AbstractEntityPersister
 	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
 
 	public final boolean checkVersion(final boolean[] includeProperty) {
-		return includeProperty[getVersionProperty()] || entityMetamodel.isVersionGeneratedOnExecute();
+		return includeProperty[getVersionProperty()] || isVersionGeneratedOnExecution();
 	}
 
 	@Override
@@ -3947,8 +3940,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isVersionPropertyGenerated() {
 		return isVersioned()
-			&& ( getEntityMetamodel().isVersionGeneratedOnExecute()
-				|| getEntityMetamodel().isVersionGeneratedBeforeExecute() );
+			&& ( isVersionGeneratedOnExecution() || isVersionGeneratedBeforeExecution() );
 	}
 
 	@Override
@@ -3956,9 +3948,19 @@ public abstract class AbstractEntityPersister
 		return isVersioned() && getPropertyInsertability()[getVersionProperty()];
 	}
 
+	public boolean isVersionGeneratedOnExecution() {
+		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
+		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecution();
+	}
+
+	public boolean isVersionGeneratedBeforeExecution() {
+		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
+		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecution();
+	}
+
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+		if ( isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == POJO ) {
 			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
 					.extractLazyInterceptor( entity );
 			assert interceptor != null;

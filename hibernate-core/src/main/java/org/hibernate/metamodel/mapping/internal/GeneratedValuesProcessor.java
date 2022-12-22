@@ -91,7 +91,7 @@ public class GeneratedValuesProcessor {
 		entityDescriptor.forEachAttributeMapping( mapping -> {
 			final Generator generator = generators[ mapping.getStateArrayPosition() ];
 			if ( generator != null
-					&& generator.generatedOnExecute()
+					&& generator.generatedOnExecution()
 					&& generator.getEventTypes().contains(timing) ) {
 				generatedValuesToSelect.add( mapping );
 			}

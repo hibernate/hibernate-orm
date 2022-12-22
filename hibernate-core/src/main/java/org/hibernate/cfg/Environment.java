@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
@@ -128,8 +129,14 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * </table>
  *
  * @see org.hibernate.SessionFactory
+ *
+ * @apiNote This is really considered an internal contract, but leaving in place in this
+ * package as many applications use it historically.  However, consider migrating to use
+ * {@link AvailableSettings} instead.
+ *
  * @author Gavin King
  */
+@Internal
 public final class Environment implements AvailableSettings {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 

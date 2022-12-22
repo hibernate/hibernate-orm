@@ -6,6 +6,9 @@ import java.util.Objects;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 
+/**
+ * @author Habib Zerai
+ */
 @Embeddable
 public class UserRoleId implements Serializable {
 

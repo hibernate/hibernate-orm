@@ -7,6 +7,9 @@ import javax.persistence.Basic;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 
+/**
+ * @author Habib Zerai
+ */
 @Embeddable
 public class RoleId implements Serializable {
 

@@ -16,8 +16,7 @@ import org.hibernate.testing.TestForIssue;
 import java.util.List;
 
 /**
- * @author Martin Simka
- * @author Gail Badner
+ * @author Habib Zerai
  */
 public class EmbeddedCompositeIdTest extends BaseEntityManagerFunctionalTestCase {
 

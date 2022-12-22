@@ -13,6 +13,9 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+/**
+ * @author Habib Zerai
+ */
 @Access(value = AccessType.FIELD)
 @Table(name = "user_")
 @Entity(name = "user")

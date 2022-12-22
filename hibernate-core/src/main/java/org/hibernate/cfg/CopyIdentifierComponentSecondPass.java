@@ -101,7 +101,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			}
 			index.set( 0 );
 		}
-
+		int propertyIndex = 0;
 		while ( properties.hasNext() ) {
 			Property referencedProperty = properties.next();
 			if ( referencedProperty.isComposite() ) {
@@ -109,9 +109,10 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				component.addProperty( property );
 			}
 			else {
-				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty );
+				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty, propertyIndex );
 				component.addProperty( property );
 			}
+			propertyIndex++;
 		}
 	}
 
@@ -137,6 +138,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 
 		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
+		int propertyIndex = 0;
 		while(propertyIterator.hasNext()) {
 			Property referencedComponentProperty = propertyIterator.next();
 
@@ -145,9 +147,10 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				value.addProperty( componentProperty );
 			}
 			else {
-				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty );
+				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty, propertyIndex );
 				value.addProperty( componentProperty );
 			}
+			propertyIndex++;
 		}
 
 		return property;
@@ -159,7 +162,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			boolean isExplicitReference,
 			Map<String, Ejb3JoinColumn> columnByReferencedName,
 			AtomicInteger index,
-			Property referencedProperty ) {
+			Property referencedProperty, int propertyIndex ) {
 		Property property = new Property();
 		property.setName( referencedProperty.getName() );
 		//FIXME set optional?
@@ -213,7 +216,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
 				final Identifier explicitName = database.toIdentifier( columnName );
 				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
-				value.addColumn( new Column( physicalName.render( database.getDialect() ) ) );
+				Column idColumn = new Column( physicalName.render( database.getDialect() ) );
+				idColumn.setUniqueInteger(propertyIndex);
+				value.addColumn(idColumn);
 				if ( joinColumn != null ) {
 					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
 					joinColumn.linkWithValue( value );

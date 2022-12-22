@@ -361,6 +361,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public String getCanonicalName() {
 		return quoted ? name : name.toLowerCase( Locale.ROOT );
 	}
+	
+	public void setUniqueInteger(int uniqueInteger) {
+		this.uniqueInteger = uniqueInteger;
+	}
 
 	/**
 	 * Shallow copy, the value is not copied

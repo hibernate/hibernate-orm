@@ -354,15 +354,23 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Predicate... restrictions) {
-		SqmWhereClause whereClause = getWhereClause();
-		if ( whereClause == null ) {
-			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+		if ( restrictions == null ) {
+			throw new IllegalArgumentException( "The predicate array cannot be null" );
+		}
+		else if ( restrictions.length == 0 ) {
+			setWhereClause( null );
 		}
 		else {
-			whereClause.setPredicate( null );
-		}
-		for ( Predicate restriction : restrictions ) {
-			whereClause.applyPredicate( (SqmPredicate) restriction );
+			SqmWhereClause whereClause = getWhereClause();
+			if ( whereClause == null ) {
+				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+			}
+			else {
+				whereClause.setPredicate( null );
+			}
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
 		}
 		return this;
 	}
@@ -632,7 +640,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				sb.append( sqmFrom.resolveAlias() ).append( '.' );
-				sb.append( (attributeJoin).getAttribute().getName() );
+				sb.append( ( attributeJoin ).getAttribute().getName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( attributeJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
@@ -647,7 +655,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
 				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
-				sb.append( (sqmEntityJoin).getEntityName() );
+				sb.append( ( sqmEntityJoin ).getEntityName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );

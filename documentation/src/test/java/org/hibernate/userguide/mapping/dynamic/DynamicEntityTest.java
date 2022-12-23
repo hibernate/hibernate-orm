@@ -49,7 +49,7 @@ public class DynamicEntityTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager
 				.unwrap(Session.class)
-				.save("Book", book);
+				.persist("Book", book);
 			//end::mapping-model-dynamic-example[]
 		});
 	}

@@ -73,7 +73,7 @@ public class BitSetJdbcTypeTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete Product").executeUpdate()
+				(session) -> session.createMutationQuery("delete Product").executeUpdate()
 		);
 	}
 

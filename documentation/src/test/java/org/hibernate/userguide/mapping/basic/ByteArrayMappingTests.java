@@ -87,7 +87,7 @@ public class ByteArrayMappingTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfByteArrays").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfByteArrays").executeUpdate()
 		);
 	}
 

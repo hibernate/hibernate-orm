@@ -11,7 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

@@ -52,7 +52,7 @@ public class AlwaysFlushTest extends BaseEntityManagerFunctionalTestCase {
 
             Session session = entityManager.unwrap(Session.class);
             assertTrue(((Number) session
-                    .createNativeQuery("select count(*) from Person")
+                    .createNativeQuery("select count(*) from Person", Integer.class)
                     .setHibernateFlushMode(FlushMode.ALWAYS)
                     .uniqueResult()).intValue() == 1);
             //end::flushing-always-flush-sql-example[]

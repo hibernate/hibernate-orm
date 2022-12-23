@@ -105,9 +105,9 @@ public class ExplicitLockingTest {
 	}
 
 	@Test
-	public void testBuildLockRequest(EntityManagerFactoryScope scope) {
+	public void testSessionLock(EntityManagerFactoryScope scope) {
 		Person p = scope.fromTransaction( entityManager -> {
-			log.info("testBuildLockRequest");
+			log.info("testSessionLock");
 			Person person = new Person("John Doe");
 			Phone home = new Phone("123-456-7890");
 			Phone office = new Phone("098-765-4321");
@@ -119,29 +119,22 @@ public class ExplicitLockingTest {
 		});
 		scope.inTransaction( entityManager -> {
 			Long id = p.getId();
-			//tag::locking-buildLockRequest-example[]
+			//tag::locking-session-lock-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
-			session
-				.buildLockRequest(LockOptions.NONE)
-				.setLockMode(LockMode.PESSIMISTIC_READ)
-				.setTimeOut(LockOptions.NO_WAIT)
-				.lock(person);
-			//end::locking-buildLockRequest-example[]
+			LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ, LockOptions.NO_WAIT);
+			session.lock(person, lockOptions);
+			//end::locking-session-lock-example[]
 		});
 
 		scope.inTransaction( entityManager -> {
 			Long id = p.getId();
-			//tag::locking-buildLockRequest-scope-example[]
+			//tag::locking-session-lock-scope-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
-			session
-				.buildLockRequest(LockOptions.NONE)
-				.setLockMode(LockMode.PESSIMISTIC_READ)
-				.setTimeOut(LockOptions.NO_WAIT)
-				.setScope(true)
-				.lock(person);
-			//end::locking-buildLockRequest-scope-example[]
+			LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ, LockOptions.NO_WAIT, PessimisticLockScope.EXTENDED);
+			session.lock(person, lockOptions);
+			//end::locking-session-lock-scope-example[]
 		});
 
 	}

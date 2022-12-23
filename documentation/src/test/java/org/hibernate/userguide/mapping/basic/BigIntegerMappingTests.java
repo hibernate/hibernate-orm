@@ -68,7 +68,7 @@ public class BigIntegerMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfBigIntegers").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfBigIntegers").executeUpdate()
 		);
 	}
 

@@ -18,7 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -47,7 +47,6 @@ public class AcmeCorpPhysicalNamingStrategyTest {
 			Identifier in = Identifier.toIdentifier("accountNumber");
 			Identifier out = strategy.toPhysicalTableName(in, serviceRegistry.getService(JdbcEnvironment.class));
 			assertThat(out.getText(), equalTo("acct_num"));
-
 		}
 	}
 }

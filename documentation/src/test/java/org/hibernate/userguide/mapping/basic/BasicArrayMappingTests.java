@@ -68,7 +68,7 @@ public class BasicArrayMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfArrays").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfArrays").executeUpdate()
 		);
 	}
 

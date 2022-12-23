@@ -10,8 +10,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
  * @author Shawn Clowater
@@ -25,7 +25,7 @@ public class EntityPersister
             PersistentClass persistentClass,
             EntityDataAccess cache,
             NaturalIdDataAccess naturalIdRegionAccessStrategy,
-            PersisterCreationContext creationContext)
+            RuntimeModelCreationContext creationContext)
             throws HibernateException {
         super(persistentClass, cache, naturalIdRegionAccessStrategy, creationContext);
     }

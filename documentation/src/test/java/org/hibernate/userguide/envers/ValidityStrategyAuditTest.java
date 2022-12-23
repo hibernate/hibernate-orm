@@ -14,7 +14,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.envers.strategy.ValidityAuditStrategy;
+import org.hibernate.envers.strategy.internal.ValidityAuditStrategy;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;

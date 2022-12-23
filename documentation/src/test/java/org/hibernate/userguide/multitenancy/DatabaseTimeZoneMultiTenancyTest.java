@@ -142,7 +142,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId")
+                "where p.id = :personId", Timestamp.class)
             .setParameter("personId", 1L)
             .getSingleResult();
 
@@ -157,7 +157,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId")
+                "where p.id = :personId", Timestamp.class)
             .setParameter("personId", 1L)
             .getSingleResult();
 
@@ -174,7 +174,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId")
+                "where p.id = :personId", Timestamp.class)
             .setParameter("personId", 1L)
             .getSingleResult();
 

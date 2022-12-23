@@ -27,7 +27,6 @@ import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
-import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -70,14 +69,13 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 
 /**
- * This class is meant to be extended.
- *
- * Wraps and delegates all methods to a {@link SessionImplementor} and
- * a {@link Session}. This is useful for custom implementations of this
- * API so that only some methods need to be overridden
+ * A wrapper class that delegates all method invocations to a delegate instance of
+ * {@link SessionImplementor}. This is useful for custom implementations of that
+ * API, so that only some methods need to be overridden
+ * <p>
  * (Used by Hibernate Search).
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
+ * @author Sanne Grinovero
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {
@@ -89,8 +87,10 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
-	 * method coming from the EntityManager interface which returns the current session.
+	 * Returns the delegate session.
+	 * <p>
+	 * @apiNote This returns a different object to the {@link #getDelegate()}
+	 *          method inherited from {@link jakarta.persistence.EntityManager}.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()
 	 */
@@ -650,11 +650,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
-	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
-	 * anything about it.
-	 * <p>
-	 * To get the underlying delegate, use {@link #delegate()} instead.
+	 * This is the implementation of {@link jakarta.persistence.EntityManager#getDelegate()}.
+	 * It returns this object and <em>not</em> what we call the "delegate" session here.
+	 * To get the delegate session, use {@link #delegate()} instead.
 	 *
 	 * @see SessionDelegatorBaseImpl#delegate()
 	 */
@@ -683,7 +681,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();

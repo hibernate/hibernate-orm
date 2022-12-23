@@ -209,7 +209,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			if ( entity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() ) {
 				// make sure it is not DELETED
 				final EntityEntry entry = persistenceContext.getEntry( entity );
-				if ( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE ) {
+				if ( entry.getStatus().isDeletedOrGone() ) {
 					// the entity is locally deleted, and the options ask that we not return such entities...
 					entity = null;
 				}

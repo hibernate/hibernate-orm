@@ -692,8 +692,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		// todo (6.0): do we really need this check ?
 		if ( entry != null ) {
-			Status status = entry.getStatus();
-			if ( status == Status.DELETED || status == Status.GONE ) {
+			if ( entry.getStatus().isDeletedOrGone() ) {
 				return;
 			}
 		}

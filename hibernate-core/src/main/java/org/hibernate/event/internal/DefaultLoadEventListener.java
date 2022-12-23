@@ -443,8 +443,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private static boolean wasDeleted(PersistenceContext persistenceContext, Object existing) {
-		final Status status = persistenceContext.getEntry( existing ).getStatus();
-		return status == Status.DELETED || status == Status.GONE;
+		return persistenceContext.getEntry( existing ).getStatus().isDeletedOrGone();
 	}
 
 	private static Object createProxy(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {

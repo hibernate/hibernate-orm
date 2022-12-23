@@ -18,5 +18,9 @@ public enum Status {
 	DELETED,
 	GONE,
 	LOADING,
-	SAVING
+	SAVING;
+
+	public boolean isDeletedOrGone() {
+		return this == DELETED || this == GONE;
+	}
 }

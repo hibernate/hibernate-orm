@@ -54,7 +54,7 @@ public class DeprecationReportTask extends AbstractJandexAwareTask {
 		super.writeReportHeader( fileWriter );
 
 		try {
-			fileWriter.write( "# Union of everything annotated @Deprecated and/or @Remove" );
+			fileWriter.write( "# All API elements considered deprecated - union of @Deprecated and @Remove" );
 			fileWriter.write( '\n' );
 			fileWriter.write( '\n' );
 		}

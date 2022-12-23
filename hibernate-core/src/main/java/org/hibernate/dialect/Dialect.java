@@ -248,9 +248,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * <p>
  * Almost every subclass must, as a bare minimum, override at least:
  * <ul>
- *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
- *     to define a mapping from SQL {@linkplain SqlTypes type codes} to
- *     database column types, and
+ *     <li>{@link #columnType(int)} to define a mapping from SQL
+ *     {@linkplain SqlTypes type codes} to database column types, and
  *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
@@ -461,8 +460,8 @@ public abstract class Dialect implements ConversionContext {
 	 * </ol>
 	 *
 	 * @param sqlTypeCode a SQL {@link SqlTypes type code}
-	 * @return a column type name, with $l, $p, $s placeholders for
-	 *         length, precision, scale
+	 * @return a column type name, with {@code $l}, {@code $p}, {@code $s}
+	 *         placeholders for length, precision, scale
 	 *
 	 * @see SqlTypes
 	 */

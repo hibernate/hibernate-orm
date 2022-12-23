@@ -270,6 +270,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
 			case "byte": return getBasicTypeForJavaType( Byte.class );
+			case "short": return getBasicTypeForJavaType( Short.class );
 			case "integer": return getBasicTypeForJavaType( Integer.class );
 			case "long": return getBasicTypeForJavaType( Long.class );
 			case "float": return getBasicTypeForJavaType( Float.class );

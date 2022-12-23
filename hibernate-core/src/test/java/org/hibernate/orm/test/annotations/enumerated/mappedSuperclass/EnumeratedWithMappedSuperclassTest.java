@@ -21,7 +21,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -49,7 +49,9 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 	@Before
 	public void before() {
 		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, PostgreSQL81Dialect.class )
+				.applySetting( AvailableSettings.DIALECT, PostgreSQLDialect.class.getName() )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "8" )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, "1" )
 				.build();
 	}
 

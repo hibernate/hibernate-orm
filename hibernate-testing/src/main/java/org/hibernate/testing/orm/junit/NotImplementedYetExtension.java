@@ -9,8 +9,6 @@ package org.hibernate.testing.orm.junit;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.hibernate.NotImplementedYetException;
-
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;

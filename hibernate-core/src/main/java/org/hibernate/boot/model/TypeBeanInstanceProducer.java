@@ -17,10 +17,12 @@ import org.hibernate.type.spi.TypeBootstrapContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * BeanInstanceProducer implementation for building beans related with
+ * custom types.
+ *
  * @author Christian Beikov
  */
 public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBootstrapContext {
-
 	private final TypeConfiguration typeConfiguration;
 
 	public TypeBeanInstanceProducer(TypeConfiguration typeConfiguration) {

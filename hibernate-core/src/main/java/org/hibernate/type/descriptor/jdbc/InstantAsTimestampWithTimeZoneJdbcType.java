@@ -10,13 +10,10 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -62,11 +59,16 @@ public class InstantAsTimestampWithTimeZoneJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Instant.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Instant.class );
+	}
+
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return OffsetDateTime.class;
 	}
 
 	@Override

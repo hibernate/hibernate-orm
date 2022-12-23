@@ -13,6 +13,7 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 
+import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -21,7 +22,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Hibernate extension to the JPA {@link jakarta.persistence.metamodel.Metamodel} contract
+ * Extensions to the JPA-defined {@linkplain Metamodel metamodel} of
+ * persistent Java types.
  *
  * @see MappingMetamodel
  *
@@ -29,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 @Incubating
-public interface JpaMetamodel extends jakarta.persistence.metamodel.Metamodel {
+public interface JpaMetamodel extends Metamodel {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Context

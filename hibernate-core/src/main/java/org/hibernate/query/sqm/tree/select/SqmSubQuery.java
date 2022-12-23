@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.criteria.JpaCteContainer;
+import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaSelection;
@@ -24,6 +26,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
@@ -84,6 +87,17 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	public SqmSubQuery(
 			SqmQuery<?> parent,
+			SqmQueryPart<T> queryPart,
+			Class<T> resultType,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			NodeBuilder builder) {
+		super( builder, cteStatements, resultType );
+		this.parent = parent;
+		setQueryPart( queryPart );
+	}
+
+	public SqmSubQuery(
+			SqmQuery<?> parent,
 			Class<T> resultType,
 			NodeBuilder builder) {
 		super( resultType, builder );
@@ -100,12 +114,11 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	private SqmSubQuery(
 			NodeBuilder builder,
 			Map<String, SqmCteStatement<?>> cteStatements,
-			boolean withRecursive,
 			Class<T> resultType,
 			SqmQuery<?> parent,
 			SqmExpressible<T> expressibleType,
 			String alias) {
-		super( builder, cteStatements, withRecursive, resultType );
+		super( builder, cteStatements, resultType );
 		this.parent = parent;
 		this.expressibleType = expressibleType;
 		this.alias = alias;
@@ -122,7 +135,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 				new SqmSubQuery<>(
 						nodeBuilder(),
 						copyCteStatements( context ),
-						isWithRecursive(),
 						getResultType(),
 						parent.copy( context ),
 						getExpressible(),
@@ -131,6 +143,24 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		);
 		statement.setQueryPart( getQueryPart().copy( context ) );
 		return statement;
+	}
+
+	@Override
+	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+		final SqmCteStatement<?> cteCriteria = super.getCteStatement( cteLabel );
+		if ( cteCriteria != null || !( parent instanceof SqmCteContainer ) ) {
+			return cteCriteria;
+		}
+		return ( (SqmCteContainer) parent ).getCteStatement( cteLabel );
+	}
+
+	@Override
+	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+		final JpaCteCriteria<X> cteCriteria = super.getCteCriteria( cteName );
+		if ( cteCriteria != null || !( parent instanceof JpaCteContainer ) ) {
+			return cteCriteria;
+		}
+		return ( (JpaCteContainer) parent ).getCteCriteria( cteName );
 	}
 
 	@Override

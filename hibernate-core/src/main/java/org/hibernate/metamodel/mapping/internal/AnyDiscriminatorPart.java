@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.function.BiConsumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,12 +24,10 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -42,8 +39,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Acts as a ModelPart for the discriminator portion of an any-valued mapping
@@ -62,8 +57,10 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
-	private final boolean nullable;
 
+	private final boolean insertable;
+	private final boolean updateable;
+	private final boolean partitioned;
 	private final MetaType metaType;
 
 	public AnyDiscriminatorPart(
@@ -75,7 +72,9 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			Long length,
 			Integer precision,
 			Integer scale,
-			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
 			MetaType metaType) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -85,7 +84,9 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
-		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.metaType = metaType;
 	}
 
@@ -110,6 +111,26 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override
@@ -168,13 +189,13 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -183,7 +204,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -195,11 +216,10 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -220,6 +240,11 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public String getFetchableName() {
 		return getPartName();
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return 0;
 	}
 
 	@Override
@@ -260,20 +285,12 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
 		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, column ),
-				processingState -> new ColumnReference(
-						tableReference,
-						column,
-						false,
-						null,
-						null,
-						jdbcMapping(),
-						sessionFactory
-				)
+				tableReference,
+				this
 		);
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
-				jdbcMapping().getMappedJavaType(),
+				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -283,7 +300,6 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);

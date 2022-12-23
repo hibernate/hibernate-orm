@@ -11,10 +11,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -38,7 +40,8 @@ public class EntityDeleteAction extends EntityAction {
 
 	/**
 	 * Constructs an EntityDeleteAction.
-	 *  @param id The entity identifier
+	 *
+	 * @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param version The current entity version
 	 * @param instance The entity instance
@@ -53,14 +56,13 @@ public class EntityDeleteAction extends EntityAction {
 			final Object instance,
 			final EntityPersister persister,
 			final boolean isCascadeDeleteEnabled,
-			final SessionImplementor session) {
+			final EventSource session) {
 		super( session, id, instance, persister );
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
 
-		NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
-
+		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
 					.removeLocalResolution(
@@ -69,6 +71,20 @@ public class EntityDeleteAction extends EntityAction {
 							getPersister()
 					);
 		}
+	}
+
+	/**
+	 * Constructs an EntityDeleteAction for an unloaded proxy.
+	 *
+	 * @param id The entity identifier
+	 * @param persister The entity persister
+	 * @param session The session
+	 */
+	public EntityDeleteAction(final Object id, final EntityPersister persister, final EventSource session) {
+		super( session, id, null, persister );
+		version = null;
+		isCascadeDeleteEnabled = false;
+		state = null;
 	}
 
 	public Object getVersion() {
@@ -95,39 +111,59 @@ public class EntityDeleteAction extends EntityAction {
 		this.lock = lock;
 	}
 
+	private boolean isInstanceLoaded() {
+		// A null instance signals that we're deleting an unloaded proxy.
+		return getInstance() != null;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		final Object id = getId();
+		final Object version = getCurrentVersion();
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
-		final boolean veto = preDelete();
+		final boolean veto = isInstanceLoaded() && preDelete();
 
-		Object version = this.version;
-		if ( persister.isVersionPropertyGenerated() ) {
-			// we need to grab the version value from the entity, otherwise
-			// we have issues with generated-version entities that may have
-			// multiple actions queued during the same flush
-			version = persister.getVersion( instance );
-		}
-
-		final Object ck;
-		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			ck = cache.generateCacheKey( id, persister, session.getFactory(), session.getTenantIdentifier() );
-			lock = cache.lockItem( session, ck, version );
-		}
-		else {
-			ck = null;
-		}
+		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
 			persister.delete( id, version, instance, session );
 		}
-		
-		//postDelete:
-		// After actually deleting a row, record the fact that the instance no longer 
+
+		if ( isInstanceLoaded() ) {
+			postDeleteLoaded( id, persister, session, instance, ck );
+		}
+		else {
+			// we're deleting an unloaded proxy
+			postDeleteUnloaded( id, persister, session, ck );
+		}
+
+		final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
+		if ( statistics.isStatisticsEnabled() && !veto ) {
+			statistics.deleteEntity( getPersister().getEntityName() );
+		}
+	}
+
+	private Object getCurrentVersion() {
+		return getPersister().isVersionPropertyGenerated()
+						// skip if we're deleting an unloaded proxy, no need for the version
+						&& isInstanceLoaded()
+				// we need to grab the version value from the entity, otherwise
+				// we have issues with generated-version entities that may have
+				// multiple actions queued during the same flush
+				? getPersister().getVersion( getInstance() )
+				: version;
+	}
+
+	private void postDeleteLoaded(
+			Object id,
+			EntityPersister persister,
+			SharedSessionContractImplementor session,
+			Object instance,
+			Object ck) {
+		// After actually deleting a row, record the fact that the instance no longer
 		// exists on the database (needed for identity-column key generation), and
 		// remove it from the session cache
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -136,40 +172,42 @@ public class EntityDeleteAction extends EntityAction {
 			throw new AssertionFailure( "possible non-threadsafe access to session" );
 		}
 		entry.postDelete();
-
-		persistenceContext.removeEntity( entry.getEntityKey() );
-		persistenceContext.removeProxy( entry.getEntityKey() );
-		
-		if ( persister.canWriteToCache() ) {
-			persister.getCacheAccessStrategy().remove( session, ck);
-		}
-
+		EntityKey key = entry.getEntityKey();
+		persistenceContext.removeEntity( key );
+		persistenceContext.removeProxy( key );
+		removeCacheItem( ck );
 		persistenceContext.getNaturalIdResolutions().removeSharedResolution( id, naturalIdValues, persister );
-
 		postDelete();
+	}
 
-		final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() && !veto ) {
-			statistics.deleteEntity( getPersister().getEntityName() );
+	private void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		EntityKey key = session.generateEntityKey( id, persister );
+		if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
+			throw new AssertionFailure( "deleted proxy should be for an unloaded entity: " + key );
 		}
+		persistenceContext.removeProxy( key );
+		removeCacheItem( ck );
 	}
 
 	protected boolean preDelete() {
-		boolean veto = false;
-		final EventListenerGroup<PreDeleteEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_DELETE;
+		final EventListenerGroup<PreDeleteEventListener> listenerGroup
+				= getFastSessionServices().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
+			return false;
+		}
+		else {
+			final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+			boolean veto = false;
+			for ( PreDeleteEventListener listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreDelete( event );
+			}
 			return veto;
 		}
-		final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
-		for ( PreDeleteEventListener listener : listenerGroup.listeners() ) {
-			veto |= listener.onPreDelete( event );
-		}
-		return veto;
 	}
 
 	protected void postDelete() {
-		getFastSessionServices()
-				.eventListenerGroup_POST_DELETE
+		getFastSessionServices().eventListenerGroup_POST_DELETE
 				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 	}
 
@@ -184,8 +222,8 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	protected void postCommitDelete(boolean success) {
-		final EventListenerGroup<PostDeleteEventListener> eventListeners = getFastSessionServices()
-				.eventListenerGroup_POST_COMMIT_DELETE;
+		final EventListenerGroup<PostDeleteEventListener> eventListeners
+				= getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE;
 		if (success) {
 			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 		}
@@ -206,29 +244,53 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
-		EntityPersister entityPersister = getPersister();
-		if ( entityPersister.canWriteToCache() ) {
-			EntityDataAccess cache = entityPersister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
-					getId(),
-					entityPersister,
-					session.getFactory(),
-					session.getTenantIdentifier()
-			);
-			cache.unlockItem( session, ck, lock );
-		}
+		unlockCacheItem();
 		postCommitDelete( success );
 	}
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostDeleteEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE;
-		for ( PostDeleteEventListener listener : group.listeners() ) {
+		for ( PostDeleteEventListener listener: getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
-
 		return false;
+	}
+
+	private Object lockCacheItem() {
+		final EntityPersister persister = getPersister();
+		if ( persister.canWriteToCache() ) {
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final SharedSessionContractImplementor session = getSession();
+			Object ck = cache.generateCacheKey( getId(), persister, session.getFactory(), session.getTenantIdentifier() );
+			lock = cache.lockItem( session, ck, getCurrentVersion() );
+			return ck;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void unlockCacheItem() {
+		final EntityPersister persister = getPersister();
+		if ( persister.canWriteToCache() ) {
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final SharedSessionContractImplementor session = getSession();
+			final Object ck = cache.generateCacheKey(
+					getId(),
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
+			cache.unlockItem( session, ck, lock );
+		}
+	}
+
+	private void removeCacheItem(Object ck) {
+		final EntityPersister persister = getPersister();
+		if ( persister.canWriteToCache() ) {
+			persister.getCacheAccessStrategy().remove( getSession(), ck );
+		}
 	}
 }

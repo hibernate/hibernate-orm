@@ -42,16 +42,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
 
-	@Override
-	default LockOptions getLockOptions() {
-		return null;
-	}
-
-	@Override
-	default LockModeType getLockMode() {
-		return null;
-	}
-
 	/**
 	 * Best guess whether this is a select query.  {@code null}
 	 * indicates unknown
@@ -63,7 +53,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	// covariant overrides - NativeQuery
 
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	default <T> NativeQueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
 		QueryImplementor.super.setResultTransformer( transformer );
 		//noinspection unchecked
@@ -182,6 +172,9 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	@Override
 	NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions);
+
+	@Override
+	NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode);
 
 	@Override
 	NativeQueryImplementor<R> setLockMode(LockModeType lockMode);

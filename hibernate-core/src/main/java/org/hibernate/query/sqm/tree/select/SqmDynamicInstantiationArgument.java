@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -49,5 +50,18 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	@Override
 	public NodeBuilder nodeBuilder() {
 		return nodeBuilder;
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return selectableNode.accept( walker );
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		selectableNode.appendHqlString( sb );
+		if ( alias != null ) {
+			sb.append( " as " ).append( alias );
+		}
 	}
 }

@@ -14,7 +14,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * Contract for stuff that integrates with Hibernate.
- * <p/>
+ * <p>
  * IMPL NOTE: called during session factory initialization (constructor), so not all parts of the passed session factory
  * will be available.
  *
@@ -45,8 +45,6 @@ public interface Integrator {
 	 * @param metadata The fully initialized boot-time mapping model
 	 * @param bootstrapContext The context for bootstrapping of the SessionFactory
 	 * @param sessionFactory The SessionFactory being created
-	 *
-	 * todo (6.0) : why pass the `serviceRegistry`?  Why not just grab it from the SessionFactory?
 	 */
 	@Incubating
 	default void integrate(

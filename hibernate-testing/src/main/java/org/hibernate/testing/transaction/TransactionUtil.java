@@ -27,6 +27,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -588,7 +589,7 @@ public class TransactionUtil {
 	public static void setJdbcTimeout(Session session, long millis) {
 		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 		session.doWork( connection -> {
-			if ( dialect instanceof PostgreSQLDialect ) {
+			if ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) {
 				try (Statement st = connection.createStatement()) {
 					//Prepared Statements fail for SET commands
 					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));
@@ -651,15 +652,29 @@ public class TransactionUtil {
 		StandardServiceRegistry ssr = ssrb.build();
 
 		try {
-			try (Connection connection = ssr.getService( JdbcServices.class )
-					.getBootstrapJdbcConnectionAccess()
-					.obtainConnection();
-				Statement statement = connection.createStatement()) {
+			final JdbcConnectionAccess connectionAccess = ssr.getService( JdbcServices.class )
+					.getBootstrapJdbcConnectionAccess();
+			final Connection connection;
+			try {
+				connection = connectionAccess.obtainConnection();
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+			try (Statement statement = connection.createStatement()) {
 				connection.setAutoCommit( true );
 				consumer.accept( statement );
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
+			}
+			finally {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException e) {
+					// ignore
+				}
 			}
 		}
 		finally {
@@ -716,7 +731,13 @@ public class TransactionUtil {
 	public static void doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionVoidFunction function) throws SQLException {
 		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
 				.getBootstrapJdbcConnectionAccess();
-		Connection connection = connectionAccess.obtainConnection();
+		final Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
 		try {
 			function.accept( connection );
 		}
@@ -734,7 +755,13 @@ public class TransactionUtil {
 	public static <T> T doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionFunction<T> function) throws SQLException {
 		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
 				.getBootstrapJdbcConnectionAccess();
-		Connection connection = connectionAccess.obtainConnection();
+		final Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
 		try {
 			return function.accept( connection );
 		}

@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T> {
+public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, SqmVisitableNode {
 	/**
 	 * The Java type descriptor for this node.
 	 */

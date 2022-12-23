@@ -35,8 +35,7 @@ public enum InheritanceType {
 		}
 
 		// We assume that every subclass is of the same type.
-		final Subclass subclass = (Subclass) superclass.getSubclassIterator().next();
-
+		final Subclass subclass = superclass.getSubclasses().get(0);
 		if ( subclass instanceof SingleTableSubclass ) {
 			return InheritanceType.SINGLE;
 		}

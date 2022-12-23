@@ -6,31 +6,30 @@
  */
 package org.hibernate.orm.test.jpa.exception;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.persistence.PersistenceException;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 @Jpa(
 		annotatedClasses = {
 				Music.class,
@@ -76,7 +75,7 @@ public class ExceptionTest {
 			}
 			catch (OptimisticLockException e) {
 				//success
-				assertEquals( music, e.getEntity() );
+				assertThat( e.getEntity() ).isEqualTo( music );
 			}
 			catch (Exception e) {
 				fail( "Should raise an optimistic lock exception" );
@@ -140,8 +139,7 @@ public class ExceptionTest {
 							fail();
 						}
 						catch ( PersistenceException e ) {
-							Throwable t = e.getCause();
-							assertTrue( t instanceof ConstraintViolationException, "Should be a constraint violation" );
+							assertTrue( e instanceof ConstraintViolationException, "Should be a constraint violation" );
 							entityManager.getTransaction().rollback();
 						}
 					}

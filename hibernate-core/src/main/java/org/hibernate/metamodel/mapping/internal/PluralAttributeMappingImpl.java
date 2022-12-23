@@ -16,13 +16,14 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -31,8 +32,9 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.Queryable;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -41,7 +43,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -53,11 +54,11 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -68,7 +69,6 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.hibernate.tuple.ValueGeneration;
 
 import org.jboss.logging.Logger;
 
@@ -80,7 +80,17 @@ public class PluralAttributeMappingImpl
 		implements PluralAttributeMapping, FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
+	/**
+	 * Allows callback after creation of the attribute mapping.
+	 *
+	 * Support for the {@linkplain CollectionPersister collection},
+	 * {@linkplain CollectionPart element} and {@linkplain CollectionPart index}
+	 * descriptors
+	 */
 	public interface Aware {
+		/**
+		 * Injects the created attribute mapping
+		 */
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
 	}
 
@@ -88,7 +98,7 @@ public class PluralAttributeMappingImpl
 	private final CollectionMappingType collectionMappingType;
 	private final int stateArrayPosition;
 	private final PropertyAccess propertyAccess;
-	private final AttributeMetadataAccess attributeMetadataAccess;
+	private final AttributeMetadata attributeMetadata;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -116,9 +126,10 @@ public class PluralAttributeMappingImpl
 			String attributeName,
 			Collection bootDescriptor,
 			PropertyAccess propertyAccess,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			CollectionMappingType<?> collectionMappingType,
 			int stateArrayPosition,
+			int fetchableIndex,
 			CollectionPart elementDescriptor,
 			CollectionPart indexDescriptor,
 			CollectionIdentifierDescriptor identifierDescriptor,
@@ -127,9 +138,9 @@ public class PluralAttributeMappingImpl
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
-		super( attributeName, declaringType );
+		super( attributeName, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.attributeMetadataAccess = attributeMetadataAccess;
+		this.attributeMetadata = attributeMetadata;
 		this.collectionMappingType = collectionMappingType;
 		this.stateArrayPosition = stateArrayPosition;
 		this.elementDescriptor = elementDescriptor;
@@ -315,8 +326,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public AttributeMetadataAccess getAttributeMetadataAccess() {
-		return attributeMetadataAccess;
+	public AttributeMetadata getAttributeMetadata() {
+		return attributeMetadata;
 	}
 
 	@Override
@@ -325,9 +336,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public ValueGeneration getValueGeneration() {
+	public Generator getGenerator() {
 		// can never be a generated value
-		return NoValueGeneration.INSTANCE;
+		return null;
 	}
 
 	@Override
@@ -348,6 +359,11 @@ public class PluralAttributeMappingImpl
 	@Override
 	public FetchTiming getTiming() {
 		return fetchTiming;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override
@@ -559,7 +575,12 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationContext creationContext) {
 		final SqlAstJoinType joinType;
 		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
+			if ( fetched ) {
+				joinType = getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				joinType = SqlAstJoinType.INNER;
+			}
 		}
 		else {
 			joinType = requestedJoinType;
@@ -646,6 +667,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
 		this.fkDescriptor = fkDescriptor;
 	}
@@ -659,7 +681,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final TableGroup elementTableGroup = ( (EntityCollectionPart) elementDescriptor ).createTableGroupInternal(
+		final TableGroup elementTableGroup = ( (OneToManyCollectionPart) elementDescriptor ).createAssociatedTableGroup(
 				canUseInnerJoins,
 				navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 				fetched,
@@ -671,6 +693,7 @@ public class PluralAttributeMappingImpl
 		final OneToManyTableGroup tableGroup = new OneToManyTableGroup(
 				this,
 				elementTableGroup,
+//				this::createIndexTableGroup,
 				creationContext.getSessionFactory()
 		);
 
@@ -708,8 +731,7 @@ public class PluralAttributeMappingImpl
 		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),
-				true,
-				creationContext.getSessionFactory()
+				true
 		);
 
 		final CollectionTableGroup tableGroup = new CollectionTableGroup(
@@ -839,8 +861,8 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( elementDescriptor instanceof Queryable ) {
-			final ModelPart subPart = ( (Queryable) elementDescriptor ).findSubPart( name, null );
+		if ( elementDescriptor instanceof ModelPartContainer ) {
+			final ModelPart subPart = ( (ModelPartContainer) elementDescriptor ).findSubPart( name, null );
 			if ( subPart != null ) {
 				return subPart;
 			}
@@ -858,6 +880,20 @@ public class PluralAttributeMappingImpl
 		}
 
 		return null;
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, elementDescriptor );
+
+		int position = 1;
+		if ( indexDescriptor != null ) {
+			consumer.accept( position++, indexDescriptor );
+		}
+
+		if ( identifierDescriptor != null ) {
+			consumer.accept( position+1, identifierDescriptor );
+		}
 	}
 
 	@Override
@@ -889,21 +925,23 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public String getContainingTableExpression() {
+		return getKeyDescriptor().getKeyTable();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
-		int span = elementDescriptor.getJdbcTypeCount();
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.getJdbcTypeCount();
-		}
-		return span;
+		return 0;
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return null;
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		int span = elementDescriptor.forEachJdbcType( offset, action );
-		if ( indexDescriptor != null ) {
-			span += indexDescriptor.forEachJdbcType( offset + span, action );
-		}
-		return span;
+		return 0;
 	}
 
 	@Override
@@ -914,16 +952,10 @@ public class PluralAttributeMappingImpl
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return elementDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return indexDescriptor == null ? 1 : 2;
+		return elementDescriptor.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override

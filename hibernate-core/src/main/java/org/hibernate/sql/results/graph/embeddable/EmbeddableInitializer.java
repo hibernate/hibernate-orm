@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * Special initializer contract for embeddables
@@ -21,8 +22,25 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 
 	Object getCompositeInstance();
 
+	FetchParentAccess getFetchParentAccess();
+
+	default RowProcessingState wrapProcessingState(RowProcessingState processingState) {
+		final FetchParentAccess fetchParentAccess = getFetchParentAccess();
+		if ( fetchParentAccess != null ) {
+			if ( fetchParentAccess instanceof EmbeddableInitializer ) {
+				return ( (EmbeddableInitializer) fetchParentAccess ).wrapProcessingState( processingState );
+			}
+		}
+		return processingState;
+	}
+
 	@Override
 	default Object getInitializedInstance() {
 		return getCompositeInstance();
+	}
+
+	@Override
+	default boolean isEmbeddableInitializer() {
+		return true;
 	}
 }

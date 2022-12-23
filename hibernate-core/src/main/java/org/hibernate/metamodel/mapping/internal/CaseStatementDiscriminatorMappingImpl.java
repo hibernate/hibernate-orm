@@ -50,13 +50,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			String[] discriminatorValues,
 			Map<String,String> subEntityNameByTableName,
 			DiscriminatorType<?> incomingDiscriminatorType,
+			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		super(
-				incomingDiscriminatorType.getUnderlyingType().getJdbcMapping(),
-				entityDescriptor,
-				incomingDiscriminatorType,
-				creationProcess
-		);
+		super( entityDescriptor, incomingDiscriminatorType, valueMappings, creationProcess );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			final String tableName = tableNames[notNullColumnTableNumbers[i]];
@@ -79,12 +75,12 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public boolean isPhysical() {
+	public boolean hasPhysicalColumn() {
 		return false;
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -154,8 +150,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 												false,
 												null,
 												null,
-												getJdbcMapping(),
-												getSessionFactory()
+												getJdbcMapping()
 										),
 										true
 								);
@@ -208,6 +203,31 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	@Override
 	public Integer getScale() {
 		return null;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return false;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override

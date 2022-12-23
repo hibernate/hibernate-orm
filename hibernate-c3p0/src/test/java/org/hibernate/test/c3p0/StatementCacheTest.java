@@ -11,8 +11,6 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.Session;
-
 import org.junit.Assert;
 import org.junit.Test;
 

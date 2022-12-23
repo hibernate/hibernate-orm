@@ -13,21 +13,21 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
+public interface SharedSessionBuilder extends SessionBuilder {
 
 	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection();
+	SharedSessionBuilder connection();
 
 	/**
 	 * Signifies the interceptor from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T interceptor();
+	SharedSessionBuilder interceptor();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
@@ -37,51 +37,51 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	 * @deprecated use {@link #connectionHandlingMode} instead.
 	 */
 	@Deprecated(since = "6.0")
-	T connectionReleaseMode();
+	SharedSessionBuilder connectionReleaseMode();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode();
+	SharedSessionBuilder connectionHandlingMode();
 
 	/**
 	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoJoinTransactions();
+	SharedSessionBuilder autoJoinTransactions();
 
 	/**
 	 * Signifies that the FlushMode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T flushMode();
+	SharedSessionBuilder flushMode();
 
 	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoClose();
+	SharedSessionBuilder autoClose();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// overrides to maintain binary compatibility
 
 	@Override
-	T interceptor(Interceptor interceptor);
+	SharedSessionBuilder interceptor(Interceptor interceptor);
 
 	@Override
-	T noInterceptor();
+	SharedSessionBuilder noInterceptor();
 
 	@Override
-	T connection(Connection connection);
+	SharedSessionBuilder connection(Connection connection);
 
 	@Override
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	@Override
-	T autoClose(boolean autoClose);
+	SharedSessionBuilder autoClose(boolean autoClose);
 }

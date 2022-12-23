@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
 
 /**
  * Allows user code to inspect and/or change entity property values before they are
- * written to the database, or after the are read from the database.
+ * written to the database, or after they are read from the database.
  * <p>
  * The {@link Session} may not be invoked from a callback (nor may a callback cause
  * a collection or proxy to be lazily initialized).
@@ -47,7 +47,7 @@ public interface Interceptor {
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
 	 * be propagated to the persistent object. Note that when this method is called, {@code entity} will be
 	 * an empty uninitialized instance of the class.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code state}, {@code propertyNames} and {@code types} arrays match.
 	 *
 	 * @param entity The entity instance being loaded
@@ -72,7 +72,7 @@ public interface Interceptor {
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
 	 * be propagated to the persistent object. Note that when this method is called, {@code entity} will be
 	 * an empty uninitialized instance of the class.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code state}, {@code propertyNames} and {@code types} arrays match.
 	 *
 	 * @param entity The entity instance being loaded
@@ -99,7 +99,7 @@ public interface Interceptor {
 	 * Note that not all flushes end in actual synchronization with the database, in which case the
 	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
 	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames} and
 	 * {@code types} arrays match.
 	 *
@@ -133,7 +133,7 @@ public interface Interceptor {
 	 * Note that not all flushes end in actual synchronization with the database, in which case the
 	 * new {@code currentState} will be propagated to the object, but not necessarily (immediately) to
 	 * the database. It is strongly recommended that the interceptor <b>not</b> modify the {@code previousState}.
-	 * <p/>
+	 * <p>
 	 * NOTE: The indexes across the {@code currentState}, {@code previousState}, {@code propertyNames} and
 	 * {@code types} arrays match.
 	 *
@@ -184,8 +184,8 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Called before an object is saved. The interceptor may modify the <tt>state</tt>, which will be used for
-	 * the SQL <tt>INSERT</tt> and propagated to the persistent object.
+	 * Called before an object is saved. The interceptor may modify the {@code state}, which will be used for
+	 * the SQL {@code INSERT} and propagated to the persistent object.
 	 *
 	 * @param entity The entity instance whose state is being inserted
 	 * @param id The identifier of the entity
@@ -193,7 +193,7 @@ public interface Interceptor {
 	 * @param propertyNames The names of the entity properties.
 	 * @param types The types of the entity properties
 	 *
-	 * @return <tt>true</tt> if the user modified the <tt>state</tt> in any way.
+	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
@@ -450,6 +450,8 @@ public interface Interceptor {
 	 * @return the name of the entity
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+	 *
+	 * @see EntityNameResolver
 	 */
 	default String getEntityName(Object object) throws CallbackException {
 		return null;

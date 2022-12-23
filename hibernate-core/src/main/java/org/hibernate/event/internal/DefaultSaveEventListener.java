@@ -24,13 +24,13 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContextInternal().getEntry( event.getEntity() );
 		return entry != null && entry.getStatus() != Status.DELETED
-				? entityIsPersistent(event)
-				: entityIsTransient(event);
+				? entityIsPersistent( event )
+				: entityIsTransient( event );
 	}
 	
 	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		if ( event.getRequestedId() == null ) {
-			return super.saveWithGeneratedOrRequestedId(event);
+			return super.saveWithGeneratedOrRequestedId( event );
 		}
 		else {
 			return saveWithRequestedId(
@@ -41,7 +41,6 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 					event.getSession()
 				);
 		}
-
 	}
 
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
@@ -52,6 +51,4 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 			return false;
 		}
 	}
-	
-
 }

@@ -47,6 +47,6 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 	}
 
 	default void visitEntityNameResolvers(Consumer<EntityNameResolver> consumer) {
-		// byt default do nothing
+		// by default do nothing
 	}
 }

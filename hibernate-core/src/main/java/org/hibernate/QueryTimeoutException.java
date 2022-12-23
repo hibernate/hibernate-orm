@@ -15,7 +15,7 @@ import java.sql.SQLException;
  */
 public class QueryTimeoutException extends JDBCException {
 	/**
-	 * Constructs a QueryTimeoutException using the supplied information.
+	 * Constructs a {@code QueryTimeoutException} using the supplied information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param sqlException The underlying SQLException

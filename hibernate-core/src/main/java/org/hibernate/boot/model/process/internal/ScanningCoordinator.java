@@ -98,7 +98,7 @@ public class ScanningCoordinator {
 			}
 		}
 		else {
-			if ( Scanner.class.isInstance( scannerSetting ) ) {
+			if ( scannerSetting instanceof Scanner ) {
 				if ( archiveDescriptorFactory != null ) {
 					throw new IllegalStateException(
 							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
@@ -112,7 +112,7 @@ public class ScanningCoordinator {
 			}
 
 			final Class<? extends Scanner> scannerImplClass;
-			if ( Class.class.isInstance( scannerSetting ) ) {
+			if ( scannerSetting instanceof Class ) {
 				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 			}
 			else {

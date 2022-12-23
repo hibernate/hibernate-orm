@@ -12,7 +12,6 @@ import jakarta.persistence.EntityResult;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -48,10 +47,8 @@ public class SpaceShip {
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-	@JoinColumn(name = "fname", referencedColumnName = "firstname"),
+	@JoinColumn(name = "fname", referencedColumnName = "firstname")
 	@JoinColumn(name = "lname", referencedColumnName = "lastname")
-			})
 	public Captain getCaptain() {
 		return captain;
 	}

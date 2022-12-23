@@ -38,6 +38,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
+				javaType,
 				this
 		);
 	}

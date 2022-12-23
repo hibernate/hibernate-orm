@@ -34,7 +34,7 @@ public interface SqlStringGenerationContext {
 	/**
 	 * Generate an Identifier instance from its simple name as obtained from mapping
 	 * information.
-	 * <p/>
+	 * <p>
 	 * Note that Identifiers returned from here may be implicitly quoted based on
 	 * 'globally quoted identifiers' or based on reserved words.
 	 *
@@ -108,4 +108,10 @@ public interface SqlStringGenerationContext {
 	 */
 	String formatWithoutCatalog(QualifiedSequenceName qualifiedName);
 
+	/**
+	 * Is the generated SQL for use in {@linkplain org.hibernate.tool.schema.spi.SchemaMigrator schema migration}?
+	 *
+	 * @return {@code true} if and only if this is a migration
+	 */
+	boolean isMigration();
 }

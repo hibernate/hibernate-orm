@@ -6,6 +6,12 @@
  */
 package org.hibernate.tuple;
 
+import java.util.Locale;
+
+import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.GenerationTime;
+import org.hibernate.generator.EventType;
+
 /**
  * Represents the timing of {@link ValueGeneration value generation} that occurs
  * in the Java program, or in the database.
@@ -13,86 +19,86 @@ package org.hibernate.tuple;
  * @author Steve Ebersole
  *
  * @see ValueGeneration
+ *
+ * @deprecated Replaced by {@link EventType} as id-generation has been
+ * redefined using the new broader {@linkplain org.hibernate.generator generation}
+ * approach.
  */
+@Deprecated(since = "6", forRemoval = true)
 public enum GenerationTiming {
 	/**
 	 * Value generation that never occurs.
 	 */
-	NEVER {
-		@Override
-		public boolean includesInsert() {
-			return false;
-		}
-
-		@Override
-		public boolean includesUpdate() {
-			return false;
-		}
-
-		@Override
-		public boolean includes(GenerationTiming timing) {
-			return false;
-		}
-	},
+	NEVER,
 	/**
 	 * Value generation that occurs when a row is inserted in the database.
 	 */
-	INSERT {
-		@Override
-		public boolean includesInsert() {
-			return true;
-		}
-
-		@Override
-		public boolean includesUpdate() {
-			return false;
-		}
-
-		@Override
-		public boolean includes(GenerationTiming timing) {
-			return timing.includesInsert();
-		}
-	},
+	INSERT,
+	/**
+	 * Value generation that occurs when a row is updated in the database.
+	 */
+	UPDATE,
 	/**
 	 * Value generation that occurs when a row is inserted or updated in the database.
 	 */
-	ALWAYS {
-		@Override
-		public boolean includesInsert() {
-			return true;
-		}
-
-		@Override
-		public boolean includesUpdate() {
-			return true;
-		}
-
-		@Override
-		public boolean includes(GenerationTiming timing) {
-			return timing != NEVER;
-		}
-	};
+	ALWAYS;
 
 	/**
-	 * Does value generation happen for SQL {@code INSERT} statements?
+	 * Does value generation happen for SQL {@code insert} statements?
 	 */
-	public abstract boolean includesInsert();
+	public boolean includesInsert() {
+		return this == INSERT || this == ALWAYS;
+	}
 	/**
-	 * Does value generation happen for SQL {@code UPDATE} statements?
+	 * Does value generation happen for SQL {@code update} statements?
 	 */
-	public abstract boolean includesUpdate();
+	public boolean includesUpdate() {
+		return this == UPDATE || this == ALWAYS;
+	}
 
-	public abstract boolean includes(GenerationTiming timing);
+	public boolean includes(GenerationTiming timing) {
+		switch (this) {
+			case NEVER:
+				return timing == NEVER;
+			case INSERT:
+				return timing.includesInsert();
+			case UPDATE:
+				return timing.includesUpdate();
+			case ALWAYS:
+				return true;
+			default:
+				throw new AssertionFailure("unknown timing");
+		}
+	}
 
 	public static GenerationTiming parseFromName(String name) {
-		if ( "insert".equalsIgnoreCase( name ) ) {
-			return INSERT;
+		switch ( name.toLowerCase(Locale.ROOT) ) {
+			case "insert":
+				return INSERT;
+			case "update":
+				return UPDATE;
+			case "always":
+				return ALWAYS;
+			default:
+				return NEVER;
 		}
-		else if ( "always".equalsIgnoreCase( name ) ) {
-			return ALWAYS;
-		}
-		else {
-			return NEVER;
+	}
+
+	/**
+	 * @return the equivalent instance of {@link GenerationTime}
+	 */
+	public GenerationTime getEquivalent() {
+		switch (this) {
+			case ALWAYS:
+				return GenerationTime.ALWAYS;
+			case INSERT:
+				return GenerationTime.INSERT;
+			case UPDATE:
+				return GenerationTime.UPDATE;
+			case NEVER:
+				return GenerationTime.NEVER;
+			default:
+				throw new AssertionFailure("unknown timing");
 		}
 	}
 }

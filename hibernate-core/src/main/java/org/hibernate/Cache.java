@@ -9,7 +9,22 @@ package org.hibernate;
 /**
  * An API for directly querying and managing the second level cache.
  * <p>
- * Note that only entities and collection roles explicitly annotated
+ * Hibernate has two levels of caching:
+ * <ul>
+ * <li>The <em>first-level cache</em> is better known as the persistence context.
+ *     It's the collection of managed entity instances associated with an open
+ *     {@link Session}.
+ * <li>The <em>second-level cache</em> is shared between all sessions belonging to
+ *     a given {@link SessionFactory}. It stores the state of an entity instance
+ *     in a destructured format, as a tuple of persistent attribute values.
+ * </ul>
+ * By nature, a second-level cache tends to undermine the ACID properties of
+ * transaction processing in a relational database. A second-level cache is often
+ * by far the easiest way to improve the performance of a system, but only at the
+ * cost of making it much more difficult to reason about concurrency. And so the
+ * cache is a potential source of bugs which are difficult to isolate and reproduce.
+ * <p>
+ * Therefore, only entities and collection roles explicitly annotated
  * {@link jakarta.persistence.Cacheable} or {@link org.hibernate.annotations.Cache}
  * are eligible for storage in the second-level cache, and so by default the state
  * of an entity is always retrieved from the database when requested.
@@ -45,8 +60,30 @@ package org.hibernate;
  * semantics associated with the underlying caches. In particular, eviction via
  * the methods of this interface causes an immediate "hard" removal outside any
  * current transaction and/or locking scheme.
+ * <p>
+ * The {@link org.hibernate.annotations.Cache} annotation also specifies a
+ * {@link org.hibernate.annotations.CacheConcurrencyStrategy}, a policy governing
+ * access to the second-level cache by concurrent transactions. Either:
+ * <ul>
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_ONLY
+ *     read-only access} for immutable data,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#NONSTRICT_READ_WRITE
+ *     read/write access with no locking}, when concurrent updates are
+ *     extremely improbable,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_WRITE
+ *     read/write access using soft locks} when concurrent updates are possible
+ *     but not common, or
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#TRANSACTIONAL
+ *     transactional access} when concurrent updates are frequent.
+ * </ul>
+ * It's important to always explicitly specify an appropriate policy, taking into
+ * account the expected patterns of data access, most importantly, the frequency
+ * of updates.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.annotations.Cache
+ * @see org.hibernate.annotations.CacheConcurrencyStrategy
  */
 public interface Cache extends jakarta.persistence.Cache {
 	/**

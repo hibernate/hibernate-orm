@@ -21,6 +21,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -28,9 +29,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -73,16 +76,21 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
-
-		entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
+		EntityManagerFactoryBuilder entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).build().unwrap( SessionFactoryImplementor.class );
+		);
+		applyMetadataImplementor( entityManagerFactoryBuilder.metadata() );
+		entityManagerFactory = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getServiceRegistry()
 				.getParentServiceRegistry();
 
 		afterEntityManagerFactoryBuilt();
+	}
+
+	protected void applyMetadataImplementor(MetadataImplementor metadataImplementor) {
+
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
@@ -227,6 +235,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
+		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {

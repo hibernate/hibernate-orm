@@ -15,16 +15,8 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -68,6 +60,7 @@ import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -86,6 +79,7 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -98,12 +92,21 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+
 import static java.lang.Boolean.TRUE;
 
 /**
- * Base class for SharedSessionContract/SharedSessionContractImplementor
- * implementations.  Intended for Session and StatelessSession implementations
- * <P/>
+ * Base class for implementations of {@link org.hibernate.SharedSessionContract} and
+ * {@link SharedSessionContractImplementor}. Intended for concrete implementations of
+ * {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
+ * <p>
  * NOTE: This implementation defines access to a number of instance state values
  * in a manner that is not exactly concurrent-access safe.  However, a Session/EntityManager
  * is never intended to be used concurrently; therefore the condition is not expected
@@ -114,6 +117,9 @@ import static java.lang.Boolean.TRUE;
  *     <li>{@link #getJdbcServices()}</li>
  *     <li>{@link #getTransaction()} (and therefore related methods such as {@link #beginTransaction()}, etc)</li>
  * </ul>
+ *
+ * @see SessionImpl
+ * @see StatelessSessionImpl
  *
  * @author Steve Ebersole
  */
@@ -491,11 +497,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public long getTransactionStartTimestamp() {
-		return getCacheTransactionSynchronization().getCurrentTransactionStartTimestamp();
-	}
-
-	@Override
 	public Transaction beginTransaction() {
 		checkOpen();
 
@@ -579,10 +580,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public LobCreator getLobCreator() {
-		return ( (SharedSessionContractImplementor) this ).getFactory()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getLobCreator(this);
+		return getFactory().getFastSessionServices().jdbcServices.getLobCreator( this );
 	}
 
 	@Override
@@ -818,7 +816,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else if ( getFactory().getMappingMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
-		else {
+		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			query.addScalar( 1, resultClass );
 		}
 		return query;
@@ -1157,6 +1155,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>( (SqmDeleteStatement<?>) deleteQuery, null, this );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		checkOpen();
+		try {
+			return new QuerySqmImpl<>( (SqmInsertSelectStatement<?>) insertSelect, null, this );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );

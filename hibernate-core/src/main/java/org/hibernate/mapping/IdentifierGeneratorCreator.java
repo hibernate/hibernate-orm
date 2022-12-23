@@ -6,10 +6,12 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.Internal;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.generator.Generator;
 
+@Internal
 @FunctionalInterface
 public interface IdentifierGeneratorCreator {
-	IdentifierGenerator createGenerator(CustomIdGeneratorCreationContext context);
+	Generator createGenerator(CustomIdGeneratorCreationContext context);
 }

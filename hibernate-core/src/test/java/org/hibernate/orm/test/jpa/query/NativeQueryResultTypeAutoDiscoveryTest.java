@@ -24,17 +24,22 @@ import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -49,7 +54,7 @@ import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
@@ -95,67 +100,87 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	public void commonNumericTypes() {
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps integer types to number")
+	public void smallintType() {
+		createEntityManagerFactory(SmallintEntity.class);
+		doTest( SmallintEntity.class, (short)32767 );
+	}
+
+	@Test
+	public void integerTypes() {
 		createEntityManagerFactory(
 				BigintEntity.class,
-				IntegerEntity.class,
-				SmallintEntity.class,
-				DoubleEntity.class
+				IntegerEntity.class
 		);
 
 		doTest( BigintEntity.class, 9223372036854775807L );
 		doTest( IntegerEntity.class, 2147483647 );
-		doTest( SmallintEntity.class, (short)32767 );
+	}
+
+	@Test
+	public void doubleType() {
+		createEntityManagerFactory( DoubleEntity.class );
 		doTest( DoubleEntity.class, 445146115151.45845 );
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	public void booleanType() {
 		createEntityManagerFactory( BooleanEntity.class );
 		doTest( BooleanEntity.class, true );
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	public void bitType() {
 		createEntityManagerFactory( BitEntity.class );
 		doTest( BitEntity.class, false );
 	}
 
 	@Test
-	@SkipForDialect(value = PostgreSQLDialect.class, comment = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
-	@SkipForDialect(value = DerbyDialect.class, comment = "No support for the tinyint datatype so we use smallint")
-	@SkipForDialect(value = DB2Dialect.class, comment = "No support for the tinyint datatype so we use smallint")
-	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "No support for the tinyint datatype so we use smallint")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
 	}
 
 	@Test
-	@SkipForDialect(value = H2Dialect.class, comment = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
-	@SkipForDialect(value = HSQLDialect.class, comment = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	public void floatType() {
 		createEntityManagerFactory( FloatEntity.class );
 		doTest( FloatEntity.class, 15516.125f );
 	}
 
 	@Test
-	@SkipForDialect(value = MySQLDialect.class, comment = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
-	@SkipForDialect(value = HSQLDialect.class, comment = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	public void realType() {
 		createEntityManagerFactory( RealEntity.class );
 		doTest( RealEntity.class, 15516.125f );
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Value is too big for the maximum allowed precision of Derby")
-	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
-	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
-	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Value is too big for the maximum allowed precision of Derby")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
+	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	public void numericType() {
 		createEntityManagerFactory(
 				NumericEntity.class
@@ -164,11 +189,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Value is too big for the maximum allowed precision of Derby")
-	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
-	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
-	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Value is too big for the maximum allowed precision of Derby")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
+	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
@@ -186,10 +212,10 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARCHAR to CLOB")
-	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARCHAR to CLOB")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARCHAR to CLOB")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to CLOB")
 	public void longCharType() {
 		createEntityManagerFactory(
 				LongvarcharEntity.class
@@ -224,10 +250,10 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARBINARY to BLOB")
-	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARBINARY to BLOB")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARBINARY to BLOB")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA maps LONGVARCHAR to BLOB")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps LONGVARBINARY to BLOB")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARBINARY to BLOB")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARBINARY to BLOB")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to BLOB")
 	public void longBinaryType() {
 		createEntityManagerFactory(
 				LongvarbinaryEntity.class
@@ -258,7 +284,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
-	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps DATE and TIME to TIMESTAMP")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps DATE and TIME to TIMESTAMP")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "EDB maps DATE and TIME to TIMESTAMP")
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,

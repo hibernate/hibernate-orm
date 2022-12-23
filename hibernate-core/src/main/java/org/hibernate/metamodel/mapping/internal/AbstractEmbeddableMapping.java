@@ -7,12 +7,10 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.dialect.Dialect;
@@ -27,20 +25,21 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -60,18 +59,12 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Base support for EmbeddableMappingType implementations
  */
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
-	protected final SessionFactoryImplementor sessionFactory;
 
 	public AbstractEmbeddableMapping(MappingModelCreationProcess creationProcess) {
 		this( creationProcess.getCreationContext() );
 	}
 
 	public AbstractEmbeddableMapping(RuntimeModelCreationContext creationContext) {
-		this( creationContext.getSessionFactory() );
-	}
-
-	protected AbstractEmbeddableMapping(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
@@ -91,13 +84,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		}
 
 		final Object[] results = new Object[getNumberOfAttributeMappings()];
-		forEachAttributeMapping( (position, attribute) -> {
-			final Getter getter = attribute.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( findContainingEntityMapping() )
+		for ( int i = 0; i < results.length; i++ ) {
+			final Getter getter = getAttributeMapping( i ).getAttributeMetadata()
 					.getPropertyAccess()
 					.getGetter();
-			results[position] = getter.get( compositeInstance );
-		} );
+			results[i] = getter.get( compositeInstance );
+		}
 		return results;
 	}
 
@@ -108,9 +100,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			optimizer.getAccessOptimizer().setPropertyValues( component, values );
 		}
 		else {
-			forEachAttributeMapping( (position, attribute) -> {
-				attribute.getPropertyAccess().getSetter().set( component, values[position] );
-			} );
+			for ( int i = 0; i < values.length; i++ ) {
+				getAttributeMapping( i ).getPropertyAccess().getSetter().set( component, values[i] );
+			}
 		}
 	}
 
@@ -141,17 +133,17 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess,
 			ManagedMappingType declaringType,
-			List<? extends AttributeMapping> attributeMappings) {
-		if ( inverseMappingType.getAttributeMappings().isEmpty() ) {
+			MutableAttributeMappingList mappings) {
+		final int size = inverseMappingType.getNumberOfAttributeMappings();
+		if ( size == 0 ) {
 			return false;
 		}
-		//noinspection unchecked
-		final List<AttributeMapping> mappings = (List<AttributeMapping>) attributeMappings;
 		// Reset the attribute mappings that were added in previous attempts
 		mappings.clear();
 		int currentIndex = 0;
 		// We copy the attributes from the inverse mappings and replace the selection mappings
-		for ( AttributeMapping attributeMapping : inverseMappingType.getAttributeMappings() ) {
+		for ( int j = 0; j < size; j++ ) {
+			AttributeMapping attributeMapping = inverseMappingType.getAttributeMapping( j );
 			if ( attributeMapping instanceof BasicAttributeMapping ) {
 				final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 				final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
@@ -159,7 +151,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						declaringType,
 						original,
 						original.getPropertyAccess(),
-						original.getValueGeneration(),
+						selectableMapping.isInsertable(),
+						selectableMapping.isUpdateable(),
 						selectableMapping
 				);
 				currentIndex++;
@@ -167,7 +160,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
 				ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor==null ) {
+				if ( foreignKeyDescriptor == null ) {
 					// This is expected to happen when processing a
 					// PostInitCallbackEntry because the callbacks
 					// are not ordered. The exception is caught in
@@ -197,7 +190,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
 				final SelectableMapping[] subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
-				for (int i = 0; i < subMappings.length; i++) {
+				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
 				}
 				attributeMapping = MappingModelCreationHelper.createInverseModelPart(
@@ -249,8 +242,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			final PropertyAccess propertyAccess = representationStrategy.resolvePropertyAccess( bootPropertyDescriptor );
 			final AttributeMapping attributeMapping;
 
+			final Value value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
-				final BasicValue basicValue = (BasicValue) bootPropertyDescriptor.getValue();
+				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
@@ -277,33 +271,41 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[ columnPosition ];
 				}
+				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
 				final Integer precision;
 				final Integer scale;
+				final boolean nullable;
 				if ( selectable instanceof Column ) {
-					Column column = (Column) selectable;
+					final Column column = (Column) selectable;
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
+					nullable = column.isNullable();
+					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
 					columnDefinition = null;
 					length = null;
 					precision = null;
 					scale = null;
+					nullable = true;
+					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
 				}
 
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						navigableRole.append( bootPropertyDescriptor.getName() ),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
 						(BasicType<?>) subtype,
 						containingTableExpression,
 						columnExpression,
+						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
 						selectable.getCustomWriteExpression(),
@@ -311,6 +313,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						length,
 						precision,
 						scale,
+						nullable,
+						value.isColumnInsertable( 0 ),
+						value.isColumnUpdateable( 0 ),
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -319,12 +324,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				columnPosition++;
 			}
 			else if ( subtype instanceof AnyType ) {
-				final Any bootValueMapping = (Any) bootPropertyDescriptor.getValue();
+				final Any bootValueMapping = (Any) value;
 				final AnyType anyType = (AnyType) subtype;
 
 				final boolean nullable = bootValueMapping.isNullable();
-				final boolean insertable = bootPropertyDescriptor.isInsertable();
-				final boolean updateable = bootPropertyDescriptor.isUpdateable();
+				final boolean insertable = value.isColumnInsertable( 0 );
+				final boolean updateable = value.isColumnUpdateable( 0 );
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
 				final MutabilityPlan<?> mutabilityPlan;
@@ -347,12 +352,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 						@Override
 						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 
 						@Override
 						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
+							throw new UnsupportedOperationException();
 						}
 					};
 				}
@@ -360,53 +365,21 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 				}
 
-				final AttributeMetadataAccess attributeMetadataAccess = entityMappingType -> new AttributeMetadata() {
-					@Override
-					public PropertyAccess getPropertyAccess() {
-						return propertyAccess;
-					}
-
-					@Override
-					public MutabilityPlan<?> getMutabilityPlan() {
-						return mutabilityPlan;
-					}
-
-					@Override
-					public boolean isNullable() {
-						return nullable;
-					}
-
-					@Override
-					public boolean isInsertable() {
-						return insertable;
-					}
-
-					@Override
-					public boolean isUpdatable() {
-						return updateable;
-					}
-
-					@Override
-					public boolean isIncludedInDirtyChecking() {
-						// todo (6.0) : do not believe this is correct
-						return updateable;
-					}
-
-					@Override
-					public boolean isIncludedInOptimisticLocking() {
-						return includeInOptimisticLocking;
-					}
-
-					@Override
-					public CascadeStyle getCascadeStyle() {
-						return cascadeStyle;
-					}
-				};
+				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
+						propertyAccess,
+						mutabilityPlan,
+						nullable,
+						insertable,
+						updateable,
+						includeInOptimisticLocking,
+						cascadeStyle
+				);
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						navigableRole.append( bootPropertyDescriptor.getName() ),
 						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						declarer,
+						attributeIndex,
 						attributeIndex,
 						attributeMetadataAccess,
 						bootPropertyDescriptor.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
@@ -435,6 +408,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						declarer,
 						subCompositeType,
@@ -454,6 +428,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
+						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,
 						propertyAccess,
@@ -469,6 +444,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						navigableRole.append( bootPropertyDescriptor.getName() ),
+						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
 						entityPersister,

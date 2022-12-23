@@ -12,8 +12,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -22,14 +23,17 @@ import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * The root class of an inheritance hierarchy
+ * A mapping model object that represents the root class in an entity class
+ * {@linkplain jakarta.persistence.Inheritance inheritance} hierarchy.
  *
  * @author Gavin King
  */
 public class RootClass extends PersistentClass implements TableOwner {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
+	@Deprecated(since = "6.2") @Remove
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
+	@Deprecated(since = "6.2") @Remove
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
 	private Property identifierProperty;
@@ -55,8 +59,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
 
-	public RootClass(MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+	public RootClass(MetadataBuildingContext buildingContext) {
+		super( buildingContext );
 	}
 
 	@Override
@@ -279,7 +283,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		super.validate( mapping );
 		if ( !getIdentifier().isValid( mapping ) ) {
 			throw new MappingException(

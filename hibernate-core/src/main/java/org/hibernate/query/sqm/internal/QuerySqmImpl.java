@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -19,11 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -32,19 +26,24 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -64,6 +63,7 @@ import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractSelectionQuery;
+import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -75,8 +75,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -87,16 +87,26 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -109,6 +119,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptionsWithUniqueSemanticFilter;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 
 /**
@@ -331,7 +342,7 @@ public class QuerySqmImpl<R>
 				);
 			default:
 				throw new UnsupportedOperationException(
-						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
+						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported"
 				);
 		}
 	}
@@ -371,10 +382,10 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			final SqmInsertSelectStatement<R> statement = (SqmInsertSelectStatement<R>) sqmStatement;
-			final List<SqmSelection<?>> selections = statement.getSelectQueryPart()
+			final List<SqmSelectableNode<?>> selections = statement.getSelectQueryPart()
 					.getFirstQuerySpec()
 					.getSelectClause()
-					.getSelections();
+					.getSelectionItems();
 			verifyInsertTypesMatch( hqlString, insertionTargetPaths, selections );
 			statement.getSelectQueryPart().validateQueryStructureAndFetchOwners();
 		}
@@ -417,6 +428,9 @@ public class QuerySqmImpl<R>
 		}
 	}
 
+	public TupleMetadata getTupleMetadata() {
+		return tupleMetadata;
+	}
 
 	@Override
 	public String getQueryString() {
@@ -501,6 +515,33 @@ public class QuerySqmImpl<R>
 		final boolean needsDistinct = containsCollectionFetches
 				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
 
+		final List<R> list = resolveSelectQueryPlan()
+				.performList( executionContextFordoList( containsCollectionFetches, hasLimit, needsDistinct ) );
+
+		if ( needsDistinct ) {
+			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
+					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
+					: getQueryOptions().getLimit().getFirstRow();
+			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
+					? getMaxRows( sqmStatement, list.size() )
+					: getQueryOptions().getLimit().getMaxRows();
+			if ( first > 0 || max != -1 ) {
+				final int toIndex;
+				final int resultSize = list.size();
+				if ( max != -1 ) {
+					toIndex = first + max;
+				}
+				else {
+					toIndex = resultSize;
+				}
+				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
+			}
+		}
+		return list;
+
+	}
+
+	protected DomainQueryExecutionContext executionContextFordoList(boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
 		final DomainQueryExecutionContext executionContextToUse;
 		if ( hasLimit && containsCollectionFetches ) {
 			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
@@ -516,7 +557,13 @@ public class QuerySqmImpl<R>
 			}
 
 			final MutableQueryOptions originalQueryOptions = getQueryOptions();
-			final QueryOptions normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			final QueryOptions normalizedQueryOptions;
+			if ( needsDistinct ) {
+				normalizedQueryOptions = omitSqlQueryOptionsWithUniqueSemanticFilter( originalQueryOptions, true, false );
+			}
+			else {
+				normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			}
 			if ( originalQueryOptions == normalizedQueryOptions ) {
 				executionContextToUse = this;
 			}
@@ -530,39 +577,49 @@ public class QuerySqmImpl<R>
 			}
 		}
 		else {
-			executionContextToUse = this;
-		}
-
-		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
-
-		if ( needsDistinct ) {
-			int includedCount = -1;
-			// NOTE : firstRow is zero-based
-			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
-					? getIntegerLiteral( sqmStatement.getOffset(), 0 )
-					: getQueryOptions().getLimit().getFirstRow();
-			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
-					? getMaxRows( sqmStatement, list.size() )
-					: getQueryOptions().getLimit().getMaxRows();
-			final List<R> tmp = new ArrayList<>( list.size() );
-			final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
-			for ( final R result : list ) {
-				if ( !distinction.add( result ) ) {
-					continue;
+			if ( needsDistinct ) {
+				final MutableQueryOptions originalQueryOptions = getQueryOptions();
+				final QueryOptions normalizedQueryOptions = uniqueSemanticQueryOptions( originalQueryOptions );
+				if ( originalQueryOptions == normalizedQueryOptions ) {
+					executionContextToUse = this;
 				}
-				includedCount++;
-				if ( includedCount < first ) {
-					continue;
-				}
-				tmp.add( result );
-				// NOTE : ( max - 1 ) because first is zero-based while max is not...
-				if ( max >= 0 && ( includedCount - first ) >= ( max - 1 ) ) {
-					break;
+				else {
+					executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
+						@Override
+						public QueryOptions getQueryOptions() {
+							return normalizedQueryOptions;
+						}
+					};
 				}
 			}
-			return tmp;
+			else {
+				executionContextToUse = this;
+			}
 		}
-		return list;
+		return executionContextToUse;
+	}
+
+	public static QueryOptions uniqueSemanticQueryOptions(QueryOptions originalOptions) {
+		final ListResultsConsumer.UniqueSemantic semantic = originalOptions.getUniqueSemantic();
+
+
+		if ( semantic == ListResultsConsumer.UniqueSemantic.FILTER ) {
+			return originalOptions;
+		}
+
+		return new UniqueSemanticFilterQueryOption( originalOptions );
+	}
+
+	public static class UniqueSemanticFilterQueryOption extends DelegatingQueryOptions{
+
+		public UniqueSemanticFilterQueryOption(QueryOptions queryOptions) {
+			super( queryOptions );
+		}
+
+		@Override
+		public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
+			return ListResultsConsumer.UniqueSemantic.FILTER;
+		}
 	}
 
 	@Override
@@ -662,7 +719,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private void verifyUpdate() {
+	protected void verifyUpdate() {
 		try {
 			SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hql );
 		}
@@ -712,7 +769,7 @@ public class QuerySqmImpl<R>
 			return buildInsertQueryPlan();
 		}
 
-		throw new NotYetImplementedException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "not yet supported" );
+		throw new UnsupportedOperationException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "] not supported" );
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -778,20 +835,57 @@ public class QuerySqmImpl<R>
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
+		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityNameToInsert );
 
-		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
-		if ( multiTableStrategy == null || isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
+		boolean useMultiTableInsert = entityDescriptor.isMultiTable();
+		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
+			final Generator identifierGenerator = entityDescriptor.getGenerator();
+			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
+					&& identifierGenerator instanceof OptimizableGenerator ) {
+				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, entityDescriptor );
+				}
+			}
+		}
+		if ( !useMultiTableInsert ) {
 			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 		}
 		else {
-			return new MultiTableInsertQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
+			return new MultiTableInsertQueryPlan(
+					sqmInsert,
+					domainParameterXref,
+					entityDescriptor.getSqmMultiTableInsertStrategy()
+			);
 		}
 	}
 
-	private boolean isSimpleValuesInsert(@SuppressWarnings("rawtypes") SqmInsertStatement sqmInsert, EntityPersister entityDescriptor) {
+	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final String partName;
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+			partName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+		}
+		else {
+			partName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		}
+		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
+			final SqmPath<?> lhs = insertionTargetPath.getLhs();
+			if ( !( lhs instanceof SqmRoot<?> ) ) {
+				continue;
+			}
+			final SqmPathSource<?> referencedPathSource = insertionTargetPath.getReferencedPathSource();
+			if ( referencedPathSource.getPathName().equals( partName ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
 				// An insert is only simple if no SqmMultiTableMutation strategy is available,
@@ -825,7 +919,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		// No verifySelect call, because in Hibernate we support locking in subqueries
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -982,19 +1076,16 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public List<R> list() {
-		//noinspection unchecked
 		return super.list();
 	}
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll() {
-		//noinspection unchecked
 		return super.scroll();
 	}
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		//noinspection unchecked
 		return super.scroll( scrollMode );
 	}
 
@@ -1006,19 +1097,16 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public R uniqueResult() {
-		//noinspection unchecked
-		return (R) super.uniqueResult();
+		return super.uniqueResult();
 	}
 
 	@Override
 	public R getSingleResult() {
-		//noinspection unchecked
-		return (R) super.getSingleResult();
+		return super.getSingleResult();
 	}
 
 	@Override
 	public Optional<R> uniqueResultOptional() {
-		//noinspection unchecked
 		return super.uniqueResultOptional();
 	}
 
@@ -1126,6 +1214,18 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 

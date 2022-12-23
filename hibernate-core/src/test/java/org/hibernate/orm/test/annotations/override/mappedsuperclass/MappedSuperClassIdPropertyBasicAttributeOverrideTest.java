@@ -33,7 +33,7 @@ public class MappedSuperClassIdPropertyBasicAttributeOverrideTest {
 		}
 		catch (MappingException expected) {
 			assertEquals(
-					"You cannot override the [uid] non-identifier property from the [org.hibernate.orm.test.annotations.override.mappedsuperclass.MappedSuperClassWithUuidAsBasic] base class or @MappedSuperclass and make it an identifier in the [org.hibernate.orm.test.annotations.override.mappedsuperclass.SubclassWithUuidAsId] subclass!",
+					"You cannot override the [uid] non-identifier property from the [org.hibernate.orm.test.annotations.override.mappedsuperclass.MappedSuperClassWithUuidAsBasic] base class or @MappedSuperclass and make it an identifier in the [org.hibernate.orm.test.annotations.override.mappedsuperclass.SubclassWithUuidAsId] subclass",
 					expected.getMessage()
 			);
 		}

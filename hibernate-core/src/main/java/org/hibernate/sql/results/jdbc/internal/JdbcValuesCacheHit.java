@@ -227,4 +227,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	protected void release() {
 		cachedData = null;
 	}
+
+	@Override
+	public void setFetchSize(int fetchSize) {}
 }

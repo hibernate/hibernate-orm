@@ -9,30 +9,35 @@ package org.hibernate.dialect;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for H2.
@@ -45,6 +50,84 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		if ( isNotEmpty( tableInsert.getReturningColumns() ) ) {
+			visitReturningInsertStatement( tableInsert );
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
+		assert tableInsert.getReturningColumns() != null
+				&& !tableInsert.getReturningColumns().isEmpty();
+
+		//TODO: This is a terrible way to solve this problem, please fix it!
+		//      Not every "returning insert" statement has something to do
+		//      with identity columns! (Nor is it an elegant implementation.)
+
+		final H2IdentityColumnSupport  identitySupport = (H2IdentityColumnSupport) getSessionFactory()
+				.getJdbcServices()
+				.getDialect()
+				.getIdentityColumnSupport();
+
+		identitySupport.render(
+				tableInsert,
+				this::appendSql,
+				(columnReference) -> columnReference.accept( this ),
+				() -> super.visitStandardTableInsert( tableInsert ),
+				getSessionFactory()
+		);
+	}
+
+	@Override
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
+		// do nothing - this is handled via `#visitReturningInsertStatement`
+	}
+
+	@Override
+	public void visitCteContainer(CteContainer cteContainer) {
+		// H2 has various bugs in different versions that make it impossible to use CTEs with parameters reliably
+		withParameterRenderingMode(
+				SqlAstNodeRenderingMode.INLINE_PARAMETERS,
+				() -> super.visitCteContainer( cteContainer )
+		);
+	}
+
+	@Override
+	protected boolean needsCteInlining() {
+		// CTEs in H2 are just so buggy, that we can't reliably use them
+		return true;
+	}
+
+	@Override
+	protected boolean shouldInlineCte(TableGroup tableGroup) {
+		return tableGroup instanceof CteTableGroup
+				&& !getCteStatement( tableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return getDialect().getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return getDialect().getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	protected String getArrayContainsFunction() {
+		return "array_contains";
 	}
 
 	@Override
@@ -83,16 +166,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 				throw new IllegalArgumentException( "Can't emulate fetch clause type: " + queryPart.getFetchClauseType() );
 			}
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// H2 does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// H2 does not support this, but it can be emulated
 	}
 
 	@Override
@@ -147,7 +220,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
@@ -170,32 +243,54 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
 		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
 			final boolean realTableGroup = tableGroup.isRealTableGroup()
-					&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
+					&& ( isNotEmpty( tableGroup.getTableReferenceJoins() )
 					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
 			if ( realTableGroup ) {
 				appendSql( "dual cross join " );
 			}
 		}
 		return super.renderPrimaryTableReference( tableGroup, lockMode );
+	}
 
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		super.visitLikePredicate( likePredicate );
+		// Custom implementation because H2 uses backslash as the default escape character
+		// We can override this by specifying an empty escape character
+		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side
+		if ( likePredicate.getEscapeCharacter() == null ) {
+			appendSql( " escape ''" );
+		}
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
+		return true;
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
+		return true;
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
+		return true;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
+		// Seems that before, this was buggy
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
+	}
+
+	@Override
+	protected boolean supportsNullPrecedence() {
+		// Support for nulls clause in listagg was added in 2.0
+		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -204,7 +299,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 195 );
+		return true;
 	}
 
 	private boolean supportsOffsetFetchClausePercentWithTies() {

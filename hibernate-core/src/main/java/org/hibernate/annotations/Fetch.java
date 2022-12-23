@@ -12,11 +12,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify the fetching strategy used for the annotated association.
+ * Specifies the default fetching strategy for the annotated association.
+ * <p>
+ * When this annotation is <em>not</em> explicitly specified, then:
+ * <ul>
+ * <li>{@linkplain FetchMode#SELECT select fetching} is used for
+ *     {@linkplain jakarta.persistence.FetchType#LAZY lazy} fetching,
+ *     and
+ * <li>{@linkplain FetchMode#JOIN join fetching} is used for
+ *     {@linkplain jakarta.persistence.FetchType#EAGER eager} fetching.
+ * </ul>
+ * The default fetching strategy specified by this annotation may be
+ * overridden in a given {@linkplain FetchProfile fetch profile}.
  *
  * @author Emmanuel Bernard
  *
  * @see FetchMode
+ * @see FetchProfile
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

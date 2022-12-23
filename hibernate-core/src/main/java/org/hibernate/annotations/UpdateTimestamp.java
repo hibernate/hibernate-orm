@@ -8,40 +8,33 @@ package org.hibernate.annotations;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.tuple.UpdateTimestampGeneration;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
 
 /**
- * Marks a property as the update timestamp of the containing entity. The property value will be set to the current VM
- * date whenever the owning entity is updated.
+ * Specifies that the annotated field of property is a generated <em>update timestamp.</em>
+ * The timestamp is regenerated every time an entity instance is updated in the database.
  * <p>
- * Supported property types:
- * <ul>
- * <li>{@link java.util.Date}</li>
- * <li>{@link java.util.Calendar}</li>
- * <li>{@link java.sql.Date}</li>
- * <li>{@link java.sql.Time}</li>
- * <li>{@link java.sql.Timestamp}</li>
- * <li>{@link java.time.Instant}</li>
- * <li>{@link java.time.LocalDate}</li>
- * <li>{@link java.time.LocalDateTime}</li>
- * <li>{@link java.time.LocalTime}</li>
- * <li>{@link java.time.MonthDay}</li>
- * <li>{@link java.time.OffsetDateTime}</li>
- * <li>{@link java.time.OffsetTime}</li>
- * <li>{@link java.time.Year}</li>
- * <li>{@link java.time.YearMonth}</li>
- * <li>{@link java.time.ZonedDateTime}</li>
- * </ul>
+ * By default, the timestamp is generated {@linkplain java.time.Clock#instant() in memory},
+ * but this may be changed by explicitly specifying the {@link #source}.
+ * Otherwise, this annotation is a synonym for
+ * {@link CurrentTimestamp @CurrentTimestamp(source=VM)}.
+ *
+ * @see CurrentTimestamp
  *
  * @author Gunnar Morling
  */
-@ValueGenerationType(generatedBy = UpdateTimestampGeneration.class)
-@Retention(RetentionPolicy.RUNTIME)
+@ValueGenerationType(generatedBy = CurrentTimestampGeneration.class)
+@Retention(RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface UpdateTimestamp {
+	/**
+	 * Specifies how the timestamp is generated. By default, it is generated
+	 * in memory, which saves a round trip to the database.
+	 */
+	SourceType source() default SourceType.VM;
 }

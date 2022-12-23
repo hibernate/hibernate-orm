@@ -7,28 +7,32 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
-import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
@@ -42,6 +46,18 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	 */
 	public static final OffsetDateTimeJavaType INSTANCE = new OffsetDateTimeJavaType();
 
+	private static final DateTimeFormatter PARSE_FORMATTER;
+	static {
+		PARSE_FORMATTER = new DateTimeFormatterBuilder()
+				.parseCaseInsensitive()
+				.append(ISO_LOCAL_DATE_TIME)
+				.optionalStart()
+				.parseLenient()
+				.appendOffset( "+HH:MM:ss", "Z" )
+				.parseStrict()
+				.toFormatter();
+	}
+
 	public OffsetDateTimeJavaType() {
 		super( OffsetDateTime.class, ImmutableMutabilityPlan.instance(), OffsetDateTime.timeLineOrder() );
 	}
@@ -53,47 +69,38 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
-		final JdbcTypeRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			switch ( stdIndicators.getDefaultTimeZoneStorageStrategy() ) {
-				case NORMALIZE:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
-				case NORMALIZE_UTC:
-					return jdbcTypeRegistry.getDescriptor( SqlTypes.TIMESTAMP_UTC );
-				default:
-					return jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
-			}
-		}
-
-		switch ( temporalPrecision ) {
-			case TIME: {
-				return jdbcTypeRegistry.getDescriptor( Types.TIME );
-			}
-			case DATE: {
-				return jdbcTypeRegistry.getDescriptor( Types.DATE );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );
-			}
-		}
+		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
 	@Override
 	public String toString(OffsetDateTime value) {
-		return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( value );
+		return ISO_OFFSET_DATE_TIME.format( value );
 	}
 
 	@Override
 	public OffsetDateTime fromString(CharSequence string) {
-		return OffsetDateTime.from( DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse( string ) );
+		return OffsetDateTime.from( ISO_OFFSET_DATE_TIME.parse( string ) );
+	}
+
+	@Override
+	public OffsetDateTime fromEncodedString(CharSequence string, int start, int end) {
+		final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse(
+				CharSequenceHelper.subSequence( string, start, end )
+		);
+		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			return OffsetDateTime.from( temporalAccessor );
+		}
+		else {
+			// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
+			return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+		}
 	}
 
 	@Override
@@ -239,4 +246,5 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			SharedSessionContractImplementor session) {
 		return OffsetDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
+
 }

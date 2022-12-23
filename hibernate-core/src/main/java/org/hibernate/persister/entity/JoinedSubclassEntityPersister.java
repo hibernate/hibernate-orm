@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -29,6 +30,8 @@ import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -44,6 +47,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -51,14 +55,15 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.Insert;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
@@ -66,10 +71,13 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
 /**
  * An {@link EntityPersister} implementing the normalized
@@ -121,7 +129,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 //	private final int[] subclassFormulaTableNumberClosure;
 	private final String[] subclassColumnClosure;
 
-	private final boolean[] subclassTableSequentialSelect;
+//	private final boolean[] subclassTableSequentialSelect;
 //	private final boolean[] subclassTableIsLazyClosure;
 	private final boolean[] isInverseSubclassTable;
 	private final boolean[] isNullableSubclassTable;
@@ -311,7 +319,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		ArrayList<String> subclassTableNames = new ArrayList<>();
 		ArrayList<Boolean> isConcretes = new ArrayList<>();
-		ArrayList<Boolean> isDeferreds = new ArrayList<>();
+//		ArrayList<Boolean> isDeferreds = new ArrayList<>();
 //		ArrayList<Boolean> isLazies = new ArrayList<>();
 		ArrayList<Boolean> isInverses = new ArrayList<>();
 		ArrayList<Boolean> isNullables = new ArrayList<>();
@@ -319,14 +327,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		keyColumns = new ArrayList<>();
 		for ( Table table : persistentClass.getSubclassTableClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( table ) );
-			isDeferreds.add( Boolean.FALSE );
-//			isLazies.add( Boolean.FALSE );
-			isInverses.add( Boolean.FALSE );
-			isNullables.add( Boolean.FALSE );
+//			isDeferreds.add( false );
+//			isLazies.add( false );
+			isInverses.add( false );
+			isNullables.add( false );
 			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			List<Column> columns = table.getPrimaryKey().getColumns();
+			List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -338,7 +346,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final Table joinTable = join.getTable();
 
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( joinTable ) );
-			isDeferreds.add( join.isSequentialSelect() );
+//			isDeferreds.add( join.isSequentialSelect() );
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 //			isLazies.add( join.isLazy() );
@@ -346,7 +354,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
-			List<Column> columns = joinTable.getPrimaryKey().getColumns();
+			List<Column> columns = joinTable.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -356,7 +364,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		String[] naturalOrderSubclassTableNameClosure = ArrayHelper.toStringArray( subclassTableNames );
 		String[][] naturalOrderSubclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( keyColumns );
 		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
-		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
+//		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
 //		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		isInverseSubclassTable = ArrayHelper.toBooleanArray( isInverses );
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
@@ -398,30 +406,41 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		insertCallable = new boolean[tableSpan];
 		updateCallable = new boolean[tableSpan];
 		deleteCallable = new boolean[tableSpan];
-		insertResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
-		updateResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
-		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
+
+		insertExpectations = new Expectation[tableSpan];
+		updateExpectations = new Expectation[tableSpan];
+		deleteExpectations = new Expectation[tableSpan];
 
 		PersistentClass pc = persistentClass;
 		int jk = coreTableSpan - 1;
 		while ( pc != null ) {
 			isNullableTable[jk] = false;
 			isInverseTable[jk] = false;
+
 			customSQLInsert[jk] = pc.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && pc.isCustomInsertCallable();
-			insertResultCheckStyles[jk] = pc.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
-					: pc.getCustomSQLInsertCheckStyle();
+			insertExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLInsertCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[jk], insertCallable[jk] )
+							: pc.getCustomSQLInsertCheckStyle()
+			);
+
 			customSQLUpdate[jk] = pc.getCustomSQLUpdate();
 			updateCallable[jk] = customSQLUpdate[jk] != null && pc.isCustomUpdateCallable();
-			updateResultCheckStyles[jk] = pc.getCustomSQLUpdateCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
-					: pc.getCustomSQLUpdateCheckStyle();
+			updateExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLUpdateCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
+							: pc.getCustomSQLUpdateCheckStyle()
+			);
+
 			customSQLDelete[jk] = pc.getCustomSQLDelete();
 			deleteCallable[jk] = customSQLDelete[jk] != null && pc.isCustomDeleteCallable();
-			deleteResultCheckStyles[jk] = pc.getCustomSQLDeleteCheckStyle() == null
+			deleteExpectations[jk] = Expectations.appropriateExpectation(
+					pc.getCustomSQLDeleteCheckStyle() == null
 					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
-					: pc.getCustomSQLDeleteCheckStyle();
+					: pc.getCustomSQLDeleteCheckStyle()
+			);
+
 			jk--;
 			pc = pc.getSuperclass();
 		}
@@ -437,19 +456,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
-			insertResultCheckStyles[j] = join.getCustomSQLInsertCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-					: join.getCustomSQLInsertCheckStyle();
+			insertExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLInsertCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
+							: join.getCustomSQLInsertCheckStyle()
+			);
+
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
 			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
-			updateResultCheckStyles[j] = join.getCustomSQLUpdateCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-					: join.getCustomSQLUpdateCheckStyle();
+			updateExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLUpdateCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
+							: join.getCustomSQLUpdateCheckStyle()
+			);
+
 			customSQLDelete[j] = join.getCustomSQLDelete();
 			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
-			deleteResultCheckStyles[j] = join.getCustomSQLDeleteCheckStyle() == null
-					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-					: join.getCustomSQLDeleteCheckStyle();
+			deleteExpectations[j] = Expectations.appropriateExpectation(
+					join.getCustomSQLDeleteCheckStyle() == null
+							? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
+							: join.getCustomSQLDeleteCheckStyle()
+			);
+
 			j++;
 		}
 
@@ -577,7 +605,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	/**
 	 * Used to hold the name of subclasses that each "subclass table" is part of.  For example, given a hierarchy like:
 	 * {@code JoinedEntity <- JoinedEntitySubclass <- JoinedEntitySubSubclass}..
-	 * <p/>
+	 * <p>
 	 * For the persister for JoinedEntity, we'd have:
 	 * <pre>
 	 *	 subclassClosure[0] = "JoinedEntitySubSubclass"
@@ -596,14 +624,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 * do not need to account for those here.  The "offset" is defined by the value of {@link #getTableSpan()}.
 	 * Therefore the corresponding row in subclassNameClosureBySubclassTable for a given row in subclassTableNameClosure
 	 * is calculated as {@code subclassTableNameClosureIndex - getTableSpan()}.
-	 * <p/>
+	 * <p>
 	 * As we consider each subclass table we can look into this array based on the subclass table's index and see
 	 * which subclasses would require it to be included.  E.g., given {@code TREAT( x AS JoinedEntitySubSubclass )},
 	 * when trying to decide whether to include join to "T_JoinedEntitySubclass" (subclassTableNameClosureIndex = 1),
 	 * we'd look at {@code subclassNameClosureBySubclassTable[0]} and see if the TREAT-AS subclass name is included in
 	 * its values.  Since {@code subclassNameClosureBySubclassTable[1]} includes "JoinedEntitySubSubclass", we'd
 	 * consider it included.
-	 * <p/>
+	 * <p>
 	 * {@link #subclassTableNameClosure} also accounts for secondary tables and we properly handle those as we
 	 * build the subclassNamesBySubclassTable array and they are therefore properly handled when we use it
 	 */
@@ -725,14 +753,43 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer) {
+		for ( int i = 0; i < naturalOrderTableNames.length; i++ ) {
+			final String tableName = naturalOrderTableNames[i];
+			final int tableIndex = i;
+
+			consumer.consume(
+					tableName,
+					tableIndex,
+					() -> (columnConsumer) -> columnConsumer.accept(
+							tableName,
+							getIdentifierMapping(),
+							naturalOrderTableKeyColumns[tableIndex]
+					)
+			);
+		}
+	}
+
+	@Override
+	protected boolean isIdentifierTable(String tableExpression) {
+		return tableExpression.equals( getRootTableName() );
+	}
+
+	@Override
+	public boolean hasSkippableTables() {
+		// todo (6.x) : cache this?
+		return hasAnySkippableTables( isNullableTable, isInverseTable );
+	}
+
+	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
-	@Override
-	protected boolean isSubclassTableSequentialSelect(int j) {
-		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
-	}
+//	@Override
+//	protected boolean isSubclassTableSequentialSelect(int j) {
+//		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
+//	}
 
 	/*public void postInstantiate() throws MappingException {
 		super.postInstantiate();
@@ -807,9 +864,50 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected void addDiscriminatorToInsert(Insert insert) {
+	protected Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> buildDiscriminatorValueMappings(PersistentClass bootEntityDescriptor, MappingModelCreationProcess modelCreationProcess) {
+		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
+				.getSessionFactory()
+				.getMappingMetamodel();
+
+		//noinspection unchecked
+		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = (JdbcLiteralFormatter<Object>) discriminatorType.getJdbcLiteralFormatter();
+		final Dialect dialect = modelCreationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+
+		final Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
+
+		subclassesByDiscriminatorValue.forEach( (value, entityName) -> {
+			final String jdbcLiteral = value == NULL_DISCRIMINATOR || value == NOT_NULL_DISCRIMINATOR
+					? null
+					: jdbcLiteralFormatter.toJdbcLiteral( value, dialect, null );
+			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
+					value,
+					jdbcLiteral,
+					mappingModel.findEntityDescriptor( entityName )
+			);
+			valueMappings.put( value, valueMapping );
+		} );
+		return valueMappings;
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
-			insert.addColumn( explicitDiscriminatorColumnName, getDiscriminatorSQLValue() );
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
+			final String discriminatorValueToUse;
+			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+				discriminatorValueToUse = "null";
+			}
+			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+				discriminatorValueToUse = "not null";
+			}
+			else {
+				discriminatorValueToUse = discriminatorSQLString;
+			}
+			tableInsertBuilder.addValueColumn(
+					explicitDiscriminatorColumnName,
+					discriminatorValueToUse,
+					getDiscriminatorMapping().getJdbcMapping()
+			);
 		}
 	}
 
@@ -1051,7 +1149,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
-		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+		throw new HibernateException(
+				"Could not locate table which owns column [" + columnName + "] referenced in order-by mapping - " + getEntityName()
+		);
 	}
 
 	@Override
@@ -1132,6 +1232,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			precision = column.getPrecision();
 			scale = column.getScale();
 		}
+		final Value value = bootEntityDescriptor.getIdentifierProperty().getValue();
 		return new BasicEntityIdentifierMappingImpl(
 				this,
 				templateInstanceCreator,
@@ -1142,6 +1243,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				length,
 				precision,
 				scale,
+				value.isColumnInsertable( 0 ),
+				value.isColumnUpdateable( 0 ),
 				(BasicType<?>) idType,
 				creationProcess
 		);
@@ -1181,6 +1284,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					discriminatorValues,
 					subclassNameByTableName,
 					discriminatorMetadataType,
+					buildDiscriminatorValueMappings( bootEntityDescriptor, modelCreationProcess ),
 					modelCreationProcess
 			);
 		}
@@ -1206,6 +1310,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
+	}
+
+	@Override
+	public TableDetails getMappedTableDetails() {
+		return getTableMapping( getTableMappings().length - 1 );
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		final EntityMappingType superMappingType = getSuperMappingType();
+		if ( superMappingType == null ) {
+			return getMappedTableDetails();
+		}
+		return getRootEntityDescriptor().getIdentifierTableDetails();
 	}
 
 	@Override

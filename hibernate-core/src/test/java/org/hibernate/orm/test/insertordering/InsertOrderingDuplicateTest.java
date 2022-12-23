@@ -66,14 +66,14 @@ public class InsertOrderingDuplicateTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into SaleDocumentSummary (sale_number, totalPrice, id) values (?, ?, ?)" ),
-				new Batch( "insert into Product (description, name, price, quantity, id) values (?, ?, ?, ?, ?)" ),
+				new Batch( "insert into SaleDocumentSummary (sale_number,totalPrice,id) values (?,?,?)" ),
+				new Batch( "insert into Product (description,name,price,quantity,id) values (?,?,?,?,?)" ),
 				new Batch(
-						"insert into SaleDocument (ID_SALE_DOCUMENT_CORRECTION, sale_number, totalPrice, id) values (?, ?, ?, ?)",
+						"insert into SaleDocument (ID_SALE_DOCUMENT_CORRECTION,sale_number,totalPrice,id) values (?,?,?,?)",
 						2
 				),
 				new Batch(
-						"insert into SaleDocumentItem (lp, product_id, quantity, ID_SALE_DOCUMENT, ID_SALE_DOCUMENT_SUMAMRY, id) values (?, ?, ?, ?, ?, ?)" )
+						"insert into SaleDocumentItem (lp,product_id,quantity,ID_SALE_DOCUMENT,ID_SALE_DOCUMENT_SUMAMRY,id) values (?,?,?,?,?,?)" )
 		);
 	}
 

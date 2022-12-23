@@ -8,8 +8,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Locale;
 
-import jakarta.xml.bind.JAXBElement;
-
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
@@ -19,13 +17,17 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
+import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
+
+import jakarta.xml.bind.JAXBElement;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -61,14 +63,15 @@ public class NamedQueryBinder {
 
 		for ( Object content : namedQueryBinding.getContent() ) {
 			if ( content instanceof String ) {
-				final String hqlString = StringHelper.nullIfEmpty( ( (String) content ).trim() );
-				if ( StringHelper.isNotEmpty( hqlString ) ) {
+				final String hqlString = nullIfEmpty( ( (String) content ).trim() );
+				if ( isNotEmpty( hqlString ) ) {
 					queryBuilder.setHqlString( hqlString );
 					foundQuery = true;
 				}
 			}
 			else {
-				final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType)( (JAXBElement) content ).getValue();
+				final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType)
+						( (JAXBElement<?>) content ).getValue();
 				queryBuilder.addParameterTypeHint( paramTypeBinding.getName(), paramTypeBinding.getType() );
 			}
 		}
@@ -90,7 +93,9 @@ public class NamedQueryBinder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named native query
 
-	public static void processNamedNativeQuery(HbmLocalMetadataBuildingContext context, JaxbHbmNamedNativeQueryType namedQueryBinding) {
+	public static void processNamedNativeQuery(
+			HbmLocalMetadataBuildingContext context,
+			JaxbHbmNamedNativeQueryType namedQueryBinding) {
 		processNamedNativeQuery( context, namedQueryBinding, "" );
 	}
 
@@ -117,11 +122,8 @@ public class NamedQueryBinder {
 				.setFetchSize( namedQueryBinding.getFetchSize() )
 				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
-		final ImplicitHbmResultSetMappingDescriptorBuilder
-				implicitResultSetMappingBuilder = new ImplicitHbmResultSetMappingDescriptorBuilder(
-				registrationName,
-				context
-		);
+		final ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder =
+				new ImplicitHbmResultSetMappingDescriptorBuilder( registrationName, context );
 
 		boolean foundQuery = false;
 
@@ -149,7 +151,7 @@ public class NamedQueryBinder {
 		}
 
 		if ( implicitResultSetMappingBuilder.hasAnyReturns() ) {
-			if ( StringHelper.isNotEmpty( namedQueryBinding.getResultsetRef() ) ) {
+			if ( isNotEmpty( namedQueryBinding.getResultsetRef() ) ) {
 				throw new org.hibernate.boot.MappingException(
 						String.format(
 								"Named native query [%s] specified both a resultset-ref and an inline mapping of results",
@@ -203,7 +205,7 @@ public class NamedQueryBinder {
 			// Especially when the query string is wrapped in CDATA we will get
 			// "extra" Strings here containing just spaces and/or newlines.  This
 			// bit tries to account for them.
-			final String contentString = StringHelper.nullIfEmpty( ( (String) content ).trim() );
+			final String contentString = nullIfEmpty( ( (String) content ).trim() );
 			if ( contentString != null ) {
 				queryBuilder.setSqlString( (String) content );
 				return true;
@@ -214,7 +216,7 @@ public class NamedQueryBinder {
 		}
 		else if ( content instanceof JAXBElement ) {
 			return processNamedQueryContentItem(
-					( (JAXBElement) content ).getValue(),
+					( (JAXBElement<?>) content ).getValue(),
 					queryBuilder,
 					implicitResultSetMappingBuilder,
 					namedQueryBinding,
@@ -249,7 +251,7 @@ public class NamedQueryBinder {
 							"Encountered unexpected content type [%s] for named native query [%s] : [%s]",
 							content.getClass().getName(),
 							namedQueryBinding.getName(),
-							content.toString()
+							content
 					),
 					context.getOrigin()
 			);

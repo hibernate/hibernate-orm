@@ -79,7 +79,7 @@ public class GeolatteGeometryJavaType extends AbstractJavaType<Geometry> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.GEOMETRY );
+		return indicators.getJdbcType( SqlTypes.GEOMETRY );
 	}
 
 	@Override

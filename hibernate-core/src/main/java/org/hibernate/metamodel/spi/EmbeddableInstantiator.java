@@ -6,11 +6,8 @@
  */
 package org.hibernate.metamodel.spi;
 
-import java.util.function.Supplier;
-
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.spi.Instantiator;
 
 /**
  * Contract for instantiating embeddable values

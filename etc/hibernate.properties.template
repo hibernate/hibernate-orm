@@ -1,11 +1,3 @@
-######################
-### Query Language ###
-######################
-
-## Query translator factory class
-
-hibernate.query.factory_class @QUERY_TRANSLATOR_FACTORY@
-
 #################
 ### Platforms ###
 #################
@@ -82,7 +74,7 @@ hibernate.connection.url @DB_URL@
 
 ## DB2/400
 
-#hibernate.dialect org.hibernate.dialect.DB2400Dialect
+#hibernate.dialect org.hibernate.dialect.DB2iDialect
 #hibernate.connection.username user
 #hibernate.connection.password password
 
@@ -322,9 +314,9 @@ hibernate.default_batch_fetch_size 8
 #hibernate.use_identifier_rollback true
 
 
-## enable bytecode reflection optimizer (disabled by default)
+## disable bytecode reflection optimizer (enabled by default)
 
-#hibernate.bytecode.use_reflection_optimizer true
+#hibernate.bytecode.use_reflection_optimizer false
 
 
 

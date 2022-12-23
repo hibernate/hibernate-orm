@@ -16,21 +16,17 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -50,23 +46,20 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class BasicValuedCollectionPart
-		implements CollectionPart, BasicValuedModelPart, ConvertibleModelPart, FetchOptions {
+		implements CollectionPart, BasicValuedModelPart, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final BasicValueConverter<Object, ?> valueConverter;
 
 	private final SelectableMapping selectableMapping;
 
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
-			BasicValueConverter valueConverter,
 			SelectableMapping selectableMapping) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
-		this.valueConverter = valueConverter;
 		this.selectableMapping = selectableMapping;
 	}
 
@@ -93,6 +86,26 @@ public class BasicValuedCollectionPart
 	@Override
 	public boolean isFormula() {
 		return selectableMapping.isFormula();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return selectableMapping.isNullable();
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return selectableMapping.isInsertable();
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return selectableMapping.isPartitioned();
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return selectableMapping.isUpdateable();
 	}
 
 	@Override
@@ -126,11 +139,6 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
-		return valueConverter;
-	}
-
-	@Override
 	public JavaType<?> getJavaType() {
 		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
@@ -153,12 +161,10 @@ public class BasicValuedCollectionPart
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaType(),
-				valueConverter,
+				selectableMapping.getJdbcMapping(),
 				navigablePath
 		);
 	}
@@ -187,17 +193,10 @@ public class BasicValuedCollectionPart
 		);
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableReference,
-								selectableMapping.getSelectionExpression()
-						),
-						sqlAstProcessingState -> new ColumnReference(
-								tableReference,
-								selectableMapping,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-						)
+						tableReference,
+						selectableMapping
 				),
-				getJavaType(),
+				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
@@ -239,6 +238,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}
@@ -272,7 +276,6 @@ public class BasicValuedCollectionPart
 				fetchParent,
 				fetchablePath,
 				this,
-				valueConverter,
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
@@ -307,13 +310,17 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+		valueConsumer.consume( disassemble( domainValue, session ), this );
+	}
+
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		valueConsumer.consume( disassemble( domainValue, session ), this );
 	}
 
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -323,9 +330,6 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( valueConverter != null ) {
-			return valueConverter.toRelationalValue( value );
-		}
-		return value;
+		return selectableMapping.getJdbcMapping().convertToRelationalValue( value );
 	}
 }

@@ -14,18 +14,17 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -35,7 +34,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -47,6 +45,8 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -96,9 +96,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			MappingModelCreationProcess creationProcess) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			final AttributeMetadataAccess metadataAccess = attributeMapping.getAttributeMetadataAccess();
-
-			if ( ! metadataAccess.resolveAttributeMetadata( entityDescriptor ).isUpdatable() ) {
+			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
+			if ( ! metadata.isUpdatable() ) {
 				return false;
 			}
 		}
@@ -208,7 +207,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = getNaturalIdAttributes().get( i );
 
-			final boolean updatable = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( persister ).isUpdatable();
+			final boolean updatable = attributeMapping.getAttributeMetadata().isUpdatable();
 			if ( updatable ) {
 				// property is updatable (mutable), there is nothing to check
 				continue;
@@ -258,12 +257,23 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public JavaType<?> getJavaType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// the JavaType is the entity itself
+		return getDeclaringType().getJavaType();
 	}
 
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		for ( AttributeMapping attributeMapping : attributes ) {
+			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 
@@ -381,7 +391,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -392,7 +401,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
+			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -400,7 +409,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -412,7 +420,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachJdbcValue( incoming[ i ], clause, span + offset, valuesConsumer, session );
+			span += attribute.forEachJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -420,6 +428,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	@Override
 	public int getNumberOfFetchables() {
 		return attributes.size();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return attributes.get( position );
 	}
 
 	@Override
@@ -433,6 +446,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			consumer.accept( i, attributes.get(i) );
+		}
+	}
+
+	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		attributes.forEach( consumer );
 	}
@@ -443,7 +463,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> arrayJtd;
 
-		private final List<Fetch> fetches;
+		private final ImmutableFetchList fetches;
+		private final boolean hasJoinFetches;
+		private final boolean containsCollectionFetches;
 
 		private final String resultVariable;
 
@@ -459,6 +481,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			this.resultVariable = resultVariable;
 
 			this.fetches = creationState.visitFetches( this );
+			this.hasJoinFetches = this.fetches.hasJoinFetches();
+			this.containsCollectionFetches = this.fetches.containsCollectionFetches();
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -507,22 +531,24 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public List<Fetch> getFetches() {
+		public ImmutableFetchList getFetches() {
 			return fetches;
 		}
 
 		@Override
 		public Fetch findFetch(Fetchable fetchable) {
 			assert fetchable != null;
+			return fetches.get( fetchable );
+		}
 
-			for ( int i = 0; i < fetches.size(); i++ ) {
-				final Fetch fetch = fetches.get( i );
-				if ( fetchable.equals( fetch.getFetchedMapping() ) ) {
-					return fetch;
-				}
-			}
+		@Override
+		public boolean hasJoinFetches() {
+			return hasJoinFetches;
+		}
 
-			return null;
+		@Override
+		public boolean containsCollectionFetches() {
+			return containsCollectionFetches;
 		}
 	}
 
@@ -531,10 +557,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> jtd;
 
-		private final List<DomainResultAssembler<?>> subAssemblers;
+		private final DomainResultAssembler<?>[] subAssemblers;
 
 		private AssemblerImpl(
-				List<Fetch> fetches,
+				ImmutableFetchList fetches,
 				NavigablePath navigablePath,
 				CompoundNaturalIdMapping naturalIdMapping,
 				JavaType<Object[]> jtd,
@@ -547,11 +573,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			// we just "need it" as an impl detail for handling Fetches
 			final InitializerImpl initializer = new InitializerImpl( navigablePath, naturalIdMapping );
 
-			this.subAssemblers = CollectionHelper.arrayList( fetches.size() );
-			for ( int i = 0; i < fetches.size(); i++ ) {
-				final Fetch fetch = fetches.get( i );
-				final DomainResultAssembler<?> fetchAssembler = fetch.createAssembler( initializer, creationState );
-				subAssemblers.add( fetchAssembler );
+			this.subAssemblers = new DomainResultAssembler[fetches.size()];
+			int i = 0;
+			for ( Fetch fetch : fetches ) {
+				subAssemblers[i++] = fetch.createAssembler( initializer, creationState );
 			}
 		}
 
@@ -559,9 +584,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public Object[] assemble(
 				RowProcessingState rowProcessingState,
 				JdbcValuesSourceProcessingOptions options) {
-			final Object[] result = new Object[ subAssemblers.size() ];
-			for ( int i = 0; i < subAssemblers.size(); i++ ) {
-				result[ i ] = subAssemblers.get( i ).assemble( rowProcessingState, options );
+			final Object[] result = new Object[ subAssemblers.length ];
+			for ( int i = 0; i < subAssemblers.length; i++ ) {
+				result[ i ] = subAssemblers[i].assemble( rowProcessingState, options );
 			}
 			return result;
 		}
@@ -583,6 +608,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		@Override
 		public FetchParentAccess findFirstEntityDescriptorAccess() {
+			return null;
+		}
+
+		@Override
+		public EntityInitializer findFirstEntityInitializer() {
 			return null;
 		}
 

@@ -9,7 +9,7 @@ package org.hibernate.tool.schema.internal.exec;
 import org.hibernate.internal.build.AllowSysOut;
 
 /**
- * GenerationTarget implementation for handling generation to System.out
+ * A {@link GenerationTarget} that writed DDL to {@link System#out}.
  *
  * @author Steve Ebersole
  */

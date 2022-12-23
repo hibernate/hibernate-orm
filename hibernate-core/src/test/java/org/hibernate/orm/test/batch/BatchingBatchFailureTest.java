@@ -6,28 +6,25 @@
  */
 package org.hibernate.orm.test.batch;
 
+import java.lang.reflect.Field;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.spi.SessionImplementor;
-
-import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -80,12 +77,9 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 					throw new Exception( "Current batch was null" );
 				}
 				else {
-					//make sure it's actually a batching impl
-					assertEquals( BatchingBatch.class, batch.getClass() );
-					field = AbstractBatchImpl.class.getDeclaredField( "statements" );
-					field.setAccessible( true );
-					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)
-					assertEquals( 0, ((Map) field.get( batch )).size() );
+//					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)
+					final PreparedStatementDetails statementDetails = batch.getStatementGroup().getSingleStatementDetails();
+					assertThat( statementDetails.getStatement() ).isNull();
 				}
 			}
 			catch (Exception fieldException) {

@@ -13,12 +13,13 @@ import org.hibernate.MappingException;
 
 /**
  * A unifying interface for queries which can define tables (query spaces) to synchronize on.
- *
+ * <p>
  * These query spaces affect the process of auto-flushing by determining which entities will be
  * processed by auto-flush based on the table to which those entities are mapped and which are
  * determined to have pending state changes.
- *
- * In a similar manner, these query spaces also affect how query result caching can recognize invalidated results.
+ * <p>
+ * In a similar manner, these query spaces also affect how query result caching can recognize
+ * invalidated results.
  *
  * @author Steve Ebersole
  */

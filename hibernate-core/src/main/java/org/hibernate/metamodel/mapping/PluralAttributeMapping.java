@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Filter;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -59,7 +60,7 @@ public interface PluralAttributeMapping
 	OrderByFragment getManyToManyOrderByFragment();
 
 	@Override
-	default void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default void visitKeyFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		final CollectionPart indexDescriptor = getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			fetchableConsumer.accept( indexDescriptor );
@@ -67,8 +68,53 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
-	default void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	default int getNumberOfKeyFetchables() {
+		return getIndexDescriptor() == null ? 0 : 1;
+	}
+
+	@Override
+	default Fetchable getKeyFetchable(int position) {
+		final CollectionPart indexDescriptor = getIndexDescriptor();
+		if ( indexDescriptor != null && position == 0 ) {
+			return indexDescriptor;
+		}
+		throw new IndexOutOfBoundsException( position );
+	}
+
+	@Override
+	default void visitKeyFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		final CollectionPart indexDescriptor = getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			fetchableConsumer.accept( 0, indexDescriptor );
+		}
+	}
+
+	@Override
+	default void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
+	}
+
+	@Override
+	default int getNumberOfFetchables() {
+		return 1;
+	}
+
+	@Override
+	default int getNumberOfFetchableKeys() {
+		return getNumberOfKeyFetchables() + getNumberOfFetchables();
+	}
+
+	@Override
+	default void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		fetchableConsumer.accept( 0, getElementDescriptor() );
+	}
+
+	@Override
+	default Fetchable getFetchable(int position) {
+		if ( position == 0 ) {
+			return getElementDescriptor();
+		}
+		throw new IndexOutOfBoundsException( position );
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

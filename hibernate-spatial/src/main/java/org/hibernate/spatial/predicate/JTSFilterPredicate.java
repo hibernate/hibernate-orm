@@ -11,7 +11,10 @@ import jakarta.persistence.criteria.Predicate;
 
 /**
  * JPA Spatial Filter {@link Predicate}
+ *
+ * @deprecated Use {@link org.hibernate.spatial.criteria.JTSSpatialCriteriaBuilder JTSSpatialCriteriaBuilder} instead
  */
+@Deprecated(since = "6.2")
 class JTSFilterPredicate {
 
 	private Expression<?> geometry;

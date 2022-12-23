@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -23,6 +24,7 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A SQL AST translator for HANA.
@@ -42,6 +44,18 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
 				&& !isRowsOnlyFetchClauseType( queryPart );
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// HANA doesn't seem to support correlation, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	protected boolean isCorrelated(CteStatement cteStatement) {
+		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
+		return false;
 	}
 
 	@Override
@@ -78,7 +92,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
-		// HANA does not support parameters in lateral sub queries for some reason, so inline all the parameters in this case
+		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
 		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
 	}
 
@@ -96,16 +110,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// HANA does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// HANA does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
@@ -116,7 +120,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			appendSql( "grouping sets (())" );
 		}
 		else if ( expression instanceof Summarization ) {
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
@@ -124,27 +128,12 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			appendSql( OPEN_PARENTHESIS );
-			render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( CLOSE_PARENTHESIS );
-		}
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+	protected boolean supportsRowValueConstructorGtLtSyntax() {
 		return false;
 	}
 
@@ -156,5 +145,16 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	protected String getFromDualForSelectOnly() {
 		return getFromDual();
+	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		throw new MappingException(
+				String.format(
+						"The INSERT statement for table [%s] contains no column, and this is not supported by [%s]",
+						tableInsert.getMutatingTable().getTableId(),
+						getDialect()
+				)
+		);
 	}
 }

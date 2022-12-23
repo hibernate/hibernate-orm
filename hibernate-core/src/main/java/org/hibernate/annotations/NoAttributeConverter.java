@@ -7,10 +7,14 @@
 package org.hibernate.annotations;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.Remove;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated this class is no longer used
  */
+@Deprecated(since= "6.2") @Remove
 public class NoAttributeConverter<O,R> implements AttributeConverter<O,R> {
 	@Override
 	public R convertToDatabaseColumn(Object attribute) {

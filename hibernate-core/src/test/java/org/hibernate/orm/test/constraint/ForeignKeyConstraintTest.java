@@ -180,7 +180,7 @@ public class ForeignKeyConstraintTest {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
+                Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 
@@ -202,7 +202,7 @@ public class ForeignKeyConstraintTest {
 	private void assertNoForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyIterator();
+                Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 					assertFalse(
@@ -529,7 +529,7 @@ public class ForeignKeyConstraintTest {
 		public CompanyInfo info;
 	}
 
-	@Entity
+	@Entity(name = "PlanItem")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public abstract class PlanItem {
 
@@ -546,7 +546,7 @@ public class ForeignKeyConstraintTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Task")
 	@SecondaryTable( name = "Task" )
 	public class Task extends PlanItem {
 		@Id

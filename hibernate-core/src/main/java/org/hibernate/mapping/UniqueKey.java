@@ -10,19 +10,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A relational unique key constraint
+ * A mapping model object representing a {@linkplain jakarta.persistence.UniqueConstraint unique key}
+ * constraint on a relational database table.
  *
  * @author Brett Meyer
  */
 public class UniqueKey extends Constraint {
-	private Map<Column, String> columnOrderMap = new HashMap<>();
+	private final Map<Column, String> columnOrderMap = new HashMap<>();
+	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
 
-	@Override
+	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -31,27 +31,6 @@ public class UniqueKey extends Constraint {
 //		return dialect.getUniqueDelegate().uniqueConstraintSql( this );
 		// Not used.
 		return "";
-	}
-
-	@Override
-	public String sqlCreateString(
-			Mapping p,
-			SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		return null;
-//		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
-//				this, defaultCatalog, defaultSchema
-//		);
-	}
-
-	@Override
-	public String sqlDropString(
-			SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		return null;
-//		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
-//				this, defaultCatalog, defaultSchema
-//		);
 	}
 
 	public void addColumn(Column column, String order) {
@@ -72,5 +51,22 @@ public class UniqueKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		return StringHelper.qualify( getTable().getExportIdentifier(), "UK-" + getName() );
+	}
+
+	public boolean isNameExplicit() {
+		return nameExplicit;
+	}
+
+	public void setNameExplicit(boolean nameExplicit) {
+		this.nameExplicit = nameExplicit;
+	}
+
+	public boolean hasNullableColumn() {
+		for ( Column column : getColumns() ) {
+			if ( column.isNullable() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

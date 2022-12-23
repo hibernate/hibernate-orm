@@ -106,16 +106,6 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// SQLite does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// SQLite does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( rhs instanceof Any ) {
 			emulateSubQueryRelationalRestrictionPredicate(

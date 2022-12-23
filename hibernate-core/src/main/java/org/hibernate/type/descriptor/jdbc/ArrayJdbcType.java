@@ -24,7 +24,6 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class ArrayJdbcType implements JdbcType {
 
 	public static final ArrayJdbcType INSTANCE = new ArrayJdbcType( ObjectJdbcType.INSTANCE );
-	private static final ClassValue<Method> NAME_BINDER = new ClassValue<Method>() {
+	private static final ClassValue<Method> NAME_BINDER = new ClassValue<>() {
 		@Override
 		protected Method computeValue(Class<?> type) {
 			try {
@@ -84,16 +83,16 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		final BasicJavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
+		final JavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
 				precision,
 				scale,
 				typeConfiguration
 		);
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
 		);
 	}
@@ -137,7 +136,7 @@ public class ArrayJdbcType implements JdbcType {
 						throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
 					}
 				}
-				// Not that it's supposed to have setArray(String,Array) by standard.
+				// Note that it's supposed to have setArray(String,Array) by standard.
 				// There are numerous missing methods that only have versions for positional parameter,
 				// but not named ones.
 
@@ -156,7 +155,7 @@ public class ArrayJdbcType implements JdbcType {
 				final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
 				final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
 						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
-				final Class<?> preferredJavaTypeClass = underlyingJdbcType.getPreferredJavaTypeClass( options );
+				final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 				final Class<?> elementJdbcJavaTypeClass;
 				if ( preferredJavaTypeClass == null ) {
 					elementJdbcJavaTypeClass = underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(
@@ -184,7 +183,7 @@ public class ArrayJdbcType implements JdbcType {
 						.resolveSize( elementJdbcType, containerJavaType.getElementJavaType(), null, null, null );
 				String typeName = session.getTypeConfiguration()
 						.getDdlTypeRegistry()
-						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() )
+						.getDescriptor( elementJdbcType.getDdlTypeCode() )
 						.getTypeName( size );
 				int cutIndex = typeName.indexOf( '(' );
 				if ( cutIndex > 0 ) {

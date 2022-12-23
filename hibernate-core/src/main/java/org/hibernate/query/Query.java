@@ -30,6 +30,8 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -37,7 +39,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 /**
- * Represents a {@link jakarta.persistence.criteria.CriteriaBuilder criteria query}
+ * Represents a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}
  * or a query written in HQL. The subtype {@link NativeQuery} represents a query
  * written in native SQL.
  * <p>
@@ -317,22 +319,22 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Obtains the {@link LockOptions} in effect for this query.
 	 *
-	 * @return The LockOptions
+	 * @return The {@link LockOptions} currently in effect
 	 *
 	 * @see LockOptions
 	 */
+	@Override
 	LockOptions getLockOptions();
 
 	/**
-	 * Set the lock options for the query.
-	 * <p>
-	 * Only the following options are taken into consideration:
-	 * <ol>
-	 * <li>{@link LockOptions#getLockMode()}</li>
-	 * <li>{@link LockOptions#getScope()}</li>
-	 * <li>{@link LockOptions#getTimeOut()}</li>
-	 * </ol>
-	 * For alias-specific locking, use {@link #setLockMode(String, LockMode)}.
+	 * Apply the given {@linkplain LockOptions lock options} to this
+	 * query. Alias-specific lock modes in the given lock options are
+	 * merged with any alias-specific lock mode which have already been
+	 * {@linkplain #setAliasSpecificLockMode(String, LockMode) set}. If
+	 * a lock mode has already been specified for an alias that is among
+	 * the aliases in the given lock options, the lock mode specified in
+	 * the given lock options overrides the lock mode that was already
+	 * set.
 	 *
 	 * @param lockOptions The lock options to apply to the query.
 	 *
@@ -353,13 +355,14 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * driver and database. For maximum portability, the given lock
 	 * mode should be {@link LockMode#PESSIMISTIC_WRITE}.
 	 *
-	 * @param alias a query alias, or {@code "this"} for a collection filter
-	 * @param lockMode The lock mode to apply.
+	 * @param alias A query alias
+	 * @param lockMode The lock mode to apply
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getLockOptions()
 	 */
+	@Override
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
@@ -411,7 +414,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(String, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
@@ -419,8 +421,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, BindableType<P> type);
 
@@ -462,7 +462,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(int, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
@@ -470,8 +469,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, BindableType<P> type);
 
@@ -521,7 +518,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
@@ -560,7 +556,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -579,7 +575,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -603,7 +598,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -620,7 +615,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -644,7 +638,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -661,7 +655,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -701,7 +694,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use. If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -743,7 +735,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * appropriate {@link BindableType}, {@link #setParameterList(String, Collection)}
 	 * is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such
@@ -789,7 +780,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such
@@ -802,9 +792,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter}, inferring the {@link BindableType}.
-	 *
-	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -852,6 +840,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	Query<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	Query<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	Query<R> setTimeout(int timeout);

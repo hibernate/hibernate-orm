@@ -11,7 +11,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -32,16 +35,16 @@ import org.hibernate.type.BasicTypeReference;
 
 /**
  * Represents a native (SQL) query.
- *
+ * <p>
  * Allows the user to define certain aspects about its execution, such as:<ul>
  *     <li>
  *         result-set value mapping (see below)
  *     </li>
  *     <li>
  *         Tables used via {@link #addSynchronizedQuerySpace}, {@link #addSynchronizedEntityName} and
- *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
- *         auto-flush checking as well as cached query results if the results of the query are being
- *         cached.
+ *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows
+ *         Hibernate to know how to properly deal with auto-flush checking as well as cached query
+ *         results if the results of the query are being cached.
  *     </li>
  * </ul>
  *
@@ -51,7 +54,8 @@ import org.hibernate.type.BasicTypeReference;
  *         of its metadata
  *     </li>
  *     <li>
- *         A pre-defined (defined in metadata and named) mapping can be associated via {@link org.hibernate.Session#createNativeQuery(String, String)}
+ *         A pre-defined (defined in metadata and named) mapping can be associated via
+ *         {@link org.hibernate.Session#createNativeQuery(String, String)}
  *     </li>
  *     <li>
  *         Defined locally per the various {@link #addEntity}, {@link #addRoot}, {@link #addJoin},
@@ -66,7 +70,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically
 	 * detect the underlying type.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -79,7 +83,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -93,7 +97,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result.
-	 * <p/>
+	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
@@ -107,7 +111,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Declare a scalar query result using the specified result type.
-	 *
+	 * <p>
 	 * Hibernate will implicitly determine an appropriate conversion, if
 	 * it can.  Otherwise an exception will be thrown
 	 *
@@ -203,7 +207,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Defines a result based on a specified attribute. Differs from adding a scalar in that
 	 * any conversions or other semantics defined on the attribute are automatically applied
 	 * to the mapping.
-	 *
+	 * <p>
 	 * This form accepts the JPA Attribute mapping describing the attribute
 	 *
 	 * @return {@code this}, for method chaining
@@ -240,7 +244,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
 	 * same as the unqualified entity name
-	 * <p/>
+	 * <p>
 	 * Use {@link #addRoot} if you need further control of the mapping
 	 *
 	 * @param entityName The entity name that is the root return of the query.
@@ -353,7 +357,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Simple unification interface for all returns from the various `#addXYZ` methods .
 	 * Allows control over the "shape" of that particular part of the fetch graph.
-	 *
+	 * <p>
 	 * Some GraphNodes can be query results, while others simply describe a part
 	 * of one of the results.
 	 */
@@ -522,6 +526,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setCacheMode(CacheMode cacheMode);
 
 	@Override
+	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
 	NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
@@ -536,9 +546,33 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockOptions getLockOptions();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
 	@Override
 	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
+	/**
+	 * Not applicable to native SQL queries.
+	 *
+	 * @throws IllegalStateException for consistency with JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
@@ -557,8 +591,51 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
 
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #getHibernateLockMode()} to obtain the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
+	@Override
+	LockModeType getLockMode();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockMode getHibernateLockMode();
+
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #setHibernateLockMode(LockMode)} or the hint named
+	 * {@value org.hibernate.jpa.HibernateHints#HINT_NATIVE_LOCK_MODE}
+	 * to set the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(LockModeType lockMode);
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
 
 	@Override
 	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);

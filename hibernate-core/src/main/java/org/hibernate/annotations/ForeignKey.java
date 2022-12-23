@@ -9,6 +9,8 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.Remove;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -34,6 +36,9 @@ public @interface ForeignKey {
 	/**
 	 * Used for the non-owning side of a {@code ManyToMany} association.
 	 * Ignored for other association cardinalities.
+	 *
+	 * @deprecated this member is currently ignored and has no effect
 	 */
+	@Deprecated
 	String inverseName() default "";
 }

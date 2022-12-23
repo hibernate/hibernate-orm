@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface ResultSetMappingResolutionContext {
 	SessionFactoryImplementor getSessionFactory();
 }

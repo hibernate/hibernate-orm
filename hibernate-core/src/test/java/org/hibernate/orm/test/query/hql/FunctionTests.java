@@ -7,11 +7,18 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TiDBDialect;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -34,13 +41,17 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Gavin King
@@ -57,6 +68,8 @@ public class FunctionTests {
 		scope.inTransaction(
 				em -> {
 					EntityOfBasics entity = new EntityOfBasics();
+					entity.setTheInt(5);
+					entity.setTheDouble(1.0);
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
@@ -80,6 +93,44 @@ public class FunctionTests {
 					eom.addNumberByNumber(1,1.0);
 					em.persist(eom);
 				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15711")
+	public void testLowerUpperFunctionsWithEnums(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select lower(e.gender) from EntityOfBasics e", String.class)
+							.list();
+					session.createQuery("select upper(e.gender) from EntityOfBasics e", String.class)
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15711")
+	public void testLowerUpperFunctionsWithConvertedEnums(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select lower(e.convertedGender) from EntityOfBasics e", String.class)
+							.list();
+					session.createQuery("select upper(e.convertedGender) from EntityOfBasics e", String.class)
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15711")
+	public void testLowerFunctionsOrdinalEnumsShouldFail(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						assertThrows( IllegalArgumentException.class, () ->
+								session.createQuery( "select lower(e.ordinalGender) from EntityOfBasics e" )
+										.list()
+						)
 		);
 	}
 
@@ -318,19 +369,8 @@ public class FunctionTests {
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select function('ascii', 'x'), function('chr', 120) from EntityOfBasics w")
-							.list();
-					session.createQuery("from EntityOfBasics e where function('ascii', 'x') > 0")
-							.list();
-					session.createQuery("from EntityOfBasics e where function('chr', 120) = 'z'")
-							.list();
-
-					session.createQuery("select ascii('x'), chr(120) from EntityOfBasics w")
-							.list();
-					session.createQuery("from EntityOfBasics e where ascii('x') > 0")
-							.list();
-					session.createQuery("from EntityOfBasics e where chr(120) = 'z'")
-							.list();
+					assertThat( session.createQuery("select chr(65)").getSingleResult(), is( 'A' ) );
+					assertThat( session.createQuery("select ascii('A')").getSingleResult(), anyOf( is( 65 ), is( (short) 65 ) ) );
 				}
 		);
 	}
@@ -433,6 +473,48 @@ public class FunctionTests {
 					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sqrt(9.0)").getSingleResult(), is(3.0d) );
+				}
+		);
+	}
+
+	@Test
+	public void testRoundTruncFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select trunc(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select trunc(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select trunc(-32.92345f)").getSingleResult(), is(-32f) );
+					assertThat( session.createQuery("select trunc(-32.92345f,3)").getSingleResult(), is(-32.923f) );
+					assertThat( session.createQuery("select truncate(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select truncate(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.92345f)").getSingleResult(), is(33f) );
+					assertThat( session.createQuery("select round(32.92345f,1)").getSingleResult(), is(32.9f) );
+					assertThat( session.createQuery("select round(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.923451f,4)").getSingleResult(), is(32.9235f) );
+
+					assertThat( session.createQuery("select trunc(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select trunc(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select trunc(-32.92345d)").getSingleResult(), is(-32d) );
+					assertThat( session.createQuery("select trunc(-32.92345d,3)").getSingleResult(), is(-32.923d) );
+					assertThat( session.createQuery("select truncate(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select truncate(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.92345d)").getSingleResult(), is(33d) );
+					assertThat( session.createQuery("select round(32.92345d,1)").getSingleResult(), is(32.9d) );
+					assertThat( session.createQuery("select round(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.923451d,4)").getSingleResult(), is(32.9235d) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void testDateTruncFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select date_trunc(year,current_timestamp)").getSingleResult();
 				}
 		);
 	}
@@ -934,6 +1016,16 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testStatisticalFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select var_samp(e.theDouble), var_pop(abs(e.theDouble)), stddev_samp(e.theDouble), stddev_pop(e.theDouble) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
 	public void testCurrentDateTimeFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -983,6 +1075,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = MySQLDialect.class)
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	@SkipForDialect(dialectClass = TiDBDialect.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
 	public void testDateAddDiffFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1148,20 +1241,6 @@ public class FunctionTests {
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
-							.list();
-
-					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
-							.list();
-					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
-							.list();
-
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e")
 							.list();
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by minute from EntityOfBasics e")
@@ -1190,6 +1269,28 @@ public class FunctionTests {
 
 
 					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select (e.theDate - e.theTimestamp) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theDate - e.theTimestamp) by day from EntityOfBasics e")
+							.list();
+
+					session.createQuery("select (e.theTimestamp - e.theDate) by year from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by month from EntityOfBasics e")
+							.list();
+					session.createQuery("select (e.theTimestamp - e.theDate) by day from EntityOfBasics e")
 							.list();
 				}
 		);
@@ -1401,8 +1502,6 @@ public class FunctionTests {
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e")
-							.list();
 					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e")
 							.list();
 					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e")
@@ -1412,13 +1511,56 @@ public class FunctionTests {
 							session.createQuery("select format(theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics where id=123").getResultList().get(0),
 							is("Monday, 25/03/1974")
 					);
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unknown signature: experimental_strftime(time, string)") // could cast the first argument to timestamp to workaround this
+	public void testFormatTime(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e")
+							.list();
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics where id=123").getResultList().get(0),
-							is("Hello, 08:10:08 PM")
+							isOneOf( "Hello, 08:10:08 PM", "Hello, 08:10:08 pm" )
 					);
 				}
 		);
 	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMedian.class)
+	public void testMedian(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Object[]> list = session.createQuery("select median(e.theDouble), median(e.theInt) from EntityOfBasics e", Object[].class)
+							.list();
+					assertEquals( 1, list.size() );
+					Double d = (Double) list.get(0)[0];
+					Double i = (Double) list.get(0)[1];
+					assertEquals(d,1.0, 1e-5);
+					assertEquals(i,5.0, 1e-5);
+				}
+		);
+	}
+
+	@Test
+	public void testHyperbolic(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Math.sinh(1), (Double) session.createQuery("select sinh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+					assertEquals( Math.cosh(1), (Double) session.createQuery("select cosh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+					assertEquals( Math.tanh(1), (Double) session.createQuery("select tanh(e.theDouble) from EntityOfBasics e")
+							.getSingleResult(), 1e-6 );
+				}
+		);
+	}
+
 
 	@Test
 	public void testGrouping(SessionFactoryScope scope) {

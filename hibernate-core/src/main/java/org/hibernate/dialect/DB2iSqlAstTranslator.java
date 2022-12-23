@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.DB2iDialect.DB2_LUW_VERSION9;
+import static org.hibernate.dialect.DB2iDialect.DB2_LUW_VERSION;
 
 /**
  * A SQL AST translator for DB2i.
@@ -52,6 +52,6 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DB2_LUW_VERSION9;
+		return DB2_LUW_VERSION;
 	}
 }

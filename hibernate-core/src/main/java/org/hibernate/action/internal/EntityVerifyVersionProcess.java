@@ -20,6 +20,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Scott Marlow
  */
 public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess {
+
 	private final Object object;
 
 	/**
@@ -35,19 +36,18 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
 		// Don't check version for an entity that is not in the PersistenceContext;
-		if ( entry == null ) {
-			return;
-		}
-
-		final EntityPersister persister = entry.getPersister();
-		final Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
-		if ( !entry.getVersion().equals( latestVersion ) ) {
-			throw new OptimisticEntityLockException(
-					object,
-					"Newer version [" + latestVersion +
-							"] of entity [" + MessageHelper.infoString( entry.getEntityName(), entry.getId() ) +
-							"] found in database"
-			);
+		if ( entry != null ) {
+			final Object latestVersion = entry.getPersister().getCurrentVersion( entry.getId(), session );
+			if ( !entry.getVersion().equals( latestVersion ) ) {
+				throw new OptimisticEntityLockException(
+						object,
+						"Newer version ["
+								+ latestVersion
+								+ "] of entity ["
+								+ MessageHelper.infoString( entry.getEntityName(), entry.getId() )
+								+ "] found in database"
+				);
+			}
 		}
 	}
 }

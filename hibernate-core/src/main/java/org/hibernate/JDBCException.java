@@ -9,7 +9,8 @@ package org.hibernate;
 import java.sql.SQLException;
 
 /**
- * Wraps a {@link SQLException}.  Indicates that an exception occurred during a JDBC call.
+ * Wraps a {@link SQLException} arising from the JDBC driver.
+ * Indicates that an error occurred during a JDBC call.
  *
  * @author Gavin King
  *
@@ -17,27 +18,32 @@ import java.sql.SQLException;
  */
 public class JDBCException extends HibernateException {
 	private final SQLException sqlException;
+	private final String message;
 	private final String sql;
 
 	/**
-	 * Constructs a JDBCException using the given information.
+	 * Constructs a {@code JDBCException} using the given information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param cause The underlying cause
 	 */
 	public JDBCException(String message, SQLException cause) {
-		this( message, cause, null );
+		super( message, cause );
+		this.message = message;
+		this.sqlException = cause;
+		this.sql = null;
 	}
 
 	/**
-	 * Constructs a JDBCException using the given information.
+	 * Constructs a {@code JDBCException} using the given information.
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param cause The underlying cause
 	 * @param sql The sql being executed when the exception occurred
 	 */
 	public JDBCException(String message, SQLException cause, String sql) {
-		super( message, cause );
+		super( message + " [" + sql + "]", cause );
+		this.message = message;
 		this.sqlException = cause;
 		this.sql = sql;
 	}
@@ -82,4 +88,10 @@ public class JDBCException extends HibernateException {
 		return sql;
 	}
 
+	/**
+	 * @return The error message without the SQL statement appended
+	 */
+	public String getErrorMessage() {
+		return message;
+	}
 }

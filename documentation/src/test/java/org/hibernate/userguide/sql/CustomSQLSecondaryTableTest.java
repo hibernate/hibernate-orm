@@ -90,24 +90,24 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
     //tag::sql-custom-crud-secondary-table-example[]
     @Entity(name = "Person")
     @Table(name = "person")
+    @SecondaryTable(name = "person_details",
+            pkJoinColumns = @PrimaryKeyJoinColumn(name = "person_id"))
     @SQLInsert(
         sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) "
    )
     @SQLDelete(
         sql = "UPDATE person SET valid = false WHERE id = ? "
-   )
-    @SecondaryTable(name = "person_details",
-        pkJoinColumns = @PrimaryKeyJoinColumn(name = "person_id"))
-    @org.hibernate.annotations.Table(
-        appliesTo = "person_details",
-        sqlInsert = @SQLInsert(
-            sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
-            check = ResultCheckStyle.COUNT
-       ),
-        sqlDelete = @SQLDelete(
-            sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
-       )
-   )
+    )
+    @SQLInsert(
+        table = "person_details",
+        sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
+        check = ResultCheckStyle.COUNT
+    )
+    @SQLDelete(
+        table = "person_details",
+        sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
+    )
+
     @Loader(namedQuery = "find_valid_person")
     @NamedNativeQueries({
         @NamedNativeQuery(

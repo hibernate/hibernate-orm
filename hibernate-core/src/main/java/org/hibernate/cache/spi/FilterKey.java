@@ -8,20 +8,20 @@ package org.hibernate.cache.spi;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.Filter;
+import org.hibernate.Remove;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.internal.FilterImpl;
 import org.hibernate.type.Type;
 
 /**
  * Allows cached queries to be keyed by enabled filters.
  * 
  * @author Gavin King
+ *
+ * @deprecated this class is no longer used
  */
+@Deprecated(since = "6.2") @Remove
 public final class FilterKey implements Serializable {
 	private final String filterName;
 	private final Map<String,TypedValue> filterParameters = new HashMap<>();

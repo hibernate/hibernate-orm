@@ -49,6 +49,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Andrea Boriero
@@ -117,8 +118,6 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 
-		final int relativesAttributeIndex = childPersister.getEntityMetamodel().getPropertyIndex( "relatives" );
-
 		inTransaction(
 				session -> {
 					stats.clear();
@@ -127,7 +126,6 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 					final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) loadedChild;
 					final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 					MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
-					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
 
 					loadedChild.setName( updatedName );
 
@@ -139,21 +137,15 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 					assertEquals( 1, stats.getPrepareStatementCount() );
 
 					final EntityEntry entry = session.getPersistenceContext().getEntry( loadedChild );
-					assertThat(
-							entry.getLoadedState()[ relativesAttributeIndex ],
-							is( LazyPropertyInitializer.UNFETCHED_PROPERTY )
-					);
+					assertFalse( Hibernate.isInitialized( loadedChild.getRelatives() ) );
 
-					// force a flush - the relatives collection should still be UNFETCHED_PROPERTY afterwards
+					// force a flush - the relatives collection should still be uninitialized afterwards
 					session.flush();
 
 					final EntityEntry updatedEntry = session.getPersistenceContext().getEntry( loadedChild );
 					assertThat( updatedEntry, sameInstance( entry ) );
 
-					assertThat(
-							entry.getLoadedState()[ relativesAttributeIndex ],
-							is( LazyPropertyInitializer.UNFETCHED_PROPERTY )
-					);
+					assertFalse( Hibernate.isInitialized( loadedChild.getRelatives() ) );
 
 					session.getEventListenerManager();
 				}
@@ -164,11 +156,7 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 					Child loadedChild = session.load( Child.class, lastChildID );
 					assertThat( loadedChild.getName(), is( updatedName ) );
 
-					final EntityEntry entry = session.getPersistenceContext().getEntry( loadedChild );
-					assertThat(
-							entry.getLoadedState()[ relativesAttributeIndex ],
-							is( LazyPropertyInitializer.UNFETCHED_PROPERTY )
-					);
+					assertFalse( Hibernate.isInitialized( loadedChild.getRelatives() ) );
 				}
 		);
 

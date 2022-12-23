@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -63,7 +62,7 @@ public class MetadataSources implements Serializable {
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
 
-	private final XmlMappingBinderAccess xmlMappingBinderAccess;
+	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
 	private List<Binding<?>> xmlBindings;
 	private LinkedHashSet<Class<?>> annotatedClasses;
@@ -85,7 +84,7 @@ public class MetadataSources implements Serializable {
 	 * @param serviceRegistry The service registry to use.
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry) {
-		this( serviceRegistry, new XmlMappingBinderAccess( serviceRegistry ) );
+		this( serviceRegistry, null );
 	}
 
 	/**
@@ -109,24 +108,15 @@ public class MetadataSources implements Serializable {
 		this.xmlMappingBinderAccess = xmlMappingBinderAccess;
 	}
 
-	/**
-	 * Consider this an SPI, used by Quarkus
-	 */
-	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
-		Objects.requireNonNull( serviceRegistry );
-		this.serviceRegistry = serviceRegistry;
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.xmlMappingBinderAccess = disableXmlMappingBinders
-				? null
-				: new XmlMappingBinderAccess( serviceRegistry );
-	}
-
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
 		return serviceRegistry instanceof BootstrapServiceRegistry
 			|| serviceRegistry instanceof StandardServiceRegistry;
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		if ( xmlMappingBinderAccess == null ) {
+			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
+		}
 		return xmlMappingBinderAccess;
 	}
 
@@ -422,7 +412,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
@@ -440,7 +430,7 @@ public class MetadataSources implements Serializable {
 	 * the DOM structure of a particular mapping. It is saved from a previous call
 	 * as a file with the name {@code {xmlFile}.bin} where {@code {xmlFile}} is the
 	 * name of the original mapping file.
-	 * </p>
+	 * <p>
 	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}},
 	 * the {@code {xmlFile}.bin} file will be read directly. Otherwise {@code {xmlFile}}
 	 * is read and then serialized to {@code {xmlFile}.bin} for use the next time.
@@ -458,7 +448,7 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
@@ -478,7 +468,7 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever reason.
 	 *
@@ -540,7 +530,7 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * Read all {@code .hbm.xml} mappings from a jar file.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
@@ -566,7 +556,7 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *

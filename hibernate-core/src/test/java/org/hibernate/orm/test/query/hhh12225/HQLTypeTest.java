@@ -29,6 +29,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class HQLTypeTest {
 
 	@Test
+	public void smokeTest(SessionFactoryScope scope) {
+//		scope.inTransaction( (session) -> {
+//			final Vehicle vehicle = new Vehicle();
+//			final VehicleContract contract = new VehicleContract();
+//			vehicle.setContract( contract );
+//
+//			session.persist( contract );
+//			session.persist( vehicle );
+//		} );
+
+		scope.inTransaction( (session) -> {
+//			final Vehicle vehicle = new Vehicle();
+			final VehicleTrackContract contract = new VehicleTrackContract();
+//			vehicle.setContract( contract );
+
+			session.persist( contract );
+//			session.persist( vehicle );
+		} );
+	}
+
+	@Test
 	public void test(SessionFactoryScope scope) {
 		VehicleContract contract = scope.fromTransaction( session -> {
 			VehicleContract firstCotract = null;

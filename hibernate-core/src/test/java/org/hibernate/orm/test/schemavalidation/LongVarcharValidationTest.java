@@ -82,6 +82,7 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Translation.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 

@@ -6,13 +6,16 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.util.Map;
+
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.service.Service;
 
 /**
  * Contract for providers of bytecode services to Hibernate.
- * <p/>
+ * <p>
  * Bytecode requirements break down into the following areas<ol>
  *     <li>proxy generation (both for runtime-lazy-loading and basic proxy generation) {@link #getProxyFactoryFactory()}</li>
  *     <li>bean reflection optimization {@link #getReflectionOptimizer}</li>
@@ -38,8 +41,20 @@ public interface BytecodeProvider extends Service {
 	 * @param setterNames Names of all property setters to be accessed via reflection.
 	 * @param types The types of all properties to be accessed.
 	 * @return The reflection optimization delegate.
+	 * @deprecated Use {@link #getReflectionOptimizer(Class, Map)} insstead
 	 */
+	@Deprecated(forRemoval = true)
 	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
+
+	/**
+	 * Retrieve the ReflectionOptimizer delegate for this provider
+	 * capable of generating reflection optimization components.
+	 *
+	 * @param clazz The class to be reflected upon.
+	 * @param propertyAccessMap The ordered property access map
+	 * @return The reflection optimization delegate.
+	 */
+	ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.

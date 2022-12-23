@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.post;
 
-import java.io.File;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.TreeSet;
 import javax.inject.Inject;
@@ -38,6 +38,20 @@ public abstract class InternalsReportTask extends AbstractJandexAwareTask {
 		processAnnotations( DotName.createSimple( INTERNAL_ANN_NAME ), internals );
 
 		writeReport( internals );
+	}
+
+	@Override
+	protected void writeReportHeader(OutputStreamWriter fileWriter) {
+		super.writeReportHeader( fileWriter );
+
+		try {
+			fileWriter.write( "# All API elements considered internal for Hibernate's own use" );
+			fileWriter.write( '\n' );
+			fileWriter.write( '\n' );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
 	}
 
 }

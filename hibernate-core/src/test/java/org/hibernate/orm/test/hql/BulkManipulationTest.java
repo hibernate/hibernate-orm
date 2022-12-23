@@ -24,7 +24,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
@@ -34,6 +33,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.generator.Generator;
 import org.junit.Test;
 import org.junit.jupiter.api.Assumptions;
 import junit.framework.AssertionFailedError;
@@ -580,10 +580,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
         EntityPersister persister = sessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		return BulkInsertionCapableIdentifierGenerator.class.isInstance( generator )
-				&& BulkInsertionCapableIdentifierGenerator.class.cast( generator )
-				.supportsBulkInsertionIdentifierGeneration();
+		Generator generator = persister.getGenerator();
+		return generator instanceof BulkInsertionCapableIdentifierGenerator
+			&& ( (BulkInsertionCapableIdentifierGenerator) generator ).supportsBulkInsertionIdentifierGeneration();
 	}
 
 	@Test

@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.envers.boot.model.AttributeContainer;
@@ -20,6 +19,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
@@ -50,13 +50,6 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			EntityMappingData mappingData,
 			boolean firstPass) {
 		final Component propComponent = (Component) value;
-		final Class<? extends EmbeddableInstantiator> instantiatorClass;
-		if ( propComponent.getCustomInstantiator() != null ) {
-			instantiatorClass = propComponent.getCustomInstantiator();
-		}
-		else {
-			instantiatorClass = null;
-		}
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
 			instantiator = getMetadataBuildingContext().getBootstrapContext()
@@ -77,6 +70,13 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 					.getBeanInstance();
 			instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
 		}
+		else if ( propComponent.getInstantiator() != null ) {
+			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
+					propComponent.getPropertyNames(),
+					propComponent.getInstantiator(),
+					propComponent.getInstantiatorPropertyNames()
+			);
+		}
 		else {
 			instantiator = null;
 		}
@@ -94,10 +94,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 
 		// Adding all properties of the component
 		propComponent.sortProperties();
-		final Iterator<Property> properties = propComponent.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = properties.next();
-
+		for ( Property property : propComponent.getProperties() ) {
 			final PropertyAuditingData componentPropertyAuditingData =
 					componentAuditingData.getPropertyAuditingData( property.getName() );
 

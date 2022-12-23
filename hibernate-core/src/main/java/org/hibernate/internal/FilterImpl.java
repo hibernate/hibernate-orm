@@ -73,15 +73,17 @@ public class FilterImpl implements Filter, Serializable {
 	 * of the passed value did not match the configured type.
 	 */
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
+		Object argument = definition.processArgument(value);
+
 		// Make sure this is a defined parameter and check the incoming value type
 		JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
 		}
-		if ( value != null && !type.getJavaTypeDescriptor().isInstance( value ) ) {
+		if ( argument != null && !type.getJavaTypeDescriptor().isInstance( argument ) ) {
 			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
 		}
-		parameters.put( name, value );
+		parameters.put( name, argument );
 		return this;
 	}
 
@@ -96,7 +98,7 @@ public class FilterImpl implements Filter, Serializable {
 	public Filter setParameterList(String name, Collection<?> values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
-			throw new IllegalArgumentException( "Collection must be not null!" );
+			throw new IllegalArgumentException( "Collection must be not null" );
 		}
 		JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {

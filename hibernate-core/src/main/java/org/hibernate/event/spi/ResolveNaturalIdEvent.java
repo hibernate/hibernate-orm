@@ -31,7 +31,7 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 	private Object entityId;
 
 	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityPersister entityPersister, EventSource source) {
-		this( naturalIdValues, entityPersister, new LockOptions(), source );
+		this( naturalIdValues, entityPersister, LockOptions.NONE, source );
 	}
 
 	public ResolveNaturalIdEvent(

@@ -64,6 +64,7 @@ public class CollectionCompositeElementExplicitConversionTest {
 				.addAnnotatedClass( Traits.class )
 				.buildMetadata();
 
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final PersistentClass entityBinding = metadata.getEntityBinding( Disguise.class.getName() );

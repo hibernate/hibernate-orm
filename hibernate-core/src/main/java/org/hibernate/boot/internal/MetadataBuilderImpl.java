@@ -39,6 +39,8 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -63,7 +65,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -72,9 +73,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -179,6 +179,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		this.options.physicalNamingStrategy = namingStrategy;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.options.columnOrderingStrategy = columnOrderingStrategy;
 		return this;
 	}
 
@@ -449,7 +455,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							throw new AnnotationException(
 									String.format(
 											Locale.ROOT,
-											"`%s` should specify either `%s` or `%s` - %s",
+											"'%s' should specify either '%s' or '%s' (was '%s')",
 											AvailableSettings.DEFAULT_LIST_SEMANTICS,
 											java.util.List.class.getName(),
 											java.util.Collection.class.getName(),
@@ -541,7 +547,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
 		private final IdentifierGeneratorFactory identifierGeneratorFactory;
-		private final TimeZoneStorageStrategy defaultTimezoneStorage;
+		private final TimeZoneStorageType defaultTimezoneStorage;
 
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
@@ -550,6 +556,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
+		private ColumnOrderingStrategy columnOrderingStrategy;
 
 		private SharedCacheMode sharedCacheMode;
 		private final AccessType defaultCacheAccessType;
@@ -569,14 +576,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
-			this.identifierGeneratorFactory = new StandardIdentifierGeneratorFactory( serviceRegistry );
+			this.identifierGeneratorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
-			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( serviceRegistry, configService );
+			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
 			this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 
 			this.xmlMappingEnabled = configService.getSetting(
@@ -694,6 +701,21 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
+			this.columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+					ColumnOrderingStrategy.class,
+					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
+					new Callable<>() {
+						@Override
+						public ColumnOrderingStrategy call() {
+							return strategySelector.resolveDefaultableStrategy(
+									ColumnOrderingStrategy.class,
+									"default",
+									ColumnOrderingStrategyStandard.INSTANCE
+							);
+						}
+					}
+			);
+
 			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 
 			this.useNationalizedCharacterData = configService.getSetting(
@@ -748,7 +770,61 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
-			return defaultTimezoneStorage;
+			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
+		}
+
+		@Override
+		public TimeZoneSupport getTimeZoneSupport() {
+			try {
+				return serviceRegistry.getService( JdbcServices.class )
+						.getDialect()
+						.getTimeZoneSupport();
+			}
+			catch (ServiceException se) {
+				return TimeZoneSupport.NONE;
+			}
+		}
+
+		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
+			switch ( defaultTimezoneStorage ) {
+				case NATIVE:
+					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
+					}
+					return TimeZoneStorageStrategy.NATIVE;
+				case COLUMN:
+					return TimeZoneStorageStrategy.COLUMN;
+				case NORMALIZE:
+					return TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC:
+					return TimeZoneStorageStrategy.NORMALIZE_UTC;
+				case AUTO:
+					switch (timeZoneSupport) {
+						case NATIVE:
+							// if the db has native support for timezones, we use that, not a column
+							return TimeZoneStorageStrategy.NATIVE;
+						case NORMALIZE:
+						case NONE:
+							// otherwise we use a separate column
+							return TimeZoneStorageStrategy.COLUMN;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
+					}
+				case DEFAULT:
+					switch (timeZoneSupport) {
+						case NATIVE:
+							// if the db has native support for timezones, we use that, and don't normalize
+							return TimeZoneStorageStrategy.NATIVE;
+						case NORMALIZE:
+						case NONE:
+							// otherwise we normalize things to UTC
+							return TimeZoneStorageStrategy.NORMALIZE_UTC;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport);
+					}
+				default:
+					throw new HibernateException( "Unsupported time zone storage type: " + defaultTimezoneStorage );
+			}
 		}
 
 		@Override
@@ -769,6 +845,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 			return physicalNamingStrategy;
+		}
+
+		@Override
+		public ColumnOrderingStrategy getColumnOrderingStrategy() {
+			return columnOrderingStrategy;
 		}
 
 		@Override
@@ -864,56 +945,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 	}
 
-	private static TimeZoneStorageStrategy resolveTimeZoneStorageStrategy(
-			StandardServiceRegistry serviceRegistry,
+	private static TimeZoneStorageType resolveTimeZoneStorageStrategy(
 			ConfigurationService configService) {
-		final TimeZoneStorageType configuredTimeZoneStorageType = configService.getSetting(
+		return  configService.getSetting(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
 				value -> TimeZoneStorageType.valueOf( value.toString() ),
-				null
+				TimeZoneStorageType.DEFAULT
 		);
-		final TimeZoneStorageStrategy resolvedTimezoneStorage;
-		// For now, we default to NORMALIZE as that is the Hibernate 5.x behavior
-		if ( configuredTimeZoneStorageType == null ) {
-			resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
-		}
-		else {
-			final TimeZoneSupport timeZoneSupport = serviceRegistry.getService( JdbcServices.class )
-					.getDialect()
-					.getTimeZoneSupport();
-			switch ( configuredTimeZoneStorageType ) {
-				case NATIVE:
-					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
-						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
-					}
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
-					break;
-				case COLUMN:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
-					break;
-				case NORMALIZE:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
-					break;
-				case NORMALIZE_UTC:
-					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE_UTC;
-					break;
-				case AUTO:
-					switch ( timeZoneSupport ) {
-						case NATIVE:
-							resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
-							break;
-						case NORMALIZE:
-						case NONE:
-							resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
-							break;
-						default:
-							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport );
-					}
-					break;
-				default:
-					throw new HibernateException( "Unsupported time zone storage type: " + configuredTimeZoneStorageType );
-			}
-		}
-		return resolvedTimezoneStorage;
 	}
 }

@@ -104,7 +104,7 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 												List<ProvidedService<?>> providedServices,
 												Map<?, ?> configurationValues) {
 		if ( super.isActive() ) {
-			throw new IllegalStateException( "Can't reactivate an active registry!" );
+			throw new IllegalStateException( "Can't reactivate an active registry" );
 		}
 		super.resetParent( bootstrapServiceRegistry );
 		this.configurationValues = new HashMap( configurationValues );

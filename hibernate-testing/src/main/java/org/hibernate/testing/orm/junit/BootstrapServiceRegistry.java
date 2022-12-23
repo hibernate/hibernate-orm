@@ -18,8 +18,8 @@ import org.hibernate.integrator.spi.Integrator;
  * Used to define the bootstrap ServiceRegistry to be used for testing.
  */
 @Inherited
-@Target( ElementType.TYPE )
-@Retention( RetentionPolicy.RUNTIME )
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
 
 @ServiceRegistryFunctionalTesting
 public @interface BootstrapServiceRegistry {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -14,21 +15,22 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -52,9 +54,10 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
 
 /**
  * @author Steve Ebersole
@@ -72,28 +75,28 @@ public class EmbeddedAttributeMapping
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		this(
 			name,
 			navigableRole,
 			stateArrayPosition,
+			fetchableIndex,
 			tableExpression,
-			attributeMetadataAccess,
+			attributeMetadata,
 			getPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,
 			declaringType,
-			propertyAccess,
-			valueGeneration
+			propertyAccess
 		);
 	}
 
@@ -101,24 +104,24 @@ public class EmbeddedAttributeMapping
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				name,
 				stateArrayPosition,
-				attributeMetadataAccess,
+				fetchableIndex,
+				attributeMetadata,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 
@@ -140,13 +143,13 @@ public class EmbeddedAttributeMapping
 		super(
 				inverseModelPart.getFetchableName(),
 				-1,
+				inverseModelPart.getFetchableKey(),
 				null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
-				inverseModelPart instanceof PropertyBasedMapping ?
-						( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess() :
-						null,
-				null
+				inverseModelPart instanceof PropertyBasedMapping
+						? ( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess()
+						: null
 		);
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
@@ -182,8 +185,23 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public int compare(Object value1, Object value2) {
+		return super.compare( value1, value2 );
+	}
+
+	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
+	}
+
+	@Override
+	public void forEachInsertable(SelectableConsumer consumer) {
+		getEmbeddableTypeDescriptor().forEachInsertable( 0, consumer );
+	}
+
+	@Override
+	public void forEachUpdatable(SelectableConsumer consumer) {
+		getEmbeddableTypeDescriptor().forEachUpdatable( 0, consumer );
 	}
 
 	@Override
@@ -192,11 +210,29 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().decompose( domainValue, valueConsumer, session );
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableResultImpl<>(
+					navigablePath,
+					this,
+					resultVariable,
+					creationState
+			);
+		}
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -235,6 +271,16 @@ public class EmbeddedAttributeMapping
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
+			return new AggregateEmbeddableFetchImpl(
+					fetchablePath,
+					this,
+					fetchParent,
+					fetchTiming,
+					selected,
+					creationState
+			);
+		}
 		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
@@ -251,24 +297,31 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
+		if ( embeddableMappingType.getAggregateMapping() != null ) {
+			final SelectableMapping selection = embeddableMappingType.getAggregateMapping();
+			final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+			final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+			return new SqlTuple(
+					Collections.singletonList(
+							sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+									tableReference,
+									selection
+							)
+					),
+					this
+			);
+		}
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey(
-									tableReference,
-									selection.getSelectionExpression()
-							),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference.getIdentificationVariable(),
-									selection,
-									sqlAstCreationState.getCreationContext().getSessionFactory()
-							)
+							tableReference,
+							selection
 					);
 
 					columnReferences.add( columnReference.getColumnReference() );
@@ -349,6 +402,16 @@ public class EmbeddedAttributeMapping
 	@Override
 	public int getNumberOfFetchables() {
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getEmbeddableTypeDescriptor().getFetchable( position );
+	}
+
+	@Override
+	public int getSelectableIndex(String selectableName) {
+		return getEmbeddableTypeDescriptor().getSelectableIndex( selectableName );
 	}
 
 	@Override

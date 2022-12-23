@@ -17,8 +17,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.model.internal.HCANNHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 
@@ -97,14 +97,15 @@ public class ConverterHelper {
 		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
 		if ( converterParamTypes == null ) {
 			throw new AnnotationException(
-					"Could not extract type parameter information from AttributeConverter implementation ["
-							+ converterClass.getName() + "]"
+					"Could not extract type argument from attribute converter class '"
+							+ converterClass.getName() + "'"
 			);
 		}
 		else if ( converterParamTypes.size() != 2 ) {
 			throw new AnnotationException(
-					"Unexpected type parameter information for AttributeConverter implementation [" +
-							converterClass.getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
+					"Unexpected type argument for attribute converter class '"
+							+ converterClass.getName()
+							+ "' (expected 2 type arguments, but found " + converterParamTypes.size() + ")"
 			);
 		}
 		return converterParamTypes;

@@ -81,7 +81,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	}
 
 	/**
-	 * Set a <literal>.cfg.xml</literal> file
+	 * Set a {@code .cfg.xml} file
 	 * @param configurationFile the file name
 	 */
 	public void setConfig(File configurationFile) {

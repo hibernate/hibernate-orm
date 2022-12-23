@@ -199,4 +199,5 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 			SharedSessionContractImplementor session) {
 		return (short) ( current + 1 );
 	}
+
 }

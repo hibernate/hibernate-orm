@@ -24,10 +24,10 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
- * @author Andrea Boriero
- *
  * This implementation executes a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
  * to retrieve all the database table in order to determine if all the {@link jakarta.persistence.Entity} have a mapped database tables.
+ *
+ * @author Andrea Boriero
  */
 public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 
@@ -50,7 +50,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
 			Namespace namespace,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
@@ -76,12 +76,12 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = tables.getTableInformation( table );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, sqlStringGenerationContext, targets );
+						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
 					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
 						migrateTable( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}
@@ -93,9 +93,9 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}

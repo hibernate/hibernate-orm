@@ -10,4 +10,7 @@ package org.hibernate.persister.walking.spi;
 * @author Steve Ebersole
 */
 public interface AttributeSource {
+	default int getPropertyIndex(String propertyName) {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQLDialect;
 
 /**
  * @author Vlad Mihalcea
@@ -23,7 +23,7 @@ public class MySQLIdleConnectionCounter implements IdleConnectionCounter {
 
 	@Override
 	public boolean appliesTo(Class<? extends Dialect> dialect) {
-		return MySQL5Dialect.class.isAssignableFrom( dialect );
+		return MySQLDialect.class.isAssignableFrom( dialect );
 	}
 
 	@Override

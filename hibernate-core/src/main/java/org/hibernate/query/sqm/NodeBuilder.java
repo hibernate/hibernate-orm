@@ -644,4 +644,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	BasicType<Boolean> getBooleanType();
 
 	BasicType<Integer> getIntegerType();
+
+	BasicType<Character> getCharacterType();
 }

@@ -9,6 +9,7 @@ package org.hibernate.testing.orm.junit;
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -16,6 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
@@ -27,23 +29,43 @@ public final class DialectContext {
 
 	static void init() {
 		final Properties properties = Environment.getProperties();
+		final String diverClassName = properties.getProperty( Environment.DRIVER );
 		final String dialectName = properties.getProperty( Environment.DIALECT );
+		final String jdbcUrl = properties.getProperty( Environment.URL );
+		final Properties props = new Properties();
+		props.setProperty( "user", properties.getProperty( Environment.USER ) );
+		props.setProperty( "password", properties.getProperty( Environment.PASS ) );
 		if ( dialectName == null ) {
 			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );
 		}
+		final Constructor<? extends Dialect> constructor;
 		try {
+			@SuppressWarnings("unchecked")
 			final Class<? extends Dialect> dialectClass = ReflectHelper.classForName( dialectName );
-			final Constructor<? extends Dialect> constructor = dialectClass.getConstructor( DialectResolutionInfo.class );
-			Driver driver = (Driver) Class.forName( properties.getProperty( Environment.DRIVER ) ).newInstance();
-			Properties props = new Properties();
-			props.setProperty( "user", properties.getProperty( Environment.USER ) );
-			props.setProperty( "password", properties.getProperty( Environment.PASS ) );
-			try (Connection connection = driver.connect( properties.getProperty( Environment.URL ), props )) {
-				dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
-			}
+			constructor = dialectClass.getConstructor( DialectResolutionInfo.class );
 		}
 		catch (ClassNotFoundException cnfe) {
 			throw new HibernateException( "Dialect class not found: " + dialectName, cnfe );
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );
+		}
+		final Driver driver;
+		try {
+			driver = (Driver) Class.forName( diverClassName ).newInstance();
+		}
+		catch (ClassNotFoundException cnfe) {
+			throw new HibernateException( "JDBC Driver class not found: " + dialectName, cnfe );
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate given JDBC driver class: " + dialectName, e );
+		}
+		try ( Connection connection = driver.connect( jdbcUrl, props ) ) {
+			dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
+		}
+		catch (SQLException sqle) {
+			throw new JDBCConnectionException( "Could not connect to database with JDBC URL: '"
+					+ jdbcUrl + "' [" + sqle.getMessage() + "]", sqle );
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );

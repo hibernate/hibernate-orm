@@ -70,4 +70,5 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 	public String toString() {
 		return name;
 	}
+
 }

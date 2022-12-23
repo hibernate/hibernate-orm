@@ -11,20 +11,24 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.OracleDialect;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.CockroachDialect;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -68,8 +72,10 @@ public class BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				List<Person> persons = session.createQuery( "select p from Person p").getResultList();
+			inTransaction( (session) -> {
+				List<Person> persons = session
+						.createSelectionQuery( "select p from Person p", Person.class )
+						.getResultList();
 
 				for ( int i = 0; i < persons.size(); i++ ) {
 					Person person = persons.get( i );
@@ -96,14 +102,20 @@ public class BatchOptimisticLockingTest extends
 			if ( getDialect() instanceof CockroachDialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
+				var msg = "org.hibernate.exception.LockAcquisitionException: could not execute batch";
 				assertEquals(
 						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
-						expected.getMessage()
+						expected.getMessage().substring( 0, msg.length() )
+				);
+			}
+			else if ( getDialect() instanceof OracleDialect && getDialect().getVersion().isBefore( 12 ) ) {
+				assertTrue(
+						expected.getCause() instanceof StaleObjectStateException
 				);
 			}
 			else {
 				assertEquals(
-						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?, version=? where id=? and version=?",
+						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?",
 						expected.getMessage()
 				);
 			}

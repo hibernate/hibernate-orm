@@ -9,20 +9,12 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Lob;
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyEnumerated;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -44,10 +36,17 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -291,7 +290,7 @@ public class AuditedPropertiesReader {
 			final Property property = propertyIter.next();
 			addPersistentProperty( property );
 			// See HHH-6636
-			if ( "embedded".equals( property.getPropertyAccessorName() ) && !PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
+			if ( "embedded".equals( property.getPropertyAccessorName() ) && !NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
 				createPropertiesGroupMapping( property );
 			}
 		}
@@ -306,12 +305,9 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void createPropertiesGroupMapping(Property property) {
 		final Component component = (Component) property.getValue();
-		final Iterator<Property> componentProperties = component.getPropertyIterator();
-		while ( componentProperties.hasNext() ) {
-			final Property componentProperty = componentProperties.next();
+		for ( Property componentProperty : component.getProperties() ) {
 			propertiesGroupMapping.put( componentProperty.getName(), property.getName() );
 		}
 	}

@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
@@ -20,6 +21,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -28,9 +31,8 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -39,6 +41,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -47,6 +50,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class DiscriminatedCollectionPart implements DiscriminatedAssociationModelPart, CollectionPart {
 	private final Nature nature;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private final NavigableRole partRole;
 	private final CollectionPersister collectionDescriptor;
@@ -71,6 +75,8 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				bootValueMapping,
 				creationProcess
 		);
+
+		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -99,13 +105,32 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		discriminatorMapping.getDiscriminatorPart().forEachSelectable( offset, consumer );
+		discriminatorMapping.getKeyPart().forEachSelectable( offset + 1, consumer );
+
+		return 2;
+	}
+
+	@Override
 	public String getFetchableName() {
 		return nature.getName();
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return discriminatorMapping;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+				|| discriminatorMapping.getKeyPart().isPartitioned();
 	}
 
 	@Override
@@ -173,6 +198,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public MappingType getMappedType() {
+		return getPartMappingType();
+	}
+
+	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
@@ -193,6 +223,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, getDiscriminatorPart() );
+		consumer.accept( 1, getKeyPart() );
+	}
+
+	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		consumer.accept( getDiscriminatorPart() );
 		consumer.accept( getKeyPart() );
@@ -204,8 +240,29 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		switch ( position ) {
+			case 0:
+				return getDiscriminatorPart();
+			case 1:
+				return getKeyPart();
+		}
+		throw new IndexOutOfBoundsException(position);
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return getDiscriminatorPart().getContainingTableExpression();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return getDiscriminatorPart().getSelectable( columnIndex );
 	}
 
 	@Override
@@ -216,13 +273,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return discriminatorMapping.getDiscriminatorPart().forEachDisassembledJdbcValue(
 				value,
-				clause,
 				offset,
 				valuesConsumer,
 				session
@@ -231,7 +286,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		discriminatorMapping.getDiscriminatorPart().breakDownJdbcValues( domainValue, valueConsumer, session );
+		discriminatorMapping.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
+
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		discriminatorMapping.decompose( domainValue, valueConsumer, session );
 	}
 
 	@Override

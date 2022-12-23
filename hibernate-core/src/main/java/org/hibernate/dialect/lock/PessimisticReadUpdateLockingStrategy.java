@@ -15,7 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
@@ -25,11 +25,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * A pessimistic locking strategy where the locks are obtained through update statements.
- * <p/>
- * This strategy is valid for LockMode.PESSIMISTIC_READ
- *
- * This class is a clone of UpdateLockingStrategy.
+ * A pessimistic locking strategy where a lock is obtained via
+ * an update statement.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_READ}.
+ * <p>
+ * This class is a clone of {@link UpdateLockingStrategy}.
  *
  * @author Steve Ebersole
  * @author Scott Marlow
@@ -68,7 +69,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
@@ -89,7 +90,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+					final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 					// todo:  should this instead check for exactly one row modified?
 					if ( affected < 0 ) {
 						final StatisticsImplementor statistics = factory.getStatistics();

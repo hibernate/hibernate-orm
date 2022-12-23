@@ -12,7 +12,6 @@ import jakarta.persistence.criteria.Selection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 /**
  * Defines a SQM AST node that can be used as a selection in the query,
@@ -20,7 +19,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  *
  * @author Steve Ebersole
  */
-public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, SqmVisitableNode {
+public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	/**
 	 * Visit each of this selectable's direct sub-selectables - used to
 	 * support JPA's {@link Selection} model (which is really a "selectable",

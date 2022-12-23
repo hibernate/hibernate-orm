@@ -9,13 +9,8 @@ package org.hibernate.query.results;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -23,11 +18,14 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicConverted;
@@ -35,19 +33,25 @@ import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderDiscriminatedAssociation;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntityPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.query.results.implicit.ImplicitResultClassBuilder;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * @author Steve Ebersole
@@ -145,7 +149,7 @@ public class Builders {
 			String attributePath,
 			SessionFactoryImplementor sessionFactory) {
 		if ( attributePath.contains( "." ) ) {
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Support for defining a NativeQuery attribute result based on a composite path is not yet implemented"
 			);
 		}
@@ -180,12 +184,12 @@ public class Builders {
 
 	public static ResultBuilder attributeResult(String columnAlias, SingularAttribute<?, ?> attribute) {
 		if ( ! ( attribute.getDeclaringType() instanceof EntityType ) ) {
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Support for defining a NativeQuery attribute result based on a composite path is not yet implemented"
 			);
 		}
 
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -239,14 +243,23 @@ public class Builders {
 		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, new ArrayList<>(), new HashMap<>() );
 	}
 
-	public static ResultBuilder implicitEntityResultBuilder(
+	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			ResultSetMappingResolutionContext resolutionContext) {
-		final EntityMappingType entityMappingType = resolutionContext
+		final MappingMetamodelImplementor mappingMetamodel = resolutionContext
 				.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( resultMappingClass );
-		return new ImplicitModelPartResultBuilderEntity( entityMappingType );
+				.getMappingMetamodel();
+		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
+		if ( entityMappingType != null ) {
+			// the resultClass is an entity
+			return new ImplicitModelPartResultBuilderEntity( entityMappingType );
+		}
+
+		// todo : support for known embeddables might be nice
+
+		// otherwise, assume it's a "basic" mapping
+		return new ImplicitResultClassBuilder( resultMappingClass );
 	}
 
 	public static ImplicitFetchBuilder implicitFetchBuilder(
@@ -255,7 +268,7 @@ public class Builders {
 			DomainResultCreationState creationState) {
 		if ( fetchable instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicValuedFetchable = (BasicValuedModelPart) fetchable;
-			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable );
+			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
 		}
 
 		if ( fetchable instanceof EmbeddableValuedFetchable ) {
@@ -275,6 +288,15 @@ public class Builders {
 		if ( fetchable instanceof EntityCollectionPart ) {
 			return new ImplicitFetchBuilderEntityPart( fetchPath, (EntityCollectionPart) fetchable );
 		}
+
+		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping ) {
+			return new ImplicitFetchBuilderDiscriminatedAssociation(
+					fetchPath,
+					(DiscriminatedAssociationAttributeMapping) fetchable,
+					creationState
+			);
+		}
+
 
 		throw new UnsupportedOperationException();
 	}

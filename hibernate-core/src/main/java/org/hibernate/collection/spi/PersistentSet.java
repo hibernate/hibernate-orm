@@ -16,6 +16,8 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -38,7 +40,7 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	/**
 	 * Empty constructor.
-	 * <p/>
+	 * <p>
 	 * Note: this form is not ever ever ever used by Hibernate; it is, however,
 	 * needed for SOAP libraries and other such marshalling code.
 	 */
@@ -221,6 +223,27 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		else {
 			return false;
 		}
+	}
+
+	@Internal
+	public boolean queuedRemove(Object element) {
+		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentSet.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+		}
+		else {
+			final CollectionPersister persister = entry.getLoadedPersister();
+			if ( hasQueuedOperations() ) {
+				getSession().flush();
+			}
+			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
+				elementRemoved = true;
+				queueOperation( new SimpleRemove( (E) element ) );
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

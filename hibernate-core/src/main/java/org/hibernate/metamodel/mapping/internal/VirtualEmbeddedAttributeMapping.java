@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.tuple.ValueGeneration;
 
 /**
  * @author Christian Beikov
@@ -28,27 +27,28 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess, ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				name,
 				navigableRole,
 				stateArrayPosition,
+				fetchableIndex,
 				tableExpression,
-				attributeMetadataAccess,
+				attributeMetadata,
 				parentInjectionAttributeName,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				embeddableMappingType,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 	}
 
@@ -56,27 +56,28 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			String tableExpression,
-			AttributeMetadataAccess attributeMetadataAccess,
+			AttributeMetadata attributeMetadata,
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess, ValueGeneration valueGeneration) {
+			PropertyAccess propertyAccess) {
 		super(
 				name,
 				navigableRole,
 				stateArrayPosition,
+				fetchableIndex,
 				tableExpression,
-				attributeMetadataAccess,
+				attributeMetadata,
 				parentInjectionAttributePropertyAccess,
 				mappedFetchTiming,
 				mappedFetchStyle,
 				embeddableMappingType,
 				declaringType,
-				propertyAccess,
-				valueGeneration
+				propertyAccess
 		);
 	}
 

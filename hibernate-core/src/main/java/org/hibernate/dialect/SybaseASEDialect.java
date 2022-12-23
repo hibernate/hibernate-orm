@@ -45,12 +45,18 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 11.9 and above.
+ * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 16 and above.
  */
 public class SybaseASEDialect extends SybaseDialect {
+
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -60,7 +66,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
 					if ( precision != null ) {
@@ -74,7 +80,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	private final boolean ansiNull;
 
 	public SybaseASEDialect() {
-		this( DatabaseVersion.make( 11 ) );
+		this( MINIMUM_VERSION );
 	}
 
 	public SybaseASEDialect(DatabaseVersion version) {
@@ -96,15 +102,13 @@ public class SybaseASEDialect extends SybaseDialect {
 				// tinyint to store signed bytes, we can use it
 				// to store boolean values)
 				return "tinyint";
-			case BIGINT:
-				// Sybase ASE didn't introduce 'bigint' until version 15.0
-				return getVersion().isBefore( 15 ) ? "numeric(19,0)" : super.columnType( sqlTypeCode );
 			case DATE:
-				return getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
+				return "date";
 			case TIME:
-				return getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
+				return "time";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -114,7 +118,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
-		if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
+		if ( !jtdsDriver ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
 							.withTypeCapacity( 3, "datetime" )
@@ -265,7 +269,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			case NATIVE:
 				// If the driver or database do not support bigdatetime and bigtime types,
 				// we try to operate on milliseconds instead
-				if ( getVersion().isBefore( 15, 5 ) || jtdsDriver ) {
+				if ( jtdsDriver ) {
 					return "dateadd(millisecond,?2/1000000,?3)";
 				}
 				else {
@@ -280,12 +284,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	public long getFractionalSecondPrecisionInNanos() {
 		// If the database does not support bigdatetime and bigtime types,
 		// we try to operate on milliseconds instead
-		if ( getVersion().isBefore( 15, 5 ) ) {
-			return 1_000_000;
-		}
-		else {
-			return 1_000;
-		}
+		return 1_000;
 	}
 
 	@Override
@@ -294,14 +293,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
-				// If the database does not support bigdatetime and bigtime types,
-				// we try to operate on milliseconds instead
-				if ( getVersion().isBefore( 15, 5 ) ) {
-					return "cast(datediff(ms,?2,?3) as numeric(21))";
-				}
-				else {
-					return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
-				}
+				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
 			default:
 				return "datediff(?1,?2,?3)";
 		}
@@ -577,13 +569,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	public String getTableTypeString() {
 		//HHH-7298 I don't know if this would break something or cause some side affects
 		//but it is required to use 'select for update'
-		return getVersion().isBefore( 15, 7 ) ? super.getTableTypeString() : " lock datarows";
-	}
-
-	@Override
-	public boolean supportsExpectedLobUsagePattern() {
-		// Earlier Sybase did not support LOB locators at all
-		return getVersion().isSameOrAfter( 15, 7 );
+		return " lock datarows";
 	}
 
 	@Override
@@ -593,33 +579,43 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSameOrAfter( 15, 7 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+		return RowLockStrategy.COLUMN;
 	}
 
 	@Override
 	public String getForUpdateString() {
-		return getVersion().isBefore( 15, 7 ) ? "" : " for update";
+		return " for update";
 	}
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		return getVersion().isBefore( 15, 7 )
-				? ""
-				: getForUpdateString() + " of " + aliases;
+		return getForUpdateString() + " of " + aliases;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		//TODO: is this really necessary??!
-		return getVersion().isBefore( 15, 7 ) ? super.appendLockHint( mode, tableName ) : tableName;
+		return tableName;
 	}
 
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		//TODO: is this really correct?
-		return getVersion().isBefore( 15, 7 )
-				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
-				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+	}
+
+	@Override
+	public String toQuotedIdentifier(String name) {
+		if ( name == null || name.isEmpty() ) {
+			return name;
+		}
+		if ( name.charAt( 0 ) == '#' ) {
+			// Temporary tables must start with a '#' character,
+			// but Sybase doesn't support quoting of such identifiers,
+			// so we simply don't apply quoting in this case
+			return name;
+		}
+		return super.toQuotedIdentifier( name );
 	}
 
 	@Override
@@ -633,73 +629,75 @@ public class SybaseASEDialect extends SybaseDialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
 				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
-				switch ( JdbcExceptionHelper.extractSqlState( sqle ) ) {
-					// UNIQUE VIOLATION
-					case "S1000":
-						if (2601 == errorCode) {
-							return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
-						}
-						break;
-					case "23000":
-						if (546 == errorCode) {
-							// Foreign key violation
-							return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
-						}
-						break;
-//					// FOREIGN KEY VIOLATION
-//					case 23503:
-//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-//					// NOT NULL VIOLATION
-//					case 23502:
-//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-//					// TODO: RESTRICT VIOLATION
-//					case 23001:
-//						return null;
-					// ALL OTHER
-					default:
-						return null;
+				if ( sqlState != null ) {
+					switch ( sqlState ) {
+						// UNIQUE VIOLATION
+						case "S1000":
+							if ( 2601 == errorCode ) {
+								return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+							}
+							break;
+						case "23000":
+							if ( 546 == errorCode ) {
+								// Foreign key violation
+								return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+							}
+							break;
+	//					// FOREIGN KEY VIOLATION
+	//					case 23503:
+	//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+	//					// NOT NULL VIOLATION
+	//					case 23502:
+	//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+	//					// TODO: RESTRICT VIOLATION
+	//					case 23001:
+	//						return null;
+						// ALL OTHER
+					}
 				}
 				return null;
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		if ( getVersion().isBefore( 15, 7 ) ) {
-			return null;
-		}
-
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( sqlState ) {
-				case "JZ0TO":
-				case "JZ006":
-					throw new LockTimeoutException( message, sqlException, sql );
-				case "S1000":
-					switch ( errorCode ) {
-						case 515:
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "JZ0TO":
+					case "JZ006":
+						throw new LockTimeoutException( message, sqlException, sql );
+					case "S1000":
+						switch ( errorCode ) {
+							case 515:
+								// Attempt to insert NULL value into column; column does not allow nulls.
+							case 2601:
+								// Unique constraint violation
+								final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+										sqlException );
+								return new ConstraintViolationException( message, sqlException, sql, constraintName );
+						}
+						break;
+					case "ZZZZZ":
+						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-						case 2601:
-							// Unique constraint violation
-							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+									sqlException );
 							return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
-				case "ZZZZZ":
-					if (515 == errorCode) {
-						// Attempt to insert NULL value into column; column does not allow nulls.
-						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
-				case "23000":
-					if (546 == errorCode) {
-						// Foreign key violation
-						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-					break;
+						}
+						break;
+					case "23000":
+						if ( 546 == errorCode ) {
+							// Foreign key violation
+							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
+									sqlException );
+							return new ConstraintViolationException( message, sqlException, sql, constraintName );
+						}
+						break;
+				}
 			}
 			return null;
 		};
@@ -707,10 +705,6 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion().isBefore( 12, 5 ) ) {
-			//support for SELECT TOP was introduced in Sybase ASE 12.5.3
-			return super.getLimitHandler();
-		}
 		return new TopLimitHandler(false);
 	}
 }

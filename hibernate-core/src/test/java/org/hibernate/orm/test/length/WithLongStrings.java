@@ -13,6 +13,9 @@ public class WithLongStrings {
     @GeneratedValue
     public int id;
 
+    @Column(length = LONG)
+    public String longish;
+
     @Column(length = LONG16)
     public String long16;
 

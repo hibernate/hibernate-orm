@@ -68,10 +68,10 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "failOnError", defaultValue = "true")
 	private boolean failOnError = true;
 
-	@Parameter(property = "enableLazyInitialization", defaultValue = "false")
+	@Parameter(property = "enableLazyInitialization", defaultValue = "true")
 	private boolean enableLazyInitialization;
 
-	@Parameter(property = "enableDirtyTracking", defaultValue = "false")
+	@Parameter(property = "enableDirtyTracking", defaultValue = "true")
 	private boolean enableDirtyTracking;
 
 	@Parameter(property = "enableAssociationManagement", defaultValue = "false")
@@ -143,6 +143,12 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			}
 		};
 
+		if ( !enableLazyInitialization ) {
+			log.warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
+		if ( !enableDirtyTracking ) {
+			log.warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
 		if ( enableExtendedEnhancement ) {
 			log.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 		}

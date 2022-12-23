@@ -34,6 +34,8 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.jboss.logging.Logger;
 
 /**
+ * Base implementation of {@link SchemaValidator}.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaValidator implements SchemaValidator {
@@ -54,7 +56,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter) {
-		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
 				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
 				metadata.getDatabase(),
 				options.getConfigurationValues()
@@ -65,7 +67,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
 				isolator,
-				sqlStringGenerationContext,
+				context,
 				tool
 		);
 
@@ -158,10 +160,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata ).toLowerCase(Locale.ROOT)
-						.startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
-		if ( !typesMatch ) {
+		if ( !ColumnDefinitions.hasMatchingType( column, columnInformation, metadata, dialect ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +

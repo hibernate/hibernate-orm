@@ -9,7 +9,6 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
@@ -17,13 +16,11 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
  * need to happen to "fill" the identifier property(s).
- * <p/>
+ * <p>
  * This generator is used implicitly for all composite identifier scenarios if an
  * explicit generator is not in place.  So it make sense to discuss the various 
  * potential scenarios:<ul>
@@ -45,13 +42,13 @@ import org.hibernate.type.Type;
  * and is only possible in annotations
  * </li>
  * </ul>
- * <p/>
+ * <p>
  * Most of the grunt work is done in {@link org.hibernate.mapping.Component}.
  *
  * @author Steve Ebersole
  */
 public class CompositeNestedGeneratedValueGenerator
-		implements StandardGenerator, IdentifierGeneratorAggregator, Serializable {
+		implements IdentifierGenerator, StandardGenerator, IdentifierGeneratorAggregator, Serializable {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
@@ -94,7 +91,7 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List<GenerationPlan> generationPlans = new ArrayList<>();
+	private final List<GenerationPlan> generationPlans = new ArrayList<>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -108,9 +105,8 @@ public class CompositeNestedGeneratedValueGenerator
 	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		final Object context = generationContextLocator.locateGenerationContext( session, object );
 
-		for ( Object generationPlan : generationPlans ) {
-			final GenerationPlan plan = (GenerationPlan) generationPlan;
-			plan.execute( session, object, context );
+		for ( GenerationPlan generationPlan : generationPlans ) {
+			generationPlan.execute( session, object, context );
 		}
 
 		return context;
@@ -118,14 +114,14 @@ public class CompositeNestedGeneratedValueGenerator
 
 	@Override
 	public void registerExportables(Database database) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.registerExportables( database );
 		}
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		for (GenerationPlan plan : generationPlans) {
+		for ( GenerationPlan plan : generationPlans ) {
 			plan.initialize( context );
 		}
 	}

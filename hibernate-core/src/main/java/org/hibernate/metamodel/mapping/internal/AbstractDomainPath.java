@@ -9,18 +9,16 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
+import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -29,6 +27,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.results.graph.Fetchable;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Andrea Boriero
@@ -61,14 +62,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey(
+					createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+					processingState -> new ColumnReference(
 							tableReference,
-							selection.getSelectionExpression()
-					),
-					sqlAstProcessingState -> new ColumnReference(
-							tableReference,
-							selection,
-							creationState.getCreationContext().getSessionFactory()
+							selection
 					)
 			);
 		}
@@ -86,13 +83,12 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) referenceModelPart;
 			if ( embeddableValuedModelPart.getFetchableName()
 					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
-				final List<Expression> expressions = new ArrayList<>( embeddableValuedModelPart.getNumberOfFetchables() );
-				embeddableValuedModelPart.visitFetchables(
-						fetchable -> {
-							expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
-						},
-						null
-				);
+				final int size = embeddableValuedModelPart.getNumberOfFetchables();
+				final List<Expression> expressions = new ArrayList<>( size );
+				for ( int i = 0; i < size; i++ ) {
+					final Fetchable fetchable = embeddableValuedModelPart.getFetchable( i );
+					expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
+				}
 				return new SqlTuple( expressions, embeddableValuedModelPart );
 			}
 			else {
@@ -103,7 +99,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			// sure it can happen
-			throw new NotYetImplementedFor6Exception( "Ordering for " + referenceModelPart + " not supported" );
+			throw new UnsupportedOperationException( "Ordering for " + referenceModelPart + " not supported" );
 		}
 	}
 
@@ -193,7 +189,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			// sure it can happen
-			throw new NotYetImplementedFor6Exception( "Ordering for " + getReferenceModelPart() + " not supported" );
+			throw new UnsupportedOperationException( "Ordering for " + getReferenceModelPart() + " not supported" );
 		}
 	}
 
@@ -247,14 +243,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey(
+				createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+				processingState -> new ColumnReference(
 						tableReference,
-						selection.getSelectionExpression()
-				),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						selection,
-						creationState.getCreationContext().getSessionFactory()
+						selection
 				)
 		);
 		// It makes no sense to order by an expression multiple times

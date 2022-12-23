@@ -13,13 +13,15 @@ import java.lang.annotation.RetentionPolicy;
 import static java.lang.annotation.ElementType.*;
 
 /**
- * Marks an entity, collection, or attribute as immutable. The absence of this annotation
- * means the element is mutable.
+ * Marks an entity, collection, or attribute of an entity as immutable. The absence of this
+ * annotation means the element is mutable.
  * <ul>
  * <li>
  *     Changes made in memory to the state of an immutable entity are never synchronized to
  *     the database. The changes are ignored, with no exception thrown. In a mapped inheritance
- *     hierarchy, {@code @Immutable} may be applied only to the root entity.
+ *     hierarchy, {@code @Immutable} may be applied only to the root entity, and is inherited
+ *     by entity subclasses. To make just one entity in the hierarchy immutable, annotate its
+ *     attributes individually.
  * </li>
  * <li>
  *     An immutable collection may not be modified. A {@link org.hibernate.HibernateException}

@@ -9,15 +9,15 @@ package org.hibernate.userguide.sql;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.Account;
@@ -37,6 +37,9 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import jakarta.persistence.PersistenceException;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -373,19 +376,20 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_sql_hibernate_entity_associations_query_many_to_one_join_result_transformer_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
-			//tag::sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example[]
+			//tag::sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example[]
 			List<Phone> phones = session.createNativeQuery(
-				"SELECT {ph.*}, {pr.*} " +
+		"SELECT {ph.*}, {pr.*} " +
 				"FROM Phone ph " +
 				"JOIN Person pr ON ph.person_id = pr.id")
 			.addEntity("ph", Phone.class)
 			.addJoin("pr", "ph.person")
+			.setTupleTransformer( (TupleTransformer<Phone>) (tuple, aliases) -> (Phone) tuple[0] )
 			.list();
 
 			for (Phone person : phones) {
 				person.getPerson();
 			}
-			//end::sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example[]
+			//end::sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example[]
 			assertEquals(3, phones.size());
 		});
 	}
@@ -471,7 +475,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			fail("Should throw NonUniqueDiscoveredSqlAliasException!");
 		}
 		catch (PersistenceException expected) {
-			assertEquals(NonUniqueDiscoveredSqlAliasException.class, expected.getCause().getClass());
+			assertEquals(NonUniqueDiscoveredSqlAliasException.class, expected.getClass());
 		}
 	}
 
@@ -584,7 +588,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-scalar-named-query-example[]
 			List<String> names = entityManager.createNamedQuery(
-				"find_person_name")
+				"find_person_name", String.class)
 			.getResultList();
 			//end::sql-jpa-scalar-named-query-example[]
 			assertEquals(3, names.size());
@@ -609,7 +613,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-multiple-scalar-values-named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_person_name_and_nickName")
+				"find_person_name_and_nickName", Object[].class)
 			.getResultList();
 
 			for(Object[] tuple : tuples) {
@@ -644,10 +648,12 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-multiple-scalar-values-dto-named-query-example[]
 			List<PersonNames> personNames = entityManager.createNamedQuery(
-				"find_person_name_and_nickName_dto")
+				"find_person_name_and_nickName_dto", PersonNames.class)
 			.getResultList();
 			//end::sql-jpa-multiple-scalar-values-dto-named-query-example[]
 			assertEquals(3, personNames.size());
+			assertThat( personNames.get(0) ).isNotNull();
+			assertThat( personNames.get(0) ).isInstanceOf(PersonNames.class);
 		});
 	}
 
@@ -684,11 +690,13 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-named-query-example[]
 			List<Person> persons = entityManager.createNamedQuery(
-				"find_person_by_name")
+				"find_person_by_name", Person.class)
 			.setParameter("name", "J%")
 			.getResultList();
 			//end::sql-jpa-entity-named-query-example[]
 			assertEquals(1, persons.size());
+			assertThat( persons ).hasSize( 1 );
+			assertThat( persons.get( 0 ) ).isInstanceOf( Person.class );
 		});
 	}
 
@@ -714,7 +722,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations_named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_person_with_phones_by_name")
+				"find_person_with_phones_by_name", Object[].class)
 			.setParameter("name", "J%")
 			.getResultList();
 
@@ -724,6 +732,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			//end::sql-jpa-entity-associations_named-query-example[]
 			assertEquals(1, tuples.size());
+			assertThat( tuples.get(0).getClass().isArray() ).isTrue();
 		});
 	}
 
@@ -754,7 +763,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-composite-key-entity-associations_named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_all_spaceships")
+				"find_all_spaceships", Object[].class)
 			.getResultList();
 
 			for(Object[] tuple : tuples) {

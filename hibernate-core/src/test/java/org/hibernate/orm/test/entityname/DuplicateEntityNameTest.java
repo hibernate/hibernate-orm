@@ -39,7 +39,7 @@ public class DuplicateEntityNameTest extends BaseCoreFunctionalTestCase {
 			fail("Should throw DuplicateMappingException");
 		}
 		catch (DuplicateMappingException e) {
-			assertEquals( "The [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase1] and [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase2] entities share the same JPA entity name: [Purchase], which is not allowed!", e.getMessage() );
+			assertEquals( "The [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase1] and [org.hibernate.orm.test.entityname.DuplicateEntityNameTest$Purchase2] entities share the same JPA entity name: [Purchase], which is not allowed", e.getMessage() );
 		}
 	}
 

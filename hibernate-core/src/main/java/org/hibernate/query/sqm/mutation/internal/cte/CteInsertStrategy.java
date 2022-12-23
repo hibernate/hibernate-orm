@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -17,8 +16,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
  * @asciidoc
@@ -99,7 +98,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 
 	private final EntityPersister rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final SqmCteTable entityCteTable;
+	private final CteTable entityCteTable;
 
 	public CteInsertStrategy(
 			EntityMappingType rootEntityType,
@@ -113,10 +112,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(
@@ -148,7 +144,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		else {
 			qualifiedTableName = name;
 		}
-		this.entityCteTable = SqmCteTable.createEntityTable( qualifiedTableName, rootDescriptor );
+		this.entityCteTable = CteTable.createEntityTable( qualifiedTableName, rootDescriptor );
 	}
 
 	@Override

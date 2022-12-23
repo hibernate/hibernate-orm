@@ -161,7 +161,7 @@ public interface AuditReader {
 	/**
 	 * Gets the revision number, that corresponds to the given date. More precisely, returns
 	 * the number of the highest revision, which was created on or before the given date. So:
-	 * <code>getRevisionDate(getRevisionNumberForDate(date)) <= date</code> and
+	 * <code>getRevisionDate(getRevisionNumberForDate(date)) &lt;= date</code> and
 	 * <code>getRevisionDate(getRevisionNumberForDate(date)+1) > date</code>.
 	 *
 	 * @param date Date for which to get the revision.
@@ -178,7 +178,7 @@ public interface AuditReader {
 	/**
 	 * Gets the revision number, that corresponds to the given date. More precisely, returns
 	 * the number of the highest revision, which was created on or before the given date. So:
-	 * <code>getRevisionDate(getRevisionNumberForDate(date)) <= date</code> and
+	 * <code>getRevisionDate(getRevisionNumberForDate(date)) &lt;= date</code> and
 	 * <code>getRevisionDate(getRevisionNumberForDate(date)+1) > date</code>.
 	 *
 	 * @param date Date for which to get the revision.
@@ -293,8 +293,10 @@ public interface AuditReader {
 	 *
 	 * @return the entityName for the given entity.
 	 * @throws HibernateException if one of the following conditions are satisfied:
+	 * <ul>
 	 * <li>The supplied entity has yet to be returned by this AuditReader instance, e.g. it isn't in the reader's cache.</li>
 	 * <li>The supplied entity, primary key, and revision triplet is not a valid combination.</li>
+	 * </ul>
 	 */
 	String getEntityName(Object primaryKey, Number revision, Object entity)
 			throws HibernateException;

@@ -7,17 +7,15 @@
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.Type;
 
 /**
- * Represents a version property within the Hibernate runtime-metamodel.
- *
- * @author Steve Ebersole
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.EntityVersionMapping}
  */
+@Deprecated(forRemoval = true)
 public class VersionProperty extends AbstractNonIdentifierAttribute {
 	/**
 	 * Constructs VersionProperty instances.

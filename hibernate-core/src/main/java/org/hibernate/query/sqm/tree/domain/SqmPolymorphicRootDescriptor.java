@@ -74,25 +74,30 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 			final List<EntityDomainType<?>> subList = implementorsList.subList( 1, implementors.size() - 1 );
 			firstImplementor.visitAttributes(
 					attribute -> {
-						// for each of its attributes, check whether the other implementors also expose it
-						for ( EntityDomainType navigable : subList ) {
-							if ( navigable.findAttribute( attribute.getName() ) == null ) {
-								// we found an implementor that does not expose that attribute,
-								// so break-out to the next attribute
-								break;
-							}
-
-							// if we get here - they all had it.  so put it in the workMap
+						if ( isACommonAttribute( subList, attribute ) ) {
+							// if isACommonAttribute - they all had it.  so put it in the workMap
 							//
 							// todo (6.0) : Atm We use the attribute from the first implementor directly for each implementor
 							//		need to handle this in QuerySplitter somehow
+
 							workMap.put( attribute.getName(), attribute );
 						}
-
 					}
 			);
 		}
 		this.commonAttributes = Collections.unmodifiableMap( workMap );
+	}
+
+	private static boolean isACommonAttribute(List<EntityDomainType<?>> subList, PersistentAttribute<?, ?> attribute) {
+		// for each of its attributes, check whether the other implementors also expose it
+		for ( EntityDomainType navigable : subList ) {
+			if ( navigable.findAttribute( attribute.getName() ) != null ) {
+				// we found an implementor that does not expose that attribute,
+				// so break-out to the next attribute
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public Set<EntityDomainType<?>> getImplementors() {

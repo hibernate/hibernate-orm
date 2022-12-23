@@ -10,16 +10,15 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public interface NonIdentifierAttribute extends Attribute {
 	boolean isLazy();
 
 	boolean isInsertable();
 
 	boolean isUpdateable();
-
-	ValueGeneration getValueGenerationStrategy();
 
 	boolean isNullable();
 

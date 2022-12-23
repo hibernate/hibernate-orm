@@ -36,8 +36,7 @@ public class OneToManyNotAuditedNullEntity implements Serializable {
 	private String data;
 
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	@OneToMany(fetch = FetchType.LAZY)
-	@NotFound(action = NotFoundAction.IGNORE)
+	@OneToMany(fetch = FetchType.EAGER)
 	@JoinTable(joinColumns = @JoinColumn(name = "O2MNotAudited_id"))
 	private List<UnversionedStrTestEntity> references = new ArrayList<UnversionedStrTestEntity>();
 

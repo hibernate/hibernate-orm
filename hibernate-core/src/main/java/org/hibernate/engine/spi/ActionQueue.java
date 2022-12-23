@@ -43,6 +43,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -107,7 +108,23 @@ public class ActionQueue {
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider<?>> EXECUTABLE_LISTS_MAP;
 	static {
 		EXECUTABLE_LISTS_MAP = CollectionHelper.linkedMapOfSize( 8 );
-
+		/*
+			CollectionRemoveAction actions have to be executed before OrphanRemovalAction actions, to prevent a constraint violation
+			when deleting an orphan Entity that contains an ElementCollection (see HHH-15159)
+		 */
+		EXECUTABLE_LISTS_MAP.put(
+				CollectionRemoveAction.class,
+				new ListProvider<CollectionRemoveAction>() {
+					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
+						return instance.collectionRemovals;
+					}
+					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
+						return instance.collectionRemovals = new ExecutableList<>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
 				new ListProvider<OrphanRemovalAction>() {
@@ -161,19 +178,6 @@ public class ActionQueue {
 					}
 					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
 						return instance.collectionQueuedOps = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
-				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				CollectionRemoveAction.class,
-				new ListProvider<CollectionRemoveAction>() {
-					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
-						return instance.collectionRemovals;
-					}
-					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
-						return instance.collectionRemovals = new ExecutableList<>(
 								instance.isOrderUpdatesEnabled()
 						);
 					}
@@ -841,10 +845,10 @@ public class ActionQueue {
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
-		if ( rescuedEntity instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) rescuedEntity ).getHibernateLazyInitializer();
-			if ( !initializer.isUninitialized() ) {
-				rescuedEntity = initializer.getImplementation( session );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( rescuedEntity );
+		if ( lazyInitializer != null ) {
+			if ( !lazyInitializer.isUninitialized() ) {
+				rescuedEntity = lazyInitializer.getImplementation( session );
 			}
 		}
 		if ( deletions != null ) {
@@ -902,7 +906,7 @@ public class ActionQueue {
 	 * @throws IOException indicates a problem reading from the stream
 	 * @throws ClassNotFoundException Generally means we were unable to locate user classes.
 	 */
-	public static ActionQueue deserialize(ObjectInputStream ois, SessionImplementor session)
+	public static ActionQueue deserialize(ObjectInputStream ois, EventSource session)
 			throws IOException, ClassNotFoundException {
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled ) {

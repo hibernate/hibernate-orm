@@ -30,15 +30,16 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
@@ -127,13 +128,13 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			final Type type = basicValue.getType();
 			assertNotNull( type );
-			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
-			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
-			final JdbcType jdbcType = typeAdapter.getJdbcType();
+			final JdbcType jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 	}
@@ -154,7 +155,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			if ( ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter with autoApply=false was auto applied" );
 			}
 		}
@@ -183,11 +184,11 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final Type type = nameValue.getType();
 			assertNotNull( type );
 
-			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
-			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), Matchers.equalTo( String.class ) );
-			final JdbcType jdbcType = typeAdapter.getJdbcType();
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), Matchers.equalTo( String.class ) );
+			final JdbcType jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -214,14 +215,14 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			BasicValue nameValue = (BasicValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
-			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
 
-			final JdbcType jdbcType = typeAdapter.getJdbcType();
+			final JdbcType jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -248,16 +249,16 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			if ( !ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter not applied" );
 			}
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
-			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
 
-			final JdbcType sqlTypeDescriptor = typeAdapter.getJdbcType();
+			final JdbcType sqlTypeDescriptor = jdbcMapping.getJdbcType();
 			assertThat( sqlTypeDescriptor, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -284,7 +285,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			if ( ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter applied (should not have been)" );
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
@@ -355,13 +356,13 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final BasicValue nameValue = (BasicValue) codeProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
-			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( Integer.class ) );
-			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( typeAdapter.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
+			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -462,11 +463,11 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final BasicValue nameValue = (BasicValue) nameProp.getValue();
 			final Type type = nameValue.getType();
 			assertNotNull( type );
-			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
-			assertThat( typeAdapter.getDomainJtd(), instanceOf( EnumJavaType.class ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor(), instanceOf( EnumJavaType.class ) );
 
 			final int expectedJdbcTypeCode;
 			if ( metadata.getDatabase().getDialect() instanceof HANAColumnStoreDialect
@@ -477,7 +478,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			else {
 				expectedJdbcTypeCode = Types.VARCHAR;
 			}
-			assertThat( typeAdapter.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( expectedJdbcTypeCode ) ) );
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( expectedJdbcTypeCode ) ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

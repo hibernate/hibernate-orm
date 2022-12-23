@@ -16,6 +16,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
@@ -33,6 +34,7 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -66,6 +68,15 @@ public interface SessionFactoryImplementor
 	 */
 	String getName();
 
+	/**
+	 * Overrides {@link SessionFactory#openSession()} to widen the return type:
+	 * this is useful for internal code depending on {@link SessionFactoryImplementor}
+	 * as it would otherwise need to frequently resort to casting to the internal contract.
+	 * @return the opened Session.
+	 */
+	@Override
+	SessionImplementor openSession();
+
 	TypeConfiguration getTypeConfiguration();
 
 	default SessionFactoryImplementor getSessionFactory() {
@@ -88,7 +99,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
-	Session openTemporarySession() throws HibernateException;
+	SessionImplementor openTemporarySession() throws HibernateException;
 
 	@Override
 	CacheImplementor getCache();
@@ -120,9 +131,16 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Get the identifier generator for the hierarchy
+	 * 
+	 * @deprecated use {@link #getGenerator(String)}
 	 */
+	@Deprecated(since = "6.2")
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
 
+	/**
+	 * Get the identifier generator for the hierarchy
+	 */
+	Generator getGenerator(String rootEntityName);
 
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 

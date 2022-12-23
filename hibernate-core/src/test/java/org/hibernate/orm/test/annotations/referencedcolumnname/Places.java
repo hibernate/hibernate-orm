@@ -9,7 +9,6 @@ package org.hibernate.orm.test.annotations.referencedcolumnname;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 /**
@@ -19,8 +18,8 @@ import jakarta.persistence.ManyToOne;
 public class Places {
 
 	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumns({ @JoinColumn(name = "LIVING_ROOM", referencedColumnName = "NAME"),
-			@JoinColumn(name = "LIVING_ROOM_OWNER", referencedColumnName = "OWNER") })
+	@JoinColumn(name = "LIVING_ROOM", referencedColumnName = "NAME")
+	@JoinColumn(name = "LIVING_ROOM_OWNER", referencedColumnName = "OWNER")
 	Place livingRoom;
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "KITCHEN", referencedColumnName = "NAME")

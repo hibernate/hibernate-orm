@@ -40,7 +40,7 @@ public interface SequenceSupport {
 	/**
 	 * Generate the select expression fragment that will retrieve the next
 	 * value of a sequence as part of another (typically DML) statement.
-	 * <p/>
+	 * <p>
 	 * This differs from {@link #getSequenceNextValString(String)} in that
 	 * it must return an expression usable within another statement.
 	 *
@@ -53,7 +53,7 @@ public interface SequenceSupport {
 	/**
 	 * Generate the select expression fragment that will retrieve the previous
 	 * value of a sequence as part of another (typically DML) statement.
-	 * <p/>
+	 * <p>
 	 * This differs from {@link #getSequencePreviousValString(String)} in that
 	 * it must return an expression usable within another statement.
 	 *
@@ -68,7 +68,7 @@ public interface SequenceSupport {
 	/**
 	 * Generate the appropriate select statement to to retrieve the next value
 	 * of a sequence.
-	 * <p/>
+	 * <p>
 	 * This should be a stand alone select statement.
 	 *
 	 * @param sequenceName the name of the sequence
@@ -82,7 +82,7 @@ public interface SequenceSupport {
 	/**
 	 * Generate the appropriate select statement to to retrieve the previous value
 	 * of a sequence.
-	 * <p/>
+	 * <p>
 	 * This should be a stand alone select statement.
 	 *
 	 * @param sequenceName the name of the sequence
@@ -100,7 +100,7 @@ public interface SequenceSupport {
 	/**
 	 * Generate the appropriate select statement to to retrieve the next value
 	 * of a sequence.
-	 * <p/>
+	 * <p>
 	 * This should be a stand alone select statement.
 	 *
 	 * @param sequenceName the name of the sequence
@@ -130,12 +130,12 @@ public interface SequenceSupport {
 	 * a single command. This method is a convenience making it easier to
 	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
 	 * dialects.
-	 * <p/>
+	 * <p>
 	 * The default definition is to return {@code create sequence sequenceName}
 	 * for the argument {@code sequenceName}. Dialects need to override this
 	 * method if a sequence created in this manner does not start at 1, or if
 	 * the syntax is nonstandard.
-	 * <p/>
+	 * <p>
 	 * Dialects which support sequences and can create a sequence in a single
 	 * command need *only* override this method. Dialects which support
 	 * sequences but require multiple commands to create a sequence should
@@ -154,7 +154,7 @@ public interface SequenceSupport {
 	 * a single command. This method is a convenience making it easier to
 	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
 	 * dialects.
-	 * <p/>
+	 * <p>
 	 * Overloaded form of {@link #getCreateSequenceString(String)}, additionally
 	 * taking the initial value and increment size to be applied to the sequence
 	 * definition.
@@ -196,7 +196,7 @@ public interface SequenceSupport {
 	 * Typically dialects which support sequences can drop a sequence
 	 * with a single command.  This is convenience form of
 	 * {@link #getDropSequenceStrings} to help facilitate that.
-	 * <p/>
+	 * <p>
 	 * Dialects which support sequences and can drop a sequence in a
 	 * single command need *only* override this method.  Dialects
 	 * which support sequences but require multiple commands to drop

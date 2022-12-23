@@ -9,6 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -19,10 +20,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Describes a SqlTypeDescriptor to be added to the {@link JdbcTypeRegistry}
- * <p/>
+ * <p>
  * Registrations applied to a package are processed before Hibernate begins to process
  * any attributes, etc.
- * <p/>
+ * <p>
  * Registrations applied to a class are only applied once Hibernate begins to process
  * that class; it will also affect all future processing.  However, it will not change
  * previous resolutions to use this newly registered one.  Because of this randomness
@@ -33,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({PACKAGE, TYPE})
+@Target({PACKAGE, TYPE})
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JdbcTypeRegistrations.class )
@@ -47,7 +48,7 @@ public @interface JdbcTypeRegistration {
 	 * The type-code under which to register this descriptor.  Can either add a new descriptor
 	 * or override an existing one.
 	 *
-	 * By default we will use {@link JdbcType#getJdbcTypeCode}
+	 * By default we will use {@link JdbcType#getDefaultSqlTypeCode()}
 	 */
 	int registrationCode() default Integer.MIN_VALUE;
 }

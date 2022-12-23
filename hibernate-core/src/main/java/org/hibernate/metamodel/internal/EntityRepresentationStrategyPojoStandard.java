@@ -7,13 +7,10 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -23,7 +20,6 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -41,7 +37,6 @@ import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessBasicImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
@@ -55,6 +50,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * @author Steve Ebersole
@@ -76,7 +73,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
-	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
+	private final Map<String, PropertyAccess> propertyAccessMap;
 	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
 	public EntityRepresentationStrategyPojoStandard(
@@ -99,8 +96,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
-		this.isBytecodeEnhanced = PersistentAttributeInterceptable.class.isAssignableFrom( mappedJavaType );
-
+		this.isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
@@ -161,7 +157,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		// resolveReflectionOptimizer may lead to a makePropertyAccess call which requires strategySelector
 		this.strategySelector = sessionFactory.getServiceRegistry().getService( StrategySelector.class );
-
+		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
+		for ( Property property : bootDescriptor.getPropertyClosure() ) {
+			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
+		}
+		this.propertyAccessMap = propertyAccessMap;
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
 		this.instantiator = determineInstantiator( bootDescriptor, entityMetamodel );
@@ -293,48 +293,12 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			PersistentClass bootType,
 			BytecodeProvider bytecodeProvider,
 			SessionFactoryImplementor sessionFactory) {
-		final Class<?> javaTypeToReflect;
-		if ( proxyFactory != null ) {
-			assert proxyJtd != null;
-			javaTypeToReflect = proxyJtd.getJavaTypeClass();
-		}
-		else {
-			javaTypeToReflect = mappedJtd.getJavaTypeClass();
-		}
-
-		final List<String> getterNames = new ArrayList<>();
-		final List<String> setterNames = new ArrayList<>();
-		final List<Class<?>> getterTypes = new ArrayList<>();
-
-		boolean foundCustomAccessor = false;
-
-		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		while ( itr.hasNext() ) {
-			//TODO: redesign how PropertyAccessors are acquired...
-			final Property property = itr.next();
-			final PropertyAccess propertyAccess = makePropertyAccess( property );
-
-			propertyAccessMap.put( property.getName(), propertyAccess );
-
-			if ( ! (propertyAccess instanceof PropertyAccessBasicImpl) ) {
-				foundCustomAccessor = true;
-			}
-
-			getterNames.add( propertyAccess.getGetter().getMethodName() );
-			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
-
-			setterNames.add( propertyAccess.getSetter().getMethodName() );
-		}
-
-		if ( foundCustomAccessor || ! Environment.useReflectionOptimizer() ) {
+		if ( ! Environment.useReflectionOptimizer() ) {
 			return null;
 		}
-
 		return bytecodeProvider.getReflectionOptimizer(
-				javaTypeToReflect,
-				getterNames.toArray( new String[0] ),
-				setterNames.toArray( new String[0] ),
-				getterTypes.toArray( new Class[0] )
+				mappedJtd.getJavaTypeClass(),
+				propertyAccessMap
 		);
 	}
 

@@ -21,32 +21,36 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
-import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
-import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -59,11 +63,15 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * Centralizes metamodel information about an entity.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Replaced by {@link EntityMappingType}.  EntityMetamodel
+ * was a first attempt at what has become {@link EntityMappingType}
  */
+@Deprecated( since = "6", forRemoval = true )
 public class EntityMetamodel implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
 
-	private static final int NO_VERSION_INDX = -66;
+	public static final int NO_VERSION_INDX = -66;
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -71,6 +79,7 @@ public class EntityMetamodel implements Serializable {
 	private final String rootName;
 	private EntityType entityType;
 
+	private final int subclassId;
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
 
@@ -96,12 +105,12 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasInsertGeneratedValues;
 	private final boolean hasUpdateGeneratedValues;
 
-	private final InMemoryValueGenerationStrategy[] inMemoryValueGenerationStrategies;
-	private final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies;
+	private final Generator[] generators;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final Map<String, Integer> propertyIndexes = new HashMap<>();
 	private final boolean hasCollections;
+	private final boolean hasOwnedCollections;
 	private final BitSet mutablePropertiesIndexes;
 	private final boolean hasLazyProperties;
 	private final boolean hasNonIdentifierPropertyNamedId;
@@ -112,6 +121,7 @@ public class EntityMetamodel implements Serializable {
 
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
+	private final boolean hasCascadeDelete;
 	private final boolean mutable;
 	private final boolean isAbstract;
 	private final boolean selectBeforeUpdate;
@@ -125,7 +135,9 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
-	private final Map<Class<?>,String> entityNameByInheritenceClassMap;
+	private final Map<Class<?>,String> entityNameByInheritanceClassMap;
+
+	private final BeforeExecutionGenerator versionGenerator;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
@@ -143,12 +155,14 @@ public class EntityMetamodel implements Serializable {
 			RuntimeModelCreationContext creationContext) {
 		this.sessionFactory = creationContext.getSessionFactory();
 
-		name = persistentClass.getEntityName();
-		rootName = persistentClass.getRootClass().getEntityName();
+		// Improves performance of EntityKey#equals by avoiding content check in String#equals
+		name = persistentClass.getEntityName().intern();
+		rootName = persistentClass.getRootClass().getEntityName().intern();
+		subclassId = persistentClass.getSubclassId();
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
 				persistentClass,
-				sessionFactory.getIdentifierGenerator( rootName )
+				sessionFactory.getGenerator( rootName )
 		);
 
 		versioned = persistentClass.isVersioned();
@@ -203,8 +217,7 @@ public class EntityMetamodel implements Serializable {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		this.inMemoryValueGenerationStrategies = new InMemoryValueGenerationStrategy[propertySpan];
-		this.inDatabaseValueGenerationStrategies = new InDatabaseValueGenerationStrategy[propertySpan];
+		generators = new Generator[propertySpan];
 
 		boolean foundPreInsertGeneratedValues = false;
 		boolean foundPreUpdateGeneratedValues = false;
@@ -214,22 +227,25 @@ public class EntityMetamodel implements Serializable {
 
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
+		boolean foundCascadeDelete = false;
 		boolean foundCollection = false;
+		boolean foundOwnedCollection = false;
 		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
+		BeforeExecutionGenerator tempVersionGenerator = null;
 
 		List<Property> props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
-			Property prop = props.get(i);
+			Property property = props.get(i);
 			final NonIdentifierAttribute attribute;
-			if ( prop == persistentClass.getVersion() ) {
+			if ( property == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
 				attribute = PropertyFactory.buildVersionProperty(
 						persister,
 						sessionFactory,
 						i,
-						prop,
+						property,
 						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
 				);
 			}
@@ -238,27 +254,27 @@ public class EntityMetamodel implements Serializable {
 						persister,
 						sessionFactory,
 						i,
-						prop,
+						property,
 						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
 						creationContext
 				);
 			}
 			properties[i] = attribute;
 
-			if ( prop.isNaturalIdentifier() ) {
+			if ( property.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
-				if ( prop.isUpdateable() ) {
+				if ( property.isUpdateable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}
 
-			if ( "id".equals( prop.getName() ) ) {
+			if ( "id".equals( property.getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					prop,
+					property,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
 					(entityName) -> {
 						final MetadataImplementor metadata = creationContext.getMetadata();
@@ -283,55 +299,65 @@ public class EntityMetamodel implements Serializable {
 			propertyInsertability[i] = attribute.isInsertable();
 			propertyVersionability[i] = attribute.isVersionable();
 			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
-			propertyCheckability[i] = propertyUpdateability[i] ||
-					( propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked() );
+			propertyCheckability[i] = propertyUpdateability[i]
+					|| propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked();
 
 			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			GenerationStrategyPair pair = buildGenerationStrategyPair( sessionFactory, prop );
-			inMemoryValueGenerationStrategies[i] = pair.getInMemoryStrategy();
-			inDatabaseValueGenerationStrategies[i] = pair.getInDatabaseStrategy();
-
-			if ( pair.getInMemoryStrategy() != null ) {
-				final GenerationTiming timing = pair.getInMemoryStrategy().getGenerationTiming();
-				if ( timing != GenerationTiming.NEVER ) {
-					final ValueGenerator<?> generator = pair.getInMemoryStrategy().getValueGenerator();
-					if ( generator != null ) {
-						// we have some level of generation indicated
-						if ( timing == GenerationTiming.INSERT ) {
+			final Generator generator = buildGenerator( property, creationContext );
+			if ( generator != null ) {
+				if ( i == tempVersionProperty && !generator.generatedOnExecution() ) {
+					// when we have an in-memory generator for the version, we
+					// want to plug it in to the older infrastructure specific
+					// to version generation, instead of treating it like a
+					// plain "value" generator for a regular attribute
+					tempVersionGenerator = (BeforeExecutionGenerator) generator;
+				}
+				else {
+					generators[i] = generator;
+					if ( generatedWithNoParameter( generator ) ) {
+						propertyInsertability[i] = false;
+						propertyUpdateability[i] = false;
+					}
+					if ( generator.generatesOnInsert() ) {
+						if ( generator.generatedOnExecution() ) {
+							foundPostInsertGeneratedValues = true;
+						}
+						else {
 							foundPreInsertGeneratedValues = true;
 						}
-						else if ( timing == GenerationTiming.ALWAYS ) {
-							foundPreInsertGeneratedValues = true;
+					}
+					if ( generator.generatesOnUpdate() ) {
+						if ( generator.generatedOnExecution() ) {
+							foundPostUpdateGeneratedValues = true;
+						}
+						else {
 							foundPreUpdateGeneratedValues = true;
 						}
 					}
 				}
 			}
-			if (  pair.getInDatabaseStrategy() != null ) {
-				final GenerationTiming timing =  pair.getInDatabaseStrategy().getGenerationTiming();
-				if ( timing == GenerationTiming.INSERT ) {
-					foundPostInsertGeneratedValues = true;
-				}
-				else if ( timing == GenerationTiming.ALWAYS ) {
-					foundPostInsertGeneratedValues = true;
-					foundPostUpdateGeneratedValues = true;
-				}
-			}
+
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			if ( attribute.isLazy() ) {
 				hasLazy = true;
 			}
 
-			if ( attribute.getCascadeStyle() != CascadeStyles.NONE ) {
+			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
+			}
+			if ( cascadeStyles[i].doCascade(CascadingActions.DELETE) ) {
+				foundCascadeDelete = true;
 			}
 
 			if ( indicatesCollection( attribute.getType() ) ) {
 				foundCollection = true;
+			}
+			if ( indicatesOwnedCollection( attribute.getType(), creationContext.getMetadata() ) ) {
+				foundOwnedCollection = true;
 			}
 
 			// Component types are dirty tracked as well so they are not exactly mutable for the "maybeDirty" check
@@ -339,7 +365,7 @@ public class EntityMetamodel implements Serializable {
 				mutableIndexes.set( i );
 			}
 
-			mapPropertyToIndex(prop, i);
+			mapPropertyToIndex(property, i);
 		}
 
 		if (naturalIdNumbers.size()==0) {
@@ -353,16 +379,19 @@ public class EntityMetamodel implements Serializable {
 			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
 
-		this.hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
-		this.hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
-		this.hasInsertGeneratedValues = foundPostInsertGeneratedValues;
-		this.hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
+		hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
+		hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
+		hasInsertGeneratedValues = foundPostInsertGeneratedValues;
+		hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
+
+		versionGenerator = tempVersionGenerator;
 
 		hasCascades = foundCascade;
+		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
-		if (hasLazyProperties) {
+		if ( hasLazyProperties ) {
 			LOG.lazyPropertyFetchingAvailable(name);
 		}
 
@@ -388,7 +417,8 @@ public class EntityMetamodel implements Serializable {
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
 
 		dynamicUpdate = persistentClass.useDynamicUpdate()
-				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
+				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+					&& getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();
@@ -409,6 +439,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		hasCollections = foundCollection;
+		hasOwnedCollections = foundOwnedCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
@@ -425,365 +456,72 @@ public class EntityMetamodel implements Serializable {
 				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
 			}
 		}
-		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
+		entityNameByInheritanceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
-	private static GenerationStrategyPair buildGenerationStrategyPair(
-			final SessionFactoryImplementor sessionFactory,
-			final Property mappingProperty) {
-		final ValueGeneration valueGeneration = mappingProperty.getValueGenerationStrategy();
-		if ( valueGeneration != null && valueGeneration.getGenerationTiming() != GenerationTiming.NEVER ) {
-			// the property is generated in full. build the generation strategy pair.
-			if ( valueGeneration.getValueGenerator() != null ) {
-				// in-memory generation
-				return new GenerationStrategyPair(
-						FullInMemoryValueGenerationStrategy.create( valueGeneration )
-				);
-			}
-			else {
-				// in-db generation
-				return new GenerationStrategyPair(
-						create(
-								sessionFactory,
-								mappingProperty,
-								valueGeneration
-						)
-				);
-			}
-		}
-		else if ( mappingProperty.getValue() instanceof Component ) {
-			final CompositeGenerationStrategyPairBuilder builder = new CompositeGenerationStrategyPairBuilder( mappingProperty );
-			interpretPartialCompositeValueGeneration( sessionFactory, (Component) mappingProperty.getValue(), builder );
-			return builder.buildPair();
-		}
-
-		return NO_GEN_PAIR;
+	private static boolean generatedWithNoParameter(Generator generator) {
+		return generator.generatedOnExecution()
+			&& !((OnExecutionGenerator) generator).writePropertyValue();
 	}
 
-	private static final GenerationStrategyPair NO_GEN_PAIR = new GenerationStrategyPair();
-
-	private static void interpretPartialCompositeValueGeneration(
-			SessionFactoryImplementor sessionFactory,
-			Component composite,
-			CompositeGenerationStrategyPairBuilder builder) {
-		for ( Property property : composite.getProperties() ) {
-			builder.addPair( buildGenerationStrategyPair( sessionFactory, property ) );
+	private static Generator buildGenerator(
+			final Property mappingProperty,
+			final RuntimeModelCreationContext context) {
+		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
+		if ( generatorCreator != null ) {
+			final Generator generator = mappingProperty.createGenerator( context );
+			if ( generator.generatesSometimes() ) {
+				return generator;
+			}
 		}
+		if ( mappingProperty.getValue() instanceof Component ) {
+			final Dialect dialect = context.getSessionFactory().getJdbcServices().getDialect();
+			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
+			final Component component = (Component) mappingProperty.getValue();
+			for ( Property property : component.getProperties() ) {
+				builder.add( property.createGenerator( context ) );
+			}
+			return builder.build();
+		}
+		return null;
 	}
 
-	public static InDatabaseValueGenerationStrategyImpl create(
-			SessionFactoryImplementor sessionFactoryImplementor,
-			Property mappingProperty,
-			ValueGeneration valueGeneration) {
-		final int numberOfMappedColumns = mappingProperty.getType().getColumnSpan( sessionFactoryImplementor );
-		if ( numberOfMappedColumns == 1 ) {
-			return new InDatabaseValueGenerationStrategyImpl(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.referenceColumnInSql(),
-					new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
-
-			);
-		}
-		else {
-			if ( valueGeneration.getDatabaseGeneratedReferencedColumnValue() != null ) {
-				LOG.debugf(
-						"Value generator specified column value in reference to multi-column attribute [%s -> %s]; ignoring",
-						mappingProperty.getPersistentClass(),
-						mappingProperty.getName()
-				);
-			}
-			return new InDatabaseValueGenerationStrategyImpl(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.referenceColumnInSql(),
-					new String[numberOfMappedColumns]
-			);
-		}
+	public Generator[] getGenerators() {
+		return generators;
 	}
 
-	public static class GenerationStrategyPair {
-		private final InMemoryValueGenerationStrategy inMemoryStrategy;
-		private final InDatabaseValueGenerationStrategy inDatabaseStrategy;
-
-		public GenerationStrategyPair() {
-			this( NoInMemoryValueGenerationStrategy.INSTANCE, NoInDatabaseValueGenerationStrategy.INSTANCE );
-		}
-
-		public GenerationStrategyPair(FullInMemoryValueGenerationStrategy inMemoryStrategy) {
-			this( inMemoryStrategy, NoInDatabaseValueGenerationStrategy.INSTANCE );
-		}
-
-		public GenerationStrategyPair(InDatabaseValueGenerationStrategyImpl inDatabaseStrategy) {
-			this( NoInMemoryValueGenerationStrategy.INSTANCE, inDatabaseStrategy );
-		}
-
-		public GenerationStrategyPair(
-				InMemoryValueGenerationStrategy inMemoryStrategy,
-				InDatabaseValueGenerationStrategy inDatabaseStrategy) {
-			// perform some normalization.  Also check that only one (if any) strategy is specified
-			if ( inMemoryStrategy == null ) {
-				inMemoryStrategy = NoInMemoryValueGenerationStrategy.INSTANCE;
-			}
-			if ( inDatabaseStrategy == null ) {
-				inDatabaseStrategy = NoInDatabaseValueGenerationStrategy.INSTANCE;
-			}
-
-			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER
-					&& inDatabaseStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
-				throw new ValueGenerationStrategyException(
-						"in-memory and in-database value generation are mutually exclusive"
-				);
-			}
-
-			this.inMemoryStrategy = inMemoryStrategy;
-			this.inDatabaseStrategy = inDatabaseStrategy;
-		}
-
-		public InMemoryValueGenerationStrategy getInMemoryStrategy() {
-			return inMemoryStrategy;
-		}
-
-		public InDatabaseValueGenerationStrategy getInDatabaseStrategy() {
-			return inDatabaseStrategy;
-		}
+	public BeforeExecutionGenerator getVersionGenerator() {
+		return versionGenerator;
 	}
 
-	public static class ValueGenerationStrategyException extends HibernateException {
-		public ValueGenerationStrategyException(String message) {
-			super( message );
-		}
-	}
-
-	private static class CompositeGenerationStrategyPairBuilder {
-		private final Property mappingProperty;
-
-		private boolean hadInMemoryGeneration;
-		private boolean hadInDatabaseGeneration;
-
-		private List<InDatabaseValueGenerationStrategy> inDatabaseStrategies;
-
-		public CompositeGenerationStrategyPairBuilder(Property mappingProperty) {
-			this.mappingProperty = mappingProperty;
-		}
-
-		public void addPair(GenerationStrategyPair generationStrategyPair) {
-			add( generationStrategyPair.getInMemoryStrategy() );
-			add( generationStrategyPair.getInDatabaseStrategy() );
-		}
-
-		private void add(InMemoryValueGenerationStrategy inMemoryStrategy) {
-			if ( inMemoryStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
-				hadInMemoryGeneration = true;
-			}
-		}
-
-		private void add(InDatabaseValueGenerationStrategy inDatabaseStrategy) {
-			if ( inDatabaseStrategies == null ) {
-				inDatabaseStrategies = new ArrayList<>();
-			}
-			inDatabaseStrategies.add( inDatabaseStrategy );
-
-			if ( inDatabaseStrategy.getGenerationTiming() != GenerationTiming.NEVER ) {
-				hadInDatabaseGeneration = true;
-			}
-		}
-
-		public GenerationStrategyPair buildPair() {
-			if ( hadInMemoryGeneration && hadInDatabaseGeneration ) {
-				throw new ValueGenerationStrategyException(
-						"Composite attribute [" + mappingProperty.getName() + "] contained both in-memory"
-								+ " and in-database value generation"
-				);
-			}
-			else if ( hadInMemoryGeneration ) {
-				throw new NotYetImplementedException( "Still need to wire in composite in-memory value generation" );
-
-			}
-			else if ( hadInDatabaseGeneration ) {
-				final Component composite = (Component) mappingProperty.getValue();
-
-				// we need the numbers to match up so we can properly handle 'referenced sql column values'
-				if ( inDatabaseStrategies.size() != composite.getPropertySpan() ) {
-					throw new ValueGenerationStrategyException(
-							"Internal error : mismatch between number of collected in-db generation strategies" +
-									" and number of attributes for composite attribute : " + mappingProperty.getName()
-					);
-				}
-
-				// the base-line values for the aggregated InDatabaseValueGenerationStrategy we will build here.
-				GenerationTiming timing = GenerationTiming.INSERT;
-				boolean referenceColumns = false;
-				String[] columnValues = new String[ composite.getColumnSpan() ];
-
-				// start building the aggregate values
-				int propertyIndex = -1;
-				int columnIndex = 0;
-				for ( Property property : composite.getProperties() ) {
-					propertyIndex++;
-					final InDatabaseValueGenerationStrategy subStrategy = inDatabaseStrategies.get( propertyIndex );
-
-					if ( subStrategy.getGenerationTiming() == GenerationTiming.ALWAYS ) {
-						// override the base-line to the more often "ALWAYS"...
-						timing = GenerationTiming.ALWAYS;
-
-					}
-					if ( subStrategy.referenceColumnsInSql() ) {
-						// override base-line value
-						referenceColumns = true;
-					}
-					if ( subStrategy.getReferencedColumnValues() != null ) {
-						if ( subStrategy.getReferencedColumnValues().length != property.getColumnSpan() ) {
-							throw new ValueGenerationStrategyException(
-									"Internal error : mismatch between number of collected 'referenced column values'" +
-											" and number of columns for composite attribute : " + mappingProperty.getName() +
-											'.' + property.getName()
-							);
-						}
-						System.arraycopy(
-								subStrategy.getReferencedColumnValues(),
-								0,
-								columnValues,
-								columnIndex,
-								property.getColumnSpan()
-						);
-					}
-				}
-
-				// then use the aggregated values to build the InDatabaseValueGenerationStrategy
-				return new GenerationStrategyPair(
-						new InDatabaseValueGenerationStrategyImpl( timing, referenceColumns, columnValues )
-				);
-			}
-			else {
-				return NO_GEN_PAIR;
-			}
-		}
-	}
-
-	private static class NoInMemoryValueGenerationStrategy implements InMemoryValueGenerationStrategy {
-		/**
-		 * Singleton access
-		 */
-		public static final NoInMemoryValueGenerationStrategy INSTANCE = new NoInMemoryValueGenerationStrategy();
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return GenerationTiming.NEVER;
-		}
-
-		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return null;
-		}
-	}
-
-	private static class FullInMemoryValueGenerationStrategy implements InMemoryValueGenerationStrategy {
-		private final GenerationTiming timing;
-		private final ValueGenerator<?> generator;
-
-		private FullInMemoryValueGenerationStrategy(GenerationTiming timing, ValueGenerator<?> generator) {
-			this.timing = timing;
-			this.generator = generator;
-		}
-
-		public static FullInMemoryValueGenerationStrategy create(ValueGeneration valueGeneration) {
-			return new FullInMemoryValueGenerationStrategy(
-					valueGeneration.getGenerationTiming(),
-					valueGeneration.getValueGenerator()
-			);
-		}
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
-		}
-
-		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return generator;
-		}
-	}
-
-	private static class NoInDatabaseValueGenerationStrategy implements InDatabaseValueGenerationStrategy {
-		/**
-		 * Singleton access
-		 */
-		public static final NoInDatabaseValueGenerationStrategy INSTANCE = new NoInDatabaseValueGenerationStrategy();
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return GenerationTiming.NEVER;
-		}
-
-		@Override
-		public boolean referenceColumnsInSql() {
-			return true;
-		}
-
-		@Override
-		public String[] getReferencedColumnValues() {
-			return null;
-		}
-	}
-
-	private static class InDatabaseValueGenerationStrategyImpl implements InDatabaseValueGenerationStrategy {
-		private final GenerationTiming timing;
-		private final boolean referenceColumnInSql;
-		private final String[] referencedColumnValues;
-
-		private InDatabaseValueGenerationStrategyImpl(
-				GenerationTiming timing,
-				boolean referenceColumnInSql,
-				String[] referencedColumnValues) {
-			this.timing = timing;
-			this.referenceColumnInSql = referenceColumnInSql;
-			this.referencedColumnValues = referencedColumnValues;
-		}
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
-		}
-
-		@Override
-		public boolean referenceColumnsInSql() {
-			return referenceColumnInSql;
-		}
-
-		@Override
-		public String[] getReferencedColumnValues() {
-			return referencedColumnValues;
-		}
-	}
-
-
-	private void mapPropertyToIndex(Property prop, int i) {
-		propertyIndexes.put( prop.getName(), i );
-		if ( prop.getValue() instanceof Component ) {
-			Component composite = (Component) prop.getValue();
-			for ( Property subprop : composite.getProperties() ) {
+	private void mapPropertyToIndex(Property property, int i) {
+		propertyIndexes.put( property.getName(), i );
+		if ( property.getValue() instanceof Component ) {
+			Component composite = (Component) property.getValue();
+			for ( Property subproperty : composite.getProperties() ) {
 				propertyIndexes.put(
-						prop.getName() + '.' + subprop.getName(),
+						property.getName() + '.' + subproperty.getName(),
 						i
 					);
 			}
 		}
 	}
 
+	/**
+	 * @return {@code true} if one of the properties belonging to the natural id
+	 *         is generated during the execution of an {@code insert} statement
+	 */
 	public boolean isNaturalIdentifierInsertGenerated() {
-		// the intention is for this call to replace the usage of the old ValueInclusion stuff (as exposed from
-		// persister) in SelectGenerator to determine if it is safe to use the natural identifier to find the
-		// insert-generated identifier.  That wont work if the natural-id is also insert-generated.
-		//
-		// Assumptions:
-		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
-		// 		* That code assumes a non-composite natural-id, so we assume the same here
-		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
-		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
-	}
-
-	public boolean isVersionGenerated() {
-		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ versionPropertyIndex ];
-		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
+		if ( naturalIdPropertyNumbers.length == 0 ) {
+			throw new IllegalStateException( "entity does not have a natural id: " + name );
+		}
+		for ( int i = 0; i < naturalIdPropertyNumbers.length; i++ ) {
+			final Generator strategy = generators[ naturalIdPropertyNumbers[i] ];
+			if ( strategy != null && strategy.generatesOnInsert() && strategy.generatedOnExecution() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public int[] getNaturalIdentifierProperties() {
@@ -806,14 +544,30 @@ public class EntityMetamodel implements Serializable {
 		return subclassEntityNames;
 	}
 
-	private boolean indicatesCollection(Type type) {
+	private static boolean indicatesCollection(Type type) {
 		if ( type.isCollectionType() ) {
 			return true;
 		}
 		else if ( type.isComponentType() ) {
 			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
 			for ( Type subtype : subtypes ) {
-					if ( indicatesCollection( subtype ) ) {
+				if ( indicatesCollection( subtype ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean indicatesOwnedCollection(Type type, MetadataImplementor metadata) {
+		if ( type.isCollectionType() ) {
+			String role = ( (CollectionType) type ).getRole();
+			return !metadata.getCollectionBinding( role ).isInverse();
+		}
+		else if ( type.isComponentType() ) {
+			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+			for ( Type subtype : subtypes ) {
+				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
 				}
 			}
@@ -831,6 +585,10 @@ public class EntityMetamodel implements Serializable {
 
 	public String getRootName() {
 		return rootName;
+	}
+
+	public int getSubclassId() {
+		return subclassId;
 	}
 
 	public EntityType getEntityType() {
@@ -877,8 +635,15 @@ public class EntityMetamodel implements Serializable {
 		return propertyIndexes.get( propertyName );
 	}
 
+
+
+
 	public boolean hasCollections() {
 		return hasCollections;
+	}
+
+	public boolean hasOwnedCollections() {
+		return hasOwnedCollections;
 	}
 
 	public boolean hasMutableProperties() {
@@ -899,6 +664,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasCascades() {
 		return hasCascades;
+	}
+
+	public boolean hasCascadeDelete() {
+		return hasCascadeDelete;
 	}
 
 	public boolean isMutable() {
@@ -964,7 +733,7 @@ public class EntityMetamodel implements Serializable {
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
 	public String findEntityNameByEntityClass(Class<?> inheritanceClass) {
-		return entityNameByInheritenceClassMap.get( inheritanceClass );
+		return entityNameByInheritanceClassMap.get( inheritanceClass );
 	}
 
 	@Override
@@ -1029,16 +798,8 @@ public class EntityMetamodel implements Serializable {
 		return hasUpdateGeneratedValues;
 	}
 
-	public InMemoryValueGenerationStrategy[] getInMemoryValueGenerationStrategies() {
-		return inMemoryValueGenerationStrategies;
-	}
-
-	public InDatabaseValueGenerationStrategy[] getInDatabaseValueGenerationStrategies() {
-		return inDatabaseValueGenerationStrategies;
-	}
-
 	/**
-	 * Whether or not this class can be lazy (ie intercepted)
+	 * Whether this class can be lazy (ie intercepted)
 	 */
 	public boolean isInstrumented() {
 		return bytecodeEnhancementMetadata.isEnhancedForLazyLoading();

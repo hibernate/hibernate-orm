@@ -16,6 +16,11 @@ public class DB2IdentityColumnSupport extends IdentityColumnSupportImpl {
 	}
 
 	@Override
+	public boolean supportsInsertSelectIdentity() {
+		return true;
+	}
+
+	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
 		return "values identity_val_local()";
 	}
@@ -28,5 +33,10 @@ public class DB2IdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public String getIdentityInsertString() {
 		return "default";
+	}
+
+	@Override
+	public String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return "select " + identityColumnName + " from final table ( " + insertString + " )"; //TODO: should it be 'from new table'?
 	}
 }

@@ -48,8 +48,8 @@ hibernate {
 The extension is of type `EnhancementSpec` which exposes the following properties:
 
 
-enableLazyInitialization:: Whether to incorporate lazy loading support into the enhanced bytecode
-enableDirtyTracking:: Whether to incorporate dirty tracking into the enhanced bytecode
+enableLazyInitialization:: Whether to incorporate lazy loading support into the enhanced bytecode. Defaults to `true`. This setting is deprecated for removal without a replacement.
+enableDirtyTracking:: Whether to incorporate dirty tracking into the enhanced bytecode. Defaults to `true`. This setting is deprecated for removal without a replacement.
 enableAssociationManagement:: Whether to add bidirectional association management into the enhanced bytecode
 
 

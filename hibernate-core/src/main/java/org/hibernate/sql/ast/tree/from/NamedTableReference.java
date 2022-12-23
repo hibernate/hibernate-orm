@@ -12,9 +12,10 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Represents a reference to a "named" table in a query's from clause.
@@ -29,8 +30,7 @@ public class NamedTableReference extends AbstractTableReference {
 	public NamedTableReference(
 			String tableExpression,
 			String identificationVariable,
-			boolean isOptional,
-			SessionFactoryImplementor sessionFactory) {
+			boolean isOptional) {
 		super( identificationVariable, isOptional );
 		assert tableExpression != null;
 		this.tableExpression = tableExpression;
@@ -66,7 +66,7 @@ public class NamedTableReference extends AbstractTableReference {
 
 	@Override
 	public boolean containsAffectedTableName(String requestedName) {
-		return getTableExpression().equals( requestedName );
+		return isEmpty( requestedName ) || getTableExpression().equals( requestedName );
 	}
 
 	@Override

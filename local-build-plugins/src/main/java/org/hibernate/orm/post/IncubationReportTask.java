@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.post;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.TreeSet;
 import javax.inject.Inject;
@@ -42,4 +44,17 @@ public abstract class IncubationReportTask extends AbstractJandexAwareTask {
 		writeReport( incubations );
 	}
 
+	@Override
+	protected void writeReportHeader(OutputStreamWriter fileWriter) {
+		super.writeReportHeader( fileWriter );
+
+		try {
+			fileWriter.write( "# All API elements considered incubating" );
+			fileWriter.write( '\n' );
+			fileWriter.write( '\n' );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
+	}
 }

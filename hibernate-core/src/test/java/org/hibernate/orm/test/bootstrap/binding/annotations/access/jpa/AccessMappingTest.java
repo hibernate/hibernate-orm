@@ -33,7 +33,6 @@ import static org.junit.Assert.fail;
  *
  * @author Hardy Ferentschik
  */
-@SuppressWarnings({ "deprecation" })
 public class AccessMappingTest {
 	private ServiceRegistry serviceRegistry;
 

@@ -118,6 +118,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( MissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {
@@ -135,6 +136,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {
@@ -152,6 +154,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( NoNameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		Map<String, Object> settings = new HashMap<>(  );
@@ -184,6 +187,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( NameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {
@@ -207,6 +211,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( NameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		Map<String, Object> settings = new HashMap<>(  );
@@ -239,6 +244,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( IntegerNameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {

@@ -10,17 +10,39 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collection;
+import java.util.Map;
 
 /**
- * Define the lazy status of a collection.
+ * Specify the laziness of a collection, either a
+ * {@link jakarta.persistence.OneToMany} or
+ * {@link jakarta.persistence.ManyToMany} association,
+ * or an {@link jakarta.persistence.ElementCollection}.
+ * This is an alternative to specifying the JPA
+ * {@link jakarta.persistence.FetchType}. This annotation
+ * is used to enable {@linkplain LazyCollectionOption#EXTRA
+ * extra-lazy collection fetching}.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated
+ * <ul>
+ * <li>Use the JPA-defined {@link jakarta.persistence.FetchType#EAGER}
+ *     instead of {@code LazyCollection(FALSE)}.
+ * <li>Use static methods of {@link org.hibernate.Hibernate},
+ *     for example {@link org.hibernate.Hibernate#size(Collection)},
+ *     {@link org.hibernate.Hibernate#contains(Collection, Object)},
+ *     {@link org.hibernate.Hibernate#get(Map, Object)}, or
+ *     {@link org.hibernate.Hibernate#remove(Map, Object)} instead
+ *     of {@code LazyCollection(EXTRA)}.
+ * </ul>
  */
+@Deprecated(since="6.2")
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LazyCollection {
 	/**
-	 * The laziness option for the collection.
+	 * The laziness of the collection.
 	 */
-	LazyCollectionOption value();
+	LazyCollectionOption value() default LazyCollectionOption.TRUE;
 }

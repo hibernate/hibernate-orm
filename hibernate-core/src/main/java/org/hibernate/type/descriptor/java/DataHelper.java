@@ -154,7 +154,7 @@ public final class DataHelper {
 	 * @return The contents as a {@code byte[]}
 	 */
 	public static byte[] extractBytes(InputStream inputStream) {
-		if ( BinaryStream.class.isInstance( inputStream ) ) {
+		if ( inputStream instanceof BinaryStream ) {
 			return ( (BinaryStream ) inputStream ).getBytes();
 		}
 
@@ -200,7 +200,7 @@ public final class DataHelper {
 	 * @return The extracted bytes
 	 */
 	public static byte[] extractBytes(InputStream inputStream, long start, int length) {
-		if ( BinaryStream.class.isInstance( inputStream ) && Integer.MAX_VALUE > start ) {
+		if ( inputStream instanceof BinaryStream && Integer.MAX_VALUE > start ) {
 			byte[] data = ( (BinaryStream ) inputStream ).getBytes();
 			int size = Math.min( length, data.length );
 			byte[] result = new byte[size];

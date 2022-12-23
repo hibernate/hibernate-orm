@@ -110,12 +110,40 @@ values
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // QUERY SPEC - general structure of root sqm or sub sqm
 
+withClause
+	: WITH cte (COMMA cte)*
+	;
+
+cte
+	: identifier AS (NOT? MATERIALIZED)? LEFT_PAREN queryExpression RIGHT_PAREN searchClause? cycleClause?
+	;
+
+cteAttributes
+	: identifier (COMMA identifier)*
+	;
+
+searchClause
+	: SEARCH (BREADTH|DEPTH) FIRST BY searchSpecifications SET identifier
+	;
+
+searchSpecifications
+	: searchSpecification (COMMA searchSpecification)*
+	;
+
+searchSpecification
+	: identifier sortDirection? nullsPrecedence?
+	;
+
+cycleClause
+	: CYCLE cteAttributes SET identifier (TO literal DEFAULT literal)? (USING identifier)?
+	;
+
 /**
  * A toplevel query of subquery, which may be a union or intersection of subqueries
  */
 queryExpression
-	: orderedQuery								# SimpleQueryGroup
-	| orderedQuery (setOperator orderedQuery)+	# SetQueryGroup
+	: withClause? orderedQuery								# SimpleQueryGroup
+	| withClause? orderedQuery (setOperator orderedQuery)+	# SetQueryGroup
 	;
 
 /**
@@ -176,8 +204,8 @@ entityWithJoins
  * A root entity declaration in the 'from' clause, with optional identification variable
  */
 fromRoot
-	: entityName variable?									# RootEntity
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# RootSubquery
+	: entityName variable?							# RootEntity
+	| LEFT_PAREN subquery RIGHT_PAREN variable?		# RootSubquery
 	;
 
 /**
@@ -637,7 +665,7 @@ inList
  * A single character used to escape the '_' and '%' wildcards in a 'like' pattern
  */
 likeEscape
-	: ESCAPE (STRING_LITERAL | parameter)
+	: ESCAPE (STRING_LITERAL | JAVA_STRING_LITERAL | parameter)
 	;
 
 
@@ -795,6 +823,7 @@ searchedCaseWhen
  */
 literal
 	: STRING_LITERAL
+	| JAVA_STRING_LITERAL
 	| NULL
 	| booleanLiteral
 	| numericLiteral
@@ -1482,6 +1511,7 @@ rollup
 	| AVG
 	| BETWEEN
 	| BOTH
+	| BREADTH
 	| BY
 	| CASE
 	| CAST
@@ -1494,10 +1524,13 @@ rollup
 	| CURRENT_INSTANT
 	| CURRENT_TIME
 	| CURRENT_TIMESTAMP
+	| CYCLE
 	| DATE
 	| DATETIME
 	| DAY
+	| DEFAULT
 	| DELETE
+	| DEPTH
 	| DESC
 	| DISTINCT
 	| ELEMENT
@@ -1552,6 +1585,7 @@ rollup
 	| LOCAL_DATETIME
 	| LOCAL_TIME
 	| MAP
+	| MATERIALIZED
 	| MAX
 	| MAXELEMENT
 	| MAXINDEX
@@ -1596,6 +1630,7 @@ rollup
 	| ROLLUP
 	| ROW
 	| ROWS
+	| SEARCH
 	| SECOND
 	| SELECT
 	| SET
@@ -1609,6 +1644,7 @@ rollup
 	| TIMESTAMP
 	| TIMEZONE_HOUR
 	| TIMEZONE_MINUTE
+	| TO
 	| TRAILING
 	| TREAT
 	| TRIM
@@ -1617,6 +1653,7 @@ rollup
 	| UNBOUNDED
 	| UNION
 	| UPDATE
+	| USING
 	| VALUE
 	| VALUES
 	| VERSION

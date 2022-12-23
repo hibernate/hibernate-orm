@@ -17,8 +17,12 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}
@@ -130,9 +134,9 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy proxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getInternalIdentifier() );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				data.put( propertyData.getName(), lazyInitializer.getInternalIdentifier() );
 			}
 			else {
 				final Object value = getValueFromObject( propertyData, obj );

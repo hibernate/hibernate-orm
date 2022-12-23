@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * better option.
  */
 @Inherited
-@Target({ ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 
 @ExtendWith( LoggingInspectionsExtension.class )

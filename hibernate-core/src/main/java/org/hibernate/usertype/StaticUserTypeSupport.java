@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -71,7 +72,8 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 		return javaType;
 	}
 
-	public JdbcType getJdbcType() {
+	@Override
+	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
 		return jdbcType;
 	}
 
@@ -94,7 +96,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 
 	@Override
 	public int getSqlType() {
-		return jdbcType.getDefaultSqlTypeCode();
+		return jdbcType.getDdlTypeCode();
 	}
 
 	@Override

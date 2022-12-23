@@ -12,13 +12,12 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 
 import jakarta.persistence.ParameterMode;
 
@@ -47,49 +46,60 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 	}
 
 	@Override
-	public JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
-		final FunctionReturnImplementor functionReturn = procedureCall.getFunctionReturn();
+		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
 		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final ParameterStrategy parameterStrategy = functionReturn == null && parameterMetadata.hasNamedParameters() ?
-				ParameterStrategy.NAMED :
-				ParameterStrategy.POSITIONAL;
-		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder( parameterStrategy );
+		final int paramStringSizeEstimate;
+		if ( functionReturn == null && parameterMetadata.hasNamedParameters() ) {
+			// That's just a rough estimate. I guess most params will have fewer than 8 chars on average
+			paramStringSizeEstimate = registrations.size() * 10;
+		}
+		else {
+			// For every param rendered as '?' we have a comma, hence the estimate
+			paramStringSizeEstimate = registrations.size() * 2;
+		}
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder();
 		final StringBuilder buffer;
 		final int offset;
 		if ( functionReturn != null && !implicitReturn ) {
 			offset = 2;
-			buffer = new StringBuilder( 11 + procedureName.length() + registrations.size() * 2 ).append( "{?=call " );
+			buffer = new StringBuilder( 11 + procedureName.length() + paramStringSizeEstimate ).append( "{?=call " );
 			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
 		}
 		else {
 			offset = 1;
-			buffer = new StringBuilder( 9 + procedureName.length() + registrations.size() * 2 ).append( "{call " );
+			buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
 		}
 
-		buffer.append( procedureName ).append( "(" );
+		buffer.append( procedureName );
 
-		String sep = "";
-		for ( int i = 0; i < registrations.size(); i++ ) {
-			final ProcedureParameterImplementor<?> parameter = registrations.get( i );
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
+		if ( registrations.isEmpty() ) {
+			buffer.append( '(' );
+		}
+		else {
+			char sep = '(';
+			for ( int i = 0; i < registrations.size(); i++ ) {
+				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
+				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+					verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
+				}
+				buffer.append( sep );
+				final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(
+						i + offset,
+						procedureCall
+				);
+				if ( registration.getName() != null ) {
+					buffer.append( ':' ).append( registration.getName() );
+				}
+				else {
+					buffer.append( "?" );
+				}
+				sep = ',';
+				builder.addParameterRegistration( registration );
 			}
-			buffer.append( sep );
-			final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(
-					i + offset,
-					procedureCall
-			);
-			if ( registration.getName() != null ) {
-				buffer.append( ':' ).append( registration.getName() );
-			}
-			else {
-				buffer.append( "?" );
-			}
-			sep = ",";
-			builder.addParameterRegistration( registration );
 		}
 
 		buffer.append( ")}" );

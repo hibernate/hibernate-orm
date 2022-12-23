@@ -9,13 +9,12 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -87,16 +86,6 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// TimesTen does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// TimesTen does not support this, but it can be emulated
 	}
 
 	@Override

@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * Mapping for a collection. Subclasses specialize to particular collection styles.
+ * A mapping model object representing a collection. Subclasses specialize to particular kinds of collection.
  *
  * @author Gavin King
  */
@@ -415,7 +415,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	private void checkColumnDuplication() throws MappingException {
-		HashSet<String> cols = new HashSet<>();
+		final HashSet<String> cols = new HashSet<>();
 		checkColumnDuplication( cols, getKey() );
 		if ( isIndexed() ) {
 			checkColumnDuplication(
@@ -720,7 +720,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getRole() + ')';
+		return getClass().getSimpleName() + '(' + getRole() + ')';
 	}
 
 	public java.util.Set<String> getSynchronizedTables() {
@@ -844,5 +844,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public void setMappedByProperty(String mappedByProperty) {
 		this.mappedByProperty = mappedByProperty;
+	}
+
+	@Override
+	public boolean isColumnInsertable(int index) {
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		return false;
 	}
 }

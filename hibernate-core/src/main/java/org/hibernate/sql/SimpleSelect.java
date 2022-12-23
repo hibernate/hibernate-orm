@@ -43,7 +43,7 @@ public class SimpleSelect {
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
 
-	private Dialect dialect;
+	private final Dialect dialect;
 
 
 	public SimpleSelect addColumns(String[] columnNames, String[] columnAliases) {
@@ -189,7 +189,7 @@ public class SimpleSelect {
 		}
 
 		if ( lockOptions != null ) {
-			buf = new StringBuilder(dialect.applyLocksToSql( buf.toString(), lockOptions, null ) );
+			buf = new StringBuilder( dialect.applyLocksToSql( buf.toString(), lockOptions, null ) );
 		}
 
 		return dialect.transformSelectString( buf.toString() );

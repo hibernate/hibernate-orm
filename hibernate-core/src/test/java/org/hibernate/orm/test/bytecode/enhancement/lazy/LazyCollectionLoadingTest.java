@@ -116,13 +116,11 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
             Parent parent = s.find( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-            assertFalse( isPropertyInitialized( parent, "children" ) );
             checkDirtyTracking( parent );
 
             List<Child> children1 = parent.children;
             List<Child> children2 = parent.children;
 
-            assertTrue( isPropertyInitialized( parent, "children" ) );
             checkDirtyTracking( parent );
 
             assertThat( children1, sameInstance( children2 ) );

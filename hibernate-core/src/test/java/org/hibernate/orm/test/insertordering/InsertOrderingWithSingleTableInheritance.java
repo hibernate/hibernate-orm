@@ -8,6 +8,13 @@ package org.hibernate.orm.test.insertordering;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.BatchSize;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.CascadeType;
@@ -25,12 +32,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.BatchSize;
-
-import org.hibernate.testing.TestForIssue;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
@@ -83,6 +84,13 @@ public class InsertOrderingWithSingleTableInheritance extends BaseInsertOrdering
 			clearBatches();
 		} );
 
+		// 1 for first 10 Person (1)
+		// 0 for final 2 Person (reused)
+		// 1 for first 10 SpecialPerson (2)
+		// 0 for last 2 SpecialPerson (reused)
+		// 1 for first 10 Address (3)
+		// 0 for second 10 Address (reused)
+		// 0 for final 4 Address (reused)
 		verifyPreparedStatementCount( 3 );
 	}
 

@@ -46,7 +46,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public void configure(Map<String, Object> configValues) {
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		assert jdbcEnvironment != null : "JdbcEnvironment was not found!";
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
 
 		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 

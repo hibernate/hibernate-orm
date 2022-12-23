@@ -45,7 +45,7 @@ public interface PersistentPropertiesSource {
 		return new PersistentPropertiesSource() {
 			@Override
 			public Iterator<Property> getPropertyIterator() {
-				return persistentClass.getPropertyIterator();
+				return persistentClass.getProperties().iterator();
 			}
 
 			@Override
@@ -105,7 +105,7 @@ public interface PersistentPropertiesSource {
 		return new PersistentPropertiesSource() {
 			@Override
 			public Iterator<Property> getPropertyIterator() {
-				return component.getPropertyIterator();
+				return component.getProperties().iterator();
 			}
 
 			@Override

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.OracleDialect;
@@ -18,6 +19,7 @@ import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
+import org.hibernate.procedure.ProcedureCall;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -84,15 +86,19 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 		// Verify statement closing with JdbcCoordinator#hasRegisteredResources() instead.
 		// BigDecimal maxCursors = (BigDecimal) session.createSQLQuery( "SELECT value FROM v$parameter WHERE name = 'open_cursors'" ).uniqueResult();
 		// for ( int i = 0; i < maxCursors + 10; ++i ) { named_query_execution }
+		ProcedureCall namedStoredProcedureQuery = session.createNamedStoredProcedureQuery( "NumValue.getSomeValues" );
+		List resultList = namedStoredProcedureQuery.getResultList();
 		Assert.assertEquals(
 				Arrays.asList( new NumValue( 1, "Line 1" ), new NumValue( 2, "Line 2" ) ),
-				session.createNamedStoredProcedureQuery( "NumValue.getSomeValues" ).getResultList()
+				resultList
 		);
+		namedStoredProcedureQuery.close();
 		JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 		Assert.assertFalse(
 				"Prepared statement and result set should be released after query execution.",
 				jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources()
 		);
+
 		session.getTransaction().commit();
 		session.close();
 	}

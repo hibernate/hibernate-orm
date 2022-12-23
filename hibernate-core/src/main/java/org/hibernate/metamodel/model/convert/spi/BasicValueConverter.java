@@ -7,7 +7,9 @@
 package org.hibernate.metamodel.model.convert.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Support for basic-value conversions.
@@ -46,4 +48,23 @@ public interface BasicValueConverter<D,R> {
 	 * Descriptor for the Java type for the relational portion of this converter
 	 */
 	JavaType<R> getRelationalJavaType();
+
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param sqlType the {@link JdbcType} of the mapped column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 */
+	@Incubating
+	default String getCheckCondition(String columnName, JdbcType sqlType, Dialect dialect) {
+		return null;
+	}
+
+	@Incubating
+	default String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
+		return null;
+	}
 }

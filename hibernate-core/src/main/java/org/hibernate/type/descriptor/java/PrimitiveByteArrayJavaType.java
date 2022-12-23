@@ -18,6 +18,7 @@ import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -50,9 +51,9 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	public String toString(byte[] bytes) {
-		final StringBuilder buf = new StringBuilder( bytes.length * 2 );
-		appendString( buf::append, bytes );
-		return buf.toString();
+		final StringBuilder sb = new StringBuilder( bytes.length * 2 );
+		appendString( new StringBuilderSqlAppender( sb ), bytes );
+		return sb.toString();
 	}
 
 	public void appendString(SqlAppender appender, byte[] bytes) {
@@ -62,6 +63,16 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 				appender.appendSql( '0' );
 			}
 			appender.appendSql( hexStr );
+		}
+	}
+
+	public void appendString(StringBuilder appender, byte[] bytes) {
+		for ( byte aByte : bytes ) {
+			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
+			if ( hexStr.length() == 1 ) {
+				appender.append( '0' );
+			}
+			appender.append( hexStr );
 		}
 	}
 

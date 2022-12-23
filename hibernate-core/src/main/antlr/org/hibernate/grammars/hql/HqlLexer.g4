@@ -75,10 +75,13 @@ HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
 fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
 
-STRING_LITERAL
-	: DOUBLE_QUOTE ( ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE | ~('"') )* DOUBLE_QUOTE
-	| SINGLE_QUOTE ( ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE | ~('\'') )* SINGLE_QUOTE
-	;
+STRING_LITERAL : SINGLE_QUOTE ( SINGLE_QUOTE SINGLE_QUOTE | ~('\'') )* SINGLE_QUOTE;
+
+JAVA_STRING_LITERAL
+	: DOUBLE_QUOTE ( ESCAPE_SEQUENCE | ~('"') )* DOUBLE_QUOTE
+ 	| [jJ] SINGLE_QUOTE ( ESCAPE_SEQUENCE | ~('\'') )* SINGLE_QUOTE
+ 	| [jJ] DOUBLE_QUOTE ( ESCAPE_SEQUENCE | ~('\'') )* DOUBLE_QUOTE
+ 	;
 
 fragment BACKSLASH : '\\';
 
@@ -96,6 +99,7 @@ UNICODE_ESCAPE
 
 BINARY_LITERAL
 	: [xX] SINGLE_QUOTE (HEX_DIGIT HEX_DIGIT)* SINGLE_QUOTE
+	| [xX] DOUBLE_QUOTE (HEX_DIGIT HEX_DIGIT)* DOUBLE_QUOTE
 	;
 
 // ESCAPE start tokens
@@ -149,6 +153,7 @@ ASC					: [aA] [sS] [cC];
 AVG					: [aA] [vV] [gG];
 BETWEEN	 			: [bB] [eE] [tT] [wW] [eE] [eE] [nN];
 BOTH				: [bB] [oO] [tT] [hH];
+BREADTH	 			: [bB] [rR] [eE] [aA] [dD] [tT] [hH];
 BY					: [bB] [yY];
 CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
@@ -161,10 +166,13 @@ CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
 CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT]; //deprecated legacy
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
+CYCLE				: [cC] [yY] [cC] [lL] [eE];
 DATE				: [dD] [aA] [tT] [eE];
 DATETIME			: [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 DAY					: [dD] [aA] [yY];
+DEFAULT				: [dD] [eE] [fF] [aA] [uU] [lL] [tT];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
+DEPTH	 			: [dD] [eE] [pP] [tT] [hH];
 DESC				: [dD] [eE] [sS] [cC];
 DISTINCT			: [dD] [iI] [sS] [tT] [iI] [nN] [cC] [tT];
 ELEMENT				: [eE] [lL] [eE] [mM] [eE] [nN] [tT];
@@ -219,6 +227,7 @@ LOCAL_DATE			: [lL] [oO] [cC] [aA] [lL] '_' [dD] [aA] [tT] [eE];
 LOCAL_DATETIME		: [lL] [oO] [cC] [aA] [lL] '_' [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 LOCAL_TIME			: [lL] [oO] [cC] [aA] [lL] '_' [tT] [iI] [mM] [eE];
 MAP					: [mM] [aA] [pP];
+MATERIALIZED		: [mM] [aA] [tT] [eE] [rR] [iI] [aA] [lL] [iI] [zZ] [eE] [dD];
 MAX					: [mM] [aA] [xX];
 MAXELEMENT			: [mM] [aA] [xX] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 MAXINDEX			: [mM] [aA] [xX] [iI] [nN] [dD] [eE] [xX];
@@ -262,6 +271,7 @@ RIGHT				: [rR] [iI] [gG] [hH] [tT];
 ROLLUP				: [rR] [oO] [lL] [lL] [uU] [pP];
 ROW	    			: [rR] [oO] [wW];
 ROWS    			: [rR] [oO] [wW] [sS];
+SEARCH				: [sS] [eE] [aA] [rR] [cC] [hH];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
@@ -275,6 +285,7 @@ TIME				: [tT] [iI] [mM] [eE];
 TIMESTAMP			: [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 TIMEZONE_HOUR		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [hH] [oO] [uU] [rR];
 TIMEZONE_MINUTE		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [mM] [iI] [nN] [uU] [tT] [eE];
+TO					: [tT] [oO];
 TRAILING			: [tT] [rR] [aA] [iI] [lL] [iI] [nN] [gG];
 TREAT				: [tT] [rR] [eE] [aA] [tT];
 TRIM				: [tT] [rR] [iI] [mM];
@@ -283,6 +294,7 @@ TYPE				: [tT] [yY] [pP] [eE];
 UNBOUNDED			: [uU] [nN] [bB] [oO] [uU] [nN] [dD] [eE] [dD];
 UNION				: [uU] [nN] [iI] [oO] [nN];
 UPDATE				: [uU] [pP] [dD] [aA] [tT] [eE];
+USING				: [uU] [sS] [iI] [nN] [gG];
 VALUE				: [vV] [aA] [lL] [uU] [eE];
 VALUES				: [vV] [aA] [lL] [uU] [eE] [sS];
 WEEK				: [wW] [eE] [eE] [kK];

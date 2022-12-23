@@ -10,18 +10,21 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -32,17 +35,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -52,20 +48,25 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
+import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
+
 /**
- * Any value that maps to columns.
+ * A mapping model object that represents any value that maps to columns.
+ *
  * @author Gavin King
  */
 public abstract class SimpleValue implements KeyValue {
@@ -79,6 +80,7 @@ public abstract class SimpleValue implements KeyValue {
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
 	private final List<Boolean> updatability = new ArrayList<>();
+	private boolean partitionKey;
 
 	private String typeName;
 	private Properties typeParameters;
@@ -86,7 +88,7 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean isNationalized;
 	private boolean isLob;
 
-	private Properties identifierGeneratorProperties;
+	private Map<String,Object> identifierGeneratorParameters;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
 
@@ -94,11 +96,14 @@ public abstract class SimpleValue implements KeyValue {
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
-	private boolean cascadeDeleteEnabled;
+	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
+
+	private IdentifierGeneratorCreator customIdGeneratorCreator;
+	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -116,25 +121,24 @@ public abstract class SimpleValue implements KeyValue {
 		this.columns.addAll( original.columns );
 		this.insertability.addAll( original.insertability );
 		this.updatability.addAll( original.updatability );
+		this.partitionKey = original.partitionKey;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
 		this.isLob = original.isLob;
-		this.identifierGeneratorProperties = original.identifierGeneratorProperties == null
-				? null
-				: new Properties( original.identifierGeneratorProperties );
+		this.identifierGeneratorParameters = original.identifierGeneratorParameters;
 		this.identifierGeneratorStrategy = original.identifierGeneratorStrategy;
 		this.nullValue = original.nullValue;
 		this.table = original.table;
 		this.foreignKeyName = original.foreignKeyName;
 		this.foreignKeyDefinition = original.foreignKeyDefinition;
 		this.alternateUniqueKey = original.alternateUniqueKey;
-		this.cascadeDeleteEnabled = original.cascadeDeleteEnabled;
+		this.onDeleteAction = original.onDeleteAction;
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
-		this.identifierGenerator = original.identifierGenerator;
+		this.generator = original.generator;
 	}
 
 	public MetadataBuildingContext getBuildingContext() {
@@ -150,14 +154,31 @@ public abstract class SimpleValue implements KeyValue {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
-	@Override
-	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
+	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
 	}
+
+	/**
+	 * @deprecated use {@link #getOnDeleteAction()}
+	 */
+	@Deprecated(since = "6.2")
+	@Override
+	public boolean isCascadeDeleteEnabled() {
+		return onDeleteAction == OnDeleteAction.CASCADE;
+	}
+
+	/**
+	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
+	 */
+	@Deprecated(since = "6.2")
+	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
+		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
+	}
+
 
 	public void addColumn(Column column) {
 		addColumn( column, true, true );
@@ -201,21 +222,20 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void sortColumns(int[] originalOrder) {
-		if ( columns.size() == 1 ) {
-			return;
-		}
-		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
-		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
-		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
-		for ( int i = 0; i < originalOrder.length; i++ ) {
-			final int originalIndex = originalOrder[i];
-			final Selectable selectable = originalColumns[originalIndex];
-			if ( selectable instanceof Column ) {
-				( (Column) selectable ).setTypeIndex( i );
+		if ( columns.size() > 1 ) {
+			final Selectable[] originalColumns = columns.toArray( new Selectable[0] );
+			final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
+			final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
+			for ( int i = 0; i < originalOrder.length; i++ ) {
+				final int originalIndex = originalOrder[i];
+				final Selectable selectable = originalColumns[i];
+				if ( selectable instanceof Column ) {
+					( (Column) selectable ).setTypeIndex( originalIndex );
+				}
+				columns.set( originalIndex, selectable );
+				insertability.set( originalIndex, originalInsertability[i] );
+				updatability.set( originalIndex, originalUpdatability[i] );
 			}
-			columns.set( i, selectable );
-			insertability.set( i, originalInsertability[originalIndex] );
-			updatability.set( i, originalUpdatability[originalIndex] );
 		}
 	}
 
@@ -326,7 +346,7 @@ public abstract class SimpleValue implements KeyValue {
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
 			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setCascadeDeleteEnabled( cascadeDeleteEnabled );
+			fk.setOnDeleteAction( onDeleteAction );
 			return fk;
 		}
 
@@ -341,186 +361,46 @@ public abstract class SimpleValue implements KeyValue {
 		getTable().createUniqueKey( getConstraintColumns() );
 	}
 
-	private IdentifierGeneratorCreator customIdGeneratorCreator;
-	private IdentifierGenerator identifierGenerator;
-
 	/**
-	 * Returns the cached identifierGenerator.
-	 *
-	 * @return IdentifierGenerator null if
-	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
-	 * completed.
+	 * Returns the cached {@link IdentifierGenerator}, or null if
+	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)}
+	 * was never completed.
 	 *
 	 * @deprecated not used and no longer supported.
 	 */
 	@Deprecated(since = "6.0")
 	public IdentifierGenerator getIdentifierGenerator() {
-		return identifierGenerator;
+		return (IdentifierGenerator) generator;
 	}
 
+	@Internal
 	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
 	}
 
+	@Internal
 	public IdentifierGeneratorCreator getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
 	}
 
 	@Override
-	public IdentifierGenerator createIdentifierGenerator(
+	public Generator createGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		return createIdentifierGenerator( identifierGeneratorFactory, dialect, null, null, rootClass );
-	}
-
-	@Override
-	public IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect, 
-			String defaultCatalog, 
-			String defaultSchema, 
-			RootClass rootClass) throws MappingException {
-		if ( identifierGenerator != null ) {
-			return identifierGenerator;
+		if ( generator != null ) {
+			return generator;
 		}
-
-		if ( customIdGeneratorCreator != null ) {
-			final CustomIdGeneratorCreationContext creationContext = new CustomIdGeneratorCreationContext() {
-				@Override
-				public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-					return identifierGeneratorFactory;
-				}
-
-				@Override
-				public Database getDatabase() {
-					return buildingContext.getMetadataCollector().getDatabase();
-				}
-
-				@Override
-				public ServiceRegistry getServiceRegistry() {
-					return buildingContext.getBootstrapContext().getServiceRegistry();
-				}
-
-				@Override
-				public String getDefaultCatalog() {
-					return defaultCatalog;
-				}
-
-				@Override
-				public String getDefaultSchema() {
-					return defaultSchema;
-				}
-
-				@Override
-				public RootClass getRootClass() {
-					return rootClass;
-				}
-			};
-
-			identifierGenerator = customIdGeneratorCreator.createGenerator( creationContext );
-			return identifierGenerator;
-		}
-
-		final Properties params = new Properties();
-
-		// This is for backwards compatibility only;
-		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
-		// null, and defaults are handled later.
-		if ( defaultSchema != null ) {
-			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
-		}
-
-		if ( defaultCatalog != null ) {
-			params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
-		}
-
-		// default initial value and allocation size per-JPA defaults
-		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
-		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.getService( ConfigurationService.class );
-
-		final String idNamingStrategy = cs.getSetting(
-				AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-				StandardConverters.STRING,
-				null
-		);
-
-		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
-				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-				|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
-			params.setProperty( OptimizableGenerator.INCREMENT_PARAM, "1" );
+		else if ( customIdGeneratorCreator != null ) {
+			generator = customIdGeneratorCreator.createGenerator(
+					new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
+			);
+			return generator;
 		}
 		else {
-			params.setProperty(
-					OptimizableGenerator.INCREMENT_PARAM,
-					String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE )
-			);
+			generator = createLegacyIdentifierGenerator(this, identifierGeneratorFactory, dialect, null, null, rootClass );
+			return generator;
 		}
-		//init the table here instead of earlier, so that we can get a quoted table name
-		//TODO: would it be better to simply pass the qualified table name, instead of
-		//      splitting it up into schema/catalog/table names
-		final String tableName = getTable().getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
-
-		//pass the column name (a generated id almost always has a single column)
-		final String columnName = ( (Column) getSelectables().get(0) ).getQuotedName( dialect );
-		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
-
-		//pass the entity-name, if not a collection-id
-		if ( rootClass != null ) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-			// The table name is not really a good default for subselect entities, so use the JPA entity name which is short
-			if ( getTable().isSubselect() ) {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, rootClass.getJpaEntityName() );
-			}
-			else {
-				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, getTable().getName() );
-			}
-
-			final StringBuilder tables = new StringBuilder();
-			final Iterator<Table> itr = rootClass.getIdentityTables().iterator();
-			while ( itr.hasNext() ) {
-				final Table table = itr.next();
-				tables.append( table.getQuotedName( dialect ) );
-				if ( itr.hasNext() ) {
-					tables.append( ", " );
-				}
-			}
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
-		}
-		else {
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, tableName );
-		}
-
-		if ( identifierGeneratorProperties != null ) {
-			params.putAll( identifierGeneratorProperties );
-		}
-
-		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-
-		params.put(
-				IdentifierGenerator.CONTRIBUTOR_NAME,
-				buildingContext.getCurrentContributorName()
-		);
-
-		if ( cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) != null ) {
-			params.put(
-					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					cs.getSettings().get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
-			);
-		}
-
-		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
-				identifierGeneratorStrategy,
-				getType(),
-				params
-		);
-
-		return identifierGenerator;
 	}
 
 	public boolean isUpdateable() {
@@ -552,34 +432,51 @@ public abstract class SimpleValue implements KeyValue {
 		this.identifierGeneratorStrategy = identifierGeneratorStrategy;
 	}
 
+	@Deprecated
+	@Override
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		return IdentityGenerator.class.isAssignableFrom(
 				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
 		);
 	}
 
+	public Map<String, Object> getIdentifierGeneratorParameters() {
+		return identifierGeneratorParameters;
+	}
+
+	public void setIdentifierGeneratorParameters(Map<String, Object> identifierGeneratorParameters) {
+		this.identifierGeneratorParameters = identifierGeneratorParameters;
+	}
+
+	/**
+	 * @deprecated use {@link #getIdentifierGeneratorParameters()}
+	 */
+	@Deprecated @Remove
 	public Properties getIdentifierGeneratorProperties() {
-		return identifierGeneratorProperties;
+		Properties properties = new Properties();
+		properties.putAll( identifierGeneratorParameters );
+		return properties;
 	}
 
 	/**
-	 * Sets the identifierGeneratorProperties.
-	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
+	@Deprecated @Remove
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
-		this.identifierGeneratorProperties = identifierGeneratorProperties;
+		this.identifierGeneratorParameters = new HashMap<>();
+		identifierGeneratorProperties.forEach((key, value) -> {
+			if (key instanceof String) {
+				identifierGeneratorParameters.put((String) key, value);
+			}
+		});
 	}
 
 	/**
-	 * Sets the identifierGeneratorProperties.
-	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 * @deprecated use {@link #setIdentifierGeneratorParameters(Map)}
 	 */
-	public void setIdentifierGeneratorProperties(Map identifierGeneratorProperties) {
-		if ( identifierGeneratorProperties != null ) {
-			Properties properties = new Properties();
-			properties.putAll( identifierGeneratorProperties );
-			setIdentifierGeneratorProperties( properties );
-		}
+	@Deprecated @Remove
+	public void setIdentifierGeneratorProperties(Map<String,Object> identifierGeneratorProperties) {
+		this.identifierGeneratorParameters = identifierGeneratorProperties;
 	}
 
 	public String getNullValue() {
@@ -636,7 +533,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		for (Selectable selectable : getSelectables()) {
+		for ( Selectable selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable
@@ -728,14 +625,7 @@ public abstract class SimpleValue implements KeyValue {
 			if ( className == null ) {
 				throw new MappingException( "Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 			}
-			typeName = ReflectHelper.reflectedPropertyClass(
-					className,
-					propertyName,
-					getMetadata()
-							.getMetadataBuildingOptions()
-							.getServiceRegistry()
-							.getService( ClassLoaderService.class )
-			).getName();
+			typeName = getClass( className, propertyName ).getName();
 			// todo : to fully support isNationalized here we need to do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
@@ -747,6 +637,17 @@ public abstract class SimpleValue implements KeyValue {
 		type = buildAttributeConverterTypeAdapter();
 	}
 
+	private Class<?> getClass(String className, String propertyName) {
+		return ReflectHelper.reflectedPropertyClass(
+				className,
+				propertyName,
+				getMetadata()
+						.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.getService(ClassLoaderService.class)
+		);
+	}
+
 	/**
 	 * Build a Hibernate Type that incorporates the JPA AttributeConverter.  AttributeConverter works totally in
 	 * memory, meaning it converts between one Java representation (the entity attribute representation) and another
@@ -754,7 +655,7 @@ public abstract class SimpleValue implements KeyValue {
 	 * at the lower level of actually dealing directly with those JDBC objects.  So even though we have an
 	 * AttributeConverter, we still need to "fill out" the rest of the BasicType data and bridge calls
 	 * to bind/extract through the converter.
-	 * <p/>
+	 * <p>
 	 * Essentially the idea here is that an intermediate Java type needs to be used.  Let's use an example as a means
 	 * to illustrate...  Consider an {@code AttributeConverter<Integer,String>}.  This tells Hibernate that the domain
 	 * model defines this attribute as an Integer value (the 'entityAttributeJavaType'), but that we need to treat the
@@ -773,12 +674,11 @@ public abstract class SimpleValue implements KeyValue {
 	 * </ul>
 	 *
 	 * @return The built AttributeConverter -> Type adapter
-	 *
-	 * @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specify-able separately
-	 * then we can "play them against each other" in terms of determining proper typing
-	 *
-	 * @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter; see note below about caching
 	 */
+	// @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specifiable separately
+	//         then we can "play them against each other" in terms of determining proper typing
+	// @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter;
+	//         see note below about caching
 	private Type buildAttributeConverterTypeAdapter() {
 		// todo : validate the number of columns present here?
 		return buildAttributeConverterTypeAdapter( attributeConverterDescriptor.createJpaAttributeConverter(
@@ -799,7 +699,7 @@ public abstract class SimpleValue implements KeyValue {
 		) );
 	}
 
-	private <T> AttributeConverterTypeAdapter<T> buildAttributeConverterTypeAdapter(
+	private <T> Type buildAttributeConverterTypeAdapter(
 			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
 		JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
 		JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
@@ -824,7 +724,7 @@ public abstract class SimpleValue implements KeyValue {
 					}
 				}
 		);
-		int jdbcTypeCode = recommendedJdbcType.getDefaultSqlTypeCode();
+		int jdbcTypeCode = recommendedJdbcType.getDdlTypeCode();
 		if ( isLob() ) {
 			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
@@ -851,7 +751,7 @@ public abstract class SimpleValue implements KeyValue {
 
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
-		return new AttributeConverterTypeAdapter<>(
+		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
 						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
 				String.format(
@@ -859,17 +759,8 @@ public abstract class SimpleValue implements KeyValue {
 						domainJavaType.getJavaType().getTypeName(),
 						relationalJavaType.getJavaType().getTypeName()
 				),
-				jpaAttributeConverter,
-				// and finally construct the adapter, which injects the AttributeConverter
-				// calls into the binding/extraction process...
-				new AttributeConverterJdbcTypeAdapter(
-						jpaAttributeConverter,
-						metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
-						relationalJavaType
-				),
-				relationalJavaType,
-				domainJavaType,
-				null
+				metadata.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode ),
+				jpaAttributeConverter
 		);
 	}
 
@@ -881,7 +772,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeParameters = parameterMap;
 	}
 
-	public void setTypeParameters(Map<String, String> parameters) {
+	public void setTypeParameters(Map<String, ?> parameters) {
 		if ( parameters != null ) {
 			Properties properties = new Properties();
 			properties.putAll( parameters );
@@ -921,7 +812,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + columns + ')';
+		return getClass().getSimpleName() + '(' + columns + ')';
 	}
 
 	public Object accept(ValueVisitor visitor) {
@@ -959,6 +850,30 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean isColumnInsertable(int index) {
+		if ( insertability.size() > 0 ) {
+			return insertability.get( index );
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		if ( updatability.size() > 0 ) {
+			return updatability.get( index );
+		}
+		return false;
+	}
+
+	public boolean isPartitionKey() {
+		return partitionKey;
+	}
+
+	public void setPartitionKey(boolean partitionColumn) {
+		this.partitionKey = partitionColumn;
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {
@@ -1131,6 +1046,60 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Long[] getColumnLengths() {
 			return columnLengths;
+		}
+	}
+
+	private class IdGeneratorCreationContext implements CustomIdGeneratorCreationContext {
+		private final IdentifierGeneratorFactory identifierGeneratorFactory;
+		private final String defaultCatalog;
+		private final String defaultSchema;
+		private final RootClass rootClass;
+
+		public IdGeneratorCreationContext(IdentifierGeneratorFactory identifierGeneratorFactory, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+			this.identifierGeneratorFactory = identifierGeneratorFactory;
+			this.defaultCatalog = defaultCatalog;
+			this.defaultSchema = defaultSchema;
+			this.rootClass = rootClass;
+		}
+
+		@Override
+		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+			return identifierGeneratorFactory;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return buildingContext.getMetadataCollector().getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return buildingContext.getBootstrapContext().getServiceRegistry();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return defaultCatalog;
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return defaultSchema;
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return rootClass;
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return rootClass;
+		}
+
+		@Override
+		public Property getProperty() {
+			return rootClass.getIdentifierProperty();
 		}
 	}
 }

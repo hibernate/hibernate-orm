@@ -6,12 +6,6 @@
  */
 package org.hibernate.orm.test.persister.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.Persister;
@@ -22,13 +16,19 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -50,9 +50,9 @@ public class CustomSqlSchemaResolvingIdentityTest {
 		String className = CustomEntity.class.getName();
 
         final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
-		String insertQuery = persister.getSQLInsertStrings()[0];
-		String updateQuery = persister.getSQLUpdateStrings()[0];
-		String deleteQuery = persister.getSQLDeleteStrings()[0];
+		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticInsertGroup().getSingleOperation() ).getSqlString();
+		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticUpdateGroup().getSingleOperation() ).getSqlString();
+		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticDeleteGroup().getSingleOperation() ).getSqlString();
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name) VALUES (?)", insertQuery );
@@ -61,7 +61,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 				"DELETE FROM FOO WHERE id = ?", deleteQuery );
 		
 		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
-				"UPDATE FOO SET name = ? WHERE id = ? ", updateQuery );
+				"UPDATE FOO SET name = ? WHERE id = ?", updateQuery );
 
 		CustomEntity _entitty = scope.fromTransaction( session -> {
 			CustomEntity entity = new CustomEntity();

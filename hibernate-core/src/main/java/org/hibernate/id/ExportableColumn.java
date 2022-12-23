@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
@@ -37,7 +38,7 @@ public class ExportableColumn extends Column {
 				type,
 				database.getTypeConfiguration()
 						.getDdlTypeRegistry()
-						.getTypeName( type.getJdbcType().getDefaultSqlTypeCode(), database.getDialect() )
+						.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 		);
 	}
 
@@ -175,6 +176,16 @@ public class ExportableColumn extends Column {
 		@Override
 		public ServiceRegistry getServiceRegistry() {
 			return database.getServiceRegistry();
+		}
+
+		@Override
+		public boolean isColumnInsertable(int index) {
+			return true;
+		}
+
+		@Override
+		public boolean isColumnUpdateable(int index) {
+			return true;
 		}
 	}
 

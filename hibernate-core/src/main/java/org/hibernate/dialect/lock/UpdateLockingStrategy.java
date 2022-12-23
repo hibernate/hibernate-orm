@@ -15,7 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
@@ -27,8 +27,8 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- * A locking strategy where the locks are obtained through update statements.
- * <p/>
+ * A locking strategy where a lock is obtained via an update statement.
+ * <p>
  * This strategy is not valid for read style locks.
  *
  * @author Steve Ebersole
@@ -72,7 +72,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			Object version,
 			Object object,
 			int timeout,
-			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
+			EventSource session) throws StaleObjectStateException, JDBCException {
 		final String lockableEntityName = lockable.getEntityName();
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockableEntityName + "]" );
@@ -96,7 +96,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 					lockableVersionType.nullSafeSet( st, version, offset, session );
 				}
 
-				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 				if ( affected < 0 ) {
 					final StatisticsImplementor statistics = factory.getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {

@@ -212,4 +212,5 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
+
 }

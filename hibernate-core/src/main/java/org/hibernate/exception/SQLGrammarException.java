@@ -10,8 +10,11 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating that the SQL sent to the database
- * server was invalid (syntax error, invalid object references, etc).
+ * Specialization of {@link JDBCException} indicating that the SQL sent to the
+ * database server was invalid, either due to a syntax error, unrecognized name,
+ * or similar problem.
+ * <p>
+ * The name of this class is misleading: the SQL might be syntactically well-formed.
  *
  * @author Steve Ebersole
  */

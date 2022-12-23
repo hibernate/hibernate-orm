@@ -6,38 +6,21 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.generator.Generator;
 
 /**
- * Represents an identifying key of a table: the value for primary key
- * of an entity, or a foreign key of a collection or join table or
- * joined subclass table.
+ * A mapping model {@link Value} which may be treated as an identifying key of a
+ * relational database table. A {@code KeyValue} might represent the primary key
+ * of an entity or the foreign key of a collection, join table, secondary table,
+ * or joined subclass table.
+ *
  * @author Gavin King
  */
 public interface KeyValue extends Value {
 
-	/**
-	 * @deprecated Use {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, RootClass)}
-	 * instead.
-	 */
-	@Deprecated
-	IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
-			RootClass rootClass) throws MappingException;
-
-	IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException;
-
-	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
-	
 	ForeignKey createForeignKeyOfEntity(String entityName);
 	
 	boolean isCascadeDeleteEnabled();
@@ -45,4 +28,40 @@ public interface KeyValue extends Value {
 	String getNullValue();
 	
 	boolean isUpdateable();
+
+	Generator createGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass);
+
+	/**
+	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 */
+	@Deprecated(since="6.2")
+	default IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) {
+		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+	}
+
+	/**
+	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 */
+	@Deprecated(since="6.2")
+	default IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass) {
+		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+	}
+
+	/**
+	 * @deprecated We need to add {@code Column.isIdentity()}
+	 */
+	@Deprecated(since="6.2")
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
+
 }

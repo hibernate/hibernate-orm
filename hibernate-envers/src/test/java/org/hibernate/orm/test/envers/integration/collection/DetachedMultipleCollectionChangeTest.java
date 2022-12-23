@@ -16,7 +16,6 @@ import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -26,7 +25,6 @@ import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntit
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity2;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -228,12 +226,8 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 	}
 
 	@Test
-	@SkipForDialects( value = {
-			@SkipForDialect(value = CockroachDialect.class,
-					comment = "requires serial_normalization=sql_sequence setting"),
-			@SkipForDialect(value = Oracle8iDialect.class,
-					comment = "Oracle does not support identity key generation")
-	})
+	@SkipForDialect(value = CockroachDialect.class,
+			comment = "requires serial_normalization=sql_sequence setting")
 	public void testAuditJoinTable() throws Exception {
 		List<AuditJoinTableInfo> mceRe1AuditJoinTableInfos = getAuditJoinTableRows(
 				"MCE_RE1_AUD", "MCE_ID",

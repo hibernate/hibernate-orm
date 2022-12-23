@@ -9,9 +9,12 @@ package org.hibernate.engine.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -22,6 +25,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this
@@ -34,7 +42,7 @@ import java.util.Map;
  *         either directly or through bytecode enhancement.
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  *
  * @author Steve Ebersole
  */
@@ -90,21 +98,22 @@ public class EntityEntryContext {
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
-			if (entity instanceof ManagedEntity) {
+			if ( isManagedEntity( entity ) ) {
+				final ManagedEntity managed = asManagedEntity( entity );
 				if ( entityEntry.getPersister().isMutable() ) {
-					managedEntity = (ManagedEntity) entity;
+					managedEntity = managed;
 					// We know that managedEntity is not associated with the same PersistenceContext.
 					// Check if managedEntity is associated with a different PersistenceContext.
 					checkNotAssociatedWithOtherPersistenceContextIfMutable( managedEntity );
 				}
 				else {
 					// Create a holder for PersistenceContext-related data.
-					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					managedEntity = new ImmutableManagedEntityHolder( managed );
 					if ( immutableManagedEntityXref == null ) {
 						immutableManagedEntityXref = new IdentityHashMap<>();
 					}
 					immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
+							managed,
 							(ImmutableManagedEntityHolder) managedEntity
 					);
 				}
@@ -149,8 +158,8 @@ public class EntityEntryContext {
 	}
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
-		if (entity instanceof ManagedEntity) {
-			final ManagedEntity managedEntity = (ManagedEntity) entity;
+		if ( isManagedEntity( entity ) ) {
+			final ManagedEntity managedEntity = asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated
 				return null;
@@ -251,7 +260,7 @@ public class EntityEntryContext {
 			immutableManagedEntityXref.remove( entity );
 
 		}
-		else if ( !(entity instanceof ManagedEntity) ) {
+		else if ( ! ( isManagedEntity( entity ) ) ) {
 			nonEnhancedEntityXref.remove( entity );
 		}
 
@@ -324,23 +333,46 @@ public class EntityEntryContext {
 		return reentrantSafeEntries;
 	}
 
+	private void processEachManagedEntity(final Consumer<ManagedEntity> action) {
+		ManagedEntity node = head;
+		while ( node != null ) {
+			final ManagedEntity next = node.$$_hibernate_getNextManagedEntity();
+			action.accept( node );
+			node = next;
+		}
+	}
+
+	// Could have used #processEachManagedEntity but avoided because of measurable overhead.
+	// Careful, this needs to be very efficient as we potentially iterate quite a bit!
+	// Also: we perform two operations at once, so to not iterate on the list twice;
+	// being a linked list, multiple iterations are not cache friendly at all.
+	private void clearAllReferencesFromManagedEntities() {
+		ManagedEntity nextManagedEntity = head;
+		while ( nextManagedEntity != null ) {
+			final ManagedEntity current = nextManagedEntity;
+			nextManagedEntity = current.$$_hibernate_getNextManagedEntity();
+			Object toProcess = current.$$_hibernate_getEntityInstance();
+			unsetSession( asPersistentAttributeInterceptableOrNull( toProcess ) );
+			clearManagedEntity( current );//careful this also unlinks from the "next" entry in the list
+		}
+	}
+
+	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable) {
+		if ( persistentAttributeInterceptable != null ) {
+			final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
+			}
+		}
+	}
+
 	/**
 	 * Clear this context of all managed entities
 	 */
 	public void clear() {
 		dirty = true;
 
-		ManagedEntity node = head;
-		while ( node != null ) {
-			final ManagedEntity nextNode = node.$$_hibernate_getNextManagedEntity();
-
-			node.$$_hibernate_setEntityEntry( null );
-
-			node.$$_hibernate_setPreviousManagedEntity( null );
-			node.$$_hibernate_setNextManagedEntity( null );
-
-			node = nextNode;
-		}
+		clearAllReferencesFromManagedEntities();
 
 		if ( immutableManagedEntityXref != null ) {
 			immutableManagedEntityXref.clear();
@@ -357,20 +389,21 @@ public class EntityEntryContext {
 		reentrantSafeEntries = null;
 	}
 
+	private static void clearManagedEntity(final ManagedEntity node) {
+		node.$$_hibernate_setEntityEntry( null );
+		node.$$_hibernate_setPreviousManagedEntity( null );
+		node.$$_hibernate_setNextManagedEntity( null );
+	}
+
 	/**
 	 * Down-grade locks to NONE for all entities in this context
 	 */
 	public void downgradeLocks() {
-		if ( head == null ) {
-			return;
-		}
+		processEachManagedEntity( EntityEntryContext::downgradeLockOnManagedEntity );
+	}
 
-		ManagedEntity node = head;
-		while ( node != null ) {
-			node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
-
-			node = node.$$_hibernate_getNextManagedEntity();
-		}
+	private static void downgradeLockOnManagedEntity(final ManagedEntity node) {
+		node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
 	}
 
 	/**
@@ -443,16 +476,17 @@ public class EntityEntryContext {
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
 				if ( entry.getPersister().isMutable() ) {
-					managedEntity = (ManagedEntity) entity;
+					managedEntity = ManagedTypeHelper.asManagedEntity( entity );
 				}
 				else {
-					managedEntity = new ImmutableManagedEntityHolder( (ManagedEntity) entity );
+					final ManagedEntity castedEntity = asManagedEntity( entity );
+					managedEntity = new ImmutableManagedEntityHolder( castedEntity );
 					if ( context.immutableManagedEntityXref == null ) {
 						context.immutableManagedEntityXref =
 								new IdentityHashMap<>();
 					}
 					context.immutableManagedEntityXref.put(
-							(ManagedEntity) entity,
+							castedEntity,
 							(ImmutableManagedEntityHolder) managedEntity
 
 					);

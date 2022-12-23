@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface SingleUniqueKeyEntityLoader<T> extends SingleEntityLoader {
+public interface SingleUniqueKeyEntityLoader<T> extends SingleEntityLoader<T> {
 	/**
 	 * Load by unique key value
 	 */

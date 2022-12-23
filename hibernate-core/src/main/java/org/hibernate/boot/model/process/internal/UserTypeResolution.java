@@ -21,8 +21,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 public class UserTypeResolution implements BasicValue.Resolution {
-	private final CustomType<Object> userTypeAdapter;
-	private final MutabilityPlan mutabilityPlan;
+	private final CustomType<?> userTypeAdapter;
+	private final MutabilityPlan<?> mutabilityPlan;
 
 	/**
 	 * We need this for the way envers interprets the boot-model
@@ -31,8 +31,8 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	private final Properties combinedTypeParameters;
 
 	public UserTypeResolution(
-			CustomType<Object> userTypeAdapter,
-			MutabilityPlan explicitMutabilityPlan,
+			CustomType<?> userTypeAdapter,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			Properties combinedTypeParameters) {
 		this.userTypeAdapter = userTypeAdapter;
 		this.combinedTypeParameters = combinedTypeParameters;

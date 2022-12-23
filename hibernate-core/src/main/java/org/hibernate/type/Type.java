@@ -14,22 +14,23 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types}, as well
- * as describing the in-memory semantics of the given java type (how do we check it for 'dirtiness', how do
- * we copy values, etc).
- * <p/>
- * Application developers needing custom types can implement this interface (either directly or via subclassing an
- * existing impl) or by the (slightly more stable, though more limited) {@link org.hibernate.usertype.UserType}
- * interface.
- * <p/>
- * Implementations of this interface must certainly be thread-safe.  It is recommended that they be immutable as
- * well, though that is difficult to achieve completely given the no-arg constructor requirement for custom types.
+ * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types},
+ * as well as describing the in-memory semantics of the given Java type, including:
+ * <ul>
+ *     <li>how to compare values and check for "dirtiness",
+ *     <li>how to clone values, and
+ *     <li>how to assemble/disassemble values for storage in the second-level cache.
+ * </ul>
+ * An application-defined custom types could, in principle, implement this interface directly,
+ * but it's safer to implement the more stable interface {@link org.hibernate.usertype.UserType}.
+ * <p>
+ * An implementation of this interface must certainly be thread-safe. Ideally, it should also be
+ * immutable.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -37,58 +38,62 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 @Internal
 public interface Type extends Serializable {
 	/**
-	 * Return true if the implementation is castable to {@link AssociationType}. This does not necessarily imply that
-	 * the type actually represents an association.  Essentially a polymorphic version of
-	 * {@code (type instanceof AssociationType.class)}
+	 * Return true if the implementation is castable to {@link AssociationType}. This does not
+	 * necessarily imply that the type actually represents an association. Shortcut for
+	 * {@code type instanceof AssociationType}.
 	 *
 	 * @return True if this type is also an {@link AssociationType} implementor; false otherwise.
 	 */
 	boolean isAssociationType();
 
 	/**
-	 * Return true if the implementation is castable to {@link CollectionType}. Essentially a polymorphic version of
-	 * {@code (type instanceof CollectionType.class)}
-	 * <p/>
-	 * A {@link CollectionType} is additionally an {@link AssociationType}; so if this method returns true,
-	 * {@link #isAssociationType()} should also return true.
+	 * Return true if the implementation is castable to {@link CollectionType}. Shortcut for
+	 * {@code type instanceof CollectionType}
+	 * <p>
+	 * A {@link CollectionType} is additionally an {@link AssociationType}; so if this method
+	 * returns true, {@link #isAssociationType()} should also return true.
 	 *
 	 * @return True if this type is also a {@link CollectionType} implementor; false otherwise.
 	 */
 	boolean isCollectionType();
 
 	/**
-	 * Return true if the implementation is castable to {@link EntityType}. Essentially a polymorphic
-	 * version of {@code (type instanceof EntityType.class)}.
-	 * <p/>
-	 * An {@link EntityType} is additionally an {@link AssociationType}; so if this method returns true,
-	 * {@link #isAssociationType()} should also return true.
+	 * Return true if the implementation is castable to {@link EntityType}. Shortcut for
+	 * {@code type instanceof EntityType}.
+	 * <p>
+	 * An {@link EntityType} is additionally an {@link AssociationType}; so if this method
+	 * returns true, {@link #isAssociationType()} should also return true.
 	 *
 	 * @return True if this type is also an {@link EntityType} implementor; false otherwise.
 	 */
 	boolean isEntityType();
 
 	/**
-	 * Return true if the implementation is castable to {@link AnyType}. Essentially a polymorphic
-	 * version of {@code (type instanceof AnyType.class)}.
-	 * <p/>
-	 * An {@link AnyType} is additionally an {@link AssociationType}; so if this method returns true,
-	 * {@link #isAssociationType()} should also return true.
+	 * Return true if the implementation is castable to {@link AnyType}. Shortcut for
+	 * {@code type instanceof AnyType}.
+	 * <p>
+	 * An {@link AnyType} is additionally an {@link AssociationType}; so if this method
+	 * returns true, then {@link #isAssociationType()} should also return true.
 	 *
 	 * @return True if this type is also an {@link AnyType} implementor; false otherwise.
 	 */
 	boolean isAnyType();
 
 	/**
-	 * Return true if the implementation is castable to {@link CompositeType}. Essentially a polymorphic
-	 * version of {@code (type instanceof CompositeType.class)}.  A component type may own collections or
-	 * associations and hence must provide certain extra functionality.
+	 * Return true if the implementation is castable to {@link CompositeType}. Shortcut for
+	 * {@code type instanceof CompositeType}.
+	 * <p>
+	 * A component type may own collections or associations and hence must provide certain
+	 * extra functionality.
 	 *
 	 * @return True if this type is also a {@link CompositeType} implementor; false otherwise.
 	 */
 	boolean isComponentType();
 
 	/**
-	 * How many columns are used to persist this type.  Always the same as {@code sqlTypes(mapping).length}
+	 * How many columns are used to persist this type?
+	 * <p>
+	 * Always the same as {@link #getSqlTypeCodes(Mapping) getSqlTypCodes(mapping).length}.
 	 *
 	 * @param mapping The mapping object :/
 	 *
@@ -99,9 +104,10 @@ public interface Type extends Serializable {
 	int getColumnSpan(Mapping mapping) throws MappingException;
 
 	/**
-	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
-	 * <p/>
-	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
+	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
+	 * for the columns mapped by this type.
+	 * <p>
+	 * The number of elements in this array must match the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
 	 *
@@ -119,11 +125,13 @@ public interface Type extends Serializable {
 	Class<?> getReturnedClass();
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
-	 * state) taking a shortcut for entity references.
-	 * <p/>
-	 * For most types this should equate to an {@link Object#equals equals} check on the values.  For associations
-	 * the implication is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
+	 * Compare two instances of the class mapped by this type for persistence "equality",
+	 * that is, equality of persistent state, taking a shortcut for entity references.
+	 * <p>
+	 * For most types this should boil down to an {@linkplain Object#equals equality}
+	 * comparison of the given values, and it's reasonable to simply delegate to
+	 * {@link #isEqual(Object, Object)}. But for associations the semantics are a bit
+	 * different.
 	 *
 	 * @param x The first value
 	 * @param y The second value
@@ -135,12 +143,14 @@ public interface Type extends Serializable {
 	boolean isSame(Object x, Object y) throws HibernateException;
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
-	 * state).
-	 * <p/>
-	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
-	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
-	 * it is meant to represent (timestamp, date, time).
+	 * Compare two instances of the class mapped by this type for persistence "equality",
+	 * that is, equality of persistent state. For most types this could simply delegate to
+	 * {@link java.util.Objects#equals(Object, Object) equals()}.
+	 * <p>
+	 * This should always equate to some form of comparison of the value's internal state.
+	 * As an example, for Java's {@link java.util.Date} class, the comparison should be of
+	 * its internal state, but based only on the specific part which is persistent (the
+	 * timestamp, date, or time).
 	 *
 	 * @param x The first value
 	 * @param y The second value
@@ -152,12 +162,14 @@ public interface Type extends Serializable {
 	boolean isEqual(Object x, Object y) throws HibernateException;
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
-	 * state).
-	 * <p/>
-	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
-	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
-	 * it is meant to represent (timestamp, date, time).
+	 * Compare two instances of the class mapped by this type for persistence "equality",
+	 * that is, equality of persistent state. For most types this could simply delegate to
+	 * {@link #isEqual(Object, Object)}.
+	 * <p>
+	 * This should always equate to some form of comparison of the value's internal state.
+	 * As an example, for Java's {@link java.util.Date} class, the comparison should be of
+	 * its internal state, but based only on the specific part which is persistent (the
+	 * timestamp, date, or time).
 	 *
 	 * @param x The first value
 	 * @param y The second value
@@ -170,8 +182,8 @@ public interface Type extends Serializable {
 	boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
-	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
-	 * delegate to the value's {@link Object#hashCode hashCode}.
+	 * Get a hash code, consistent with persistence "equality". For most types this could
+	 * simply delegate to the given value's {@link Object#hashCode() hashCode}.
 	 *
 	 * @param x The value for which to retrieve a hash code
 	 * @return The hash code
@@ -181,8 +193,8 @@ public interface Type extends Serializable {
 	int getHashCode(Object x) throws HibernateException;
 
 	/**
-	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
-	 * delegate to the value's {@link Object#hashCode hashCode}.
+	 * Get a hash code, consistent with persistence "equality".  For most types this could
+	 * simply delegate to {@link #getHashCode(Object)}.
 	 *
 	 * @param x The value for which to retrieve a hash code
 	 * @param factory The session factory
@@ -194,12 +206,14 @@ public interface Type extends Serializable {
 	int getHashCode(Object x, SessionFactoryImplementor factory) throws HibernateException;
 
 	/**
-	 * Perform a {@link java.util.Comparator} style comparison between values
+	 * Perform a {@link java.util.Comparator}-style comparison of the given values.
 	 *
 	 * @param x The first value
 	 * @param y The second value
 	 *
-	 * @return The comparison result.  See {@link java.util.Comparator#compare} for a discussion.
+	 * @return The comparison result.
+	 *
+	 * @see java.util.Comparator#compare(Object, Object)
 	 */
 	int compare(Object x, Object y);
 
@@ -232,10 +246,10 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Has the value been modified compared to the current database state?  The difference between this
-	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
-	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
-	 * {@link #isDirty} here/
+	 * Has the value been modified compared to the current database state?  The difference
+	 * between this and the {@link #isDirty} methods is that here we need to account for
+	 * "partially" built values. This is really only an issue with association types. For
+	 * most type implementations it is enough to simply delegate to {@link #isDirty}.
 	 *
 	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
 	 * @param currentState the current state of the object
@@ -254,9 +268,10 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
-	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
-	 * possibility of null values.  A multi-column type should bind parameters starting from {@code index}.
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
+	 * to the given JDBC {@link PreparedStatement}, ignoring some columns as dictated by the
+	 * {@code settable} parameter. Implementors should handle the possibility of null values.
+	 * A multi-column type should bind parameters starting from {@code index}.
 	 *
 	 * @param st The JDBC prepared statement to which to bind
 	 * @param value the object to write
@@ -276,9 +291,10 @@ public interface Type extends Serializable {
 	throws HibernateException, SQLException;
 
 	/**
-	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
-	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
-	 * starting from {@code index}.
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
+	 * to the given JDBC {@link PreparedStatement}, ignoring some columns as dictated by the
+	 * {@code settable} parameter. Implementors should handle the possibility of null values.
+	 * A multi-column type should bind parameters starting from {@code index}.
 	 *
 	 * @param st The JDBC prepared statement to which to bind
 	 * @param value the object to write
@@ -292,7 +308,7 @@ public interface Type extends Serializable {
 	throws HibernateException, SQLException;
 
 	/**
-	 * Generate a representation of the value for logging purposes.
+	 * Generate a representation of the given value for logging purposes.
 	 *
 	 * @param value The value to be logged
 	 * @param factory The session factory
@@ -307,7 +323,7 @@ public interface Type extends Serializable {
 	/**
 	 * Returns the abbreviated name of the type.
 	 *
-	 * @return String the Hibernate type name
+	 * @return the Hibernate type name
 	 */
 	String getName();
 
@@ -325,18 +341,48 @@ public interface Type extends Serializable {
 	throws HibernateException;
 
 	/**
-	 * Are objects of this type mutable. (With respect to the referencing object ...
-	 * entities and collections are considered immutable because they manage their
-	 * own internal state.)
+	 * Are objects of this type mutable with respect to the referencing object?
+	 * Entities and collections are considered immutable because they manage their
+	 * own internal state.
 	 *
 	 * @return boolean
 	 */
 	boolean isMutable();
 
 	/**
-	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
-	 * caching, so care should be taken to break values down to their simplest forms; for entities especially, this
-	 * means breaking them down into their constituent parts.
+	 * Return a disassembled representation of the object. This is the representation that
+	 * is stored in the second-level cache.
+	 * <p>
+	 * A reference to an associated entity should be disassembled to its primary key value.
+	 * <p>
+	 * A high-quality implementation of this method should ensure that:
+	 * <pre>
+	 * {@code Objects.equals(disassemble(x,s), disassemble(y,s))} == isEqual(x,y,sf)
+	 * </pre>
+	 * and that:
+	 * <pre>
+	 * {@code Objects.equals(x, assemble(disassemble(x,s),s,o))}
+	 * </pre>
+	 * That is, the implementation must be consistent with
+	 * {@link #isEqual(Object, Object, SessionFactoryImplementor)} and with
+	 * {@link #assemble(Serializable, SharedSessionContractImplementor, Object)}.
+	 *
+	 * @param value the value to cache
+	 * @param sessionFactory the session factory
+	 *
+	 * @return the disassembled, deep cloned state
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	default Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return disassemble( value, null, null );
+	}
+
+	/**
+	 * Return a disassembled representation of the object. This is the representation that
+	 * is stored in the second-level cache.
+	 * <p>
+	 * A reference to an associated entity should be disassembled to its primary key value.
 	 *
 	 * @param value the value to cache
 	 * @param session the originating session
@@ -349,7 +395,8 @@ public interface Type extends Serializable {
 	Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
+	 * Reconstruct the object from its disassembled state. This function is the inverse of
+	 * {@link #disassemble(Object, SharedSessionContractImplementor, Object)}.
 	 *
 	 * @param cached the disassembled state from the cache
 	 * @param session the originating session
@@ -362,8 +409,8 @@ public interface Type extends Serializable {
 	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Called before assembling a query result set from the query cache, to allow batch fetching
-	 * of entities missing from the second-level cache.
+	 * Called before assembling a query result set from the query cache, to allow batch
+	 * fetching of entities missing from the second-level cache.
 	 *
 	 * @param cached The key
 	 * @param session The originating session
@@ -421,8 +468,8 @@ public interface Type extends Serializable {
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
 
 	/**
-	 * Given an instance of the type, return an array of boolean, indicating
-	 * which mapped columns would be null.
+	 * Given an instance of the type, return an array of {@code boolean} values indicating which
+	 * mapped columns would be null.
 	 *
 	 * @param value an instance of the type
 	 * @param mapping The mapping abstraction
@@ -431,11 +478,4 @@ public interface Type extends Serializable {
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
 
-	default CacheKeyValueDescriptor toCacheKeyDescriptor(SessionFactoryImplementor sessionFactory) {
-		if ( this instanceof CacheKeyValueDescriptor ) {
-			return (CacheKeyValueDescriptor) this;
-		}
-
-		throw new HibernateException( "Type does not support use as a cache-key" );
-	}
 }

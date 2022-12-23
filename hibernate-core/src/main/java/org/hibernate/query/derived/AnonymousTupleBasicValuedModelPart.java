@@ -22,13 +22,12 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -36,8 +35,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Christian Beikov
@@ -50,16 +47,19 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	private final String selectionExpression;
 	private final SqmExpressible<?> expressible;
 	private final JdbcMapping jdbcMapping;
+	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
 			String partName,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping jdbcMapping,
+			int fetchableIndex) {
 		this.partName = partName;
 		this.selectionExpression = selectionExpression;
 		this.expressible = expressible;
 		this.jdbcMapping = jdbcMapping;
+		this.fetchableIndex = fetchableIndex;
 	}
 
 	@Override
@@ -123,6 +123,31 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public String getColumnDefinition() {
 		return null;
 	}
@@ -153,6 +178,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return fetchableIndex;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return FETCH_OPTIONS;
 	}
@@ -170,12 +200,10 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				creationState.getSqlAstCreationState()
 		);
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaType(),
-				null,
+				jdbcMapping,
 				navigablePath
 		);
 	}
@@ -186,17 +214,14 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 			FetchParent fetchParent,
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
-		final Expression expression = expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getSelectionExpression() ),
-				sqlAstProcessingState -> new ColumnReference(
-						tableGroup.resolveTableReference( navigablePath, "" ),
-						this,
-						creationState.getCreationContext().getSessionFactory()
-				)
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				navigablePath,
+				getContainingTableExpression()
 		);
+		final Expression expression = expressionResolver.resolveSqlExpression( tableReference, this );
 		return expressionResolver.resolveSqlSelection(
 				expression,
-				getJdbcMapping().getJavaTypeDescriptor(),
+				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
@@ -229,7 +254,6 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);
@@ -258,7 +282,6 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -283,7 +306,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+	public int forEachJdbcValue(
+			Object value,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}

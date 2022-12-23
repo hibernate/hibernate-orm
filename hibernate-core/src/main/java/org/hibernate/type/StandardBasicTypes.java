@@ -225,7 +225,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGVARCHAR LONGVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
 	 */
 	public static final BasicTypeReference<String> TEXT = new BasicTypeReference<>(
@@ -236,7 +236,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link org.hibernate.type.SqlTypes#LONGNVARCHAR LONGNVARCHAR}.
-	 * <p/>
+	 * <p>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
 	 */
 	public static final BasicTypeReference<String> NTEXT = new BasicTypeReference<>(
@@ -601,7 +601,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link org.hibernate.type.SqlTypes#VARBINARY VARBINARY}.
-	 * <p/>
+	 * <p>
 	 * See especially the discussion wrt {@link ClassLoader} determination on {@link SerializableType}
 	 */
 	public static final BasicTypeReference<Serializable> SERIALIZABLE = new BasicTypeReference<>(
@@ -1198,13 +1198,6 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				DbTimestampType.INSTANCE,
-				null,
-				basicTypeRegistry,
-				DbTimestampType.INSTANCE.getName(), "dbtimestamp"
-		);
-
-		handle(
 				JavaObjectType.INSTANCE,
 				null,
 				basicTypeRegistry,
@@ -1217,13 +1210,6 @@ public final class StandardBasicTypes {
 				basicTypeRegistry,
 				"null"
 		);
-
-		// todo (6.0) - ? how to handle DbTimestampType?
-		//		DbTimestampType was really just a variant of TimestampType with overridden
-		//		version (opt lock) support
-		//handle( DbTimestampType.INSTANCE, typeConfiguration, basicTypeProducerRegistry, "dbtimestamp" );
-		//handle( new AdaptedImmutableType( DbTimestampType.INSTANCE ), typeConfiguration,
-		//		basicTypeProducerRegistry, "imm_dbtimestamp" );
 
 		final BasicTypeReference<Date> dateTypeImmutableType = DATE.asImmutable();
 		handle( dateTypeImmutableType, null, basicTypeRegistry, dateTypeImmutableType.getName() );

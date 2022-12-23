@@ -29,10 +29,10 @@ public class ExceptionMapperLegacyJpaImpl implements ExceptionMapper {
 
 	@Override
 	public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure, SessionImplementor session) {
-		if ( HibernateException.class.isInstance( failure ) ) {
+		if (failure instanceof HibernateException) {
 			throw session.getExceptionConverter().convert( failure );
 		}
-		if ( PersistenceException.class.isInstance( failure ) ) {
+		if (failure instanceof PersistenceException) {
 			throw failure;
 		}
 		throw new PersistenceException( message, failure );

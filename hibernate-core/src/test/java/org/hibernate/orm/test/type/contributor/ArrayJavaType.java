@@ -23,7 +23,7 @@ public class ArrayJavaType extends AbstractClassJavaType<Array> {
 
     @Override
     public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-        return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
+        return indicators.getJdbcType( Types.VARCHAR );
     }
 
     @Override

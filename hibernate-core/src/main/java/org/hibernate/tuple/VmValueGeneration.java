@@ -7,51 +7,50 @@
 package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
+import java.util.EnumSet;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.annotations.GeneratorType;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.BeforeExecutionGenerator;
+
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
- * A {@link AnnotationValueGeneration} which allows to specify the {@link ValueGenerator} to be used to determine the
- * value of the annotated property.
+ * A {@link BeforeExecutionGenerator} which delegates to a {@link ValueGenerator}.
+ * Underlies the {@link GeneratorType} annotation.
  *
  * @author Gunnar Morling
+ *
+ * @deprecated since {@link GeneratorType} is deprecated
  */
-public class VmValueGeneration implements AnnotationValueGeneration<GeneratorType> {
+@Internal
+@Deprecated(since = "6.2")
+public class VmValueGeneration implements BeforeExecutionGenerator {
 
-	private GenerationTiming generationTiming;
-	private Constructor<? extends ValueGenerator<?>> constructor;
+	private final EnumSet<EventType> eventTypes;
+	private final ValueGenerator<?> generator;
 
-	@Override
-	public void initialize(GeneratorType annotation, Class<?> propertyType) {
-		Class<? extends ValueGenerator<?>> generatorType = annotation.type();
-		constructor = ReflectHelper.getDefaultConstructor( generatorType );
-		this.generationTiming = annotation.when().getEquivalent();
-	}
-
-	@Override
-	public GenerationTiming getGenerationTiming() {
-		return generationTiming;
-	}
-
-	@Override
-	public ValueGenerator<?> getValueGenerator() {
+	public VmValueGeneration(GeneratorType annotation) {
+		Constructor<? extends ValueGenerator<?>> constructor = getDefaultConstructor( annotation.type() );
 		try {
-			return constructor.newInstance();
+			generator = constructor.newInstance();
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Couldn't instantiate value generator", e );
 		}
+		eventTypes = annotation.when().eventTypes();
 	}
 
 	@Override
-	public boolean referenceColumnInSql() {
-		return false;
+	public EnumSet<EventType> getEventTypes() {
+		return eventTypes;
 	}
 
 	@Override
-	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+		return generator.generateValue( session.asSessionImplementor(), owner, currentValue );
 	}
 }

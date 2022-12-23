@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -21,7 +22,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -53,7 +53,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
@@ -77,6 +77,13 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * A simple walker that checks for aggregate functions.
@@ -282,7 +289,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		for ( CteStatement cteStatement : statement.getCteStatements().values() ) {
 			cteStatement.getCteDefinition().accept( this );
 		}
@@ -438,6 +445,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+	}
+
+	@Override
 	public void visitExtractUnit(ExtractUnit extractUnit) {
 	}
 
@@ -486,10 +497,6 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral) {
-	}
-
-	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
 	}
 
@@ -508,7 +515,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		tableReference.getQueryPart().accept( this );
+		tableReference.getStatement().accept( this );
 	}
 
 	@Override
@@ -516,5 +523,50 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 		for ( SqlAstNode argument : tableReference.getFunctionExpression().getArguments() ) {
 			argument.accept( this );
 		}
+	}
+
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		tableInsert.getMutatingTable().accept( this );
+
+		tableInsert.forEachValueBinding( (integer, columnValueBinding) -> {
+			columnValueBinding.getColumnReference().accept( this );
+			columnValueBinding.getValueExpression().accept( this );
+		} );
+
+		tableInsert.forEachReturningColumn( (integer, columnReference) -> {
+			columnReference.accept( this );
+		} );
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new UnsupportedOperationException();
 	}
 }

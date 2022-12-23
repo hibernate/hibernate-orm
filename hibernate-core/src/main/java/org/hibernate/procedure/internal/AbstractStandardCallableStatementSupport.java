@@ -11,15 +11,15 @@ import java.sql.CallableStatement;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 
 public abstract class AbstractStandardCallableStatementSupport implements CallableStatementSupport {
 
 	@Override
 	public void registerParameters(
 			String procedureName,
-			JdbcCall procedureCall,
+			JdbcOperationQueryCall procedureCall,
 			CallableStatement statement,
 			ProcedureParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session) {

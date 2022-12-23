@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
@@ -22,6 +23,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * The action for updating a collection
  */
 public final class CollectionUpdateAction extends CollectionAction {
+
 	private final boolean emptySnapshot;
 
 	/**
@@ -37,7 +39,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, collection, id, session );
 		this.emptySnapshot = emptySnapshot;
 	}
@@ -68,9 +70,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 		}
 		else if ( collection.needsRecreate( persister ) ) {
 			if ( affectedByFilters ) {
-				throw new HibernateException(
-						"cannot recreate collection while filter is enabled: " +
-								MessageHelper.collectionInfoString( persister, collection, id, session )
+				throw new HibernateException( "cannot recreate collection while filter is enabled: "
+						+ MessageHelper.collectionInfoString( persister, collection, id, session )
 				);
 			}
 			if ( !emptySnapshot ) {
@@ -95,9 +96,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 	
 	private void preUpdate() {
-		getFastSessionServices()
-				.eventListenerGroup_PRE_COLLECTION_UPDATE
-				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent, PreCollectionUpdateEventListener::onPreUpdateCollection );
+		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent,
+						PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
 	private PreCollectionUpdateEvent newPreCollectionUpdateEvent() {
@@ -109,9 +110,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	private void postUpdate() {
-		getFastSessionServices()
-				.eventListenerGroup_POST_COLLECTION_UPDATE
-				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent, PostCollectionUpdateEventListener::onPostUpdateCollection );
+		getFastSessionServices().eventListenerGroup_POST_COLLECTION_UPDATE
+				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent,
+						PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
 	private PostCollectionUpdateEvent newPostCollectionUpdateEvent() {

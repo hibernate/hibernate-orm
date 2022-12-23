@@ -27,6 +27,10 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	 */
 	ModelPart getKeyTargetMatchPart();
 
+	boolean isReferenceToPrimaryKey();
+
+	boolean isFkOptimizationAllowed();
+
 	@Override
 	default boolean incrementFetchDepth(){
 		return true;

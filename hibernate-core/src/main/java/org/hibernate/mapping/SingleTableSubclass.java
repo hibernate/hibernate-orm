@@ -10,21 +10,25 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
+ * A mapping model object that represents a subclass in a
+ * {@linkplain jakarta.persistence.InheritanceType#SINGLE_TABLE single table}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class SingleTableSubclass extends Subclass {
 
-	public SingleTableSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public SingleTableSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
+		super( superclass, buildingContext );
 	}
 
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getUnjoinedPropertyIterator(),
@@ -36,7 +40,7 @@ public class SingleTableSubclass extends Subclass {
 		return new JoinedList<>( getSuperclass().getUnjoinedProperties(), getUnjoinedProperties() );
 	}
 
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		return isDiscriminatorInsertable() && !getDiscriminator().hasFormula()
 				? getDiscriminator().getColumnIterator()
@@ -47,7 +51,7 @@ public class SingleTableSubclass extends Subclass {
 		return mv.accept( this );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		if ( getDiscriminator() == null ) {
 			throw new MappingException(
 					"No discriminator found for " + getEntityName()

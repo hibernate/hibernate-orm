@@ -6,33 +6,46 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
+
 /**
  * Extends the generic {@link EntityPersister} contract to add
  * operations required by the Hibernate Query Language
  *
  * @author Gavin King
  *
- * @deprecated See {@link org.hibernate.metamodel.mapping.Queryable}
+ * @deprecated Use {@link org.hibernate.metamodel.mapping.EntityMappingType}
+ * instead
  */
 @Deprecated(since = "6.0")
 public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	/**
 	 * Is this an abstract class?
+	 *
+	 * @see EntityMappingType#isAbstract()
 	 */
 	boolean isAbstract();
 	/**
 	 * Is this class explicit polymorphism only?
+	 *
+	 * @see EntityMappingType#isExplicitPolymorphism()
 	 */
 	boolean isExplicitPolymorphism();
+
 	/**
 	 * Get the class that this class is mapped as a subclass of -
 	 * not necessarily the direct superclass
+	 *
+	 * @see EntityMappingType#getSuperMappingType()
 	 */
 	String getMappedSuperclass();
+
 	/**
 	 * Get the discriminator value for this particular concrete subclass,
 	 * as a string that may be embedded in a select statement
+	 *
+	 * @see EntityMappingType#getDiscriminatorSQLValue()
 	 */
 	String getDiscriminatorSQLValue();
 
@@ -65,10 +78,10 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * For each table specified in {@link #getConstraintOrderedTableNameClosure()}, get
 	 * the columns that define the key between the various hierarchy classes.
-	 * <p/>
+	 * <p>
 	 * The first dimension here corresponds to the table indexes returned in
 	 * {@link #getConstraintOrderedTableNameClosure()}.
-	 * <p/>
+	 * <p>
 	 * The second dimension should have the same length across all the elements in
 	 * the first dimension.  If not, that would be a problem ;)
 	 *
@@ -78,7 +91,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * Given a property name, determine the number of the table which contains the column
 	 * to which this property is mapped.
-	 * <p/>
+	 * <p>
 	 * Note that this is <b>not</b> relative to the results from {@link #getConstraintOrderedTableNameClosure()}.
 	 * It is relative to the subclass table name closure maintained internal to the persister (yick!).
 	 * It is also relative to the indexing used to resolve {@link #getSubclassTableName}...
@@ -91,7 +104,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * Determine whether the given property is declared by our
 	 * mapped class, our super class, or one of our subclasses...
-	 * <p/>
+	 * <p>
 	 * Note: the method is called 'subclass property...' simply
 	 * for consistency sake (e.g. {@link #getSubclassPropertyTableNumber}
 	 *
@@ -116,7 +129,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	/**
 	 * The alias used for any filter conditions (mapped where-fragments or
 	 * enabled-filters).
-	 * </p>
+	 * <p>
 	 * This may or may not be different from the root alias depending upon the
 	 * inheritance mapping strategy.
 	 *

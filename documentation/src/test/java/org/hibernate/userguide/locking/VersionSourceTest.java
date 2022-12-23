@@ -6,36 +6,33 @@
  */
 package org.hibernate.userguide.locking;
 
-import java.util.Date;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+import org.hibernate.annotations.CurrentTimestamp;
 
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceType;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import java.time.LocalDateTime;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
-public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
+@DomainModel( annotatedClasses = VersionSourceTest.Person.class )
+@SessionFactory
+public class VersionSourceTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::locking-optimistic-version-timestamp-source-persist-example[]
 			Person person = new Person();
 			person.setId(1L);
@@ -47,6 +44,24 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 			assertNotNull(person.getVersion());
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
 		});
+		sleep();
+		scope.inTransaction( entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
+			person.setFirstName("Jane");
+		});
+		sleep();
+		scope.inTransaction( entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
+			person.setFirstName("John");
+		});
+	}
+
+	private static void sleep() {
+		try {
+			Thread.sleep(300);
+		}
+		catch (InterruptedException ignored) {
+		}
 	}
 
 	//tag::locking-optimistic-version-timestamp-source-mapping-example[]
@@ -60,9 +75,8 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String lastName;
 
-		@Version
-		@Source(value = SourceType.DB)
-		private Date version;
+		@Version @CurrentTimestamp
+		private LocalDateTime version;
 	//end::locking-optimistic-version-timestamp-source-mapping-example[]
 
 		public Long getId() {
@@ -89,11 +103,8 @@ public class VersionSourceTest extends BaseEntityManagerFunctionalTestCase {
 			this.lastName = lastName;
 		}
 
-		public Date getVersion() {
+		public LocalDateTime getVersion() {
 			return version;
 		}
-
-		//tag::locking-optimistic-version-timestamp-source-mapping-example[]
 	}
-	//end::locking-optimistic-version-timestamp-source-mapping-example[]
 }

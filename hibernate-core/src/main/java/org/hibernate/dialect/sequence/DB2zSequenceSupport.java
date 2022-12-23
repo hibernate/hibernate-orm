@@ -7,7 +7,7 @@
 package org.hibernate.dialect.sequence;
 
 /**
- * Sequence support for {@link org.hibernate.dialect.DB2390Dialect}.
+ * Sequence support for {@link org.hibernate.dialect.DB2zDialect}.
  *
  * @author Gavin King
  */

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -18,6 +19,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -26,19 +28,29 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MariaDB
+ * A {@linkplain Dialect SQL dialect} for MariaDB 10.3 and above.
  *
  * @author Vlad Mihalcea
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion VERSION5 = DatabaseVersion.make( 5 );
-	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 3 );
+	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
-		this( DatabaseVersion.make( 5 ) );
+		this( MINIMUM_VERSION );
 	}
 
 	public MariaDBDialect(DatabaseVersion version) {
@@ -46,14 +58,18 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super(info);
+		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		registerKeywords( info );
 	}
 
 	@Override
 	public DatabaseVersion getMySQLVersion() {
-		return getVersion().isBefore( 5, 3 )
-				? VERSION5
-				: VERSION57;
+		return MYSQL57;
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -65,19 +81,63 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		if ( getVersion().isSameOrAfter( 10, 2 ) ) {
-			CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
-			commonFunctionFactory.windowFunctions();
-			commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-			queryEngine.getSqmFunctionRegistry().registerNamed(
-					"json_valid",
-					queryEngine.getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.resolve( StandardBasicTypes.BOOLEAN )
-			);
-			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
-				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-			}
+		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
+		commonFunctionFactory.windowFunctions();
+		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		queryEngine.getSqmFunctionRegistry().registerNamed(
+				"json_valid",
+				queryEngine.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.BOOLEAN )
+		);
+		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
+				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		}
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uuid":
+						jdbcTypeCode = UUID;
+						break;
+				}
+				break;
+			case VARBINARY:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					jdbcTypeCode = GEOMETRY;
+				}
+				break;
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeRegistry();
+		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
 		}
 	}
 
@@ -94,12 +154,23 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 10, 2 );
+		return true;
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		// See https://jira.mariadb.org/browse/MDEV-19078
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
 	}
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return getVersion().isSameOrAfter( 10, 2 );
+		return true;
 	}
 
 	@Override
@@ -109,7 +180,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSameOrAfter( 10 );
+		return true;
 	}
 
 	@Override
@@ -119,9 +190,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion().isBefore( 10, 3 )
-				? super.getSequenceSupport()
-				: MariaDBSequenceSupport.INSTANCE;
+		return MariaDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -146,12 +215,12 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 10, 3 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsWait() {
-		return getVersion().isSameOrAfter( 10, 3 );
+		return true;
 	}
 
 	@Override
@@ -164,6 +233,15 @@ public class MariaDBDialect extends MySQLDialect {
 	boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
+	}
+
+	/**
+	 * @return {@code true} for 10.5 and above because Maria supports
+	 *         {@code insert ... returning} even though MySQL does not
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override

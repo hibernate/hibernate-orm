@@ -66,8 +66,7 @@ public class IngresSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 								new NamedTableReference(
 										"(select 1)",
 										"dummy_(x)",
-										false,
-										getCreationContext().getSessionFactory()
+										false
 								),
 								null,
 								getCreationContext().getSessionFactory()

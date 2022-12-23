@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2)
+@RequiresDialect(value = PostgreSQLDialect.class)
 public class JdbcTimestampWithoutUTCTimeZoneTest extends BaseSessionFactoryFunctionalTest {
 
 	private TimeZoneConnectionProvider connectionProvider;

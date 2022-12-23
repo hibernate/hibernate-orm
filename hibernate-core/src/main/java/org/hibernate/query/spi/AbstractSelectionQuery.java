@@ -19,6 +19,9 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -69,6 +72,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -316,7 +320,7 @@ public abstract class AbstractSelectionQuery<R>
 					}
 				}
 				if ( jdbcType != null ) {
-					switch ( jdbcType.getJdbcTypeCode() ) {
+					switch ( jdbcType.getDefaultSqlTypeCode() ) {
 						case Types.DATE:
 							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
 								return;
@@ -565,19 +569,40 @@ public abstract class AbstractSelectionQuery<R>
 		return getQueryOptions().getLockOptions();
 	}
 
+	@Override
+	public LockModeType getLockMode() {
+		return LockModeTypeHelper.getLockModeType( getHibernateLockMode() );
+	}
+
 	/**
 	 * Specify the root LockModeType for the query
 	 *
 	 * @see #setHibernateLockMode
 	 */
+	@Override
 	public SelectionQuery<R> setLockMode(LockModeType lockMode) {
 		setHibernateLockMode( LockModeTypeHelper.getLockMode( lockMode ) );
 		return this;
 	}
 
+	@Override
+	public SelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
+		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		return this;
+	}
+
+	/**
+	 * Get the root LockMode for the query
+	 */
+	@Override
+	public LockMode getHibernateLockMode() {
+		return getLockOptions().getLockMode();
+	}
+
 	/**
 	 * Specify the root LockMode for the query
 	 */
+	@Override
 	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
 		return this;
@@ -585,7 +610,10 @@ public abstract class AbstractSelectionQuery<R>
 
 	/**
 	 * Specify a LockMode to apply to a specific alias defined in the query
+	 *
+	 * @deprecated use {{@link #setLockMode(String, LockMode)}}
 	 */
+	@Override @Deprecated
 	public SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
@@ -659,9 +687,29 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
 	public SelectionQuery<R> setCacheMode(CacheMode cacheMode) {
 		getQueryOptions().setCacheMode( cacheMode );
 		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		return setCacheMode( fromJpaModes( cacheRetrieveMode, getQueryOptions().getCacheMode().getJpaStoreMode() ) );
+	}
+
+	@Override
+	public SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		return setCacheMode( fromJpaModes( getQueryOptions().getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override

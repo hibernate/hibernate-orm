@@ -7,7 +7,11 @@
 package org.hibernate.orm.test.collection.basic;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
@@ -17,6 +21,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,8 +31,11 @@ public class Contact implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
-    private Set<EmailAddress> emailAddresses2 = new HashSet<EmailAddress>();
+    private Set<EmailAddress> emailAddresses = new HashSet<>();
+    private Set<EmailAddress> emailAddresses2 = new HashSet<>();
+
+    private List<EmailAddress> emailAddresses3 = new ArrayList<>();
+    private Map<EmailAddress,Contact> contactsByEmail = new HashMap<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -49,6 +57,16 @@ public class Contact implements Serializable {
     }
 
     @ElementCollection
+    @CollectionTable(name = "user_email_addresses3", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    public List<EmailAddress> getEmailAddresses3() {
+        return emailAddresses3;
+    }
+
+    public void setEmailAddresses3(List<EmailAddress> emailAddresses3) {
+        this.emailAddresses3 = emailAddresses3;
+    }
+
+    @ElementCollection
     @CollectionTable(name = "user_email_addresses2", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
     public Set<EmailAddress> getEmailAddresses2() {
         return emailAddresses2;
@@ -66,6 +84,16 @@ public class Contact implements Serializable {
 
     public void setEmailAddresses(Set<EmailAddress> emailAddresses) {
         this.emailAddresses = emailAddresses;
+    }
+
+    @ManyToMany
+    @CollectionTable(name="contact_email_addresses")
+    public Map<EmailAddress, Contact> getContactsByEmail() {
+        return contactsByEmail;
+    }
+
+    public void setContactsByEmail(Map<EmailAddress, Contact> contactsByEmail) {
+        this.contactsByEmail = contactsByEmail;
     }
 
     @Override

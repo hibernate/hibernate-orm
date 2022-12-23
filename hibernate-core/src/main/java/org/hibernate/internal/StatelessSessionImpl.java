@@ -20,25 +20,41 @@ import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.Versioning.incrementVersion;
+import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.generator.EventType.INSERT;
+
 /**
+ * Concrete implementation of the {@link StatelessSession} API.
+ * <p>
+ * Exposes two interfaces:<ul>
+ * <li>{@link StatelessSession} to the application</li>
+ * <li>{@link org.hibernate.engine.spi.SharedSessionContractImplementor} to other Hibernate components (SPI)</li>
+ * </ul>
+ * <p>
+ * This class is not thread-safe.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -81,25 +97,21 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
-		EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifierGenerator().generate( this, entity );
-		Object[] state = persister.getValues( entity );
-		if ( persister.isVersioned() ) {
-			boolean substitute = Versioning.seedVersion(
-					state,
-					persister.getVersionProperty(),
-					persister.getVersionMapping(),
-					this
-			);
-			if ( substitute ) {
-				persister.setValues( entity, state );
+		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final Object id;
+		final Object[] state = persister.getValues( entity );
+		final Generator generator = persister.getGenerator();
+		if ( !generator.generatedOnExecution() ) {
+			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			if ( persister.isVersioned() ) {
+				if ( seedVersion( entity, state, persister, this ) ) {
+					persister.setValues( entity, state );
+				}
 			}
-		}
-		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			id = persister.insert( state, entity, this );
+			persister.insert( id, state, entity, this );
 		}
 		else {
-			persister.insert( id, state, entity, this );
+			id = persister.insert( state, entity, this );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;
@@ -141,8 +153,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning.increment( oldVersion, persister.getVersionMapping(), this );
-			Versioning.setVersion( state, newVersion, persister );
+			Object newVersion = incrementVersion( entity, oldVersion, persister, this );
+			setVersion( state, newVersion, persister );
 			persister.setValues( entity, state );
 		}
 		else {
@@ -317,7 +329,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						if ( LOG.isTraceEnabled() ) {
 							LOG.trace( "Entity proxy found in session cache" );
 						}
-						if ( LOG.isDebugEnabled() && ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
+						if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
@@ -375,9 +387,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void fetch(Object association) {
 		checkOpen();
 		PersistenceContext persistenceContext = getPersistenceContext();
-		if ( association instanceof HibernateProxy ) {
-			LazyInitializer initializer =
-					((HibernateProxy) association).getHibernateLazyInitializer();
+		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( association );
+		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
 				String entityName = initializer.getEntityName();
 				Object id = initializer.getIdentifier();
@@ -399,9 +410,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
-		else if ( association instanceof PersistentAttributeInterceptable) {
-			final PersistentAttributeInterceptor interceptor =
-					( (PersistentAttributeInterceptable) association ).$$_hibernate_getInterceptor();
+		else if ( isPersistentAttributeInterceptable( association ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
 				EnhancementAsProxyLazinessInterceptor proxyInterceptor =
 						(EnhancementAsProxyLazinessInterceptor) interceptor;
@@ -457,7 +467,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private void managedClose() {
 		if ( isClosed() ) {
-			throw new SessionException( "Session was already closed!" );
+			throw new SessionException( "Session was already closed" );
 		}
 		close();
 	}
@@ -469,8 +479,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			object = lazyInitializer.getImplementation();
 		}
 		return guessEntityName( object );
 	}
@@ -574,6 +585,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public boolean isEventSource() {
 		return false;
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		throw new HibernateException( "Illegal Cast to EventSource - guard by invoking isEventSource() first" );
 	}
 
 	public boolean isDefaultReadOnly() {
@@ -709,4 +725,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private LockMode getNullSafeLockMode(LockMode lockMode) {
 		return lockMode == null ? LockMode.NONE : lockMode;
 	}
+
+	@Override
+	public StatelessSession asStatelessSession() {
+		return this;
+	}
+
+	@Override
+	public boolean isStatelessSession() {
+		return true;
+	}
+
 }

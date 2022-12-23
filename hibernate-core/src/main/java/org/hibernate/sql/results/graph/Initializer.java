@@ -7,6 +7,9 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
@@ -70,4 +73,39 @@ public interface Initializer {
 	default void endLoading(ExecutionContext context) {
 		// by default - nothing to do
 	}
+
+	default boolean isAttributeAssignableToConcreteDescriptor(
+			FetchParentAccess parentAccess,
+			AttributeMapping referencedModelPart) {
+		if ( parentAccess != null && parentAccess.isEntityInitializer() ) {
+			final EntityPersister concreteDescriptor = parentAccess.findFirstEntityInitializer()
+					.getConcreteDescriptor();
+			if ( concreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
+				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType();
+				if ( concreteDescriptor != declaringType ) {
+					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() ) ) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	default boolean isEmbeddableInitializer(){
+		return false;
+	}
+
+	default boolean isEntityInitializer(){
+		return false;
+	}
+
+	default boolean isCollectionInitializer(){
+		return false;
+	}
+
+	default EntityInitializer asEntityInitializer() {
+		return null;
+	}
+
 }

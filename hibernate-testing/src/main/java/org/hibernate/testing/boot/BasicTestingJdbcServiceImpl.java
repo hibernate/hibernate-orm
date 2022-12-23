@@ -30,7 +30,7 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
  * Implementation of the {@link JdbcServices} contract for use by tests.
- * <p/>
+ * <p>
  * An alternative approach is to build a {@link ServiceRegistryTestingImpl} and grab the {@link JdbcServices}
  * from that.
  *

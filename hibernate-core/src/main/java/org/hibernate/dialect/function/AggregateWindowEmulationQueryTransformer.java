@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
@@ -111,7 +112,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		// for group by items, since these group by items are migrated to the outer query
 		final Map<Expression, Integer> selectionMapping = new HashMap<>( subSelections.size() );
 		// Create the expressions/selections for the outer query and the columnNames list
-		// for the QueryPartTableGroup within which the sub query spec is embedded
+		// for the QueryPartTableGroup within which the subquery spec is embedded
 		for ( int i = 0; i < subSelections.size(); i++ ) {
 			final BasicValuedMapping mapping = (BasicValuedMapping) subSelections.get( i )
 					.getExpressionType();
@@ -122,8 +123,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					false,
 					null,
 					null,
-					mapping.getJdbcMapping(),
-					factory
+					mapping.getJdbcMapping()
 			);
 			final Expression expression = subSelections.get( i ).getExpression();
 			final Expression finalExpression;
@@ -193,8 +193,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							false,
 							null,
 							null,
-							jdbcMapping,
-							factory
+							jdbcMapping
 					);
 					final int subValuesPosition = subSelectClause.getSqlSelections().size();
 					final SqlSelection subSelection = new ResolvedSqlSelection(
@@ -258,8 +257,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 									false,
 									null,
 									null,
-									jdbcMapping,
-									factory
+									jdbcMapping
 							);
 							final int subValuesPosition = subSelectClause.getSqlSelections().size();
 							final SqlSelection subSelection = new ResolvedSqlSelection(
@@ -320,8 +318,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 								false,
 								null,
 								null,
-								jdbcMapping,
-								factory
+								jdbcMapping
 						);
 						final int subValuesPosition = subSelectClause.getSqlSelections().size();
 						final SqlSelection subSelection = new ResolvedSqlSelection(
@@ -352,7 +349,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			subQuerySpec.getSortSpecifications().clear();
 		}
 
-		// We need to add selection items for the expressions we order by to the sub query spec.
+		// We need to add selection items for the expressions we order by to the subquery spec.
 		final int selectionOffset = columnNames.size();
 		// Collect the sorting column references so we can apply the filter later
 		final List<ColumnReference> sortingColumns = new ArrayList<>( withinGroup.size() );
@@ -378,8 +375,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							false,
 							null,
 							null,
-							mapping.getJdbcMapping(),
-							factory
+							mapping.getJdbcMapping()
 					)
 			);
 		}
@@ -417,7 +413,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		final QueryPartTableGroup queryPartTableGroup = new QueryPartTableGroup(
 				navigablePath,
 				null,
-				subQuerySpec,
+				new SelectStatement( subQuerySpec ),
 				identifierVariable,
 				columnNames,
 				false,

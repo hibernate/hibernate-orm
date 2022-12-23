@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.internal.log.SubSystemLogging;
@@ -114,12 +115,9 @@ public class DomainResultGraphPrinter {
 //				visitKeyGraphNode( identifierFetch, lastInBranch );
 //			}
 
-			final int numberOfFetches = fetchParent.getFetches().size();
-
-			for ( int i = 0; i < numberOfFetches; i++ ) {
-				final Fetch fetch = fetchParent.getFetches().get( i );
-
-				final boolean lastInBranch = i + 1 == numberOfFetches;
+			for ( Iterator<Fetch> iterator = fetchParent.getFetches().iterator(); iterator.hasNext(); ) {
+				final Fetch fetch = iterator.next();
+				final boolean lastInBranch = !iterator.hasNext();
 				visitGraphNode( fetch, lastInBranch );
 			}
 		}

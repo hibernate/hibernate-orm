@@ -28,7 +28,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 
 	public SqmLiteral(T value, SqmExpressible<? extends T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
-		assert value != null;
+		assert value != null && ( inherentType == null || inherentType.getExpressibleJavaType().isInstance( value ) );
 		this.value = value;
 	}
 

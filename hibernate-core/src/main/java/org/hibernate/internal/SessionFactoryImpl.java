@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,23 +25,13 @@ import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import jakarta.persistence.Cache;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PersistenceUnitUtil;
-import jakarta.persistence.Query;
-import jakarta.persistence.SynchronizationType;
-
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -75,8 +66,10 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -88,14 +81,12 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
@@ -103,6 +94,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -112,6 +104,8 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.relational.SchemaManager;
+import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -128,6 +122,13 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Concrete implementation of the {@code SessionFactory} interface. Has the following
@@ -179,16 +180,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private volatile DelayedDropAction delayedDropAction;
 
 	// todo : move to MetamodelImpl
-	private final transient Map<String,IdentifierGenerator> identifierGenerators;
+	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
 	private final transient FastSessionServices fastSessionServices;
 	private final transient WrapperOptions wrapperOptions;
-	private final transient SessionBuilder defaultSessionOpenOptions;
-	private final transient SessionBuilder temporarySessionOpenOptions;
+	private final transient SessionBuilderImpl defaultSessionOpenOptions;
+	private final transient SessionBuilderImpl temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
 	private final transient EntityNameResolver entityNameResolver;
+
+	private final transient SchemaManager schemaManager;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -287,14 +290,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
 			bootMetamodel.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-				final IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+				final Generator generator = model.getIdentifier().createGenerator(
 						bootstrapContext.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
 						(RootClass) model
 				);
-				generator.initialize( sqlStringGenerationContext );
+				if ( generator instanceof IdentifierGenerator ) {
+					( (IdentifierGenerator) generator ).initialize( sqlStringGenerationContext );
+				}
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
+			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
 			LOG.debug( "Instantiated session factory" );
@@ -409,9 +415,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 			throw e;
 		}
+
+		this.schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 	}
 
-	private SessionBuilder createDefaultSessionOpenOptionsIfPossible() {
+	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
 		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
 		if ( currentTenantIdentifierResolver == null ) {
 			return withOptions();
@@ -422,7 +430,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	private SessionBuilder buildTemporarySessionOpenOptions() {
+	private SessionBuilderImpl buildTemporarySessionOpenOptions() {
 		return withOptions()
 				.autoClose( false )
 				.flushMode( FlushMode.MANUAL )
@@ -483,7 +491,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		getCache().prime( regionConfigs );
 	}
 
-	public Session openSession() throws HibernateException {
+	public SessionImplementor openSession() throws HibernateException {
 		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
 		if ( this.defaultSessionOpenOptions != null ) {
 			return this.defaultSessionOpenOptions.openSession();
@@ -493,7 +501,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	public Session openTemporarySession() throws HibernateException {
+	@Override
+	public SessionImpl openTemporarySession() throws HibernateException {
 		//The temporarySessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
 		if ( this.temporarySessionOpenOptions != null ) {
 			return this.temporarySessionOpenOptions.openSession();
@@ -506,14 +515,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public Session getCurrentSession() throws HibernateException {
 		if ( currentSessionContext == null ) {
-			throw new HibernateException( "No CurrentSessionContext configured!" );
+			throw new HibernateException( "No CurrentSessionContext configured" );
 		}
 		return currentSessionContext.currentSession();
 	}
 
 	@Override
-	public SessionBuilderImplementor withOptions() {
-		return new SessionBuilderImpl<>( this );
+	public SessionBuilderImpl withOptions() {
+		return new SessionBuilderImpl( this );
 	}
 
 	@Override
@@ -686,8 +695,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( object );
+		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
 			if ( initializer.isUninitialized() ) {
@@ -890,31 +899,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> T unwrap(Class<T> type) {
-		if ( type.isAssignableFrom( SessionFactory.class ) ) {
+		if ( type.isInstance( this ) ) {
 			return type.cast( this );
 		}
 
-		if ( type.isAssignableFrom( SessionFactoryImplementor.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( SessionFactoryImpl.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( EntityManagerFactory.class ) ) {
-			return type.cast( this );
-		}
-
-		if ( type.isAssignableFrom( SessionFactoryServiceRegistry.class ) ) {
+		if ( type.isInstance( serviceRegistry ) ) {
 			return type.cast( serviceRegistry );
 		}
 
-		if ( type.isAssignableFrom( JdbcServices.class ) ) {
+		if ( type.isInstance( jdbcServices ) ) {
 			return type.cast( jdbcServices );
 		}
 
-		if ( type.isAssignableFrom( Cache.class ) || type.isAssignableFrom( org.hibernate.Cache.class ) ) {
+		if ( type.isInstance( cacheAccess ) ) {
 			return type.cast( cacheAccess );
 		}
 
@@ -926,11 +923,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return type.cast( runtimeMetamodels.getJpaMetamodel() );
 		}
 
-		if ( type.isAssignableFrom( MetamodelImplementor.class ) || type.isAssignableFrom( MetadataImplementor.class ) ) {
+		if ( type.isInstance( runtimeMetamodels.getMappingMetamodel() ) ) {
 			return type.cast( runtimeMetamodels.getMappingMetamodel() );
 		}
 
-		if ( type.isAssignableFrom( QueryEngine.class ) ) {
+		if ( type.isInstance( queryEngine ) ) {
 			return type.cast( queryEngine );
 		}
 
@@ -969,11 +966,22 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Set<String> getDefinedFilterNames() {
-		return filters.keySet();
+		return unmodifiableSet( filters.keySet() );
 	}
 
+	@Override
+	public Set<String> getDefinedFetchProfileNames() {
+		return unmodifiableSet( fetchProfiles.keySet() );
+	}
+
+	@Deprecated
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return identifierGenerators.get(rootEntityName);
+		return (IdentifierGenerator) getGenerator( rootEntityName );
+	}
+
+	@Deprecated
+	public Generator getGenerator(String rootEntityName) {
+		return identifierGenerators.get( rootEntityName );
 	}
 
 	private boolean canAccessTransactionManager() {
@@ -1059,18 +1067,29 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		Class<?> clazz;
-		if (bindValue instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) bindValue;
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			clazz = li.getPersistentClass();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( bindValue );
+		if ( lazyInitializer != null ) {
+			clazz = lazyInitializer.getPersistentClass();
 		}
 		else {
 			clazz = bindValue.getClass();
 		}
 
-		@SuppressWarnings("unchecked")
-		Class<? extends T> c = (Class<? extends T>) clazz;
-		return resolveParameterBindType( c );
+		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
+		Class<?> c = clazz;
+		do {
+			BindableType<?> type = resolveParameterBindType( c );
+			if ( type != null ) {
+				//noinspection unchecked
+				return (BindableType<? extends T>) type;
+			}
+			c = c.getSuperclass();
+		} while ( c != Object.class );
+		if ( !clazz.isEnum() && Serializable.class.isAssignableFrom( clazz ) ) {
+			//noinspection unchecked
+			return (BindableType<? extends T>) resolveParameterBindType( Serializable.class );
+		}
+		return null;
 	}
 
 	@Override
@@ -1117,7 +1136,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	public static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
+	public static class SessionBuilderImpl implements SessionBuilderImplementor, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
@@ -1227,91 +1246,86 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// SessionBuilder
 
 		@Override
-		public Session openSession() {
+		public SessionImpl openSession() {
 			log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
 			return new SessionImpl( sessionFactory, this );
 		}
 
-		@SuppressWarnings("unchecked")
-		private T getThis() {
-			return (T) this;
-		}
-
 		@Override
-		public T interceptor(Interceptor interceptor) {
+		public SessionBuilderImpl interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
 			this.explicitNoInterceptor = false;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T noInterceptor() {
+		public SessionBuilderImpl noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
 			this.explicitNoInterceptor = true;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T statementInspector(StatementInspector statementInspector) {
+		public SessionBuilderImpl statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T connection(Connection connection) {
+		public SessionBuilderImpl connection(Connection connection) {
 			this.connection = connection;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		public SessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T autoJoinTransactions(boolean autoJoinTransactions) {
+		public SessionBuilderImpl autoJoinTransactions(boolean autoJoinTransactions) {
 			this.autoJoinTransactions = autoJoinTransactions;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T autoClose(boolean autoClose) {
+		public SessionBuilderImpl autoClose(boolean autoClose) {
 			this.autoClose = autoClose;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T autoClear(boolean autoClear) {
+		public SessionBuilderImpl autoClear(boolean autoClear) {
 			this.autoClear = autoClear;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T flushMode(FlushMode flushMode) {
+		public SessionBuilderImpl flushMode(FlushMode flushMode) {
 			this.flushMode = flushMode;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
+		public SessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T eventListeners(SessionEventListener... listeners) {
+		public SessionBuilderImpl eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
 				this.listeners = sessionFactory.getSessionFactoryOptions()
 						.getBaselineSessionEventsListenerBuilder()
 						.buildBaselineList();
 			}
 			Collections.addAll( this.listeners, listeners );
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T clearEventListeners() {
+		public SessionBuilderImpl clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
 				this.listeners = new ArrayList<>( 3 );
@@ -1319,13 +1333,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			else {
 				listeners.clear();
 			}
-			return getThis();
+			return this;
 		}
 
 		@Override
-		public T jdbcTimeZone(TimeZone timeZone) {
+		public SessionBuilderImpl jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
-			return getThis();
+			return this;
 		}
 	}
 
@@ -1567,6 +1581,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public WrapperOptions getWrapperOptions() {
 		return wrapperOptions;
+	}
+
+	@Override
+	public SchemaManager getSchemaManager() {
+		return schemaManager;
 	}
 
 	private enum Status {

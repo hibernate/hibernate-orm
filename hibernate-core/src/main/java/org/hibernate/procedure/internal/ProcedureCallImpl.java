@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -44,6 +45,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -53,8 +55,6 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -63,17 +63,16 @@ import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
+import org.hibernate.result.internal.OutputsExecutionContext;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.NoMoreOutputsException;
@@ -94,6 +93,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
+import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -118,7 +118,6 @@ public class ProcedureCallImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private JdbcCall call;
 	private ProcedureOutputsImpl outputs;
 
 
@@ -135,7 +134,7 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( procedureName );
+		this.resultSetMapping = new ResultSetMappingImpl( procedureName, true );
 
 		this.synchronizedQuerySpaces = null;
 	}
@@ -315,7 +314,7 @@ public class ProcedureCallImpl<R>
 			markAsFunctionCall( Types.REF_CURSOR );
 		}
 		else {
-			markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
+			markAsFunctionCall( type );
 		}
 	}
 
@@ -327,11 +326,6 @@ public class ProcedureCallImpl<R>
 	@Override
 	public MutableQueryOptions getQueryOptions() {
 		return queryOptions;
-	}
-
-	@Override
-	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		throw new IllegalStateException( "Cannot set LockMode on a procedure-call" );
 	}
 
 	@Override
@@ -359,8 +353,42 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCall markAsFunctionCall(int sqlType) {
+	public ProcedureCallImpl<R> markAsFunctionCall(int sqlType) {
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
+		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+		final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType( resultType );
+		if ( basicType == null ) {
+			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + resultType.getName() );
+		}
+		return markAsFunctionCall( basicType );
+	}
+
+	@Override
+	public ProcedureCallImpl<R> markAsFunctionCall(BasicTypeReference<?> typeReference) {
+		final BasicType<?> basicType = getSessionFactory().getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( typeReference );
+		if ( basicType == null ) {
+			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
+		}
+		return markAsFunctionCall( basicType );
+	}
+
+	private ProcedureCallImpl<R> markAsFunctionCall(BasicType<?> basicType) {
+		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			// Function returns might not be represented as callable parameters,
+			// but we still want to convert the result to the requested java type if possible
+			resultSetMapping.addResultBuilder(
+					new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() )
+			);
+		}
+		//noinspection unchecked
+		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) basicType );
 		return this;
 	}
 
@@ -462,23 +490,13 @@ public class ProcedureCallImpl<R>
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
 		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
 
-		final Class<T> expressibleJavaType;
-		if ( parameterType == null ) {
-			expressibleJavaType = null;
-		}
-		else {
-			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
-			assert sqmExpressible != null;
-
-			expressibleJavaType = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
-		}
-
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				expressibleJavaType,
+				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
+
 		registerParameter( procedureParameter );
 
 		return procedureParameter;
@@ -518,13 +536,25 @@ public class ProcedureCallImpl<R>
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
-				parameterType.getBindableJavaType(),
+				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
 
 		registerParameter( parameter );
 
 		return parameter;
+	}
+
+	private <T> Class<T> getExpressibleJavaType(BindableType<T> parameterType) {
+		if ( parameterType == null ) {
+			return null;
+		}
+		else {
+			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			assert sqmExpressible != null;
+
+			return sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
+		}
 	}
 
 	@Override
@@ -586,7 +616,7 @@ public class ProcedureCallImpl<R>
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
-		this.call = callableStatementSupport.interpretCall( this );
+		final JdbcOperationQueryCall call = callableStatementSupport.interpretCall( this );
 
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
@@ -608,86 +638,52 @@ public class ProcedureCallImpl<R>
 			}
 		}
 
-		LOG.debugf( "Preparing procedure call : %s", call );
+		LOG.debugf( "Preparing procedure call : %s", call);
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
 				.getStatementPreparer()
-				.prepareStatement( call.getSql(), true );
-
-		// Register the parameter mode and type
-		callableStatementSupport.registerParameters(
-				procedureName,
-				call,
-				statement,
-				parameterMetadata,
-				getSession()
-		);
-
-		// Apply the parameter bindings
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterRegistrations.size() );
-		for ( Map.Entry<ProcedureParameter<?>, JdbcCallParameterRegistration> entry : parameterRegistrations.entrySet() ) {
-			final JdbcCallParameterRegistration registration = entry.getValue();
-			if ( registration.getParameterBinder() != null ) {
-				final ProcedureParameter<?> parameter = entry.getKey();
-				final QueryParameterBinding<?> binding = getParameterBindings().getBinding( parameter );
-				if ( !binding.isBound() ) {
-					if ( parameter.getPosition() == null ) {
-						throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
-					}
-					else {
-						throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
-					}
-				}
-				jdbcParameterBindings.addBinding(
-						(JdbcParameter) registration.getParameterBinder(),
-						new JdbcParameterBindingImpl(
-								(JdbcMapping) registration.getParameterType(),
-								binding.getBindValue()
-						)
-				);
-			}
-		}
-
-		final JdbcCallRefCursorExtractor[] extractors = refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] );
-
-		final ExecutionContext executionContext = new ExecutionContext() {
-			private final Callback callback = new CallbackImpl();
-
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return ProcedureCallImpl.this.getSession();
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-				return new QueryOptionsAdapter() {
-					@Override
-					public Boolean isReadOnly() {
-						return false;
-					}
-				};
-			}
-
-			@Override
-			public String getQueryIdentifier(String sql) {
-				return sql;
-			}
-
-			@Override
-			public QueryParameterBindings getQueryParameterBindings() {
-				return QueryParameterBindings.NO_PARAM_BINDINGS;
-			}
-
-			@Override
-			public Callback getCallback() {
-				return callback;
-			}
-
-		};
-
-		// Note that this should actually happen in an executor
-
+				.prepareStatement( call.getSqlString(), true );
 		try {
+			// Register the parameter mode and type
+			callableStatementSupport.registerParameters(
+					procedureName,
+					call,
+					statement,
+					parameterMetadata,
+					getSession()
+			);
+
+			// Apply the parameter bindings
+			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterRegistrations.size() );
+			for ( Map.Entry<ProcedureParameter<?>, JdbcCallParameterRegistration> entry : parameterRegistrations.entrySet() ) {
+				final JdbcCallParameterRegistration registration = entry.getValue();
+				if ( registration.getParameterBinder() != null ) {
+					final ProcedureParameter<?> parameter = entry.getKey();
+					final QueryParameterBinding<?> binding = getParameterBindings().getBinding( parameter );
+					if ( !binding.isBound() ) {
+						if ( parameter.getPosition() == null ) {
+							throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
+						}
+						else {
+							throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
+						}
+					}
+					final JdbcMapping parameterType = (JdbcMapping) registration.getParameterType();
+					final Object bindValue = binding.getBindValue();
+					jdbcParameterBindings.addBinding(
+							(JdbcParameter) registration.getParameterBinder(),
+							new JdbcParameterBindingImpl(
+									parameterType,
+									parameterType.convertToRelationalValue( bindValue )
+							)
+					);
+				}
+			}
+
+			final ExecutionContext executionContext = new OutputsExecutionContext( getSession() );
+
+			// Note that this should actually happen in an executor
+
 			int paramBindingPosition = call.getFunctionReturn() == null ? 1 : 2;
 			for ( JdbcParameterBinder parameterBinder : call.getParameterBinders() ) {
 				parameterBinder.bindParameterValue(
@@ -700,13 +696,21 @@ public class ProcedureCallImpl<R>
 			}
 		}
 		catch (SQLException e) {
+			getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 			throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Error registering CallableStatement parameters",
 					procedureName
 			);
 		}
-		return new ProcedureOutputsImpl( this, parameterRegistrations, extractors, statement );
+
+		return new ProcedureOutputsImpl(
+				this,
+				parameterRegistrations,
+				refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] ),
+				statement
+		);
+
 	}
 
 	@Override
@@ -799,18 +803,7 @@ public class ProcedureCallImpl<R>
 		final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
 
 		parameterMetadata.visitRegistrations(
-				queryParameter -> {
-					final ProcedureParameterImplementor<?> procedureParameter = (ProcedureParameterImplementor<?>) queryParameter;
-					mementos.add(
-							new NamedCallableQueryMementoImpl.ParameterMementoImpl(
-									procedureParameter.getPosition(),
-									procedureParameter.getName(),
-									procedureParameter.getMode(),
-									procedureParameter.getParameterType(),
-									procedureParameter.getHibernateType()
-							)
-					);
-				}
+				queryParameter -> mementos.add( fromRegistration( (ProcedureParameterImplementor<?>) queryParameter) )
 		);
 
 		return mementos;
@@ -1071,13 +1064,28 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		// throw IllegalStateException here for consistency with JPA
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
+	}
+
+	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new IllegalStateException("jakarta.persistence.Query.setLockMode not valid on jakarta.persistence.StoredProcedureQuery" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
 	}
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new IllegalStateException( "jakarta.persistence.Query.getHibernateFlushMode not valid on jakarta.persistence.StoredProcedureQuery" );
+		// the JPA spec requires IllegalStateException here, even
+		// though it's logically an UnsupportedOperationException
+		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
+	}
+
+	@Override
+	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
+		throw new UnsupportedOperationException( "setLockOptions does not apply to procedure calls" );
 	}
 
 	@Override
@@ -1207,4 +1215,5 @@ public class ProcedureCallImpl<R>
 	public ResultSetMapping getResultSetMapping() {
 		return resultSetMapping;
 	}
+
 }

@@ -8,12 +8,12 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.generator.Generator;
 
 /**
  * @author Steve Ebersole
@@ -23,37 +23,30 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
-	private final ValueGeneration valueGeneration;
 
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			AttributeMetadataAccess attributeMetadataAccess,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
-		super( name, attributeMetadataAccess, mappedFetchOptions, stateArrayPosition, declaringType );
+			PropertyAccess propertyAccess) {
+		super( name, attributeMetadata, mappedFetchOptions, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.valueGeneration = valueGeneration != null
-				? valueGeneration
-				: NoValueGeneration.INSTANCE;
 	}
 
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			AttributeMetadataAccess attributeMetadataAccess,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess,
-			ValueGeneration valueGeneration) {
-		super( name, attributeMetadataAccess, fetchTiming, fetchStyle, stateArrayPosition, declaringType );
+			PropertyAccess propertyAccess) {
+		super( name, attributeMetadata, fetchTiming, fetchStyle, stateArrayPosition, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
-		this.valueGeneration = valueGeneration != null
-				? valueGeneration
-				: NoValueGeneration.INSTANCE;
 	}
 
 	@Override
@@ -62,7 +55,7 @@ public abstract class AbstractSingularAttributeMapping
 	}
 
 	@Override
-	public ValueGeneration getValueGeneration() {
-		return valueGeneration;
+	public Generator getGenerator() {
+		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
 	}
 }

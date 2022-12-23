@@ -108,7 +108,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 	public static class SimpleEntity {
 		@Id
 		public Integer id;
-		@Column(unique = true, name = "entity_key")
+		@Column(unique = true, nullable = false, name = "entity_key")
 		public String key;
 		public String name;
 

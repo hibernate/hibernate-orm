@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -106,23 +107,85 @@ public class MultiLoadTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoad(SessionFactoryScope scope) {
+	public void testUnflushedDeleteAndThenMultiLoadPart0(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.load(SimpleEntity.class, 5);
+					session.delete( s4 );
+
+					assertFalse( Hibernate.isInitialized( s4 ) );
+
+					// as a baseline, assert based on how load() handles it
+					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					assertNotNull( s5 );
+					assertFalse( Hibernate.isInitialized( s5 ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart1(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.delete( s4 );
+
+					// as a baseline, assert based on how load() handles it
+					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
+					assertNotNull( s5 );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.delete( s4 );
+
+					// and then, assert how get() handles it
+					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
+					assertNull( s5 );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart3(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// delete one of them (but do not flush)...
+					SimpleEntity s4 = session.load( SimpleEntity.class, 5 );
+					Hibernate.initialize( s4 );
+					session.delete( s4 );
+
+					// finally assert how multiLoad handles it
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
+					assertEquals( 56, list.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10984" )
+	public void testUnflushedDeleteAndThenMultiLoadPart4(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					// delete one of them (but do not flush)...
 					session.delete( session.load( SimpleEntity.class, 5 ) );
 
-					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.load( SimpleEntity.class, 5 );
-					assertNotNull( s5 );
-
 					// and then, assert how get() handles it
-					s5 = session.get( SimpleEntity.class, 5 );
+					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
 					assertNull( s5 );
-
-					// finally assert how multiLoad handles it
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
-					assertEquals( 56, list.size() );
 				}
 		);
 	}

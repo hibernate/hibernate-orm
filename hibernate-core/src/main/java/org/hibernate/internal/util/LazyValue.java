@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -24,17 +25,13 @@ public class LazyValue<T> {
 		this.supplier = supplier;
 	}
 
-	public Object getValue() {
+	public T getValue() {
 		if ( value == null ) {
 			final T obtainedValue = supplier.get();
-			if ( obtainedValue == null ) {
-				value = NULL;
-			}
-			else {
-				value = obtainedValue;
-			}
+			value = Objects.requireNonNullElse( obtainedValue, NULL );
 		}
 
-		return value == NULL ? null : value;
+		//noinspection unchecked
+		return value == NULL ? null : (T) value;
 	}
 }

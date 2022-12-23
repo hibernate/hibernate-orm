@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -64,4 +65,5 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

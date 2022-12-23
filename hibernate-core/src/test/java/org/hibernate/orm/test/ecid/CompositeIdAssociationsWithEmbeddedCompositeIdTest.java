@@ -12,7 +12,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.testing.TestForIssue;
@@ -96,18 +95,14 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 	@Entity(name = "Person")
 	public static class Person implements Serializable {
 		@Id
-		@JoinColumns(value = {
-				@JoinColumn(name = "p1Name"),
-				@JoinColumn(name = "p1Index")
-		})
+		@JoinColumn(name = "p1Name")
+		@JoinColumn(name = "p1Index")
 		@ManyToOne
 		private Parent parent1;
 
 		@Id
-		@JoinColumns(value = {
-				@JoinColumn(name = "p2Name"),
-				@JoinColumn(name = "p2Index")
-		})
+		@JoinColumn(name = "p2Name")
+		@JoinColumn(name = "p2Index")
 		@ManyToOne
 		private Parent parent2;
 

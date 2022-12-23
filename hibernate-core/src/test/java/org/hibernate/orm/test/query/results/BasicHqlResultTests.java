@@ -99,4 +99,30 @@ public class BasicHqlResultTests {
 			assertThat( result[1] ).isInstanceOf( SimpleComposite.class );
 		});
 	}
+
+	@Test
+	public void testSelectingSamePathDifferentAliasOrder1(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String qry = "select id as id1, id as id2 from SimpleEntity order by id1";
+			final List<Object[]> list = session.createQuery( qry ).list();
+			assertThat( list ).hasSize( 1 );
+
+			final Object[] result = list.get( 0 );
+			assertThat( result[0] ).isEqualTo( 1 );
+			assertThat( result[1] ).isEqualTo( 1 );
+		});
+	}
+
+	@Test
+	public void testSelectingSamePathDifferentAliasOrder2(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final String qry = "select id as id1, id as id2 from SimpleEntity order by id2";
+			final List<Object[]> list = session.createQuery( qry ).list();
+			assertThat( list ).hasSize( 1 );
+
+			final Object[] result = list.get( 0 );
+			assertThat( result[0] ).isEqualTo( 1 );
+			assertThat( result[1] ).isEqualTo( 1 );
+		});
+	}
 }

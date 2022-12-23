@@ -15,6 +15,8 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
+import static jakarta.persistence.FetchType.LAZY;
+import static org.hibernate.annotations.OnDeleteAction.CASCADE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
@@ -96,8 +98,8 @@ public class CascadeOnDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		@Column(name = "`number`")
 		private String number;
 
-		@ManyToOne(fetch = FetchType.LAZY)
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@ManyToOne(fetch = LAZY)
+		@OnDelete(action = CASCADE)
 		private Person owner;
 
 		//Getters and setters are omitted for brevity

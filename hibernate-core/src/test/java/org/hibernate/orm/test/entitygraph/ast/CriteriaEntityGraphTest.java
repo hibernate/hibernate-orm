@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -54,6 +54,7 @@ import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -190,13 +191,12 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 						Fetchable fetchable = getFetchable( "company", Person.class );
 
 						final Fetch companyFetch = ownerEntityResult.findFetch( fetchable );
-						List<Fetch> fetches = ownerEntityResult.getFetches();
 						assertThat( companyFetch, notNullValue() );
 
 						final EntityResult companyEntityResult = ( (EntityFetchJoinedImpl) companyFetch).getEntityResult();
-						assertThat( companyEntityResult.getFetches(), hasSize( 1 ) );
+						assertThat( companyEntityResult.getFetches().size(), is( 1 ) );
 
-						final Fetch shipAddressesFetch = companyEntityResult.getFetches().get( 0 );
+						final Fetch shipAddressesFetch = companyEntityResult.getFetches().iterator().next();
 						assertThat( shipAddressesFetch.getFetchedMapping().getPartName(), is( "shipAddresses" ) );
 						assertThat( shipAddressesFetch, instanceOf( DelayedCollectionFetch.class ) );
 					} );
@@ -209,11 +209,11 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.findEntityDescriptor( entityClass.getName() );
-		Collection<AttributeMapping> attributeMappings = person.getAttributeMappings();
+		AttributeMappingsList attributeMappings = person.getAttributeMappings();
 		Fetchable fetchable = null;
-		for(AttributeMapping mapping :attributeMappings){
-			if(mapping.getAttributeName().equals( attributeName  )){
-				fetchable = (Fetchable) mapping;
+		for ( AttributeMapping mapping : attributeMappings ){
+			if ( mapping.getAttributeName().equals( attributeName ) ) {
+				fetchable = mapping;
 			}
 		}
 		return fetchable;
@@ -348,9 +348,9 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedEntityJpaClass ) );
-		assertThat( entityResult.getFetches(), hasSize( 1 ) );
+		assertThat( entityResult.getFetches().size(), is( 1 ) );
 
-		final Fetch fetch = entityResult.getFetches().get( 0 );
+		final Fetch fetch = entityResult.getFetches().iterator().next();
 		assertThat( fetch, instanceOf( EntityFetch.class ) );
 
 		final EntityFetch entityFetch = (EntityFetch) fetch;
@@ -447,4 +447,3 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		String name;
 	}
 }
-

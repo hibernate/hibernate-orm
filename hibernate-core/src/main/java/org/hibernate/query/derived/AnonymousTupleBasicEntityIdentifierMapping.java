@@ -18,7 +18,8 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBasicValuedModelPart
+public class AnonymousTupleBasicEntityIdentifierMapping
+		extends AnonymousTupleBasicValuedModelPart
 		implements BasicEntityIdentifierMapping {
 
 	private final BasicEntityIdentifierMapping delegate;
@@ -28,18 +29,18 @@ public class AnonymousTupleBasicEntityIdentifierMapping extends AnonymousTupleBa
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			BasicEntityIdentifierMapping delegate) {
-		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping );
+		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
 		this.delegate = delegate;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
 	}
 
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return delegate.getUnsavedStrategy();
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
 	}
 
 	@Override

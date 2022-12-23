@@ -16,6 +16,7 @@ import java.sql.Statement;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -59,6 +60,7 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		JdbcCoordinator jdbcCoord = sessionImpl.getJdbcCoordinator();
 
 		try {
+			Transaction ddlTxn = session.beginTransaction();
 			Statement statement = jdbcCoord.getStatementPreparer().createStatement();
 			String dropSql = sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" );
 			try {
@@ -74,7 +76,9 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			getResourceRegistry( jdbcCoord ).release( statement );
 			assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 			assertTrue( jdbcCoord.getLogicalConnection().isPhysicallyConnected() ); // after_transaction specified
+			ddlTxn.commit();
 
+			Transaction dmlTxn = session.beginTransaction();
 			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
 					"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
 			ps.setLong( 1, 1 );
@@ -83,19 +87,21 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 
 			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			jdbcCoord.getResultSetReturn().extract( ps );
-
 			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
+			dmlTxn.commit();
 		}
 		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {
 			try {
+				Transaction ddlTx = session.beginTransaction();
 				session.doWork( connection -> {
 					final Statement stmnt = connection.createStatement();
 
 					stmnt.execute( sessionFactory().getJdbcServices().getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
 				} );
+				ddlTx.commit();
 			}
 			finally {
 				session.close();

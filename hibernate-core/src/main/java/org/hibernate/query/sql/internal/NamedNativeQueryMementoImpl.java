@@ -18,13 +18,14 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 /**
- * Keeps details of a named native-sql query
+ * Keeps details of a named native SQL query
  *
  * @author Max Andersen
  * @author Steve Ebersole
  */
 public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento implements NamedNativeQueryMemento {
 	private final String sqlString;
+	private final String originalSqlString;
 
 	private final String resultSetMappingName;
 	private final Class<?> resultSetMappingClass;
@@ -38,8 +39,9 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	public NamedNativeQueryMementoImpl(
 			String name,
 			String sqlString,
+			String originalSqlString,
 			String resultSetMappingName,
-			Class resultSetMappingClass,
+			Class<?> resultSetMappingClass,
 			Set<String> querySpaces,
 			Boolean cacheable,
 			String cacheRegion,
@@ -65,6 +67,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				hints
 		);
 		this.sqlString = sqlString;
+		this.originalSqlString = originalSqlString;
 		this.resultSetMappingName = resultSetMappingName == null || resultSetMappingName.isEmpty()
 				? null
 				: resultSetMappingName;
@@ -92,6 +95,11 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
+	public String getOriginalSqlString() {
+		return originalSqlString;
+	}
+
+	@Override
 	public String getResultMappingName() {
 		return resultSetMappingName;
 	}
@@ -116,6 +124,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 		return new NamedNativeQueryMementoImpl(
 				name,
 				sqlString,
+				originalSqlString,
 				resultSetMappingName,
 				resultSetMappingClass,
 				querySpaces,

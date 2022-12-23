@@ -9,13 +9,18 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -26,9 +31,22 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import java.lang.reflect.Type;
+import java.sql.Types;
 import java.util.List;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BIT;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.hasDatePart;
+import static org.hibernate.type.SqlTypes.hasTimePart;
+import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
+import static org.hibernate.type.SqlTypes.isCharacterType;
+import static org.hibernate.type.SqlTypes.isIntegral;
+import static org.hibernate.type.SqlTypes.isNumericType;
+import static org.hibernate.type.SqlTypes.isTemporalType;
+
 
 /**
  * Typechecks the arguments of HQL functions based on the assigned JDBC types.
@@ -68,10 +86,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				JavaType<?> javaType = nodeType.getExpressibleJavaType();
 				if (javaType != null) {
 					try {
-						JdbcType jdbcType = javaType.getRecommendedJdbcType(indicators);
+						final JdbcType jdbcType = getJdbcType( queryEngine, argument, indicators, javaType );
 						checkType(
 								count, functionName, type,
-								jdbcType.getJdbcTypeCode(),
+								jdbcType.getDefaultSqlTypeCode(),
 								javaType.getJavaTypeClass()
 						);
 					}
@@ -104,6 +122,47 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			else {
 				//TODO: appropriate error?
 			}
+		}
+	}
+
+	private JdbcType getJdbcType(
+			QueryEngine queryEngine,
+			SqmTypedNode<?> argument,
+			JdbcTypeIndicators indicators,
+			JavaType<?> javaType) {
+		// For enum types, we must try to resolve the JdbcMapping of a possible path
+		// to be sure we use the correct JdbcType for the validation
+		final JdbcMapping mapping = javaType.getJavaTypeClass().isEnum()
+				? getJdbcMapping( argument, queryEngine )
+				: null;
+		if ( mapping == null ) {
+			return javaType.getRecommendedJdbcType( indicators );
+		}
+		else {
+			return mapping.getJdbcType();
+		}
+	}
+
+	private JdbcMapping getJdbcMapping(SqmTypedNode<?> argument, QueryEngine queryEngine) {
+		if ( argument instanceof SqmPath<?> ) {
+			final SqmPath<?> path = (SqmPath<?>) argument;
+			final ModelPartContainer modelPartContainer = getModelPartContainer( path.getLhs(), queryEngine );
+			final ModelPart part = modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
+			return part.getJdbcMappings().get( 0 );
+		}
+		return null;
+	}
+
+	private ModelPartContainer getModelPartContainer(SqmPath<?> path, QueryEngine queryEngine) {
+		final SqmPath<?> lhs = path.getLhs();
+		if ( lhs == null ) {
+			assert path instanceof SqmFrom<?, ?>;
+			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) path.getNodeType().getSqmPathType();
+			return queryEngine.getTypeConfiguration().getSessionFactory().getRuntimeMetamodels().getEntityMappingType( entityDomainType.getHibernateEntityName() );
+		}
+		else {
+			final ModelPartContainer modelPartContainer = getModelPartContainer( lhs, queryEngine );
+			return (ModelPartContainer) modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
 		}
 	}
 
@@ -143,7 +202,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if (type != null) {
 				checkType(
 						count, functionName, type,
-						mapping.getJdbcType().getJdbcTypeCode(),
+						mapping.getJdbcType().getDefaultSqlTypeCode(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);
 			}
@@ -154,7 +213,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void checkType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) &&!isNumericType(code) ) {
+				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && code != UUID ) {
+					if ( javaType == java.util.UUID.class && ( code == Types.BINARY || isCharacterType( code ) ) ) {
+						// We also consider UUID to be comparable when it's a character or binary type
+						return;
+					}
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -181,7 +244,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case BOOLEAN:
 				// ugh, need to be careful here, need to accept all the
 				// JDBC type codes that a Dialect might use for BOOLEAN
-				if ( code != BOOLEAN && code != BIT && code != TINYINT ) {
+				if ( code != BOOLEAN && code != BIT && code != TINYINT && code != SMALLINT ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;

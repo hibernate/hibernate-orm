@@ -194,7 +194,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			try {
 				SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
+				SharedSessionContractImplementor session = sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setHibernateFlushMode( FlushMode.MANUAL );
 
@@ -319,12 +319,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), s, getEntityName() );
-		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
+		return entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey );
 	}
 
 	/**
 	 * Getter for property 'target'.
-	 * <p/>
+	 * <p>
 	 * Same as {@link #getImplementation()} except that this method will not force initialization.
 	 *
 	 * @return Value for property 'target'.
@@ -382,7 +382,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	/**
 	 * Get the read-only/modifiable setting that should be put in affect when it is
 	 * attached to a session.
-	 * <p/>
+	 * <p>
 	 * This method should only be called during serialization when read-only/modifiable setting
 	 * is not available (i.e., isReadOnlySettingAvailable() == false)
 	 *

@@ -40,8 +40,8 @@ pipeline {
 					sh '''./gradlew clean publish \
 						-PhibernatePublishUsername=$hibernatePublishUsername \
 						-PhibernatePublishPassword=$hibernatePublishPassword \
-						-PhibernatePluginPortalUsername=$hibernatePluginPortalUsername \
-						-PhibernatePluginPortalPassword=$hibernatePluginPortalPassword \
+						-Pgradle.publish.key=$hibernatePluginPortalUsername \
+						-Pgradle.publish.secret=$hibernatePluginPortalPassword \
 						--no-scan \
 						-DsigningPassword=$SIGNING_PASS \
 						-DsigningKeyFile=$SIGNING_KEYRING \

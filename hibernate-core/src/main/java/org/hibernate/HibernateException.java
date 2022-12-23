@@ -9,16 +9,16 @@ package org.hibernate;
 import jakarta.persistence.PersistenceException;
 
 /**
- * The base exception type for Hibernate exceptions.
- * <p/>
- * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
- * {@link JDBCException}.
+ * The base type for exceptions thrown by Hibernate.
+ * <p>
+ * Note that every {@linkplain java.sql.SQLException exception arising
+ * from the JDBC layer} is wrapped in some form of {@link JDBCException}.
  * 
  * @author Gavin King
  */
 public class HibernateException extends PersistenceException {
 	/**
-	 * Constructs a HibernateException using the given exception message.
+	 * Constructs a {@code HibernateException} using the given exception message.
 	 *
 	 * @param message The message explaining the reason for the exception
 	 */
@@ -27,7 +27,7 @@ public class HibernateException extends PersistenceException {
 	}
 
 	/**
-	 * Constructs a HibernateException using the given message and underlying cause.
+	 * Constructs a {@code HibernateException} using the given message and underlying cause.
 	 *
 	 * @param cause The underlying cause.
 	 */
@@ -36,7 +36,7 @@ public class HibernateException extends PersistenceException {
 	}
 
 	/**
-	 * Constructs a HibernateException using the given message and underlying cause.
+	 * Constructs a {@code HibernateException} using the given message and underlying cause.
 	 *
 	 * @param message The message explaining the reason for the exception.
 	 * @param cause The underlying cause.

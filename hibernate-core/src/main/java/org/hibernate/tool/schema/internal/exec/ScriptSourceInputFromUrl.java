@@ -60,11 +60,16 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	@Override
 	protected void releaseReader(Reader reader) {
 		try {
-			prepareReader().close();
+			reader.close();
 		}
 		catch (IOException e) {
 			log.warn( "Unable to close file reader for generation script source" );
 		}
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		return url.equals( url );
 	}
 
 	@Override

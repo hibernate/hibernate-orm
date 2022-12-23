@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -184,27 +186,21 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			return null;
 		}
 
-		if ( hasCustomAccessors() ) {
+		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null || bootDescriptor.getInstantiator() != null ) {
 			return null;
 		}
 
-		final String[] getterNames = new String[getPropertySpan()];
-		final String[] setterNames = new String[getPropertySpan()];
-		final Class<?>[] propTypes = new Class[getPropertySpan()];
+		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
 
-		for ( int i = 0; i < getPropertyAccesses().length; i++ ) {
-			final PropertyAccess propertyAccess = getPropertyAccesses()[i];
-
-			getterNames[i] = propertyAccess.getGetter().getMethodName();
-			setterNames[i] = propertyAccess.getSetter().getMethodName();
-			propTypes[i] = propertyAccess.getGetter().getReturnTypeClass();
+		int i = 0;
+		for ( Property property : bootDescriptor.getProperties() ) {
+			propertyAccessMap.put( property.getName(), getPropertyAccesses()[i] );
+			i++;
 		}
 
 		return Environment.getBytecodeProvider().getReflectionOptimizer(
 				bootDescriptor.getComponentClass(),
-				getterNames,
-				setterNames,
-				propTypes
+				propertyAccessMap
 		);
 	}
 

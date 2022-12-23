@@ -8,7 +8,6 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -18,14 +17,11 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 
 /**
  * @author Nathan Xu
@@ -71,9 +67,6 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			if ( fetchable instanceof PluralAttributeMapping ) {
 				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
-						|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
-
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
@@ -116,21 +109,10 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		if ( currentGraphContext == null || !( fetchParent instanceof EntityResultGraphNode ) ) {
+		if ( currentGraphContext == null ) {
 			return false;
 		}
-
-		final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-
-		assert currentGraphContext.getGraphedType() instanceof EntityDomainType;
-		final EntityDomainType entityDomainType = (EntityDomainType) currentGraphContext.getGraphedType();
-
-		return entityDomainType.getHibernateEntityName().equals( entityFetchParentMappingType.getEntityName() );
-	}
-
-	private static boolean isJpaMapCollectionType(PluralAttributeMapping pluralAttributeMapping) {
-		return pluralAttributeMapping.getCollectionDescriptor().getCollectionSemantics().getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
+		return fetchParent.appliesTo( currentGraphContext );
 	}
 
 }

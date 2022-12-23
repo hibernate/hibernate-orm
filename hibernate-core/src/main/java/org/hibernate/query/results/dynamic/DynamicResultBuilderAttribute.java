@@ -12,13 +12,18 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import static org.hibernate.query.results.ResultsHelper.impl;
+import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
 
 /**
  * DynamicResultBuilder based on a named mapped attribute
@@ -76,19 +81,18 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		// todo (6.0) : TableGroups + `attributeMapping#buldResult`
+		final DomainResultCreationStateImpl domainResultCreationStateImpl = impl( domainResultCreationState );
 
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						columnAlias,
-						state -> {
-							final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-							final int valuesArrayPosition = resultSetPosition - 1;
+		final SqlSelection sqlSelection = domainResultCreationStateImpl.resolveSqlSelection(
+				domainResultCreationStateImpl.resolveSqlExpression(
+						SqlExpressionResolver.createColumnReferenceKey( columnAlias ),
+						processingState -> {
+							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, attributeMapping );
 						}
 				),
-				attributeMapping.getJavaType(),
+				attributeMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
 				domainResultCreationState.getSqlAstCreationState()
 						.getCreationContext()
@@ -99,8 +103,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				attributeMapping.getJavaType(),
-				attributeMapping.getValueConverter()
+				attributeMapping.getJdbcMapping()
 		);
 	}
 

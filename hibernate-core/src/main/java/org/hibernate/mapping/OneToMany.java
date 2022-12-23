@@ -15,12 +15,13 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A mapping for a one-to-many association
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToMany many-to-one association}.
  *
  * @author Gavin King
  */
@@ -180,7 +181,7 @@ public class OneToMany implements Value {
 
 	public boolean[] getColumnInsertability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -190,7 +191,7 @@ public class OneToMany implements Value {
 
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
-		throw new UnsupportedOperationException();
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
@@ -216,4 +217,18 @@ public class OneToMany implements Value {
 				: null;
 	}
 
+	@Override
+	public boolean isColumnInsertable(int index) {
+		return false;
+	}
+
+	@Override
+	public boolean isColumnUpdateable(int index) {
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

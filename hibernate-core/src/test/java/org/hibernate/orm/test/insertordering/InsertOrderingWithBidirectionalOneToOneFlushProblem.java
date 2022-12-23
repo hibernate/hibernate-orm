@@ -32,7 +32,7 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseIns
 					clearBatches();
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					LeftEntity left = new LeftEntity();
 					RightEntity right = new RightEntity();
@@ -56,9 +56,9 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseIns
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)" ),
-				new Batch( "insert into LeftEntity (name, top_id, id) values (?, ?, ?)" ),
-				new Batch( "insert into RightEntity (left_id, name, top_id, id) values (?, ?, ?, ?)" )
+				new Batch( "insert into TopEntity (name,id) values (?,?)" ),
+				new Batch( "insert into LeftEntity (name,top_id,id) values (?,?,?)" ),
+				new Batch( "insert into RightEntity (left_id,name,top_id,id) values (?,?,?,?)" )
 		);
 	}
 
@@ -72,7 +72,7 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseIns
 					clearBatches();
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					LeftEntity left = new LeftEntity();
 					RightEntity right = new RightEntity();
@@ -96,9 +96,9 @@ public class InsertOrderingWithBidirectionalOneToOneFlushProblem extends BaseIns
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)" ),
-				new Batch( "insert into LeftEntity (name, top_id, id) values (?, ?, ?)" ),
-				new Batch( "insert into RightEntity (left_id, name, top_id, id) values (?, ?, ?, ?)" )
+				new Batch( "insert into TopEntity (name,id) values (?,?)" ),
+				new Batch( "insert into LeftEntity (name,top_id,id) values (?,?,?)" ),
+				new Batch( "insert into RightEntity (left_id,name,top_id,id) values (?,?,?,?)" )
 		);
 	}
 

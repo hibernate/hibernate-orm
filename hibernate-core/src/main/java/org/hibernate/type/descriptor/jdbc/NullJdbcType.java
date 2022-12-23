@@ -70,12 +70,12 @@ public class NullJdbcType implements JdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) {
-				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null!" );
+				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null" );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) {
-				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null!" );
+				throw new UnsupportedOperationException( getClass().getName() + " should only be used to bind null" );
 			}
 		};
 	}

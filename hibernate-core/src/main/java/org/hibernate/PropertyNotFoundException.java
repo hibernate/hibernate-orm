@@ -14,7 +14,7 @@ package org.hibernate;
  */
 public class PropertyNotFoundException extends MappingException {
 	/**
-	 * Constructs a PropertyNotFoundException given the specified message.
+	 * Constructs a {@code PropertyNotFoundException} given the specified message.
 	 *
 	 * @param message A message explaining the exception condition
 	 */

@@ -14,11 +14,6 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -111,7 +106,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		if ( functionKind != FunctionKind.AGGREGATE ) {
-			throw new UnsupportedOperationException( "The function " + getName() + " is not an aggregate function!" );
+			throw new UnsupportedOperationException( "The function " + getName() + " is not an aggregate function" );
 		}
 		return new SelfRenderingSqmAggregateFunction<>(
 				this,
@@ -135,7 +130,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		if ( functionKind != FunctionKind.ORDERED_SET_AGGREGATE ) {
-			throw new UnsupportedOperationException( "The function " + getName() + " is not an ordered set-aggregate function!" );
+			throw new UnsupportedOperationException( "The function " + getName() + " is not an ordered set-aggregate function" );
 		}
 		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
 				this,
@@ -161,7 +156,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		if ( functionKind != FunctionKind.WINDOW ) {
-			throw new UnsupportedOperationException( "The function " + getName() + " is not a window function!" );
+			throw new UnsupportedOperationException( "The function " + getName() + " is not a window function" );
 		}
 		return new SelfRenderingSqmWindowFunction<>(
 				this,

@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.SourceSetContainer;
 
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
@@ -31,8 +32,10 @@ public class EnhancementSpec {
 
 	@Inject
 	public EnhancementSpec(HibernateOrmSpec ormDsl, Project project) {
-		enableLazyInitialization = makeProperty( project );
-		enableDirtyTracking = makeProperty( project );
+		final SourceSetContainer sourceSets = project.getExtensions().getByType( SourceSetContainer.class );
+
+		enableLazyInitialization = makeProperty( project ).convention( true );
+		enableDirtyTracking = makeProperty( project ).convention( true );
 		enableAssociationManagement = makeProperty( project );
 		enableExtendedEnhancement = makeProperty( project );
 	}
@@ -44,43 +47,53 @@ public class EnhancementSpec {
 				|| enableExtendedEnhancement.get();
 	}
 
+	@Deprecated(forRemoval = true)
 	public Property<Boolean> getEnableLazyInitialization() {
 		return enableLazyInitialization;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setEnableLazyInitialization(boolean enable) {
 		enableLazyInitialization.set( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void enableLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void lazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
 
+	@Deprecated(forRemoval = true)
 	public Property<Boolean> getEnableDirtyTracking() {
 		return enableDirtyTracking;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setEnableDirtyTracking(boolean enable) {
 		enableDirtyTracking.set( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void enableDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void dirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void setDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}

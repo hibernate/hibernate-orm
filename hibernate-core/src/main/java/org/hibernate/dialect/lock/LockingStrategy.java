@@ -7,11 +7,11 @@
 package org.hibernate.dialect.lock;
 
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
- * <p/>
+ * <p>
  * All locking provided implementations assume the underlying database supports
  * (and that the connection is in) at least read-committed transaction isolation.
  * The most glaring exclusion to this is HSQLDB which only offers support for
@@ -37,6 +37,6 @@ public interface LockingStrategy {
 	 * the requested lock.
 	 * @throws LockingStrategyException Indicates a failure in the lock attempt
 	 */
-	void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+	void lock(Object id, Object version, Object object, int timeout, EventSource session)
 			throws StaleObjectStateException, LockingStrategyException;
 }

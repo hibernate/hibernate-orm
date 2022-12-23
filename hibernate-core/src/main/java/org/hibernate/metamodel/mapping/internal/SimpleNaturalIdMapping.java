@@ -20,6 +20,7 @@ import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -27,7 +28,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -48,7 +48,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			MappingModelCreationProcess creationProcess) {
 		super(
 				declaringType,
-				attribute.getAttributeMetadataAccess().resolveAttributeMetadata( declaringType ).isUpdatable()
+				attribute.getAttributeMetadata().isUpdatable()
 		);
 		this.attribute = attribute;
 
@@ -56,6 +56,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 				.getSessionFactory()
 				.getTypeConfiguration();
 
+	}
+
+	public SingularAttributeMapping getAttribute() {
+		return attribute;
 	}
 
 	@Override
@@ -110,7 +114,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return;
 		}
 
-		if ( naturalIdValue.getClass().isArray() ) {
+		final Class<?> naturalIdValueClass = naturalIdValue.getClass();
+		if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 			// be flexible
 			final Object[] values = (Object[]) naturalIdValue;
 			if ( values.length == 1 ) {
@@ -124,7 +129,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 							Locale.ROOT,
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
-							naturalIdValue.getClass().getName(),
+							naturalIdValueClass.getName(),
 							getJavaType().getJavaType().getTypeName()
 					)
 			);
@@ -164,10 +169,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return normalizedValue;
 		}
 		return getJavaType().coerce( normalizedValue, this );
-	}
-
-	public SingularAttributeMapping getAttribute() {
-		return attribute;
 	}
 
 	@Override
@@ -241,21 +242,19 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return attribute.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return attribute.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return attribute.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return attribute.forEachJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
@@ -271,5 +270,15 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public AttributeMapping asAttributeMapping() {
+		return getAttribute();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return attribute.hasPartitionedSelectionMapping();
 	}
 }

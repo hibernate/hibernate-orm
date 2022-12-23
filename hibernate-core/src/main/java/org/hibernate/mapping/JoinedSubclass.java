@@ -9,11 +9,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 
 /**
- * A subclass in a table-per-subclass mapping
+ * A mapping model object that represents a subclass in a "joined" or
+ * {@linkplain jakarta.persistence.InheritanceType#JOINED "table per subclass"}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class JoinedSubclass extends Subclass implements TableOwner {
@@ -41,9 +44,9 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		this.key = key;
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		super.validate(mapping);
-		if ( key!=null && !key.isValid(mapping) ) {
+		if ( key != null && !key.isValid( mapping ) ) {
 			throw new MappingException(
 					"subclass key mapping has wrong number of columns: " +
 					getEntityName() +
@@ -53,7 +56,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	public Iterator<Property> getReferenceablePropertyIterator() {
 		return getPropertyIterator();
 	}

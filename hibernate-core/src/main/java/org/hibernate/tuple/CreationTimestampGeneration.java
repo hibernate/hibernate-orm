@@ -6,20 +6,30 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.dialect.Dialect;
 
 /**
- * Value generation implementation for {@link CreationTimestamp}.
+ * Value generation implementation for {@link CreationTimestamp}, no longer used.
  *
  * @author Gunnar Morling
+ *
+ * @deprecated use {@link org.hibernate.generator.internal.CurrentTimestampGeneration}
  */
+@Internal
+@Deprecated(since = "6.2") @Remove
 public class CreationTimestampGeneration implements AnnotationValueGeneration<CreationTimestamp> {
 
 	private ValueGenerator<?> generator;
 
 	@Override
 	public void initialize(CreationTimestamp annotation, Class<?> propertyType) {
-		generator = TimestampGenerators.get(propertyType);
+		if ( annotation.source() == SourceType.VM ) {
+			generator = TimestampGenerators.get( propertyType );
+		}
 	}
 
 	@Override
@@ -39,6 +49,11 @@ public class CreationTimestampGeneration implements AnnotationValueGeneration<Cr
 
 	@Override
 	public String getDatabaseGeneratedReferencedColumnValue() {
-		return null;
+		return "current_timestamp";
+	}
+
+	@Override
+	public String getDatabaseGeneratedReferencedColumnValue(Dialect dialect) {
+		return dialect.currentTimestamp();
 	}
 }

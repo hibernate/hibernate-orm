@@ -27,7 +27,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class Expectations {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Expectations.class );
 
-	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
+	private static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;
@@ -115,6 +115,11 @@ public class Expectations {
 		}
 
 		@Override
+		public int getNumberOfParametersUsed() {
+			return 1;
+		}
+
+		@Override
 		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
 			toCallableStatement( statement ).registerOutParameter( parameterPosition, Types.NUMERIC );
 			return 1;
@@ -137,7 +142,7 @@ public class Expectations {
 		}
 
 		private CallableStatement toCallableStatement(PreparedStatement statement) {
-			if ( !CallableStatement.class.isInstance( statement ) ) {
+			if ( !(statement instanceof CallableStatement) ) {
 				throw new HibernateException(
 						"BasicParamExpectation operates exclusively on CallableStatements : " + statement.getClass()
 				);

@@ -6,59 +6,74 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
+import org.hibernate.Remove;
 
 /**
- * Enumeration for the different interaction modes between the session and
- * the Level 2 Cache.
+ * Enumerates the different interaction modes between the session
+ * and the second-level Cache. This enumeration is isomorphic to
+ * {@link CacheMode} and exists only for historical reasons.
  *
  * @author Emmanuel Bernard
  * @author Carlos Gonzalez-Cadenas
+ *
+ * @deprecated use {@link CacheMode} or
+ *             {@link jakarta.persistence.CacheStoreMode} and
+ *             {@link jakarta.persistence.CacheRetrieveMode}.
  */
+@Deprecated(since = "6.2") @Remove
 public enum CacheModeType {
 	/**
 	 * Corresponds to {@link CacheMode#GET}.
 	 *
 	 * @see CacheMode#GET
 	 */
-	GET( CacheMode.GET ),
+	GET,
 
 	/**
 	 * Corresponds to {@link CacheMode#IGNORE}.
 	 *
 	 * @see CacheMode#IGNORE
 	 */
-	IGNORE( CacheMode.IGNORE ),
+	IGNORE,
 
 	/**
 	 * Corresponds to {@link CacheMode#NORMAL}.
 	 *
 	 * @see CacheMode#NORMAL
 	 */
-	NORMAL( CacheMode.NORMAL ),
+	NORMAL,
 
 	/**
 	 * Corresponds to {@link CacheMode#PUT}.
 	 *
 	 * @see CacheMode#PUT
 	 */
-	PUT( CacheMode.PUT ),
+	PUT,
 
 	/**
 	 * Corresponds to {@link CacheMode#REFRESH}.
 	 *
 	 * @see CacheMode#REFRESH
 	 */
-	REFRESH( CacheMode.REFRESH );
-
-	private final CacheMode cacheMode;
-
-	private CacheModeType(CacheMode cacheMode) {
-		this.cacheMode = cacheMode;
-	}
+	REFRESH;
 
 	public CacheMode getCacheMode() {
-		return cacheMode;
+		switch (this) {
+			case GET:
+				return CacheMode.GET;
+			case IGNORE:
+				return CacheMode.IGNORE;
+			case NORMAL:
+				return CacheMode.NORMAL;
+			case PUT:
+				return CacheMode.PUT;
+			case REFRESH:
+				return CacheMode.REFRESH;
+			default:
+				throw new AssertionFailure( "Unknown CacheModeType" );
+		}
 	}
 
 	/**
@@ -66,7 +81,8 @@ public enum CacheModeType {
 	 *
 	 * @param cacheMode The cache mode to convert
 	 *
-	 * @return The corresponding enum value.  Will be {@code null} if the given {@code accessType} is {@code null}.
+	 * @return The corresponding enum value.
+	 *         Will be {@code null} if the given {@code accessType} is {@code null}.
 	 */
 	public static CacheModeType fromCacheMode(CacheMode cacheMode) {
 		if ( null == cacheMode ) {
@@ -74,24 +90,18 @@ public enum CacheModeType {
 		}
 
 		switch ( cacheMode ) {
-			case NORMAL: {
+			case NORMAL:
 				return NORMAL;
-			}
-			case GET: {
+			case GET:
 				return GET;
-			}
-			case PUT: {
+			case PUT:
 				return PUT;
-			}
-			case REFRESH: {
+			case REFRESH:
 				return REFRESH;
-			}
-			case IGNORE: {
+			case IGNORE:
 				return IGNORE;
-			}
-			default: {
+			default:
 				throw new IllegalArgumentException( "Unrecognized CacheMode : " + cacheMode );
-			}
 		}
 	}
 }

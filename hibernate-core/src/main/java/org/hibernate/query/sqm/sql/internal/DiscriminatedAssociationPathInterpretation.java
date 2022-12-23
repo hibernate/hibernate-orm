@@ -45,12 +45,8 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 				(selectionIndex, selectableMapping) -> {
 					final TableReference tableReference = tableGroup.resolveTableReference( sqmPath.getNavigablePath(), selectableMapping.getContainingTableExpression() );
 					final Expression expression = converter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-							processingState -> new ColumnReference(
-									tableReference,
-									selectableMapping,
-									converter.getCreationContext().getSessionFactory()
-							)
+							tableReference,
+							selectableMapping
 					);
 					tupleExpressions.add( expression );
 				}

@@ -12,9 +12,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Extension contract for BasicType implementations that understand how to
- * adjust themselves relative to where/how they are used (e.g. accounting
- * for LOB, nationalized, primitive/wrapper, etc).
+ * Extension contract for {@link BasicType} implementations which understand how to
+ * adjust themselves relative to where/how they're used by, for example, accounting
+ * for LOB, nationalized, primitive/wrapper, etc.
  */
 public interface AdjustableBasicType<J> extends BasicType<J> {
 	/**
@@ -30,6 +30,13 @@ public interface AdjustableBasicType<J> extends BasicType<J> {
 			if ( resolvedJdbcType != jdbcType ) {
 				return indicators.getTypeConfiguration().getBasicTypeRegistry()
 						.resolve( domainJtd, resolvedJdbcType, getName() );
+			}
+		}
+		else {
+			final int resolvedJdbcTypeCode = indicators.resolveJdbcTypeCode( jdbcType.getDefaultSqlTypeCode() );
+			if ( resolvedJdbcTypeCode != jdbcType.getDefaultSqlTypeCode() ) {
+				return indicators.getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( domainJtd, indicators.getJdbcType( resolvedJdbcTypeCode ), getName() );
 			}
 		}
 		return (BasicType<X>) this;

@@ -208,14 +208,12 @@ public class TableBasedUpdateHandler
 		}
 
 		return new UpdateExecutionDelegate(
-				getSqmUpdate(),
 				converterDelegate,
 				idTable,
 				afterUseAction,
 				sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,
-				hierarchyRootTableReference,
 				tableReferenceByAlias,
 				assignments,
 				predicateCollector.getPredicate(),

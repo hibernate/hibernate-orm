@@ -59,6 +59,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 		final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( EntityWithEnumeratedAttributes.class )
 				.buildMetadata();
+		mappings.orderColumns( false );
 		mappings.validate();
 
 		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeRegistry();
@@ -78,7 +79,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );
 		final int expectedJdbcTypeCode = jdbcRegistry.getDescriptor(
 				expectedJpaEnumType == EnumType.ORDINAL ?
-						Types.SMALLINT :
+						Types.TINYINT :
 						Types.VARCHAR
 		).getJdbcTypeCode();
 		assertThat(

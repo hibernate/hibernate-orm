@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
@@ -27,8 +28,28 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @see jakarta.persistence.EmbeddedId
  * @see jakarta.persistence.Embeddable
  */
-public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
+public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
 	EmbeddableMappingType getEmbeddableTypeDescriptor();
+
+	@Override
+	default EmbeddableMappingType getMappedType() {
+		return getEmbeddableTypeDescriptor();
+	}
+
+	@Override
+	default ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		return getEmbeddableTypeDescriptor().findSubPart( name, treatTargetType );
+	}
+
+	@Override
+	default void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		getEmbeddableTypeDescriptor().forEachSubPart( consumer, treatTarget );
+	}
+
+	@Override
+	default void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		getEmbeddableTypeDescriptor().visitSubParts( consumer, treatTargetType );
+	}
 
 	@Override
 	default int getJdbcTypeCount() {
@@ -48,11 +69,15 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	@Override
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return getEmbeddableTypeDescriptor().forEachJdbcValue( value, offset, valuesConsumer, session );
+	}
+
+	@Override
+	default SelectableMapping getSelectable(int columnIndex) {
+		return getEmbeddableTypeDescriptor().getSelectable( columnIndex );
 	}
 
 	@Override
@@ -63,13 +88,11 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	@Override
 	default int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
 				value,
-				clause,
 				offset,
 				valuesConsumer,
 				session
@@ -80,14 +103,6 @@ public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, Fetchab
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().disassemble( value, session );
 	}
-
-	/**
-	 * The main table expression (table name or subselect) that usually contains
-	 * most of the columns to which this embedded is mapped.
-	 *
-	 * @apiNote Hibernate has historically required a composite to be mapped to the same table.
-	 */
-	String getContainingTableExpression();
 
 	/**
 	 * @see org.hibernate.annotations.Parent

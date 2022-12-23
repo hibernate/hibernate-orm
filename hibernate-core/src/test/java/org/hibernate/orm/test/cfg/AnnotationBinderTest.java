@@ -6,23 +6,26 @@
  */
 package org.hibernate.orm.test.cfg;
 
-import static org.junit.Assert.assertTrue;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.internal.EntityBinder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.CoreMessageLogger;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.jboss.logging.Logger;
-import org.junit.Rule;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Dominique Toupin
@@ -32,7 +35,7 @@ public class AnnotationBinderTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() ) );
+			Logger.getMessageLogger( CoreMessageLogger.class, EntityBinder.class.getName() ) );
 
 	@Test
 	public void testInvalidPrimaryKeyJoinColumnAnnotationMessageContainsClassName() throws Exception {
@@ -47,7 +50,7 @@ public class AnnotationBinderTest {
 
 			assertTrue( "Expected warning HHH00137 but it wasn't triggered", triggerable.wasTriggered() );
 			assertTrue(
-					"Expected invalid class name in warning HHH00137 message but it does not apper to be present; got " + triggerable.triggerMessage(),
+					"Expected invalid class name in warning HHH00137 message but it does not appear to be present; got " + triggerable.triggerMessage(),
 					triggerable.triggerMessage()
 							.matches( ".*\\b\\Q" + InvalidPrimaryKeyJoinColumnAnnotationEntity.class.getName() + "\\E\\b.*" )
 			);

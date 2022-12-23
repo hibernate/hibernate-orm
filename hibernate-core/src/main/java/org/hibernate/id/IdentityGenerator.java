@@ -6,148 +6,57 @@
  */
 package org.hibernate.id;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.insert.AbstractReturningDelegate;
-import org.hibernate.id.insert.AbstractSelectingDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
+import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.InsertSelectIdentityInsert;
+import org.hibernate.id.insert.InsertReturningDelegate;
 
 /**
- * A generator for use with ANSI-SQL IDENTITY columns used as the primary key.
- * The IdentityGenerator for autoincrement/identity key generation.
+ * An {@link OnExecutionGenerator} that handles {@code IDENTITY}/"autoincrement" columns
+ * on those databases which support them.
  * <p>
- * Indicates to the {@code Session} that identity (ie. identity/autoincrement
- * column) key generation should be used.
+ * Delegates to the {@link org.hibernate.dialect.identity.IdentityColumnSupport} provided
+ * by the {@linkplain Dialect#getIdentityColumnSupport() dialect}.
+ * <p>
+ * The actual work involved in retrieving the primary key value is the job of a
+ * {@link org.hibernate.id.insert.InsertGeneratedIdentifierDelegate}, either:
+ * <ul>
+ * <li>a {@link org.hibernate.id.insert.GetGeneratedKeysDelegate},
+ * <li>an {@link org.hibernate.id.insert.InsertReturningDelegate}, or a
+ * <li>a {@link org.hibernate.id.insert.BasicSelectingDelegate}.
+ * </ul>
+ *
+ * @see org.hibernate.dialect.identity.IdentityColumnSupport
+ * @see org.hibernate.id.insert.InsertGeneratedIdentifierDelegate
  *
  * @author Christoph Sturm
  */
-public class IdentityGenerator extends AbstractPostInsertGenerator {
+public class IdentityGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect,
-			boolean isGetGeneratedKeysEnabled) throws HibernateException {
-		if ( isGetGeneratedKeysEnabled ) {
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return dialect.getIdentityColumnSupport().hasIdentityInsertKeyword();
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return new String[] { dialect.getIdentityColumnSupport().getIdentityInsertString() };
+	}
+
+	@Override
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
+		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+		if ( persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
 		}
 		else if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
-			return new InsertSelectDelegate( persister, dialect );
+			return new InsertReturningDelegate( persister, dialect );
 		}
 		else {
-			return new BasicDelegate( persister, dialect );
+			return new BasicSelectingDelegate( persister, dialect );
 		}
 	}
-
-
-
-	/**
-	 * Delegate for dealing with IDENTITY columns where the dialect supports returning
-	 * the generated IDENTITY value directly from the insert statement.
-	 */
-	public static class InsertSelectDelegate
-			extends AbstractReturningDelegate
-			implements InsertGeneratedIdentifierDelegate {
-		private final PostInsertIdentityPersister persister;
-		private final Dialect dialect;
-
-		public InsertSelectDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-			super( persister );
-			this.persister = persister;
-			this.dialect = dialect;
-		}
-
-		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-			InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
-			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
-			return insert;
-		}
-
-		@Override
-		public String prepareIdentifierGeneratingInsert(String insertSQL) {
-			return dialect.getIdentityColumnSupport().appendIdentitySelectToInsert( insertSQL );
-		}
-
-		@Override
-		protected PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException {
-			return session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
-		}
-
-		@Override
-		public Object executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
-				throws SQLException {
-			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().execute( insert );
-			try {
-				return IdentifierGeneratorHelper.getGeneratedIdentity(
-						rs,
-						persister.getRootTableKeyColumnNames()[0],
-						persister.getIdentifierType(),
-						session.getJdbcServices().getJdbcEnvironment().getDialect()
-				);
-			}
-			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, insert );
-			}
-		}
-
-		public Object determineGeneratedIdentifier(SharedSessionContractImplementor session, Object entity) {
-			throw new AssertionFailure( "insert statement returns generated value" );
-		}
-	}
-
-	/**
-	 * Delegate for dealing with IDENTITY columns where the dialect requires an
-	 * additional command execution to retrieve the generated IDENTITY value
-	 */
-	public static class BasicDelegate
-			extends AbstractSelectingDelegate
-			implements InsertGeneratedIdentifierDelegate {
-		private final PostInsertIdentityPersister persister;
-		private final Dialect dialect;
-
-		public BasicDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-			super( persister );
-			this.persister = persister;
-			this.dialect = dialect;
-		}
-
-		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-			IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
-			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
-			return insert;
-		}
-
-		@Override
-		protected String getSelectSQL() {
-			return persister.getIdentitySelectString();
-		}
-
-		@Override
-		protected Object getResult(
-				SharedSessionContractImplementor session,
-				ResultSet rs,
-				Object object) throws SQLException {
-			return IdentifierGeneratorHelper.getGeneratedIdentity(
-					rs,
-					persister.getRootTableKeyColumnNames()[0],
-					persister.getIdentifierType(),
-					session.getJdbcServices().getJdbcEnvironment().getDialect()
-			);
-		}
-	}
-
 }

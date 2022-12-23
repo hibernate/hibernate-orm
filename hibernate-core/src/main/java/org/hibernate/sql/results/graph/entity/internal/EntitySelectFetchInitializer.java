@@ -18,15 +18,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -89,6 +88,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( np instanceof EntityIdentifierNavigablePath
 					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
 					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
+
 				initializeInstance( rowProcessingState );
 				return;
 			}
@@ -129,24 +129,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
 		if ( entityInstance != null ) {
-			isInitialized = true;
-			return;
-		}
-
-		Initializer initializer = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.findInitializer( entityKey );
-
-		if ( initializer != null ) {
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
-				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-						"(%s) Found an initializer for entity (%s) : %s",
-						CONCRETE_NAME,
-						toLoggableString( getNavigablePath(), entityIdentifier ),
-						entityIdentifier
-				);
-			}
-			initializer.resolveInstance( rowProcessingState );
-			entityInstance = initializer.getInitializedInstance();
 			isInitialized = true;
 			return;
 		}
@@ -217,25 +199,15 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 
 		final boolean unwrapProxy = toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading;
-		if ( entityInstance instanceof HibernateProxy ) {
-			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+		if ( lazyInitializer != null ) {
+			lazyInitializer.setUnwrap( unwrapProxy );
 		}
 		isInitialized = true;
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
-		if ( parentAccess instanceof EntityInitializer ) {
-			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
-			if ( concreteDescriptor.isPolymorphic() ) {
-				final AbstractEntityPersister declaringType = (AbstractEntityPersister) toOneMapping.getDeclaringType();
-				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
+		return isAttributeAssignableToConcreteDescriptor( parentAccess, toOneMapping );
 	}
 
 	@Override

@@ -7,32 +7,33 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDerivedJoin<T> {
+public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements JpaDerivedJoin<T> {
 	private final SqmSubQuery<T> subQuery;
 	private final boolean lateral;
-	private SqmPredicate joinPredicate;
 
 	public SqmDerivedJoin(
 			SqmSubQuery<T> subQuery,
@@ -106,11 +107,6 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		return path;
 	}
 
-	protected void copyTo(SqmDerivedJoin<T> target, SqmCopyContext context) {
-		super.copyTo( target, context );
-		target.joinPredicate = joinPredicate == null ? null : joinPredicate.copy( context );
-	}
-
 	public SqmRoot<?> getRoot() {
 		return (SqmRoot<?>) super.getLhs();
 	}
@@ -137,13 +133,23 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public SqmPredicate getJoinPredicate() {
-		return joinPredicate;
+	public SqmDerivedJoin<T> on(JpaExpression<Boolean> restriction) {
+		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
 
 	@Override
-	public void setJoinPredicate(SqmPredicate predicate) {
-		this.joinPredicate = predicate;
+	public SqmDerivedJoin<T> on(Expression<Boolean> restriction) {
+		return (SqmDerivedJoin<T>) super.on( restriction );
+	}
+
+	@Override
+	public SqmDerivedJoin<T> on(JpaPredicate... restrictions) {
+		return (SqmDerivedJoin<T>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmDerivedJoin<T> on(Predicate... restrictions) {
+		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
 	@Override
@@ -156,28 +162,26 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 
 	@Override
 	public SqmCorrelatedEntityJoin<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception(getClass());
-//		return new SqmCorrelatedEntityJoin<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 	@Override
-	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Derived joins can not be treated!" );
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 }

@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
@@ -20,9 +19,9 @@ import org.hibernate.pretty.MessageHelper;
  * Uniquely identifies of an entity instance in a particular Session by identifier.
  * Note that it's only safe to be used within the scope of a Session: it doesn't consider for example the tenantId
  * as part of the equality definition.
- * <p/>
+ * <p>
  * Information used to determine uniqueness consists of the entity-name and the identifier value (see {@link #equals}).
- * <p/>
+ * <p>
  * Performance considerations: lots of instances of this type are created at runtime. Make sure each one is as small as possible
  * by storing just the essential needed.
  *
@@ -37,7 +36,7 @@ public final class EntityKey implements Serializable {
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
-	 * <p/>
+	 * <p>
 	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
 	 * the Session to which this key belongs.  To help minimize the impact of these changes in the future, the
 	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
@@ -102,12 +101,8 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {
-		if ( otherKey.persister == persister ) {
-			return true;
-		}
-		else {
-			return Objects.equals( otherKey.persister.getRootEntityName(), persister.getRootEntityName() );
-		}
+		return otherKey.persister == persister
+			|| otherKey.persister.getRootEntityName().equals( persister.getRootEntityName() );
 	}
 
 	@Override
@@ -117,8 +112,7 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" +
-				MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+		return "EntityKey" + MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
 	}
 
 	/**

@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -39,7 +38,7 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 
 	@Override
 	public EmbeddableValuedModelPart getEmbedded(String role) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "Locating EmbeddableValuedModelPart by (String) role is not supported" );
 	}
 
 	@Override

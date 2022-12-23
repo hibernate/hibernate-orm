@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -18,7 +17,6 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -28,7 +26,6 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 
@@ -57,6 +54,39 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		booleanExpressionPredicate.getExpression().accept( this );
 		if ( isNegated ) {
 			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
+		// Even though HSQL supports the array constructor, it's illegal to use arrays in CTEs
+		return false;
+	}
+
+	@Override
+	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+		// HSQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
+		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
+		if ( sizeEstimate == -1 ) {
+			super.visitRecursivePath( recursivePath, sizeEstimate );
+		}
+		else {
+			appendSql( "cast(" );
+			recursivePath.accept( this );
+			appendSql( " as varchar(" );
+			appendSql( sizeEstimate );
+			appendSql( "))" );
 		}
 	}
 
@@ -162,25 +192,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected LockStrategy determineLockingStrategy(
-			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		if ( getDialect().getVersion().isBefore( 2 ) ) {
-			return LockStrategy.NONE;
-		}
-		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 2 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( supportsOffsetFetchClause() ) {
 			assertRowsOnlyFetchClauseType( queryPart );
@@ -189,16 +200,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		else {
 			renderLimitOffsetClause( queryPart );
 		}
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// HSQL does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// HSQL does not support this, but it can be emulated
 	}
 
 	@Override
@@ -251,7 +252,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
@@ -284,7 +285,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion().isSameOrAfter( 2, 5 );
+		return true;
 	}
 
 	@Override

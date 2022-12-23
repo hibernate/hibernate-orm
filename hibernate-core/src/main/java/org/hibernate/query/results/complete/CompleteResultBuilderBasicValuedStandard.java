@@ -11,11 +11,13 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -71,56 +73,20 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
-
+		final int jdbcPosition;
 		final String columnName;
 		if ( explicitColumnName != null ) {
+			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
 			columnName = explicitColumnName;
 		}
 		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
+			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
+			columnName = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 		}
-
-//		final int jdbcPosition;
-//		if ( explicitColumnName != null ) {
-//			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-//		}
-//		else {
-//			jdbcPosition = resultPosition + 1;
-//		}
-//
-//		final BasicValuedMapping basicType;
-//		if ( explicitType != null ) {
-//			basicType = explicitType;
-//		}
-//		else {
-//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType );
-//		}
-//
-//		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-//				creationStateImpl.resolveSqlExpression(
-//						columnName,
-//						processingState -> {
-//							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-//							return new SqlSelectionImpl( valuesArrayPosition, basicType );
-//						}
-//				),
-//				basicType.getExpressibleJavaType(),
-//				sessionFactory.getTypeConfiguration()
-//		);
-
-
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
-						columnName,
+						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						processingState -> {
-							final int jdbcPosition;
-							if ( explicitColumnName != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-							}
-							else {
-								jdbcPosition = resultPosition + 1;
-							}
-
 							final BasicValuedMapping basicType;
 							if ( explicitType != null ) {
 								basicType = explicitType;
@@ -142,10 +108,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				sessionFactory.getTypeConfiguration()
 		);
 
+		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getJdbcMappings().get( 0 );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				sqlSelection.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaType()
+				jdbcMapping
 		);
 	}
 

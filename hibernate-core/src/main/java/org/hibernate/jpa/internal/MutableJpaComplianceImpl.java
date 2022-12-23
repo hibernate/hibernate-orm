@@ -27,7 +27,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
 
-	public MutableJpaComplianceImpl(Map configurationSettings) {
+	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
 		this(
 				configurationSettings,
 				ConfigurationHelper.getBoolean(
@@ -39,9 +39,10 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	public MutableJpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
+	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
 
+		//noinspection deprecation
 		listCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_LIST_COMPLIANCE,
 				configurationSettings,
@@ -62,31 +63,26 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
-
 		queryCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_QUERY_COMPLIANCE,
 				configurationSettings,
 				ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
 		);
-
 		transactionCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_TRANSACTION_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-
 		closedCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_CLOSED_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-
 		cachingCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_CACHING_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-
 		loadByIdCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE,
 				configurationSettings,

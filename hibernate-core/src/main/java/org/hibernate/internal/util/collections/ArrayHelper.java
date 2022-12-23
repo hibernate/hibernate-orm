@@ -18,13 +18,22 @@ import java.util.function.Consumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
 
 	public static boolean contains(Object[] array, Object object) {
 		return indexOf( array, object ) > -1;
+	}
+
+	public static boolean contains(int[] array, int value) {
+		for ( int i = 0; i < array.length; i++ ) {
+			if ( array[i] == value ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static int indexOf(Object[] array, Object object) {
@@ -247,6 +256,15 @@ public final class ArrayHelper {
 		return true;
 	}
 
+	public static boolean isAnyTrue(boolean... values) {
+		for ( boolean value : values ) {
+			if ( value ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean[] negate(boolean[] valueNullness) {
 		boolean[] result = new boolean[valueNullness.length];
 		for (int i = 0; i < valueNullness.length; i++) {
@@ -268,36 +286,36 @@ public final class ArrayHelper {
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
 
-	public static int[] getBatchSizes(int maxBatchSize) {
-		int batchSize = maxBatchSize;
-		int n = 1;
-		while ( batchSize > 1 ) {
-			batchSize = getNextBatchSize( batchSize );
-			n++;
-		}
-		int[] result = new int[n];
-		batchSize = maxBatchSize;
-		for ( int i = 0; i < n; i++ ) {
-			result[i] = batchSize;
-			batchSize = getNextBatchSize( batchSize );
-		}
-		return result;
-	}
+//	public static int[] getBatchSizes(int maxBatchSize) {
+//		int batchSize = maxBatchSize;
+//		int n = 1;
+//		while ( batchSize > 1 ) {
+//			batchSize = getNextBatchSize( batchSize );
+//			n++;
+//		}
+//		int[] result = new int[n];
+//		batchSize = maxBatchSize;
+//		for ( int i = 0; i < n; i++ ) {
+//			result[i] = batchSize;
+//			batchSize = getNextBatchSize( batchSize );
+//		}
+//		return result;
+//	}
+//
+//	private static int getNextBatchSize(int batchSize) {
+//		if ( batchSize <= 10 ) {
+//			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
+//		}
+//		else if ( batchSize / 2 < 10 ) {
+//			return 10;
+//		}
+//		else {
+//			return batchSize / 2;
+//		}
+//	}
 
-	private static int getNextBatchSize(int batchSize) {
-		if ( batchSize <= 10 ) {
-			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
-		}
-		else if ( batchSize / 2 < 10 ) {
-			return 10;
-		}
-		else {
-			return batchSize / 2;
-		}
-	}
-
-	private static int SEED = 23;
-	private static int PRIME_NUMBER = 37;
+	private static final int SEED = 23;
+	private static final int PRIME_NUMBER = 37;
 
 	/**
 	 * calculate the array hash (only the first level)
@@ -404,21 +422,6 @@ public final class ArrayHelper {
 			return new ArrayList<>();
 		}
 		return Arrays.asList( values );
-	}
-
-	@AllowSysOut
-	public static void main(String... args) {
-		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );
-
-		System.out.println( "Forward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		for ( int i = 0; i < batchSizes.length; i++ ) {
-			System.out.println( "[" + i + "] -> " + batchSizes[i] );
-		}
-
-		System.out.println( "Backward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		for ( int i = batchSizes.length - 1; i >= 0; i-- ) {
-			System.out.println( "[" + i + "] -> " + batchSizes[i] );
-		}
 	}
 
 	public static boolean isEmpty(Object[] array) {

@@ -6,14 +6,13 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 
 import jakarta.persistence.criteria.Expression;
 
@@ -73,7 +72,9 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		return Collections.singletonList( booleanExpression );
+		final List<Expression<Boolean>> expressions = new ArrayList<>( 1 );
+		expressions.add( booleanExpression );
+		return expressions;
 	}
 
 	@Override

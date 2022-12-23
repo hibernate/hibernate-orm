@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.generated;
 
-import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.RequiresDialect;

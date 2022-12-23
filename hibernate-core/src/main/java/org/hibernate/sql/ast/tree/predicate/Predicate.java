@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
@@ -36,16 +37,15 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 	default DomainResult<Boolean> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final JavaType javaType = getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		final JdbcMapping jdbcMapping = getExpressionType().getJdbcMappings().get( 0 );
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
-				javaType,
+				jdbcMapping.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
 
-		//noinspection unchecked
-		return new BasicResult( sqlSelection.getValuesArrayPosition(), resultVariable, javaType );
+		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultVariable, jdbcMapping );
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

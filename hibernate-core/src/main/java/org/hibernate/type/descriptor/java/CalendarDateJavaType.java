@@ -39,7 +39,7 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.DATE );
+		return context.getJdbcType( Types.DATE );
 	}
 
 	@Override
@@ -61,12 +61,12 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	public String toString(Calendar value) {
-		return DateJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcDateJavaType.INSTANCE.toString( value.getTime() );
 	}
 
 	public Calendar fromString(CharSequence string) {
 		Calendar result = new GregorianCalendar();
-		result.setTime( DateJavaType.INSTANCE.fromString( string.toString() ) );
+		result.setTime( JdbcDateJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
 
@@ -131,6 +131,16 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		Calendar cal = new GregorianCalendar();
 		cal.setTime( (Date) value );
 		return cal;
+	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override

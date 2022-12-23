@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 
+import org.hibernate.QueryException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
@@ -115,8 +116,6 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-11957")
 	public void testSubstrWithStringUnits() {
 
-		mostRecentStatementInspector.clear();
-
 		try {
 			doInHibernate(
 					this::sessionFactory, session -> {
@@ -129,12 +128,9 @@ public class DB297SubStringFunctionsTest extends BaseCoreFunctionalTestCase {
 			);
 			fail( "Should have failed because substr cannot be used with string units." );
 		}
-		catch (PersistenceException expected) {
-			assertTrue( SQLGrammarException.class.isInstance( expected.getCause() ) );
+		catch (IllegalArgumentException expected) {
+			assertTrue( QueryException.class.isInstance( expected.getCause() ) );
 		}
-
-		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "substr(" ) );
-		assertTrue( mostRecentStatementInspector.mostRecentSql.contains( "octets" ) );
 	}
 
 	@Test

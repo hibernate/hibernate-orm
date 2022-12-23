@@ -64,14 +64,6 @@ public class CommonFunctionFactory {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// trigonometric/geometric functions
 
-	public void cosh() {
-		functionRegistry.namedDescriptorBuilder( "cosh" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
-	}
-
 	public void cot() {
 		functionRegistry.namedDescriptorBuilder( "cot" )
 				.setExactArgumentCount( 1 )
@@ -80,14 +72,9 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void degrees() {
-		functionRegistry.namedDescriptorBuilder( "degrees" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
-				.register();
-	}
-
+	/**
+	 * For databases where the first parameter is the base
+	 */
 	public void log() {
 		functionRegistry.namedDescriptorBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
@@ -96,6 +83,42 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void log_ln() {
+		functionRegistry.patternDescriptorBuilder( "log", "ln(?2)/ln(?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * SQL Server defines parameters in reverse order
+	 */
+	public void log_log() {
+		functionRegistry.patternDescriptorBuilder( "log", "log(?2,?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * For Sybase
+	 */
+	public void log_loglog() {
+		functionRegistry.patternDescriptorBuilder( "log", "log(?2)/log(?1)" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	/**
+	 * For SQL Server and Sybase
+	 */
 	public void ln_log() {
 		functionRegistry.namedDescriptorBuilder( "ln", "log" )
 				.setInvariantType(doubleType)
@@ -139,6 +162,36 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * For Oracle, HANA
+	 */
+	public void radians_acos() {
+		functionRegistry.patternDescriptorBuilder( "radians", "(?1*acos(-1)/180)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	public void degrees() {
+		functionRegistry.namedDescriptorBuilder( "degrees" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	/**
+	 * For Oracle, HANA
+	 */
+	public void degrees_acos() {
+		functionRegistry.patternDescriptorBuilder( "degrees", "(?1/acos(-1)*180)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
 	public void sinh() {
 		functionRegistry.namedDescriptorBuilder( "sinh" )
 				.setExactArgumentCount( 1 )
@@ -147,8 +200,40 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void sinh_exp() {
+		functionRegistry.patternDescriptorBuilder( "sinh", "((exp(?1)-exp(-?1))/2)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void cosh() {
+		functionRegistry.namedDescriptorBuilder( "cosh" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void cosh_exp() {
+		functionRegistry.patternDescriptorBuilder( "cosh", "((exp(?1)+exp(-?1))/2)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
 	public void tanh() {
 		functionRegistry.namedDescriptorBuilder( "tanh" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void tanh_exp() {
+		functionRegistry.patternDescriptorBuilder( "tanh", "((exp(2*?1)-1)/(exp(2*?1)+1))" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.setInvariantType(doubleType)
@@ -178,11 +263,82 @@ public class CommonFunctionFactory {
 
 	public void trunc() {
 		functionRegistry.namedDescriptorBuilder( "trunc" )
+				.setReturnTypeResolver( useArgType( 1 ) )
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(doubleType)
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * MySQL
+	 */
+	public void trunc_truncate() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"truncate(?1,0)",
+				"truncate(?1,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * SQL Server
+	 */
+	public void trunc_round() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"round(?1,0,1)",
+				"round(?1,?2,1)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Sybase
+	 */
+	public void trunc_floorPower() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"sign(?1)*floor(abs(?1))",
+				"sign(?1)*floor(abs(?1)*power(10,?2))/power(10,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * PostgreSQL (only works if the second arg is constant, as it almost always is)
+	 */
+	public void trunc_truncFloor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"trunc(?1)",
+				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Derby (only works if the second arg is constant, as it almost always is)
+	 */
+	public void trunc_floor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"sign(?1)*floor(abs(?1))",
+				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	public void truncate() {
@@ -240,10 +396,25 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 */
+	public void median_percentileCont_castDouble() {
+		functionRegistry.patternDescriptorBuilder(
+						"median",
+						"percentile_cont(0.5) within group (order by cast(?1 as double precision))"
+				)
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
-	 *
-	 * - On Postgres it means stdev_samp()
-	 * - On Oracle, DB2, MySQL it means stdev_pop()
+	 * <ul>
+	 * <li>On Postgres it means {@code stdev_samp()}
+	 * <li>On Oracle, DB2, MySQL it means {@code  stdev_pop()}
+	 * </ul>
 	 */
 	public void stddev() {
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev" )
@@ -255,9 +426,10 @@ public class CommonFunctionFactory {
 
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
-	 *
-	 * - On Postgres it means var_samp()
-	 * - On Oracle, DB2, MySQL it means var_pop()
+	 * <ul>
+	 * <li>On Postgres it means {@code var_samp()}
+	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()}
+	 * </ul>
 	 */
 	public void variance() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance" )
@@ -315,7 +487,6 @@ public class CommonFunctionFactory {
 	}
 
 	public void regrLinearRegressionAggregates() {
-
 		Arrays.asList(
 						"regr_avgx", "regr_avgy", "regr_count", "regr_intercept", "regr_r2",
 						"regr_slope", "regr_sxx", "regr_sxy", "regr_syy"
@@ -332,16 +503,35 @@ public class CommonFunctionFactory {
 	/**
 	 * DB2
 	 */
-	public void stdevVarianceSamp() {
-		functionRegistry.namedAggregateDescriptorBuilder( "stddev_samp" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
+	public void varianceSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance_samp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	private static final String VAR_SAMP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1)-1,0)";
+
+	/**
+	 * DB2 before 11
+	 */
+	public void varSamp_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_samp", VAR_SAMP_SUM_COUNT_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	/**
+	 * DB2 before 11
+	 */
+	public void stddevSamp_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "stddev_samp", "sqrt(" + VAR_SAMP_SUM_COUNT_PATTERN + ")" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -385,6 +575,15 @@ public class CommonFunctionFactory {
 		functionRegistry.noArgsBuilder( "pi" )
 				.setInvariantType(doubleType)
 				.setUseParenthesesWhenNoArgs( true )
+				.setArgumentListSignature("")
+				.register();
+	}
+
+	public void pi_acos() {
+		functionRegistry.patternDescriptorBuilder( "pi", "acos(-1)" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount(0)
+				.setArgumentListSignature("")
 				.register();
 	}
 
@@ -828,11 +1027,11 @@ public class CommonFunctionFactory {
 	 * for databases that have to emulate the boolean
 	 * aggregation functions using sum() and case.
 	 */
-	public void everyAny_sumCase() {
+	public void everyAny_sumCase(boolean supportsPredicateAsExpression) {
 		functionRegistry.register( "every",
-				new EveryAnyEmulation( typeConfiguration, true ) );
+				new EveryAnyEmulation( typeConfiguration, true, supportsPredicateAsExpression ) );
 		functionRegistry.register( "any",
-				new EveryAnyEmulation( typeConfiguration, false ) );
+				new EveryAnyEmulation( typeConfiguration, false, supportsPredicateAsExpression ) );
 	}
 
 	/**
@@ -1586,14 +1785,13 @@ public class CommonFunctionFactory {
 	/**
 	 * For DB2 which has a broken implementation of overlay()
 	 */
-	public void overlayCharacterLength_overlay() {
+	public void overlayLength_overlay(boolean withCodeUnits) {
+		final String codeUnits = withCodeUnits ? " using codeunits32" : "";
 		functionRegistry.registerTernaryQuaternaryPattern(
 						"overlay",
 						stringType,
-						//use character_length() here instead of length()
-						//because DB2 doesn't like "length(?)"
-						"overlay(?1 placing ?2 from ?3 for character_length(?2))",
-						"overlay(?1 placing ?2 from ?3 for ?4)",
+						"overlay(?1 placing ?2 from ?3 for character_length(?2" + (withCodeUnits ? ",codeunits32" : "") + ")" + codeUnits + ")",
+						"overlay(?1 placing ?2 from ?3 for ?4" + codeUnits + ")",
 						STRING, STRING, INTEGER, INTEGER,
 						typeConfiguration
 				)
@@ -1648,6 +1846,12 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Very widely supported, but we don't treat this as a "standard"
+	 * function because it's hard to emulate on any database that
+	 * doesn't have it (e.g. Derby) and because, well, ASCII. For the
+	 * same reason we don't consider chr()/char() as "standard".
+	 */
 	public void ascii() {
 		functionRegistry.namedDescriptorBuilder( "ascii" )
 				.setExactArgumentCount( 1 )
@@ -1953,13 +2157,6 @@ public class CommonFunctionFactory {
 	}
 
 	public void math() {
-		functionRegistry.namedDescriptorBuilder( "round" )
-				// To avoid truncating to a specific data type, we default to using the argument type
-				.setReturnTypeResolver( useArgType( 1 ) )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, INTEGER)
-				.register();
-
 		functionRegistry.namedDescriptorBuilder( "floor" )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
@@ -2036,12 +2233,54 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void round_floor() {
-		functionRegistry.patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
-				.setReturnTypeResolver( useArgType(1) )
-				.setExactArgumentCount( 2 )
+	public void round() {
+		functionRegistry.namedDescriptorBuilder( "round" )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType( 1 ) )
+				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
+				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
+	}
+
+	/**
+	 * SQL Server
+	 */
+	public void round_round() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"round(?1,0)",
+				"round(?1,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Derby (only works if the second arg is constant, as it almost always is)
+	 */
+	public void round_floor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"floor(?1+0.5)",
+				"floor(?1*1e?2+0.5)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+	}
+
+	/**
+	 * PostgreSQL (only works if the second arg is constant, as it almost always is)
+	 */
+	public void round_roundFloor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"round(?1)",
+				"floor(?1*1e?2+0.5)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
 	}
 
 	public void square() {
@@ -2307,6 +2546,15 @@ public class CommonFunctionFactory {
 
 	public void dateTrunc() {
 		functionRegistry.patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
+				.setInvariantType(timestampType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.register();
+	}
+
+	public void dateTrunc_trunc() {
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc(?2,'?1')" )
 				.setInvariantType(timestampType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)

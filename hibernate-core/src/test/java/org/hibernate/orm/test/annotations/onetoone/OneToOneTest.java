@@ -305,7 +305,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 		PersistentClass pc = metadata().getEntityBinding( Son.class.getName() );
 		Iterator<Join> iter = pc.getJoinIterator();
 		Table table = iter.next().getTable();
-		Iterator<Column> columnIter = table.getColumnIterator();
+        Iterator<Column> columnIter = table.getColumns().iterator();
 		boolean fooFound = false;
 		boolean barFound = false;
 		while ( columnIter.hasNext() ) {

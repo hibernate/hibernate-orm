@@ -19,6 +19,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -65,30 +66,48 @@ public class HiLoSequenceMismatchStrategyTest {
 		final ConnectionProvider connectionProvider = scope.getSessionFactory()
 				.getServiceRegistry()
 				.getService( ConnectionProvider.class );
+		scope.inSession(
+				session -> {
+					Connection connection = null;
+					final JdbcConnectionAccess jdbcConnectionAccess = session.getJdbcConnectionAccess();
+					try {
+						connection = jdbcConnectionAccess.obtainConnection();
+						try ( Statement statement = connection.createStatement() ) {
 
-		try ( Connection connection = connectionProvider.getConnection();
-			  Statement statement = connection.createStatement() ) {
+							for ( String dropSequenceStatement : dropSequenceStatements ) {
+								try {
+									statement.execute( dropSequenceStatement );
+								}
+								catch (SQLException e) {
+									System.out.printf( "TEST DEBUG : dropping sequence failed [`%s`] - %s", dropSequenceStatement, e.getMessage() );
+									System.out.println();
+									e.printStackTrace( System.out );
+									// ignore
+								}
+							}
+							// Commit in between because CockroachDB fails to drop and commit schema objects in the same transaction
+							connection.commit();
 
-			for ( String dropSequenceStatement : dropSequenceStatements ) {
-				try {
-					statement.execute( dropSequenceStatement );
+							for ( String createSequenceStatement : createSequenceStatements ) {
+								statement.execute( createSequenceStatement );
+							}
+							connection.commit();
+						}
+					}
+					catch (SQLException e) {
+						fail( e.getMessage() );
+					}
+					finally {
+						if ( connection != null ) {
+							try {
+								jdbcConnectionAccess.releaseConnection( connection );
+							}
+							catch (SQLException ignore) {
+							}
+						}
+					}
 				}
-				catch (SQLException e) {
-					System.out.printf( "TEST DEBUG : dropping sequence failed [`%s`] - %s", dropSequenceStatement, e.getMessage() );
-					System.out.println();
-					e.printStackTrace( System.out );
-					// ignore
-				}
-			}
-
-			for ( String createSequenceStatement : createSequenceStatements ) {
-				statement.execute( createSequenceStatement );
-			}
-			connection.commit();
-		}
-		catch (SQLException e) {
-			fail( e.getMessage() );
-		}
+		);
 	}
 
 	@Test

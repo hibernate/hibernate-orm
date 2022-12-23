@@ -8,6 +8,7 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 
 /**
  * Normal implementation of BatchKey
@@ -18,6 +19,13 @@ public class BasicBatchKey implements BatchKey {
 	private final String comparison;
 	private final int statementCount;
 	private final Expectation expectation;
+
+	/**
+	 * Constructs a BasicBatchKey with {@link Expectations#NONE}
+	 */
+	public BasicBatchKey(String comparison) {
+		this( comparison, Expectations.NONE );
+	}
 
 	/**
 	 * Constructs a BasicBatchKey
@@ -59,4 +67,13 @@ public class BasicBatchKey implements BatchKey {
 		return comparison.hashCode();
 	}
 
+	@Override
+	public String toLoggableString() {
+		return comparison;
+	}
+
+	@Override
+	public String toString() {
+		return "BasicBatchKey(" + comparison + ")";
+	}
 }

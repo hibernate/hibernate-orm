@@ -30,12 +30,11 @@ import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.tuple.GeneratedValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.generator.internal.GeneratedGeneration;
 
 import org.jboss.logging.Logger;
 
@@ -120,11 +119,11 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 
 	private boolean isPropertyInsertable(Property property) {
 		if ( !property.isInsertable() ) {
-			final ValueGeneration generation = property.getValueGenerationStrategy();
-			if ( generation instanceof GeneratedValueGeneration ) {
-				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
-				if ( GenerationTiming.INSERT == valueGeneration.getGenerationTiming()
-					|| GenerationTiming.ALWAYS == valueGeneration.getGenerationTiming() ) {
+			// TODO: this is now broken by changes to generators
+			final GeneratorCreator generation = property.getValueGeneratorCreator();
+			if ( generation instanceof GeneratedGeneration) {
+				final GeneratedGeneration valueGeneration = (GeneratedGeneration) generation;
+				if ( valueGeneration.generatesOnInsert() ) {
 					return true;
 				}
 			}
@@ -144,7 +143,6 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void createJoins(PersistentClass persistentClass, JoinAwarePersistentEntity entity, ClassAuditingData auditingData) {
 		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
 		final Map<org.hibernate.mapping.Join, Join> joinElements = new HashMap<>();
@@ -191,7 +189,6 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addJoins(
 			PersistentClass persistentClass,
 			CompositeMapperBuilder currentMapper,

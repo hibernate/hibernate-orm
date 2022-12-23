@@ -8,11 +8,9 @@ public class Policy {
 	@EmbeddedId
 	PolicyId id;
 
-	@JoinColumns({
-			@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME"),
-			@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName"),
-			@JoinColumn(name = "NAME", referencedColumnName = "Name")
-	})
+	@JoinColumn(name = "FIRSTNAME", referencedColumnName = "FIRSTNAME")
+	@JoinColumn(name = "LASTNAME", referencedColumnName = "lastName")
+	@JoinColumn(name = "NAME", referencedColumnName = "Name")
 	@MapsId("depPK")
 	@ManyToOne
 	Dependent dep;

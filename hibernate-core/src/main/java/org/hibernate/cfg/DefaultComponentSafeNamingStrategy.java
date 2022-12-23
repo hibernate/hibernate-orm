@@ -7,12 +7,16 @@
 package org.hibernate.cfg;
 
 import java.util.Locale;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard
+ *
+ * @deprecated {@link NamingStrategy} itself has been deprecated
  */
+@Deprecated
 public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamingStrategy {
 	public static final NamingStrategy INSTANCE = new DefaultComponentSafeNamingStrategy();
 
@@ -27,19 +31,27 @@ public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamin
 
 	@Override
 	public String collectionTableName(
-			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
-			String propertyName
-	) {
-		String entityTableName = associatedEntityTable != null ? associatedEntityTable : addUnderscores(propertyName);
+			String ownerEntity,
+			String ownerEntityTable,
+			String associatedEntity,
+			String associatedEntityTable,
+			String propertyName) {
+		final String entityTableName = associatedEntityTable != null
+				? associatedEntityTable
+				: addUnderscores(propertyName);
 		return tableName( ownerEntityTable + "_" + entityTableName );
 	}
 
 
 	public String foreignKeyColumnName(
-			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
-	) {
+			String propertyName,
+			String propertyEntityName,
+			String propertyTableName,
+			String referencedColumnName) {
 		String header = propertyName != null ? addUnderscores( propertyName ) : propertyTableName;
-		if ( header == null ) throw new AssertionFailure( "NamingStrategy not properly filled" );
+		if ( header == null ) {
+			throw new AssertionFailure( "NamingStrategy not properly filled" );
+		}
 		return columnName( header + "_" + referencedColumnName );
 	}
 
@@ -50,13 +62,15 @@ public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamin
 
 	@Override
 	public String logicalCollectionTableName(
-			String tableName, String ownerEntityTable, String associatedEntityTable, String propertyName
-	) {
+			String tableName,
+			String ownerEntityTable,
+			String associatedEntityTable,
+			String propertyName) {
 		if ( tableName != null ) {
 			return tableName;
 		}
 		else {
-			String entityTableName = associatedEntityTable != null ? associatedEntityTable : propertyName;
+			final String entityTableName = associatedEntityTable != null ? associatedEntityTable : propertyName;
 			return ownerEntityTable + "_" + entityTableName;
 		}
 

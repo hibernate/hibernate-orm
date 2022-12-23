@@ -15,6 +15,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -27,6 +28,7 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
@@ -46,48 +48,46 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final NavigablePath relativePath = creationStateImpl.getCurrentRelativePath();
+		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
 		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
 		final NavigablePath associationKeyFetchPath;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
-			associationKeyFetchPath = relativePath.append( associationKeyPropertyName );
+			associationKeyFetchPath = relativePath.getValue().append( associationKeyPropertyName );
 		}
 		else {
 			associationKeyPropertyName = fetchable.getReferencedPropertyName();
-			NavigablePath path = relativePath;
+			NavigablePath path = relativePath.getValue();
 			for ( String part : associationKeyPropertyName.split( "\\." ) ) {
 				path = path.append( part );
 			}
 			associationKeyFetchPath = path;
 		}
 		final FetchBuilder explicitAssociationKeyFetchBuilder = fetchBuilderResolver
-				.apply( associationKeyFetchPath.getFullPath() );
+				.apply( relativePath.getKey() + "." + associationKeyPropertyName );
 		final Map<NavigablePath, FetchBuilder> fetchBuilders;
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			final MappingType partMappingType = foreignKeyDescriptor.getPartMappingType();
 			if ( partMappingType instanceof EmbeddableMappingType ) {
 				final EmbeddableMappingType embeddableValuedModelPart = (EmbeddableMappingType) partMappingType;
-				fetchBuilders = new LinkedHashMap<>( embeddableValuedModelPart.getNumberOfFetchables() );
-				embeddableValuedModelPart.visitFetchables(
-						subFetchable -> {
-							final NavigablePath subFetchPath = associationKeyFetchPath.append( subFetchable.getFetchableName() );
-							final FetchBuilder explicitFetchBuilder = fetchBuilderResolver
-									.apply( subFetchPath.getFullPath() );
-							if ( explicitFetchBuilder == null ) {
-								fetchBuilders.put(
-										subFetchPath,
-										Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
-								);
-							}
-							else {
-								fetchBuilders.put( subFetchPath, explicitFetchBuilder );
-							}
-						},
-						null
-				);
+				final int size = embeddableValuedModelPart.getNumberOfFetchables();
+				fetchBuilders = CollectionHelper.linkedMapOfSize( size );
+				for ( int i = 0; i < size; i++ ) {
+					final Fetchable subFetchable = embeddableValuedModelPart.getFetchable( i );
+					final NavigablePath subFetchPath = associationKeyFetchPath.append( subFetchable.getFetchableName() );
+					final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchPath.getFullPath() );
+					if ( explicitFetchBuilder == null ) {
+						fetchBuilders.put(
+								subFetchPath,
+								Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
+						);
+					}
+					else {
+						fetchBuilders.put( subFetchPath, explicitFetchBuilder );
+					}
+				}
 			}
 			else {
 				fetchBuilders = Collections.emptyMap();

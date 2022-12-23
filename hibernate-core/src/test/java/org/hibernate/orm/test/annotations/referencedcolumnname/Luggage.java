@@ -16,7 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToMany;
 
 /**
@@ -65,10 +64,8 @@ public class Luggage implements Serializable {
 	}
 
 	@OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-	@JoinColumns({
-	@JoinColumn(name = "lug_type", referencedColumnName = "type"),
+	@JoinColumn(name = "lug_type", referencedColumnName = "type")
 	@JoinColumn(name = "lug_owner", referencedColumnName = "owner")
-			})
 	public Set<Clothes> getHasInside() {
 		return hasInside;
 	}

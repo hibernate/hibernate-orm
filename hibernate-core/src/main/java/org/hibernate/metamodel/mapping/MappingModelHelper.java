@@ -57,17 +57,15 @@ public class MappingModelHelper {
 						if ( sqlExpressionResolver == null ) {
 							colRef = new ColumnReference(
 									qualifier,
-									selection,
-									sessionFactory
+									selection
 							);
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( qualifier, selection.getSelectionExpression() ),
+									createColumnReferenceKey( qualifier, selection ),
 									sqlAstProcessingState -> new ColumnReference(
 											qualifier,
-											selection,
-											sessionFactory
+											selection
 									)
 							);
 						}
@@ -89,17 +87,15 @@ public class MappingModelHelper {
 			if ( sqlExpressionResolver == null ) {
 				return new ColumnReference(
 						qualifier,
-						basicPart,
-						sessionFactory
+						basicPart
 				);
 			}
 			else {
 				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( qualifier, basicPart.getSelectionExpression() ),
+						createColumnReferenceKey( qualifier, basicPart ),
 						sqlAstProcessingState -> new ColumnReference(
 								qualifier,
-								basicPart,
-								sessionFactory
+								basicPart
 						)
 				);
 			}
@@ -134,13 +130,17 @@ public class MappingModelHelper {
 		else if ( attribute1 instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embedded1 = (EmbeddableValuedModelPart) attribute1;
 			final EmbeddableValuedModelPart embedded2 = (EmbeddableValuedModelPart) attribute2;
-			final List<AttributeMapping> attrs1 = embedded1.getEmbeddableTypeDescriptor().getAttributeMappings();
-			final List<AttributeMapping> attrs2 = embedded2.getEmbeddableTypeDescriptor().getAttributeMappings();
-			if ( attrs1.size() != attrs2.size() ) {
+			final EmbeddableMappingType embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
+			final EmbeddableMappingType embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();
+			final int numberOfAttributeMappings = embeddableTypeDescriptor1.getNumberOfAttributeMappings();
+			if ( numberOfAttributeMappings != embeddableTypeDescriptor2.getNumberOfAttributeMappings() ) {
 				return false;
 			}
-			for ( int i = 0; i < attrs1.size(); i++ ) {
-				if ( !isCompatibleModelPart( attrs1.get( i ), attrs2.get( i ) ) ) {
+			for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+				if ( !isCompatibleModelPart(
+						embeddableTypeDescriptor1.getAttributeMapping( i ),
+						embeddableTypeDescriptor2.getAttributeMapping( i )
+				) ) {
 					return false;
 				}
 			}

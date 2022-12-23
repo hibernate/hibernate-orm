@@ -16,5 +16,5 @@ import org.hibernate.SessionBuilder;
  *
  * @author Gail Badner
  */
-public interface SessionBuilderImplementor<T extends SessionBuilder> extends SessionBuilder<T> {
+public interface SessionBuilderImplementor extends SessionBuilder {
 }

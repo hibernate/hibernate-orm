@@ -64,7 +64,7 @@ public interface JdbcEnvironment extends Service {
 
 	/**
 	 * Obtain the helper for dealing with identifiers in this environment.
-	 * <p/>
+	 * <p>
 	 * Note that the Identifiers returned from this IdentifierHelper already account for
 	 * auto-quoting :) yaay!
 	 *

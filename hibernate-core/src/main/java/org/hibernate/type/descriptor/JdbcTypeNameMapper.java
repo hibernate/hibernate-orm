@@ -63,8 +63,8 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Determine whether the given JDBC type code represents a standard JDBC type ("standard" being those defined on
-	 * {@link java.sql.Types}).
+	 * Determine whether the given JDBC type code represents a standard JDBC type
+	 * ("standard" being those defined on {@link java.sql.Types}).
 	 *
 	 * NOTE : {@link java.sql.Types#OTHER} is also "filtered out" as being non-standard.
 	 *
@@ -86,8 +86,9 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Get the type name as in the static field names defined on {@link java.sql.Types}.  If a type code is not
-	 * recognized, it is reported as {@code UNKNOWN(?)} where '?' is replace with the given type code.
+	 * Get the type name as in the static field names defined on {@link java.sql.Types}.
+	 * If a type code is not recognized, it is reported as {@code UNKNOWN(?)} where '?'
+	 * is replaced with the given type code.
 	 *
 	 * Intended as useful for logging purposes...
 	 *
@@ -104,8 +105,8 @@ public final class JdbcTypeNameMapper {
 	}
 
 	/**
-	 * Get the type code as in the static field names defined on {@link java.sql.Types}.  If a type name is not
-	 * recognized, <code>null</code> is returned.
+	 * Get the type code as in the static field names defined on {@link java.sql.Types}.
+	 * If a type name is not recognized, <code>null</code> is returned.
 	 *
 	 * @param typeName The type name to find the code for.
 	 *

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
@@ -49,7 +48,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
 	@Override
@@ -149,6 +148,18 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		Calendar cal = new GregorianCalendar();
 		cal.setTime( (java.util.Date) value );
 		return cal;
+	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.util.Date":
+			case "java.sql.Date":
+			case "java.sql.Timestamp":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override

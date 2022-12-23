@@ -7,7 +7,10 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
@@ -24,8 +27,6 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -113,6 +114,9 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect( value = HSQLDialect.class, comment = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect( value = OracleDialect.class, comment = "Oracle requires a special function to compare XML")
+	@SkipForDialect( value = MySQLDialect.class )
+	@SkipForDialect( value = DerbyDialect.class )
+	@SkipForDialect( value = DB2Dialect.class )
 	public void testNativeQuery() {
 		inSession( em -> {
 			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";

@@ -23,10 +23,10 @@ import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -85,8 +85,9 @@ public class CUBRIDDialect extends Dialect {
 				return "datetime";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetimetz";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -231,7 +232,7 @@ public class CUBRIDDialect extends Dialect {
 		functionFactory.bitLength();
 		functionFactory.md5();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.substr();
 		//also natively supports ANSI-style substring()
@@ -273,6 +274,11 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public String getDropForeignKeyString() {
 		return " drop foreign key ";
+	}
+
+	@Override
+	public String getDropUniqueKeyString() {
+		return " drop index ";
 	}
 
 	@Override

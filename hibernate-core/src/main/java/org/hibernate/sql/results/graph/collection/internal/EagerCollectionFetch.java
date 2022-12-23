@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
@@ -22,11 +23,13 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchList;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -39,7 +42,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	private final Fetch elementFetch;
 	private final Fetch indexFetch;
 
-	private final List<Fetch> fetches;
+	private final ImmutableFetchList fetches;
 
 	private final CollectionInitializerProducer initializerProducer;
 
@@ -106,14 +109,14 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		fetches = creationState.visitFetches( this );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {
 			assert fetches.size() == 2;
-			indexFetch = fetches.get( 0 );
-			elementFetch = fetches.get( 1 );
+			indexFetch = fetches.get( fetchedAttribute.getIndexDescriptor() );
+			elementFetch = fetches.get( fetchedAttribute.getElementDescriptor() );
 		}
 		else {
 			if ( !fetches.isEmpty() ) { // might be empty due to fetch depth limit
 				assert fetches.size() == 1;
 				indexFetch = null;
-				elementFetch = fetches.get( 0 );
+				elementFetch = fetches.get( fetchedAttribute.getElementDescriptor() );
 			}
 			else {
 				indexFetch = null;
@@ -179,7 +182,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public List<Fetch> getFetches() {
+	public ImmutableFetchList getFetches() {
 		return fetches;
 	}
 
@@ -197,6 +200,18 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 							" -> " + fetchable.getFetchableName() + "]"
 			);
 		}
+	}
+
+	@Override
+	public boolean hasJoinFetches() {
+		// This is already a fetch, so this line should actually never be hit
+		return true;
+	}
+
+	@Override
+	public boolean containsCollectionFetches() {
+		// This is already a collection fetch, so this line should actually never be hit
+		return true;
 	}
 
 	@Override

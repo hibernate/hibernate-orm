@@ -7,7 +7,8 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
-import jakarta.persistence.Column;
+import java.lang.annotation.Target;
+
 import jakarta.persistence.FetchType;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -15,22 +16,33 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * This is the collection-valued form of @Any definitions.  Defines a ToMany-style association pointing
- * to one of several entity types depending on a local discriminator.
+ * Maps a to-many cardinality association taking values over several
+ * entity types which are <em>not</em> related by the usual entity
+ * inheritance, using a discriminator value stored in an
+ * {@linkplain jakarta.persistence.JoinTable association table}.
+ * <p>
+ * This is just the many-valued form of {@link Any}, and the
+ * mapping options are similar, except that the
+ * {@link jakarta.persistence.JoinTable @JoinTable} annotation is
+ * used to specify the association table.
  *
  * @see Any
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface ManyToAny {
 	/**
-	 * Defines whether the value of the field or property should be lazily loaded or must be
-	 * eagerly fetched. The EAGER strategy is a requirement on the persistence provider runtime
-	 * that the value must be eagerly fetched. The LAZY strategy is applied when bytecode
-	 * enhancement is used. If not specified, defaults to EAGER.
+	 * Specifies whether the value of the field or property should be fetched
+	 * lazily or eagerly:
+	 * <ul>
+	 * <li>{@link FetchType#EAGER}, the default, requires that the association
+	 *     be fetched immediately, but
+	 * <li>{@link FetchType#LAZY} is a hint which has no effect unless bytecode
+	 *     enhancement is enabled.
+	 * </ul>
 	 */
 	FetchType fetch() default FetchType.EAGER;
 }

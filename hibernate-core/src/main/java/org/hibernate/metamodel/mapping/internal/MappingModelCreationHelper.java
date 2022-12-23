@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -14,10 +15,7 @@ import java.util.SortedSet;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -51,7 +49,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
@@ -60,19 +57,17 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -83,8 +78,12 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
@@ -99,6 +98,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogger.LOGGER;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -127,11 +127,15 @@ public class MappingModelCreationHelper {
 		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
+		final Component component = (Component) bootProperty.getValue();
 		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
-				(Component) bootProperty.getValue(),
+				component,
 				cidType,
 				rootTableName,
 				rootTableKeyColumnNames,
+				bootProperty,
+				component.getColumnInsertability(),
+				component.getColumnUpdateability(),
 				embeddable -> new EmbeddedIdentifierMappingImpl(
 						entityPersister,
 						attributeName,
@@ -171,11 +175,13 @@ public class MappingModelCreationHelper {
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			Property bootProperty,
 			ManagedMappingType declaringType,
 			BasicType attrType,
 			String tableExpression,
 			String attrColumnName,
+			SelectablePath selectablePath,
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
@@ -183,62 +189,15 @@ public class MappingModelCreationHelper {
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final Value value = bootProperty.getValue();
+		final SimpleValue value = (SimpleValue) bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-
-		final BasicValueConverter<?,?> valueConverter = resolution.getValueConverter();
-
-		final AttributeMetadataAccess attributeMetadataAccess = entityMappingType -> new AttributeMetadata() {
-			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
-			private final boolean nullable = value.isNullable();
-			private final boolean insertable = bootProperty.isInsertable();
-			private final boolean updateable = bootProperty.isUpdateable();
-			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
-
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return nullable;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return insertable;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				// todo (6.0) : do not believe this is correct
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return includeInOptimisticLocking;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
@@ -257,79 +216,40 @@ public class MappingModelCreationHelper {
 			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
 		}
-		final ValueGeneration valueGeneration = bootProperty.getValueGenerationStrategy();
 
-		if ( valueConverter != null ) {
-			// we want to "decompose" the "type" into its various pieces as expected by the mapping
-			assert valueConverter.getRelationalJavaType() == resolution.getRelationalJavaType();
-
-			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
-					.getDomainModel()
-					.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.resolve( valueConverter.getRelationalJavaType(), resolution.getJdbcType() );
-
-//			final GeneratedValueResolver generatedValueResolver;
-//			if ( valueGeneration == null ) {
-//				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
-//			}
-//			else if ( valueGeneration.getValueGenerator() == null ) {
-//				// in-db generation
-//			}
-
-			return new BasicAttributeMapping(
-					attrName,
-					navigableRole,
-					stateArrayPosition,
-					attributeMetadataAccess,
-					fetchTiming,
-					fetchStyle,
-					tableExpression,
-					attrColumnName,
-					isAttrFormula,
-					null,
-					null,
-					columnDefinition,
-					length,
-					precision,
-					scale,
-					valueConverter,
-					mappingBasicType.getJdbcMapping(),
-					declaringType,
-					propertyAccess,
-					valueGeneration
-			);
-		}
-		else {
-			return new BasicAttributeMapping(
-					attrName,
-					navigableRole,
-					stateArrayPosition,
-					attributeMetadataAccess,
-					fetchTiming,
-					fetchStyle,
-					tableExpression,
-					attrColumnName,
-					isAttrFormula,
-					readExpr,
-					writeExpr,
-					columnDefinition,
-					length,
-					precision,
-					scale,
-					null,
-					attrType,
-					declaringType,
-					propertyAccess,
-					valueGeneration
-			);
-		}
+		return new BasicAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				fetchTiming,
+				fetchStyle,
+				tableExpression,
+				attrColumnName,
+				selectablePath,
+				isAttrFormula,
+				readExpr,
+				writeExpr,
+				columnDefinition,
+				length,
+				precision,
+				scale,
+				nullable,
+				insertable,
+				updateable,
+				value.isPartitionKey(),
+				attrType,
+				declaringType,
+				propertyAccess
+		);
 	}
 
 
 	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
+			int fetchableIndex,
 			Property bootProperty,
 			ManagedMappingType declaringType,
 			CompositeType attrType,
@@ -338,7 +258,7 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
+		final AttributeMetadata attributeMetadataAccess = getAttributeMetadata(
 				bootProperty,
 				attrType,
 				propertyAccess,
@@ -352,12 +272,16 @@ public class MappingModelCreationHelper {
 				attrType,
 				tableExpression,
 				rootTableKeyColumnNames,
+				bootProperty,
+				component.getColumnInsertability(),
+				component.getColumnUpdateability(),
 				attributeMappingType -> {
 					if ( component.isEmbedded() ) {
 						return new VirtualEmbeddedAttributeMapping(
 								attrName,
 								declaringType.getNavigableRole().append( attrName ),
 								stateArrayPosition,
+								fetchableIndex,
 								tableExpression,
 								attributeMetadataAccess,
 								component.getParentProperty(),
@@ -365,8 +289,7 @@ public class MappingModelCreationHelper {
 								FetchStyle.JOIN,
 								attributeMappingType,
 								declaringType,
-								propertyAccess,
-								bootProperty.getValueGenerationStrategy()
+								propertyAccess
 						);
 					}
 					else {
@@ -374,6 +297,7 @@ public class MappingModelCreationHelper {
 								attrName,
 								declaringType.getNavigableRole().append( attrName ),
 								stateArrayPosition,
+								fetchableIndex,
 								tableExpression,
 								attributeMetadataAccess,
 								component.getParentProperty(),
@@ -381,8 +305,7 @@ public class MappingModelCreationHelper {
 								FetchStyle.JOIN,
 								attributeMappingType,
 								declaringType,
-								propertyAccess,
-								bootProperty.getValueGenerationStrategy()
+								propertyAccess
 						);
 					}
 				},
@@ -393,157 +316,67 @@ public class MappingModelCreationHelper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected static AttributeMetadataAccess getAttributeMetadataAccess(
+	protected static AttributeMetadata getAttributeMetadata(
 			Property bootProperty,
 			Type attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		return entityMappingType -> new AttributeMetadata() {
-			private final boolean nullable = bootProperty.getValue().isNullable();
-			private final boolean insertable = bootProperty.isInsertable();
-			private final boolean updateable = bootProperty.isUpdateable();
-			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
+		final MutabilityPlan mutabilityPlan;
+		if ( bootProperty.isUpdateable() ) {
+			mutabilityPlan = new MutabilityPlan() {
 
-			private final MutabilityPlan mutabilityPlan;
+				final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext()
+						.getSessionFactory();
 
-			{
-				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan() {
-						@Override
-						public boolean isMutable() {
-							return true;
-						}
-
-						@Override
-						public Object deepCopy(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							return attrType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
-						}
-
-						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-
-						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-					};
+				@Override
+				public boolean isMutable() {
+					return true;
 				}
-				else {
-					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+
+				@Override
+				public Object deepCopy(Object value) {
+					if ( value == null ) {
+						return null;
+					}
+
+					return attrType.deepCopy( value, sessionFactory );
 				}
-			}
 
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
+				@Override
+				public Serializable disassemble(Object value, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
 
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return nullable;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return insertable;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				// todo (6.0) : do not believe this is correct
-				return updateable;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return includeInOptimisticLocking;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+				@Override
+				public Object assemble(Serializable cached, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+		else {
+			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+		}
+		SimpleAttributeMetadata basicAttributeMetadataAccess = new SimpleAttributeMetadata( propertyAccess,
+																							mutabilityPlan,
+																							bootProperty.getValue().isNullable(),
+																							bootProperty.isInsertable(),
+																							bootProperty.isUpdateable(),
+																							bootProperty.isOptimisticLocked(),
+																							cascadeStyle );
+		return basicAttributeMetadataAccess;
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static AttributeMetadataAccess getAttributeMetadataAccess(PropertyAccess propertyAccess) {
-		return new AttributeMetadataAccess() {
-			final AttributeMetadata attributeMetadata = new AttributeMetadata() {
-				private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
-
-				@Override
-				public PropertyAccess getPropertyAccess() {
-					return propertyAccess;
-				}
-
-				@Override
-				public MutabilityPlan getMutabilityPlan() {
-					return mutabilityPlan;
-				}
-
-				@Override
-				public boolean isNullable() {
-					return false;
-				}
-
-				@Override
-				public boolean isInsertable() {
-					return true;
-				}
-
-				@Override
-				public boolean isUpdatable() {
-					return false;
-				}
-
-				@Override
-				public boolean isIncludedInDirtyChecking() {
-
-					return false;
-				}
-
-				@Override
-				public boolean isIncludedInOptimisticLocking() {
-					// todo (6.0) : do not sure this is correct
-					return true;
-				}
-
-				@Override
-				public CascadeStyle getCascadeStyle() {
-					// todo (6.0) : do not sure this is correct
-					return null;
-				}
-			};
-
-			@Override
-			public AttributeMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
-				return attributeMetadata;
-			}
-		};
+	public static AttributeMetadata getAttributeMetadata(PropertyAccess propertyAccess) {
+		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
 	@SuppressWarnings("rawtypes")
 	public static PluralAttributeMapping buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
+			int fetchableIndex,
 			Property bootProperty,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
@@ -555,8 +388,7 @@ public class MappingModelCreationHelper {
 
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final SqlStringGenerationContext sqlStringGenerationContext = sessionFactory.getSqlStringGenerationContext();
-		final Dialect dialect = sqlStringGenerationContext.getDialect();
+		final Dialect dialect = sessionFactory.getSqlStringGenerationContext().getDialect();
 		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
@@ -595,14 +427,15 @@ public class MappingModelCreationHelper {
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						creationProcess.getCreationContext().getTypeConfiguration(),
+						index.isColumnInsertable( 0 ),
+						index.isColumnUpdateable( 0 ),
+						false,
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
 						CollectionPart.Nature.INDEX,
-						// no converter
-						null,
 						selectableMapping
 				);
 
@@ -647,14 +480,15 @@ public class MappingModelCreationHelper {
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						creationProcess.getCreationContext().getTypeConfiguration(),
+						index.isColumnInsertable( 0 ),
+						index.isColumnUpdateable( 0 ),
+						false,
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
 						CollectionPart.Nature.INDEX,
-						// no converter
-						null,
 						selectableMapping
 				);
 
@@ -718,47 +552,15 @@ public class MappingModelCreationHelper {
 			}
 		}
 
-		final AttributeMetadata attributeMetadata = new AttributeMetadata() {
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return ImmutableMutabilityPlan.instance();
-			}
-
-			@Override
-			public boolean isNullable() {
-				return bootProperty.isOptional();
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return bootProperty.isInsertable();
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return bootProperty.isUpdateable();
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				return false;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return bootProperty.isOptimisticLocked();
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return cascadeStyle;
-			}
-		};
+		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata(
+				propertyAccess,
+				ImmutableMutabilityPlan.instance(),
+				bootProperty.isOptional(),
+				bootProperty.isInsertable(),
+				bootProperty.isUpdateable(),
+				bootProperty.isOptimisticLocked(),
+				cascadeStyle
+		);
 
 		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
@@ -778,9 +580,10 @@ public class MappingModelCreationHelper {
 				attrName,
 				bootValueMapping,
 				propertyAccess,
-				entityMappingType -> attributeMetadata,
+				attributeMetadata,
 				collectionMappingType,
 				stateArrayPosition,
+				fetchableIndex,
 				elementDescriptor,
 				indexDescriptor,
 				identifierDescriptor,
@@ -846,10 +649,11 @@ public class MappingModelCreationHelper {
 
 		final KeyValue bootValueMappingKey = bootValueMapping.getKey();
 		final Type keyType = bootValueMappingKey.getType();
-		final ModelPart fkTarget;
+		final ModelPart fkTargetPart;
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
 		final ManagedMappingType keyDeclaringType;
+
 		if ( collectionDescriptor.getElementType().isEntityType() ) {
 			keyDeclaringType = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
 		}
@@ -860,55 +664,62 @@ public class MappingModelCreationHelper {
 			// Since the declaring type is needed for certain operations, we use the one from the target side of the FK
 			keyDeclaringType = declaringType;
 		}
+
 		if ( isReferenceToPrimaryKey ) {
-			fkTarget = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
+			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
-			fkTarget = declaringType.findAttributeMapping( lhsPropertyName );
+			fkTargetPart = declaringType.findAttributeMapping( lhsPropertyName );
 		}
 
 		if ( keyType instanceof BasicType ) {
 			assert bootValueMappingKey.getColumnSpan() == 1;
-			assert fkTarget instanceof BasicValuedModelPart;
-			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
-			final String tableExpression = getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
+			assert fkTargetPart instanceof BasicValuedModelPart;
+
+			final BasicValuedModelPart simpleFkTargetPart = (BasicValuedModelPart) fkTargetPart;
+
+			final String keyTableExpression = getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
-					tableExpression,
+					keyTableExpression,
 					bootValueMappingKey.getSelectables().get(0),
 					(JdbcMapping) keyType,
 					creationProcess.getCreationContext().getTypeConfiguration(),
+					bootValueMappingKey.isColumnInsertable( 0 ),
+					bootValueMappingKey.isColumnUpdateable( 0 ),
+					false,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
-			attributeMapping.setForeignKeyDescriptor(
-					new SimpleForeignKeyDescriptor(
-							keyDeclaringType,
-							simpleFkTarget,
-							null,
-							keySelectableMapping,
-							simpleFkTarget,
-							isReferenceToPrimaryKey,
-							( (SimpleValue) bootValueMappingKey ).isConstrained()
-					)
-			);
-		}
-		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
-			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor =
-					buildEmbeddableForeignKeyDescriptor(
-							(EmbeddableValuedModelPart) fkTarget,
-							bootValueMapping,
-							keyDeclaringType,
-							collectionDescriptor.getAttributeMapping(),
-							false,
-							dialect,
-							creationProcess
-					);
 
-			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+			final SimpleForeignKeyDescriptor keyDescriptor = new SimpleForeignKeyDescriptor(
+					keyDeclaringType,
+					keySelectableMapping,
+					simpleFkTargetPart,
+					isReferenceToPrimaryKey,
+					( (SimpleValue) bootValueMappingKey ).isConstrained()
+			);
+			attributeMapping.setForeignKeyDescriptor( keyDescriptor );
+			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
+		}
+		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
+			final EmbeddedForeignKeyDescriptor keyDescriptor = buildEmbeddableForeignKeyDescriptor(
+					(EmbeddableValuedModelPart) fkTargetPart,
+					bootValueMapping,
+					keyDeclaringType,
+					collectionDescriptor.getAttributeMapping(),
+					false,
+					bootValueMappingKey.getColumnInsertability(),
+					bootValueMappingKey.getColumnUpdateability(),
+					dialect,
+					creationProcess
+			);
+
+			attributeMapping.setForeignKeyDescriptor( keyDescriptor );
+			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(
-					"Support for " + fkTarget.getClass() + " foreign keys not yet implemented: " + bootValueMapping.getRole()
+			throw new UnsupportedOperationException(
+					"Support for " + fkTargetPart.getClass() + " foreign keys not yet implemented: " + bootValueMapping.getRole()
 			);
 		}
 	}
@@ -985,6 +796,8 @@ public class MappingModelCreationHelper {
 						attributeMapping.getDeclaringType(),
 						attributeMapping.findContainingEntityMapping(),
 						true,
+						bootValueMapping.getColumnInsertability(),
+						bootValueMapping.getColumnUpdateability(),
 						dialect,
 						creationProcess
 				);
@@ -995,7 +808,7 @@ public class MappingModelCreationHelper {
 						.getEntityName() + " -> " + bootProperty.getName() );
 			}
 			else {
-				throw new NotYetImplementedFor6Exception(
+				throw new UnsupportedOperationException(
 						"Support for foreign-keys based on `" + modelPart + "` not yet implemented: " +
 								bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 				);
@@ -1016,50 +829,54 @@ public class MappingModelCreationHelper {
 			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
-			final BasicValuedModelPart declaringKeyPart;
 			final PropertyAccess declaringKeyPropertyAccess;
 			if ( inversePropertyAccess == null ) {
 				// So far, OneToOne mappings are only supported based on the owner's PK
 				if ( bootValueMapping instanceof OneToOne ) {
-					declaringKeyPart = simpleFkTarget;
 					final EntityIdentifierMapping identifierMapping = attributeMapping.findContainingEntityMapping()
 							.getIdentifierMapping();
 					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
 				}
 				else {
-					declaringKeyPart = simpleFkTarget;
-//					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
 					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
 							attributeMapping.getPropertyAccess(),
-							( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess()
+							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 					);
 				}
 			}
 			else {
-				declaringKeyPart = simpleFkTarget;
 				declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
 						inversePropertyAccess,
 						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 				);
 			}
 			final SelectableMapping keySelectableMapping;
+			int i = 0;
+			final Value value = bootProperty.getValue();
 			if ( columnIterator.hasNext() ) {
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						columnIterator.next(),
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
+						value.isColumnInsertable( i ),
+						value.isColumnUpdateable( i ),
+						((SimpleValue) value).isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
+				i++;
 			}
 			else {
 				// case of ToOne with @PrimaryKeyJoinColumn
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						table.getColumn( 0 ),
+						table.getPrimaryKey().getColumn( 0 ),
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
+						value.isColumnInsertable( 0 ),
+						value.isColumnUpdateable( 0 ),
+						((SimpleValue) value).isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry()
 				);
@@ -1067,30 +884,34 @@ public class MappingModelCreationHelper {
 
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 					attributeMapping.getDeclaringType(),
-					declaringKeyPart,
-					declaringKeyPropertyAccess,
 					keySelectableMapping,
+					declaringKeyPropertyAccess,
 					simpleFkTarget,
 					bootValueMapping.isReferenceToPrimaryKey(),
 					bootValueMapping.isConstrained(),
 					swapDirection
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
+			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
+			final Value value = bootProperty.getValue();
 			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTarget,
 					bootValueMapping,
 					attributeMapping.getDeclaringType(),
 					attributeMapping.findContainingEntityMapping(),
 					swapDirection,
+					value.getColumnInsertability(),
+					value.getColumnUpdateability(),
 					dialect,
 					creationProcess
 			);
 			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+			creationProcess.registerForeignKey( attributeMapping, embeddedForeignKeyDescriptor );
 		}
 		else {
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Support for " + fkTarget.getClass() + " foreign-keys not yet implemented: " +
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
@@ -1157,6 +978,8 @@ public class MappingModelCreationHelper {
 			ManagedMappingType keyDeclaringType,
 			TableGroupProducer keyDeclaringTableGroupProducer,
 			boolean inverse,
+			boolean[] insertable,
+			boolean[] updateable,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final boolean hasConstraint;
@@ -1164,7 +987,7 @@ public class MappingModelCreationHelper {
 		final String keyTableExpression;
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
-			hasConstraint = ( (SimpleValue) collectionBootValueMapping.getKey() ).isConstrained();
+			hasConstraint = ((SimpleValue) collectionBootValueMapping.getKey()).isConstrained();
 			keyTableExpression = getTableIdentifierExpression(
 					collectionBootValueMapping.getCollectionTable(),
 					creationProcess
@@ -1175,6 +998,8 @@ public class MappingModelCreationHelper {
 					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
+					insertable,
+					updateable,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1185,7 +1010,7 @@ public class MappingModelCreationHelper {
 				hasConstraint = !bootValueMapping.isNullable();
 			}
 			else {
-				hasConstraint = ( (SimpleValue) bootValueMapping ).isConstrained();
+				hasConstraint = ((SimpleValue) bootValueMapping).isConstrained();
 			}
 			keyTableExpression = getTableIdentifierExpression(
 					bootValueMapping.getTable(),
@@ -1197,6 +1022,8 @@ public class MappingModelCreationHelper {
 					getPropertyOrder( bootValueMapping, creationProcess ),
 					creationProcess.getCreationContext().getSessionFactory(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
+					insertable,
+					updateable,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1239,7 +1066,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
+	public static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
 		final ComponentType componentType;
 		final boolean sorted;
 		if ( bootValueMapping instanceof Collection ) {
@@ -1339,18 +1166,32 @@ public class MappingModelCreationHelper {
 
 		if ( bootMapKeyDescriptor instanceof BasicValue ) {
 			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
+			final boolean insertable;
+			final boolean updatable;
+			if ( indexedCollection instanceof org.hibernate.mapping.Map
+					&& ( (org.hibernate.mapping.Map) indexedCollection ).getMapKeyPropertyName() != null ) {
+				// Replicate behavior of AbstractCollectionPersister#indexColumnIsSettable
+				insertable = false;
+				updatable = false;
+			}
+			else {
+				insertable = updatable = basicValue.isColumnInsertable( 0 )
+						|| basicValue.isColumnUpdateable( 0 );
+			}
 			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					basicValue.getSelectables().get(0),
+					basicValue.getSelectables().get( 0 ),
 					basicValue.resolve().getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
+					insertable,
+					updatable,
+					false,
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
-					basicValue.resolve().getValueConverter(),
 					selectableMapping
 			);
 		}
@@ -1363,6 +1204,8 @@ public class MappingModelCreationHelper {
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
+					component.getColumnInsertability(),
+					component.getColumnUpdateability(),
 					inflightDescriptor -> new EmbeddedCollectionPart(
 							collectionDescriptor,
 							CollectionPart.Nature.INDEX,
@@ -1382,33 +1225,44 @@ public class MappingModelCreationHelper {
 			final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
-			final EntityCollectionPart indexDescriptor = new EntityCollectionPart(
-					collectionDescriptor,
-					CollectionPart.Nature.INDEX,
-					bootMapKeyDescriptor,
-					null,
-					associatedEntity,
-					creationProcess
-			);
+			final EntityCollectionPart.Cardinality partCardinality = bootMapKeyDescriptor instanceof OneToMany
+					? EntityCollectionPart.Cardinality.ONE_TO_MANY
+					: EntityCollectionPart.Cardinality.MANY_TO_MANY;
+
+			final EntityCollectionPart indexDescriptor;
+			if ( bootMapKeyDescriptor instanceof OneToMany ) {
+				indexDescriptor = new OneToManyCollectionPart(
+						CollectionPart.Nature.INDEX,
+						bootValueMapping,
+						collectionDescriptor,
+						associatedEntity,
+						creationProcess
+				);
+			}
+			else {
+				indexDescriptor = new ManyToManyCollectionPart(
+						CollectionPart.Nature.INDEX,
+						bootValueMapping,
+						collectionDescriptor,
+						associatedEntity,
+						creationProcess
+				);
+			}
 
 			creationProcess.registerInitializationCallback(
 					"PluralAttributeMapping( " + bootValueMapping.getRole() + ") - index descriptor",
-					() -> {
-						indexDescriptor.finishInitialization(
-								collectionDescriptor,
-								bootValueMapping,
-								indexEntityType.getRHSUniqueKeyPropertyName(),
-								creationProcess
-						);
-
-						return true;
-					}
+					() -> indexDescriptor.finishInitialization(
+							collectionDescriptor,
+							bootValueMapping,
+							indexEntityType.getRHSUniqueKeyPropertyName(),
+							creationProcess
+					)
 			);
 
 			return indexDescriptor;
 		}
 
-		throw new NotYetImplementedFor6Exception(
+		throw new UnsupportedOperationException(
 				"Support for plural attributes with index type [" + bootMapKeyDescriptor + "] not yet implemented"
 		);
 	}
@@ -1429,13 +1283,15 @@ public class MappingModelCreationHelper {
 					basicElement.getSelectables().get(0),
 					basicElement.resolve().getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
+					basicElement.isColumnInsertable( 0 ),
+					basicElement.isColumnUpdateable( 0 ),
+					basicElement.isPartitionKey(),
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
-					basicElement.resolve().getValueConverter(),
 					selectableMapping
 			);
 		}
@@ -1448,6 +1304,8 @@ public class MappingModelCreationHelper {
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
+					component.getColumnInsertability(),
+					component.getColumnUpdateability(),
 					embeddableMappingType -> new EmbeddedCollectionPart(
 							collectionDescriptor,
 							CollectionPart.Nature.ELEMENT,
@@ -1485,45 +1343,43 @@ public class MappingModelCreationHelper {
 			final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
-			final NotFoundAction notFoundAction;
-			if ( element instanceof ManyToOne ) {
-				notFoundAction = ( (ManyToOne) element ).getNotFoundAction();
-			}
-			else if ( element instanceof OneToMany ) {
-				notFoundAction = ( (OneToMany) element ).getNotFoundAction();
+			final EntityCollectionPart elementDescriptor;
+			if ( element instanceof OneToMany ) {
+				elementDescriptor = new OneToManyCollectionPart(
+						CollectionPart.Nature.ELEMENT,
+						bootDescriptor,
+						collectionDescriptor,
+						associatedEntity,
+						( (OneToMany) element ).getNotFoundAction(),
+						creationProcess
+				);
 			}
 			else {
-				throw new IllegalArgumentException( "Just seeing if this happens" );
+				elementDescriptor = new ManyToManyCollectionPart(
+						CollectionPart.Nature.ELEMENT,
+						bootDescriptor,
+						collectionDescriptor,
+						associatedEntity,
+						( (ManyToOne) element ).getNotFoundAction(),
+						creationProcess
+				);
 			}
 
-			final EntityCollectionPart elementDescriptor = new EntityCollectionPart(
-					collectionDescriptor,
-					CollectionPart.Nature.ELEMENT,
-					bootDescriptor.getElement(),
-					notFoundAction,
-					associatedEntity,
-					creationProcess
-			);
-
 			creationProcess.registerInitializationCallback(
-					"PluralAttributeMapping( " + elementDescriptor.getNavigableRole() + ") - index descriptor",
-					() -> {
-						elementDescriptor.finishInitialization(
-								collectionDescriptor,
-								bootDescriptor,
-								elementEntityType.getRHSUniqueKeyPropertyName(),
-								creationProcess
-						);
-
-						return true;
-					}
+					"PluralAttributeMapping( " + elementDescriptor.getNavigableRole() + ") - element descriptor",
+					() -> elementDescriptor.finishInitialization(
+							collectionDescriptor,
+							bootDescriptor,
+							elementEntityType.getRHSUniqueKeyPropertyName(),
+							creationProcess
+					)
 			);
 
 			return elementDescriptor;
 		}
 
-		throw new NotYetImplementedFor6Exception(
-				"Support for plural attributes with element type [" + element + "] not yet implemented"
+		throw new UnsupportedOperationException(
+				"Unexpected plural-attribute element type : " + element.getClass().getName()
 		);
 	}
 
@@ -1534,12 +1390,12 @@ public class MappingModelCreationHelper {
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
 		final EmbeddableMappingType embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
-		if ( modelPart instanceof NonAggregatedIdentifierMapping ) {
+		if ( modelPart instanceof org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping ) {
 			return new InverseNonAggregatedIdentifierMapping(
 					keyDeclaringType,
 					declaringTableGroupProducer,
 					selectableMappings,
-					(NonAggregatedIdentifierMapping) modelPart,
+					(org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping) modelPart,
 					embeddableTypeDescriptor,
 					creationProcess
 			);
@@ -1563,6 +1419,61 @@ public class MappingModelCreationHelper {
 					embeddableTypeDescriptor,
 					creationProcess
 			);
+		}
+	}
+
+	public static Expression buildColumnReferenceExpression(
+			TableGroup tableGroup,
+			ModelPart modelPart,
+			SqlExpressionResolver sqlExpressionResolver,
+			SessionFactoryImplementor sessionFactory) {
+		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
+
+		if ( modelPart instanceof EmbeddableValuedModelPart ) {
+			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
+			modelPart.forEachSelectable(
+					(columnIndex, selection) -> {
+						final ColumnReference colRef;
+						final String qualifier;
+						if ( tableGroup == null ) {
+							qualifier = selection.getContainingTableExpression();
+						}
+						else {
+							qualifier = tableGroup.resolveTableReference( selection.getContainingTableExpression() ).getIdentificationVariable();
+						}
+						if ( sqlExpressionResolver == null ) {
+							colRef = new ColumnReference( qualifier, selection );
+						}
+						else {
+							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
+									createColumnReferenceKey( qualifier, selection ),
+									sqlAstProcessingState -> new ColumnReference( qualifier, selection )
+							);
+						}
+						columnReferences.add( colRef );
+					}
+			);
+			return new SqlTuple( columnReferences, modelPart );
+		}
+		else {
+			assert modelPart instanceof BasicValuedModelPart;
+			final BasicValuedModelPart basicPart = (BasicValuedModelPart) modelPart;
+			final String qualifier;
+			if ( tableGroup == null ) {
+				qualifier = basicPart.getContainingTableExpression();
+			}
+			else {
+				qualifier = tableGroup.resolveTableReference( basicPart.getContainingTableExpression() ).getIdentificationVariable();
+			}
+			if ( sqlExpressionResolver == null ) {
+				return new ColumnReference( qualifier, basicPart );
+			}
+			else {
+				return sqlExpressionResolver.resolveSqlExpression(
+						createColumnReferenceKey( qualifier, basicPart ),
+						sqlAstProcessingState -> new ColumnReference( qualifier, basicPart )
+				);
+			}
 		}
 	}
 
@@ -1592,6 +1503,7 @@ public class MappingModelCreationHelper {
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
+			int fetchableIndex,
 			Property bootProperty,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
@@ -1602,7 +1514,7 @@ public class MappingModelCreationHelper {
 		if ( bootProperty.getValue() instanceof ToOne ) {
 			final ToOne value = (ToOne) bootProperty.getValue();
 			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
-			final AttributeMetadataAccess attributeMetadataAccess = getAttributeMetadataAccess(
+			final AttributeMetadata attributeMetadata = getAttributeMetadata(
 					bootProperty,
 					attrType,
 					propertyAccess,
@@ -1646,8 +1558,9 @@ public class MappingModelCreationHelper {
 					attrName,
 					navigableRole,
 					stateArrayPosition,
+					fetchableIndex,
 					(ToOne) bootProperty.getValue(),
-					attributeMetadataAccess,
+					attributeMetadata,
 					fetchTiming,
 					fetchStyle,
 					entityPersister,
@@ -1677,7 +1590,7 @@ public class MappingModelCreationHelper {
 			return attributeMapping;
 		}
 		else {
-			throw new NotYetImplementedFor6Exception( "AnyType support has not yet been implemented" );
+			throw new UnsupportedOperationException( "AnyType support has not yet been implemented" );
 		}
 	}
 }

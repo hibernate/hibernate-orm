@@ -11,6 +11,8 @@ import java.io.InputStream;
 /**
  * Abstraction for locating class-path resources
  *
+ * @see ResourceLocator
+ *
  * @author Steve Ebersole
  */
 @FunctionalInterface

@@ -417,7 +417,7 @@ public class JpaDescriptorParser {
 	/**
 	 * Determines the default access type as specified in the <i>persistence-unit-defaults</i> as well as whether the
 	 * xml configuration is complete and annotations should be ignored.
-	 * <p/>
+	 * <p>
 	 * Note, the spec says:
 	 * <ul>
 	 * <li>The persistence-unit-metadata element contains metadata for the entire persistence unit. It is

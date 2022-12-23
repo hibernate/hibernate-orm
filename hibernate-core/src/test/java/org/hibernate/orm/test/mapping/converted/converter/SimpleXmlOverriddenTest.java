@@ -17,11 +17,12 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -62,8 +63,9 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
-		AttributeConverterTypeAdapter adapter = assertTyping( AttributeConverterTypeAdapter.class, type );
-		assertTrue( SillyStringConverter.class.isAssignableFrom( adapter.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
+		ConvertedBasicTypeImpl adapter = assertTyping( ConvertedBasicTypeImpl.class, type );
+		final JpaAttributeConverter converter = (JpaAttributeConverter) adapter.getValueConverter();
+		assertTrue( SillyStringConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 	}
 
 	/**

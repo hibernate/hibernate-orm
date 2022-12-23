@@ -6,36 +6,26 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 /**
  * @author Christian Beikov
  */
-public class PostgreSQLJsonbJdbcType extends PostgreSQLPGObjectJdbcType {
+public class PostgreSQLJsonbJdbcType extends AbstractPostgreSQLJsonJdbcType {
 
-	public static final PostgreSQLJsonbJdbcType INSTANCE = new PostgreSQLJsonbJdbcType();
+	public static final PostgreSQLJsonbJdbcType INSTANCE = new PostgreSQLJsonbJdbcType( null );
 
-	public PostgreSQLJsonbJdbcType() {
-		super( "jsonb", SqlTypes.JSON );
+	public PostgreSQLJsonbJdbcType(EmbeddableMappingType embeddableMappingType) {
+		super( embeddableMappingType, "jsonb" );
 	}
 
 	@Override
-	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
-	}
-
-	@Override
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new PostgreSQLJsonbJdbcType( mappingType );
 	}
 }

@@ -15,6 +15,12 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
 
 /**
+ * A mapping model object representing some sort of auxiliary table, for
+ * example, an {@linkplain jakarta.persistence.JoinTable association table},
+ * a {@linkplain jakarta.persistence.SecondaryTable secondary table}, or a
+ * table belonging to a {@linkplain jakarta.persistence.InheritanceType#JOINED
+ * joined subclass}.
+ *
  * @author Gavin King
  */
 public class Join implements AttributeContainer, Serializable {
@@ -26,7 +32,6 @@ public class Join implements AttributeContainer, Serializable {
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
-	private boolean sequentialSelect;
 	private boolean inverse;
 	private boolean optional;
 	private boolean disableForeignKeyCreation;
@@ -176,13 +181,6 @@ public class Join implements AttributeContainer, Serializable {
 		return deleteCheckStyle;
 	}
 
-	public boolean isSequentialSelect() {
-		return sequentialSelect;
-	}
-	public void setSequentialSelect(boolean deferred) {
-		this.sequentialSelect = deferred;
-	}
-
 	public boolean isInverse() {
 		return inverse;
 	}
@@ -192,7 +190,7 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public String toString() {
-		return getClass().getName() + '(' + table.toString() + ')';
+		return getClass().getSimpleName() + '(' + table.getName() + ')';
 	}
 
 	public boolean isLazy() {

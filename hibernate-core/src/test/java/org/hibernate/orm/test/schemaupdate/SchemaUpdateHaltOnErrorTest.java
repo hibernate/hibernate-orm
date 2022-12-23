@@ -20,6 +20,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.CustomRunner;
@@ -39,16 +40,16 @@ import org.junit.runner.RunWith;
  */
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby is far more resistant to the reserved keyword usage.")
+@SkipForDialect(value = FirebirdDialect.class, comment = "FirebirdDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @RunWith(CustomRunner.class)
 public class SchemaUpdateHaltOnErrorTest {
 
-	private File output;
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
 	@Before
 	public void setUp() throws IOException {
-		output = File.createTempFile( "update_script", ".sql" );
+		File output = File.createTempFile("update_script", ".sql");
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder().build();
 
@@ -72,9 +73,7 @@ public class SchemaUpdateHaltOnErrorTest {
 		}
 		catch ( Exception e ) {
 			SchemaManagementException cause = (SchemaManagementException) e;
-
 			assertTrue( cause.getMessage().startsWith( "Halting on error : Error executing DDL" ) );
-			assertTrue( cause.getMessage().endsWith( "via JDBC Statement" ) );
 		}
 	}
 

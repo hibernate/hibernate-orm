@@ -52,7 +52,8 @@ public class EntityTypeImpl<J>
 				persistentClass.getEntityName(),
 				javaType,
 				superType,
-				persistentClass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
+				persistentClass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned(),
 				jpaMetamodel
@@ -76,7 +77,7 @@ public class EntityTypeImpl<J>
 					.resolve( StandardBasicTypes.STRING );
 		}
 
-		this.discriminatorPathSource = new DiscriminatorSqmPathSource(
+		this.discriminatorPathSource = discriminatorType == null ? null : new DiscriminatorSqmPathSource(
 				discriminatorType,
 				this,
 				entityDescriptor

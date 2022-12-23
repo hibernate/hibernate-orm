@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.util.Calendar;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -15,8 +16,10 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -48,28 +51,40 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
-	 * <p/>
+	 * Naturally, this should always be {@link org.hibernate.jpa.HibernatePersistenceProvider},
+	 * which is the best damn persistence provider ever. There's no need to explicitly specify
+	 * this setting when there are no inferior persistence providers floating about.
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 */
 	String JAKARTA_PERSISTENCE_PROVIDER = "jakarta.persistence.provider";
 
 	/**
-	 * Specifies the type of transactions supported by the entity managers.
-	 * <p/>
+	 * Specifies the {@linkplain jakarta.persistence.spi.PersistenceUnitTransactionType
+	 * type of transactions} supported by the entity managers. The default depends on
+	 * whether the program is considered to be executing in a Java SE or EE environment:
+	 * <ul>
+	 *     <li>For Java SE, the default is
+	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 *     RESOURCE_LOCAL}.
+	 *     <li>For Java EE, the default is
+	 *     {@link jakarta.persistence.spi.PersistenceUnitTransactionType#JTA JTA}.
+	 * </ul>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 */
 	String JAKARTA_TRANSACTION_TYPE = "jakarta.persistence.transactionType";
 
 	/**
 	 * Specifies the JNDI name of a JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
 	String JAKARTA_JTA_DATASOURCE = "jakarta.persistence.jtaDataSource";
 
 	/**
 	 * Specifies the JNDI name of a non-JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
 	String JAKARTA_NON_JTA_DATASOURCE = "jakarta.persistence.nonJtaDataSource";
@@ -125,7 +140,7 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that the second-level cache (which JPA calls the
 	 * "shared" cache) may be used, as per the rules defined in JPA 2 section 3.1.7.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 *
 	 * @see jakarta.persistence.SharedCacheMode
@@ -133,20 +148,33 @@ public interface AvailableSettings {
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
+	 * Set a default value for {@link SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE},
+	 * used when the hint is not explicitly specified.
+	 * <p>
+	 * It does not usually make sense to change the default from
+	 * {@link jakarta.persistence.CacheRetrieveMode#USE}.
+	 *
+	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
+	 * Set a default value for {@link SpecHints#HINT_SPEC_CACHE_STORE_MODE},
+	 * used when the hint is not explicitly specified.
+	 * <p>
+	 * It does not usually make sense to change the default from
+	 * {@link jakarta.persistence.CacheStoreMode#USE}.
+	 *
+	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
+	String JAKARTA_SHARED_CACHE_STORE_MODE = SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
 	/**
-	 * Indicates which form of automatic validation is in effect as per the
-	 * rules defined in JPA 2 section 3.6.1.1.
-	 * <p/>
+	 * Indicates which {@linkplain jakarta.persistence.ValidationMode form of automatic
+	 * validation} is in effect as per the rules defined in JPA 2 section 3.6.1.1.
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
+	 *
 	 * @see jakarta.persistence.ValidationMode
 	 */
 	String JAKARTA_VALIDATION_MODE = "jakarta.persistence.validation.mode";
@@ -160,7 +188,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
@@ -168,7 +196,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
@@ -176,25 +204,31 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 */
 	@SuppressWarnings("unused")
 	String JAKARTA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
 
 	/**
-	 * Used to request (hint) a pessimistic lock scope.
-	 * <p/>
+	 * Set a default value for the hint {@link SpecHints#HINT_SPEC_LOCK_SCOPE},
+	 * used when the hint is not explicitly specified.
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 *
+	 * @see SpecHints#HINT_SPEC_LOCK_SCOPE
 	 */
-	String JAKARTA_LOCK_SCOPE = "jakarta.persistence.lock.scope";
+	String JAKARTA_LOCK_SCOPE = SpecHints.HINT_SPEC_LOCK_SCOPE;
 
 	/**
-	 * Used to request (hint) a pessimistic lock timeout in milliseconds.
-	 * <p/>
+	 * Set a default value for the hint {@link SpecHints#HINT_SPEC_LOCK_TIMEOUT},
+	 * used when the hint is not explicitly specified.
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
+	 *
+	 * @see SpecHints#HINT_SPEC_LOCK_TIMEOUT
 	 */
-	String JAKARTA_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
+	String JAKARTA_LOCK_TIMEOUT = SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
 	/**
 	 * Used to pass a CDI {@link jakarta.enterprise.inject.spi.BeanManager} to
@@ -203,19 +237,19 @@ public interface AvailableSettings {
 	 * According to the JPA specification, the {@code BeanManager} should be
 	 * passed at boot time and be ready for immediate use at that time. But
 	 * not all environments can do this (WildFly, for example). To accommodate
-	 * such environments, Hibernate provides two options:
-	 * <ol>
-	 * <li>A proprietary CDI extension SPI (which has been proposed to the CDI
-	 * spec group as a standard option) which can be used to provide delayed
-	 * {@code BeanManager} access: to use this solution, the reference passed
-	 * as the {@code BeanManager} during bootstrap should be typed as
-	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
-	 * <li>Delayed access to the {@code BeanManager} reference: here, Hibernate
-	 * will not access the reference passed as the {@code BeanManager} during
-	 * bootstrap until it is first needed. Note, however, that this has the
-	 * effect of delaying the detection of any deployment problems until after
-	 * bootstrapping.
+	 * such environments, Hibernate provides two options: <ol>
+	 *     <li> A proprietary CDI extension SPI (which has been proposed to the CDI
+	 *          spec group as a standard option) which can be used to provide delayed
+	 *          {@code BeanManager} access: to use this solution, the reference passed
+	 *          as the {@code BeanManager} during bootstrap should be typed as
+	 *          {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
+	 *     <li> Delayed access to the {@code BeanManager} reference: here, Hibernate
+	 *          will not access the reference passed as the {@code BeanManager} during
+	 *          bootstrap until it is first needed. Note, however, that this has the
+	 *          effect of delaying the detection of any deployment problems until after
+	 *          bootstrapping.
 	 * </ol>
+	 *
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
@@ -288,22 +322,28 @@ public interface AvailableSettings {
 	 * to use for obtaining JDBC connections, either:
 	 * <ul>
 	 *     <li>an instance of {@code ConnectionProvider},
-	 *     <li>a {@link Class} representing a class that implements {@code ConnectionProvider}, or
+	 *     <li>a {@link Class} representing a class that implements
+	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * The term {@code "class"} appears in the setting name due to legacy reasons;
 	 * however it can accept instances.
 	 */
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
 	/**
-	 * Specifies the JDBC driver class.
+	 * Specifies the {@linkplain java.sql.Driver JDBC driver} class.
+	 *
+	 * @see java.sql.Driver
+	 * @see #JAKARTA_JDBC_DRIVER
 	 */
 	String DRIVER = "hibernate.connection.driver_class";
 
 	/**
 	 * Specifies the JDBC connection URL.
+	 *
+	 * @see #JAKARTA_JDBC_URL
 	 */
 	String URL = "hibernate.connection.url";
 
@@ -315,13 +355,14 @@ public interface AvailableSettings {
 	 * specified username might be used to:
 	 * <ul>
 	 *     <li>create a JDBC connection using
-	 *     {@link java.sql.DriverManager#getConnection(String,java.util.Properties)}
-	 *     or {@link java.sql.Driver#connect(String,java.util.Properties)}, or
+	 *         {@link java.sql.DriverManager#getConnection(String,java.util.Properties)}
+	 *         or {@link java.sql.Driver#connect(String,java.util.Properties)}, or
 	 *     <li>obtain a JDBC connection from a datasource, using
-	 *     {@link javax.sql.DataSource#getConnection(String, String)}.
+	 *         {@link javax.sql.DataSource#getConnection(String, String)}.
 	 * </ul>
 	 *
 	 * @see #PASS
+	 * @see #JAKARTA_JDBC_PASSWORD
 	 */
 	String USER = "hibernate.connection.username";
 
@@ -329,6 +370,7 @@ public interface AvailableSettings {
 	 * Specifies password to use when connecting via JDBC.
 	 *
 	 * @see #USER
+	 * @see #JAKARTA_JDBC_USER
 	 */
 	String PASS = "hibernate.connection.password";
 
@@ -359,6 +401,10 @@ public interface AvailableSettings {
 	 *     <li>a JNDI name under which to obtain the {@link javax.sql.DataSource}.
 	 * </ul>
 	 * For JNDI names, see also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
+	 *
+	 * @see javax.sql.DataSource
+	 * @see #JAKARTA_JTA_DATASOURCE
+	 * @see #JAKARTA_NON_JTA_DATASOURCE
 	 */
 	String DATASOURCE = "hibernate.connection.datasource";
 
@@ -368,7 +414,7 @@ public interface AvailableSettings {
 	 * have autocommit disabled when we acquire them from the provider. When we obtain
 	 * connections with autocommit already disabled, we may circumvent some operations in
 	 * the interest of performance.
-	 * <p/>
+	 * <p>
 	 * By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)} on
 	 * newly-obtained connections.
 	 *
@@ -406,7 +452,14 @@ public interface AvailableSettings {
 	String JNDI_PREFIX = "hibernate.jndi";
 
 	/**
-	 * Specifies the Hibernate SQL {@link org.hibernate.dialect.Dialect} class.
+	 * Specifies the Hibernate {@linkplain org.hibernate.dialect.Dialect SQL dialect}, either
+	 * <ul>
+	 *     <li>an instance of {@link org.hibernate.dialect.Dialect},
+	 *     <li>a {@link Class} representing a class that extends {@code Dialect}, or
+	 *     <li>the name of a class that extends {@code Dialect}.
+	 * </ul>
+	 * By default, Hibernate will attempt to automatically determine the dialect from the
+	 * {@linkplain #URL JDBC URL} and JDBC metadata, so this setting is not usually necessary.
 	 *
 	 * @see org.hibernate.dialect.Dialect
 	 */
@@ -423,10 +476,10 @@ public interface AvailableSettings {
 	 * Specifies the name of the database provider in cases where a connection to the
 	 * database is not available (usually for generating scripts). In such cases, a value
 	 * for this setting <em>must</em> be specified.
-	 * <p/>
+	 * <p>
 	 * The value of this setting is expected to match the value returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductName()} for the target database.
-	 * <p/>
+	 * <p>
 	 * Additionally, specifying {@value #DIALECT_DB_MAJOR_VERSION}, and perhaps even
 	 * {@value #DIALECT_DB_MINOR_VERSION}, may be required for high quality DDL generation.
 	 *
@@ -446,7 +499,7 @@ public interface AvailableSettings {
 	 * to help more precisely determine how to perform schema generation tasks for the
 	 * underlying database in cases where {@value #DIALECT_DB_NAME} does not provide
 	 * enough distinction.
-	 * <p/>
+	 * <p>
 	 * The value of this setting is expected to match the value returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target
 	 * database.
@@ -624,14 +677,14 @@ public interface AvailableSettings {
 	 * (Hibernate does not need the discriminator.). However, some JPA providers do need the
 	 * discriminator for handling joined inheritance, so in the interest of portability this
 	 * capability has been added to Hibernate.
-	 * <p/>
+	 * <p>
 	 * However, we want to make sure that legacy applications continue to work as well.
 	 * Which puts us in a bind in terms of how to handle "implicit" discriminator mappings.
 	 * The solution is to assume that the absence of discriminator metadata means to follow
 	 * the legacy behavior <em>unless</em> this setting is enabled. With this setting enabled,
 	 * Hibernate will interpret the absence of discriminator metadata as an indication to use
 	 * the JPA defined defaults for these absent annotations.
-	 * <p/>
+	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
@@ -644,13 +697,13 @@ public interface AvailableSettings {
 	 * (Hibernate does not need the discriminator). However, some JPA providers do need the
 	 * discriminator for handling joined inheritance, so in the interest of portability this
 	 * capability has been added to Hibernate.
-	 * <p/>
+	 * <p>
 	 * Existing applications rely (implicitly or explicitly) on Hibernate ignoring any
 	 * {@link jakarta.persistence.DiscriminatorColumn} declarations on joined inheritance
 	 * hierarchies. This setting allows these applications to maintain the legacy behavior
 	 * of {@code @DiscriminatorColumn} annotations being ignored when paired with joined
 	 * inheritance.
-	 * <p/>
+	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
@@ -721,7 +774,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} representing a class that implements {@code ArchiveDescriptorFactory}, or
 	 *     <li>the name of a class that implements {@code ArchiveDescriptorFactory}.
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
 	 * about expected constructor forms.
 	 *
@@ -748,9 +801,7 @@ public interface AvailableSettings {
 	 * Used to specify the {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
 	 * class to use. The following shortcut names are defined for this setting:
 	 * <ul>
-	 *     <li>{@code "default"} is an abbreviation for
-	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
-	 *     <li>{@code "jpa"} is an abbreviation for
+	 *     <li>{@code "default"} and {@code "jpa"} are an abbreviations for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
 	 *     <li>{@code "legacy-jpa"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}
@@ -759,9 +810,9 @@ public interface AvailableSettings {
 	 *     <li>{@code "component-path"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}
 	 * </ul>
-	 * The default is defined by the {@code ImplicitNamingStrategy} registered under the
-	 * {@code "default"} key. If that happens to be empty, the fallback is to use
-	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}.
+	 * By default, the {@code ImplicitNamingStrategy} registered under the key
+	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl} is used.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy
 	 *
@@ -771,6 +822,9 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} to use.
+	 * <p>
+	 * By default, {@link org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl}
+	 * is used, in which case physical names are taken to be identical to logical names.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy
 	 *
@@ -779,13 +833,13 @@ public interface AvailableSettings {
 	String PHYSICAL_NAMING_STRATEGY = "hibernate.physical_naming_strategy";
 
 	/**
-	 * An implicit naming-strategy for database structures (tables, sequences) related
-	 * to identifier-generators
-	 *
+	 * An implicit naming strategy for database structures (tables, sequences) related
+	 * to identifier generators.
+	 * <p>
 	 * Resolution uses the {@link org.hibernate.boot.registry.selector.spi.StrategySelector}
 	 * service and accepts any of the forms discussed on
-	 * {@link StrategySelector#resolveDefaultableStrategy}.
-	 *
+	 * {@link StrategySelector#resolveDefaultableStrategy(Class, Object, java.util.concurrent.Callable)}.
+	 * <p>
 	 * The recognized short names being:<ul>
 	 *     <li>{@value org.hibernate.id.enhanced.SingleNamingStrategy#STRATEGY_NAME}</li>
 	 *     <li>{@value org.hibernate.id.enhanced.LegacyNamingStrategy#STRATEGY_NAME}</li>
@@ -798,14 +852,37 @@ public interface AvailableSettings {
 	String ID_DB_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
 
 	/**
+	 * Used to specify the {@link org.hibernate.boot.model.relational.ColumnOrderingStrategy}
+	 * class to use. The following shortcut names are defined for this setting:
+	 * <ul>
+	 *     <li>{@code "default"} is an abbreviations for
+	 *     {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard}
+	 *     <li>{@code "legacy"} is an abbreviation for
+	 *     {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy}
+	 * </ul>
+	 * By default, the {@linkplain org.hibernate.boot.model.relational.ColumnOrderingStrategy} registered under the key
+	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
+	 * {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard} is used.
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy
+	 *
+	 * @since 6.2
+	 */
+	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
+
+	/**
 	 * Specifies the order in which metadata sources should be processed, is a delimited list
 	 * of values defined by {@link MetadataSourceType}.
 	 * <p>
 	 * The default is {@code "hbm,class"} which that {@code hbm.xml} files should be processed
 	 * first, followed by annotations (combined with {@code orm.xml} mappings).
 	 *
+	 * @see MetadataSourceType
 	 * @see org.hibernate.boot.MetadataBuilder#applySourceProcessOrdering(MetadataSourceType...)
+	 *
+	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
 	 */
+	@Deprecated(since = "6", forRemoval = true)
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 
 	/**
@@ -833,14 +910,14 @@ public interface AvailableSettings {
 	 * Specifies the {@link org.hibernate.metamodel.CollectionClassification} to use when
 	 * Hibernate detects a plural attribute typed as {@link java.util.List} with no explicit
 	 * list index configuration.
-	 * <p/>
+	 * <p>
 	 * Accepts any of:
 	 * <ul>
 	 *     <li>an instance of {@code CollectionClassification}
 	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 *
 	 * @since 6.0
 	 */
@@ -945,8 +1022,9 @@ public interface AvailableSettings {
 	 * from the database when more rows are needed. If {@code 0}, the JDBC driver's
 	 * default settings will be used.
 	 *
-	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see java.sql.PreparedStatement#setFetchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcFetchSize(int)
+	 * @see org.hibernate.ScrollableResults#setFetchSize(int)
 	 */
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
@@ -959,7 +1037,7 @@ public interface AvailableSettings {
 	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 
 	/**
-	 * Specifies a custom {@link org.hibernate.engine.jdbc.batch.spi.BatchBuilder}.
+	 * Specifies a custom {@link BatchBuilder}.
 	 */
 	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 
@@ -972,11 +1050,18 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Specify a {@linkplain java.util.TimeZone time zone} that should be passed to
+	 * Specifies a {@linkplain java.util.TimeZone time zone} that should be passed to
 	 * {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
-	 * and {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)}
-	 * when binding parameters.
+	 * {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)},
+	 * {@link java.sql.ResultSet#getTimestamp(int, Calendar)}, and
+	 * {@link java.sql.ResultSet#getTime(int, Calendar)} when binding parameters.
 	 * <p>
+	 * The time zone may be given as:
+	 * <ul>
+	 *     <li>an instance of {@link java.util.TimeZone},
+	 *     <li>an instance of {@link java.time.ZoneId}, or
+	 *     <li>a time zone ID string to be passed to {@link java.time.ZoneId#of(String)}.
+	 * </ul>
 	 * By default, the {@linkplain java.util.TimeZone#getDefault() JVM default time zone}
 	 * is assumed by the JDBC driver.
 	 *
@@ -1002,7 +1087,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies how Hibernate should manage JDBC connections in terms of acquisition
-	 * and release.
+	 * and release, either:
+	 * <ul>
+	 *     <li>an instance of the enumeration
+	 *         {@link org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode},
+	 *         or
+	 *     <li>the name of one of its instances.
+	 * </ul>
+	 * The default is {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}.
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionHandlingMode(PhysicalConnectionHandlingMode)
@@ -1014,11 +1106,22 @@ public interface AvailableSettings {
 	/**
 	 * Specifies a {@link org.hibernate.context.spi.CurrentSessionContext} for
 	 * scoping the {@linkplain org.hibernate.SessionFactory#getCurrentSession()
-	 * current session}.
+	 * current session}, either:<ul>
+	 *     <li>{@code jta}, {@code thread}, or {@code managed}, or
+	 *     <li>the name of a class implementing
+	 *     {@code org.hibernate.context.spi.CurrentSessionContext}.
+	 * </ul>
+	 *
+	 * @see org.hibernate.SessionFactory#getCurrentSession()
 	 */
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
+	 * When enabled, specifies that the generated identifier of an entity is unset
+	 * when the entity is {@linkplain org.hibernate.Session#remove(Object) deleted}.
+	 * <p>
+	 * By default, generated identifiers are never unset.
+	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyIdentifierRollbackSupport(boolean)
 	 */
 	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
@@ -1026,7 +1129,10 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that property access should be optimized via the use
 	 * of generated bytecode.
+	 *
+	 * @deprecated Will be removed without replacement. See HHH-15631
 	 */
+	@Deprecated(forRemoval = true)
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
@@ -1077,36 +1183,44 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
-	 * Enable ordering of update statements by primary key value.
+	 * Enable ordering of update statements by primary key value, for the purpose of more
+	 * efficient JDBC batching
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates(boolean)
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
-	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
+	 * Enable ordering of insert statements by primary key value, for the purpose of more
+	 * efficient JDBC batching.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts(boolean)
 	 */
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
-	 * JPA callbacks are enabled by default. Set this to {@code false} to disable them.
-	 * Mostly useful to save a bit of memory when they are not used.
-	 *
+	 * Allows JPA callbacks (via {@link jakarta.persistence.PreUpdate} and friends) to be
+	 * completely disabled. Mostly useful to save some memory when they are not used.
+	 * <p>
+	 * JPA callbacks are enabled by default. Set this property to {@code false} to disable
+	 * them.
+	 * <p>
 	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
 	 *
 	 * @see org.hibernate.jpa.event.spi.CallbackType
 	 *
 	 * @since 5.4
 	 */
+	@Incubating
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
-	 * Default precedence of null values in {@code ORDER BY} clause.
+	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the HQL
+	 * {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last}.
 	 * <p>
-	 * Supported options: {@code none} (default), {@code first}, {@code last}.
+	 * The default is {@code none}.
 	 *
+	 * @see NullPrecedence
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
@@ -1300,14 +1414,21 @@ public interface AvailableSettings {
 
 	/**
 	 * Optimize interaction with the second-level cache to minimize writes, at the cost
-	 * of more frequent database reads.
+	 * of an additional read before each write. This setting is useful if writes to the
+	 * cache are much more expensive than reads from the cache, for example, if the cache
+	 * is a distributed cache.
+	 * <p>
+	 * It's not usually necessary to set this explicitly because, by default, it's set
+	 * to a {@linkplain org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
+	 * sensible value} by the second-level cache implementation.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 
 	/**
-	 * Enables the use of structured second-level cache entries.
+	 * Enables the use of structured second-level cache entries. This makes the cache
+	 * entries human-readable, but carries a performance cost.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
@@ -1327,7 +1448,8 @@ public interface AvailableSettings {
 	 * Enable direct storage of entity references into the second level cache when
 	 * applicable. This is appropriate only for immutable entities.
 	 * <p>
-	 * By default, entities are always stored in a "disassembled" form.
+	 * By default, entities are always stored in a "disassembled" form, that is, as
+	 * a tuple of attribute values.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDirectReferenceCaching(boolean)
 	 */
@@ -1434,10 +1556,10 @@ public interface AvailableSettings {
 	/**
 	 * Setting to perform {@link org.hibernate.tool.schema.spi.SchemaManagementTool}
 	 * actions automatically as part of the {@link org.hibernate.SessionFactory}
-	 * lifecycle. Valid options are enumeratd by {@link org.hibernate.tool.schema.Action}.
-	 * <p/>
-	 * Interpreted in combination with {@link #HBM2DDL_DATABASE_ACTION} and
-	 * {@link #HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
+	 * lifecycle. Valid options are enumerated by {@link org.hibernate.tool.schema.Action}.
+	 * <p>
+	 * Interpreted in combination with {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} and
+	 * {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
 	 * is {@link org.hibernate.tool.schema.Action#NONE "none"}.
 	 *
 	 * @see org.hibernate.tool.schema.Action
@@ -1445,7 +1567,7 @@ public interface AvailableSettings {
 	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * @deprecated Use {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION} instead
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
 	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
@@ -1785,7 +1907,7 @@ public interface AvailableSettings {
 	/**
 	 * JPA-standard variant of {@link #HBM2DDL_IMPORT_FILES} for specifying a database
 	 * initialization script to be run as part of schema-export
-	 *
+	 * <p>
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script
 	 * or a string designating the {@link java.net.URL} for the SQL load script.
 	 */
@@ -1795,7 +1917,7 @@ public interface AvailableSettings {
 	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES} used to specify whether database
 	 * schemas used in the mapping model should be created on export in addition to creating
 	 * the tables, sequences, etc.
-	 *
+	 * <p>
 	 * The default is {@code false}, meaning to not create schemas
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCHEMAS = "jakarta.persistence.create-database-schemas";
@@ -1971,6 +2093,12 @@ public interface AvailableSettings {
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
 	/**
+	 * Allows a detached proxy or lazy collection to be fetched even when not
+	 * associated with an open persistence context, by creating a temporary
+	 * persistence context when the proxy or collection is accessed. This
+	 * behavior is not recommended, since it can easily break transaction
+	 * isolation or lead to data aliasing. It is therefore disabled by default.
+	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
 	 */
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
@@ -2500,12 +2628,12 @@ public interface AvailableSettings {
 	 * type is explicitly specified, a sensible
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 * dialect-specific default type code} is used.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_boolean_jdbc_type=BIT}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_boolean_jdbc_type=BIT}.
 	 *
 	 * @since 6.0
 	 */
@@ -2514,12 +2642,12 @@ public interface AvailableSettings {
 
 	/**
 	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_uuid_jdbc_type=CHAR}.
 	 *
 	 * @since 6.0
 	 */
@@ -2527,14 +2655,14 @@ public interface AvailableSettings {
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
-	 * The preferred JDBC type to use for storing duration values.  Falls back to
+	 * The preferred JDBC type to use for storing duration values. Falls back to
 	 * {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND}.
-	 *
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 *Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}.
 	 *
 	 * @since 6.0
 	 */
@@ -2543,13 +2671,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the preferred JDBC type for storing instant values. When no
-	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC} is used.
-	 *
+	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}
+	 * is used.
+	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
-	 * {@link org.hibernate.annotations.JdbcTypeCode} and friends
-	 *
-	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant field.  E.g.
-	 * {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}
+	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
+	 * <p>
+	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
+	 * field, for example, {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}.
 	 *
 	 * @since 6.0
 	 */
@@ -2589,15 +2718,24 @@ public interface AvailableSettings {
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
-	 * Specifies the default strategy for storage of the timezone information
-	 * for zoned datetime types:
-	 * <ul>
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE}, or
-	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}.
-	 * </ul>
-	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
-	 * meaning that timezone information is not stored by default, but timestamps are
-	 * normalized to UTC instead.
+	 * Specifies the default strategy for storage of the timezone information for the zoned
+	 * datetime types {@link java.time.OffsetDateTime} and {@link java.time.ZonedDateTime}.
+	 * The possible options for this setting are enumerated by
+	 * {@link org.hibernate.annotations.TimeZoneStorageType}.
+	 * <p>
+	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#DEFAULT DEFAULT},
+	 * which guarantees that the {@linkplain java.time.OffsetDateTime#toInstant() instant}
+	 * represented by a zoned datetime type is preserved by a round trip to the database.
+	 * It does <em>not</em> guarantee that the time zone or offset is preserved.
+	 * <p>
+	 * For backward compatibility with older versions of Hibernate, set this property to
+	 * {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE NORMALIZE}.
+	 * <p>
+	 * The default strategy specified using this setting may be overridden using the
+	 * annotation {@link org.hibernate.annotations.TimeZoneStorage}.
+	 *
+	 * @see org.hibernate.annotations.TimeZoneStorageType
+	 * @see org.hibernate.annotations.TimeZoneStorage
 	 *
 	 * @since 6.0
 	 */
@@ -2609,7 +2747,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 *
 	 * @deprecated Use {@link #JAKARTA_PERSISTENCE_PROVIDER} instead
@@ -2620,7 +2758,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The type of transactions supported by the entity managers.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 *
 	 * @deprecated Use {@link #JAKARTA_TRANSACTION_TYPE} instead
@@ -2630,7 +2768,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The JNDI name of a JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 *
 	 * @deprecated Use {@link #JAKARTA_JTA_DATASOURCE} instead
@@ -2641,7 +2779,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The JNDI name of a non-JTA {@link javax.sql.DataSource}.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 *
 	 * @deprecated Use {@link #JAKARTA_NON_JTA_DATASOURCE} instead
@@ -2715,7 +2853,7 @@ public interface AvailableSettings {
 	/**
 	 * Used to indicate whether second-level (what JPA terms shared cache)
 	 * caching is enabled as per the rules defined in JPA 2 section 3.1.7.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 * @see jakarta.persistence.SharedCacheMode
 	 *
@@ -2754,7 +2892,7 @@ public interface AvailableSettings {
 	/**
 	 * Used to indicate what form of automatic validation is in effect as
 	 * per rules defined in JPA 2 section 3.6.1.1.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
 	 *
 	 * @see jakarta.persistence.ValidationMode
@@ -2776,7 +2914,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_PERSIST_VALIDATION_GROUP} instead
@@ -2786,7 +2924,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_UPDATE_VALIDATION_GROUP} instead
@@ -2796,7 +2934,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to coordinate with bean validators.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 section 8.2.1.9
 	 *
 	 * @deprecated Use {@link #JAKARTA_REMOVE_VALIDATION_GROUP} instead
@@ -2806,7 +2944,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to request (hint) a pessimistic lock scope.
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 *
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
@@ -2817,7 +2955,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
-	 * <p/>
+	 * <p>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 *
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
@@ -2849,6 +2987,8 @@ public interface AvailableSettings {
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
+	 *
+	 * @deprecated Use {@link #JAKARTA_CDI_BEAN_MANAGER} instead
 	 */
 	@Deprecated
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
@@ -2891,12 +3031,18 @@ public interface AvailableSettings {
 
 	/**
 	 * Enable dirty tracking feature in runtime bytecode enhancement
+	 *
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	String ENHANCER_ENABLE_DIRTY_TRACKING = "hibernate.enhancer.enableDirtyTracking";
 
 	/**
 	 * Enable lazy loading feature in runtime bytecode enhancement
+	 *
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	String ENHANCER_ENABLE_LAZY_INITIALIZATION = "hibernate.enhancer.enableLazyInitialization";
 
 	/**
@@ -2938,7 +3084,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.
-	 * <p/>
+	 * <p>
 	 * Default is {@code true}
 	 *
 	 * @since 6.1
@@ -2955,7 +3101,7 @@ public interface AvailableSettings {
 
 	/**
 	 * How features in a `hbm.xml` file which are not supported for transformation should be handled.
-	 * <p/>
+	 * <p>
 	 * Default is {@link org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling#ERROR}
 	 *
 	 * @see org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling

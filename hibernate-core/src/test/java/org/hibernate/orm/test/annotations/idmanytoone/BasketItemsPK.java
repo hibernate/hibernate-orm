@@ -15,7 +15,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
 @Embeddable
@@ -50,7 +49,8 @@ public class BasketItemsPK implements Serializable {
 
 	@Id
 	@ManyToOne(cascade={ CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-	@JoinColumns({ @JoinColumn(name="basketDatetime", referencedColumnName="basketDatetime"), @JoinColumn(name="customerID", referencedColumnName="customerID") })
+	@JoinColumn(name="basketDatetime", referencedColumnName="basketDatetime")
+	@JoinColumn(name="customerID", referencedColumnName="customerID")
 	@Basic(fetch= FetchType.LAZY)
 	private ShoppingBaskets shoppingBaskets;
 

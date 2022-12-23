@@ -10,6 +10,8 @@ import org.hibernate.MappingException;
 
 import java.sql.Types;
 
+import static org.hibernate.internal.util.StringHelper.unquote;
+
 /**
  * @author Andrea Boriero
  */
@@ -21,7 +23,7 @@ public class PostgreSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
-		return "select currval('" + table + '_' + column + "_seq')";
+		return "select currval('" + unquote(table) + '_' + unquote(column) + "_seq')";
 	}
 
 	@Override

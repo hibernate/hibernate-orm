@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -37,6 +38,11 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	public SybaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean supportsWithClause() {
+		return false;
 	}
 
 	// Sybase does not allow CASE expressions where all result arms contain plain parameters.
@@ -106,16 +112,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Sybase does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Sybase does not support this, but it can be emulated
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
@@ -146,11 +142,20 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		arithmeticExpression.getLeftHandOperand().accept( this );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

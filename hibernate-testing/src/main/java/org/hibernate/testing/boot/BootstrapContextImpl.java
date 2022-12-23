@@ -63,8 +63,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public BeanInstanceProducer getBeanInstanceProducer() {
-		return delegate.getBeanInstanceProducer();
+	public BeanInstanceProducer getCustomTypeProducer() {
+		return delegate.getCustomTypeProducer();
 	}
 
 	@Override

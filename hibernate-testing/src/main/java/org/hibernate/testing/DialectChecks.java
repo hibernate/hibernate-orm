@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -14,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.TiDBDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 
@@ -228,7 +230,9 @@ abstract public class DialectChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
+			return !( dialect instanceof DB2Dialect
+					|| dialect instanceof DerbyDialect
+					|| dialect instanceof FirebirdDialect );
 		}
 	}
 
@@ -291,8 +295,21 @@ abstract public class DialectChecks {
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery()
-					// For some reason, HANA doesn't support order by in correlated sub queries...
+					// For some reason, HANA doesn't support order by in correlated subqueries...
 					&& !( dialect instanceof AbstractHANADialect );
+		}
+	}
+
+	public static class SupportsSubqueryInOnClause implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			// TiDB db does not support subqueries for ON condition
+			return !( dialect instanceof TiDBDialect );
+		}
+	}
+
+	public static class SupportsRecursiveCtes implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRecursiveCTE();
 		}
 	}
 }

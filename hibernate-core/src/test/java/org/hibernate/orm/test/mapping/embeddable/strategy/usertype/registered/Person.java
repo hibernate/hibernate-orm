@@ -9,7 +9,6 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.registered;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.Name;
 import org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.NameCompositeUserType;

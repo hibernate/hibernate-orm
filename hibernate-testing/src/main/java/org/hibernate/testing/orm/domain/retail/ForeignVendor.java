@@ -21,4 +21,8 @@ public class ForeignVendor extends Vendor {
 	public ForeignVendor(Integer id, String name, String billingEntity) {
 		super( id, name, billingEntity );
 	}
+
+	public ForeignVendor(Integer id, String name, String billingEntity, String supplementalDetail) {
+		super( id, name, billingEntity, supplementalDetail );
+	}
 }

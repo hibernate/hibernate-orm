@@ -16,11 +16,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 
 /**
- * Descriptor for a named native query in the run-time environment
+ * Descriptor for a named native query in the runtime environment
  *
  * @author Steve Ebersole
  */
@@ -29,6 +28,10 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * Informational access to the SQL query string
 	 */
 	String getSqlString();
+
+	default String getOriginalSqlString(){
+		return getSqlString();
+	}
 
 	/**
 	 * The affected query spaces.
@@ -132,6 +135,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 		public NamedNativeQueryMemento build(SessionFactoryImplementor sessionFactory) {
 			return new NamedNativeQueryMementoImpl(
 					name,
+					queryString,
 					queryString,
 					resultSetMappingName,
 					sessionFactory.getServiceRegistry()

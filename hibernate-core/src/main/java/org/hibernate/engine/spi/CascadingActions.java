@@ -29,6 +29,8 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Steve Ebersole
  */
@@ -92,18 +94,7 @@ public class CascadingActions {
 				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
 			LOG.tracev( "Cascading to lock: {0}", entityName );
-			LockMode lockMode = LockMode.NONE;
-			LockOptions lr = new LockOptions();
-			if ( lockOptions != null ) {
-				lr.setTimeOut( lockOptions.getTimeOut() );
-				lr.setScope( lockOptions.getScope() );
-				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
-				if ( lockOptions.getScope() ) {
-					lockMode = lockOptions.getLockMode();
-				}
-			}
-			lr.setLockMode( lockMode );
-			session.buildLockRequest( lr ).lock( entityName, child );
+			session.lock( entityName, child, lockOptions );
 		}
 
 		@Override
@@ -372,7 +363,7 @@ public class CascadingActions {
 				Object child = persister.getValue( parent, propertyIndex );
 				if ( child != null
 						&& !isInManagedState( child, session )
-						&& !(child instanceof HibernateProxy) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
+						&& !( isHibernateProxy( child ) ) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 					final String childEntityName =
 							((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
 					if ( ForeignKeys.isTransient(childEntityName, child, null, session) ) {
@@ -476,7 +467,7 @@ public class CascadingActions {
 			EventSource session,
 			CollectionType collectionType,
 			Object collection) {
-		return collectionType.getElementsIterator( collection, session );
+		return collectionType.getElementsIterator( collection );
 	}
 
 	/**
@@ -489,7 +480,7 @@ public class CascadingActions {
 			Object collection) {
 		if ( collectionIsInitialized( collection ) ) {
 			// handles arrays and newly instantiated collections
-			return collectionType.getElementsIterator( collection, session );
+			return collectionType.getElementsIterator( collection );
 		}
 		else {
 			// does not handle arrays (thats ok, cos they can't be lazy)

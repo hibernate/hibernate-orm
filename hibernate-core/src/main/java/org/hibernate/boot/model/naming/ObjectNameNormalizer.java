@@ -20,7 +20,7 @@ public abstract class ObjectNameNormalizer {
 
 	/**
 	 * Normalizes the quoting of identifiers.
-	 * <p/>
+	 * <p>
 	 * This implements the rules set forth in JPA 2 (section "2.13 Naming of Database Objects") which
 	 * states that the double-quote (") is the character which should be used to denote a {@code quoted
 	 * identifier}.  Here, we handle recognizing that and converting it to the more elegant
@@ -58,10 +58,7 @@ public abstract class ObjectNameNormalizer {
 	 */
 	public String normalizeIdentifierQuotingAsString(String identifierText) {
 		final Identifier identifier = normalizeIdentifierQuoting( identifierText );
-		if ( identifier == null ) {
-			return null;
-		}
-		return identifier.render( database().getDialect() );
+		return identifier == null ? null : identifier.render( database().getDialect() );
 	}
 
 	public String toDatabaseIdentifierText(String identifierText) {

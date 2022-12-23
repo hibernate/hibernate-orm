@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -27,13 +28,16 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
- * A column of a relational database table
+ * A mapping model object representing a {@linkplain jakarta.persistence.Column column}
+ * of a relational database {@linkplain Table table}.
  *
  * @author Gavin King
  */
@@ -55,9 +59,11 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
+	private String assignmentExpression;
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
+	private String specializedTypeDeclaration;
 
 	public Column() {
 	}
@@ -194,40 +200,38 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return object instanceof Column && equals( (Column) object );
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	public boolean equals(Column column) {
-		if ( null == column ) {
-			return false;
-		}
-		if ( this == column ) {
-			return true;
-		}
-
-		return isQuoted() ?
-				name.equals( column.name ) :
-				name.equalsIgnoreCase( column.name );
+		return column != null && (
+				this == column || isQuoted() ? name.equals( column.name ) : name.equalsIgnoreCase( column.name )
+		);
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		Type type = getValue().getType();
-		try {
-			int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
-			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
-				throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
+		if ( sqlTypeCode == null ) {
+			Type type = getValue().getType();
+			try {
+				int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
+				if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
+					throw new MappingException( "SQL type codes do not match, mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
+				}
+				return this.sqlTypeCode = sqlTypeCode;
 			}
-			return sqlTypeCode;
+			catch (MappingException me)  {
+				throw me;
+			}
+			catch (Exception e) {
+				throw new MappingException(
+						"Could not determine type for column " +
+								name +
+								" of type " +
+								type.getClass().getName() +
+								": " +
+								e.getClass().getName(),
+						e
+				);
+			}
 		}
-		catch (Exception e) {
-			throw new MappingException(
-					"Could not determine type for column " +
-							name +
-							" of type " +
-							type.getClass().getName() +
-							": " +
-							e.getClass().getName(),
-					e
-			);
-		}
+		return sqlTypeCode;
 	}
 
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
@@ -237,7 +241,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			final BasicType<?> elementType = containerType.getElementType();
 			final int sqlTypeCode;
 			try {
-				sqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+				sqlTypeCode = elementType.getJdbcType().getDdlTypeCode();
 			}
 			catch (Exception e) {
 				throw new MappingException(
@@ -269,11 +273,11 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	/**
-	 * Returns the underlying columns SqlTypeCode.
-	 * If null, it is because the SqlTypeCode is unknown.
-	 * <p/>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
-	 * for the columns associated Value/Type.
+	 * Returns {@linkplain org.hibernate.type.SqlTypes SQL type code}
+	 * for this column, or {@code null} if the type code is unknown.
+	 * <p>
+	 * Use {@link #getSqlTypeCode(Mapping)} to retrieve the type code
+	 * using {@link Value} associated with the column.
 	 *
 	 * @return sqlTypeCode if it is set, otherwise null.
 	 */
@@ -285,6 +289,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		sqlTypeCode = typeCode;
 	}
 
+	public String getSqlType(Metadata mapping) throws HibernateException {
+		return getSqlType( mapping.getDatabase().getTypeConfiguration(), mapping.getDatabase().getDialect(), mapping );
+	}
+
+	/**
+	 * @deprecated use {@link #getSqlType(Metadata)}
+	 */
+	@Deprecated(since = "6.2")
 	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
 			try {
@@ -345,9 +357,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
+		final JdbcMapping jdbcMapping = (JdbcMapping) type;
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
+		final JavaType<?> javaType = jdbcMapping.getJdbcJavaType();
 		columnSize = dialect.getSizeStrategy().resolveSize(
-				( (JdbcMapping) type ).getJdbcType(),
-				( (JdbcMapping) type ).getJavaTypeDescriptor(),
+				jdbcType,
+				javaType,
 				precision,
 				scale,
 				length
@@ -389,17 +404,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
-		while ( !( type instanceof JdbcMapping ) ) {
-			//ManyToOneType doesn't implement JdbcMapping
-			type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( mapping );
-			if ( type instanceof ComponentType ) {
-				type = ( (ComponentType) type ).getSubtypes()[typeIndex];
-				while (type instanceof ComponentType) {
-					type = ( (ComponentType) type ).getSubtypes()[0];
-				}
-			}
+		int index = 0;
+		if ( type instanceof EntityType ) {
+			EntityType entityType = (EntityType) type;
+			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
-		return type;
+		else if ( type instanceof ComponentType ) {
+			for (Type subtype : ((ComponentType) type).getSubtypes() ) {
+				Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
+				if ( result != null ) {
+					return result;
+				}
+				index += subtype.getColumnSpan( mapping );
+			}
+			return null;
+		}
+		else if ( typeIndex == 0 ) {
+			return type;
+		}
+		else  {
+			return null;
+		}
 	}
 
 	public String getSqlType() {
@@ -420,7 +445,19 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	@Override
 	public String toString() {
-		return getClass().getName() + '(' + getName() + ')';
+		return getClass().getSimpleName() + '(' + getName() + ')';
+	}
+
+	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
+		this.specializedTypeDeclaration = specializedTypeDeclaration;
+	}
+
+	public String getSpecializedTypeDeclaration() {
+		return specializedTypeDeclaration;
+	}
+
+	public boolean hasSpecializedTypeDeclaration() {
+		return specializedTypeDeclaration != null;
 	}
 
 	public String getCheckConstraint() {
@@ -436,7 +473,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public String checkConstraint() {
-		if (checkConstraint==null) {
+		if ( checkConstraint == null ) {
 			return null;
 		}
 		return " check (" + checkConstraint + ")";
@@ -474,12 +511,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	@Override
 	public String getText(Dialect d) {
-		return getQuotedName( d );
+		return assignmentExpression != null ? assignmentExpression : getQuotedName( d );
 	}
 
 	@Override
 	public String getText() {
-		return getName();
+		return assignmentExpression != null ? assignmentExpression : getName();
 	}
 
 	@Override
@@ -532,6 +569,13 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		this.generatedAs = generatedAs;
 	}
 
+	public String getAssignmentExpression() {
+		return assignmentExpression;
+	}
+
+	public void setAssignmentExpression(String assignmentExpression) {
+		this.assignmentExpression = assignmentExpression;
+	}
 
 	public String getCustomWrite() {
 		return customWrite;
@@ -579,6 +623,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.setComment( comment );
 		copy.setDefaultValue( defaultValue );
 		copy.setGeneratedAs( generatedAs );
+		copy.setAssignmentExpression( assignmentExpression );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
 		return copy;

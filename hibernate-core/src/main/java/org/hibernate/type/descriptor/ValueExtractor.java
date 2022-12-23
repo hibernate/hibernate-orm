@@ -11,8 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Contract for extracting value via JDBC from {@link ResultSet} or as output
- * param from {@link CallableStatement}.
+ * Contract for extracting values from a JDBC {@link ResultSet} or
+ * from output the parameters of a {@link CallableStatement}.
  *
  * @author Steve Ebersole
  */

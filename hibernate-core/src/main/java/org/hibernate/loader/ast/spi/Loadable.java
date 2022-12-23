@@ -11,19 +11,37 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 
 /**
- * Contract for things that can be loaded by a Loader.
- *
- * Generally speaking this is limited to entities and collections
+ * Common details for things that can be loaded by a {@linkplain Loader loader} - generally
+ * {@linkplain org.hibernate.metamodel.mapping.EntityMappingType entities} and
+ * {@linkplain org.hibernate.metamodel.mapping.PluralAttributeMapping plural attributes} (collections).
  *
  * @see Loader
+ * @see org.hibernate.metamodel.mapping.EntityMappingType
+ * @see org.hibernate.metamodel.mapping.PluralAttributeMapping
  *
  * @author Steve Ebersole
  */
 public interface Loadable extends ModelPart, RootTableGroupProducer {
-	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
-	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
-	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);
-
+	/**
+	 * The name for this loadable, for use as the root when generating
+	 * {@linkplain org.hibernate.spi.NavigablePath relative paths}
+	 */
 	String getRootPathName();
 
+	/**
+	 * Whether any of the "influencers" affect this loadable.
+	 */
+	boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers);
+
+	/**
+	 * Whether the {@linkplain LoadQueryInfluencers#getEffectiveEntityGraph() effective entity-graph}
+	 * applies to this loadable
+	 */
+	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
+
+	/**
+	 * Whether any of the {@linkplain LoadQueryInfluencers#getEnabledFetchProfileNames()}
+	 * apply to this loadable
+	 */
+	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);
 }

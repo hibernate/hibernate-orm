@@ -13,6 +13,8 @@ on:
   pull_request:
     branches:
       - 'main'
+      
+permissions: {} # none
 
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
 concurrency:
@@ -25,6 +27,8 @@ concurrency:
 
 jobs:
   build:
+    permissions:
+      contents: read
     name: Java 11
     runs-on: ubuntu-latest
     strategy:
@@ -34,14 +38,16 @@ jobs:
           - rdbms: h2
           - rdbms: hsqldb
           - rdbms: derby
-          - rdbms: mysql8
+          - rdbms: mysql
           - rdbms: mariadb
-          - rdbms: postgresql_9_5
-          - rdbms: postgresql_13
+          - rdbms: postgresql
+          - rdbms: edb
           - rdbms: oracle
           - rdbms: db2
           - rdbms: mssql
           - rdbms: sybase
+# Running with CockroachDB requires at least 2-4 vCPUs, which we don't have on GH Actions runners
+#          - rdbms: cockroachdb
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:
@@ -61,8 +67,7 @@ jobs:
           java-version: '11'
       - name: Get year/month for cache key
         id: get-date
-        run: |
-          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
+        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
         shell: bash
       - name: Cache Maven local repository
         uses: actions/cache@v2

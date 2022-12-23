@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -18,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -28,10 +29,10 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -70,7 +71,8 @@ public class DiscriminatedAssociationAttributeMapping
 			JavaType<?> baseAssociationJtd,
 			ManagedMappingType declaringType,
 			int stateArrayPosition,
-			AttributeMetadataAccess attributeMetadataAccess,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
 			FetchTiming fetchTiming,
 			PropertyAccess propertyAccess,
 			Property bootProperty,
@@ -80,12 +82,12 @@ public class DiscriminatedAssociationAttributeMapping
 		super(
 				bootProperty.getName(),
 				stateArrayPosition,
-				attributeMetadataAccess,
+				fetchableIndex,
+				attributeMetadata,
 				fetchTiming,
 				FetchStyle.SELECT,
 				declaringType,
-				propertyAccess,
-				null
+				propertyAccess
 		);
 		this.navigableRole = attributeRole;
 
@@ -115,6 +117,7 @@ public class DiscriminatedAssociationAttributeMapping
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( discriminatorValue );
 	}
 
+	@Override
 	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
 	}
@@ -184,8 +187,34 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public Fetchable getFetchable(int position) {
+		switch ( position ) {
+			case 0:
+				assert getDiscriminatorPart().getFetchableKey() == 0;
+				return getDiscriminatorPart();
+			case 1:
+				assert getKeyPart().getFetchableKey() == 1;
+				return getKeyPart();
+		}
+		throw new IndexOutOfBoundsException(position);
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return getDiscriminatorPart().getContainingTableExpression();
+	}
+
+	@Override
 	public int getJdbcTypeCount() {
 		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		if ( columnIndex == 0 ) {
+			return getDiscriminatorPart();
+		}
+		return getKeyPart();
 	}
 
 	@Override
@@ -239,7 +268,6 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -286,18 +314,12 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+		discriminatorMapping.breakDownJdbcValues( domainValue, valueConsumer, session );
+	}
 
-		final Object discriminator = discriminatorMapping
-				.getModelPart()
-				.resolveDiscriminatorForEntityType( concreteMappingType );
-		final Object disassembledDiscriminator = discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
-		valueConsumer.consume( disassembledDiscriminator, discriminatorMapping.getDiscriminatorPart() );
-
-		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( domainValue );
-		final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
-		valueConsumer.consume( disassembledKey, discriminatorMapping.getKeyPart() );
+	@Override
+	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+		discriminatorMapping.decompose( domainValue, valueConsumer, session );
 	}
 
 	@Override
@@ -307,9 +329,15 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+	public void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getDiscriminatorPart() );
 		fetchableConsumer.accept( getKeyPart() );
+	}
+
+	@Override
+	public void visitFetchables(IndexedConsumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		//noinspection unchecked,rawtypes
+		forEachSubPart( (IndexedConsumer) fetchableConsumer, treatTargetType );
 	}
 
 	@Override
@@ -318,12 +346,24 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		consumer.accept( 0, getDiscriminatorPart() );
+		consumer.accept( 1, getKeyPart() );
+	}
+
+	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		consumer.accept( getDiscriminatorPart() );
 		consumer.accept( getKeyPart() );
 	}
 
-	public static class MutabilityPlanImpl implements MutabilityPlan {
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+				|| discriminatorMapping.getKeyPart().isPartitioned();
+	}
+
+	public static class MutabilityPlanImpl implements MutabilityPlan<Object> {
 		// for now use the AnyType for consistency with write-operations
 		private final AnyType anyType;
 
@@ -388,13 +428,7 @@ public class DiscriminatedAssociationAttributeMapping
 			SqlExpressionResolver sqlExpressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			joinType = SqlAstJoinType.INNER;
-		}
-		else {
-			joinType = requestedJoinType;
-		}
+		final SqlAstJoinType joinType = Objects.requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,

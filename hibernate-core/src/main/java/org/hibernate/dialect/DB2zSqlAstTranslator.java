@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -19,7 +18,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.DB2zDialect.DB2_LUW_VERSION9;
+import static org.hibernate.dialect.DB2zDialect.DB2_LUW_VERSION;
 
 /**
  * A SQL AST translator for DB2z.
@@ -39,11 +38,7 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Percent fetches or ties fetches aren't supported in DB2 z/OS
 		// Also, variable limit isn't supported before 12.0
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| version.isBefore(12) && queryPart.isRoot() && hasLimit()
-						|| version.isBefore(12) && queryPart.getFetchClauseExpression() != null && !( queryPart.getFetchClauseExpression() instanceof Literal )
-		);
+		return getQueryPartForRowNumbering() != queryPart && ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) );
 	}
 
 	@Override
@@ -59,6 +54,10 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		if ( shouldInlineCte( tableGroup ) ) {
+			inlineCteTableGroup( tableGroup, lockMode );
+			return false;
+		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
@@ -80,6 +79,6 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	@Override
 	public DatabaseVersion getDB2Version() {
-		return DB2_LUW_VERSION9;
+		return DB2_LUW_VERSION;
 	}
 }

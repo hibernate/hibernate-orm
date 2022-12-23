@@ -7,30 +7,41 @@
 package org.hibernate.annotations;
 
 /**
- * Possible styles of checking return codes on SQL INSERT, UPDATE and DELETE queries.
+ * Enumerates strategies for checking JDBC return codes for custom SQL DML queries.
+ * <p>
+ * Return code checking is used to verify that a SQL statement actually had the
+ * intended effect, for example, that an {@code UPDATE} statement actually changed
+ * the expected number of rows.
  *
  * @author L�szl� Benke
+ *
+ * @see SQLInsert#check()
+ * @see SQLUpdate#check()
+ * @see SQLDelete#check()
+ * @see SQLDeleteAll#check()
  */
 public enum ResultCheckStyle {
 	/**
-	 * Do not perform checking.  Might mean that the user really just does not want any checking.  Might
-	 * also mean that the user is expecting a failure to be indicated by a {@link java.sql.SQLException} being
-	 * thrown (presumably from a {@link java.sql.CallableStatement} which is performing explicit checks and
-	 * propagating failures back through the driver).
+	 * No return code checking. Might mean that no checks are required, or that
+	 * failure is indicated by a {@link java.sql.SQLException} being thrown, for
+	 * example, by a {@link java.sql.CallableStatement stored procedure} which
+	 * performs explicit checks.
 	 */
 	NONE,
 	/**
-	 * Perform row-count checking.  Row counts are the int values returned by both
-	 * {@link java.sql.PreparedStatement#executeUpdate()} and
-	 * {@link java.sql.Statement#executeBatch()}.  These values are checked
-	 * against some expected count.
+	 * Row count checking. A row count is an integer value returned by
+	 * {@link java.sql.PreparedStatement#executeUpdate()} or
+	 * {@link java.sql.Statement#executeBatch()}. The row count is checked
+	 * against an expected value. For example, the expected row count for
+	 * an {@code INSERT} statement is always 1.
 	 */
 	COUNT,
 	/**
-	 * Essentially the same as {@link #COUNT} except that the row count actually
-	 * comes from an output parameter registered as part of a
-	 * {@link java.sql.CallableStatement}.  This style explicitly prohibits
-	 * statement batching from being used...
+	 * Essentially identical to {@link #COUNT} except that the row count is
+	 * obtained via an output parameter of a {@link java.sql.CallableStatement
+	 * stored procedure}.
+	 * <p>
+	 * Statement batching is disabled when {@code PARAM} is selected.
 	 */
 	PARAM
 }

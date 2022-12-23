@@ -53,7 +53,6 @@ public class UpdateStatement extends AbstractMutationStatement {
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		this(
-				cteContainer.isWithRecursive(),
 				cteContainer.getCteStatements(),
 				targetTable,
 				assignments,
@@ -63,7 +62,6 @@ public class UpdateStatement extends AbstractMutationStatement {
 	}
 
 	public UpdateStatement(
-			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
 			NamedTableReference targetTable,
 			List<Assignment> assignments,
@@ -72,7 +70,6 @@ public class UpdateStatement extends AbstractMutationStatement {
 		super( cteStatements, targetTable, returningColumns );
 		this.assignments = assignments;
 		this.restriction = restriction;
-		setWithRecursive( withRecursive );
 	}
 
 	public List<Assignment> getAssignments() {

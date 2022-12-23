@@ -38,7 +38,7 @@ public class ParameterParser {
 	/**
 	 * Performs the actual parsing and tokenizing of the query string making appropriate
 	 * callbacks to the given recognizer upon recognition of the various tokens.
-	 * <p/>
+	 * <p>
 	 * Note that currently, this only knows how to deal with a single output
 	 * parameter (for callable statements).  If we later add support for
 	 * multiple output params, this, obviously, needs to change.

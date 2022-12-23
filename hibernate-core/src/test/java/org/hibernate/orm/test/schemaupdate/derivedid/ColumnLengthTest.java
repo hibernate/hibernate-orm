@@ -16,7 +16,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
@@ -61,6 +60,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 				.addAnnotatedClass( Employee.class )
 				.addAnnotatedClass( Dependent.class )
 				.buildMetadata();
+		metadata.orderColumns( true );
 		metadata.validate();
 	}
 
@@ -81,7 +81,7 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 
 		assertTrue( checkCommandIsGenerated(
 				commands,
-				"create table DEPENDENT (name varchar(255) not null, FK1 varchar(32) not null, FK2 varchar(10) not null, primary key (FK1, FK2, name));"
+				"create table DEPENDENT (FK2 varchar(10) not null, FK1 varchar(32) not null, name varchar(255) not null, primary key (FK1, FK2, name));"
 		) );
 
 	}
@@ -122,10 +122,8 @@ public class ColumnLengthTest extends BaseUnitTestCase {
 		@EmbeddedId
 		DependentId id;
 		@MapsId("empPK")
-		@JoinColumns({
-				@JoinColumn(name = "FK1", referencedColumnName = "first_name"),
-				@JoinColumn(name = "FK2", referencedColumnName = "last_name")
-		})
+		@JoinColumn(name = "FK1", referencedColumnName = "first_name")
+		@JoinColumn(name = "FK2", referencedColumnName = "last_name")
 		@ManyToOne
 		Employee emp;
 	}

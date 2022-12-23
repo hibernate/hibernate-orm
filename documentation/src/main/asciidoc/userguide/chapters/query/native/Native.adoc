@@ -185,12 +185,12 @@ As seen in the associated SQL query, Hibernate manages to construct the entity h
 Even when using the `addJoin()` method, the result list will only contain the root entity.
 Joined entities will only be present for their respective association.
 
-[[sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]]
-.Hibernate native query selecting entities with joined many-to-one association and `ResultTransformer`
+[[sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example]]
+.Hibernate native query selecting entities with joined many-to-one association and `TupleTransformer`
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]
+include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-tuple-transformer-example]
 ----
 ====
 
@@ -909,7 +909,7 @@ You can see the expected order by enabling debug logging, so Hibernate can print
 To see the expected sequence, remember to not include your custom SQL through annotations or mapping files as that will override the Hibernate generated static SQL.
 ====
 
-Overriding SQL statements for secondary tables is also possible using `@org.hibernate.annotations.Table` and the `sqlInsert`, `sqlUpdate`, `sqlDelete` attributes.
+Overriding SQL statements for secondary tables is also possible.
 
 [[sql-custom-crud-secondary-table-example]]
 .Overriding SQL statements for secondary tables

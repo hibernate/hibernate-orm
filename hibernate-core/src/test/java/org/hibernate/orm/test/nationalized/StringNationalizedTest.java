@@ -35,8 +35,8 @@ import static org.hamcrest.core.Is.is;
 @TestForIssue(jiraKey = "10495")
 @RequiresDialects(
 		value = {
-				@RequiresDialect(value = OracleDialect.class, majorVersion = 10),
-				@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1)
+				@RequiresDialect(value = OracleDialect.class),
+				@RequiresDialect(value = PostgreSQLDialect.class)
 		})
 @DomainModel(
 		annotatedClasses = StringNationalizedTest.NationalizedEntity.class
@@ -48,7 +48,7 @@ public class StringNationalizedTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from NationalizedEntity" ).executeUpdate();
+					session.createQuery( "delete from NationalizedEntity", null ).executeUpdate();
 				}
 		);
 	}
@@ -59,13 +59,13 @@ public class StringNationalizedTest {
 				session -> {
 					NationalizedEntity ne = new NationalizedEntity();
 					ne.name = "Hello";
-					session.save( ne );
+					session.persist( ne );
 				}
 		);
 
 		scope.inSession(
 				session -> {
-					final Query query = session.createQuery( "from NationalizedEntity where name = :name" );
+					final Query query = session.createQuery( "from NationalizedEntity where name = :name", null );
 					query.setParameter( "name", "Hello" );
 					final List list = query.list();
 					assertThat( list.size(), is( 1 ) );

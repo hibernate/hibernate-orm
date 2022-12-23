@@ -16,7 +16,6 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
@@ -27,15 +26,22 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 
 /**
  * A convenience base class for listeners responding to save events.
@@ -106,32 +112,32 @@ public abstract class AbstractSaveEventListener<C>
 			boolean requiresImmediateIdAccess) {
 		callbackRegistry.preCreate( entity );
 
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
-		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Object generatedId = persister.getIdentifierGenerator().generate( source, entity );
-		if ( generatedId == null ) {
-			throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
-		}
-		else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
-			return source.getIdentifier( entity );
-		}
-		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
-			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
+		final EntityPersister persister = source.getEntityPersister( entityName, entity );
+		Generator generator = persister.getGenerator();
+		if ( !generator.generatedOnExecution() ) {
+			final Object generatedId = ( (BeforeExecutionGenerator) generator ).generate( source, entity, null, INSERT );
+			if ( generatedId == null ) {
+				throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
+			}
+			else if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
+				return source.getIdentifier( entity );
+			}
+			else {
+				// TODO: define toString()s for generators
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf(
+							"Generated identifier: %s, using strategy: %s",
+							persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
+							generator.getClass().getName()
+					);
+				}
+				return performSave( entity, generatedId, persister, false, context, source, true );
+			}
 		}
 		else {
-			// TODO: define toString()s for generators
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Generated identifier: %s, using strategy: %s",
-						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getIdentifierGenerator().getClass().getName()
-				);
-			}
-
-			return performSave( entity, generatedId, persister, false, context, source, true );
+			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
 		}
 	}
 
@@ -166,11 +172,28 @@ public abstract class AbstractSaveEventListener<C>
 			LOG.tracev( "Saving {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
 		}
 
-		final EntityKey key;
+		final EntityKey key = entityKey( entity, id, persister, useIdentityColumn, source );
+		if ( invokeSaveLifecycle( entity, persister, source ) ) {
+			return id;
+		}
+		else {
+			return performSaveOrReplicate(
+					entity,
+					key,
+					persister,
+					useIdentityColumn,
+					context,
+					source,
+					requiresImmediateIdAccess
+			);
+		}
+	}
+
+	private static EntityKey entityKey(Object entity, Object id, EntityPersister persister, boolean useIdentityColumn, EventSource source) {
 		if ( !useIdentityColumn ) {
-			key = source.generateEntityKey( id, persister );
+			final EntityKey key = source.generateEntityKey( id, persister );
 			final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-			Object old = persistenceContext.getEntity( key );
+			final Object old = persistenceContext.getEntity( key );
 			if ( old != null ) {
 				if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
 					source.forceFlush( persistenceContext.getEntry( old ) );
@@ -180,24 +203,11 @@ public abstract class AbstractSaveEventListener<C>
 				}
 			}
 			persister.setIdentifier( entity, id, source );
+			return key;
 		}
 		else {
-			key = null;
+			return null;
 		}
-
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
-			return id; //EARLY EXIT
-		}
-
-		return performSaveOrReplicate(
-				entity,
-				key,
-				persister,
-				useIdentityColumn,
-				context,
-				source,
-				requiresImmediateIdAccess
-		);
 	}
 
 	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
@@ -238,10 +248,9 @@ public abstract class AbstractSaveEventListener<C>
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-		Object id = key == null ? null : key.getIdentifier();
+		final Object id = key == null ? null : key.getIdentifier();
 
-		boolean inTrx = source.isTransactionInProgress();
-		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
+		boolean shouldDelayIdentityInserts = !source.isTransactionInProgress() && !requiresImmediateIdAccess;
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
@@ -262,11 +271,57 @@ public abstract class AbstractSaveEventListener<C>
 
 		cascadeBeforeSave( source, persister, entity, context );
 
-		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
+		final AbstractEntityInsertAction insert = addInsertAction(
+				cloneAndSubstituteValues( entity, persister, context, source, id ),
+				id,
+				entity,
+				persister,
+				useIdentityColumn,
+				source,
+				shouldDelayIdentityInserts
+		);
+
+		// postpone initializing id in case the insert has non-nullable transient dependencies
+		// that are not resolved until cascadeAfterSave() is executed
+		cascadeAfterSave( source, persister, entity, context );
+
+		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
+
+		EntityEntry newEntry = persistenceContext.getEntry( entity );
+		if ( newEntry != original ) {
+			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
+			if ( extraState == null ) {
+				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
+			}
+		}
+
+		return finalId;
+	}
+
+	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
+		if ( useIdentityColumn && insert.isEarlyInsert() ) {
+			if ( insert instanceof EntityIdentityInsertAction ) {
+				Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
+				insert.handleNaturalIdPostSaveNotifications( generatedId );
+				return generatedId;
+			}
+			else {
+				throw new IllegalStateException(
+						"Insert should be using an identity column, but action is of unexpected type: "
+								+ insert.getClass().getName()
+				);
+			}
+		}
+		else {
+			return id;
+		}
+	}
+
+	private Object[] cloneAndSubstituteValues(Object entity, EntityPersister persister, C context, EventSource source, Object id) {
+		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap(context), source );
 		Type[] types = persister.getPropertyTypes();
 
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
-
 		if ( persister.hasCollections() ) {
 			substitute = visitCollectionsBeforeSave( entity, id, values, types, source ) || substitute;
 		}
@@ -282,42 +337,7 @@ public abstract class AbstractSaveEventListener<C>
 				values,
 				source
 		);
-
-		final AbstractEntityInsertAction insert = addInsertAction(
-				values,
-				id,
-				entity,
-				persister,
-				useIdentityColumn,
-				source,
-				shouldDelayIdentityInserts
-		);
-
-		// postpone initializing id in case the insert has non-nullable transient dependencies
-		// that are not resolved until cascadeAfterSave() is executed
-		cascadeAfterSave( source, persister, entity, context );
-		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( !(insert instanceof EntityIdentityInsertAction) ) {
-				throw new IllegalStateException(
-						"Insert should be using an identity column, but action is of unexpected type: " +
-								insert.getClass().getName()
-				);
-			}
-			id = ((EntityIdentityInsertAction) insert).getGeneratedId();
-
-			insert.handleNaturalIdPostSaveNotifications( id );
-		}
-
-		EntityEntry newEntry = persistenceContext.getEntry( entity );
-
-		if ( newEntry != original ) {
-			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
-			if ( extraState == null ) {
-				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
-			}
-		}
-
-		return id;
+		return values;
 	}
 
 	private AbstractEntityInsertAction addInsertAction(
@@ -345,7 +365,7 @@ public abstract class AbstractSaveEventListener<C>
 					id,
 					values,
 					entity,
-					Versioning.getVersion( values, persister ),
+					getVersion( values, persister ),
 					persister,
 					isVersionIncrementDisabled(),
 					source
@@ -411,12 +431,7 @@ public abstract class AbstractSaveEventListener<C>
 
 		//keep the existing version number in the case of replicate!
 		if ( persister.isVersioned() ) {
-			substitute = Versioning.seedVersion(
-					values,
-					persister.getVersionProperty(),
-					persister.getVersionMapping(),
-					source
-			) || substitute;
+			substitute = seedVersion( entity, values, persister, source ) || substitute;
 		}
 		return substitute;
 	}
@@ -434,7 +449,6 @@ public abstract class AbstractSaveEventListener<C>
 			EntityPersister persister,
 			Object entity,
 			C context) {
-
 		// cascade-save to many-to-one BEFORE the parent is saved
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -466,9 +480,8 @@ public abstract class AbstractSaveEventListener<C>
 			EntityPersister persister,
 			Object entity,
 			C context) {
-
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		// cascade-save to collections AFTER the collection owner was saved
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

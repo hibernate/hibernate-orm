@@ -6,19 +6,21 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
+ * An {@link Exporter} for {@linkplain ForeignKey foreign key constraints}.
+ *
  * @author Steve Ebersole
  */
 public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
@@ -49,46 +51,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final String[] columnNames = new String[numberOfColumns];
 		final String[] targetColumnNames = new String[numberOfColumns];
 
-		final Iterator targetItr;
-		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
-				throw new AssertionFailure(
-						String.format(
-								Locale.ENGLISH,
-								COLUMN_MISMATCH_MSG,
-								numberOfColumns,
-								foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan(),
-								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
-						)
-				);
-			}
-			targetItr = foreignKey.getReferencedTable().getPrimaryKey().getColumnIterator();
-		}
-		else {
-			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
-				throw new AssertionFailure(
-						String.format(
-								Locale.ENGLISH,
-								COLUMN_MISMATCH_MSG,
-								numberOfColumns,
-								foreignKey.getReferencedColumns().size(),
-								foreignKey.getName(),
-								foreignKey.getTable().getName(),
-								foreignKey.getReferencedTable().getName()
-						)
-				);
-			}
-			targetItr = foreignKey.getReferencedColumns().iterator();
-		}
-
-		int i = 0;
-		final Iterator itr = foreignKey.getColumnIterator();
-		while ( itr.hasNext() ) {
-			columnNames[i] = ( (Column) itr.next() ).getQuotedName( dialect );
-			targetColumnNames[i] = ( (Column) targetItr.next() ).getQuotedName( dialect );
-			i++;
+		final List<Column> targetColumns = getTargetColumns( foreignKey, numberOfColumns );
+		final List<Column> columns = foreignKey.getColumns();
+		for ( int i=0; i<columns.size() && i<targetColumns.size(); i++ ) {
+			columnNames[i] = columns.get(i).getQuotedName( dialect );
+			targetColumnNames[i] = targetColumns.get(i).getQuotedName( dialect );
 		}
 
 		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
@@ -111,12 +78,48 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				);
 
 		if ( dialect.supportsCascadeDelete() ) {
-			if ( foreignKey.isCascadeDeleteEnabled() ) {
-				buffer.append( " on delete cascade" );
+			OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
 		}
 
 		return new String[] { buffer.toString() };
+	}
+
+	private static List<Column> getTargetColumns(ForeignKey foreignKey, int numberOfColumns) {
+		if ( foreignKey.isReferenceToPrimaryKey() ) {
+			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
+				throw new AssertionFailure(
+						String.format(
+								Locale.ENGLISH,
+								COLUMN_MISMATCH_MSG,
+								numberOfColumns,
+								foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan(),
+								foreignKey.getName(),
+								foreignKey.getTable().getName(),
+								foreignKey.getReferencedTable().getName()
+						)
+				);
+			}
+			return foreignKey.getReferencedTable().getPrimaryKey().getColumns();
+		}
+		else {
+			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
+				throw new AssertionFailure(
+						String.format(
+								Locale.ENGLISH,
+								COLUMN_MISMATCH_MSG,
+								numberOfColumns,
+								foreignKey.getReferencedColumns().size(),
+								foreignKey.getName(),
+								foreignKey.getTable().getName(),
+								foreignKey.getReferencedTable().getName()
+						)
+				);
+			}
+			return foreignKey.getReferencedColumns();
+		}
 	}
 
 	@Override
@@ -134,9 +137,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		}
 
 		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
-		return new String[] {
-				getSqlDropStrings( sourceTableName, foreignKey, dialect )
-		};
+		return new String[] { getSqlDropStrings( sourceTableName, foreignKey, dialect ) };
 	}
 
 	private String getSqlDropStrings(String tableName, ForeignKey foreignKey, Dialect dialect) {

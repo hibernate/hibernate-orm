@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -28,6 +30,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceException;
@@ -41,7 +44,7 @@ import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MES
 /**
  * A connection provider that uses the {@link DriverManager} directly to open connections and provides
  * a very rudimentary connection pool.
- * <p/>
+ * <p>
  * IMPL NOTE : not intended for production use!
  *
  * @author Gavin King
@@ -295,7 +298,7 @@ public class DriverManagerConnectionProviderImpl
 	protected void validateConnectionsReturned() {
 		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
 		if ( allocationCount != 0 ) {
-			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections!");
+			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
 	}
 
@@ -422,7 +425,7 @@ public class DriverManagerConnectionProviderImpl
 						}
 					}
 					throw new HibernateException(
-							"The internal connection pool has reached its maximum size and no connection is currently available!" );
+							"The internal connection pool has reached its maximum size and no connection is currently available" );
 				}
 				conn = prepareConnection( conn );
 			} while ( conn == null );
@@ -605,7 +608,22 @@ public class DriverManagerConnectionProviderImpl
 				CONNECTIONS_MESSAGE_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
 				active = false;
 				if ( executorService != null ) {
-					executorService.shutdown();
+					PrivilegedAction delegateToPrivilegedAction =
+							new PrivilegedAction() {
+
+								@Override
+								public Object run() {
+									executorService.shutdown();
+									return null;
+								}
+							};
+					if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
+						AccessController.doPrivileged(
+								delegateToPrivilegedAction );
+					}
+					else {
+						delegateToPrivilegedAction.run();
+					}
 				}
 				executorService = null;
 				try {

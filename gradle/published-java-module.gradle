@@ -11,6 +11,7 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 apply plugin: 'signing'
 
+// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
 tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
 
 configurations {

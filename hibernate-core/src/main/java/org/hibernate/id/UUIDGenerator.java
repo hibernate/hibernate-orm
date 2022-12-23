@@ -26,12 +26,12 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
  * {@link UUIDGenerationStrategy generation strategy}.  The values this generator can return
  * include {@link UUID}, {@link String} and byte[16]
- * <p/>
+ * <p>
  * Supports 2 config parameters:<ul>
  * <li>{@link #UUID_GEN_STRATEGY} - names the {@link UUIDGenerationStrategy} instance to use</li>
  * <li>{@link #UUID_GEN_STRATEGY_CLASS} - names the {@link UUIDGenerationStrategy} class to use</li>
  * </ul>
- * <p/>
+ * <p>
  * Currently there are 2 standard implementations of {@link UUIDGenerationStrategy}:<ul>
  * <li>{@link StandardRandomStrategy} (the default, if none specified)</li>
  * <li>{@link org.hibernate.id.uuid.CustomVersionOneStrategy}</li>
@@ -41,7 +41,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * {@link org.hibernate.annotations.UuidGenerator} instead
  */
 @Deprecated(since = "6.0")
-public class UUIDGenerator implements StandardGenerator {
+public class UUIDGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
@@ -51,22 +51,22 @@ public class UUIDGenerator implements StandardGenerator {
 	private UUIDJavaType.ValueTransformer valueTransformer;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		// check first for an explicit strategy instance
-		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
+		strategy = (UUIDGenerationStrategy) parameters.get( UUID_GEN_STRATEGY );
 
 		if ( strategy == null ) {
 			// next check for an explicit strategy class
-			final String strategyClassName = params.getProperty( UUID_GEN_STRATEGY_CLASS );
+			final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
 					final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-					final Class strategyClass = cls.classForName( strategyClassName );
+					final Class<?> strategyClass = cls.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
-					catch ( Exception ignore ) {
-						LOG.unableToInstantiateUuidGenerationStrategy(ignore);
+					catch ( Exception e ) {
+						LOG.unableToInstantiateUuidGenerationStrategy(e);
 					}
 				}
 				catch ( ClassLoadingException ignore ) {

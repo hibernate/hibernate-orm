@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -69,9 +68,10 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 		final JavaType javaType = ( (SqmExpressible<?>) valueMapping ).getExpressibleJavaType();
 		final int[] valuesArrayPositions = new int[expressions.size()];
 		for ( int i = 0; i < expressions.size(); i++ ) {
+			final Expression expression = expressions.get( i );
 			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-					expressions.get( i ),
-					javaType,
+					expression,
+					expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
 					null,
 					creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 			).getValuesArrayPosition();
@@ -86,7 +86,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	public static class Builder {

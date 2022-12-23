@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -14,14 +13,17 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 
 /**
  * @author Steve Ebersole
  */
-public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> implements BindableType<J> {
+public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	private final SqmPathSource<?> keyPathSource;
+	private final AnyDiscriminatorSqmPathSource discriminatorPathSource;
 
 	public AnyMappingSqmPathSource(
 			String localPathName,
@@ -29,6 +31,11 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> impleme
 			BindableType jpaBindableType) {
 		super( localPathName, domainType, jpaBindableType );
 		keyPathSource = new BasicSqmPathSource<>( "id", (BasicDomainType<?>) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
+		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>(
+				localPathName,
+				domainType.getDiscriminatorType(),
+				jpaBindableType
+		);
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -40,6 +47,9 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> impleme
 	public SqmPathSource<?> findSubPathSource(String name) {
 		if ( "id".equals( name ) ) {
 			return keyPathSource;
+		}
+		else if("{discriminator}".equals( name )) {
+			return discriminatorPathSource;
 		}
 
 		throw new UnsupportedMappingException( "De-referencing parts of an ANY mapping, other than the key, is not supported" );

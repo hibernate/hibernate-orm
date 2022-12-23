@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Duration;
+import java.time.Instant;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -38,6 +39,11 @@ public class H2DurationIntervalSecondJdbcType implements JdbcType {
 	@Override
 	public int getDefaultSqlTypeCode() {
 		return SqlTypes.INTERVAL_SECOND;
+	}
+
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Duration.class;
 	}
 
 	@Override

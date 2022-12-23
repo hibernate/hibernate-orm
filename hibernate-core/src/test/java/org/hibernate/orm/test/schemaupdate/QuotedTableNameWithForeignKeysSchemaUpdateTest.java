@@ -35,6 +35,7 @@ public class QuotedTableNameWithForeignKeysSchemaUpdateTest extends BaseUnitTest
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/UserGroup.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 			new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}

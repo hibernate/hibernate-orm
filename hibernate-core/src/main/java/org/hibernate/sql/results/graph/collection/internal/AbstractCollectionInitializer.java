@@ -15,14 +15,12 @@ import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -62,7 +60,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			return;
 		}
 
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, collectionAttributeMapping ) ) {
 			return;
 		}
 
@@ -101,6 +99,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			if ( loadingEntry != null ) {
 				collectionInstance = loadingEntry.getCollectionInstance();
+				if ( collectionInstance.getOwner() == null ) {
+					parentAccess.registerResolutionListener(
+							owner -> collectionInstance.setOwner( owner )
+					);
+				}
 				return;
 			}
 
@@ -108,6 +111,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 			if ( existing != null ) {
 				collectionInstance = existing;
+				if ( collectionInstance.getOwner() == null ) {
+					parentAccess.registerResolutionListener(
+							owner -> collectionInstance.setOwner( owner )
+					);
+				}
 				return;
 			}
 
@@ -139,21 +147,6 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 				session.getPersistenceContext().addCollectionHolder( collectionInstance );
 			}
 		}
-	}
-
-	protected boolean isAttributeAssignableToConcreteDescriptor() {
-		if ( parentAccess instanceof EntityInitializer ) {
-			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
-			if ( concreteDescriptor.isPolymorphic() ) {
-				final AbstractEntityPersister declaringType = (AbstractEntityPersister) collectionAttributeMapping.getDeclaringType();
-				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getName() ) ) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
 	}
 
 	@Override

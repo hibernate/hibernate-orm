@@ -19,16 +19,16 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
@@ -274,14 +274,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * specified in a {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link jakarta.persistence.StoredProcedureQuery} to named parameters in
 	 * the JDBC {@link java.sql.CallableStatement}.
-	 * <p/>
+	 * <p>
 	 * As JPA is defined, the use of named parameters is essentially of dubious
 	 * value since by spec the parameters have to be defined in the order they are
 	 * defined in the procedure/function declaration - we can always bind them
 	 * positionally.  The whole idea of named parameters for CallableStatement
 	 * is the ability to bind these in any order, but since we unequivocally
 	 * know the order anyway binding them via name really gains nothing.
-	 * <p/>
+	 * <p>
 	 * If this is {@code true}, we still need to make sure the Dialect supports
 	 * named binding.  Setting this to {@code false} simply circumvents that
 	 * check and always performs positional binding.

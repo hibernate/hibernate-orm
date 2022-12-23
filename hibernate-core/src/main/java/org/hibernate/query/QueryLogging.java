@@ -64,6 +64,6 @@ public interface QueryLogging extends BasicLogger {
 	void ignoringUnrecognizedQueryHint(String hintName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 90003004)
+	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory", id = 90003004)
 	void firstOrMaxResultsSpecifiedWithCollectionFetch();
 }

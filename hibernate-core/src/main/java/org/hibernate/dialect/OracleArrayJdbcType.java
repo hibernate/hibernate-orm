@@ -15,6 +15,7 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -28,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.jboss.logging.Logger;
+
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
  *
@@ -37,6 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class OracleArrayJdbcType extends ArrayJdbcType {
 
 	public static final OracleArrayJdbcType INSTANCE = new OracleArrayJdbcType( null, ObjectJdbcType.INSTANCE );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, OracleArrayJdbcType.class.getName() );
 	private static final ClassValue<Method> NAME_BINDER = new ClassValue<Method>() {
 		@Override
 		protected Method computeValue(Class<?> type) {
@@ -54,13 +58,19 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 	private static final Method CREATE_ARRAY_METHOD;
 
 	static {
+		Class<?> oracleConnectionClass = null;
+		Method createArrayMethod = null;
 		try {
-			ORACLE_CONNECTION_CLASS = Class.forName( "oracle.jdbc.OracleConnection" );
-			CREATE_ARRAY_METHOD = ORACLE_CONNECTION_CLASS.getMethod( "createOracleArray", String.class, Object.class );
+			oracleConnectionClass = Class.forName( "oracle.jdbc.OracleConnection" );
+			createArrayMethod = oracleConnectionClass.getMethod( "createOracleArray", String.class, Object.class );
 		}
 		catch (Exception e) {
-			throw new RuntimeException( "Couldn't initialize OracleArrayJdbcType", e );
+			// Ignore since #resolveType should be called anyway and the OracleArrayJdbcType shouldn't be used
+			// if driver classes are unavailable
+			LOG.warn( "Oracle JDBC driver classes are inaccessible and thus, certain DDL types like ARRAY can not be used!", e );
 		}
+		ORACLE_CONNECTION_CLASS = oracleConnectionClass;
+		CREATE_ARRAY_METHOD = createArrayMethod;
 	}
 
 	private final String typeName;
@@ -86,13 +96,14 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		if ( typeName == null || typeName.isBlank() ) {
 			typeName = dialect.getArrayTypeName(
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
-							elementType.getDefaultSqlTypeCode(),
+							elementType.getDdlTypeCode(),
 							dialect
 					)
 			);
 		}
-		if ( typeName == null ) {
+		if ( typeName == null || CREATE_ARRAY_METHOD == null ) {
 			// Fallback to XML type for the representation of arrays as the native JSON type was only introduced in 21
+			// Also, use the XML type if the Oracle JDBC driver classes are not visible
 			return typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SQLXML );
 		}
 		return new OracleArrayJdbcType( typeName, elementType );
@@ -100,6 +111,9 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
+		if ( CREATE_ARRAY_METHOD == null ) {
+			throw new RuntimeException( "OracleArrayJdbcType shouldn't be used since JDBC driver classes are not visible." );
+		}
 		//noinspection unchecked
 		final BasicPluralJavaType<X> containerJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {

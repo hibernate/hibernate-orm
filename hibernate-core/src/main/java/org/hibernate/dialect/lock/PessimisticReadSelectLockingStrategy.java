@@ -16,21 +16,22 @@ import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * A pessimistic locking strategy where the locks are obtained through select statements.
- * <p/>
- * For non-read locks, this is achieved through the Dialect's specific
- * SELECT ... FOR UPDATE syntax.
- *
- * This strategy is valid for LockMode.PESSIMISTIC_READ
- *
- * This class is a clone of SelectLockingStrategy.
+ * A pessimistic locking strategy where a lock is obtained via a
+ * select statements.
+ * <p>
+ * For non-read locks, this is achieved through the dialect's native
+ * {@code SELECT ... FOR UPDATE} syntax.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_READ}.
+ * <p>
+ * This class is a clone of {@link SelectLockingStrategy}.
  *
  * @author Steve Ebersole
  * @author Scott Marlow
@@ -52,7 +53,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {

@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = Environment.BATCH_STRATEGY, value = "org.hibernate.test.manytomany.batchload.TestingBatchBuilder"),
+				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "-1"),
 		}
 )
 public class BatchedManyToManyTest {

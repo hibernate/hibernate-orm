@@ -51,11 +51,11 @@ public class TimestampJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Timestamp.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Timestamp.class );
 	}
 
 	@Override

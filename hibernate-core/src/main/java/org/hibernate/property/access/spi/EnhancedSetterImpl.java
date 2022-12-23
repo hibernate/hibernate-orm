@@ -10,11 +10,17 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeOwner;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isCompositeTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 
 /**
  * A specialized Setter implementation for handling setting values into
@@ -26,11 +32,20 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
  * @author Luis Barreiro
  */
 public class EnhancedSetterImpl extends SetterFieldImpl {
+
+	private static final int COMPOSITE_TRACKER_MASK = 1;
+	private static final int COMPOSITE_OWNER = 2;
+	private static final int PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK = 4;
+
 	private final String propertyName;
+	private final int enhancementState;
 
 	public EnhancedSetterImpl(Class<?> containerClass, String propertyName, Field field) {
 		super( containerClass, propertyName, field );
 		this.propertyName = propertyName;
+		this.enhancementState = ( CompositeOwner.class.isAssignableFrom( containerClass ) ? COMPOSITE_OWNER : 0 )
+				| ( CompositeTracker.class.isAssignableFrom( field.getType() ) ? COMPOSITE_TRACKER_MASK : 0 )
+				| ( isPersistentAttributeInterceptableType( containerClass ) ? PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK : 0 );
 	}
 
 	@Override
@@ -38,13 +53,13 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 		super.set( target, value );
 
 		// This sets the component relation for dirty tracking purposes
-		if ( target instanceof CompositeOwner && value instanceof CompositeTracker ) {
-			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
+		if ( ( enhancementState & COMPOSITE_OWNER ) != 0 && ( ( enhancementState & COMPOSITE_TRACKER_MASK ) != 0 && value != null || isCompositeTracker( value ) ) ) {
+			asCompositeTracker( value ).$$_hibernate_setOwner( propertyName, asCompositeOwner( target ) );
 		}
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterwards
-		if ( target instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
+		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
+			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
 				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
 			}

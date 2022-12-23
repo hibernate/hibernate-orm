@@ -49,7 +49,7 @@ public final class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 * <p/>
+	 * <p>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #NEXT_FIELD_NAME
@@ -72,7 +72,7 @@ public final class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 * <p/>
+	 * <p>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #PREVIOUS_FIELD_NAME

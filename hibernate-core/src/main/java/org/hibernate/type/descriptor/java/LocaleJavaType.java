@@ -106,4 +106,5 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

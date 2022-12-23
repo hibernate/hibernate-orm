@@ -165,7 +165,7 @@ public class NamedQueryHelper {
 		final Object setting = hints.get( HINT_CACHE_MODE );
 
 		if ( setting != null ) {
-			if ( CacheMode.class.isInstance( setting ) ) {
+			if ( setting instanceof CacheMode ) {
 				return (CacheMode) setting;
 			}
 

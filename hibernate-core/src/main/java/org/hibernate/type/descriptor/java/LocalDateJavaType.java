@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the {@link LocalDate} type.
  *
  * @author Steve Ebersole
  */
@@ -47,7 +47,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.DATE );
+		return context.getJdbcType( Types.DATE );
 	}
 
 	@Override
@@ -155,6 +155,16 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 }

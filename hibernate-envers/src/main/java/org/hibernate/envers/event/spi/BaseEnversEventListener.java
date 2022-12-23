@@ -19,6 +19,7 @@ import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUn
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Base class for all Envers event listeners
@@ -92,11 +93,11 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		String toEntityName;
 		Object id;
 
-		if ( value instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) value;
-			id = hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			id = lazyInitializer.getInternalIdentifier();
 			// We've got to initialize the object from the proxy to later read its state.
-			value = EntityTools.getTargetFromProxy( session.getFactory(), hibernateProxy );
+			value = EntityTools.getTargetFromProxy( session.getFactory(), lazyInitializer );
 			// HHH-7249
 			// This call must occur after the proxy has been initialized or the returned name will
 			// be to the base class which will impact the discriminator value chosen when using an

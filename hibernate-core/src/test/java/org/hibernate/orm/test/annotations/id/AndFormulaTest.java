@@ -6,21 +6,20 @@
  */
 package org.hibernate.orm.test.annotations.id;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
 import org.hibernate.annotations.Formula;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.internal.CannotForceNonNullableException;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.CannotForceNonNullableException;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,7 +56,7 @@ public class AndFormulaTest {
 			fail( "Expecting failure from invalid mapping" );
 		}
 		catch (CannotForceNonNullableException e) {
-			assertThat( e.getMessage(), startsWith( "Identifier property [" ) );
+			assertThat( e.getMessage(), startsWith( "Identifier property " ) );
 		}
 	}
 

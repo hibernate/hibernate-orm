@@ -29,7 +29,7 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR );
+		return context.getJdbcType( SqlTypes.VARCHAR );
 	}
 
 	public String toString(URL value) {
@@ -50,6 +50,9 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( URL.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
@@ -60,9 +63,13 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		if ( value == null ) {
 			return null;
 		}
+		if (value instanceof URL) {
+			return (URL) value;
+		}
 		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

@@ -17,8 +17,10 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -35,6 +37,7 @@ public class BasicArrayType<T>
 	private final String name;
 	private final ValueBinder<T[]> jdbcValueBinder;
 	private final ValueExtractor<T[]> jdbcValueExtractor;
+	private final JdbcLiteralFormatter<T[]> jdbcLiteralFormatter;
 
 	public BasicArrayType(BasicType<T> baseDescriptor, JdbcType arrayJdbcType, JavaType<T[]> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
@@ -42,10 +45,11 @@ public class BasicArrayType<T>
 		this.name = baseDescriptor.getName() + "[]";
 		final ValueBinder<T[]> jdbcValueBinder = super.getJdbcValueBinder();
 		final ValueExtractor<T[]> jdbcValueExtractor = super.getJdbcValueExtractor();
+		final JdbcLiteralFormatter jdbcLiteralFormatter = super.getJdbcLiteralFormatter();
 		//noinspection unchecked
 		final BasicValueConverter<T, Object> valueConverter = (BasicValueConverter<T, Object>) baseDescriptor.getValueConverter();
 		if ( valueConverter != null ) {
-			this.jdbcValueBinder = new ValueBinder<T[]>() {
+			this.jdbcValueBinder = new ValueBinder<>() {
 				@Override
 				public void bind(PreparedStatement st, T[] value, int index, WrapperOptions options)
 						throws SQLException {
@@ -133,10 +137,15 @@ public class BasicArrayType<T>
 					return array;
 				}
 			};
+			this.jdbcLiteralFormatter = new JdbcLiteralFormatterArray(
+					baseDescriptor.getJavaTypeDescriptor(),
+					jdbcLiteralFormatter
+			);
 		}
 		else {
 			this.jdbcValueBinder = jdbcValueBinder;
 			this.jdbcValueExtractor = jdbcValueExtractor;
+			this.jdbcLiteralFormatter = jdbcLiteralFormatter;
 		}
 	}
 
@@ -163,6 +172,11 @@ public class BasicArrayType<T>
 	@Override
 	public ValueBinder<T[]> getJdbcValueBinder() {
 		return jdbcValueBinder;
+	}
+
+	@Override
+	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 
 	@Override

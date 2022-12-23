@@ -6,9 +6,14 @@
  */
 package org.hibernate.exception;
 
+import org.hibernate.JDBCException;
+
 import java.sql.SQLException;
 
 /**
+ * A {@link JDBCException} indicating that a lock request
+ * timed out on the database.
+ *
  * @author Steve Ebersole
  */
 public class LockTimeoutException extends LockAcquisitionException {

@@ -41,7 +41,7 @@ public class ModeStatsModeEmulation extends InverseDistributionFunction {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		sqlAppender.appendSql( "stats_mode(" );
 		if ( withinGroup == null || withinGroup.size() != 1 ) {
-			throw new IllegalArgumentException( "MODE function requires a WITHIN GROUP clause with exactly one order by item!" );
+			throw new IllegalArgumentException( "MODE function requires a WITHIN GROUP clause with exactly one order by item" );
 		}
 		if ( caseWrapper ) {
 			translator.getCurrentClauseStack().push( Clause.WHERE );

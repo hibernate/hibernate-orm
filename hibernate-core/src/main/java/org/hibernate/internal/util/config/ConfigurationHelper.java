@@ -6,9 +6,9 @@
  */
 package org.hibernate.internal.util.config;
 
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -151,11 +151,11 @@ public final class ConfigurationHelper {
 			return defaultValue;
 		}
 
-		if ( Boolean.class.isInstance( value ) ) {
+		if (value instanceof Boolean) {
 			return (Boolean) value;
 		}
 
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Boolean.parseBoolean( (String) value );
 		}
 
@@ -175,10 +175,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Boolean.class.isInstance( value ) ) {
+		if (value instanceof Boolean) {
 			return (Boolean) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Boolean.valueOf( (String) value );
 		}
 		throw new ConfigurationException(
@@ -200,10 +200,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if (value instanceof Integer) {
 			return (Integer) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Integer.parseInt( (String) value );
 		}
 		throw new ConfigurationException(
@@ -225,10 +225,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if (value instanceof Integer) {
 			return (Integer) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			//empty values are ignored
 			final String trimmed = value.toString().trim();
 			if ( trimmed.isEmpty() ) {
@@ -247,10 +247,10 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return (Long) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Long.parseLong( (String) value );
 		}
 		throw new ConfigurationException(
@@ -272,7 +272,7 @@ public final class ConfigurationHelper {
 			return null;
 		}
 		// If a Properties object, leverage its clone() impl
-		if ( Properties.class.isInstance( configurationValues ) ) {
+		if (configurationValues instanceof Properties) {
 			return (Properties) ( (Properties) configurationValues ).clone();
 		}
 		// Otherwise make a manual copy
@@ -307,7 +307,7 @@ public final class ConfigurationHelper {
 
 	/**
 	 * Extract a property value by name from the given properties object.
-	 * <p/>
+	 * <p>
 	 * Both {@code null} and {@code empty string} are viewed as the same, and return null.
 	 *
 	 * @param propertyName The name of the property for which to extract value
@@ -327,7 +327,7 @@ public final class ConfigurationHelper {
 	}
 	/**
 	 * Extract a property value by name from the given properties object.
-	 * <p/>
+	 * <p>
 	 * Both {@code null} and {@code empty string} are viewed as the same, and return null.
 	 *
 	 * @param propertyName The name of the property for which to extract value
@@ -360,7 +360,7 @@ public final class ConfigurationHelper {
 
 	/**
 	 * Constructs a map from a property value.
-	 * <p/>
+	 * <p>
 	 * The exact behavior here is largely dependant upon what is passed in as
 	 * the delimiter.
 	 *
@@ -385,7 +385,7 @@ public final class ConfigurationHelper {
 
 	/**
 	 * Constructs a map from a property value.
-	 * <p/>
+	 * <p>
 	 * The exact behavior here is largely dependant upon what is passed in as
 	 * the delimiter.
 	 *
@@ -452,7 +452,7 @@ public final class ConfigurationHelper {
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
 			final Object value = entry.getValue();
-			if ( String.class.isInstance( value ) ) {
+			if (value instanceof String) {
 				final String resolved = resolvePlaceHolder( ( String ) value );
 				if ( !value.equals( resolved ) ) {
 					if ( resolved == null ) {
@@ -600,12 +600,17 @@ public final class ConfigurationHelper {
 				return ( (Number) value ).intValue();
 			}
 
-			final String string = value.toString();
+			final String string = value.toString().toUpperCase( Locale.ROOT );
 			final Integer typeCode = JdbcTypeNameMapper.getTypeCode( string );
 			if ( typeCode != null ) {
 				return typeCode;
 			}
-			return Integer.parseInt( string );
+			try {
+				return Integer.parseInt( string );
+			}
+			catch (NumberFormatException ex) {
+				throw new IllegalArgumentException( String.format( "Couldn't interpret '%s' as JDBC type code or type code name", string ) );
+			}
 		}
 	}
 }

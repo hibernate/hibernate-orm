@@ -6,10 +6,6 @@
  */
 package org.hibernate.orm.test.compositeelement;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
@@ -20,6 +16,10 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -29,12 +29,12 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+		return "";
 	}
 
 	@Override
 	public String[] getMappings() {
-		return new String[] { "compositeelement/Parent.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/compositeelement/Parent.hbm.xml" };
 	}
 
 	@Override

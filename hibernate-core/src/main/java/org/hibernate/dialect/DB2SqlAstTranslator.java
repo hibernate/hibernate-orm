@@ -9,7 +9,9 @@ package org.hibernate.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -25,13 +27,24 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.type.SqlTypes;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for DB2.
@@ -40,13 +53,85 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	// We have to track whether we are in a later query for applying lateral during window emulation
+	private boolean inLateral;
+
 	public DB2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
 	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+		// When we are in a recursive CTE, we can't render joins on DB2...
+		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
+		if ( isInRecursiveQueryPart() ) {
+			final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
+			if ( joins == null || joins.isEmpty() ) {
+				return;
+			}
+
+			for ( TableReferenceJoin tableJoin : joins ) {
+				switch ( tableJoin.getJoinType() ) {
+					case CROSS:
+					case INNER:
+						break;
+					default:
+						throw new UnsupportedOperationException( "Can't emulate '" + tableJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
+				}
+				appendSql( COMA_SEPARATOR_CHAR );
+
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+
+				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+					addAdditionalWherePredicate( tableJoin.getPredicate() );
+				}
+			}
+		}
+		else {
+			super.renderTableReferenceJoins( tableGroup );
+		}
+	}
+
+	@Override
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		if ( isInRecursiveQueryPart() ) {
+			switch ( tableGroupJoin.getJoinType() ) {
+				case CROSS:
+				case INNER:
+					break;
+				default:
+					throw new UnsupportedOperationException( "Can't emulate '" + tableGroupJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
+			}
+			appendSql( COMA_SEPARATOR_CHAR );
+
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
+				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
+			}
+		}
+		else {
+			super.renderTableGroupJoin( tableGroupJoin, tableGroupJoinCollector );
+		}
+	}
+
+	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
-		expression.accept( this );
+		if ( expression instanceof Predicate && getDB2Version().isBefore( 11 ) ) {
+			super.renderExpressionAsClauseItem( expression );
+		}
+		else {
+			expression.accept( this );
+		}
 	}
 
 	@Override
@@ -134,13 +219,18 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in DB2
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDB2Version().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
-		);
+		if ( getQueryPartForRowNumbering() == queryPart ) {
+			return false;
+		}
+		// Percent fetches or ties fetches aren't supported in DB2
+		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
+			return true;
+		}
+		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
+		return getDB2Version().isBefore( 11, 1 )
+				&& queryPart.getFetchClauseExpression() != null
+				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
 	}
 
 	protected boolean supportsOffsetClause() {
@@ -148,10 +238,41 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		final boolean oldLateral = inLateral;
+		inLateral = tableReference.isLateral();
+		super.visitQueryPartTableReference( tableReference );
+		inLateral = oldLateral;
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		if ( getQueryPartForRowNumbering() == statement.getQueryPart() && inLateral ) {
+			appendSql( "lateral " );
+		}
+		super.visitSelectStatement( statement );
+	}
+
+	@Override
+	protected void emulateFetchOffsetWithWindowFunctionsVisitQueryPart(QueryPart queryPart) {
+		if ( inLateral ) {
+			appendSql( "lateral " );
+			final boolean oldLateral = inLateral;
+			inLateral = false;
+			super.emulateFetchOffsetWithWindowFunctionsVisitQueryPart( queryPart );
+			inLateral = oldLateral;
+		}
+		else {
+			super.emulateFetchOffsetWithWindowFunctionsVisitQueryPart( queryPart );
+		}
+	}
+
+	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, emulateFetchClause );
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
 		}
 		else {
 			super.visitQueryGroup( queryGroup );
@@ -161,8 +282,9 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, emulateFetchClause );
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
+			emulateFetchOffsetWithWindowFunctions( querySpec, true );
 		}
 		else {
 			super.visitQuerySpec( querySpec );
@@ -185,6 +307,26 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	protected void renderOffsetExpression(Expression offsetExpression) {
+		if ( supportsParameterOffsetFetchExpression() ) {
+			super.renderOffsetExpression( offsetExpression );
+		}
+		else {
+			renderExpressionAsLiteral( offsetExpression, getJdbcParameterBindings() );
+		}
+	}
+
+	@Override
+	protected void renderFetchExpression(Expression fetchExpression) {
+		if ( supportsParameterOffsetFetchExpression() ) {
+			super.renderFetchExpression( fetchExpression );
+		}
+		else {
+			renderExpressionAsLiteral( fetchExpression, getJdbcParameterBindings() );
+		}
+	}
+
+	@Override
 	protected void visitDeleteStatementOnly(DeleteStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
 		super.visitDeleteStatementOnly( statement );
@@ -203,7 +345,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertStatement statement) {
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
 		super.visitInsertStatementOnly( statement );
 		if ( closeWrapper ) {
@@ -213,16 +355,15 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	protected boolean renderReturningClause(MutationStatement statement) {
 		final List<ColumnReference> returningColumns = statement.getReturningColumns();
-		final int size = returningColumns.size();
-		if ( size == 0 ) {
+		if ( isEmpty( returningColumns ) ) {
 			return false;
 		}
 		appendSql( "select " );
-		String separator = "";
-		for ( int i = 0; i < size; i++ ) {
-			appendSql( separator );
+		for ( int i = 0; i < returningColumns.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
 			appendSql( returningColumns.get( i ).getColumnExpression() );
-			separator = ",";
 		}
 		if ( statement instanceof DeleteStatement ) {
 			appendSql( " from old table (" );
@@ -234,13 +375,104 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		final List<ColumnReference> returningColumns = tableInsert.getReturningColumns();
+		if ( isNotEmpty( returningColumns ) ) {
+			appendSql( "select " );
+
+			for ( int i = 0; i < returningColumns.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ", " );
+				}
+				appendSql( returningColumns.get( i ).getColumnExpression() );
+			}
+
+			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			super.visitStandardTableInsert( tableInsert );
+			appendSql( ")" );
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
+			final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+			if ( lhsExpressionType != null
+					&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+				// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "decode(" );
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ',' );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ",0,1)=1" );
+						return;
+					case NOT_DISTINCT_FROM:
+						appendSql( "decode(" );
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ',' );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ",0,1)=0" );
+						return;
+					case EQUAL:
+					case NOT_EQUAL:
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( operator.sqlText() );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						return;
+					default:
+						// Fall through
+						break;
+				}
+			}
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 		}
+	}
+
+	@Override
+	protected void renderComparisonStandard(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "xmlserialize(" );
+					lhs.accept( this );
+					appendSql( " as varchar(32672))" );
+					appendSql( operator.sqlText() );
+					appendSql( "xmlserialize(" );
+					rhs.accept( this );
+					appendSql( " as varchar(32672))" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
+		super.renderComparisonStandard( lhs, operator, rhs );
 	}
 
 	@Override
@@ -299,12 +531,16 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected void visitReturningColumns(MutationStatement mutationStatement) {
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}
 
 	public DatabaseVersion getDB2Version() {
 		return this.getDialect().getVersion();
+	}
+
+	protected boolean supportsParameterOffsetFetchExpression() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 
 }

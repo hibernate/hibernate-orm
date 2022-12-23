@@ -16,7 +16,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 /**
  * A "non-aggregated" composite identifier, which means that the entity itself
  * does not define a singular representation of its identifier like an
- * {@link jakarta.persistence.EmbeddedId} does.
+ * {@linkplain AggregatedIdentifierMapping aggregated mapping} does.
  *
  * An IdClass can be used to provide a simple, singular representation of the
  * identifier for easier reference in API calls.  JPA requires using an IdClass
@@ -45,6 +45,11 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	 */
 	IdentifierValueMapper getIdentifierValueMapper();
 
+	@Override
+	default int getFetchableKey() {
+		return -1;
+	}
+
 	/**
 	 * Think of an AttributeConverter for id values to account for representation
 	 * difference between virtual and id-class mappings
@@ -68,6 +73,7 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 		 * Convenience method to iterate the attributes for this mapper's representation
 		 */
 		default void forEachAttribute(IndexedConsumer<SingularAttributeMapping> consumer) {
+			//noinspection unchecked,rawtypes
 			getEmbeddedPart().getEmbeddableTypeDescriptor().forEachAttributeMapping( (IndexedConsumer) consumer );
 		}
 	}

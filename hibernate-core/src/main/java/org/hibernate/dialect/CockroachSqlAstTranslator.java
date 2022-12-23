@@ -9,11 +9,13 @@ package org.hibernate.dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -53,29 +55,26 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected void renderMaterializationHint(CteMaterialization materialization) {
+		if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
+			appendSql( "not " );
+		}
+		appendSql( "materialized " );
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
 	protected String getForShare(int timeoutMillis) {
 		return " for share";
-	}
-
-	@Override
-	protected LockStrategy determineLockingStrategy(
-			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
-			return LockStrategy.NONE;
-		}
-		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -112,16 +111,6 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Cockroach does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Cockroach does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
 			appendSql( "'0' || '0'" );
@@ -130,10 +119,35 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		// Custom implementation because CockroachDB uses backslash as default escape character
+		likePredicate.getMatchExpression().accept( this );
+		if ( likePredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		if ( likePredicate.isCaseSensitive() ) {
+			appendSql( " like " );
+		}
+		else {
+			appendSql( WHITESPACE );
+			appendSql( getDialect().getCaseInsensitiveLike() );
+			appendSql( WHITESPACE );
+		}
+		likePredicate.getPattern().accept( this );
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
+		}
+		else {
+			appendSql( " escape ''" );
 		}
 	}
 

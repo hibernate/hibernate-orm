@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.sql.ast.Clause;
 
 /**
  * Contract for things at the domain mapping level that can be bound
@@ -26,6 +25,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * The number of JDBC mappings
 	 */
+	@Override
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
 	}
@@ -33,6 +33,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * The list of JDBC mappings
 	 */
+	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
@@ -44,6 +45,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 *
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
 	 */
+	@Override
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		return forEachJdbcType( 0, action );
 	}
@@ -113,15 +115,13 @@ public interface Bindable extends JdbcMappingContainer {
 	 */
 	default int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return forEachDisassembledJdbcValue( value, clause, 0, valuesConsumer, session );
+		return forEachDisassembledJdbcValue( value, 0, valuesConsumer, session );
 	}
 
 	int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session);
@@ -134,19 +134,17 @@ public interface Bindable extends JdbcMappingContainer {
 	 */
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return forEachJdbcValue( value, clause, 0, valuesConsumer, session );
+		return forEachJdbcValue( value, 0, valuesConsumer, session );
 	}
 
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return forEachDisassembledJdbcValue( disassemble( value, session ), clause, offset, valuesConsumer, session );
+		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, valuesConsumer, session );
 	}
 
 

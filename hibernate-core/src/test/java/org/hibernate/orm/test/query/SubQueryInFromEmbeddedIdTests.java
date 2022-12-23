@@ -6,10 +6,8 @@
  */
 package org.hibernate.orm.test.query;
 
-import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -19,13 +17,12 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,18 +40,19 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Christian Beikov
  */
 @DomainModel(annotatedClasses = SubQueryInFromEmbeddedIdTests.Contact.class)
 @SessionFactory
-@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+@TestForIssue( jiraKey = "HHH-")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
 public class SubQueryInFromEmbeddedIdTests {
 
 	@Test
-	@FailureExpected(reason = "Support for embedded id association selecting in from clause sub queries not yet supported")
 	public void testEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -72,27 +70,32 @@ public class SubQueryInFromEmbeddedIdTests {
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
-					cq.where( root.get( "alternativeContact" ).isNotNull() );
+					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
 							"select c.name, a.contact.id from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
 									"from c.alternativeContact alt " +
-									"order by address.name.first" +
+									"order by alt.name.first " +
 									"limit 1" +
 									") a " +
-									"where c.alternativeContact is not null",
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
 							session.createQuery( cq ).getResultList(),
 							query.getResultList(),
 							list -> {
-								assertEquals( 1, list.size() );
+								assertEquals( 3, list.size() );
 								assertEquals( "John", list.get( 0 ).get( 0, Contact.Name.class ).getFirst() );
 								assertEquals( 2, list.get( 0 ).get( 1, Contact.ContactId.class ).getId1() );
 								assertEquals( 2, list.get( 0 ).get( 1, Contact.ContactId.class ).getId2() );
+								assertEquals( "Jane", list.get( 1 ).get( 0, Contact.Name.class ).getFirst() );
+								assertEquals( 3, list.get( 1 ).get( 1, Contact.ContactId.class ).getId1() );
+								assertEquals( 3, list.get( 1 ).get( 1, Contact.ContactId.class ).getId2() );
+								assertEquals( "Granny", list.get( 2 ).get( 0, Contact.Name.class ).getFirst() );
+								assertNull( list.get( 2 ).get( 1, Contact.ContactId.class ) );
 							}
 					);
 				}
@@ -100,7 +103,6 @@ public class SubQueryInFromEmbeddedIdTests {
 	}
 
 	@Test
-	@FailureExpected(reason = "Support for embedded id association selecting in from clause sub queries not yet supported")
 	public void testEntityJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -116,28 +118,32 @@ public class SubQueryInFromEmbeddedIdTests {
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
-					final SqmAttributeJoin<Object, Object> alt = a.join( "contact" );
+					final Join<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
+					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
 									"from c.alternativeContact alt " +
-									"order by alt.name.first desc" +
+									"order by alt.name.first desc " +
 									"limit 1" +
 									") a " +
-									"join a.contact alt",
+									"join a.contact alt " +
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
 							session.createQuery( cq ).getResultList(),
 							query.getResultList(),
 							list -> {
-								assertEquals( 1, list.size() );
+								assertEquals( 2, list.size() );
 								assertEquals( "John", list.get( 0 ).get( 0, Contact.Name.class ).getFirst() );
-								assertEquals( "Granny", list.get( 0 ).get( 1, Contact.Name.class ).getFirst() );
+								assertEquals( "Jane", list.get( 0 ).get( 1, Contact.Name.class ).getFirst() );
+								assertEquals( "Jane", list.get( 1 ).get( 0, Contact.Name.class ).getFirst() );
+								assertEquals( "Granny", list.get( 1 ).get( 1, Contact.Name.class ).getFirst() );
 							}
 					);
 				}
@@ -145,7 +151,6 @@ public class SubQueryInFromEmbeddedIdTests {
 	}
 
 	@Test
-	@FailureExpected(reason = "Support for embedded id association selecting in from clause sub queries not yet supported")
 	public void testEntityImplicit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -163,24 +168,28 @@ public class SubQueryInFromEmbeddedIdTests {
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
+					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
 					final QueryImplementor<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
 									"from c.alternativeContact alt " +
-									"order by alt.name.first desc" +
+									"order by alt.name.first desc " +
 									"limit 1" +
-									") a",
+									") a " +
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
 							session.createQuery( cq ).getResultList(),
 							query.getResultList(),
 							list -> {
-								assertEquals( 1, list.size() );
+								assertEquals( 2, list.size() );
 								assertEquals( "John", list.get( 0 ).get( 0, Contact.Name.class ).getFirst() );
-								assertEquals( "Granny", list.get( 0 ).get( 1, Contact.Name.class ).getFirst() );
+								assertEquals( "Jane", list.get( 0 ).get( 1, Contact.Name.class ).getFirst() );
+								assertEquals( "Jane", list.get( 1 ).get( 0, Contact.Name.class ).getFirst() );
+								assertEquals( "Granny", list.get( 1 ).get( 1, Contact.Name.class ).getFirst() );
 							}
 					);
 				}
@@ -213,6 +222,7 @@ public class SubQueryInFromEmbeddedIdTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
+			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
 			session.createQuery( "delete Contact" ).executeUpdate();
 		} );
 	}

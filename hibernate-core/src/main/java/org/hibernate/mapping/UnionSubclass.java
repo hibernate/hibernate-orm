@@ -8,20 +8,20 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 
 /**
- * A subclass in a table-per-concrete-class mapping
+ * A mapping model object that represents a subclass in a "union" or
+ * {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS "table per concrete class"}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class UnionSubclass extends Subclass implements TableOwner {
 	private Table table;
-	private KeyValue key;
 
-	public UnionSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public UnionSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
+		super( superclass, buildingContext );
 	}
 
 	public Table getTable() {
@@ -37,7 +37,7 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		return synchronizedTables;
 	}
 
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
 		return getPropertyClosureIterator();
 	}
@@ -45,18 +45,6 @@ public class UnionSubclass extends Subclass implements TableOwner {
 	@Override
 	protected List<Property> getNonDuplicatedProperties() {
 		return getPropertyClosure();
-	}
-
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate(mapping);
-		if ( key!=null && !key.isValid(mapping) ) {
-			throw new MappingException(
-				"subclass key mapping has wrong number of columns: " +
-				getEntityName() +
-				" type: " +
-				key.getType().getName()
-			);
-		}
 	}
 	
 	public Table getIdentityTable() {

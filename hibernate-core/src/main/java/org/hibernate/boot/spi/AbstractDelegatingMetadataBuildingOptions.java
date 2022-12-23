@@ -13,9 +13,11 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -59,6 +61,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return delegate.getTimeZoneSupport();
+	}
+
+	@Override
 	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
 	}
@@ -76,6 +83,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 		return delegate.getPhysicalNamingStrategy();
+	}
+
+	@Override
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return delegate.getColumnOrderingStrategy();
 	}
 
 	@Override

@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -205,6 +208,19 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+
+	@Override
 	public boolean isCacheable() {
 		return super.isCacheable();
 	}
@@ -247,22 +263,18 @@ public abstract class AbstractQuery<R>
 	@Override
 	public LockModeType getLockMode() {
 		getSession().checkOpen( false );
-
 		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
 	}
 
 	@Override
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
-		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
-		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
-		getQueryOptions().getLockOptions().setFollowOnLocking( lockOptions.getFollowOnLocking() );
+		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		super.setLockMode( alias, lockMode );
 		return this;
 	}
 
@@ -313,8 +325,8 @@ public abstract class AbstractQuery<R>
 		}
 
 		if ( getLockOptions().getScope() ) {
-			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getScope() );
-			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
 		}
 
 		if ( getLockOptions().hasAliasSpecificLockModes() ) {
@@ -429,7 +441,7 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
-		super.setParameter( parameter, value );
+		super.setParameter( parameter, value, javaTypeClass );
 		return this;
 	}
 

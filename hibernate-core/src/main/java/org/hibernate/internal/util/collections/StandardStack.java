@@ -66,7 +66,15 @@ public final class StandardStack<T> implements Stack<T> {
 		if ( internalStack == null ) {
 			return null;
 		}
-		return convert( internalStack.peek() );
+		return convert( internalStack.peekFirst() );
+	}
+
+	@Override
+	public T getRoot() {
+		if ( internalStack == null ) {
+			return null;
+		}
+		return convert( internalStack.peekLast() );
 	}
 
 	@Override

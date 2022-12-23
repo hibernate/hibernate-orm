@@ -7,6 +7,7 @@
 package org.hibernate.persister.collection;
 
 
+@Deprecated( since = "6" )
 public interface SQLLoadableCollection extends QueryableCollection {
 
 	String[] getCollectionPropertyColumnAliases(String propertyName, String string);

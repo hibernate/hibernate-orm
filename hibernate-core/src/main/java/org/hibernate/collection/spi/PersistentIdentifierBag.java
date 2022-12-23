@@ -23,6 +23,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
+import static org.hibernate.generator.EventType.INSERT;
+
 /**
  * An {@code IdentifierBag} implements "bag" semantics more efficiently than
  * a regular {@code Bag} by adding a synthetic identifier column to the
@@ -368,7 +370,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
-				final Object id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				final Object id = persister.getGenerator().generate( getSession(), entry, null, INSERT );
 				identifiers.put( loc, id );
 			}
 		}

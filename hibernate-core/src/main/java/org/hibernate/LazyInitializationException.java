@@ -11,9 +11,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Indicates an attempt to access not-yet-fetched data outside of a session context.
- *
- * For example, when an uninitialized proxy or collection is accessed after the session was closed.
+ * Indicates an attempt to access unfetched data outside the context
+ * of an open stateful {@link Session}.
+ * <p>
+ * For example, this exception occurs when an uninitialized proxy or
+ * collection is accessed after the session was closed.
  *
  * @see Hibernate#initialize(Object)
  * @see Hibernate#isInitialized(Object)
@@ -27,7 +29,7 @@ public class LazyInitializationException extends HibernateException {
 	);
 
 	/**
-	 * Constructs a LazyInitializationException using the given message.
+	 * Constructs a {@code LazyInitializationException} using the given message.
 	 *
 	 * @param message A message explaining the exception condition
 	 */

@@ -15,7 +15,6 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
@@ -25,6 +24,7 @@ import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
 import org.hibernate.query.results.complete.DelayedFetchBuilderBasicPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -85,7 +85,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 
 			final boolean isEnhancedForLazyLoading = entityDescriptor.getRepresentationStrategy().isBytecodeEnhanced();
 			// Implicit basic fetches are DELAYED by default, so register fetch builders for the remaining basic fetchables
-			entityDescriptor.visitAttributeMappings(
+			entityDescriptor.forEachAttributeMapping(
 					attributeMapping -> {
 						final Function<String, FetchBuilder> fetchBuilderCreator;
 						if ( attributeMapping instanceof BasicValuedModelPart ) {

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
+@RequiresDialect(value = OracleDialect.class)
 @TestForIssue(jiraKey = "HHH-13104")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/ops/Competition.hbm.xml"

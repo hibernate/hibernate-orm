@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -52,7 +52,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -75,6 +75,13 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * A walker that allows to replace expressions.
@@ -106,6 +113,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		doReplaceExpression( columnReference );
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		doReplaceExpression( aggregateColumnWriteExpression );
 	}
 
 	@Override
@@ -219,11 +231,6 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitConvertedQueryLiteral(ConvertedQueryLiteral<?, ?> convertedQueryLiteral) {
-		doReplaceExpression( convertedQueryLiteral );
-	}
-
-	@Override
 	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
 		doReplaceExpression( unaryOperationExpression );
 	}
@@ -321,7 +328,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final Expression testExpression = replaceExpression( inSubQueryPredicate.getTestExpression() );
-		final QueryPart subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
+		final SelectStatement subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
 		if ( testExpression != inSubQueryPredicate.getTestExpression()
 				|| subQuery != inSubQueryPredicate.getSubQuery() ) {
 			returnedNode = new InSubQueryPredicate(
@@ -338,10 +345,10 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
-		final QueryPart queryPart = replaceExpression( existsPredicate.getExpression() );
-		if ( queryPart != existsPredicate.getExpression() ) {
+		final SelectStatement selectStatement = replaceExpression( existsPredicate.getExpression() );
+		if ( selectStatement != existsPredicate.getExpression() ) {
 			returnedNode = new ExistsPredicate(
-					queryPart,
+					selectStatement,
 					existsPredicate.isNegated(),
 					existsPredicate.getExpressionType()
 			);
@@ -475,7 +482,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitInsertStatement(InsertStatement statement) {
+	public void visitInsertStatement(InsertSelectStatement statement) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -561,6 +568,41 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitStandardTableDelete(TableDeleteStandard tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
 		throw new UnsupportedOperationException();
 	}
 }

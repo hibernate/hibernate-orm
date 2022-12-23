@@ -8,7 +8,6 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -19,10 +18,12 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
 
 /**
  * @author Steve Ebersole
@@ -72,7 +73,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 		}
 
-		this.inLineDirtyChecking = SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
+		this.inLineDirtyChecking = isSelfDirtinessTrackerType( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
 		// because the pre-computed update statement contains even not dirty properties and so we need all the values
 		// we have to initialise it even if it's versioned to fetch the current version
@@ -145,9 +146,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 					if ( writtenValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
 						for ( String writtenFieldName : writtenFieldNames ) {
-							List<AttributeMapping> attributeMappings = entityPersister.getAttributeMappings();
-							for ( int index = 0; index < attributeMappings.size(); index++ ) {
-								if ( writtenFieldName.contains( attributeMappings.get( index ).getAttributeName() ) ) {
+							final int size = entityPersister.getNumberOfAttributeMappings();
+							for ( int index = 0; index < size; index++ ) {
+								if ( writtenFieldName.contains( entityPersister.getAttributeMapping( index ).getAttributeName() ) ) {
 									entityPersister.setValue(
 											target,
 											index,
@@ -280,7 +281,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 
 			if ( inLineDirtyChecking ) {
-				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
+				asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attributeName );
 			}
 		}
 		else {
@@ -293,7 +294,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 			writtenFieldNames.add( attributeName );
 
-			( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
+			asSelfDirtinessTracker( target ).$$_hibernate_trackChange( attributeName );
 		}
 
 		return newValue;

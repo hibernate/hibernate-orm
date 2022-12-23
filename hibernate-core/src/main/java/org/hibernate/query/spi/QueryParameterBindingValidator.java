@@ -13,7 +13,6 @@ import java.util.Date;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.TemporalType;
@@ -40,15 +39,6 @@ public class QueryParameterBindingValidator {
 		if ( bind == null || paramType == null ) {
 			// nothing we can check
 			return;
-		}
-
-		if ( paramType instanceof AttributeConverterTypeAdapter ) {
-			final AttributeConverterTypeAdapter<?> converterTypeAdapter = (AttributeConverterTypeAdapter<?>) paramType;
-			final JavaType<?> domainJtd = converterTypeAdapter.getDomainJtd();
-
-			if ( domainJtd.getJavaTypeClass().isInstance( bind ) ) {
-				return;
-			}
 		}
 
 		final Class<?> parameterJavaType;

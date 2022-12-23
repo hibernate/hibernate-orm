@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
@@ -128,31 +127,31 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 			definitionBuilder.setStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
 			definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.catalog() ) ) {
+			if ( !tableGeneratorAnnotation.catalog().isEmpty()) {
 				definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, tableGeneratorAnnotation.catalog() );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.schema() ) ) {
+			if ( !tableGeneratorAnnotation.schema().isEmpty()) {
 				definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, tableGeneratorAnnotation.schema() );
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.table() ) ) {
+			if ( !tableGeneratorAnnotation.table().isEmpty()) {
 				definitionBuilder.addParam(
 						org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM,
 						tableGeneratorAnnotation.table()
 				);
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.pkColumnName() ) ) {
+			if ( !tableGeneratorAnnotation.pkColumnName().isEmpty()) {
 				definitionBuilder.addParam(
 						org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM,
 						tableGeneratorAnnotation.pkColumnName()
 				);
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.pkColumnValue() ) ) {
+			if ( !tableGeneratorAnnotation.pkColumnValue().isEmpty()) {
 				definitionBuilder.addParam(
 						org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM,
 						tableGeneratorAnnotation.pkColumnValue()
 				);
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.valueColumnName() ) ) {
+			if ( !tableGeneratorAnnotation.valueColumnName().isEmpty()) {
 				definitionBuilder.addParam(
 						org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM,
 						tableGeneratorAnnotation.valueColumnName()
@@ -182,19 +181,19 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 			definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
 			definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
 
-			if ( !BinderHelper.isEmptyAnnotationValue( sequenceGeneratorAnnotation.catalog() ) ) {
+			if ( !sequenceGeneratorAnnotation.catalog().isEmpty()) {
 				definitionBuilder.addParam(
 						PersistentIdentifierGenerator.CATALOG,
 						sequenceGeneratorAnnotation.catalog()
 				);
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( sequenceGeneratorAnnotation.schema() ) ) {
+			if ( !sequenceGeneratorAnnotation.schema().isEmpty()) {
 				definitionBuilder.addParam(
 						PersistentIdentifierGenerator.SCHEMA,
 						sequenceGeneratorAnnotation.schema()
 				);
 			}
-			if ( !BinderHelper.isEmptyAnnotationValue( sequenceGeneratorAnnotation.sequenceName() ) ) {
+			if ( !sequenceGeneratorAnnotation.sequenceName().isEmpty()) {
 				definitionBuilder.addParam(
 						SequenceStyleGenerator.SEQUENCE_PARAM,
 						sequenceGeneratorAnnotation.sequenceName()

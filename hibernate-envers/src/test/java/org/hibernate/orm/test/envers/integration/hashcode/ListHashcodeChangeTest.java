@@ -11,6 +11,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -21,14 +30,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.NotAudited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -255,7 +256,8 @@ public class ListHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinTable(name = "author_book",
-				joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
+				joinColumns = @JoinColumn(name = "book_id"),
+				inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
 		@NotAudited
 		private Author author;
 

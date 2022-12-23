@@ -36,6 +36,7 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -85,22 +86,22 @@ public class MappedFetchTests {
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult entityResult = (EntityResult) domainResult;
-		final List<Fetch> fetches = entityResult.getFetches();
+		final ImmutableFetchList fetches = entityResult.getFetches();
 
 		// name + both lists
 		assertThat( fetches.size(), is( 3 ) );
 
 		// order is alphabetical...
 
-		final Fetch nameFetch = fetches.get( 0 );
+		final Fetch nameFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "name" ) );
 		assertThat( nameFetch.getFetchedMapping().getFetchableName(), is( "name" ) );
 		assertThat( nameFetch, instanceOf( BasicFetch.class ) );
 
-		final Fetch nickNamesFetch = fetches.get( 1 );
+		final Fetch nickNamesFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "nickNames" ) );
 		assertThat( nickNamesFetch.getFetchedMapping().getFetchableName(), is( "nickNames" ) );
 		assertThat( nickNamesFetch, instanceOf( EagerCollectionFetch.class ) );
 
-		final Fetch simpleEntitiesFetch = fetches.get( 2 );
+		final Fetch simpleEntitiesFetch = fetches.get( rootEntityDescriptor.findAttributeMapping( "simpleEntities" ) );
 		assertThat( simpleEntitiesFetch.getFetchedMapping().getFetchableName(), is( "simpleEntities" ) );
 		assertThat( simpleEntitiesFetch, instanceOf( DelayedCollectionFetch.class ) );
 

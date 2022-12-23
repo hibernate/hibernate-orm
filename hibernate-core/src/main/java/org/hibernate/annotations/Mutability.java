@@ -20,7 +20,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify a {@link MutabilityPlan} for a basic value mapping.
+ * Specifies a {@link MutabilityPlan} for a basic value mapping.
  * <ul>
  *     <li>
  *         When applied to a Map-valued attribute, describes the
@@ -47,7 +47,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}.
  *
- * See <a href="package-summary.html#basic-value-mapping"/> for a
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for a
  * high-level discussion of basic value mapping.
  *
  * @apiNote Valid on {@link ElementType#TYPE} in very limited cases.

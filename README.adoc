@@ -5,8 +5,8 @@ It also provides an implementation of the JPA specification, which is the standa
 
 This is the repository of its source code; see https://hibernate.org/orm/[Hibernate.org] for additional information.
 
-image:https://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-main-h2-main/]
-image:https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18[Language grade: Java,link=https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java]
+image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
+image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
 
 == Continuous Integration
 
@@ -129,7 +129,7 @@ The script `docker_db.sh` allows you to start a pre-configured database which ca
 All you have to do is run the following command:
 
 ----
-./docker_db.sh postgresql_9_5
+./docker_db.sh postgresql
 ----
 
 omitting the argument will print a list of possible options.
@@ -160,24 +160,16 @@ The following table illustrates a list of commands for various databases that ca
 |-
 |`./gradlew test -Pdb=derby`
 
-|MySQL 5.7
-|`./docker_db.sh mysql_5_7`
-|`./gradlew test -Pdb=mysql_ci`
-
-|MySQL 8.0
-|`./docker_db.sh mysql_8_0`
+|MySQL
+|`./docker_db.sh mysql`
 |`./gradlew test -Pdb=mysql_ci`
 
 |MariaDB
 |`./docker_db.sh mariadb`
 |`./gradlew test -Pdb=mariadb_ci`
 
-|PostgreSQL 9.5
-|`./docker_db.sh postgresql_9_5`
-|`./gradlew test -Pdb=pgsql_ci`
-
-|PostgreSQL 13
-|`./docker_db.sh postgresql_13`
+|PostgreSQL
+|`./docker_db.sh postgresql`
 |`./gradlew test -Pdb=pgsql_ci`
 
 |EnterpriseDB
@@ -187,22 +179,6 @@ The following table illustrates a list of commands for various databases that ca
 |Oracle XE
 |`./docker_db.sh oracle`
 |`./gradlew test -Pdb=oracle_ci`
-
-|Oracle 11g
-|`./docker_db.sh oracle_11`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 18
-|`./docker_db.sh oracle_18`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle XE 21
-|`./docker_db.sh oracle_21`
-|`./gradlew test -Pdb=oracle_ci`
-
-|Oracle EE
-|`./docker_db.sh oracle_ee`
-|`./gradlew test -Pdb=oracle_docker`
 
 |DB2
 |`./docker_db.sh db2`

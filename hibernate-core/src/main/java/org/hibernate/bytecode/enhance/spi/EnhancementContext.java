@@ -14,7 +14,7 @@ package org.hibernate.bytecode.enhance.spi;
  * <li>Runtime, via agent</li>
  * <li>Runtime, via JPA constructs</li>
  * </ul>
- * <p/>
+ * <p>
  * This interface isolates the code that actually does the enhancement from the underlying context in which
  * the enhancement is being performed.
  *
@@ -75,7 +75,9 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
 	 *         indicates it should not.  In-lined is more easily serializable and probably more performant.
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	boolean doDirtyCheckingInline(UnloadedClass classDescriptor);
 
 	/**
@@ -94,14 +96,16 @@ public interface EnhancementContext {
 	 * @param classDescriptor The class to check
 	 *
 	 * @return true/false
+	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@Deprecated(forRemoval = true)
 	boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor);
 
 	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite
 
 	/**
 	 * Does the field represent persistent state?  Persistent fields will be "enhanced".
-	 * <p/>
+	 * <p>
 	 * may be better to perform basic checks in the caller (non-static, etc) and call out with just the
 	 * Class name and field name...
 	 *

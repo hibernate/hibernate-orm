@@ -87,7 +87,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 			doAfterCompletion( false, true );
 
 			// NOTE : doAfterCompletion calls reset
-			throw new HibernateException( "Transaction was rolled back in a different thread!" );
+			throw new HibernateException( "Transaction was rolled back in a different thread" );
 		}
 	}
 }

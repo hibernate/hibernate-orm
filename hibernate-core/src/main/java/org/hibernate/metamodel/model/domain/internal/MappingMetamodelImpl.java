@@ -18,14 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import jakarta.persistence.metamodel.EmbeddableType;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -50,6 +46,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -68,10 +65,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
@@ -81,16 +78,18 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+
 import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
 
 /**
- * Hibernate implementation of the JPA {@link jakarta.persistence.metamodel.Metamodel} contract.
- *
- * Really more of the mapping model then the domain model, though it does have reference to the `JpaMetamodel`
- *
- * NOTE : we suppress deprecation warnings because at the moment we still implement a deprecated API so
- * have to reference deprecated things
+ * Implementation of the JPA-defined contract {@link jakarta.persistence.metamodel.Metamodel}.
+ * <p>
+ * Really more of the {@linkplain MappingMetamodel mapping model} than the domain model, though
+ * it does have reference to the {@link org.hibernate.metamodel.model.domain.JpaMetamodel}.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -99,6 +98,9 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 public class MappingMetamodelImpl implements MappingMetamodelImplementor, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
+
+	//NOTE: we suppress deprecation warnings because at the moment we
+	//implement a deprecated API so have to override deprecated things
 
 	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
 
@@ -282,6 +284,13 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 					modelCreationContext
 			);
 			entityPersisterMap.put( model.getEntityName(), cp );
+			// Also register the persister under the class name if available,
+			// otherwise the getEntityDescriptor(Class) won't work for entities with custom entity names
+			if ( model.getClassName() != null && !model.getClassName().equals( model.getEntityName() ) ) {
+				// But only if the class name is not registered already,
+				// as we can have the same class mapped to multiple entity names
+				entityPersisterMap.putIfAbsent( model.getClassName(), cp );
+			}
 
 			if ( cp.getConcreteProxyClass() != null
 					&& cp.getConcreteProxyClass().isInterface()
@@ -377,7 +386,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		representationStrategy.visitEntityNameResolvers( entityNameResolvers::add );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
 		return entityNameResolvers;
 	}
@@ -399,7 +408,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -413,7 +422,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public EntityPersister getEntityDescriptor(NavigableRole name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -571,12 +580,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Map<String, EntityPersister> entityPersisters() {
 		return entityPersisterMap;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public CollectionPersister collectionPersister(String role) {
 		final CollectionPersister persister = collectionPersisterMap.get( role );
 		if ( persister == null ) {
@@ -585,17 +594,17 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		return persister;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Map<String, CollectionPersister> collectionPersisters() {
 		return collectionPersisterMap;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public EntityPersister entityPersister(Class<?> entityClass) {
 		return getEntityDescriptor( entityClass.getName() );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public EntityPersister entityPersister(String entityName) throws MappingException {
 		EntityPersister result = entityPersisterMap.get( entityName );
 		if ( result == null ) {
@@ -640,12 +649,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public CollectionPersister getCollectionDescriptor(NavigableRole role) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public CollectionPersister findCollectionDescriptor(NavigableRole role) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -653,7 +662,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		return collectionPersisterMap.get( role );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return collectionRolesByEntityParticipant.get( entityName );
 	}
@@ -695,22 +704,22 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public void forEachNamedGraph(Consumer<RootGraph<?>> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(String entityName) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(Class entityJavaType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public RootGraph<?> defaultGraph(EntityPersister entityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -720,12 +729,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 	@Override
 	public List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<RootGraph<?>> findRootGraphsForType(String baseEntityName) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -742,10 +751,9 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		ArrayList<String> results = new ArrayList<>();
 		for ( EntityPersister checkPersister : entityPersisters().values() ) {
 			if ( checkPersister instanceof Queryable ) {
-				final Queryable checkQueryable = (Queryable) checkPersister;
-				final String checkQueryableEntityName = checkQueryable.getEntityName();
+				final String checkQueryableEntityName = ((EntityMappingType) checkPersister).getEntityName();
 				final boolean isMappedClass = clazz.getName().equals( checkQueryableEntityName );
-				if ( checkQueryable.isExplicitPolymorphism() ) {
+				if ( checkPersister.isExplicitPolymorphism() ) {
 					if ( isMappedClass ) {
 						return new String[] { clazz.getName() }; // NOTE EARLY EXIT
 					}
@@ -755,11 +763,12 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 						results.add( checkQueryableEntityName );
 					}
 					else {
-						final Class<?> mappedClass = checkQueryable.getMappedClass();
+						final Class<?> mappedClass = checkPersister.getMappedClass();
 						if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
 							final boolean assignableSuperclass;
-							if ( checkQueryable.isInherited() ) {
-								Class<?> mappedSuperclass = getEntityDescriptor( checkQueryable.getMappedSuperclass() ).getMappedClass();
+							if ( checkPersister.isInherited() ) {
+								final String superTypeName = checkPersister.getSuperMappingType().getEntityName();
+								Class<?> mappedSuperclass = getEntityDescriptor( superTypeName ).getMappedClass();
 								assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
 							}
 							else {
@@ -814,7 +823,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		}
 
 		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
+			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
 		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {

@@ -14,6 +14,8 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import jakarta.persistence.Transient;
@@ -23,7 +25,6 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
@@ -51,6 +52,10 @@ public final class ReflectHelper {
 
 	private static final Method OBJECT_EQUALS;
 	private static final Method OBJECT_HASHCODE;
+	private static final Class<?> RECORD_CLASS;
+	private static final Method GET_RECORD_COMPONENTS;
+	private static final Method GET_NAME;
+	private static final Method GET_TYPE;
 
 	static {
 		Method eq;
@@ -64,6 +69,25 @@ public final class ReflectHelper {
 		}
 		OBJECT_EQUALS = eq;
 		OBJECT_HASHCODE = hash;
+
+		Class<?> recordClass = null;
+		Method getRecordComponents = null;
+		Method getName = null;
+		Method getType = null;
+		try {
+			recordClass = Class.forName( "java.lang.Record" );
+			getRecordComponents = Class.class.getMethod( "getRecordComponents" );
+			final Class<?> recordComponentClass = Class.forName( "java.lang.reflect.RecordComponent" );
+			getName = recordComponentClass.getMethod( "getName" );
+			getType = recordComponentClass.getMethod( "getType" );
+		}
+		catch (Exception e) {
+			// Ignore
+		}
+		RECORD_CLASS = recordClass;
+		GET_RECORD_COMPONENTS = getRecordComponents;
+		GET_NAME = getName;
+		GET_TYPE = getType;
 	}
 
 	/**
@@ -142,7 +166,7 @@ public final class ReflectHelper {
 
 	/**
 	 * Perform resolution of a class name.
-	 * <p/>
+	 * <p>
 	 * Here we first check the context classloader, if one, before delegating to
 	 * {@link Class#forName(String, boolean, ClassLoader)} using the caller's classloader
 	 *
@@ -165,7 +189,7 @@ public final class ReflectHelper {
 
 	/**
 	 * Perform resolution of a class name.
-	 * <p/>
+	 * <p>
 	 * Same as {@link #classForName(String, Class)} except that here we delegate to
 	 * {@link Class#forName(String)} if the context classloader lookup is unsuccessful.
 	 *
@@ -437,6 +461,15 @@ public final class ReflectHelper {
 		Class checkClass = containerClass;
 		Method getter = null;
 
+		if ( isRecord( containerClass ) ) {
+			try {
+				getter = containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
+			}
+			catch (NoSuchMethodException e) {
+				// Ignore
+			}
+		}
+
 		// check containerClass, and then its super types (if any)
 		while ( getter == null && checkClass != null ) {
 			if ( checkClass.equals( Object.class ) ) {
@@ -484,6 +517,14 @@ public final class ReflectHelper {
 	}
 
 	private static Method getGetterOrNull(Class containerClass, String propertyName) {
+		if ( isRecord( containerClass ) ) {
+			try {
+				return containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
+			}
+			catch (NoSuchMethodException e) {
+				// Ignore
+			}
+		}
 		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
@@ -622,6 +663,60 @@ public final class ReflectHelper {
 		return setter; // might be null
 	}
 
+	public static Method setterMethodOrNullBySetterName(final Class containerClass, final  String setterName, final Class propertyType) {
+		Class checkClass = containerClass;
+		Method setter = null;
+
+		// check containerClass, and then its super types (if any)
+		while ( setter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
+			}
+
+			setter = setterOrNullBySetterName( checkClass, setterName, propertyType );
+
+			// if no setter found yet, check all implemented interfaces
+			if ( setter == null ) {
+				setter = setterOrNullBySetterName( checkClass.getInterfaces(), setterName, propertyType );
+			}
+			else {
+				ensureAccessibility( setter );
+			}
+
+			checkClass = checkClass.getSuperclass();
+		}
+		return setter; // might be null
+	}
+
+	private static Method setterOrNullBySetterName(Class[] interfaces, String setterName, Class propertyType) {
+		Method setter = null;
+		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
+			final Class anInterface = interfaces[i];
+			setter = setterOrNullBySetterName( anInterface, setterName, propertyType );
+			if ( setter == null ) {
+				// if no setter found yet, check all implemented interfaces of interface
+				setter = setterOrNullBySetterName( anInterface.getInterfaces(), setterName, propertyType );
+			}
+		}
+		return setter;
+	}
+
+	private static Method setterOrNullBySetterName(Class theClass, String setterName, Class propertyType) {
+		Method potentialSetter = null;
+
+		for ( Method method : theClass.getDeclaredMethods() ) {
+			final String methodName = method.getName();
+			if ( method.getParameterCount() == 1 && methodName.equals( setterName ) ) {
+				potentialSetter = method;
+				if ( propertyType == null || method.getParameterTypes()[0].equals( propertyType ) ) {
+					break;
+				}
+			}
+		}
+
+		return potentialSetter;
+	}
+
 	public static Method findSetterMethod(final Class containerClass, final String propertyName, final Class propertyType) {
 		final Method setter = setterMethodOrNull( containerClass, propertyName, propertyType );
 		if ( setter == null ) {
@@ -713,8 +808,54 @@ public final class ReflectHelper {
 				}
 			}
 		}
+		if ( isRecord( field.getDeclaringClass() ) ) {
+			try {
+				return field.getDeclaringClass().getMethod( field.getName(), NO_PARAM_SIGNATURE );
+			}
+			catch (NoSuchMethodException e) {
+				// Ignore
+			}
+		}
 
 		return null;
+	}
+
+	public static boolean isRecord(Class<?> declaringClass) {
+		return RECORD_CLASS != null && RECORD_CLASS.isAssignableFrom( declaringClass );
+	}
+
+	public static Class<?>[] getRecordComponentTypes(Class<?> javaType) {
+		try {
+			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
+			final Class<?>[] componentTypes = new Class[recordComponents.length];
+			for (int i = 0; i < recordComponents.length; i++ ) {
+				componentTypes[i] = (Class<?>) GET_TYPE.invoke( recordComponents[i] );
+			}
+			return componentTypes;
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException(
+					"Could not determine the record components for: " + javaType.getName(),
+					e
+			);
+		}
+	}
+
+	public static String[] getRecordComponentNames(Class<?> javaType) {
+		try {
+			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
+			final String[] componentNames = new String[recordComponents.length];
+			for (int i = 0; i < recordComponents.length; i++ ) {
+				componentNames[i] = (String) GET_NAME.invoke( recordComponents[i] );
+			}
+			return componentNames;
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException(
+					"Could not determine the record components for: " + javaType.getName(),
+					e
+			);
+		}
 	}
 
 	public static <T> Class<T> getClass(java.lang.reflect.Type type) {
@@ -727,6 +868,24 @@ public final class ReflectHelper {
 		else if ( type instanceof ParameterizedType ) {
 			return (Class<T>) ( (ParameterizedType) type ).getRawType();
 		}
+		else if ( type instanceof TypeVariable ) {
+			return getClass( ( (TypeVariable) type ).getBounds()[0] );
+		}
+		else if ( type instanceof WildcardType ) {
+			return getClass( ( (WildcardType) type ).getUpperBounds()[0] );
+		}
 		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
+	}
+
+	public static Class<?> getPropertyType(Member member) {
+		if (member instanceof Field) {
+			return ( (Field) member ).getType();
+		}
+		else if (member instanceof Method) {
+			return ( (Method) member ).getReturnType();
+		}
+		else {
+			throw new AssertionFailure("member should have been a method or field");
+		}
 	}
 }

@@ -7,6 +7,10 @@
 package org.hibernate.transform;
 
 
+/**
+ * @deprecated since {@link ResultTransformer} is deprecated
+ */
+@Deprecated
 final public class Transformers {
 
 	private Transformers() {}

@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -16,14 +17,15 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link org.hibernate.annotations.JdbcType} used to describe the foreign-key part of an ANY mapping.
+ * Form of {@link org.hibernate.annotations.JdbcType} used to
+ * describe the foreign key part of an {@link Any} mapping.
  *
  * @see Any
  * @see AnyKeyJdbcTypeCode
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface AnyKeyJdbcType {
 	/**

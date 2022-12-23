@@ -16,42 +16,56 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers@1.5') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
+@Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
 
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
-def defaultJdk = '11'
 stage('Configure') {
 	this.environments = [
-// 		buildEnv(defaultJdk, 'h2'),
-// 		buildEnv(defaultJdk, 'hsqldb'),
-// 		buildEnv(defaultJdk, 'derby'),
-// 		buildEnv(defaultJdk, 'mysql8'),
-// 		buildEnv(defaultJdk, 'mariadb'),
-// 		buildEnv(defaultJdk, 'postgresql_9_5'),
-// 		buildEnv(defaultJdk, 'postgresql_13'),
-// 		buildEnv(defaultJdk, 'oracle'),
-		buildEnv(defaultJdk, 'oracle_ee'),
-// 		buildEnv(defaultJdk, 'db2'),
-// 		buildEnv(defaultJdk, 'mssql'),
-// 		buildEnv(defaultJdk, 'sybase'),
-		buildEnv(defaultJdk, 'hana', 'HANA'),
-		buildEnv(defaultJdk, 's390x', 's390x'),
-		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
-		// Disable EDB for now as the image is not available anymore
-// 		buildEnv(defaultJdk, 'edb')
-		jdkBuildEnv(defaultJdk, '17'),
-		jdkBuildEnv(defaultJdk, '18'),
-		jdkBuildEnv(defaultJdk, '19'),
+//		new BuildEnvironment( dbName: 'h2' ),
+//		new BuildEnvironment( dbName: 'hsqldb' ),
+//		new BuildEnvironment( dbName: 'derby' ),
+//		new BuildEnvironment( dbName: 'mysql' ),
+//		new BuildEnvironment( dbName: 'mariadb' ),
+//		new BuildEnvironment( dbName: 'postgresql' ),
+//		new BuildEnvironment( dbName: 'edb' ),
+//		new BuildEnvironment( dbName: 'oracle' ),
+//		new BuildEnvironment( dbName: 'db2' ),
+//		new BuildEnvironment( dbName: 'mssql' ),
+//		new BuildEnvironment( dbName: 'sybase' ),
+// Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
+// 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
+		new BuildEnvironment( node: 's390x' ),
+		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
+				additionalOptions: '-DdbHost=localhost:4000',
+				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
+		new BuildEnvironment( testJdkVersion: '17' ),
+		new BuildEnvironment( testJdkVersion: '18' ),
+		// We want to enable preview features when testing early-access builds of OpenJDK:
+		// even if we don't use these features, just enabling them can cause side effects
+		// and it's useful to test that.
+		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' )
 	];
+
+	if ( env.CHANGE_ID ) {
+		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ) )
+		}
+		if ( pullRequest.labels.contains( 'hana' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
+		}
+	}
 
 	helper.configure {
 		file 'job-configuration.yaml'
 		// We don't require the following, but the build helper plugin apparently does
 		jdk {
-			defaultTool "OpenJDK ${defaultJdk} Latest"
+			defaultTool DEFAULT_JDK_TOOL
 		}
 		maven {
 			defaultTool 'Apache Maven 3.8'
@@ -80,22 +94,28 @@ stage('Build') {
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
 		// Don't build environments for newer JDKs when this is a PR
-		if ( buildEnv.getVersion() != defaultJdk ) {
-			if ( helper.scmSource.pullRequest ) {
-				return
-			}
+		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion ) {
+			return
 		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
-			runBuildOnNode(buildEnv.node) {
+			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
+				def testJavaHome
+				if ( buildEnv.testJdkVersion ) {
+					testJavaHome = tool(name: "OpenJDK ${buildEnv.testJdkVersion} Latest", type: 'jdk')
+				}
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
-				withEnv(["JAVA_HOME=${tool buildEnv.buildJdkTool}", "PATH+JAVA=${tool buildEnv.buildJdkTool}/bin", "TEST_JAVA_HOME=${tool buildEnv.testJdkTool}"]) {
-					if ( buildEnv.getVersion() != defaultJdk ) {
-						state[buildEnv.tag]['additionalOptions'] = " -Ptest.jdk.version=${buildEnv.getTestVersion()} -Porg.gradle.java.installations.paths=${JAVA_HOME},${TEST_JAVA_HOME}";
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					state[buildEnv.tag]['additionalOptions'] = ''
+					if ( testJavaHome ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Ptest.jdk.version=${buildEnv.testJdkVersion} -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
 					}
-					else {
-						state[buildEnv.tag]['additionalOptions'] = "";
+					if ( buildEnv.testJdkLauncherArgs ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Ptest.jdk.launcher.args=${buildEnv.testJdkLauncherArgs}"
 					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {
@@ -104,41 +124,84 @@ stage('Build') {
 					try {
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "mysql8":
+								case "h2_1_4":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.h2=1.4.197 -Pgradle.libs.versions.h2gis=1.5.0"
+									break;
+								case "hsqldb_2_6":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.hsqldb=2.6.1"
+									break;
+								case "derby_10_14":
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+										" -Pgradle.libs.versions.derby=10.14.2.0"
+									break;
+								case "mysql":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.21').pull()
+										docker.image('mysql:8.0.31').pull()
 									}
-									sh "./docker_db.sh mysql_8_0"
+									sh "./docker_db.sh mysql"
+									state[buildEnv.tag]['containerName'] = "mysql"
+									break;
+								case "mysql_5_7":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('mysql:5.7.40').pull()
+									}
+									sh "./docker_db.sh mysql_5_7"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.5.8').pull()
+										docker.image('mariadb:10.9.3').pull()
 									}
 									sh "./docker_db.sh mariadb"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_9_5":
+								case "mariadb_10_3":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('mariadb:10.3.36').pull()
+									}
+									sh "./docker_db.sh mariadb_10_3"
+									state[buildEnv.tag]['containerName'] = "mariadb"
+									break;
+								case "postgresql":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:9.5-2.5').pull()
+										docker.image('postgis/postgis:15-3.3').pull()
 									}
-									sh "./docker_db.sh postgresql_9_5"
+									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "postgresql_13":
+								case "postgresql_10":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:13-3.1').pull()
+										docker.image('postgis/postgis:10-2.5').pull()
 									}
-									sh "./docker_db.sh postgresql_13"
+									sh "./docker_db.sh postgresql_10"
 									state[buildEnv.tag]['containerName'] = "postgres"
+									break;
+								case "edb":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:14.5-3.2-postgis').pull()
+									sh "./docker_db.sh edb"
+									state[buildEnv.tag]['containerName'] = "edb"
+									break;
+								case "edb_10":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
+									sh "./docker_db.sh edb_10"
+									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "oracle":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('quillbuilduser/oracle-18-xe').pull()
+										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
 									}
-									sh "./docker_db.sh oracle_18"
+									sh "./docker_db.sh oracle"
+									state[buildEnv.tag]['containerName'] = "oracle"
+									break;
+								case "oracle_11_2":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
+									}
+									sh "./docker_db.sh oracle_11"
 									state[buildEnv.tag]['containerName'] = "oracle"
 									break;
 								case "db2":
@@ -148,9 +211,21 @@ stage('Build') {
 									sh "./docker_db.sh db2"
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
+								case "db2_10_5":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									}
+									sh "./docker_db.sh db2_10_5"
+									state[buildEnv.tag]['containerName'] = "db2"
+									break;
 								case "mssql":
-									docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
+									docker.image('mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf').pull()
 									sh "./docker_db.sh mssql"
+									state[buildEnv.tag]['containerName'] = "mssql"
+									break;
+								case "mssql_2017":
+									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
+									sh "./docker_db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "sybase":
@@ -160,53 +235,45 @@ stage('Build') {
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
-								case "edb":
-									docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
-		// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
-		// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-		// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
-										docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
+								case "cockroachdb":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('cockroachdb/cockroach:v22.1.10').pull()
 									}
-									sh "./docker_db.sh edb"
-									state[buildEnv.tag]['containerName'] = "edb"
+									sh "./docker_db.sh cockroachdb"
+									state[buildEnv.tag]['containerName'] = "cockroach"
+									break;
+								case "cockroachdb_21_2":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('cockroachdb/cockroach:v21.2.16').pull()
+									}
+									sh "./docker_db.sh cockroachdb_21_2"
+									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}
 						stage('Test') {
-							switch (buildEnv.dbName) {
-								case "h2":
-								case "derby":
-								case "hsqldb":
-									runTest("-Pdb=${buildEnv.dbName}${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "mysql8":
-									runTest("-Pdb=mysql_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "tidb":
-									runTest("-Pdb=tidb -DdbHost=localhost:4000${state[buildEnv.tag]['additionalOptions']}", 'TIDB')
-									break;
-								case "postgresql_9_5":
-								case "postgresql_13":
-									runTest("-Pdb=pgsql_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "oracle":
-									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "oracle_ee":
-									runTest("-Pdb=oracle_jenkins${state[buildEnv.tag]['additionalOptions']}", 'ORACLE_RDS')
-									break;
-								case "hana":
-									runTest("-Pdb=hana_jenkins${state[buildEnv.tag]['additionalOptions']}", 'HANA')
-									break;
-								case "edb":
-									runTest("-Pdb=edb_ci -DdbHost=localhost:5433${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								case "s390x":
-									runTest("-Pdb=h2${state[buildEnv.tag]['additionalOptions']}")
-									break;
-								default:
-									runTest("-Pdb=${buildEnv.dbName}_ci${state[buildEnv.tag]['additionalOptions']}")
-									break;
+							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							withEnv(["RDBMS=${buildEnv.dbName}"]) {
+								try {
+									if (buildEnv.dbLockableResource == null) {
+										timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+											sh cmd
+										}
+									}
+									else {
+										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
+											if ( buildEnv.dbLockResourceAsHost ) {
+												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+											}
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+												sh cmd
+											}
+										}
+									}
+								}
+								finally {
+									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
+								}
 							}
 						}
 					}
@@ -230,57 +297,26 @@ stage('Build') {
 
 // Job-specific helpers
 
-BuildEnvironment buildEnv(String version, String dbName) {
-	return new BuildEnvironment( version, version, dbName, NODE_PATTERN_BASE, null );
-}
+class BuildEnvironment {
+	String testJdkVersion
+	String testJdkLauncherArgs
+	String dbName = 'h2'
+	String node
+	String dbLockableResource
+	boolean dbLockResourceAsHost
+	String additionalOptions
+	String notificationRecipients
+	boolean longRunning
 
-BuildEnvironment buildEnv(String version, String dbName, String node) {
-	return new BuildEnvironment( version, version, dbName, node, null );
-}
-
-BuildEnvironment buildEnv(String version, String dbName, String node, String notificationRecipients) {
-	return new BuildEnvironment( version, version, dbName, node, notificationRecipients );
-}
-
-BuildEnvironment jdkBuildEnv(String version, String testVersion) {
-	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, null );
-}
-
-BuildEnvironment jdkBuildEnv(String version, String testVersion, String notificationRecipients) {
-	return new BuildEnvironment( version,testVersion, "h2", NODE_PATTERN_BASE, notificationRecipients );
-}
-
-public class BuildEnvironment {
-	private String version;
-	private String testVersion;
-	private String buildJdkTool;
-	private String testJdkTool;
-	private String dbName;
-	private String node;
-	private String notificationRecipients;
-
-	public BuildEnvironment(String version, String testVersion, String dbName, String node, String notificationRecipients) {
-		this.version = version;
-		this.testVersion = testVersion;
-		this.dbName = dbName;
-		this.node = node;
-		this.notificationRecipients = notificationRecipients;
-		this.buildJdkTool = "OpenJDK ${version} Latest";
-		this.testJdkTool = "OpenJDK ${testVersion} Latest";
-	}
 	String toString() { getTag() }
-	String getTag() { "jdk_${testVersion}_${dbName}" }
-	String getNode() { node }
-	String getVersion() { version }
-	String getTestVersion() { testVersion }
-	String getNotificationRecipients() { notificationRecipients }
+	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
 }
 
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
         try {
-			timeout( [time: 120, unit: 'MINUTES'], body )
+			body()
         }
         finally {
         	// If this is a PR, we clean the workspace at the end
@@ -299,24 +335,6 @@ void pruneDockerContainers() {
 		sh 'docker volume prune -f || true'
 	}
 }
-// Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
-void runTest(String goal, String lockableResource = null, boolean clean = true) {
-	String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
-	try {
-		if (lockableResource == null) {
-			sh cmd
-		}
-		else {
-			lock(lockableResource) {
-				sh cmd
-			}
-		}
-	}
-	finally {
-		junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-	}
-}
-
 
 void handleNotifications(currentBuild, buildEnv) {
 	def currentResult = getParallelResult(currentBuild, buildEnv.tag)
@@ -339,22 +357,26 @@ void handleNotifications(currentBuild, buildEnv) {
 					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 			}
 		}
-		else if ( currentResult == 'FAILURE' ) {
-			if ( previousResult != null && previousResult == "FAILURE" ) {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
-					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+		else if (currentBuild.rawBuild.getActions(jenkins.model.InterruptedBuildAction.class).isEmpty()) {
+			// If there are interrupted build actions, this means the build was cancelled, probably superseded
+			// Thanks to https://issues.jenkins.io/browse/JENKINS-43339 for the "hack" to determine this
+			if ( currentResult == 'FAILURE' ) {
+				if ( previousResult != null && previousResult == "FAILURE" ) {
+					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
+					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
+						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+				}
+				else {
+					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
+					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
+						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+				}
 			}
 			else {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
+				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
+				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
 					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 			}
-		}
-		else {
-			subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
-			body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
-				<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
 		}
 
 		emailext(

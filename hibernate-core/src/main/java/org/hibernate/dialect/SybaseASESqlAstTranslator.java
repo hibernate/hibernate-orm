@@ -17,10 +17,11 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -47,6 +48,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean supportsWithClause() {
+		return false;
 	}
 
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
@@ -104,12 +110,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		super.renderNamedTableReference( tableReference, lockMode );
-		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				appendSql( " holdlock" );
-			}
-			return true;
-		}
 		return false;
 	}
 
@@ -142,24 +142,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
-	}
-
-	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// Sybase ASE does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// Sybase ASE does not support this, but it can be emulated
 	}
 
 	@Override
@@ -323,11 +305,20 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			// This could theoretically be emulated by rendering all grouping variations of the query and
 			// connect them via union all but that's probably pretty inefficient and would have to happen
 			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		arithmeticExpression.getLeftHandOperand().accept( this );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
@@ -341,7 +332,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
 					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
 					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
-				appendSql( columnReference.getExpressionText() );
+				columnReference.appendReadExpression( this );
 			}
 			// for now, use the unqualified form
 			else if ( columnReference.isColumnExpressionFormula() ) {
@@ -353,13 +344,41 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				);
 			}
 			else {
-				appendSql( getCurrentDmlStatement().getTargetTable().getTableExpression() );
-				appendSql( '.' );
-				appendSql( columnReference.getColumnExpression() );
+				columnReference.appendReadExpression(
+						this,
+						getCurrentDmlStatement().getTargetTable().getTableExpression()
+				);
 			}
 		}
 		else {
-			appendSql( columnReference.getExpressionText() );
+			columnReference.appendReadExpression( this );
+		}
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		final String dmlTargetTableAlias = getDmlTargetTableAlias();
+		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
+		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
+			// Sybase needs a table name prefix
+			// but not if this is a restricted union table reference subquery
+			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+			final List<TableGroup> roots;
+			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
+					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
+					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
+				aggregateColumnWriteExpression.appendWriteExpression( this, this );
+			}
+			else {
+				aggregateColumnWriteExpression.appendWriteExpression(
+						this,
+						this,
+						getCurrentDmlStatement().getTargetTable().getTableExpression()
+				);
+			}
+		}
+		else {
+			aggregateColumnWriteExpression.appendWriteExpression( this, this );
 		}
 	}
 
@@ -394,7 +413,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private boolean supportsTopClause() {
-		return getDialect().getVersion().isSameOrAfter( 12, 5 );
+		return true;
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

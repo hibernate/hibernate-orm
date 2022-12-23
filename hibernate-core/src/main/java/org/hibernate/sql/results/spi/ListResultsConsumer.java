@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -89,19 +90,53 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private final UniqueSemantic uniqueSemantic;
-	private final ResultHandler<R> resultHandler;
 
 	public ListResultsConsumer(UniqueSemantic uniqueSemantic) {
 		this.uniqueSemantic = uniqueSemantic;
+	}
 
-		if ( uniqueSemantic == UniqueSemantic.FILTER ) {
-			resultHandler = ListResultsConsumer::deDuplicationHandling;
+	private static class Results<R> {
+		private final List<R> results = new ArrayList<>();
+		private final JavaType resultJavaType;
+
+		public Results(JavaType resultJavaType) {
+			this.resultJavaType = resultJavaType;
 		}
-		else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-			resultHandler = ListResultsConsumer::duplicationErrorHandling;
+
+		public boolean addUnique(R result) {
+			for ( int i = 0; i < results.size(); i++ ) {
+				if ( resultJavaType.areEqual( results.get( i ), result ) ) {
+					return false;
+				}
+			}
+			results.add( result );
+			return true;
 		}
-		else {
-			resultHandler = ListResultsConsumer::applyAll;
+
+		public void add(R result) {
+			results.add( result );
+		}
+
+		public List<R> getResults() {
+			return results;
+		}
+	}
+
+	private static class EntityResult<R> extends Results<R> {
+		private static final Object DUMP_VALUE = new Object();
+
+		private final IdentityHashMap<R, Object> added = new IdentityHashMap<>();
+
+		public EntityResult(JavaType resultJavaType) {
+			super( resultJavaType );
+		}
+
+		public boolean addUnique(R result) {
+			if ( added.put( result, DUMP_VALUE ) == null ) {
+				super.add( result );
+				return true;
+			}
+			return false;
 		}
 	}
 
@@ -116,12 +151,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
-
 		RuntimeException ex = null;
 		try {
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
-
-			final List<R> results = new ArrayList<>();
 
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
@@ -129,20 +161,43 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 					typeConfiguration
 			);
 
-			final ResultHandler<R> resultHandlerToUse;
+			final boolean isEnityResultType = domainResultJavaType instanceof EntityJavaType;
 
-			if ( uniqueSemantic == UniqueSemantic.ALLOW
-					&& domainResultJavaType instanceof EntityJavaType ) {
-				resultHandlerToUse = ListResultsConsumer::deDuplicationHandling;
+			final Results<R> results;
+			if ( ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) && isEnityResultType ) {
+				results = new EntityResult<>( domainResultJavaType );
 			}
 			else {
-				resultHandlerToUse = this.resultHandler;
+				results = new Results<>( domainResultJavaType );
 			}
 
-			while ( rowProcessingState.next() ) {
-				final R row = rowReader.readRow( rowProcessingState, processingOptions );
-				resultHandlerToUse.handle( row, domainResultJavaType, results, rowProcessingState );
-				rowProcessingState.finishRowProcessing();
+			if ( this.uniqueSemantic == UniqueSemantic.FILTER
+					|| this.uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers
+					|| this.uniqueSemantic == UniqueSemantic.ALLOW && isEnityResultType ) {
+				while ( rowProcessingState.next() ) {
+					results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
+					rowProcessingState.finishRowProcessing();
+				}
+			}
+			else if ( this.uniqueSemantic == UniqueSemantic.ASSERT ) {
+				while ( rowProcessingState.next() ) {
+					if ( !results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) ) ) {
+						throw new HibernateException(
+								String.format(
+										Locale.ROOT,
+										"Duplicate row was found and `%s` was specified",
+										UniqueSemantic.ASSERT
+								)
+						);
+					}
+					rowProcessingState.finishRowProcessing();
+				}
+			}
+			else {
+				while ( rowProcessingState.next() ) {
+					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+					rowProcessingState.finishRowProcessing();
+				}
 			}
 
 			try {
@@ -155,10 +210,10 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			//noinspection unchecked
 			final ResultListTransformer<R> resultListTransformer = (ResultListTransformer<R>) queryOptions.getResultListTransformer();
 			if ( resultListTransformer != null ) {
-				return resultListTransformer.transformList( results );
+				return resultListTransformer.transformList( results.getResults() );
 			}
 
-			return results;
+			return results.getResults();
 		}
 		catch (RuntimeException e) {
 			ex = e;
@@ -183,84 +238,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				}
 			}
 		}
-		throw new IllegalStateException( "Should not reach this!" );
-	}
-
-	/**
-	 * Essentially a tri-consumer for applying the different duplication strategies.
-	 *
-	 * @see UniqueSemantic
-	 */
-	@FunctionalInterface
-	private interface ResultHandler<R> {
-		void handle(R result, JavaType<R> transformedJavaType, List<R> results, RowProcessingStateStandardImpl rowProcessingState);
-	}
-
-	public static <R> void deDuplicationHandling(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		withDuplicationCheck(
-				result,
-				transformedJavaType,
-				results,
-				rowProcessingState,
-				false
-		);
-	}
-
-	private static <R> void withDuplicationCheck(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState,
-			boolean throwException) {
-		boolean addResult = true;
-
-		for ( int i = 0; i < results.size(); i++ ) {
-			final R existingResult = results.get( i );
-			if ( transformedJavaType.areEqual( result, existingResult ) ) {
-				if ( throwException && ! rowProcessingState.hasCollectionInitializers ) {
-					throw new HibernateException(
-							String.format(
-									Locale.ROOT,
-									"Duplicate row was found and `%s` was specified",
-									UniqueSemantic.ASSERT
-							)
-					);
-				}
-
-				addResult = false;
-				break;
-			}
-		}
-
-		if ( addResult ) {
-			results.add( result );
-		}
-	}
-
-	public static <R> void duplicationErrorHandling(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		withDuplicationCheck(
-				result,
-				transformedJavaType,
-				results,
-				rowProcessingState,
-				true
-		);
-	}
-
-	public static <R> void applyAll(
-			R result,
-			JavaType<R> transformedJavaType,
-			List<R> results,
-			RowProcessingStateStandardImpl rowProcessingState) {
-		results.add( result );
+		throw new IllegalStateException( "Should not reach this" );
 	}
 
 	private JavaType<R> resolveDomainResultJavaType(

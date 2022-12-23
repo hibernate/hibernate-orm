@@ -6,62 +6,78 @@
   -->
 <body>
 
-<h2>Hibernate O/RM Aggregated JavaDocs</h2>
+<h2>Hibernate ORM Aggregated Javadoc</h2>
 
-Hibernate provides both<ul>
+Hibernate is a library for object/relation mapping (ORM). It provides:<ul>
     <li>
-        a native API comprised centrally around {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}
+        a <em>native API</em> centered around {@link org.hibernate.SessionFactory} and
+        {@link org.hibernate.Session},
     </li>
     <li>
-        an implementation of the Java Persistence API (JPA).
-        See the latest <a href="http://jcp.org/en/jsr/detail?id=338">JPA JSR</a> for details.
+        an implementation of the <em>Java (or Jakarta) Persistence API</em> (JPA),
+        where the equivalent central interfaces are {@link jakarta.persistence.EntityManagerFactory}
+        and {@link jakarta.persistence.EntityManager}, and
+    </li>
+    <li>
+        a set of <em>mapping annotations</em> which augment the O/R mapping annotations defined
+        by JPA, and which may be used with either API.
     </li>
 </ul>
-<p></p>
 
 <h3>Native API</h3>
-In addition to SessionFactory and Session, applications using the native API will often utilize the following
-interfaces:<ul>
-    <li>{@link org.hibernate.cfg.Configuration}</li>
-    <li>{@link org.hibernate.Transaction}</li>
-    <li>{@link org.hibernate.query.Query}</li>
-    <li>{@link org.hibernate.Criteria}</li>
-    <li>{@link org.hibernate.criterion.Projection}</li>
-    <li>{@link org.hibernate.criterion.Projections}</li>
-    <li>{@link org.hibernate.criterion.Criterion}</li>
-    <li>{@link org.hibernate.criterion.Restrictions}</li>
-    <li>{@link org.hibernate.criterion.Order}</li>
-    <li>{@link org.hibernate.criterion.Example}</li>
+
+Along with {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}, applications
+using the native API will often make use of the following interfaces:<ul>
+    <li>{@link org.hibernate.cfg.Configuration} to configure and bootstrap Hibernate,</li>
+    <li>{@link org.hibernate.StatelessSession} for processes involving many entity instances,</li>
+    <li>{@link org.hibernate.Cache} to manage the second-level cache,</li>
+    <li>{@link org.hibernate.Transaction} to control local transactions, and</li>
+    <li>{@link org.hibernate.query.Query} to execute HQL queries.</li>
 </ul>
-These interfaces are fully intended to be exposed to application code.
-<p></p>
 
 <h3>JPA</h3>
-The JPA interfaces are all defined by the JPA specification.  For details see {@link jakarta.persistence}.
-Not that since 5.2 Hibernate extends JPA (e.g. SessionFactory extends EntityManagerFactory) rather
-than wrapping it.
-<p></p>
 
+The JPA interfaces are defined by the JPA specification. For details see the latest
+<a href="https://jakarta.ee/specifications/persistence/">specification</a> along with the
+<a href="https://jakarta.ee/specifications/persistence/2.2/apidocs/">API documentation</a>
+for the package {@link jakarta.persistence}.
+
+<p>Note that since Hibernate 5.2, the native API extends the JPA API rather than wrapping it
+(for example,<code>SessionFactory</code> extends <code>EntityManagerFactory</code>).</p>
+
+<h3>Mapping annotations</h3>
+
+The mapping annotations defined by the JPA specification provide a foundation for expressing
+object/relational mappings in Hibernate and other JPA implementations.
+
+The annotations in the package {@link org.hibernate.annotations} extend this foundation and
+accommodate more specialized requirements. These annotation are not tied to the native API,
+and may be used in conjunction with the JPA API.
+
+The full power of Hibernate can only be unlocked via judicious use of these extra annotations.
 
 <h3>Note about package categories</h3>
+
 Hibernate categorizes packages into a number of groups based on intended consumers:<ul>
     <li>
-        <strong>API</strong> - classes to which application code will generally bind directly.  These
-        are generally classes which do not have "spi" nor "internal" in their package path and are
-        not under the "org.hibernate.testing" package
+        <strong>API</strong> - classes to which application code will generally bind directly.
+        These  are generally classes which do not have <code>spi</code> nor <code>internal</code>
+        in their package path and are not under the package <code>org.hibernate.testing</code>.
     </li>
     <li>
-        <strong>SPI</strong> - classes to which integrator developers will commonly bind directly in
-        order to develop extensions to Hibernate, or to alter its behavior in some way.  These are
-        generally under packages with "spi" in the package path.
+        <strong>SPI</strong> - classes to which integrator developers will commonly bind directly
+        in order to develop extensions to Hibernate, or to alter its behavior in some way. These
+        are generally under packages with <code>spi</code> in the package path.
     </li>
     <li>
-        <strong>Testing Support</strong> - classes from the hibernate-testing artifact used in building
-        Hibernate test cases.  These are classes under the "org.hibernate.testing" package
+        <strong>Testing Support</strong> - classes from the <code>hibernate-testing</code>
+        artifact used in building Hibernate test cases. These are classes under the package
+        <code>org.hibernate.testing</code>.
     </li>
 </ul>
 <p></p>
 
-Complete Hibernate documentation may be found online at <a href="http://hibernate.org/orm/documentation">http://hibernate.org/orm/documentation/</a>
+Complete Hibernate documentation may be found online at
+<a href="http://hibernate.org/orm/documentation">http://hibernate.org/orm/documentation/</a>.
 
 </body>

@@ -87,6 +87,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		new SchemaExport().setHaltOnError( true )
@@ -110,6 +111,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		new SchemaExport()
@@ -136,6 +138,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final Database database = metadata.getDatabase();
@@ -205,6 +208,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( SchemaTwoEntity.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );

@@ -36,6 +36,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * Delegate responsible for, in conjunction with the various
  * {@linkplain CascadingAction actions}, implementing cascade processing.
@@ -79,7 +81,6 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
-
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
@@ -321,7 +322,7 @@ public final class Cascade {
 					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
 						EntityEntry valueEntry = persistenceContext.getEntry( loadedValue );
 
-						if ( valueEntry == null && loadedValue instanceof HibernateProxy ) {
+						if ( valueEntry == null && isHibernateProxy( loadedValue ) ) {
 							// un-proxy and re-associate for cascade operation
 							// useful for @OneToOne defined as FetchType.LAZY
 							loadedValue = persistenceContext.unproxyAndReassociate( loadedValue );

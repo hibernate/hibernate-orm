@@ -14,14 +14,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.ReflectHelper;
 
-import com.oracle.svm.core.annotate.AutomaticFeature;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
 /**
  * This registers all ANTLR parser nodes for reflection, something that is necessary
  * as the HQL parser's inner workings are based on reflection.
- * This is different than the "static" registrations of {@link GraalVMStaticAutofeature}
+ * This is different than the "static" registrations of {@link GraalVMStaticFeature}
  * as we only register these if the HQL parser is actually reachable: some particularly
  * simple applications might not need dynamic queries being expressed in string form,
  * and for such cases the reflective registrations can be skipped.
@@ -33,7 +32,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
  *
  * @author Sanne Grinovero
  */
-@AutomaticFeature
 public final class QueryParsingSupport implements Feature {
 
 	private final AtomicBoolean triggered = new AtomicBoolean( false);
@@ -49,6 +47,11 @@ public final class QueryParsingSupport implements Feature {
 		Class<?> parserClazz = access.findClassByName("org.hibernate.grammars.hql.HqlParser");
 		access.registerReachabilityHandler(this::enableHQLSupport, lexerClazz);
 		access.registerReachabilityHandler(this::enableHQLSupport, parserClazz);
+	}
+
+	@Override
+	public String getDescription() {
+		return "Hibernate ORM's support for HQL Parser in GraalVM";
 	}
 
 	@AllowSysOut

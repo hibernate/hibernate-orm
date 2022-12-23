@@ -9,20 +9,25 @@ package org.hibernate;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Indicates the manner in which JDBC Connections should be acquired.  Inverse to
- * {@link ConnectionReleaseMode}.
+ * Indicates the manner in which JDBC {@linkplain java.sql.Connection connections}
+ * are acquired. Complementary to {@link ConnectionReleaseMode}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
  */
 public enum ConnectionAcquisitionMode {
 	/**
-	 * The Connection will be acquired as soon as the Hibernate Session is opened.  This
-	 * also circumvents ConnectionReleaseMode, as the Connection will then be held until the
-	 * Session is closed.
+	 * The {@code Connection} will be acquired as soon as a session is opened.
+	 * <p>
+	 * This circumvents the {@link ConnectionReleaseMode}, as the {@code Connection}
+	 * will then be held until the session is closed.
 	 */
 	IMMEDIATELY,
 	/**
-	 * The legacy behavior.  A Connection is only acquired when (if) it is actually needed.
+	 * A {@code Connection} is acquired only when (and if) it's actually needed.
+	 * <p>
+	 * This is the default (and legacy) behavior.
 	 */
 	AS_NEEDED;
 

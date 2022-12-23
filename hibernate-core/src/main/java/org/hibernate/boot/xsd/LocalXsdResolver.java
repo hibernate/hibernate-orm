@@ -31,7 +31,7 @@ import org.xml.sax.SAXException;
 public class LocalXsdResolver {
 
 	public static String latestJpaVerison() {
-		return "3.0";
+		return "3.1";
 	}
 
 	public static boolean isValidJpaVersion(String version) {

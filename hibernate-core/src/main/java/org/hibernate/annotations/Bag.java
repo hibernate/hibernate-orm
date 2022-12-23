@@ -7,6 +7,7 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -18,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Can be used to map a {@link java.util.List}-valued attribute using
  * {@link org.hibernate.metamodel.CollectionClassification#BAG} semantics.
- * <p/>
+ * <p>
  * @apiNote Ignored if either {@link jakarta.persistence.OrderColumn} or
  * {@link ListIndexBase} is used.
  *
@@ -26,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Bag {
 }

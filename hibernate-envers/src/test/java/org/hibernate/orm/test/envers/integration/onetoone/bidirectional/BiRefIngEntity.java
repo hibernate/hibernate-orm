@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.onetoone.bidirectional;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 
@@ -24,7 +24,7 @@ public class BiRefIngEntity {
 	private String data;
 
 	@Audited
-	@OneToOne
+	@ManyToOne
 	private BiRefEdEntity reference;
 
 	public BiRefIngEntity() {

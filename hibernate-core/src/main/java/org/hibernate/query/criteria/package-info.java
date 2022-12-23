@@ -7,7 +7,7 @@
 
 /**
  * Hibernate's support for JPA criteria queries.
- *
+ * <p>
  * Note JPA criteria are similar to Hibernate's legacy notion
  * of a detached criteria.  Ultimately the criteria tree is transformed
  * into an SQM form and becomes a Query.

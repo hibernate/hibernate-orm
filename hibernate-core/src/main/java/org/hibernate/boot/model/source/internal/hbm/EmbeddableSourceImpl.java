@@ -49,7 +49,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 		super( mappingDocument );
 		this.attributeRoleBase = container.getAttributeRoleBase();
 		this.attributePathBase = container.getAttributePathBase();
-		if ( ToolingHintContainer.class.isInstance( jaxbEmbeddableMapping ) ) {
+		if ( jaxbEmbeddableMapping instanceof ToolingHintContainer ) {
 			this.toolingHintContext = Helper.collectToolingHints(
 					container.getToolingHintContextBaselineForEmbeddable(),
 					(ToolingHintContainer) jaxbEmbeddableMapping

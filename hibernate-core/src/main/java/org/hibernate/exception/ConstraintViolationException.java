@@ -10,8 +10,8 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating that the requested DML operation
- * resulted in a violation of a defined integrity constraint.
+ * A {@link JDBCException} indicating that the requested DML operation
+ * resulted in violation of a defined integrity constraint.
  *
  * @author Steve Ebersole
  */

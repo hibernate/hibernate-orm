@@ -6,12 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -19,12 +17,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.DiscriminatorType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -36,10 +31,9 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.RepresentationMode.MAP;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
 /**
  * @implNote `discriminatorType` represents the mapping to Class, whereas `discriminatorType.getUnderlyingType()`
@@ -49,45 +43,35 @@ import static org.hibernate.metamodel.RepresentationMode.MAP;
  */
 public abstract class AbstractDiscriminatorMapping implements EntityDiscriminatorMapping {
 	private final NavigableRole role;
+
 	private final JdbcMapping jdbcMapping;
 
-	private final EntityPersister entityDescriptor;
-	private final DiscriminatorType<?> discriminatorType;
-	private final SessionFactoryImplementor sessionFactory;
+	private final EntityMappingType entityDescriptor;
+	private final Map<Object, DiscriminatorValueDetails> valueMappings;
 
-	private final DomainResultConverter<?> domainResultConverter;
+	private final DiscriminatorType<Object> discriminatorType;
 
 	public AbstractDiscriminatorMapping(
-			JdbcMapping jdbcMapping,
-			EntityPersister entityDescriptor,
+			EntityMappingType entityDescriptor,
 			DiscriminatorType<?> discriminatorType,
+			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		this.jdbcMapping = jdbcMapping;
-
+		this.jdbcMapping = discriminatorType.getUnderlyingType().getJdbcMapping();
 		this.entityDescriptor = entityDescriptor;
-		this.discriminatorType = discriminatorType;
+		this.valueMappings = valueMappings;
 
-		role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
-		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 
-		domainResultConverter = DomainResultConverter.create(
-				entityDescriptor,
-				this::getConcreteEntityNameForDiscriminatorValue,
-				discriminatorType.getUnderlyingType(),
-				sessionFactory
-		);
+		//noinspection unchecked
+		this.discriminatorType = (DiscriminatorType<Object>) discriminatorType;
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
 	public BasicType<?> getUnderlyingJdbcMappingType() {
 		return discriminatorType.getUnderlyingType();
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
 	}
 
 
@@ -101,12 +85,21 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return jdbcMapping;
+		return discriminatorType;
 	}
 
 	@Override
-	public String getConcreteEntityNameForDiscriminatorValue(Object value) {
-		return getEntityDescriptor().getSubclassForDiscriminatorValue( value );
+	public DiscriminatorValueDetails resolveDiscriminatorValue(Object value) {
+		if ( value == null ) {
+			return valueMappings.get( NULL_DISCRIMINATOR );
+		}
+
+		final DiscriminatorValueDetails matchedType = valueMappings.get( value );
+		if ( matchedType != null ) {
+			return matchedType;
+		}
+
+		return valueMappings.get( NOT_NULL_DISCRIMINATOR );
 	}
 
 	@Override
@@ -124,26 +117,28 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <T> DomainResult<T> createDomainResult(
+	public DomainResult createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// create a SqlSelection based on the underlying JdbcMapping
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				navigablePath,
-				getUnderlyingJdbcMappingType(),
+				jdbcMapping,
 				tableGroup,
 				null,
 				creationState.getSqlAstCreationState()
 		);
 
-		//noinspection unchecked
+		// return a BasicResult with conversion the entity class or entity-name
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				domainResultConverter.getDomainJavaType(),
-				domainResultConverter,
+				discriminatorType.getJavaTypeDescriptor(),
+				discriminatorType.getValueConverter(),
 				navigablePath
 		);
 	}
@@ -157,14 +152,14 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlSelection(
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
-				jdbcMappingToUse.getJavaTypeDescriptor(),
+				jdbcMappingToUse.getJdbcJavaType(),
 				fetchParent,
 				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}
 
 	@Override
-	public BasicFetch generateFetch(
+	public BasicFetch<?> generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -178,20 +173,22 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 
 		assert tableGroup != null;
 
+		// create a SqlSelection based on the underlying JdbcMapping
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				fetchablePath,
-				getUnderlyingJdbcMappingType(),
+				jdbcMapping,
 				tableGroup,
 				fetchParent,
 				creationState.getSqlAstCreationState()
 		);
 
+		// return a BasicFetch with conversion the entity class or entity-name
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
+				discriminatorType.getValueConverter(),
 				fetchTiming,
 				creationState
 		);
@@ -202,7 +199,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() );
+		resolveSqlSelection(
+				navigablePath,
+				jdbcMapping,
+				tableGroup,
+				null,
+				creationState.getSqlAstCreationState()
+		);
 	}
 
 	@Override
@@ -212,7 +215,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, getUnderlyingJdbcMappingType(), tableGroup, null, creationState.getSqlAstCreationState() ),
+				resolveSqlSelection( navigablePath, jdbcMapping, tableGroup, null, creationState.getSqlAstCreationState() ),
 				getJdbcMapping()
 		);
 	}
@@ -220,191 +223,33 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, convertToRelational( value ), getJdbcMapping() );
+		valuesConsumer.consume( offset, value, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		action.accept( offset, getJdbcMapping() );
+		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( convertToRelational( domainValue ), this );
-	}
-
-	private Object convertToRelational(Object domainValue) {
-		if ( domainResultConverter != null ) {
-			return domainResultConverter.toRelationalValue( domainValue );
-		}
-		return domainValue;
+		valueConsumer.consume( disassemble( domainValue, session ), this );
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return convertToRelational( value );
-	}
-
-	@Override
-	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, convertToRelational( value ), jdbcMapping );
-		return 1;
-	}
-
-	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
-		return EntityDiscriminatorMapping.super.forEachSelectable( consumer );
+		return value;
 	}
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return EntityDiscriminatorMapping.super.forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
-		return EntityDiscriminatorMapping.super.forEachJdbcType( action );
-	}
-
-
-
-	/**
-	 * Used to convert the underlying discriminator value into a Class (or String for entity-name)
-	 * reference for the entity type
-	 */
-	protected static class DomainResultConverter<R> implements BasicValueConverter<Object,R> {
-		/**
-		 * Given a "raw" discriminator value, determines the corresponding concrete entity name
-		 */
-		private final Function<R,String> subtypeResolver;
-
-		/**
-		 * Given a concrete entity name, apply the conversion to determine the "domain result" value
-		 *
-		 * @apiNote This is only used when building a {@link DomainResult}
-		 */
-		private final Function<String, Object> entityNameHandler;
-
-		/**
-		 * Given a "domain form", apply the conversion to determine the corresponding relational value
-		 */
-		private final Function<Object, R> toRelationalConverter;
-
-		private final JavaType<Object> domainJtd;
-		private final JavaType<R> relationalJtd;
-
-		public DomainResultConverter(
-				Function<R,String> subtypeResolver,
-				Function<String,Object> entityNameHandler,
-				Function<Object,R> toRelationalConverter,
-				JavaType<Object> domainJtd,
-				JavaType<R> relationalJtd) {
-			this.subtypeResolver = subtypeResolver;
-			this.entityNameHandler = entityNameHandler;
-			this.toRelationalConverter = toRelationalConverter;
-			this.domainJtd = domainJtd;
-			this.relationalJtd = relationalJtd;
-		}
-
-		private static <R> DomainResultConverter<R> create(
-				EntityPersister entityDescriptor,
-				Function<R,String> subtypeResolver,
-				BasicType underlyingDiscriminatorType,
-				final SessionFactoryImplementor sessionFactory) {
-			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-
-			final JavaType<Object> domainJtd;
-			final Function<String,Object> entityNameHandler;
-			final Function<Object,Object> toRelationalConverter;
-
-			if ( entityDescriptor.getRepresentationStrategy().getMode() == MAP ) {
-				// todo (6.0) : account for explicit entity-name which should also return String
-				domainJtd = jtdRegistry.getDescriptor( String.class );
-				entityNameHandler = (entityName) -> entityName;
-				toRelationalConverter = (domainValue) -> {
-					if ( domainValue instanceof Class ) {
-						throw new IllegalArgumentException( "Illegal attempt to specify Class for discriminator for dynamic entity" );
-					}
-					if ( domainValue instanceof String ) {
-						final String stringValue = (String) domainValue;
-						// could be either an entity name or "underlying type" (e.g. mapped to VARCHAR)
-						// 		- first we check as an entity name since that's a discrete set;
-						//		- handling as an "underlying type" value is handled in "otherwise"
-						if ( entityDescriptor.isSubclassEntityName( stringValue ) ) {
-							return entityDescriptor.getDiscriminatorValue();
-						}
-					}
-
-					// otherwise we assume its an instance of the underlying type
-					assert underlyingDiscriminatorType.getJavaTypeDescriptor().getJavaTypeClass().isInstance( domainJtd );
-					return domainJtd;
-				};
-			}
-			else {
-				final ClassLoaderService cls = sessionFactory.getServiceRegistry().getService( ClassLoaderService.class );
-				domainJtd = jtdRegistry.getDescriptor( Class.class );
-				entityNameHandler = cls::classForName;
-				toRelationalConverter = (domainValue) -> {
-					if ( domainValue instanceof Class ) {
-						final Class<?> classValue = (Class<?>) domainValue;
-						final EntityMappingType concreteEntityMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( classValue );
-						return concreteEntityMapping.getDiscriminatorValue();
-					}
-					if ( domainValue instanceof String ) {
-						final String stringValue = (String) domainValue;
-						// could be either an entity name or "underlying type" (e.g. mapped to VARCHAR)
-						// 		- first we check as an entity name since that's a discrete set;
-						//		- handling as an "underlying type" value is handled in "otherwise"
-						if ( entityDescriptor.isSubclassEntityName( stringValue ) ) {
-							return entityDescriptor.getDiscriminatorValue();
-						}
-					}
-
-					// otherwise we assume its an instance of the underlying type
-					assert underlyingDiscriminatorType.getJavaTypeDescriptor().getJavaTypeClass().isInstance( domainJtd );
-					return domainJtd;
-				};
-			}
-
-			return new DomainResultConverter(
-					subtypeResolver,
-					entityNameHandler,
-					toRelationalConverter,
-					domainJtd,
-					underlyingDiscriminatorType.getJavaTypeDescriptor()
-			);
-		}
-
-		@Override
-		public Object toDomainValue(R relationalForm) {
-			final String entityName = subtypeResolver.apply( relationalForm );
-			return entityNameHandler.apply( entityName );
-		}
-
-		@Override
-		public R toRelationalValue(Object domainForm) {
-			// the domainForm could be any of Class (entity type), String (entity-name) or
-			// underlying type (String, Integer, ..)
-
-			return toRelationalConverter.apply( domainForm );
-		}
-
-		@Override
-		public JavaType<Object> getDomainJavaType() {
-			return domainJtd;
-		}
-
-		@Override
-		public JavaType<R> getRelationalJavaType() {
-			return relationalJtd;
-		}
+		consumer.accept( offset, this );
+		return getJdbcTypeCount();
 	}
 
 }

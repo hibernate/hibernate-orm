@@ -15,7 +15,10 @@ import org.hibernate.type.BasicType;
  * @author Gavin King
  *
  * @see Session#replicate(Object, ReplicationMode)
+ *
+ * @deprecated since {@link Session#replicate(Object, ReplicationMode)} is deprecated
  */
+@Deprecated(since="6.2")
 public enum ReplicationMode {
 	/**
 	 * Throw an exception when a row already exists.

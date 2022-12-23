@@ -19,6 +19,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertThat;
 @TestForIssue(jiraKey = "HHH14424")
 @RunWith(BytecodeEnhancerRunner.class)
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class, DirtyCheckEnhancementContext.class })
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	boolean skipTest;

@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
@@ -160,7 +161,6 @@ public class UnresolvedEntityInsertActions {
 		return dependenciesByAction.isEmpty();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addDependenciesByTransientEntity(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
 		for ( Object transientEntity : dependencies.getNonNullableTransientEntities() ) {
 			Set<AbstractEntityInsertAction> dependentActions = dependentActionsByTransientEntity.get( transientEntity );
@@ -182,7 +182,6 @@ public class UnresolvedEntityInsertActions {
 	 *
 	 * @throws IllegalArgumentException if {@code managedEntity} did not have managed or read-only status.
 	 */
-	@SuppressWarnings("unchecked")
 	public Set<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity, SessionImplementor session) {
 		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( managedEntity );
 		if ( entityEntry.getStatus() != Status.MANAGED && entityEntry.getStatus() != Status.READ_ONLY ) {
@@ -295,7 +294,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public static UnresolvedEntityInsertActions deserialize(
 			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+			EventSource session) throws IOException, ClassNotFoundException {
 
 		final UnresolvedEntityInsertActions rtn = new UnresolvedEntityInsertActions();
 

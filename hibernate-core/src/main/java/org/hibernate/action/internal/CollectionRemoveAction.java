@@ -10,6 +10,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -21,6 +22,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * The action for removing a collection
  */
 public final class CollectionRemoveAction extends CollectionAction {
+
 	private final Object affectedOwner;
 	private final boolean emptySnapshot;
 
@@ -29,7 +31,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 *
 	 * Use this constructor when the collection is non-null.
 	 *
-	 * @param collection The collection to to remove; must be non-null
+	 * @param collection The collection to remove; must be non-null
 	 * @param persister  The collection's persister
 	 * @param id The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
@@ -42,7 +44,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, collection, id, session );
 		if ( collection == null ) {
 			throw new AssertionFailure("collection == null");
@@ -72,7 +74,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 				final CollectionPersister persister,
 				final Object id,
 				final boolean emptySnapshot,
-				final SharedSessionContractImplementor session) {
+				final EventSource session) {
 		super( persister, null, id, session );
 		if ( affectedOwner == null ) {
 			throw new AssertionFailure("affectedOwner == null");
@@ -81,25 +83,38 @@ public final class CollectionRemoveAction extends CollectionAction {
 		this.affectedOwner = affectedOwner;
 	}
 
+	/**
+	 * Removes a persistent collection for an unloaded proxy.
+	 *
+	 * Use this constructor when the owning entity is has not been loaded.
+	 * @param persister The collection's persister
+	 * @param id The collection key
+	 * @param session The session
+	 */
+	public CollectionRemoveAction(
+			final CollectionPersister persister,
+			final Object id,
+			final EventSource session) {
+		super( persister, null, id, session );
+		emptySnapshot = false;
+		affectedOwner = null;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();
-
 		final SharedSessionContractImplementor session = getSession();
-
 		if ( !emptySnapshot ) {
-			// an existing collection that was either non-empty or uninitialized
+			// an existing collection that was either nonempty or uninitialized
 			// is replaced by null or a different collection
-			// (if the collection is uninitialized, hibernate has no way of
+			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), session);
+			getPersister().remove( getKey(), session );
 		}
-		
 		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		}
-
 		evict();
 		postRemove();
 
@@ -110,9 +125,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void preRemove() {
-		getFastSessionServices()
-				.eventListenerGroup_PRE_COLLECTION_REMOVE
-				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent, PreCollectionRemoveEventListener::onPreRemoveCollection );
+		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent,
+						PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
@@ -125,9 +140,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void postRemove() {
-		getFastSessionServices()
-				.eventListenerGroup_POST_COLLECTION_REMOVE
-				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent, PostCollectionRemoveEventListener::onPostRemoveCollection );
+		getFastSessionServices().eventListenerGroup_POST_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent,
+						PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
 	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {

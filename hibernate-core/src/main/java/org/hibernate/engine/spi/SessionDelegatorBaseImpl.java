@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -38,6 +40,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.spi.DeleteContext;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
@@ -49,6 +52,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -200,8 +204,28 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return delegate.getCacheRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return delegate.getCacheStoreMode();
+	}
+
+	@Override
 	public void setCacheMode(CacheMode cm) {
 		delegate.setCacheMode( cm );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		delegate.setCacheStoreMode( cacheStoreMode );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		delegate.setCacheRetrieveMode( cacheRetrieveMode );
 	}
 
 	@Override
@@ -232,11 +256,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void markForRollbackOnly() {
 		delegate.markForRollbackOnly();
-	}
-
-	@Override
-	public long getTransactionStartTimestamp() {
-		return delegate.getTransactionStartTimestamp();
 	}
 
 	@Override
@@ -277,6 +296,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isEventSource() {
 		return delegate.isEventSource();
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		return delegate.asEventSource();
 	}
 
 	@Override
@@ -450,12 +474,20 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+		//noinspection resource
 		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+		//noinspection resource
 		return delegate().createMutationQuery( deleteQuery );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
@@ -525,11 +557,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public SelectionQuery<?> createNamedSelectionQuery(String name) {
+		//noinspection resource
 		return delegate().createNamedSelectionQuery( name );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType) {
+		//noinspection resource
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
@@ -649,6 +683,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();
@@ -870,6 +905,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		delegate.lock( entityName, object, lockOptions );
+	}
+
+	@Override
+	public void lock(Object object, LockOptions lockOptions) {
+		delegate.lock( object, lockOptions );
+	}
+
+	@Override @Deprecated
 	public LockRequest buildLockRequest(LockOptions lockOptions) {
 		return delegate.buildLockRequest( lockOptions );
 	}

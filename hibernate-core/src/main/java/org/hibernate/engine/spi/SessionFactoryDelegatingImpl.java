@@ -36,8 +36,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -45,8 +43,10 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.relational.SchemaManager;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -80,7 +80,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Session openSession() throws HibernateException {
+	public SessionImplementor openSession() throws HibernateException {
 		return delegate.openSession();
 	}
 
@@ -107,6 +107,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public StatisticsImplementor getStatistics() {
 		return delegate.getStatistics();
+	}
+
+	@Override
+	public SchemaManager getSchemaManager() {
+		return delegate().getSchemaManager();
 	}
 
 	@Override
@@ -159,7 +164,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getDefinedFilterNames();
 	}
 
-	@Override
+	@Override @Deprecated
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		return delegate.getFilterDefinition( filterName );
 	}
@@ -170,8 +175,18 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public Set<String> getDefinedFetchProfileNames() {
+		return delegate.getDefinedFetchProfileNames();
+	}
+
+	@Override
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
 		return delegate.getIdentifierGenerator( rootEntityName );
+	}
+
+	@Override
+	public Generator getGenerator(String rootEntityName) {
+		return delegate.getGenerator( rootEntityName );
 	}
 
 	@Override
@@ -200,7 +215,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Session openTemporarySession() throws HibernateException {
+	public SessionImplementor openTemporarySession() throws HibernateException {
 		return delegate.openTemporarySession();
 	}
 

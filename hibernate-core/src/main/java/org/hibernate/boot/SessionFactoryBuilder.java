@@ -217,7 +217,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate);
 
 	/**
-	 * Should generated identifiers be "unset" on entities during a rollback?
+	 * Should the generated identifier be "unset" when an entity is deleted?
 	 *
 	 * @param enabled {@code true} indicates identifiers should be unset; {@code false} indicates not.
 	 *
@@ -460,8 +460,8 @@ public interface SessionFactoryBuilder {
 	 * if that data already exists.  For some caches (mainly distributed caches) this can have a
 	 * major adverse performance impact.  For these caches, it is best to enable this "minimal puts"
 	 * feature.
-	 * <p/>
-	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So its is
+	 * <p>
+	 * Cache integrations also report whether "minimal puts" should be enabled by default.  So it's
 	 * very rare that users need to set this, generally speaking.
 	 *
 	 * @param enabled {@code true} indicates Hibernate should first check whether data exists and only
@@ -480,7 +480,7 @@ public interface SessionFactoryBuilder {
 	 * that format is impossible to "read" if browsing the cache.  The use of "structured" cache
 	 * entries allows the cached data to be read.
 	 *
-	 * @param enabled {@code true} indicates that structured cache entries (human readable) should be used;
+	 * @param enabled {@code true} indicates that structured (human-readable) cache entries should be used;
 	 * {@code false} indicates that the native entry structure should be used.
 	 *
 	 * @return {@code this}, for method chaining
@@ -507,11 +507,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled);
 
 	/**
-	 * When using bi-directional many-to-one associations and caching the one-to-many side
+	 * When using bidirectional many-to-one associations and caching the one-to-many side
 	 * it is expected that both sides of the association are managed (actually that is true of
-	 * all bi-directional associations).  However, in this case, if the user forgets to manage the
+	 * all bidirectional associations).  However, in this case, if the user forgets to manage the
 	 * one-to-many side stale data can be left in the second-level cache.
-	 * <p/>
+	 * <p>
 	 * Warning: enabling this will have a performance impact.  Hence why it is disabled by default
 	 * (for good citizens) and is an opt-in setting.
 	 *
@@ -638,7 +638,8 @@ public interface SessionFactoryBuilder {
 	 * Should collections be included in the default fetch group when bytecode
 	 * enhancement is used?
 	 *
-	 * @param enabled {@code true} collections should be included
+	 * @param enabled {@code true} collections should be included, {@code false} they should not.
+	 * Default is {@code true}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -652,7 +653,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
 	 * released immediately on close?
-	 * <p/>
+	 * <p>
 	 * The other option is to release them as part of an after transaction callback.
 	 */
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);

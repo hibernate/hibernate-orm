@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.SpatialTestBase;
@@ -27,6 +28,7 @@ import org.hibernate.spatial.testing.datareader.TestSupport;
 
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
@@ -49,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("rawtypes")
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 public class CommonFunctionTests extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
@@ -65,7 +68,7 @@ public class CommonFunctionTests extends SpatialTestBase {
 	public Stream<DynamicTest> testFunction() {
 
 		return
-				TestTemplates.all( templates, hqlOverrides, filterGeometry )
+				TestTemplates.all( templates, hqlOverrides, geometryEquality, filterGeometry )
 						.filter( f -> isSupported( f.function ) )
 						.filter( f -> !exludeFromTest.contains( f.function ) )
 						.flatMap( t -> Stream.of(
@@ -87,7 +90,7 @@ public class CommonFunctionTests extends SpatialTestBase {
 				) );
 	}
 
-	protected <T> String displayName(FunctionTestTemplate template, String fnName) {
+	protected String displayName(FunctionTestTemplate template, String fnName) {
 		return String.format(
 				Locale.ROOT,
 				"Test for function %s on entity %s",

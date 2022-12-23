@@ -66,7 +66,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 
 	/**
 	 * Is the entity abstract?
-	 * <p/>
+	 * <p>
 	 * The implication is whether the entity maps to a database table.
 	 *
 	 * @return {@code true} indicates the entity is abstract; {@code false} non-abstract; {@code null}

@@ -17,13 +17,6 @@ public class PostgreSQLSequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new PostgreSQLSequenceSupport();
 
-	public static final SequenceSupport LEGACY_INSTANCE = new PostgreSQLSequenceSupport() {
-		@Override
-		public String getDropSequenceString(String sequenceName) {
-			return "drop sequence " + sequenceName;
-		}
-	};
-
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return "nextval('" + sequenceName + "')";

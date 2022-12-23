@@ -10,15 +10,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * An optimistic locking strategy that forces an increment of the version (after verifying that version hasn't changed).
- * This takes place just prior to transaction commit.
- * <p/>
- * This strategy is valid for LockMode.OPTIMISTIC_FORCE_INCREMENT
+ * An optimistic locking strategy that verifies that the version
+ * has not changed and then forces an increment of the version,
+ * just before committing the transaction.
+ * <p>
+ * This strategy is valid for {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}.
  *
  * @author Scott Marlow
  * @since 3.5
@@ -42,13 +42,13 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit.
-		( (EventSource) session ).getActionQueue().registerProcess( new EntityIncrementVersionProcess( object ) );
+		session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

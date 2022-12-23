@@ -26,7 +26,6 @@ import org.hibernate.type.Type;
 @Internal
 public final class CacheKeyImplementation implements Serializable {
 	private final Object id;
-	private final CacheKeyValueDescriptor cacheKeyValueDescriptor;
 	private final String entityOrRoleName;
 	private final String tenantId;
 	private final int hashCode;
@@ -49,15 +48,14 @@ public final class CacheKeyImplementation implements Serializable {
 			final String entityOrRoleName,
 			final String tenantId,
 			final SessionFactoryImplementor factory) {
-		this.id = id;
-		this.cacheKeyValueDescriptor = type.toCacheKeyDescriptor( factory );
+		this.id = type.disassemble( id, factory );
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( );
+		this.hashCode = calculateHashCode( id, type, tenantId );
 	}
 
-	private int calculateHashCode() {
-		int result = cacheKeyValueDescriptor.getHashCode( id );
+	private static int calculateHashCode(Object id, Type type, String tenantId) {
+		int result = type.getHashCode( id );
 		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
@@ -74,13 +72,13 @@ public final class CacheKeyImplementation implements Serializable {
 		if ( this == other ) {
 			return true;
 		}
-		if ( hashCode != other.hashCode() || !( other instanceof CacheKeyImplementation) ) {
+		if ( hashCode != other.hashCode() || !( other instanceof CacheKeyImplementation ) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 		final CacheKeyImplementation that = (CacheKeyImplementation) other;
-		return Objects.equals( entityOrRoleName, that.entityOrRoleName )
-				&& cacheKeyValueDescriptor.isEqual( id, that.id )
+		return entityOrRoleName.equals( that.entityOrRoleName )
+				&& Objects.deepEquals( id, that.id )
 				&& Objects.equals( tenantId, that.tenantId );
 	}
 

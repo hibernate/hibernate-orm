@@ -9,9 +9,9 @@ package org.hibernate.boot.spi;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -25,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 5.0
  */
-public interface MetadataImplementor extends Metadata, Mapping {
+public interface MetadataImplementor extends Metadata {
 	/**
 	 * Access to the options used to build this Metadata
 	 *
@@ -41,6 +41,9 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	TypeConfiguration getTypeConfiguration();
 
 	NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
+
+	@Incubating
+	void orderColumns(boolean forceOrdering);
 
 	void validate() throws MappingException;
 

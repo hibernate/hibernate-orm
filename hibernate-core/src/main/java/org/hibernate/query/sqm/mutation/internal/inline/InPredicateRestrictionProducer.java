@@ -75,8 +75,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 					false,
 					null,
 					null,
-					basicIdMapping.getJdbcMapping(),
-					sessionFactory
+					basicIdMapping.getJdbcMapping()
 			);
 			predicate = new InListPredicate( inFixture );
 
@@ -92,8 +91,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 						columnReferences.add(
 								new ColumnReference(
 										mutatingTableReference,
-										selection,
-										sessionFactory
+										selection
 								)
 						);
 						jdbcMappings.add( selection.getJdbcMapping() );

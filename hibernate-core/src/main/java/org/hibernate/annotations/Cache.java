@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -14,9 +15,26 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add caching strategy to a root entity or a collection.
+ * Marks a root entity or collection for second-level caching, and
+ * specifies:
+ * <ul>
+ * <li>a {@linkplain #region named cache region} in which to store
+ *     the state of instances of the entity or collection, and
+ * <li>an appropriate {@linkplain #usage cache concurrency policy},
+ *     given the expected data access patterns affecting the entity
+ *     or collection.
+ * </ul>
+ * This annotation should always be used in preference to the less
+ * useful JPA-defined annotation {@link jakarta.persistence.Cacheable},
+ * since JPA provides no means to specify anything about the semantics
+ * of the cache. Alternatively, it's legal, but redundant, for the two
+ * annotations to be used together.
+ * <p>
+ * Note that entity subclasses of a root entity with a second-level
+ * cache inherit the cache belonging to the root entity.
  *
  * @see jakarta.persistence.Cacheable
+ * @see org.hibernate.Cache
  *
  * @author Emmanuel Bernard
  */
@@ -24,7 +42,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Cache {
 	/**
-	 * The concurrency strategy chosen.
+	 * The appropriate {@linkplain CacheConcurrencyStrategy concurrency
+	 * policy} for the annotated root entity or collection.
 	 */
 	CacheConcurrencyStrategy usage();
 
@@ -34,8 +53,34 @@ public @interface Cache {
 	String region() default "";
 
 	/**
-	 * How lazy properties are included in the second level cache. Default value is "all"; other allowable
-	 * value: "non-lazy"
+	 * When bytecode enhancement is used, and {@linkplain LazyGroup
+	 * field-level lazy fetching} is enabled, specifies whether lazy
+	 * attributes of the entity are eligible for inclusion in the
+	 * second-level cache, in the case where they happen to be loaded.
+	 * <p>
+	 * By default, a loaded lazy field <em>will</em> be cached when
+	 * second-level caching is enabled. If this is not desirable&mdash;if,
+	 * for example, the field value is extremely large and only rarely
+	 * accessed&mdash;then setting {@code @Cache(includeLazy=false)} will
+	 * prevent it and other lazy fields of the annotated entity from being
+	 * cached, and the lazy fields will always be retrieved directly from
+	 * the database.
+	 *
+	 * @see LazyGroup
 	 */
+	boolean includeLazy() default true;
+
+	/**
+	 * When bytecode enhancement is used, and {@linkplain LazyGroup
+	 * field-level lazy fetching} is enabled, specifies which attributes
+	 * of the entity are included in the second-level cache, either:
+	 * <ul>
+	 * <li>{@code "all"} properties, the default, or
+	 * <li>only {@code "non-lazy"} properties.
+	 * </ul>
+	 *
+	 * @deprecated Use {@link #includeLazy()} for the sake of typesafety.
+	 */
+	@Deprecated
 	String include() default "all";
 }

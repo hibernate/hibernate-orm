@@ -47,7 +47,7 @@ public class BitSetJdbcTypeTests {
 
 		assertThat( attributeMapping.getJavaType().getJavaTypeClass(), equalTo( BitSet.class));
 
-		assertThat(attributeMapping.getValueConverter(), nullValue());
+		assertThat(attributeMapping.getJdbcMapping().getValueConverter(), nullValue());
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcType().getJdbcTypeCode(),

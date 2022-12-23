@@ -56,8 +56,14 @@ public class QueryHelper {
 			return type2;
 		}
 
+		if ( type1.getExpressibleJavaType() == null ) {
+			return type2;
+		}
+		else if ( type2.getExpressibleJavaType() == null ) {
+			return type1;
+		}
 		// any other precedence rules?
-		if ( type2.getExpressibleJavaType().isWider( type1.getExpressibleJavaType() ) ) {
+		else if ( type2.getExpressibleJavaType().isWider( type1.getExpressibleJavaType() ) ) {
 			return type2;
 		}
 

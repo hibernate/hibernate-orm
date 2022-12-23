@@ -153,8 +153,8 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 				}
 		);
 
-		// address should not be initialized
-		assertFalse( Hibernate.isPropertyInitialized( detachedPerson, "addresses" ) );
+		// address should not be initialized in order to reproduce the problem
+		assertFalse( Hibernate.isInitialized( detachedPerson.getAddresses() ) );
 		detachedPerson.setName( "newName" );
 
 		Person mergedPerson = TransactionUtil.doInHibernate(
@@ -163,8 +163,8 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 				}
 		);
 
-		// address should be initialized
-		assertTrue( Hibernate.isPropertyInitialized( mergedPerson, "addresses" ) );
+		// address still shouldn't be initialized: there's no reason for it to be initialized by a merge.
+		assertFalse( Hibernate.isInitialized( detachedPerson.getAddresses() ) );
 		assertEquals( "newName", mergedPerson.getName() );
 	}
 
@@ -179,8 +179,8 @@ public class CascadeOnUninitializedTest extends BaseNonConfigCoreFunctionalTestC
 				}
 		);
 
-		// address should not be initialized
-		assertFalse( Hibernate.isPropertyInitialized( detachedPerson, "addresses" ) );
+		// address should not be initialized in order to reproduce the problem
+		assertFalse( Hibernate.isInitialized( detachedPerson.getAddresses() ) );
 
 		// deleting detachedPerson should result in detachedPerson.address being initialized,
 		// so that the DELETE operation can be cascaded to it.

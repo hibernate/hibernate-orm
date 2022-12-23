@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.internal;
 
+import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -13,6 +14,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 
 /**
  * Utilities for dealing with optimistic locking values.
@@ -39,7 +43,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
+	public static Object seed(EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
 		final Object seed = versionMapping.getJavaType().seed(
 				versionMapping.getLength(),
 				versionMapping.getPrecision(),
@@ -50,10 +54,40 @@ public final class Versioning {
 		return seed;
 	}
 
+
+	/**
+	 * Create an initial optimistic locking value using the for the version property
+	 * <em>if required</em> using the {@link org.hibernate.generator.Generator} contract
+	 * and inject it into the snapshot state.
+	 *
+	 * @param fields The current snapshot state
+	 * @param persister The persister of the versioned entity
+	 * @param entity The entity instance
+	 * @param session The originating session
+	 * @return True if we injected a new version value into the fields array; false
+	 * otherwise.
+	 */
+	public static boolean seedVersion(
+			Object entity,
+			Object[] fields,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		final int versionProperty = persister.getVersionProperty();
+		final Object initialVersion = fields[versionProperty];
+		if ( isNullInitialVersion( initialVersion ) ) {
+			fields[versionProperty] = persister.getVersionGenerator().generate( session, entity, initialVersion, INSERT );
+			return true;
+		}
+		else {
+			LOG.tracev( "Using initial version: {0}", initialVersion );
+			return false;
+		}
+	}
+
 	/**
 	 * Create an initial optimistic locking value according the {@link VersionJavaType}
-	 * contract for the version property <b>if required</b> and inject it into
-	 * the snapshot state.
+	 * contract for the version property <em>if required</em> and inject it into the
+	 * snapshot state.
 	 *
 	 * @param fields The current snapshot state
 	 * @param versionProperty The index of the version property
@@ -61,28 +95,60 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return True if we injected a new version value into the fields array; false
 	 * otherwise.
+	 *
+	 * @deprecated Use {@link #seedVersion(Object, Object[], EntityPersister, SharedSessionContractImplementor)}
 	 */
+	@Deprecated(since = "6.2") @Remove
 	public static boolean seedVersion(
 			Object[] fields,
 			int versionProperty,
 			EntityVersionMapping versionMapping,
 			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
-		if (
-			initialVersion==null ||
-			// This next bit is to allow for both unsaved-value="negative"
-			// and for "older" behavior where version number did not get
-			// seeded if it was already set in the object
-			// TODO: shift it into unsaved-value strategy
-			( (initialVersion instanceof Number) && ( (Number) initialVersion ).longValue()<0 )
-		) {
+		if ( isNullInitialVersion( initialVersion ) ) {
 			fields[versionProperty] = seed( versionMapping, session );
 			return true;
 		}
-		LOG.tracev( "Using initial version: {0}", initialVersion );
-		return false;
+		else {
+			LOG.tracev( "Using initial version: {0}", initialVersion );
+			return false;
+		}
 	}
 
+	/**
+	 * Determines if the value of the assigned  version property should be considered
+	 * a "null" value, that is, if it is literally {@code null}, or if it is a negative
+	 * integer.
+	 *
+	 * @param initialVersion The value initially assigned to a version property
+	 * @return {@code} if the value shoudl be considered null for this purpose
+	 */
+	public static boolean isNullInitialVersion(Object initialVersion) {
+		return initialVersion == null
+			||  // This next bit is to allow for both unsaved-value="negative"
+				// and for "older" behavior where version number did not get
+				// seeded if it was already set in the object
+				// TODO: shift it into unsaved-value strategy
+				initialVersion instanceof Number && ((Number) initialVersion).longValue() < 0;
+	}
+
+	/**
+	 * Generate the next increment in the optimistic locking value according the
+	 * {@link org.hibernate.generator.Generator} contract for the version property.
+	 *
+	 * @param entity The entity instance
+	 * @param currentVersion The current version
+	 * @param persister The persister of the versioned entity
+	 * @param session The originating session
+	 * @return The incremented optimistic locking value.
+	 */
+	public static Object incrementVersion(
+			Object entity,
+			Object currentVersion,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		return persister.getVersionGenerator().generate( session, entity, currentVersion, UPDATE );
+	}
 
 	/**
 	 * Generate the next increment in the optimistic locking value according
@@ -121,10 +187,9 @@ public final class Versioning {
 	 * @param persister The entity persister
 	 */
 	public static void setVersion(Object[] fields, Object version, EntityPersister persister) {
-		if ( !persister.isVersioned() ) {
-			return;
+		if ( persister.isVersioned() ) {
+			fields[ persister.getVersionProperty() ] = version;
 		}
-		fields[ persister.getVersionProperty() ] = version;
 	}
 
 	/**
@@ -135,10 +200,7 @@ public final class Versioning {
 	 * @return The extracted optimistic locking value
 	 */
 	public static Object getVersion(Object[] fields, EntityPersister persister) {
-		if ( !persister.isVersioned() ) {
-			return null;
-		}
-		return fields[ persister.getVersionProperty() ];
+		return persister.isVersioned() ? fields[persister.getVersionProperty()] : null;
 	}
 
 	/**
@@ -156,11 +218,15 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-		for ( int dirtyProperty : dirtyProperties ) {
-			if ( propertyVersionability[dirtyProperty] ) {
-				return true;
+
+		if ( dirtyProperties != null ) {
+			for ( int dirtyProperty : dirtyProperties ) {
+				if ( propertyVersionability[dirtyProperty] ) {
+					return true;
+				}
 			}
 		}
+
 		return false;
 	}
 }

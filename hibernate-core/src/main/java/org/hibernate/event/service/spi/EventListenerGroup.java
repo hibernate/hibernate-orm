@@ -48,7 +48,7 @@ public interface EventListenerGroup<T> {
 
 	/**
 	 * Mechanism to more finely control the notion of duplicates.
-	 * <p/>
+	 * <p>
 	 * For example, say you are registering listeners for an extension library.  This extension library
 	 * could define a "marker interface" which indicates listeners related to it and register a strategy
 	 * that checks against that marker interface.

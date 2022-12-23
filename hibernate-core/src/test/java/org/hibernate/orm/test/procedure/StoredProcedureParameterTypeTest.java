@@ -30,6 +30,7 @@ import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TrueFalseConverter;
@@ -46,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
+ * @author Yanming Zhou
  */
 @DomainModel
 @SessionFactory
@@ -425,4 +427,37 @@ public class StoredProcedureParameterTypeTest {
 		);
 	}
 
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15618")
+	public void testTypedParameterValueInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
+					procedureCall.setParameter( 1, new TypedParameterValue( StandardBasicTypes.STRING, "test" ) );
+
+					procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( "test", StandardBasicTypes.STRING, ParameterMode.IN );
+					procedureCall.setParameter( "test", new TypedParameterValue( StandardBasicTypes.STRING, "test" ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15618")
+	public void testTypedParameterValueInParameterWithNotSpecifiedType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+						procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
+						procedureCall.setParameter( 1, new TypedParameterValue( StandardBasicTypes.INTEGER, 1 ) );
+					}
+					catch (IllegalArgumentException e) {
+						assertTrue( e.getMessage().contains( "was not of specified type" ) );
+					}
+				}
+		);
+	}
 }

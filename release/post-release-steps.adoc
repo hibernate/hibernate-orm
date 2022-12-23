@@ -3,7 +3,7 @@
 Whether releasing <<./manual-release-process.adoc>>[manually] or via the <<./jenkins-release-process.adoc>>[Jenkins job],
 there are a number of "post" release steps that need to be performed...
 
-1. Initiate sync of release artifacts from BinTray to Maven Central - https://bintray.com/hibernate
+1. Complete release process on https://oss.sonatype.org/[OSSRH]
 2. Write release announcement blog post (see http://in.relation.to/README/[Blog site instructions])
 3. Write release descriptor as part of the https://github.com/hibernate/hibernate.org[website]
 .. If this is the first release in a new family/series, some additional steps are required:

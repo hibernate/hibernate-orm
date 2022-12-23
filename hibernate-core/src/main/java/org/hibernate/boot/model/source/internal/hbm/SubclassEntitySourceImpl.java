@@ -28,7 +28,7 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		super( sourceMappingDocument, entityElement );
 		this.container = container;
 
-		this.primaryTable = TableInformationContainer.class.isInstance( entityElement )
+		this.primaryTable = entityElement instanceof TableInformationContainer
 				? Helper.createTableSource( sourceMappingDocument(), (TableInformationContainer) entityElement, this )
 				: null;
 

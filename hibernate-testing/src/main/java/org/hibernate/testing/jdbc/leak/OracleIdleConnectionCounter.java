@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.OracleDialect;
 
 /**
  * @author Vlad Mihalcea
@@ -23,7 +23,7 @@ public class OracleIdleConnectionCounter implements IdleConnectionCounter {
 
 	@Override
 	public boolean appliesTo(Class<? extends Dialect> dialect) {
-		return Oracle10gDialect.class.isAssignableFrom( dialect );
+		return OracleDialect.class.isAssignableFrom( dialect );
 	}
 
 	@Override

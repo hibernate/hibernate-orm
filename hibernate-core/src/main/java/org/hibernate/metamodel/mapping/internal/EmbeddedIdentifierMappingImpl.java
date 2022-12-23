@@ -10,16 +10,18 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.AggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Support for {@link jakarta.persistence.EmbeddedId}
@@ -28,7 +30,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public class EmbeddedIdentifierMappingImpl
 		extends AbstractCompositeIdentifierMapping
-		implements SingleAttributeIdentifierMapping {
+		implements AggregatedIdentifierMapping {
 	private final String name;
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
@@ -50,6 +52,11 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COMPOSITE;
 	}
 
 	@Override
@@ -78,17 +85,10 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
-		}
-		return propertyAccess.getGetter().get( entity );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
-		if ( entity instanceof HibernateProxy ) {
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getIdentifier();
 		}
 		return propertyAccess.getGetter().get( entity );
 	}
@@ -115,6 +115,10 @@ public class EmbeddedIdentifierMappingImpl
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getEmbeddableTypeDescriptor().getFetchable( position );
+	}
 
 	@Override
 	public PropertyAccess getPropertyAccess() {
@@ -134,13 +138,11 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
 				value,
-				clause,
 				offset,
 				valuesConsumer,
 				session

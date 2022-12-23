@@ -21,21 +21,21 @@ import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
  */
 public interface ExecutionContext {
 
+	default boolean isScrollResult(){
+		return false;
+	}
+
 	SharedSessionContractImplementor getSession();
 
 	QueryOptions getQueryOptions();
 
-	default LoadQueryInfluencers getLoadQueryInfluencers() {
-		return getSession().getLoadQueryInfluencers();
-	}
+	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	QueryParameterBindings getQueryParameterBindings();
 
 	Callback getCallback();
 
-	default String getQueryIdentifier(String sql) {
-		return null;
-	}
+	String getQueryIdentifier(String sql);
 
 	/**
 	 * Get the collection key for the collection which is to be loaded immediately.

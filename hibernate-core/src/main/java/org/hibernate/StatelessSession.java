@@ -7,18 +7,37 @@
 package org.hibernate;
 
 /**
- * A command-oriented API for performing bulk operations against a database.
+ * A command-oriented API often used for performing bulk operations against
+ * the database. A stateless session has no persistence context, and always
+ * works directly with detached entity instances. When a method of this
+ * interface is called, any necessary interaction with the database happens
+ * immediately and synchronously.
  * <p>
- * A stateless session does not implement a first-level cache nor interact
- * with any second-level cache, nor does it implement transactional
- * write-behind or automatic dirty checking, nor do operations cascade to
- * associated instances. Collections are ignored by a stateless session.
- * Operations performed via a stateless session bypass Hibernate's event model
- * and interceptors.  Stateless sessions are vulnerable to data aliasing
- * effects, due to the lack of a first-level cache.
+ * Viewed in opposition to {@link Session}, the {@code StatelessSession} is
+ * a whole competing programming model, one preferred by some developers
+ * for its simplicity and somewhat lower level of abstraction. But the two
+ * kinds of session are not enemies, and may comfortably coexist in a single
+ * program.
  * <p>
- * For certain kinds of transactions, a stateless session may perform slightly
- * faster than a stateful session.
+ * A stateless session comes some with designed-in limitations:
+ * <ul>
+ * <li>it does not have a first-level cache,
+ * <li>nor interact with any second-level cache,
+ * <li>nor does it implement transactional write-behind or automatic dirty
+ *     checking, and
+ * <li>nor do operations cascade to associated instances.
+ * </ul>
+ * Furthermore:
+ * <ul>
+ * <li>collections are completely ignored by a stateless session, and
+ * <li>operations performed via a stateless session bypass Hibernate's event
+ *     model, lifecycle callbacks, and interceptors.
+ * </ul>
+ * Stateless sessions are vulnerable to data aliasing effects, due to the
+ * lack of a first-level cache.
+ * <p>
+ * On the other hand, for certain kinds of transactions, a stateless session
+ * may perform slightly faster than a stateful session.
  *
  * @author Gavin King
  */
@@ -160,6 +179,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param association a lazy-loaded association
 	 *
 	 * @see org.hibernate.Hibernate#initialize(Object)
+	 *
+	 * @since 6.0
 	 */
 	void fetch(Object association);
 }

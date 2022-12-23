@@ -47,7 +47,7 @@ public class CommentTest {
 				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))
 				.findFirst().orElse(null);
 		assertThat(table.getComment(), is(TABLE_COMMENT));
-		Iterator<Column> it = table.getColumnIterator();
+        Iterator<Column> it = table.getColumns().iterator();
 		while (it.hasNext()) {
 			Column col = it.next();
 			assertThat(col.getComment(), is("I am " + col.getName()));

@@ -9,7 +9,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,6 +17,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
@@ -26,6 +26,8 @@ import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.internal.FkSecondPass;
+import org.hibernate.boot.model.internal.SimpleToOneFkSecondPass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -93,15 +95,15 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.FkSecondPass;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.SimpleToOneFkSecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.generator.internal.GeneratedGeneration;
+import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -109,7 +111,6 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.AttributeContainer;
@@ -146,7 +147,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
@@ -158,6 +159,7 @@ import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -765,24 +767,24 @@ public class ModelBinder {
 			String unsavedValue,
 			SimpleValue identifierValue) {
 		if ( generator != null ) {
-			String generatorName = generator.getStrategy();
-			Properties params = new Properties();
+			final Map<String,Object> params = new HashMap<>();
 
 			// see if the specified generator name matches a registered <identifier-generator/>
-			IdentifierGeneratorDefinition generatorDef = sourceDocument.getMetadataCollector().getIdentifierGenerator( generatorName );
+			String generatorName = generator.getStrategy();
+			final IdentifierGeneratorDefinition generatorDef = sourceDocument.getMetadataCollector()
+					.getIdentifierGenerator( generatorName );
 			if ( generatorDef != null ) {
 				generatorName = generatorDef.getStrategy();
 				params.putAll( generatorDef.getParameters() );
 			}
-
 			identifierValue.setIdentifierGeneratorStrategy( generatorName );
 
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
+			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer );
 
 			params.putAll( generator.getParameters() );
 
-			identifierValue.setIdentifierGeneratorProperties( params );
+			identifierValue.setIdentifierGeneratorParameters( params );
 		}
 
 		identifierValue.getTable().setIdentifierValue( identifierValue );
@@ -790,13 +792,11 @@ public class ModelBinder {
 		if ( StringHelper.isNotEmpty( unsavedValue ) ) {
 			identifierValue.setNullValue( unsavedValue );
 		}
+		else if ( DEFAULT_ID_GEN_STRATEGY.equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
+			identifierValue.setNullValue( "undefined" );
+		}
 		else {
-			if ( "assigned".equals( identifierValue.getIdentifierGeneratorStrategy() ) ) {
-				identifierValue.setNullValue( "undefined" );
-			}
-			else {
-				identifierValue.setNullValue( null );
-			}
+			identifierValue.setNullValue( null );
 		}
 	}
 
@@ -850,7 +850,7 @@ public class ModelBinder {
 		return identifierSource.getEmbeddableSource().getTypeDescriptor().getName();
 	}
 
-	private static final String ID_MAPPER_PATH_PART = '<' + PropertyPath.IDENTIFIER_MAPPER_PROPERTY + '>';
+	private static final String ID_MAPPER_PATH_PART = '<' + NavigablePath.IDENTIFIER_MAPPER_PROPERTY + '>';
 
 	private void bindNonAggregatedCompositeEntityIdentifier(
 			MappingDocument mappingDocument,
@@ -899,7 +899,7 @@ public class ModelBinder {
 			rootEntityDescriptor.setIdentifierMapper( mapper );
 			rootEntityDescriptor.setDeclaredIdentifierMapper( mapper );
 			Property property = new Property();
-			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
+			property.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -987,25 +987,13 @@ public class ModelBinder {
 				context -> implicitNamingStrategy.determineBasicColumnName( versionAttributeSource )
 		);
 
-		Property prop = new Property();
-		prop.setValue( versionValue );
+		Property property = new Property();
+		property.setValue( versionValue );
 		bindProperty(
 				sourceDocument,
 				versionAttributeSource,
-				prop
+				property
 		);
-
-		// for version properties marked as being generated, make sure they are "always"
-		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
-		// but just to make sure...
-		if ( prop.getValueGenerationStrategy() != null ) {
-			if ( prop.getValueGenerationStrategy().getGenerationTiming() == GenerationTiming.INSERT ) {
-				throw new MappingException(
-						"'generated' attribute cannot be 'insert' for version/timestamp property",
-						sourceDocument.getOrigin()
-				);
-			}
-		}
 
 		if ( versionAttributeSource.getUnsavedValue() != null ) {
 			versionValue.setNullValue( versionAttributeSource.getUnsavedValue() );
@@ -1013,10 +1001,14 @@ public class ModelBinder {
 		else {
 			versionValue.setNullValue( "undefined" );
 		}
+		if ( versionAttributeSource.getSource().equals("db") ) {
+			property.setValueGeneratorCreator(
+					context -> new SourceGeneration( SourceType.DB, property.getType().getReturnedClass() ) );
+		}
 
-		rootEntityDescriptor.setVersion( prop );
-		rootEntityDescriptor.setDeclaredVersion( prop );
-		rootEntityDescriptor.addProperty( prop );
+		rootEntityDescriptor.setVersion( property );
+		rootEntityDescriptor.setDeclaredVersion( property );
+		rootEntityDescriptor.addProperty( property );
 	}
 
 	private void bindEntityDiscriminator(
@@ -1741,7 +1733,6 @@ public class ModelBinder {
 
 		bindCustomSql( secondaryTableSource, secondaryTableJoin );
 
-		secondaryTableJoin.setSequentialSelect( secondaryTableSource.getFetchStyle() == FetchStyle.SELECT );
 		secondaryTableJoin.setInverse( secondaryTableSource.isInverse() );
 		secondaryTableJoin.setOptional( secondaryTableSource.isOptional() );
 
@@ -1920,7 +1911,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getJdbcType().getJdbcTypeCode(), null ) ) {
+				if ( isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
 					value.makeLob();
 				}
 			}
@@ -2384,7 +2375,7 @@ public class ModelBinder {
 
 	private BasicType<?> resolveExplicitlyNamedAnyDiscriminatorType(
 			String typeName,
-			Properties parameters,
+			Map<String,String> parameters,
 			Any.MetaValue discriminatorMapping) {
 		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
 
@@ -2432,7 +2423,9 @@ public class ModelBinder {
 
 			if ( typeInstance instanceof ParameterizedType ) {
 				if ( parameters != null ) {
-					( (ParameterizedType) typeInstance ).setParameterValues( parameters );
+					Properties properties = new Properties();
+					properties.putAll( parameters );
+					( (ParameterizedType) typeInstance ).setParameterValues( properties );
 				}
 			}
 
@@ -2530,31 +2523,40 @@ public class ModelBinder {
 			// NOTE : Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
-			final GenerationTiming generationTiming = singularAttributeSource.getGenerationTiming();
-			if ( generationTiming == GenerationTiming.ALWAYS || generationTiming == GenerationTiming.INSERT ) {
-				// we had generation specified...
-				//   	HBM only supports "database generated values"
-				property.setValueGenerationStrategy( new GeneratedValueGeneration( generationTiming ) );
-
-				// generated properties can *never* be insertable...
-				if ( property.isInsertable() ) {
-					log.debugf(
-							"Property [%s] specified %s generation, setting insertable to false : %s",
-							propertySource.getName(),
-							generationTiming.name(),
+			final GenerationTiming timing = singularAttributeSource.getGenerationTiming();
+			if ( timing != null ) {
+				if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
+						&& property.getValue() instanceof SimpleValue
+						&& ((SimpleValue) property.getValue()).isVersion() ) {
+					// this is enforced by DTD, but just make sure
+					throw new MappingException(
+							"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
 							mappingDocument.getOrigin()
 					);
-					property.setInsertable( false );
 				}
+				if ( timing != GenerationTiming.NEVER ) {
+					property.setValueGeneratorCreator( context -> new GeneratedGeneration( timing.getEquivalent() ) );
 
-				// properties generated on update can never be updatable...
-				if ( property.isUpdateable() && generationTiming == GenerationTiming.ALWAYS ) {
-					log.debugf(
-							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
-							propertySource.getName(),
-							mappingDocument.getOrigin()
-					);
-					property.setUpdateable( false );
+					// generated properties can *never* be insertable...
+					if ( property.isInsertable() && timing.includesInsert() ) {
+						log.debugf(
+								"Property [%s] specified %s generation, setting insertable to false : %s",
+								propertySource.getName(),
+								timing.name(),
+								mappingDocument.getOrigin()
+						);
+						property.setInsertable( false );
+					}
+
+					// properties generated on update can never be updatable...
+					if ( property.isUpdateable() && timing.includesUpdate() ) {
+						log.debugf(
+								"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+								propertySource.getName(),
+								mappingDocument.getOrigin()
+						);
+						property.setUpdateable( false );
+					}
 				}
 			}
 		}
@@ -2808,9 +2810,9 @@ public class ModelBinder {
 
 	private static class TypeResolution {
 		private final String typeName;
-		private final Properties parameters;
+		private final Map<String,String> parameters;
 
-		public TypeResolution(String typeName, Properties parameters) {
+		public TypeResolution(String typeName, Map<String,String> parameters) {
 			this.typeName = typeName;
 			this.parameters = parameters;
 		}
@@ -2824,9 +2826,8 @@ public class ModelBinder {
 		}
 
 		String typeName = typeSource.getName();
-		Properties typeParameters = new Properties();
-
 		final TypeDefinition typeDefinition = sourceDocument.getMetadataCollector().getTypeDefinition( typeName );
+		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeDefinition != null ) {
 			// the explicit name referred to a type-def
 			typeName = typeDefinition.getTypeImplementorClass().getName();
@@ -3178,19 +3179,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceOneToMany elementSource =
 						(PluralAttributeElementSourceOneToMany) pluralAttributeSource.getElementSource();
 
-				final PersistentClass persistentClass = mappingDocument.getMetadataCollector()
-						.getEntityBinding( elementSource.getReferencedEntityName() );
-				if ( persistentClass == null ) {
-					throw new MappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Association [%s] references an unmapped entity [%s]",
-									pluralAttributeSource.getAttributeRole().getFullPath(),
-									pluralAttributeSource.getAttributeRole().getFullPath()
-							),
-							mappingDocument.getOrigin()
-					);
-				}
+				final PersistentClass persistentClass = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				// even though <key/> defines a property-ref I do not see where legacy
 				// code ever attempts to use that to "adjust" the table in its use to
@@ -3288,9 +3277,9 @@ public class ModelBinder {
 					&& !collectionBinding.isInverse()
 					&& !collectionBinding.getKey().isNullable() ) {
 				// for non-inverse one-to-many, with a not-null fk, add a backref!
-				String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
-				PersistentClass referenced = mappingDocument.getMetadataCollector().getEntityBinding( entityName );
-				Backref prop = new Backref();
+				final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
+				final PersistentClass referenced = getReferencedEntityBinding( entityName );
+				final Backref prop = new Backref();
 				prop.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
 				prop.setUpdateable( false );
 				prop.setSelectable( false );
@@ -3311,16 +3300,13 @@ public class ModelBinder {
 
 		protected void bindCollectionKey() {
 			final PluralAttributeKeySource keySource = getPluralAttributeSource().getKeySource();
-			final String propRef = keySource.getReferencedPropertyName();
-			getCollectionBinding().setReferencedPropertyName( propRef );
+			final String referencedPropertyName = keySource.getReferencedPropertyName();
+			getCollectionBinding().setReferencedPropertyName( referencedPropertyName );
 
-			final KeyValue keyVal;
-			if ( propRef == null ) {
-				keyVal = getCollectionBinding().getOwner().getIdentifier();
-			}
-			else {
-				keyVal = (KeyValue) getCollectionBinding().getOwner().getRecursiveProperty( propRef ).getValue();
-			}
+			final PersistentClass owner = getCollectionBinding().getOwner();
+			final KeyValue keyVal = referencedPropertyName == null
+					? owner.getIdentifier()
+					: (KeyValue) owner.getRecursiveProperty( referencedPropertyName ).getValue();
 			final DependantValue key = new DependantValue(
 					mappingDocument,
 					getCollectionBinding().getCollectionTable(),
@@ -3460,8 +3446,7 @@ public class ModelBinder {
 				);
 				collectionBinding.setElement( elementBinding );
 
-				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
-						.getEntityBinding( elementSource.getReferencedEntityName() );
+				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				if ( useEntityWhereClauseForCollections() ) {
 					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
@@ -3526,9 +3511,7 @@ public class ModelBinder {
 
 				getCollectionBinding().setElement( elementBinding );
 
-				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
-						elementSource.getReferencedEntityName()
-				);
+				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				// Collection#setWhere is used to set the "where" clause that applies to the collection table
 				// (which is the join table for a many-to-many association).
@@ -3632,6 +3615,24 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
+		}
+
+		private PersistentClass getReferencedEntityBinding(String referencedEntityName) {
+			PersistentClass entityBinding = mappingDocument.getMetadataCollector().getEntityBinding(
+					referencedEntityName
+			);
+			if ( entityBinding == null ) {
+				throw new MappingException(
+						String.format(
+								Locale.ENGLISH,
+								"Collection [%s] references an unmapped entity [%s]",
+								getPluralAttributeSource().getAttributeRole().getFullPath(),
+								referencedEntityName
+						),
+						getMappingDocument().getOrigin()
+				);
+			}
+			return entityBinding;
 		}
 	}
 
@@ -4068,7 +4069,7 @@ public class ModelBinder {
 						manyToOneBinding,
 						manyToOneSource.areValuesNullableByDefault(),
 						context -> {
-							throw new AssertionFailure( "Argh!!!" );
+							throw new AssertionFailure( "Should not be called" );
 						}
 				);
 			}
@@ -4243,12 +4244,11 @@ public class ModelBinder {
 
 	private String columns(Value value) {
 		final StringBuilder builder = new StringBuilder();
-		final Iterator<Selectable> selectableItr = value.getColumnIterator();
-		while ( selectableItr.hasNext() ) {
-			builder.append( selectableItr.next().getText() );
-			if ( selectableItr.hasNext() ) {
+		for ( Selectable selectable : value.getSelectables() ) {
+			if ( builder.length()>0) {
 				builder.append( ", " );
 			}
+			builder.append( selectable.getText() );
 		}
 		return builder.toString();
 	}

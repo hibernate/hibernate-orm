@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -30,10 +29,18 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface EntityValuedModelPart extends FetchableContainer {
+	/**
+	 * The descriptor of the entity that is the type for this part
+	 */
 	EntityMappingType getEntityMappingType();
 
 	default ModelPart findSubPart(String name) {
 		return getEntityMappingType().findSubPart( name, null );
+	}
+
+	@Override
+	default void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		getEntityMappingType().forEachSubPart( consumer, treatTarget );
 	}
 
 	@Override
@@ -96,20 +103,18 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	@Override
 	default int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return getEntityMappingType().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	default int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachJdbcValue( value, clause, offset, consumer, session );
+		return getEntityMappingType().forEachJdbcValue( value, offset, consumer, session );
 	}
 }

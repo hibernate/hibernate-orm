@@ -16,8 +16,8 @@ import java.util.Collections;
  * @author Gavin King
  */
 public class MetaAttribute implements Serializable {
-	private String name;
-	private java.util.List values = new ArrayList();
+	private final String name;
+	private final java.util.List<String> values = new ArrayList<>();
 
 	public MetaAttribute(String name) {
 		this.name = name;
@@ -27,7 +27,7 @@ public class MetaAttribute implements Serializable {
 		return name;
 	}	
 
-	public java.util.List getValues() {
+	public java.util.List<String> getValues() {
 		return Collections.unmodifiableList(values);
 	}
 
@@ -39,7 +39,7 @@ public class MetaAttribute implements Serializable {
 		if ( values.size()!=1 ) {
 			throw new IllegalStateException("no unique value");
 		}
-		return (String) values.get(0);
+		return values.get(0);
 	}
 
 	public boolean isMultiValued() {

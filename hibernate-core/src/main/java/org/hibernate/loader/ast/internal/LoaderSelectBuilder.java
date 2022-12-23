@@ -44,6 +44,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -55,6 +56,7 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -81,6 +83,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
@@ -512,13 +515,8 @@ public class LoaderSelectBuilder {
 								navigablePath, selection.getContainingTableExpression() );
 						final ColumnReference columnRef =
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-										p -> new ColumnReference(
-												tableReference,
-												selection,
-												creationContext.getSessionFactory()
-										)
-
+										tableReference,
+										selection
 								);
 						if ( numberOfKeysToLoad == 1 ) {
 							final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
@@ -551,12 +549,8 @@ public class LoaderSelectBuilder {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-										p -> new ColumnReference(
-												tableReference,
-												selection,
-												creationContext.getSessionFactory()
-										)
+										tableReference,
+										selection
 								)
 						);
 					}
@@ -655,37 +649,36 @@ public class LoaderSelectBuilder {
 		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
-	private List<Fetch> visitFetches(
-			FetchParent fetchParent,
-			QuerySpec querySpec,
-			LoaderSqlAstCreationState creationState) {
+	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 		}
 
-		final List<Fetch> fetches = new ArrayList<>();
+		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
 				fetchParent,
-				querySpec,
 				creationState,
 				fetches
 		);
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
-			referencedMappingContainer.visitKeyFetchables(
-					fetchable -> processor.accept( fetchable, true ), null );
+			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
+			for ( int i = 0; i < size; i++ ) {
+				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true );
+			}
 		}
-		referencedMappingContainer.visitFetchables(
-				fetchable -> processor.accept( fetchable, false ), null );
-		return fetches;
+		final int size = referencedMappingContainer.getNumberOfFetchables();
+		for ( int i = 0; i < size; i++ ) {
+			processor.accept( referencedMappingContainer.getFetchable( i ), false );
+		}
+		return fetches.build();
 	}
 
 	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
 			FetchParent fetchParent,
-			QuerySpec querySpec,
 			LoaderSqlAstCreationState creationState,
-			List<Fetch> fetches) {
+			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
 			final NavigablePath fetchablePath;
 
@@ -734,13 +727,15 @@ public class LoaderSelectBuilder {
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
 			final boolean isFetchablePluralAttributeMapping = fetchable instanceof PluralAttributeMapping;
+			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+
 			if ( !( fetchable instanceof CollectionPart ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
-					explicitFetch = true;
+					explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -756,14 +751,13 @@ public class LoaderSelectBuilder {
 							if ( profileFetch != null ) {
 								fetchTiming = FetchTiming.IMMEDIATE;
 								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
-								explicitFetch = true;
+								explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 							}
 						}
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle = ( (AttributeMapping) fetchable ).getAttributeMetadataAccess()
-							.resolveAttributeMetadata( fetchable.findContainingEntityMapping() )
+					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping().getAttributeMetadata()
 							.getCascadeStyle();
 					final CascadingAction cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
 							.getCascadingAction();
@@ -816,8 +810,6 @@ public class LoaderSelectBuilder {
 					}
 				}
 
-				final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
-
 				if ( maximumFetchDepth != null ) {
 					if ( fetchDepth == maximumFetchDepth + 1 ) {
 						joined = false;
@@ -853,6 +845,7 @@ public class LoaderSelectBuilder {
 						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
 								.getTableGroup( fetchablePath );
+						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
 						applyFiltering(
 								querySpec,
 								joinTableGroup,
@@ -884,6 +877,27 @@ public class LoaderSelectBuilder {
 				}
 			}
 		};
+	}
+
+	private boolean shouldExplicitFetch(Integer maxFetchDepth, Fetchable fetchable, LoaderSqlAstCreationState creationState) {
+		/*
+			Forcing the value of explicitFetch to true will disable the fetch circularity check and
+			for already visited association or collection this will cause a StackOverflow if maxFetchDepth is null, see HHH-15391.
+		 */
+		if ( maxFetchDepth == null ) {
+			if ( fetchable instanceof ToOneAttributeMapping ) {
+				return !creationState.isAssociationKeyVisited(
+						( (ToOneAttributeMapping) fetchable ).getForeignKeyDescriptor().getAssociationKey()
+				);
+			}
+			else if ( fetchable instanceof PluralAttributeMapping ) {
+				return !creationState.isAssociationKeyVisited(
+						( (PluralAttributeMapping) fetchable ).getKeyDescriptor().getAssociationKey()
+				);
+			}
+		}
+
+		return true;
 	}
 
 	private void applyOrdering(
@@ -1012,16 +1026,8 @@ public class LoaderSelectBuilder {
 					simpleFkDescriptor.getContainingTableExpression()
 			);
 			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey( tableReference, simpleFkDescriptor.getSelectionExpression() ),
-					sqlAstProcessingState -> new ColumnReference(
-							tableReference,
-							simpleFkDescriptor.getSelectionExpression(),
-							false,
-							null,
-							null,
-							simpleFkDescriptor.getJdbcMapping(),
-							this.creationContext.getSessionFactory()
-					)
+					tableReference,
+					simpleFkDescriptor
 			);
 		}
 		else {
@@ -1034,17 +1040,7 @@ public class LoaderSelectBuilder {
 						);
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
-										.resolveSqlExpression(
-												createColumnReferenceKey(
-														tableReference,
-														selection.getSelectionExpression()
-												),
-												sqlAstProcessingState -> new ColumnReference(
-														tableReference,
-														selection,
-														this.creationContext.getSessionFactory()
-												)
-										)
+										.resolveSqlExpression( tableReference, selection )
 						);
 					}
 			);
@@ -1095,12 +1091,8 @@ public class LoaderSelectBuilder {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
 					final TableReference tableReference = ownerTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference,
-									selection,
-									sessionFactory
-							)
+							tableReference,
+							selection
 					);
 					subQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(

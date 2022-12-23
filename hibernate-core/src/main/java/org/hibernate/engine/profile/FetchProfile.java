@@ -15,10 +15,22 @@ import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
 /**
- * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at
- * runtime, whereas that information was historically only statically defined in the metadata.
- * <p/>
- * This class defines the runtime representation of this data.
+ * The runtime representation of a Hibernate
+ * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+ * defined in annotations.
+ * <p>
+ * Fetch profiles compete with JPA-defined
+ * {@linkplain jakarta.persistence.NamedEntityGraph named entity graphs}.
+ * The semantics of these two facilities are not identical, however,
+ * since a fetch profile is a list, not a graph, and is not by nature
+ * rooted at any one particular entity. Instead, given a root entity as
+ * input, an active fetch profile contributes to the determination of
+ * the fetch graph.
+ * <p>
+ * A named fetch profile may be enabled in a given session
+ * by calling {@link org.hibernate.Session#enableFetchProfile(String)}.
+ *
+ * @see org.hibernate.mapping.FetchProfile
  *
  * @author Steve Ebersole
  */
@@ -42,7 +54,7 @@ public class FetchProfile {
 	}
 
 	/**
-	 * Add a fetch to the profile.
+	 * Add a fetch override to the profile.
 	 *
 	 * @param association The association to be fetched
 	 * @param fetchStyleName The name of the fetch style to apply
@@ -53,7 +65,7 @@ public class FetchProfile {
 	}
 
 	/**
-	 * Add a fetch to the profile.
+	 * Add a fetch override to the profile.
 	 *
 	 * @param association The association to be fetched
 	 * @param style The style to apply
@@ -63,7 +75,7 @@ public class FetchProfile {
 	}
 
 	/**
-	 * Add a fetch to the profile.
+	 * Add a fetch override to the profile.
 	 *
 	 * @param fetch The fetch to add.
 	 */

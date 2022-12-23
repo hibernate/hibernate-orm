@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.internal;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
@@ -20,6 +21,7 @@ import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -33,6 +35,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -64,8 +67,10 @@ import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -515,6 +520,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		return null;
 	}
 
+	@Override
+	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
+		processStanza(
+				"cte",
+				"`" + sqmRoot.getNavigablePath() + "`",
+				() -> {
+					processJoins( sqmRoot );
+				}
+		);
+		return null;
+	}
+
 	private void processJoins(SqmFrom<?,?> sqmFrom) {
 		if ( !sqmFrom.hasJoins() ) {
 			return;
@@ -608,6 +625,24 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		else {
 			processStanza(
 					"derived",
+					"`" + joinedFromElement.getNavigablePath() + "`",
+					() -> {
+						processJoinPredicate( joinedFromElement );
+						processJoins( joinedFromElement );
+					}
+			);
+		}
+		return null;
+	}
+
+	@Override
+	public Object visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement) {
+		if ( inJoinPredicate ) {
+			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+		}
+		else {
+			processStanza(
+					"cte",
 					"`" + joinedFromElement.getNavigablePath() + "`",
 					() -> {
 						processJoinPredicate( joinedFromElement );
@@ -810,6 +845,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitOver(SqmOver<?> over) {
+		return null;
+	}
+
+	@Override
+	public Object visitWindow(SqmWindow window) {
 		return null;
 	}
 
@@ -1041,6 +1081,16 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitSummarization(SqmSummarization<?> sqmSummarization) {
+		return null;
+	}
+
+	@Override
+	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
+		return null;
+	}
+
+	@Override
+	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
 		return null;
 	}
 

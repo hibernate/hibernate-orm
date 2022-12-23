@@ -9,8 +9,9 @@ package org.hibernate.tuple;
 import org.hibernate.type.Type;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement.
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractAttribute implements Attribute {
 	private final String attributeName;
 	private final Type attributeType;

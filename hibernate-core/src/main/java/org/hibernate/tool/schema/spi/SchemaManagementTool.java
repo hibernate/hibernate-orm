@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.service.Service;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Contract for schema management tool integration.
@@ -23,6 +24,7 @@ public interface SchemaManagementTool extends Service {
 	SchemaDropper getSchemaDropper(Map<String,Object> options);
 	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
 	SchemaValidator getSchemaValidator(Map<String,Object> options);
+	SchemaTruncator getSchemaTruncator(Map<String,Object> options);
 
 	/**
 	 * This allows to set an alternative implementation for the Database
@@ -34,4 +36,14 @@ public interface SchemaManagementTool extends Service {
 	void setCustomDatabaseGenerationTarget(GenerationTarget generationTarget);
 
 	ExtractionTool getExtractionTool();
+
+	/**
+	 * Resolves the {@linkplain GenerationTarget targets} to which to
+	 * send the DDL commands based on configuration
+	 */
+	GenerationTarget[] buildGenerationTargets(
+			TargetDescriptor targetDescriptor,
+			JdbcContext jdbcContext,
+			Map<String, Object> options,
+			boolean needsAutoCommit);
 }

@@ -8,12 +8,18 @@ package org.hibernate.procedure.internal;
 
 import java.util.function.BiFunction;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -37,7 +43,34 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		return new BasicResult<>( resultPosition, null, typeDescriptor );
+		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState()
+				.getSqlExpressionResolver();
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+				sqlExpressionResolver.resolveSqlExpression(
+						SqlExpressionResolver.createColumnReferenceKey(
+								Integer.toString( resultPosition + 1 )
+						),
+						processingState -> {
+							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+									resultPosition + 1,
+									typeDescriptor,
+									processingState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+							);
+							return new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType );
+						}
+				),
+				typeDescriptor,
+				null,
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
+		);
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				null,
+				( (BasicType<?>) sqlSelection.getExpressionType() )
+		);
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.metamodel.CollectionClassification;
@@ -39,7 +40,7 @@ import jakarta.persistence.SharedCacheMode;
 public interface MetadataBuilder {
 	/**
 	 * Specify the implicit catalog name to apply to any unqualified database names.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}
 	 * setting if using property-based configuration.
 	 *
@@ -53,7 +54,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Specify the implicit schema name to apply to any unqualified database names.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}
 	 * setting if using property-based configuration.
 	 *
@@ -66,12 +67,12 @@ public interface MetadataBuilder {
 	MetadataBuilder applyImplicitSchemaName(String implicitSchemaName);
 
 	/**
-	 * Specify the ImplicitNamingStrategy to use in building the Metadata.
-	 * <p/>
+	 * Specify the {@link ImplicitNamingStrategy}.
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
-	 * @param namingStrategy The ImplicitNamingStrategy to apply
+	 * @param namingStrategy The {@link ImplicitNamingStrategy}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -80,12 +81,12 @@ public interface MetadataBuilder {
 	MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy);
 
 	/**
-	 * Specify the PhysicalNamingStrategy to use in building the Metadata.
-	 * <p/>
+	 * Specify the {@link PhysicalNamingStrategy}.
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
-	 * @param namingStrategy The PhysicalNamingStrategy to apply
+	 * @param namingStrategy The {@link PhysicalNamingStrategy}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -94,9 +95,22 @@ public interface MetadataBuilder {
 	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
 
 	/**
-	 * Specify the second-level cache mode to be used.  This is the cache mode in terms of whether or
-	 * not to cache.
-	 * <p/>
+	 * Specify the {@link ColumnOrderingStrategy}.
+	 * <p>
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}
+	 * setting if using property-based configuration.
+	 *
+	 * @param columnOrderingStrategy The {@link ColumnOrderingStrategy}
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
+	 */
+	MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy);
+
+	/**
+	 * Specify the second-level cache mode.
+	 * <p>
 	 * Its default is defined by the {@code javax.persistence.sharedCache.mode} setting if using
 	 * property-based configuration.
 	 *
@@ -111,7 +125,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify the second-level access-type to be used by default for entities and collections that define second-level
 	 * caching, but do not specify a granular access-type.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
@@ -126,11 +140,11 @@ public interface MetadataBuilder {
 
 	/**
 	 * Allows specifying a specific Jandex index to use for reading annotation information.
-	 * <p/>
+	 * <p>
 	 * It is <i>important</i> to understand that if a Jandex index is passed in, it is expected that
 	 * this Jandex index already contains all entries for all classes.  No additional indexing will be
 	 * done in this case.
-	 * <p/>
+	 * <p>
 	 * NOTE : Here for future expansion.  At the moment the passed Jandex index is not used.
 	 *
 	 * @param jandexView The Jandex index to use.
@@ -161,7 +175,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Specify a particular Scanner instance to use.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#SCANNER}
 	 * setting if using property-based configuration.
 	 *
@@ -175,7 +189,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Specify a particular ArchiveDescriptorFactory instance to use in scanning.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER}
 	 * setting if using property-based configuration.
 	 *
@@ -197,7 +211,7 @@ public interface MetadataBuilder {
 	 * joined inheritance.  However, for portability reasons we do now allow using
 	 * explicit discriminators along with joined inheritance.  It is configurable
 	 * though to support legacy apps.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
@@ -216,10 +230,10 @@ public interface MetadataBuilder {
 	 * defined discriminator annotations?  If enabled, we will handle joined
 	 * inheritance with no explicit discriminator annotations by implicitly
 	 * creating one (following the JPA implicit naming rules).
-	 * <p/>
+	 * <p>
 	 * Again the premise here is JPA portability, bearing in mind that some
 	 * JPA provider need these discriminators.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
@@ -235,7 +249,7 @@ public interface MetadataBuilder {
 	/**
 	 * For entities which do not explicitly say, should we force discriminators into
 	 * SQL selects?  The (historical) default is {@code false}
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
 	 * setting if using property-based configuration.
 	 *
@@ -251,7 +265,7 @@ public interface MetadataBuilder {
 	/**
 	 * Should nationalized variants of character data be used in the database types?  For example, should
 	 * {@code NVARCHAR} be used instead of {@code VARCHAR}?  {@code NCLOB} instead of {@code CLOB}?
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
 	 * setting if using property-based configuration.
 	 *
@@ -315,7 +329,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Apply a ClassLoader for use while building the Metadata.
-	 * <p/>
+	 * <p>
 	 * Ideally we should avoid accessing ClassLoaders when perform 1st phase of bootstrap.  This
 	 * is a ClassLoader that can be used in cases when we have to.  IN EE managed environments, this
 	 * is the ClassLoader mandated by
@@ -334,7 +348,7 @@ public interface MetadataBuilder {
 	 * Apply a specific ordering to the processing of sources.  Note that unlike most
 	 * of the methods on this contract that deal with multiple values internally, this
 	 * one *replaces* any already set (its more a setter) instead of adding to.
-	 * <p/>
+	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
 	 * setting if using property-based configuration.
 	 *
@@ -343,7 +357,10 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
+	 *
+	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this irrelevant
 	 */
+	@Deprecated(since = "6", forRemoval = true)
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
 	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);

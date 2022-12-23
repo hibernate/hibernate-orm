@@ -12,24 +12,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
+import org.hibernate.boot.model.internal.AnnotationBinder;
+import org.hibernate.boot.model.internal.InheritanceState;
+import org.hibernate.boot.model.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware.JpaOrmXmlPersistenceUnitDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -73,7 +72,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
 		}
 
-		final AttributeConverterManager attributeConverterManager = new AttributeConverterManager( rootMetadataBuildingContext );
+		final ConverterRegistry converterRegistry = rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
 		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 
 		MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
@@ -94,32 +93,31 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					xClasses.add( toXClass( className, reflectionManager, classLoaderService ) );
 				}
 			}
-			jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( attributeConverterManager );
+			jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( converterRegistry );
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		}
 
 		for ( String className : managedResources.getAnnotatedClassNames() ) {
 			final Class<?> annotatedClass = classLoaderService.classForName( className );
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			categorizeAnnotatedClass( annotatedClass, converterRegistry );
 		}
 
 		for ( Class<?> annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			categorizeAnnotatedClass( annotatedClass, attributeConverterManager );
+			categorizeAnnotatedClass( annotatedClass, converterRegistry );
 		}
 	}
 
-	private void categorizeAnnotatedClass(Class<?> annotatedClass, AttributeConverterManager attributeConverterManager) {
+	private void categorizeAnnotatedClass(Class<?> annotatedClass, ConverterRegistry converterRegistry) {
 		final XClass xClass = reflectionManager.toXClass( annotatedClass );
 		// categorize it, based on assumption it does not fall into multiple categories
 		if ( xClass.isAnnotationPresent( Converter.class ) ) {
 			//noinspection unchecked
-			attributeConverterManager.addAttributeConverter( (Class<? extends AttributeConverter<?,?>>) annotatedClass );
+			converterRegistry.addAttributeConverter( (Class<? extends AttributeConverter<?,?>>) annotatedClass );
 		}
 		else if ( xClass.isAnnotationPresent( Entity.class )
-				|| xClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			xClasses.add( xClass );
-		}
-		else if ( xClass.isAnnotationPresent( Embeddable.class ) ) {
+				|| xClass.isAnnotationPresent( MappedSuperclass.class )
+				|| xClass.isAnnotationPresent( Embeddable.class )
+				|| xClass.isAnnotationPresent( Imported.class ) ) {
 			xClasses.add( xClass );
 		}
 		else {
@@ -169,42 +167,34 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processTypeDefinitions() {
-
 	}
 
 	@Override
 	public void processQueryRenames() {
-
 	}
 
 	@Override
 	public void processNamedQueries() {
-
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-
 	}
 
 	@Override
 	public void processFetchProfiles() {
-
 	}
 
 	@Override
 	public void prepareForEntityHierarchyProcessing() {
-
 	}
 
 	@Override
@@ -215,16 +205,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				rootMetadataBuildingContext
 		);
 
-
 		for ( XClass clazz : orderedClasses ) {
 			if ( processedEntityNames.contains( clazz.getName() ) ) {
 				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
-				continue;
 			}
-
-			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
-			AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
-			processedEntityNames.add( clazz.getName() );
+			else {
+				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
+				AnnotationBinder.bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
+				processedEntityNames.add( clazz.getName() );
+			}
 		}
 	}
 
@@ -270,16 +259,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) {
-			return;
-		}
-		//process superclass first
-		orderHierarchy( copy, newList, original, clazz.getSuperclass() );
-		if ( original.contains( clazz ) ) {
-			if ( !newList.contains( clazz ) ) {
-				newList.add( clazz );
+		if ( clazz != null && !reflectionManager.equals( clazz, Object.class ) ) {
+			//process superclass first
+			orderHierarchy( copy, newList, original, clazz.getSuperclass() );
+			if ( original.contains( clazz ) ) {
+				if ( !newList.contains( clazz ) ) {
+					newList.add( clazz );
+				}
+				copy.remove( clazz );
 			}
-			copy.remove( clazz );
 		}
 	}
 
@@ -292,35 +280,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processResultSetMappings() {
-
 	}
 
 	@Override
 	public void finishUp() {
-
-	}
-
-	private static class AttributeConverterManager implements AttributeConverterDefinitionCollector {
-		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-
-		public AttributeConverterManager(MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
-			this.rootMetadataBuildingContext = rootMetadataBuildingContext;
-		}
-
-		@Override
-		public void addAttributeConverter(AttributeConverterInfo info) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter(
-					info.toConverterDescriptor( rootMetadataBuildingContext )
-			);
-		}
-
-		@Override
-		public void addAttributeConverter(ConverterDescriptor descriptor) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( descriptor );
-		}
-
-		public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
-			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
-		}
 	}
 }

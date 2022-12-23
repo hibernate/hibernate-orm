@@ -25,6 +25,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -73,12 +74,12 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		afterInitialize( this, creationState );
 
 		// after-after-initialize :D
-		containsAnyNonScalars = determineIfContainedAnyScalars( fetches );
+		containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
-	private static boolean determineIfContainedAnyScalars(List<Fetch> fetches) {
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			if ( fetches.get( i ).containsAnyNonScalarResults() ) {
+	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+		for ( Fetch fetch : fetches ) {
+			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;
 			}
 		}

@@ -27,13 +27,13 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable<EntityAction>, AfterTransactionCompletionProcess {
+		implements ComparableEntityAction, Executable, Serializable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Object id;
 
 	private transient Object instance;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private transient EntityPersister persister;
 
 	private transient boolean veto;
@@ -47,7 +47,7 @@ public abstract class EntityAction
 	 * @param persister The entity persister
 	 */
 	protected EntityAction(
-			SharedSessionContractImplementor session,
+			EventSource session,
 			Object id,
 			Object instance,
 			EntityPersister persister) {
@@ -73,9 +73,7 @@ public abstract class EntityAction
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return needsAfterTransactionCompletion()
-				? this
-				: null;
+		return needsAfterTransactionCompletion() ? this : null;
 	}
 
 	protected abstract boolean hasPostCommitEventListeners();
@@ -108,9 +106,7 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return id instanceof DelayedPostInsertIdentifier
-				? (DelayedPostInsertIdentifier) id
-				: null;
+		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
 	}
 
 	/**
@@ -127,7 +123,7 @@ public abstract class EntityAction
 	 *
 	 * @return The session from which this action originated.
 	 */
-	public final SharedSessionContractImplementor getSession() {
+	public final EventSource getSession() {
 		return session;
 	}
 
@@ -156,16 +152,13 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(EntityAction action) {
+	public int compareTo(ComparableEntityAction action) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( action.entityName );
-		if ( roleComparison != 0 ) {
-			return roleComparison;
-		}
-		else {
-			//then by id
-			return persister.getIdentifierType().compare( id, action.id );
-		}
+		final int roleComparison = entityName.compareTo( action.getEntityName() );
+		return roleComparison != 0
+				? roleComparison
+				//then by id
+				: persister.getIdentifierType().compare( id, action.getId() );
 	}
 
 	/**
@@ -174,7 +167,7 @@ public abstract class EntityAction
 	 * @param session The session being deserialized
 	 */
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -182,13 +175,13 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+			this.persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}
 
 	protected EventSource eventSource() {
-		return (EventSource) getSession();
+		return getSession();
 	}
 
 	/**

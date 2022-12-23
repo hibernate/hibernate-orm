@@ -29,9 +29,9 @@ public class BasicTableTest {
         final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getIdentifierGenerator(), instanceOf( TableGenerator.class ) );
+		assertThat( persister.getGenerator(), instanceOf( TableGenerator.class ) );
 
-		final TableGenerator generator = ( TableGenerator ) persister.getIdentifierGenerator();
+		final TableGenerator generator = ( TableGenerator ) persister.getGenerator();
 
 		scope.inTransaction(
 				(s) -> {

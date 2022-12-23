@@ -8,7 +8,7 @@
 package org.hibernate.sql.exec.spi;
 
 /**
- * Models the function return when the JdbcCall represents a call to a database
+ * Models the function return when the JdbcOperationQueryCall represents a call to a database
  * function.
  *
  * @author Steve Ebersole

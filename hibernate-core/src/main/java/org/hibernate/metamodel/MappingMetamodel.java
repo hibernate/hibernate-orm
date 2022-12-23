@@ -27,7 +27,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Access to information about the runtime relational O/R mapping model
+ * Access to information about the runtime relational O/R mapping model.
  *
  * @author Steve Ebersole
  */

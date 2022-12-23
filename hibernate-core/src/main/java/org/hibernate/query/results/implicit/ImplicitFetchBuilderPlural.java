@@ -48,7 +48,6 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 
 		final Fetch fetch = parent.generateFetchableFetch(
 				fetchable,

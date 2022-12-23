@@ -18,10 +18,10 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +38,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Alex Burgel
  */
 @TestForIssue( jiraKey = "HHH-11330" )
-@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class )
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
@@ -47,6 +46,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @DomainModel( annotatedClasses = IdentityGeneratorWithNaturalIdCacheTest.Person.class )
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class IdentityGeneratorWithNaturalIdCacheTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {

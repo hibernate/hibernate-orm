@@ -11,7 +11,8 @@ import java.io.Serializable;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
- * Standard implementation of the PhysicalNamingStrategy contract.
+ * Standard implementation of the {@link PhysicalNamingStrategy} contract. This is a trivial implementation
+ * where each physical name is taken to be exactly identical to the corresponding logical name.
  *
  * @author Steve Ebersole
  */

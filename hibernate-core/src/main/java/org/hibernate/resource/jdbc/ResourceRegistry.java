@@ -45,7 +45,7 @@ public interface ResourceRegistry {
 
 	/**
 	 * Register a JDBC result set.
-	 * <p/>
+	 * <p>
 	 * Implementation note: Second parameter has been introduced to prevent
 	 * multiple registrations of the same statement in case {@link ResultSet#getStatement()}
 	 * does not return original {@link Statement} object.

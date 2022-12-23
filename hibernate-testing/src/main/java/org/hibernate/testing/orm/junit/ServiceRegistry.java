@@ -62,7 +62,7 @@ import org.hibernate.service.spi.ServiceContributor;
  * @author Steve Ebersole
  */
 @Inherited
-@Target( ElementType.TYPE )
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )
 
 @ServiceRegistryFunctionalTesting

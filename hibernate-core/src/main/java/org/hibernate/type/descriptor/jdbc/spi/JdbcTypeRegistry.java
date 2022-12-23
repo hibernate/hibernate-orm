@@ -7,9 +7,13 @@
 package org.hibernate.type.descriptor.jdbc.spi;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -19,7 +23,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from JDBC type code (int) -> {@link JdbcType}
+ * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
+ * to implementations of the {@link JdbcType} interface.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
@@ -31,6 +36,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, AggregateJdbcType> aggregateDescriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -111,9 +117,63 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		return fallBackDescriptor;
 	}
 
+	public AggregateJdbcType resolveAggregateDescriptor(
+			int jdbcTypeCode,
+			String typeName,
+			EmbeddableMappingType embeddableMappingType,
+			RuntimeModelCreationContext creationContext) {
+		final String registrationKey;
+		if ( typeName != null ) {
+			registrationKey = typeName.toLowerCase( Locale.ROOT );
+			final AggregateJdbcType aggregateJdbcType = aggregateDescriptorMap.get( registrationKey );
+			if ( aggregateJdbcType != null ) {
+				if ( aggregateJdbcType.getEmbeddableMappingType() != embeddableMappingType ) {
+					// We only register a single aggregate descriptor for reading native query results,
+					// but we still return a special JdbcType per EmbeddableMappingType.
+					// We do this because EmbeddableMappingType#forEachSelectable uses the SelectableMappings,
+					// which are prefixed with the aggregateMapping.
+					// Since the columnExpression is used as key for mutation parameters, this is important.
+					// We could get rid of this if ColumnValueParameter drops the ColumnReference
+					return aggregateJdbcType.resolveAggregateJdbcType(
+							embeddableMappingType,
+							typeName,
+							creationContext
+					);
+				}
+				return aggregateJdbcType;
+			}
+		}
+		else {
+			registrationKey = null;
+		}
+		final JdbcType descriptor = getDescriptor( jdbcTypeCode );
+		if ( !( descriptor instanceof AggregateJdbcType ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Tried to resolve the JdbcType [%s] as AggregateJdbcType but it does not implement that interface!",
+							descriptor.getClass().getName()
+					)
+			);
+		}
+		final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) descriptor;
+		final AggregateJdbcType resolvedJdbcType = aggregateJdbcType.resolveAggregateJdbcType(
+				embeddableMappingType,
+				typeName,
+				creationContext
+		);
+		if ( registrationKey != null ) {
+			aggregateDescriptorMap.put( registrationKey, resolvedJdbcType );
+		}
+		return resolvedJdbcType;
+	}
+
+	public AggregateJdbcType findAggregateDescriptor(String typeName) {
+		return aggregateDescriptorMap.get( typeName.toLowerCase( Locale.ROOT ) );
+	}
+
 	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
 		return descriptorMap.containsKey( jdbcTypeCode )
-				|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
-				|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
+			|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
+			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
 	}
 }

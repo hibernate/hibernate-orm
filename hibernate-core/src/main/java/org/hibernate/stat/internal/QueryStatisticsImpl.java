@@ -17,7 +17,7 @@ import org.hibernate.stat.QueryStatistics;
 
 /**
  * Query statistics (HQL and SQL)
- * <p/>
+ * <p>
  * Note that for a cached query, the cache miss is equals to the db count
  *
  * @author Alex Snaps

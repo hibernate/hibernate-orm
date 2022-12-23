@@ -17,6 +17,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -43,6 +44,11 @@ public class UuidGeneratedValueTest extends BaseEntityManagerFunctionalTestCase 
 		});
 
 		assertNotNull(book.getId());
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Book foundBook = entityManager.find( Book.class, book.getId() );
+			assertEquals( book.getAuthor(), foundBook.getAuthor() );
+		});
 	}
 
 	//tag::identifiers-generators-uuid-mapping-example[]

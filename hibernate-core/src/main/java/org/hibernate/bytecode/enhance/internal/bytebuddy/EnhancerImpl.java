@@ -22,11 +22,13 @@ import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
 
+import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
+import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
@@ -68,6 +70,23 @@ import net.bytebuddy.pool.TypePool;
 public class EnhancerImpl implements Enhancer {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
+	private static final Annotation HIBERNATE_VERSION_ANNOTATION;
+
+	static {
+		HIBERNATE_VERSION_ANNOTATION = new EnhancementInfo() {
+			@Override
+			public String version() {
+				return Version.getVersionString();
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return EnhancementInfo.class;
+			}
+		};
+	}
+
+	private static final AnnotationDescription TRANSIENT_ANNOTATION = AnnotationDescription.Builder.ofType( Transient.class ).build();
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
@@ -146,7 +165,12 @@ public class EnhancerImpl implements Enhancer {
 	private DynamicType.Builder<?> doEnhance(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's an interface!", managedCtClass.getName() );
+			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
+			return null;
+		}
+		// can't effectively enhance records
+		if ( managedCtClass.isRecord() ) {
+			log.debugf( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
 			return null;
 		}
 		// skip already enhanced classes
@@ -154,6 +178,8 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return null;
 		}
+
+		builder = builder.annotateType( HIBERNATE_VERSION_ANNOTATION );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
@@ -191,7 +217,7 @@ public class EnhancerImpl implements Enhancer {
 				if ( collectionFields.isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -208,11 +234,12 @@ public class EnhancerImpl implements Enhancer {
 									.intercept( implementationGetCollectionTrackerWithoutCollections );
 				}
 				else {
+					//TODO es.enableInterfaceExtendedSelfDirtinessTracker ? Careful with consequences..
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, CollectionTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -318,7 +345,7 @@ public class EnhancerImpl implements Enhancer {
 								FieldPersistence.TRANSIENT,
 								Visibility.PRIVATE
 						)
-								.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+								.annotateField( TRANSIENT_ANNOTATION )
 						.defineMethod(
 								EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
 								void.class,
@@ -394,7 +421,7 @@ public class EnhancerImpl implements Enhancer {
 			String setterName) {
 		return builder
 				.defineField( fieldName, type, Visibility.PRIVATE, FieldPersistence.TRANSIENT )
-						.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+						.annotateField( TRANSIENT_ANNOTATION )
 				.defineMethod( getterName, type, Visibility.PUBLIC )
 						.intercept( FieldAccessor.ofField( fieldName ) )
 				.defineMethod( setterName, void.class, Visibility.PUBLIC )
@@ -592,4 +619,5 @@ public class EnhancerImpl implements Enhancer {
 			this.resolution = new Resolution.Explicit( bytes);
 		}
 	}
+
 }

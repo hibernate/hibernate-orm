@@ -17,16 +17,15 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -77,6 +76,31 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 	@Override
 	public boolean isFormula() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return true;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
 		return false;
 	}
 
@@ -172,6 +196,12 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		consumer.accept( offset, this );
+		return 1;
+	}
+
+	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		valueConsumer.consume( domainValue, this );
 	}
@@ -184,6 +214,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public String getFetchableName() {
 		return null;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		return -1;
 	}
 
 	@Override
@@ -216,21 +251,10 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
-				type.getJavaTypeDescriptor(),
+				type.getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -240,7 +264,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
@@ -257,30 +280,18 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
-								columnName
-						),
-						p -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								columnName,
-								false,
-								null,
-								null,
-								type,
-								sessionFactory
-						)
+						tableGroup.getPrimaryTableReference(),
+						this
 				),
-				type.getJavaTypeDescriptor(),
+				type.getJdbcJavaType(),
 				null,
 				sessionFactory.getTypeConfiguration()
 		);
 
-		//noinspection unchecked
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				(JavaType<Object>) type.getJavaTypeDescriptor(),
+				type,
 				collectionPath
 		);
 	}
@@ -308,10 +319,9 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return type.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return type.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 }

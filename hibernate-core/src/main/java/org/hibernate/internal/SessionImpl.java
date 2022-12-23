@@ -14,6 +14,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.FetchNotFoundException;
@@ -30,6 +30,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.Interceptor;
 import org.hibernate.JDBCException;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
@@ -51,6 +52,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -70,12 +72,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.event.spi.DeleteContext;
-import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
+import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEvent;
@@ -92,6 +93,7 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.event.spi.PersistContext;
@@ -116,10 +118,10 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
-import org.hibernate.loader.access.IdentifierLoadAccessImpl;
-import org.hibernate.loader.access.LoadAccessContext;
-import org.hibernate.loader.access.NaturalIdLoadAccessImpl;
-import org.hibernate.loader.access.SimpleNaturalIdLoadAccessImpl;
+import org.hibernate.loader.internal.IdentifierLoadAccessImpl;
+import org.hibernate.loader.internal.LoadAccessContext;
+import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
+import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
@@ -129,15 +131,17 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.TenantIdBinder;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -148,12 +152,14 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.metamodel.Metamodel;
 
+import static org.hibernate.CacheMode.fromJpaModes;
+import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -165,13 +171,13 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
- * Concrete implementation of a the {@link Session} API.
- * <p/>
+ * Concrete implementation of the {@link Session} API.
+ * <p>
  * Exposes two interfaces:<ul>
  * <li>{@link Session} to the application</li>
- * <li>{@link SessionImplementor} to other Hibernate components (SPI)</li>
+ * <li>{@link SessionImplementor} and {@link EventSource} to other Hibernate components (SPI)</li>
  * </ul>
- * <p/>
+ * <p>
  * This class is not thread-safe.
  *
  * @author Gavin King
@@ -181,8 +187,9 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
  * @author Sanne Grinovero
  */
 public class SessionImpl
-		extends AbstractSessionImpl
-		implements SessionImplementor, LoadAccessContext, EventSource {
+		extends AbstractSharedSessionContract
+		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
+				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
 	// Defaults to null which means the properties are the default
@@ -270,7 +277,7 @@ public class SessionImpl
 		}
 
 		if ( log.isTraceEnabled() ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTransactionStartTimestamp() );
+			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), System.currentTimeMillis() );
 		}
 	}
 
@@ -310,7 +317,6 @@ public class SessionImpl
 		);
 		if ( specQueryTimeout != null ) {
 			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
-			query.setHint( HINT_JAVAEE_QUERY_TIMEOUT, specQueryTimeout );
 		}
 	}
 
@@ -326,7 +332,6 @@ public class SessionImpl
 		);
 		if ( specLockTimeout != null ) {
 			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
-			query.setHint( HINT_JAVAEE_LOCK_TIMEOUT, specLockTimeout );
 		}
 	}
 
@@ -341,7 +346,7 @@ public class SessionImpl
 
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl<>( this );
+		return new SharedSessionBuilderImpl( this );
 	}
 
 	@Override
@@ -531,8 +536,9 @@ public class SessionImpl
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
 
-		if ( object instanceof HibernateProxy ) {
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation( this );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
 				return LockMode.NONE;
 			}
@@ -673,11 +679,21 @@ public class SessionImpl
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public void lock(Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( object, lockOptions, this ) );
+	}
+
+	@Override
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		fireLock( new LockEvent( entityName, object, lockOptions, this ) );
+	}
+
+	@Override
 	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( entityName, object, lockMode, this ) );
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockRequest buildLockRequest(LockOptions lockOptions) {
 		return new LockRequestImpl( lockOptions );
 	}
@@ -979,29 +995,7 @@ public class SessionImpl
 
 	@Override
 	public void load(Object object, Object id) throws HibernateException {
-		LoadEvent event = loadEvent;
-		loadEvent = null;
-		if ( event == null ) {
-			event = new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() );
-		}
-		else {
-			event.setEntityClassName( null );
-			event.setEntityId( id );
-			event.setInstanceToLoad( object );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
-		}
-
-		fireLoad( event, LoadEventListener.RELOAD );
-
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
+		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
 	@Override @Deprecated
@@ -1042,15 +1036,10 @@ public class SessionImpl
 		event = recycleEventInstance( event, id, entityName );
 		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
 		Object result = event.getResult();
-		if ( loadEvent == null ) {
-			event.setEntityClassName( null );
-			event.setEntityId( null );
-			event.setInstanceToLoad( null );
-			event.setResult( null );
-			loadEvent = event;
-		}
-		if ( result instanceof HibernateProxy ) {
-			return ( (HibernateProxy) result ).getHibernateLazyInitializer().getImplementation();
+		finishWithEventInstance( event );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( result );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getImplementation();
 		}
 		return result;
 	}
@@ -1061,6 +1050,7 @@ public class SessionImpl
 			Object id,
 			boolean eager,
 			boolean nullable) {
+		final LoadType type = internalLoadType( eager, nullable );
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
@@ -1072,44 +1062,33 @@ public class SessionImpl
 				effectiveEntityGraph.clear();
 			}
 		}
-
 		try {
-			final LoadType type;
-			if ( nullable ) {
-				type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
-			}
-			else {
-				type = eager
-						? LoadEventListener.INTERNAL_LOAD_EAGER
-						: LoadEventListener.INTERNAL_LOAD_LAZY;
-			}
-
 			LoadEvent event = loadEvent;
 			loadEvent = null;
-
 			event = recycleEventInstance( event, id, entityName );
-
 			fireLoadNoChecks( event, type );
-
 			Object result = event.getResult();
-
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
-
-			if ( loadEvent == null ) {
-				event.setEntityClassName( null );
-				event.setEntityId( null );
-				event.setInstanceToLoad( null );
-				event.setResult( null );
-				loadEvent = event;
-			}
+			finishWithEventInstance( event );
 			return result;
 		}
 		finally {
 			if ( clearedEffectiveGraph ) {
 				effectiveEntityGraph.applyGraph( graph, semantic );
 			}
+		}
+	}
+
+	private static LoadType internalLoadType(boolean eager, boolean nullable) {
+		if ( nullable ) {
+			return LoadEventListener.INTERNAL_LOAD_NULLABLE;
+		}
+		else {
+			return eager
+					? LoadEventListener.INTERNAL_LOAD_EAGER
+					: LoadEventListener.INTERNAL_LOAD_LAZY;
 		}
 	}
 
@@ -1124,10 +1103,17 @@ public class SessionImpl
 			event.setEntityClassName( entityName );
 			event.setEntityId( id );
 			event.setInstanceToLoad( null );
-			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
-			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
-			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
 			return event;
+		}
+	}
+
+	private void finishWithEventInstance(LoadEvent event) {
+		if ( loadEvent == null ) {
+			event.setEntityClassName( null );
+			event.setEntityId( null );
+			event.setInstanceToLoad( null );
+			event.setResult( null );
+			loadEvent = event;
 		}
 	}
 
@@ -1514,12 +1500,12 @@ public class SessionImpl
 	public Object getIdentifier(Object object) throws HibernateException {
 		checkOpen();
 		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.getSession() != this ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.getSession() != this ) {
 				throw new TransientObjectException( "The proxy was not associated with this session" );
 			}
-			return li.getInternalIdentifier();
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry( object );
@@ -1537,17 +1523,14 @@ public class SessionImpl
 	@Override
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpenOrWaitingForAutoClose();
-		if ( object instanceof HibernateProxy ) {
-			return getProxyIdentifier( object );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry( object );
 			return entry != null ? entry.getId() : null;
 		}
-	}
-
-	private Object getProxyIdentifier(Object proxy) {
-		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getInternalIdentifier();
 	}
 
 	@Override
@@ -1560,23 +1543,23 @@ public class SessionImpl
 		}
 
 		try {
-			if ( object instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.isUninitialized() ) {
+				if ( lazyInitializer.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
 					//the underlying instance will be "contained"
-					return li.getSession() == this;
+					return lazyInitializer.getSession() == this;
 				}
 				else {
 					//if it is initialized, see if the underlying
 					//instance is contained, since we need to
 					//account for the fact that it might have been
 					//evicted
-					object = li.getImplementation();
+					object = lazyInitializer.getImplementation();
 				}
 			}
 
@@ -1587,7 +1570,7 @@ public class SessionImpl
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
-				if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
+				if ( ! ( lazyInitializer != null ) && persistenceContext.getEntry( object ) == null ) {
 					// check if it is even an entity -> if not throw an exception (per JPA)
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
@@ -1626,8 +1609,8 @@ public class SessionImpl
 		}
 
 		try {
-			//noinspection RedundantClassCall
-			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+			final LazyInitializer li = HibernateProxy.extractLazyInitializer( object );
+			if ( ! ( li != null ) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
 					getFactory().getRuntimeMetamodels()
@@ -1639,11 +1622,10 @@ public class SessionImpl
 				}
 			}
 
-			if ( object instanceof HibernateProxy ) {
+			if ( li != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
@@ -1712,14 +1694,14 @@ public class SessionImpl
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
-			if ( initializer.isUninitialized() ) {
-				return initializer.getEntityName();
+			if ( lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getEntityName();
 			}
-			object = initializer.getImplementation();
+			object = lazyInitializer.getImplementation();
 		}
 		EntityEntry entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
@@ -1734,11 +1716,12 @@ public class SessionImpl
 	public String getEntityName(Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();
-		if ( object instanceof HibernateProxy ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
 			if ( !persistenceContext.containsProxy( object ) ) {
 				throw new TransientObjectException( "proxy was not associated with the session" );
 			}
-			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();
+			object = lazyInitializer.getImplementation();
 		}
 
 		EntityEntry entry = persistenceContext.getEntry( object );
@@ -1751,9 +1734,9 @@ public class SessionImpl
 	@Override @SuppressWarnings("unchecked")
 	public <T> T getReference(T object) {
 		checkOpen();
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			return (T) getReference( initializer.getPersistentClass(), initializer.getIdentifier() );
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getIdentifier() );
 		}
 		else {
 			EntityPersister persister = getEntityPersister( null, object );
@@ -1832,6 +1815,11 @@ public class SessionImpl
 	}
 
 	@Override
+	public EventSource asEventSource() {
+		return this;
+	}
+
+	@Override
 	public boolean isDefaultReadOnly() {
 		return persistenceContext.isDefaultReadOnly();
 	}
@@ -1853,6 +1841,26 @@ public class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 		persistenceContext.setReadOnly( entity, readOnly );
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 	}
 
 	@Override
@@ -2013,9 +2021,7 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder>
-			extends SessionFactoryImpl.SessionBuilderImpl<T>
-			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl extends SessionFactoryImpl.SessionBuilderImpl implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -2030,51 +2036,87 @@ public class SessionImpl
 
 
 		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
+		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}
 
 		@Override
-		public T interceptor() {
-			return interceptor( session.getInterceptor() );
+		public SharedSessionBuilderImpl interceptor() {
+			super.interceptor( session.getInterceptor() );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl interceptor(Interceptor interceptor) {
+			super.interceptor( interceptor );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl noInterceptor() {
+			super.noInterceptor();
+			return this;
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public T connection() {
+		public SharedSessionBuilderImpl connection() {
 			this.shareTransactionContext = true;
-			return (T) this;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl connection(Connection connection) {
+			super.connection( connection );
+			return this;
 		}
 
 		@Override
 		@Deprecated(since = "6.0")
-		public T connectionReleaseMode() {
+		public SharedSessionBuilderImpl connectionReleaseMode() {
 			final PhysicalConnectionHandlingMode handlingMode = PhysicalConnectionHandlingMode.interpret(
 					ConnectionAcquisitionMode.AS_NEEDED,
 					session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode()
 			);
-			return connectionHandlingMode( handlingMode );
+			connectionHandlingMode( handlingMode );
+			return this;
 		}
 
 		@Override
-		public T connectionHandlingMode() {
-			return connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
+		public SharedSessionBuilderImpl connectionHandlingMode() {
+			connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
+			return this;
 		}
 
 		@Override
-		public T autoJoinTransactions() {
-			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
+		public SharedSessionBuilderImpl autoJoinTransactions() {
+			super.autoJoinTransactions( session.isAutoCloseSessionEnabled() );
+			return this;
 		}
 
 		@Override
-		public T flushMode() {
-			return flushMode( session.getHibernateFlushMode() );
+		public SharedSessionBuilderImpl autoJoinTransactions(boolean autoJoinTransactions) {
+			super.autoJoinTransactions( autoJoinTransactions );
+			return this;
 		}
 
 		@Override
-		public T autoClose() {
-			return autoClose( session.autoClose );
+		public SharedSessionBuilderImpl autoClose(boolean autoClose) {
+			super.autoClose( autoClose );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl flushMode() {
+			flushMode( session.getHibernateFlushMode() );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl autoClose() {
+			autoClose( session.autoClose );
+			return this;
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2108,12 +2150,13 @@ public class SessionImpl
 		}
 	}
 
+	@Deprecated
 	private class LockRequestImpl implements LockRequest {
 		private final LockOptions lockOptions;
 
-		private LockRequestImpl(LockOptions lo) {
-			lockOptions = new LockOptions();
-			LockOptions.copy( lo, lockOptions );
+		private LockRequestImpl(LockOptions lockOptions) {
+			this.lockOptions = new LockOptions();
+			LockOptions.copy( lockOptions, this.lockOptions );
 		}
 
 		@Override
@@ -2138,18 +2181,18 @@ public class SessionImpl
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public boolean getScope() {
 			return lockOptions.getScope();
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public LockRequest setScope(boolean scope) {
 			lockOptions.setScope( scope );
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated @SuppressWarnings("deprecation")
 		public void lock(String entityName, Object object) throws HibernateException {
 			fireLock( entityName, object, lockOptions );
 		}

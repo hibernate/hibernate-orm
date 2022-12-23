@@ -14,7 +14,12 @@ import org.hibernate.engine.spi.IdentifierValue;
  *
  * @author Andrea Boriero
  */
-public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
+public interface CompositeIdentifierMapping extends EntityIdentifierMapping, EmbeddableValuedModelPart {
+
+	@Override
+	default int getFetchableKey() {
+		return -1;
+	}
 
 	@Override
 	default IdentifierValue getUnsavedStrategy() {

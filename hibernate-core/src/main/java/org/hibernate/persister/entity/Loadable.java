@@ -6,6 +6,8 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.type.Type;
 
 /**
@@ -13,14 +15,20 @@ import org.hibernate.type.Type;
  * using a {@link org.hibernate.loader.ast.spi.Loader}.
  *
  * @author Gavin King
+ *
+ * @deprecated Use {@link EntityMappingType}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface Loadable extends EntityPersister {
 	
 	String ROWID_ALIAS = "rowid_";
 
 	/**
 	 * Does this persistent class have subclasses?
+	 *
+	 * @deprecated See {@link EntityMappingType#hasSubclasses()}
 	 */
+	@Deprecated
 	boolean hasSubclasses();
 
 	/**
@@ -30,13 +38,19 @@ public interface Loadable extends EntityPersister {
 
 	/**
 	 * Get the discriminator value
+	 *
+	 * @deprecated Use {@link EntityMappingType#getDiscriminatorValue()} instead
 	 */
+	@Deprecated
 	Object getDiscriminatorValue();
 
 	/**
 	 * Get the concrete subclass corresponding to the given discriminator
 	 * value
+	 *
+	 * @deprecated Use {@link EntityDiscriminatorMapping#resolveDiscriminatorValue} instead
 	 */
+	@Deprecated
 	String getSubclassForDiscriminatorValue(Object value);
 
 	/**
@@ -65,7 +79,10 @@ public interface Loadable extends EntityPersister {
 	
 	/**
 	 * @return the column name for the discriminator as specified in the mapping.
+	 *
+	 * @deprecated Use {@link EntityDiscriminatorMapping#getSelectionExpression()} instead
 	 */
+	@Deprecated
 	String getDiscriminatorColumnName();
 	
 	/**
@@ -87,7 +104,7 @@ public interface Loadable extends EntityPersister {
 	/**
 	 * Given a column name and the root table alias in use for the entity hierarchy, determine the proper table alias
 	 * for the table in that hierarchy that contains said column.
-	 * <p/>
+	 * <p>
 	 * NOTE : Generally speaking the column is not validated to exist.  Most implementations simply return the
 	 * root alias; the exception is {@link JoinedSubclassEntityPersister}
 	 *

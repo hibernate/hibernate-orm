@@ -16,8 +16,15 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
- * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
- * as its key into its query cache.
+ * A key that identifies a particular query with bound parameter values.
+ * This object is used as a key into the {@linkplain QueryResultsCache
+ * query results cache}.
+ * <p>
+ * Note that the fields of this object must contain every explicit and
+ * implicit setting and parameter argument that affects the result list
+ * of the query, including things like the {@link #maxRows limit} and
+ * {@link #firstRow offset}, {@link #tenantIdentifier current tenant id},
+ * and {@link #enabledFilterNames enabled filters}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -98,15 +105,12 @@ public class QueryKey implements Serializable {
 	private int generateHashCode() {
 		int result = 13;
 		result = 37 * result + sqlQueryString.hashCode();
-		result = 37 * result + ( firstRow==null ? 0 : firstRow );
-		result = 37 * result + ( maxRows==null ? 0 : maxRows );
+		// Don't include the firstRow and maxRows in the hash as these values are rarely useful for query caching
+//		result = 37 * result + ( firstRow==null ? 0 : firstRow );
+//		result = 37 * result + ( maxRows==null ? 0 : maxRows );
 		result = 37 * result + ( tenantIdentifier==null ? 0 : tenantIdentifier.hashCode() );
-		// the collections are too complicated to incorporate into the hashcode.  but they really
-		// aren't needed in the hashcode calculation - they are handled in `#equals` and the calculation
-		// without them is a good hashing code.
-		//
-		// todo (6.0) : maybe even just base it on `sqlQueryString`?
-
+		result = 37 * result + parameterBindingsMemento.hashCode();
+		result = 37 * result + ( enabledFilterNames == null ? 0 : enabledFilterNames.hashCode() );
 		return result;
 	}
 

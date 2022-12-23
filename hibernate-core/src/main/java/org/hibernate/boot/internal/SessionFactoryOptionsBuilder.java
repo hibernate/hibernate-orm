@@ -18,7 +18,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -38,7 +37,6 @@ import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
@@ -47,7 +45,9 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
+import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -57,9 +57,9 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -71,10 +71,9 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JacksonJsonFormatMapper;
-import org.hibernate.type.JacksonXmlFormatMapper;
-import org.hibernate.type.JaxbXmlFormatMapper;
-import org.hibernate.type.JsonBJsonFormatMapper;
+import org.hibernate.type.jackson.JacksonIntegration;
+import org.hibernate.type.jakartajson.JakartaJsonIntegration;
+import org.hibernate.type.jaxb.JaxbXmlFormatMapper;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
@@ -197,7 +196,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean postInsertIdentifierDelayed;
-	private boolean collectionsInDefaultFetchGroupEnabled;
+	private boolean collectionsInDefaultFetchGroupEnabled = true;
 
 	// JPA callbacks
 	private boolean callbacksEnabled;
@@ -544,7 +543,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of((String) jdbcTimeZoneValue) );
 		}
 		else if ( jdbcTimeZoneValue != null ) {
-			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
+			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported" );
 		}
 
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
@@ -629,7 +628,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -678,7 +677,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -797,23 +796,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					try {
-						// Force initialization of the instance
-						JacksonJsonFormatMapper.INSTANCE.hashCode();
-						return JacksonJsonFormatMapper.INSTANCE;
+					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.getJsonJacksonFormatMapperOrNull();
+					if (jsonJacksonFormatMapper != null) {
+						return jsonJacksonFormatMapper;
 					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
+					else {
+						return JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull();
 					}
-					try {
-						// Force initialization of the instance
-						JsonBJsonFormatMapper.INSTANCE.hashCode();
-						return JsonBJsonFormatMapper.INSTANCE;
-					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
-					return null;
 				}
 		);
 	}
@@ -823,23 +812,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					try {
-						// Force initialization of the instance
-						JacksonXmlFormatMapper.INSTANCE.hashCode();
-						return JacksonXmlFormatMapper.INSTANCE;
+					final FormatMapper jacksonFormatMapper = JacksonIntegration.getXMLJacksonFormatMapperOrNull();
+					if (jacksonFormatMapper != null) {
+						return jacksonFormatMapper;
 					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
-					try {
-						// Force initialization of the instance
-						JaxbXmlFormatMapper.INSTANCE.hashCode();
-						return JaxbXmlFormatMapper.INSTANCE;
-					}
-					catch (NoClassDefFoundError ex) {
-						// Ignore
-					}
-					return null;
+					return new JaxbXmlFormatMapper();
 				}
 		);
 	}

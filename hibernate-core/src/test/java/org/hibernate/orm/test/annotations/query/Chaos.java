@@ -31,7 +31,6 @@ import org.hibernate.annotations.SQLUpdate;
 @SQLInsert( sql="INSERT INTO CHAOS(name, nick_name, chaos_size, id) VALUES(upper(?),?,?,?)")
 @SQLUpdate( sql="UPDATE CHAOS SET name = upper(?), nick_name = ?, chaos_size = ? WHERE id = ?")
 @SQLDelete( sql="DELETE CHAOS WHERE id = ?")
-@SQLDeleteAll( sql="DELETE CHAOS")
 @Loader(namedQuery = "chaos")
 @NamedNativeQuery(name="chaos", query="select id, chaos_size, name, lower( nick_name ) as nick_name from CHAOS where id= ?", resultClass = Chaos.class)
 public class Chaos {
@@ -47,6 +46,7 @@ public class Chaos {
 	@JoinColumn(name="chaos_fk")
 	@SQLInsert( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
 	@SQLDelete( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
+	@SQLDeleteAll( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where chaos_fk = ?")
 	private Set<CasimirParticle> particles = new HashSet<CasimirParticle>();
 
 	public Long getId() {

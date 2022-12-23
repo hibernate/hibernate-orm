@@ -31,22 +31,17 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -80,7 +75,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 	}
 
 	@Override
-	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
+	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
 		assert ids != null;
 
 		if ( loadOptions.isOrderReturnEnabled() ) {
@@ -93,7 +88,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 	private List<T> performOrderedMultiLoad(
 			Object[] ids,
-			SharedSessionContractImplementor session,
+			EventSource session,
 			MultiIdLoadOptions loadOptions) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "#performOrderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
@@ -141,7 +136,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session,
+						session,
 						getReadOnlyFromLoadQueryInfluencers(session)
 				);
 
@@ -279,7 +274,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 		// we should have used all the JdbcParameter references (created bindings for all)
 		assert offset == jdbcParameters.size();
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
@@ -298,39 +293,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return null;
-					}
-
-					@Override
-					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						if ( subSelectFetchableKeysHandler != null ) {
-							subSelectFetchableKeysHandler.addKey( entityKey, entry );
-						}
-					}
-				},
+				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -343,7 +306,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 	private List<T> performUnorderedMultiLoad(
 			Object[] ids,
-			SharedSessionContractImplementor session,
+			EventSource session,
 			MultiIdLoadOptions loadOptions) {
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
@@ -382,7 +345,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session,
+						session,
 						getReadOnlyFromLoadQueryInfluencers( session )
 				);
 
@@ -482,4 +445,5 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		}
 		return readOnly;
 	}
+
 }

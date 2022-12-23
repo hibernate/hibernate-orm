@@ -37,11 +37,11 @@ public class BigIntJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Long.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Long.class );
 	}
 
 	@Override

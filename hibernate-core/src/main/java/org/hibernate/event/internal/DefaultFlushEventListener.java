@@ -29,8 +29,8 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
-		if ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-				persistenceContext.getCollectionEntriesSize() > 0 ) {
+		if ( persistenceContext.getNumberOfManagedEntities() > 0
+				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
 
 			try {
 				source.getEventListenerManager().flushStart();
@@ -52,6 +52,10 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.flush();
 			}
+		}
+		else if ( source.getActionQueue().hasAnyQueuedActions() ) {
+			// execute any queued unloaded-entity deletions
+			performExecutions( source );
 		}
 	}
 }

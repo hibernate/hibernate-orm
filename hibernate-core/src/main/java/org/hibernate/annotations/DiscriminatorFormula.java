@@ -20,6 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Used in place of the JPA {@link jakarta.persistence.DiscriminatorColumn}.
  *
  * @see Formula
+ * @see DialectOverride.DiscriminatorFormula
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

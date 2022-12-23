@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -28,6 +28,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
@@ -46,10 +47,10 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
@@ -61,14 +62,10 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
 /**
- * A convenience API making it easier to bootstrap an instance of Hibernate
- * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
- * under the covers.
+ * A convenience API making it easier to bootstrap an instance of Hibernate.
  * <p>
  * An instance of {@code Configuration} may be obtained simply by
- * {@linkplain #Configuration() instantiation}.
- * <p>
- * A {@code Configuration} may be used to aggregate:
+ * {@linkplain #Configuration() instantiation}, and may be used to aggregate:
  * <ul>
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
@@ -78,9 +75,24 @@ import jakarta.persistence.SharedCacheMode;
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <pre>{@code
+ *  SessionFactory factory = new Configuration()
+ *     // scan classes for mapping annotations
+ *     .addAnnotatedClass(Item.class)
+ *     .addAnnotatedClass(Bid.class)
+ *     .addAnnotatedClass(User.class)
+ *     // read package-level annotations of the named package
+ *     .addPackage("org.hibernate.auction")
+ *     // set a configuration property
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .getSessionFactory();
+ * }</pre>
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
  * {@link #registerTypeContributor type contributors},
+ * {@link #addEntityNameResolver entity name resolvers},
  * {@link #addSqlFunction SQL function descriptors}, and
  * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
  * setting {@link #setImplicitNamingStrategy naming strategies} and a
@@ -93,14 +105,15 @@ import jakarta.persistence.SharedCacheMode;
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
  * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
- * <p>
- * Configuration properties are enumerated by {@link AvailableSettings}.
+ * Programs may directly use the APIs defined under {@link org.hibernate.boot},
+ * as an alternative to using an instance of this class.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
+ * @see org.hibernate.boot
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
@@ -126,6 +139,7 @@ public class Configuration {
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
@@ -454,7 +468,7 @@ public class Configuration {
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
+	 * <p>
 	 * Much like {@link #addCacheableFile(File)} except that here we will fail
 	 * immediately if the cache version cannot be found or used for whatever
 	 * reason.
@@ -580,7 +594,7 @@ public class Configuration {
 
 	/**
 	 * Read all {@code .hbm.xml} mappings from a {@code .jar} file.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
@@ -596,7 +610,7 @@ public class Configuration {
 
 	/**
 	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
-	 * <p/>
+	 * <p>
 	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
 	 * This method does not support {@code orm.xml} files!
 	 *
@@ -739,6 +753,10 @@ public class Configuration {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
 
+		if ( entityNameResolvers != null ) {
+			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
+		}
+
 		if ( getSessionFactoryObserver() != null ) {
 			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
 		}
@@ -847,6 +865,18 @@ public class Configuration {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
 		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
+	}
+
+	/**
+	 * Add an {@link EntityNameResolver} to this configuration.
+	 *
+	 * @since 6.2
+	 */
+	public void addEntityNameResolver(EntityNameResolver entityNameResolver) {
+		if ( entityNameResolvers == null ) {
+			entityNameResolvers = new ArrayList<>();
+		}
+		entityNameResolvers.add( entityNameResolver );
 	}
 
 	/**

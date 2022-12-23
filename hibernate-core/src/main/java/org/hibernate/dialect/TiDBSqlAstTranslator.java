@@ -11,13 +11,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -31,8 +32,11 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private final TiDBDialect dialect;
+
 	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+		this.dialect = (TiDBDialect) super.getDialect();
 	}
 
 	@Override
@@ -55,7 +59,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+				&& dialect.supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -96,16 +100,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// TiDB does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// TiDB does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		renderComparisonDistinctOperator( lhs, operator, rhs );
 	}
@@ -127,13 +121,51 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		if ( likePredicate.isCaseSensitive() ) {
+			likePredicate.getMatchExpression().accept( this );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " like " );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					dialect.isNoBackslashEscapesEnabled()
+			);
+		}
+		else {
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			likePredicate.getMatchExpression().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " like " );
+			appendSql( dialect.getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					dialect.isNoBackslashEscapesEnabled()
+			);
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
+		}
+	}
+
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInSet() {
 		return false;
 	}
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 5, 7 );
+		return dialect.getVersion().isSameOrAfter( 5, 7 );
 	}
 
 	@Override
@@ -156,6 +188,17 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	public TiDBDialect getDialect() {
-		return (TiDBDialect) super.getDialect();
+		return this.dialect;
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
+		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, dialect );
+		if ( sqlType != null ) {
+			appendSql( sqlType );
+		}
+		else {
+			super.visitCastTarget( castTarget );
+		}
 	}
 }

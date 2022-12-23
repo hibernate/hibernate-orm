@@ -191,4 +191,5 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
+
 }

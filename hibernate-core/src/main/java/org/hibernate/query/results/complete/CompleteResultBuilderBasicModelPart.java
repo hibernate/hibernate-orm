@@ -9,6 +9,7 @@ package org.hibernate.query.results.complete;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
@@ -75,27 +76,24 @@ public class CompleteResultBuilderBasicModelPart
 
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, modelPart.getContainingTableExpression() );
-		final String mappedColumn = modelPart.getSelectionExpression();
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-				creationStateImpl.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
-						processingState -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, modelPart );
-						}
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						tableReference,
+						modelPart,
+						columnAlias
 				),
-				modelPart.getJavaType(),
+				modelPart.getJdbcMapping().getJdbcJavaType(),
 				null,
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 
-		//noinspection unchecked
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				modelPart.getJavaType()
+				modelPart.getJdbcMapping()
 		);
 	}
 

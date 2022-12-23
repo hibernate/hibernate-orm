@@ -41,13 +41,13 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class Helper {
 	public static InheritanceType interpretInheritanceType(JaxbHbmEntityBaseDefinition entityElement) {
-		if ( JaxbHbmDiscriminatorSubclassEntityType.class.isInstance( entityElement ) ) {
+		if ( entityElement instanceof JaxbHbmDiscriminatorSubclassEntityType ) {
 			return InheritanceType.DISCRIMINATED;
 		}
-		else if ( JaxbHbmJoinedSubclassEntityType.class.isInstance( entityElement ) ) {
+		else if ( entityElement instanceof JaxbHbmJoinedSubclassEntityType ) {
 			return InheritanceType.JOINED;
 		}
-		else if ( JaxbHbmUnionSubclassEntityType.class.isInstance( entityElement ) ) {
+		else if ( entityElement instanceof JaxbHbmUnionSubclassEntityType ) {
 			return InheritanceType.UNION;
 		}
 		else {

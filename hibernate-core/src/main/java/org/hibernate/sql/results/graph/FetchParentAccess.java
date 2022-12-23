@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph;
 import java.util.function.Consumer;
 
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * Provides access to information about the owner/parent of a fetch
@@ -21,6 +22,14 @@ public interface FetchParentAccess extends Initializer {
 	 * Find the first entity access up the fetch parent graph
 	 */
 	FetchParentAccess findFirstEntityDescriptorAccess();
+
+	default EntityInitializer findFirstEntityInitializer() {
+		final EntityInitializer entityInitializer = this.asEntityInitializer();
+		if ( entityInitializer != null ) {
+			return entityInitializer;
+		}
+		return findFirstEntityDescriptorAccess().asEntityInitializer();
+	}
 
 	Object getParentKey();
 

@@ -48,8 +48,8 @@ public class InsertOrderingReferenceDifferentSubclassTest extends BaseInsertOrde
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into SubclassB (name, referenceA_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into SubclassA (name, referenceB_id, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into SubclassB (name,referenceA_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into SubclassA (name,referenceB_id,id) values (?,?,?)", 2 )
 		);
 	}
 

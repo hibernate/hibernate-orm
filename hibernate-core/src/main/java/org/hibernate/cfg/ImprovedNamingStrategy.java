@@ -18,7 +18,10 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @see DefaultNamingStrategy the default strategy
  * @author Gavin King
+ *
+ * @deprecated {@link NamingStrategy} itself has been deprecated
  */
+@Deprecated
 public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 
 	/**
@@ -85,10 +88,15 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 	 * Return the property name or propertyTableName
 	 */
 	public String foreignKeyColumnName(
-			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
+			String propertyName,
+			String propertyEntityName,
+			String propertyTableName,
+			String referencedColumnName
 	) {
 		String header = propertyName != null ? StringHelper.unqualify( propertyName ) : propertyTableName;
-		if (header == null) throw new AssertionFailure("NamingStrategy not properly filled");
+		if (header == null) {
+			throw new AssertionFailure("NamingStrategy not properly filled");
+		}
 		return columnName( header ); //+ "_" + referencedColumnName not used for backward compatibility
 	}
 

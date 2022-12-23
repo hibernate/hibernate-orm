@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @TestForIssue(jiraKey = "HHH-12939")
 @RequiresDialect(value = H2Dialect.class)
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2)
+@RequiresDialect(value = PostgreSQLDialect.class)
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
@@ -112,6 +112,7 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 			metadataSources.addAnnotatedClass( MyEntity.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()
@@ -154,6 +155,7 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 			metadataSources.addAnnotatedClass( MyEntityUpdated.class );
 
 			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

@@ -69,7 +69,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	@Override
 	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
-		return new NoCachingTransactionSynchronizationImpl( this );
+		return NoCachingTransactionSynchronizationImpl.INSTANCE;
 	}
 
 	@Override

@@ -189,14 +189,14 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			if ( attributeMapping instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
@@ -208,14 +208,13 @@ public abstract class AbstractCompositeIdentifierMapping
 				);
 				span += fkDescriptor.forEachJdbcValue(
 						identifier,
-						clause,
 						span + offset,
 						valuesConsumer,
 						session
 				);
 			}
 			else {
-				span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+				span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
 			}
 		}
 		return span;
@@ -233,21 +232,11 @@ public abstract class AbstractCompositeIdentifierMapping
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-							.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey(
-											tableReference,
-											selection.getSelectionExpression()
-									),
-									sqlAstProcessingState -> new ColumnReference(
-											tableReference.getIdentificationVariable(),
-											selection,
-											sqlAstCreationState.getCreationContext().getSessionFactory()
-									)
-							);
+							.resolveSqlExpression( tableReference, selection );
 
 					columnReferences.add( (ColumnReference) columnReference );
 				}
@@ -297,6 +286,11 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	protected EntityMappingType getEntityMapping() {
 		return entityMapping;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 }

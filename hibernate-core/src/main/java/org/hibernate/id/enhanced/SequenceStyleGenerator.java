@@ -44,9 +44,9 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
- * <p/>
- * General configuration parameters:
+ * <p>
  * <table>
+ * <caption>General configuration parameters</caption>
  * 	 <tr>
  *     <td><b>NAME</b></td>
  *     <td><b>DEFAULT</b></td>
@@ -78,9 +78,10 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  * </table>
- * <p/>
+ * <p>
  * Configuration parameters used specifically when the underlying structure is a table:
  * <table>
+ * <caption>Table configuration parameters</caption>
  * 	 <tr>
  *     <td><b>NAME</b></td>
  *     <td><b>DEFAULT</b></td>
@@ -180,21 +181,21 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
-		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
+		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, parameters, false );
 
-		final QualifiedName sequenceName = determineSequenceName( params, dialect, jdbcEnvironment, serviceRegistry );
+		final QualifiedName sequenceName = determineSequenceName(parameters, dialect, jdbcEnvironment, serviceRegistry );
 
-		final int initialValue = determineInitialValue( params );
-		int incrementSize = determineIncrementSize( params );
+		final int initialValue = determineInitialValue(parameters);
+		int incrementSize = determineIncrementSize(parameters);
 
-		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
+		final String optimizationStrategy = determineOptimizationStrategy(parameters, incrementSize );
 
 		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
 
@@ -242,7 +243,7 @@ public class SequenceStyleGenerator
 
 		this.databaseStructure = buildDatabaseStructure(
 				type,
-				params,
+				parameters,
 				jdbcEnvironment,
 				forceTableUse,
 				sequenceName,
@@ -253,7 +254,7 @@ public class SequenceStyleGenerator
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
+				ConfigurationHelper.getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		this.databaseStructure.configure( optimizer );
 	}
@@ -271,7 +272,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the name of the sequence (or table if this resolves to a physical table)
 	 * to use.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -353,7 +354,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the name of the column used to store the generator value in
 	 * the db.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
 	 *
@@ -370,7 +371,7 @@ public class SequenceStyleGenerator
 	 * Determine the initial sequence value to use.  This value is used when
 	 * initializing the {@link #getDatabaseStructure() database structure}
 	 * (i.e. sequence/table).
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -383,7 +384,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the increment size to be applied.  The exact implications of
 	 * this value depends on the {@linkplain #getOptimizer() optimizer} being used.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -395,7 +396,7 @@ public class SequenceStyleGenerator
 
 	/**
 	 * Determine the optimizer to use.
-	 * <p/>
+	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -546,7 +547,8 @@ public class SequenceStyleGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
-		return context.getDialect().getSequenceSupport().getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
+		return context.getDialect().getSequenceSupport()
+				.getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
 	}
 
 	/**

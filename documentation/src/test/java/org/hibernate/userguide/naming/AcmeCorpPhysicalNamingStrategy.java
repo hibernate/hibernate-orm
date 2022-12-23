@@ -22,9 +22,9 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * An example PhysicalNamingStrategy that implements database object naming standards
  * for our fictitious company Acme Corp.
- * <p/>
+ * <p>
  * In general Acme Corp prefers underscore-delimited words rather than camel casing.
- * <p/>
+ * <p>
  * Additionally standards call for the replacement of certain words with abbreviations.
  *
  * @author Steve Ebersole

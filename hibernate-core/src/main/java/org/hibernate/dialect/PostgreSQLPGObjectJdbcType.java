@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -30,14 +32,15 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PostgreSQLPGObjectJdbcType.class );
 	private static final Constructor<Object> PG_OBJECT_CONSTRUCTOR;
 	private static final Method TYPE_SETTER;
 	private static final Method VALUE_SETTER;
 
 	static {
-		Constructor<Object> constructor;
-		Method typeSetter;
-		Method valueSetter;
+		Constructor<Object> constructor = null;
+		Method typeSetter = null;
+		Method valueSetter = null;
 		try {
 			final Class<?> pgObjectClass = ReflectHelper.classForName(
 					"org.postgresql.util.PGobject",
@@ -49,7 +52,7 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 			valueSetter = ReflectHelper.setterMethodOrNull( pgObjectClass, "value", String.class );
 		}
 		catch (Exception e) {
-			throw new RuntimeException( "Could not initialize PostgreSQLPGObjectJdbcType", e );
+			LOG.warn( "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used!", e );
 		}
 		PG_OBJECT_CONSTRUCTOR = constructor;
 		TYPE_SETTER = typeSetter;
@@ -64,6 +67,10 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 		this.sqlTypeCode = sqlTypeCode;
 	}
 
+	public static boolean isUsable() {
+		return PG_OBJECT_CONSTRUCTOR != null;
+	}
+
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.OTHER;
@@ -74,7 +81,11 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 		return sqlTypeCode;
 	}
 
-	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
+	public String getTypeName() {
+		return typeName;
+	}
+
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		return javaType.wrap( string, options );
 	}
 
@@ -136,26 +147,26 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getObject( rs.getString( paramIndex ), options );
+				return getObject( rs.getObject( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getObject( statement.getString( index ), options );
+				return getObject( statement.getObject( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getObject( statement.getString( name ), options );
+				return getObject( statement.getObject( name ), options );
 			}
 
-			private X getObject(String string, WrapperOptions options) throws SQLException {
-				if ( string == null ) {
+			private X getObject(Object object, WrapperOptions options) throws SQLException {
+				if ( object == null ) {
 					return null;
 				}
 				return ( (PostgreSQLPGObjectJdbcType) getJdbcType() ).fromString(
-						string,
+						object.toString(),
 						getJavaType(),
 						options
 				);

@@ -31,10 +31,10 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -71,7 +71,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
  * This dialect was developed for use with Hibernate 3.0.5. Other versions may
  * require modifications to the dialect.
- * <p/>
+ * <p>
  * Version History:
  * Also change the version displayed below in the constructor
  * 1.1
@@ -153,8 +153,14 @@ public class RDMSOS2200Dialect extends Dialect {
 				return "blob($l)";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return columnType( TIMESTAMP );
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
+	}
+
+	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
 	}
 
 	@Override
@@ -212,7 +218,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.rand();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.soundex();
 		functionFactory.trim2();
 		functionFactory.space();
@@ -311,7 +317,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	/**
 	 * RDMS does not support qualifing index names with the schema name.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -320,7 +326,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	/**
-	 * <TT>FOR UPDATE</TT> only supported for cursors
+	 * {@code FOR UPDATE} only supported for cursors
 	 *
 	 * @return the empty string
 	 */
@@ -335,7 +341,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	/**
 	 * RDMS does not support Cascade Deletes.
 	 * Need to review this in the future when support is provided.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -346,7 +352,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	/**
 	 * Currently, RDMS-JDBC does not support ForUpdate.
 	 * Need to review this in the future when support is provided.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

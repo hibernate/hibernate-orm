@@ -16,7 +16,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import java.util.Objects;
 
 /**
- * A simple-point association (ie. a reference to another entity).
+ * A mapping model object representing an association where the target side has cardinality one.
+ *
  * @author Gavin King
  */
 public abstract class ToOne extends SimpleValue implements Fetchable, SortableValue {
@@ -26,9 +27,9 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	private String propertyName;
 	private boolean lazy = true;
 	private boolean sorted;
-	protected boolean unwrapProxy;
-	protected boolean isUnwrapProxyImplicit;
-	protected boolean referenceToPrimaryKey = true;
+	private boolean unwrapProxy;
+	private boolean unwrapProxyImplicit;
+	private boolean referenceToPrimaryKey = true;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -43,7 +44,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		this.lazy = original.lazy;
 		this.sorted = original.sorted;
 		this.unwrapProxy = original.unwrapProxy;
-		this.isUnwrapProxyImplicit = original.isUnwrapProxyImplicit;
+		this.unwrapProxyImplicit = original.unwrapProxyImplicit;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
@@ -68,7 +69,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	}
 
 	public void setReferencedEntityName(String referencedEntityName) {
-		this.referencedEntityName = referencedEntityName==null ? 
+		this.referencedEntityName = referencedEntityName==null ?
 				null : referencedEntityName.intern();
 	}
 
@@ -134,7 +135,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	}
 
 	public boolean isUnwrapProxyImplicit() {
-		return isUnwrapProxyImplicit;
+		return unwrapProxyImplicit;
 	}
 
 	/**
@@ -142,7 +143,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	 * for reference later
 	 */
 	public void setUnwrapProxyImplicit(boolean unwrapProxyImplicit) {
-		isUnwrapProxyImplicit = unwrapProxyImplicit;
+		this.unwrapProxyImplicit = unwrapProxyImplicit;
 	}
 
 	public boolean isReferenceToPrimaryKey() {
@@ -165,6 +166,9 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	@Override
 	public int[] sortProperties() {
 		final PersistentClass entityBinding = getMetadata().getEntityBinding( getReferencedEntityName() );
+		if ( entityBinding == null ) {
+			return null;
+		}
 		final Value value;
 		if ( getReferencedPropertyName() == null ) {
 			value = entityBinding.getIdentifier();

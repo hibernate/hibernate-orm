@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.sql.Types;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,14 +15,11 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -33,7 +31,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Nathan Xu
  */
-public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMapping {
+public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	private final String rowIdName;
 	private final EntityMappingType declaringType;
 	private final String tableExpression;
@@ -44,7 +42,8 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
 		this.rowIdType = declaringType.getEntityPersister().getFactory().getTypeConfiguration()
-				.getBasicTypeForJavaType( Object.class );
+				.getBasicTypeRegistry()
+				.resolve( Object.class, Types.ROWID );
 	}
 
 	@Override
@@ -78,6 +77,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -89,31 +93,16 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 		final TableReference columnTableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnTableReference, rowIdName ),
-						sqlAstProcessingState -> new ColumnReference(
-								columnTableReference,
-								rowIdName,
-								false,
-								// todo (6.0) : allowing custom read / write transformers on ROW_ID might
-								//		be an easy way to allow customization of the how ROW_ID is rendered
-								//		- e.g. quickly testing whether that syntax works for a db without
-								//			having to write a Dialect
-								null,
-								null,
-								rowIdType,
-								sqlAstCreationState.getCreationContext().getSessionFactory()
-						)
-				),
-				rowIdType.getJavaTypeDescriptor(),
+				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
+				rowIdType.getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
-		return new BasicResult(
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				rowIdType.getJavaTypeDescriptor(),
+				rowIdType,
 				navigablePath
 		);
 	}
@@ -131,11 +120,10 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return rowIdType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return rowIdType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
@@ -174,7 +162,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public String getCustomReadExpression() {
-		return rowIdName;
+		return null;
 	}
 
 	@Override
@@ -204,7 +192,27 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public boolean isFormula() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return false;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
 	}
 
 	@Override

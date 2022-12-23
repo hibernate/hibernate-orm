@@ -14,23 +14,21 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.StringHelper;
 
 /**
- * A relational constraint.
+ * A mapping model object representing a constraint on a relational database table.
  *
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements RelationalModel, Exportable, Serializable {
+public abstract class Constraint implements Exportable, Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
@@ -55,17 +53,15 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public static String generateName(String prefix, Table table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
-
+		final StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		final Column[] alphabeticalColumns = columns.clone();
+		Arrays.sort( alphabeticalColumns, Comparator.comparing( Column::getName ) );
 		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
+			final String columnName = column == null ? "" : column.getName();
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );
@@ -77,17 +73,14 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		//N.B. legacy APIs are involved: can't trust that the columns List is actually
-		//containing Column instances - the generic type isn't consistently enforced.
-		ArrayList<Column> defensive = new ArrayList<>( columns.size() );
-		for ( Object o : columns ) {
-			if ( o instanceof Column ) {
-				defensive.add( (Column) o );
-			}
-			// else: others might be Formula instances.
-			// They don't need to be part of the name generation.
-		}
-		return generateName( prefix, table, defensive.toArray( new Column[0] ) );
+		// N.B. legacy APIs are involved: can't trust that the columns List is actually
+		// containing Column instances - the generic type isn't consistently enforced.
+		// So some elements might be Formula instances, but they don't need to be part
+		// of the name generation.
+		final Column[] defensive = columns.stream()
+				.filter( (Object thing) -> thing instanceof Column )
+				.toArray( Column[]::new );
+		return generateName( prefix, table, defensive);
 	}
 
 	/**
@@ -96,32 +89,23 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
 	 *
-	 * @param s
-	 *            The name to be hashed.
+	 * @param name The name to be hashed.
 	 * @return String The hashed name.
 	 */
-	public static String hashedName(String s) {
+	public static String hashedName(String name) {
 		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
+			final MessageDigest md = MessageDigest.getInstance( "MD5" );
 			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
+			md.update( name.getBytes() );
+			final byte[] digest = md.digest();
+			final BigInteger bigInt = new BigInteger( 1, digest );
 			// By converting to base 35 (full alphanumeric), we guarantee
 			// that the length of the name will always be smaller than the 30
 			// character identifier restriction enforced by a few dialects.
 			return bigInt.toString( 35 );
 		}
 		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
-		}
-	}
-
-	private static class ColumnComparator implements Comparator<Column> {
-		public static ColumnComparator INSTANCE = new ColumnComparator();
-
-		public int compare(Column col1, Column col2) {
-			return col1.getName().compareTo( col2.getName() );
+			throw new HibernateException( "Unable to generate a hashed Constraint name", e );
 		}
 	}
 
@@ -134,7 +118,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public void addColumns(Value value) {
 		for ( Selectable selectable : value.getSelectables() ) {
 			if ( selectable.isFormula() ) {
-				throw new MappingException( "constraint involves a formula: " + this.name );
+				throw new MappingException( "constraint involves a formula: " + name );
 			}
 			else {
 				addColumn( (Column) selectable );
@@ -154,12 +138,12 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	}
 
 	public Column getColumn(int i) {
-		return  columns.get( i );
+		return columns.get( i );
 	}
 
 	@Deprecated(since = "6.0")
 	public Iterator<Column> getColumnIterator() {
-		return columns.iterator();
+		return getColumns().iterator();
 	}
 
 	public Table getTable() {
@@ -174,45 +158,14 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context,
-			String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		if ( isGenerated( dialect ) ) {
-			final String tableName = getTable().getQualifiedName( context );
-			return String.format(
-					Locale.ROOT,
-					"%s evictData constraint %s",
-					dialect.getAlterTableString( tableName ),
-					dialect.quote( getName() )
-			);
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
-	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
-			String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		if ( isGenerated( dialect ) ) {
-			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
-			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
-			// empty string.  Prevent blank "alter table" statements.
-			String constraintString = sqlConstraintString( context, getName(), defaultCatalog, defaultSchema );
-			if ( !StringHelper.isEmpty( constraintString ) ) {
-				final String tableName = getTable().getQualifiedName( context );
-				return dialect.getAlterTableString( tableName ) + " " + constraintString;
-			}
-		}
-		return null;
-	}
-
 	public List<Column> getColumns() {
 		return columns;
 	}
 
+	/**
+	 * @deprecated this method is no longer called
+	 */
+	@Deprecated(since="6.2") @Remove
 	public abstract String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -220,7 +173,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			String defaultSchema);
 
 	public String toString() {
-		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
+		return getClass().getSimpleName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
 
 	/**

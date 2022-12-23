@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * For watching a multiple message-keys, see {@link LoggingInspections}
  */
 @Inherited
-@Target({ ElementType.TYPE, ElementType.ANNOTATION_TYPE, ElementType.METHOD })
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 
 @ExtendWith( MessageKeyInspectionExtension.class )

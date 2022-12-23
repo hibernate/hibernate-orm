@@ -9,14 +9,14 @@ package org.hibernate.dialect.lock;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * An optimistic locking strategy that verifies that the version hasn't changed (prior to transaction commit).
- * <p/>
- * This strategy is valid for LockMode.OPTIMISTIC
+ * An optimistic locking strategy that simply verifies that the
+ * version has not changed, just before committing the transaction.
+ * <p>
+ * This strategy is valid for {@link LockMode#OPTIMISTIC}.
  *
  * @author Scott Marlow
  * @since 3.5
@@ -40,12 +40,12 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new OptimisticEntityLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
-		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
+		session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

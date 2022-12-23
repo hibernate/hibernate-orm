@@ -146,6 +146,41 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		this.fromClause = fromClause;
 	}
 
+	public boolean producesUniqueResults() {
+		if ( fromClause.getRoots().size() != 1 ) {
+			return false;
+		}
+		final SqmRoot<?> sqmRoot = fromClause.getRoots().get( 0 );
+		if ( selectClause != null ) {
+			final List<SqmSelection<?>> selections = selectClause.getSelections();
+			if ( selections.size() != 1 || selections.get( 0 ).getSelectableNode() != sqmRoot ) {
+				// If we select anything but the query root, let's be pessimistic about unique results
+				return false;
+			}
+		}
+		final List<SqmFrom<?, ?>> fromNodes = new ArrayList<>( sqmRoot.getSqmJoins().size() + 1 );
+		fromNodes.add( sqmRoot );
+		while ( !fromNodes.isEmpty() ) {
+			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
+			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+					if ( join.getAttribute().isCollection() ) {
+						// Collections joins always alter cardinality
+						return false;
+					}
+				}
+				else {
+					// For now, consider all non-attribute joins as cardinality altering
+					return false;
+				}
+				fromNodes.add( sqmJoin );
+			}
+			fromNodes.addAll( fromNode.getSqmTreats() );
+		}
+		return true;
+	}
+
 	public boolean containsCollectionFetches() {
 		final List<SqmFrom<?, ?>> fromNodes = new ArrayList<>( fromClause.getRoots() );
 		while ( !fromNodes.isEmpty() ) {
@@ -159,6 +194,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				}
 				fromNodes.add( sqmJoin );
 			}
+			fromNodes.addAll( fromNode.getSqmTreats() );
 		}
 		return false;
 	}
@@ -318,15 +354,23 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Predicate... restrictions) {
-		SqmWhereClause whereClause = getWhereClause();
-		if ( whereClause == null ) {
-			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+		if ( restrictions == null ) {
+			throw new IllegalArgumentException( "The predicate array cannot be null" );
+		}
+		else if ( restrictions.length == 0 ) {
+			setWhereClause( null );
 		}
 		else {
-			whereClause.setPredicate( null );
-		}
-		for ( Predicate restriction : restrictions ) {
-			whereClause.applyPredicate( (SqmPredicate) restriction );
+			SqmWhereClause whereClause = getWhereClause();
+			if ( whereClause == null ) {
+				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+			}
+			else {
+				whereClause.setPredicate( null );
+			}
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
 		}
 		return this;
 	}
@@ -596,7 +640,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				sb.append( sqmFrom.resolveAlias() ).append( '.' );
-				sb.append( (attributeJoin).getAttribute().getName() );
+				sb.append( ( attributeJoin ).getAttribute().getName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( attributeJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
@@ -611,7 +655,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
 				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
-				sb.append( (sqmEntityJoin).getEntityName() );
+				sb.append( ( sqmEntityJoin ).getEntityName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );

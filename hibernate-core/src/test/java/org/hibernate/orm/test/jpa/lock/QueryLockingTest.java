@@ -115,12 +115,26 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 		NativeQuery query = em.createNativeQuery( "select * from lockable l" ).unwrap( NativeQuery.class );
 
-		// the spec disallows calling setLockMode in a native SQL query
+		// the spec disallows calling setLockMode() and getLockMode()
+		// on a native SQL query and requires that an IllegalStateException
+		// be thrown
 		try {
 			query.setLockMode( LockModeType.READ );
 			fail( "Should have failed" );
 		}
 		catch (IllegalStateException expected) {
+		}
+		catch (Exception e) {
+			fail( "Should have thrown IllegalStateException but threw " + e.getClass().getName() );
+		}
+		try {
+			query.getLockMode();
+			fail( "Should have failed" );
+		}
+		catch (IllegalStateException expected) {
+		}
+		catch (Exception e) {
+			fail( "Should have thrown IllegalStateException but threw " + e.getClass().getName() );
 		}
 
 		// however, we should be able to set it using hints

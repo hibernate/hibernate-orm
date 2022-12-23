@@ -11,6 +11,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -49,6 +50,7 @@ public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCa
 		private String name;
 
 		@Type(org.hibernate.userguide.mapping.basic.GenderType.class)
+		@Column(length = 6)
 		public Gender gender;
 
 		//Getters and setters are omitted for brevity

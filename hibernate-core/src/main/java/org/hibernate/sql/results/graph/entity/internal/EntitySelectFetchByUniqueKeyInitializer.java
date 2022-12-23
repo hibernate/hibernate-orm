@@ -70,7 +70,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 					.findInitializer( euk );
 			if ( initializer == null ) {
 				final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
-				jdbcValuesSourceProcessingState.registerInitilaizer( euk, this );
+				jdbcValuesSourceProcessingState.registerInitializer( euk, this );
 
 				entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
 						uniqueKeyPropertyName,

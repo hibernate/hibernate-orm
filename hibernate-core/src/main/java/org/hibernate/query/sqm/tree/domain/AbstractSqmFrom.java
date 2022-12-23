@@ -24,7 +24,12 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.criteria.JpaCrossJoin;
+import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaJoinedFrom;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -592,12 +597,43 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join;
 	}
 
+	@Override
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte) {
+		return join( cte, SqmJoinType.INNER, null );
+	}
+
+	@Override
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
+		return join( cte, joinType, null );
+	}
+
+	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
+		validateComplianceFromSubQuery();
+		final JpaJoinedFrom<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
+	}
+
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
 		}
+	}
+
+	@Override
+	public <X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType) {
+		return crossJoin( nodeBuilder().getDomainModel().entity( entityJavaType ) );
+	}
+
+	@Override
+	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
+		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
+		// noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
+		return crossJoin;
 	}
 
 	@Override

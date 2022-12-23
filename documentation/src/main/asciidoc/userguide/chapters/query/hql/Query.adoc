@@ -18,7 +18,7 @@ HQL is not the only way to write queries in Hibernate:
 
 However, HQL is the most convenient option for most people most of the time.
 
-The actual query language itself is discussed the <<chapters/query/criteria/QueryLanguage.adoc#query-language,next chapter>>.
+The actual query language itself is discussed the <<chapters/query/hql/QueryLanguage.adoc#query-language,next chapter>>.
 This chapter describes the Java APIs for executing HQL and JPQL queries.
 
 Most of this chapter is dedicated to discussing `org.hibernate.query.Query`, `jakarta.persistence.Query` and

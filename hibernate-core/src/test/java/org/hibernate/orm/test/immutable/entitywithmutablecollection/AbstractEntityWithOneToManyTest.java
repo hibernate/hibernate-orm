@@ -1065,46 +1065,45 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		clearCounts(sessionFactory);
 
-		Contract cOrig = new Contract( null, "gail", "phone" );
-		Party partyOrig = new Party( "party" );
-		cOrig.addParty( partyOrig );
-
-		scope.inTransaction(
-				s -> s.persist( cOrig )
-		);
+		// Create a Contract with one Party
+		final Contract originalContract = new Contract( null, "gail", "phone" );
+		final Party originalParty = new Party( "party" );
+		originalContract.addParty( originalParty );
+		scope.inTransaction( (session) -> session.persist( originalContract ) );
 
 		assertInsertCount( 2 , sessionFactory);
 		assertUpdateCount( 0, sessionFactory );
 		clearCounts(sessionFactory);
 
-		scope.inTransaction(
-				s -> {
-					Contract c = s.get( Contract.class, cOrig.getId() );
-					Party newParty = new Party( "new party" );
-					c.addParty( newParty );
-				}
-		);
+		// Load the Contract created above and add a new Party
+		//		- this should trigger a version increment, if `isContractVersioned`
+		scope.inTransaction( (session) -> {
+			final Contract loadedContract = session.get( Contract.class, originalContract.getId() );
+			Party newParty = new Party( "new party" );
+			loadedContract.addParty( newParty );
+		} );
 
 		assertInsertCount( 1, sessionFactory );
 		assertUpdateCount( isContractVersioned ? 1 : 0 , sessionFactory);
 		clearCounts(sessionFactory);
 
-		scope.inSession(
-				s -> {
-					cOrig.removeParty( partyOrig );
-					try {
-						s.merge( cOrig );
-						assertFalse( isContractVersioned );
-					}
-					catch (PersistenceException ex) {
-						assertTyping( StaleObjectStateException.class, ex.getCause() );
-						assertTrue( isContractVersioned );
-					}
-					finally {
-						s.getTransaction().rollback();
-					}
-				}
-		);
+		// Using the now stale `originalContract` reference, remove the
+		// first Party.  If `isContractVersioned`, this should trigger
+		// a staleness exception
+		scope.inSession( (session) -> {
+			originalContract.removeParty( originalParty );
+			try {
+				session.merge( originalContract );
+				assertFalse( isContractVersioned );
+			}
+			catch (PersistenceException ex) {
+				assertTyping( StaleObjectStateException.class, ex.getCause() );
+				assertTrue( isContractVersioned );
+			}
+			finally {
+				session.getTransaction().rollback();
+			}
+		} );
 
 
 		scope.inTransaction(

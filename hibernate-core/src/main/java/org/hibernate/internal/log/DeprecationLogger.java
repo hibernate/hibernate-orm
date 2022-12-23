@@ -255,4 +255,15 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void logDeprecatedHbmXmlProcessing(SourceType sourceType, String name);
 
+	/**
+	 * Different from {@link #deprecatedSetting} in that sometimes there is no
+	 * direct alternative
+	 */
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000029,
+			value = "The [%s] configuration is deprecated and will be removed. Set the value to [%s] to get rid of this warning"
+	)
+	void deprecatedSettingForRemoval(String settingName, String defaultValue);
+
 }

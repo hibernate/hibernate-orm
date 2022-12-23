@@ -6,16 +6,18 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.util.Collection;
+
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 
 @Embeddable
 public class InternetFavorites {
 
-	@Embedded
+	@ElementCollection
 	Collection<URLFavorite> links;
 
-	@Embedded
+	@ElementCollection
 	Collection<String> ideas;
 
 	public Collection<String> getIdeas() {

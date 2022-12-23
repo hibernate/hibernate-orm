@@ -135,4 +135,16 @@ public interface ScrollableResults<R> extends AutoCloseable, Closeable {
 	 * @return true if there is a row at that row number
 	 */
 	boolean setRowNumber(int rowNumber);
+
+	/**
+	 * Gives the JDBC driver a hint as to the number of rows that
+	 * should be fetched from the database when more rows are needed.
+	 * If {@code 0}, the JDBC driver's default setting will be used.
+	 *
+	 * @see java.sql.ResultSet#setFetchSize(int)
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
+	 *
+	 * @since 6.1.2
+	 */
+	void setFetchSize(int fetchSize);
 }

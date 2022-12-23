@@ -7,60 +7,96 @@
 package org.hibernate.tool.schema;
 
 /**
- * The allowable actions in terms of schema tooling.  Covers the unified JPA and HBM2DDL
- * cases.
+ * Enumerates the actions that may be performed by the
+ * {@linkplain org.hibernate.tool.schema.spi.SchemaManagementTool schema management tooling}.
+ * Covers the actions defined by JPA, those defined by Hibernate's legacy HBM2DDL tool, and
+ * several useful actions supported by Hibernate which are not covered by the JPA specification.
+ * <ul>
+ * <li>An action to be executed against the database may be specified using the configuration
+ *     property {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+ *     or using the property {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}.
+ * <li>An action to be written to a script may be specified using the configuration property
+ *     {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public enum Action {
 	/**
-	 * No action will be performed.  Valid in JPA; compatible with Hibernate's
-	 * hbm2ddl action of the same name.
+	 * No action.
+	 * <p>
+	 * Valid in JPA; compatible with Hibernate's HBM2DDL action of the same name.
 	 */
 	NONE( "none" ),
 	/**
-	 * Database creation will be generated.  This is an action introduced by JPA.  Hibernate's
-	 * legacy hbm2ddl had no such action - its "create" action is actually equivalent to {@link #CREATE}
-	 * <p/>
-	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaCreator}
+	 * Create the schema.
+	 * <p>
+	 * This is an action introduced by JPA; Hibernate's legacy HBM2DDL had no such
+	 * action. Its "create" action was actually equivalent to {@link #CREATE}.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
 	CREATE_ONLY( "create", "create-only" ),
 	/**
-	 * Database dropping will be generated.
-	 * <p/>
-	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaDropper}
+	 * Drop the schema.
+	 * <p>
+	 * Valid in JPA; compatible with Hibernate's HBM2DDL action of the same name.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 */
 	DROP( "drop" ),
 	/**
-	 * Database dropping will be generated followed by database creation.
-	 * <p/>
-	 * Corresponds to a call to {@link org.hibernate.tool.schema.spi.SchemaDropper}
-	 * followed immediately by a call to {@link org.hibernate.tool.schema.spi.SchemaCreator}
+	 * Drop and then recreate the schema.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaDropper
+	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
 	CREATE( "drop-and-create", "create" ),
 	/**
-	 * Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the
-	 * schema on SessionFactory shutdown.
-	 * <p/>
-	 * Has no corresponding call to a SchemaManagementTool delegate.  It is equivalent to a
-	 *
-	 * <p/>
-	 * While this is a valid option for auto schema tooling, it is not a valid action to pass to
-	 * SchemaManagementTool; instead it would be expected that the caller to SchemaManagementTool
-	 * would split this into 2 separate requests for:<ol>
-	 *     <li>{@link #CREATE}</li>
-	 *     <li>{@link #DROP}</li>
+	 * Drop the schema and then recreate it on {@code SessionFactory} startup.
+	 * Additionally, drop the schema on {@code SessionFactory} shutdown.
+	 * <p>
+	 * This action is not defined by JPA.
+	 * <p>
+	 * While this is a valid option for auto schema tooling, it's not a
+	 * valid action for the {@code SchemaManagementTool}; instead the
+	 * caller of {@code SchemaManagementTool} must split this into two
+	 * separate requests to:
+	 * <ol>
+	 *     <li>{@linkplain #CREATE drop and create} the schema, and then</li>
+	 *     <li>later, {@linkplain #DROP drop} the schema again.</li>
 	 * </ol>
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaDropper
+	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
 	CREATE_DROP( null, "create-drop" ),
 	/**
-	 * "validate" (Hibernate only) - validate the database schema
+	 * Validate the database schema.
+	 * <p>
+	 * This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaValidator
 	 */
 	VALIDATE( null, "validate" ),
 	/**
-	 * "update" (Hibernate only) - update (alter) the database schema
+	 * Update (alter) the database schema.
+	 * <p>
+	 * This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaMigrator
 	 */
-	UPDATE( null, "update" );
+	UPDATE( null, "update" ),
+	/**
+	 * Truncate the tables in the schema.
+	 * <p>
+	 * This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaTruncator
+	 *
+	 * @since 6.2
+	 */
+	TRUNCATE( null, null);
 
 	private final String externalJpaName;
 	private final String externalHbm2ddlName;
@@ -89,8 +125,8 @@ public enum Action {
 
 	/**
 	 * Used when processing JPA configuration to interpret the user config values.  Generally
-	 * this will be a value specified by {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_DATABASE_ACTION}
-	 * or {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_SCRIPTS_ACTION}
+	 * this will be a value specified by {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}
 	 *
 	 * @param value The encountered config value
 	 *

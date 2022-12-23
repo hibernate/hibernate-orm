@@ -203,19 +203,19 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	protected void releaseDataAccess(EntityDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}
 
 	protected void releaseDataAccess(NaturalIdDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}
 
 	protected void releaseDataAccess(CollectionDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}

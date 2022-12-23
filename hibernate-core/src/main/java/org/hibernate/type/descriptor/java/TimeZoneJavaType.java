@@ -59,4 +59,5 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		}
 		throw unknownWrap( value.getClass() );
 	}
+
 }

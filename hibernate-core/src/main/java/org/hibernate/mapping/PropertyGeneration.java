@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+import org.hibernate.Remove;
+
 import java.io.Serializable;
 
 /**
@@ -13,9 +15,10 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  *
- * @deprecated This is replaced by {@link org.hibernate.tuple.ValueGeneration} and {@link org.hibernate.tuple.GenerationTiming}
+ * @deprecated This is replaced by {@link org.hibernate.tuple.ValueGeneration} and
+ *             {@link org.hibernate.tuple.GenerationTiming}, and is no longer used
  */
-@Deprecated
+@Deprecated @Remove
 public class PropertyGeneration implements Serializable {
 
 	/**
@@ -58,6 +61,6 @@ public class PropertyGeneration implements Serializable {
 	}
 	
 	public String toString() {
-		return getClass().getName() + "(" + getName() + ")";
+		return getClass().getSimpleName() + "(" + getName() + ")";
 	}
 }

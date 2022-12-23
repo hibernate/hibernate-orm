@@ -40,16 +40,16 @@ sourceSets.test.resources {
 
 tasks.test {
 
-	enabled = ['pgsql',
-			   'h2',
+	enabled = ['h2',
+			   'pgsql',
 			   'pgsql_ci',
 			   'cockroachdb',
 			   'mariadb',
+			   'mariadb_ci',
+			   'mysql',
 			   'mysql_ci',
-			   'mysql_docker',
-			   'oracle_docker',
+			   'oracle',
 			   'oracle_ci',
-			   'oracle_rds',
 			   'mssql',
 			   'mssql_ci'
 	].contains( project.db )

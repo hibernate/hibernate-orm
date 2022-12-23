@@ -10,8 +10,11 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.CollectionClassification;
 
 /**
- * Defines a (contextual) set of values to use as defaults in the absence of related mapping information.  The
- * context here is conceptually a stack.  The "global" level is configuration settings.
+ * Values to use as defaults in the absence of certain mapping information.
+ *
+ * @implSpec Designed with stacking in mind, such that the defaults can be overridden at
+ * various levels using simple wrapping and delegation.  The "global" level is configuration
+ * settings.
  *
  * @author Steve Ebersole
  * @author Gail Badner

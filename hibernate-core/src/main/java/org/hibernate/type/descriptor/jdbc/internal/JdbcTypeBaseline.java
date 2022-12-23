@@ -32,7 +32,6 @@ import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 
 /**
  * Registers the base {@link JdbcType} instances.
@@ -68,10 +67,12 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );
 		target.addDescriptor( LongVarbinaryJdbcType.INSTANCE );
+		target.addDescriptor( new LongVarbinaryJdbcType(SqlTypes.LONG32VARBINARY) );
 
 		target.addDescriptor( CharJdbcType.INSTANCE );
 		target.addDescriptor( VarcharJdbcType.INSTANCE );
 		target.addDescriptor( LongVarcharJdbcType.INSTANCE );
+		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32VARCHAR) );
 
 		target.addDescriptor( BlobJdbcType.DEFAULT );
 		target.addDescriptor( ClobJdbcType.DEFAULT );
@@ -82,5 +83,6 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
+		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32NVARCHAR) );
 	}
 }

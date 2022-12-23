@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -45,7 +44,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -55,21 +54,19 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class UpdateExecutionDelegate implements TableBasedUpdateHandler.ExecutionDelegate {
-	private final SqmUpdateStatement<?> sqmUpdate;
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable idTable;
 	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
-	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
 	private final Predicate suppliedPredicate;
 
@@ -78,33 +75,27 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public UpdateExecutionDelegate(
-			SqmUpdateStatement<?> sqmUpdate,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable idTable,
 			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup updatingTableGroup,
-			TableReference hierarchyRootTableReference,
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
 			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
-		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
-		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = updatingTableGroup;
 		this.suppliedPredicate = suppliedPredicate;
-		this.paramTypeResolutions = paramTypeResolutions;
 
 		this.sessionFactory = executionContext.getSession().getFactory();
 
@@ -230,8 +221,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
-					tableReference.isOptional(),
-					sessionFactory
+					tableReference.isOptional()
 			);
 		}
 		return (NamedTableReference) tableReference;
@@ -269,8 +259,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
-									selection,
-									sessionFactory
+									selection
 							)
 					);
 				}
@@ -294,7 +283,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildUpdateTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -350,8 +339,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			final NamedTableReference existsTableReference = new NamedTableReference(
 					tableExpression,
 					"dml_",
-					false,
-					sessionFactory
+					false
 			);
 			existsQuerySpec.getFromClause().addRoot(
 					new TableGroupImpl(
@@ -369,8 +357,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 						existsKeyColumnCollector.apply(
 								new ColumnReference(
 										existsTableReference,
-										selection,
-										sessionFactory
+										selection
 								)
 						);
 					}
@@ -412,13 +399,13 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				);
 			}
 
-			final InsertStatement insertSqlAst = new InsertStatement(
+			final InsertSelectStatement insertSqlAst = new InsertSelectStatement(
 					dmlTableReference
 			);
 			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 			insertSqlAst.setSourceSelectStatement( querySpec );
 
-			final JdbcInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
 					.buildInsertTranslator( sessionFactory, insertSqlAst )
 					.translate( jdbcParameterBindings, executionContext.getQueryOptions() );

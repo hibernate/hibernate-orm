@@ -9,10 +9,11 @@ package org.hibernate.cache.spi;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Specialized Region whose data is accessed directly (not requiring key/item wrapping).
+ * Specialized {@link Region} whose data is accessed directly,
+ * without the need for key/item wrapping.
  *
- * Does not define a "remove" operation because Hibernate's query and timestamps caches
- * only ever "get" and "put"
+ * Does not define a "remove" operation because Hibernate's
+ * query and timestamps caches only ever "get" and "put".
  *
  * @author Steve Ebersole
  */

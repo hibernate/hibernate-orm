@@ -257,6 +257,28 @@ public class ExtraLazyTest {
 	}
 
 	@Test
+	public void testExtraLazySet(SessionFactoryScope scope) {
+		User gavin = new User( "gavin", "secret" );
+		Document d1 = new Document( "d1", "blah", gavin );
+		Document d2 = new Document( "d2", "blah blah", gavin );
+		scope.inTransaction(
+				session -> {
+					session.persist( gavin );
+					new Document("d3", "blah blah blah", gavin);
+					assertTrue(gavin.getDocuments().size() == 3);
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					User person = (User) session.get(User.class, gavin.getName());
+					Document d4 = new Document( "d4", "blah blah blah blah", person );
+					assertTrue(person.getDocuments().size() == 4);
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.DoubleQuoteQuoting.class)
 	public void testSQLQuery2(SessionFactoryScope scope) {
 		scope.inTransaction(

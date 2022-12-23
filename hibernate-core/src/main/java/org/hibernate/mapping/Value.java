@@ -17,11 +17,13 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * A value is anything that is persisted by value, instead of by
- * reference. It is essentially a Hibernate {@link Type}, together
- * with zero or more columns. Values are wrapped by things with
- * higher level semantics, for example properties, collections,
- * classes.
+ * A mapping model object which represents something that's persisted "by value",
+ * instead of "by reference", that is, anything with no primary key.
+ * <p>
+ * A {@code Value} is essentially a Hibernate {@link Type}, together with zero or
+ * more {@link Column columns}. In the mapping model, a {@code Value} always comes
+ * wrapped in something with higher-level semantics, for example, a property, a
+ * collection, or a class.
  *
  * @author Gavin King
  */
@@ -81,6 +83,10 @@ public interface Value extends Serializable {
 	boolean isNullable();
 
 	void createForeignKey();
+
+	// called when this is the foreign key of a
+	// @OneToOne with a FK, or a @OneToMany with
+	// a join table
 	void createUniqueKey();
 
 	boolean isSimpleValue();
@@ -101,4 +107,8 @@ public interface Value extends Serializable {
 
 	ServiceRegistry getServiceRegistry();
 	Value copy();
+
+	boolean isColumnInsertable(int index);
+
+	boolean isColumnUpdateable(int index);
 }

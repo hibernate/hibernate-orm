@@ -104,7 +104,7 @@ public class ILikeTest {
 		scope.inTransaction(
 				session -> {
 					Query q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape :esc" )
-							.setParameter("esc", "$");
+							.setParameter("esc", '$');
 					List l = q.getResultList();
 					assertEquals( 2, l.size() );
 				}

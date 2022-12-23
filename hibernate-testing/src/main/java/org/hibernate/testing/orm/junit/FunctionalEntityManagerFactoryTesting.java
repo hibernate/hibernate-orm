@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Chris Cranford
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Inherited
 @TestInstance(TestInstance.Lifecycle.PER_CLASS )
 @ExtendWith(EntityManagerFactoryScopeExtension.class)

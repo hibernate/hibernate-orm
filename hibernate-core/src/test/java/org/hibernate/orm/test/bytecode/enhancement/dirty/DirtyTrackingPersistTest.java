@@ -25,20 +25,17 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.SessionFactoryBuilder;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -46,7 +43,8 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-14360")
 @RunWith(BytecodeEnhancerRunner.class)
-public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+public class DirtyTrackingPersistTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
@@ -54,23 +52,15 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.getStandardServiceRegistryBuilder().addService(
-				SessionFactoryBuilderService.class,
-				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
-					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
-							metadata.getMetadataBuildingOptions().getServiceRegistry(),
-							bootstrapContext
-					);
-					optionsBuilder.enableCollectionInDefaultFetchGroup( true );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
-				}
-		);
+	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
+		super.configureSessionFactoryBuilder( sfb );
+		sfb.applyCollectionsInDefaultFetchGroup( true );
 	}
 
 	@Test
 	public void test() {
+		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+
 		Hentity hentity = new Hentity();
 		HotherEntity hotherEntity = new HotherEntity();
 		hentity.setLineItems( new ArrayList<>( Collections.singletonList( hotherEntity ) ) );

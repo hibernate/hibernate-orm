@@ -22,7 +22,8 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from {@link Class} -> {@link JavaType}
+ * A registry mapping {@link Class Java classes} to implementations
+ * of the {@link JavaType} interface.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero

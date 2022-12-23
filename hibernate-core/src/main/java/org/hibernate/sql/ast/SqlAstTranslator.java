@@ -8,6 +8,7 @@ package org.hibernate.sql.ast;
 
 import java.util.Set;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -19,6 +20,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  * @author Steve Ebersole
  */
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
+
+	SessionFactoryImplementor getSessionFactory();
 
 	/**
 	 * Renders the given SQL AST node with the given rendering mode.
@@ -47,5 +50,4 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	Set<String> getAffectedTableNames();
 
 	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
-
 }

@@ -50,8 +50,8 @@ public class InsertOrderingWithUnidirectionalOneToOne extends BaseInsertOrdering
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Address (person_ID, street, ID) values (?, ?, ?)", 2 ),
-				new Batch( "insert into Person (name, ID) values (?, ?)", 2 )
+				new Batch( "insert into Address (person_ID,street,ID) values (?,?,?)", 2 ),
+				new Batch( "insert into Person (name,ID) values (?,?)", 2 )
 		);
 	}
 

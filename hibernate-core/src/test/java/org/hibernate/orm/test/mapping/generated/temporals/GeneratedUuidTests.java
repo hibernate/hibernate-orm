@@ -11,17 +11,18 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.EnumSet;
 import java.util.UUID;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.tuple.AnnotationValueGeneration;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.ValueGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -65,9 +66,7 @@ public class GeneratedUuidTests {
 		assertThat( merged ).isNotNull();
 
 		// lastly, make sure we can load it..
-		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( GeneratedUuidEntity.class, 1 );
-		} );
+		final GeneratedUuidEntity loaded = scope.fromTransaction( (session) -> session.get( GeneratedUuidEntity.class, 1 ));
 
 		assertThat( loaded ).isNotNull();
 
@@ -86,36 +85,20 @@ public class GeneratedUuidTests {
 	//end::mapping-generated-custom-ex2[]
 
 	//tag::mapping-generated-custom-ex3[]
-	public static class UuidValueGeneration implements AnnotationValueGeneration<GeneratedUuidValue>, ValueGenerator<UUID> {
-		private GenerationTiming timing;
+	public static class UuidValueGeneration implements BeforeExecutionGenerator {
+		private final EnumSet<EventType> eventTypes;
 
-		@Override
-		public void initialize(GeneratedUuidValue annotation, Class<?> propertyType) {
-			timing = annotation.timing();
+		public UuidValueGeneration(GeneratedUuidValue annotation) {
+			eventTypes = annotation.timing().getEquivalent().eventTypes();
 		}
 
 		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
+		public EnumSet<EventType> getEventTypes() {
+			return eventTypes;
 		}
 
 		@Override
-		public ValueGenerator<?> getValueGenerator() {
-			return this;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			return false;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return null;
-		}
-
-		@Override
-		public UUID generateValue(Session session, Object owner) {
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 			return UUID.randomUUID();
 		}
 	}

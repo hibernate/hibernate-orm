@@ -14,7 +14,7 @@ import org.hibernate.Session;
 /**
  * Defines the contract for implementations which know how to scope the notion
  * of a {@link org.hibernate.SessionFactory#getCurrentSession() current session}.
- * <p/>
+ * <p>
  * Implementations should adhere to the following:
  * <ul>
  * <li>contain a constructor accepting a single argument of type
@@ -22,10 +22,10 @@ import org.hibernate.Session;
  * <li>should be thread safe
  * <li>should be fully serializable
  * </ul>
- * <p/>
+ * <p>
  * Implementors should be aware that they are also fully responsible for
  * cleanup of any generated current-sessions.
- * <p/>
+ * <p>
  * Note that there will be exactly one instance of the configured
  * CurrentSessionContext implementation per {@link org.hibernate.SessionFactory}.
  *

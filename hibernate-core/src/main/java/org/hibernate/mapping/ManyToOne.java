@@ -16,7 +16,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A many-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.ManyToOne many-to-one association}.
+ *
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
@@ -75,10 +76,10 @@ public class ManyToOne extends ToOne {
 	}
 
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
-		if (referencedPropertyName!=null) {
+		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key
 			sortProperties();
-			PersistentClass pc = persistentClasses.get(getReferencedEntityName() );
+			PersistentClass pc = persistentClasses.get( getReferencedEntityName() );
 			
 			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
 			
@@ -104,7 +105,7 @@ public class ManyToOne extends ToOne {
 							getForeignKeyDefinition(),
 							new ArrayList<>( property.getColumns() )
 					);
-					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );
+					fk.setOnDeleteAction( getOnDeleteAction() );
 				}
 			}
 		}

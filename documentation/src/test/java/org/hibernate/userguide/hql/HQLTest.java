@@ -24,6 +24,7 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -32,7 +33,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.type.StandardBasicTypes;
@@ -48,10 +48,9 @@ import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -157,7 +156,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test_hql_select_simplest_example() {
-
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			List<Object> objects = session.createQuery(
@@ -202,6 +200,33 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_select_no_from() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
+			//tag::hql-select-no-from[]
+
+			// result type Person, only the Person selected
+			List<Person> persons = session.createQuery(
+				"from Person join phones", Person.class)
+				.getResultList();
+			for (Person person: persons) {
+				//...
+			}
+
+			// result type Object[], both Person and Phone selected
+			List<Object[]> personsWithPhones = session.createQuery(
+				"from Person join phones", Object[].class)
+				.getResultList();
+			for (Object[] personWithPhone: personsWithPhones) {
+				Person p = (Person) personWithPhone[0];
+				Phone ph = (Phone) personWithPhone[1];
+				//...
+			}
+			//end::hql-select-no-from[]
+		});
+	}
+
+	@Test
 	public void hql_update_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-update-example[]
@@ -231,11 +256,11 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-insert-example[]
 			entityManager.createQuery(
-							"insert Person (id, name) " +
-									"values (101L, 'J A Doe III'), " +
-									"(102L, 'J X Doe'), " +
-									"(103L, 'John Doe, Jr')")
-					.executeUpdate();
+				"insert Person (id, name) " +
+				"values (101L, 'J A Doe III'), " +
+				"(102L, 'J X Doe'), " +
+				"(103L, 'John Doe, Jr')")
+			.executeUpdate();
 			//end::hql-insert-example[]
 		});
 	}
@@ -244,8 +269,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void hql_insert_with_sequence_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery(
-							"insert Person (name) values ('Jane Doe2')" )
-					.executeUpdate();
+				"insert Person (name) values ('Jane Doe2')" )
+			.executeUpdate();
 		});
 	}
 
@@ -305,6 +330,23 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Person.class)
 			.getResultList();
 			//end::hql-multiple-same-root-reference-jpql-example[]
+			assertEquals(1, persons.size());
+		});
+	}
+
+	@Test
+	public void test_hql_explicit_root_join_example_1() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-explicit-root-join-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select distinct pr " +
+				"from Person pr " +
+				"join Phone ph on ph.person = pr " +
+				"where ph.type = :phoneType",
+				Person.class)
+			.setParameter("phoneType", PhoneType.MOBILE)
+			.getResultList();
+			//end::hql-explicit-root-join-example[]
 			assertEquals(1, persons.size());
 		});
 	}
@@ -1493,8 +1535,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(DerbyDialect.class)
-	@SkipForDialect(SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "order by not supported in list")
 	public void test_hql_aggregate_functions_within_group_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]
@@ -1511,7 +1554,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-concat-function-example[]
@@ -1530,14 +1573,25 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_substring_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-substring-function-example[]
+
+			// JPQL-style
 			List<String> prefixes = entityManager.createQuery(
 				"select substring(p.number, 1, 2) " +
+				"from Call c " +
+				"join c.phone p",
+				String.class)
+				.getResultList();
+
+			// ANSI SQL-style
+			List<String> prefixes2 = entityManager.createQuery(
+				"select substring(p.number from 1 for 2) " +
 				"from Call c " +
 				"join c.phone p",
 				String.class)
 			.getResultList();
 			//end::hql-substring-function-example[]
 			assertEquals(2, prefixes.size());
+			assertEquals(2, prefixes2.size());
 		});
 	}
 
@@ -1573,12 +1627,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_trim_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-trim-function-example[]
+
+			// trim whitespace from both ends
 			List<String> names1 = entityManager.createQuery(
 				"select trim(p.name) " +
 				"from Person p ",
 				String.class)
 			.getResultList();
 
+			// trim leading spaces
 			List<String> names2 = entityManager.createQuery(
 				"select trim(leading ' ' from p.name) " +
 				"from Person p ",
@@ -1619,6 +1676,20 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_position_function_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-position-function-example[]
+			List<Integer> sizes = entityManager.createQuery(
+				"select position('John' in p.name) " +
+				"from Person p ",
+				Integer.class)
+			.getResultList();
+			//end::hql-position-function-example[]
+			assertEquals(3, sizes.size());
+		});
+	}
+
+	@Test
 	public void test_hql_abs_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-abs-function-example[]
@@ -1647,7 +1718,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/26710")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/26710")
 	public void test_hql_sqrt_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-sqrt-function-example[]
@@ -1662,8 +1733,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(SQLServerDialect.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_current_date_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-date-function-example[]
@@ -1726,7 +1797,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect({MySQLDialect.class, PostgreSQLDialect.class, H2Dialect.class, DerbyDialect.class, OracleDialect.class})
+//	@RequiresDialect({MySQLDialect.class, PostgreSQLDialect.class, H2Dialect.class, DerbyDialect.class, OracleDialect.class})
 	public void test_var_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-native-function-example[]
@@ -1800,7 +1871,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void test_hql_str_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-str-function-example[]
@@ -1937,7 +2008,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-all-example[]
@@ -2021,7 +2092,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
+	@RequiresDialectFeature(DialectChecks.SupportsSubqueryInOnClause.class)
 	public void test_hql_collection_index_operator_example_3() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-index-operator-example[]
@@ -3051,39 +3122,153 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-derived-root-example[]
 			List<Tuple> calls = entityManager.createQuery(
-							"select d.owner, d.payed " +
-									"from (" +
-									"  select p.person as owner, c.payment is not null as payed " +
-									"  from Call c " +
-									"  join c.phone p " +
-									"  where p.number = :phoneNumber) d",
-							Tuple.class)
-					.setParameter("phoneNumber", "123-456-7890")
-					.getResultList();
+				"select d.owner, d.payed " +
+				"from (" +
+				"  select p.person as owner, c.payment is not null as payed " +
+				"  from Call c " +
+				"  join c.phone p " +
+				"  where p.number = :phoneNumber) d",
+				Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
 			//end::hql-derived-root-example[]
 		});
 	}
 
 	@Test
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
-	@RequiresDialectFeature(DialectChecks.SupportsOrderByInCorrelatedSubquery.class)
+	public void test_hql_cte_materialized_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-materialized-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with data as materialized(" +
+									"  select p.person as owner, c.payment is not null as payed " +
+									"  from Call c " +
+									"  join c.phone p " +
+									"  where p.number = :phoneNumber" +
+									")" +
+									"select d.owner, d.payed " +
+									"from data d",
+							Tuple.class)
+					.setParameter("phoneNumber", "123-456-7890")
+					.getResultList();
+			//end::hql-cte-materialized-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									")" +
+									"select d.owner " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_search_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-search-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									") search breadth first by owner set orderAttr " +
+									"select d.owner " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-search-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_cycle_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-cte-recursive-cycle-example[]
+			List<Tuple> calls = entityManager.createQuery(
+							"with paymentConnectedPersons as(" +
+									"  select a.owner owner " +
+									"  from Account a where a.id = :startId " +
+									"  union all" +
+									"  select a2.owner owner " +
+									"  from paymentConnectedPersons d " +
+									"  join Account a on a.owner = d.owner " +
+									"  join a.payments p " +
+									"  join Account a2 on a2.owner = p.person" +
+									") cycle owner set cycleMark " +
+									"select d.owner, d.cycleMark " +
+									"from paymentConnectedPersons d",
+							Tuple.class)
+					.setParameter("startId", 123L)
+					.getResultList();
+			//end::hql-cte-recursive-cycle-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialectFeature({
+			DialectChecks.SupportsSubqueryInOnClause.class,
+			DialectChecks.SupportsOrderByInCorrelatedSubquery.class
+	})
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "The lateral emulation for Oracle 11 would be very complex because nested correlation is unsupported")
 	public void test_hql_derived_join_example() {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-derived-join-example[]
-			List<Tuple> calls = entityManager.createQuery(
-							"select longest.duration " +
-									"from Phone p " +
-									"left join lateral (" +
-									"  select c.duration as duration " +
-									"  from p.calls c" +
-									"  order by c.duration desc" +
-									"  limit 1 " +
-									"  ) longest " +
-									"where p.number = :phoneNumber",
-							Tuple.class)
-					.setParameter("phoneNumber", "123-456-7890")
-					.getResultList();
+			List<Tuple> calls1 = entityManager.createQuery(
+					"from Phone p " +
+					"left join (" +
+					"  select c.duration as duration, c.phone.id as cid" +
+					"  from Call c" +
+					"  order by c.duration desc" +
+					"  limit 1" +
+					"  ) as longest on cid = p.id " +
+					"where p.number = :phoneNumber " +
+					"select longest.duration",
+					Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
+
+			//same, but using 'join lateral' instead of 'on'
+			List<Tuple> calls2 = entityManager.createQuery(
+				"from Phone p " +
+				"left join lateral (" +
+				"  select c.duration as duration" +
+				"  from p.calls c" +
+				"  order by c.duration desc" +
+				"  limit 1" +
+				"  ) as longest " +
+				"where p.number = :phoneNumber " +
+				"select longest.duration",
+				Tuple.class)
+			.setParameter("phoneNumber", "123-456-7890")
+			.getResultList();
 			//end::hql-derived-join-example[]
 		});
 	}

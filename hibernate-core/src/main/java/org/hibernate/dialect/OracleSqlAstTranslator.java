@@ -8,39 +8,42 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
 
@@ -56,6 +59,37 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public void visitSqlSelection(SqlSelection sqlSelection) {
+		if ( getCurrentCteStatement() != null ) {
+			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
+				appendSql( "/*+ materialize */ " );
+			}
+		}
+		super.visitSqlSelection( sqlSelection );
+	}
+
+	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
@@ -64,7 +98,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
 		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -72,19 +106,19 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 		if ( strategy != LockStrategy.FOLLOW_ON && useOffsetFetchClause( querySpec ) && !isRowsOnlyFetchClauseType( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
-				throw new IllegalQueryOperationException( "Locking with FETCH is not supported!" );
+				throw new IllegalQueryOperationException( "Locking with FETCH is not supported" );
 			}
 			strategy = LockStrategy.FOLLOW_ON;
 		}
@@ -100,7 +134,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			}
 			if ( hasOffset ) {
 				if ( followOnLockingDisabled ) {
-					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported!" );
+					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported" );
 				}
 				strategy = LockStrategy.FOLLOW_ON;
 			}
@@ -114,6 +148,19 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	private boolean isPartOfQueryGroup() {
 		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
+	}
+
+	@Override
+	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
+		// On Oracle 11 where there is no lateral support,
+		// make sure we don't use intersect if the query has an offset/fetch clause
+		return !queryPart.hasOffsetOrFetchClause();
+	}
+
+	@Override
+	protected boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -131,7 +178,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			// When the query has no sort specifications and offset, we want to use the ROWNUM pagination as that is a special locking case
 			return !queryPart.hasSortSpecifications() && !hasOffset( queryPart )
 					// Workaround an Oracle bug, segmentation fault for insert queries with a plain query group and fetch clause
-					|| queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertStatement;
+					|| queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertSelectStatement;
 		}
 		return true;
 	}
@@ -169,33 +216,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 					querySpec,
 					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
 					() -> {
-						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-						final boolean needsParenthesis;
-						final boolean needsWrapper;
-						if ( currentQueryPart instanceof QueryGroup ) {
-							needsParenthesis = false;
-							// visitQuerySpec will add the select wrapper
-							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
-						}
-						else {
-							needsParenthesis = !querySpec.isRoot();
-							needsWrapper = true;
-						}
-						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( '(' );
-							}
-							appendSql( "select * from " );
-							if ( !needsParenthesis ) {
-								appendSql( '(' );
-							}
-						}
-						super.visitQuerySpec( querySpec );
-						if ( needsWrapper ) {
-							if ( !needsParenthesis ) {
-								appendSql( ')' );
-							}
-						}
+						appendSql( "select * from " );
+						emulateFetchOffsetWithWindowFunctionsVisitQueryPart( querySpec );
 						appendSql( " where rownum<=" );
 						final Stack<Clause> clauseStack = getClauseStack();
 						clauseStack.push( Clause.WHERE );
@@ -209,12 +231,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 						}
 						finally {
 							clauseStack.pop();
-						}
-
-						if ( needsWrapper ) {
-							if ( needsParenthesis ) {
-								appendSql( ')' );
-							}
 						}
 					}
 			);
@@ -330,6 +346,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
 		if ( !queryPart.hasSortSpecifications() ) {
 			// Oracle doesn't allow an empty over clause for the row_number() function
+			// For regular window function usage, we render a constant order by,
+			// but since this is used for emulating limit/offset anyway, this is fine
 			appendSql( "rownum" );
 		}
 		else {
@@ -345,8 +363,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
 					&& over.getExclusion() == FrameExclusion.NO_OTHERS ) {
-				// Oracle doesn't allow an empty over clause for the row_number() function
-				append( "rownum" );
+				// Oracle doesn't allow an empty over clause for the row_number() function,
+				// so we order by a constant
+				append( "row_number() over(order by 1)" );
 				return;
 			}
 		}
@@ -360,7 +379,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getJdbcTypeCode() ) {
+		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -382,8 +401,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 				rhs.accept( this );
 				appendSql( "),'/*[local-name()=''xdiff'']/*')" );
 				break;
+			case SqlTypes.CLOB:
+			case SqlTypes.NCLOB:
 			case SqlTypes.BLOB:
-				// In Oracle, BLOB types are not "comparable", so we have to use the dbms_lob.compare function for this purpose
+				// In Oracle, BLOB, CLOB and NCLOB types are not "comparable",
+				// so we have to use the dbms_lob.compare function for this purpose
 				switch ( operator ) {
 					case EQUAL:
 						appendSql( "0=" );
@@ -416,17 +438,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
-		// Oracle did not add support for CASE until 9i
-		if ( getDialect().getVersion().isBefore( 9 ) ) {
-			visitDecodeCaseSearchedExpression( caseSearchedExpression );
-		}
-		else {
-			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
-		}
-	}
-
-	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
@@ -455,7 +466,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 8, 2 );
+		return true;
 	}
 
 	@Override
@@ -465,7 +476,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion().isSameOrAfter( 9 );
+		return true;
 	}
 
 	@Override
@@ -483,20 +494,48 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-			return;
+	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
+		appendSql( tableReference.getTableExpression() );
+		registerAffectedTable( tableReference );
+		renderTableReferenceIdentificationVariable( tableReference );
+		return false;
+	}
+
+	@Override
+	protected void visitSetAssignment(Assignment assignment) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				sqlTuple.getExpressions().get( 0 ).accept( this );
+			}
+			else {
+				assignedValue.accept( this );
+			}
 		}
 		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this );
+				separator = COMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			assignment.getAssignedValue().accept( this );
 		}
 	}
 
+	@Override
+	public void visitColumnReference(ColumnReference columnReference) {
+		columnReference.appendReadExpression( this );
+	}
+
+	@Override
+	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
+		aggregateColumnWriteExpression.appendWriteExpression( this, this );
+	}
 }

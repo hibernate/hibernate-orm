@@ -18,24 +18,20 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * @author Steve Ebersole
  */
-public class Helper {
-	/**
-	 * Singleton access
-	 */
-	public static final Helper INSTANCE = new Helper();
+public final class Helper {
 
 	private Helper() {
 	}
 
-	public String determineBeanCacheKey(Class<?> beanType) {
+	public static String determineBeanCacheKey(Class<?> beanType) {
 		return beanType.getName();
 	}
 
-	public String determineBeanCacheKey(String name, Class<?> beanType) {
+	public static String determineBeanCacheKey(String name, Class<?> beanType) {
 		return beanType.getName() + ':' + name;
 	}
 
-	public boolean shouldIgnoreBeanContainer(ServiceRegistry serviceRegistry) {
+	public static boolean shouldIgnoreBeanContainer(ServiceRegistry serviceRegistry) {
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 		final Object beanManagerRef = configService.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
 
@@ -51,7 +47,7 @@ public class Helper {
 	}
 
 	@SuppressWarnings("unused")
-	public BeanLifecycleStrategy getLifecycleStrategy(boolean shouldRegistryManageLifecycle) {
+	public static BeanLifecycleStrategy getLifecycleStrategy(boolean shouldRegistryManageLifecycle) {
 		return shouldRegistryManageLifecycle
 				? JpaCompliantLifecycleStrategy.INSTANCE
 				: ContainerManagedLifecycleStrategy.INSTANCE;

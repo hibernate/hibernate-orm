@@ -19,15 +19,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -64,7 +65,8 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
-		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		if ( queryOptions.getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return Collections.emptyList();
 		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
@@ -89,7 +91,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
 
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
@@ -105,7 +107,9 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
 				null,
-				ListResultsConsumer.UniqueSemantic.NEVER
+				queryOptions.getUniqueSemantic() == null ?
+						ListResultsConsumer.UniqueSemantic.NEVER :
+						queryOptions.getUniqueSemantic()
 		);
 	}
 
@@ -134,7 +138,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			);
 		}
 
-		final JdbcSelect jdbcSelect = new JdbcSelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,

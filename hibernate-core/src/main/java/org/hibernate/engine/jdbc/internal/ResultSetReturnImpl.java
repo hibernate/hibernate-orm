@@ -68,6 +68,31 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 	}
 
+	@Override
+	public ResultSet extract(PreparedStatement statement, String sql) {
+		// IMPL NOTE : SQL logged by caller
+		long executeStartNanos = 0;
+		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
+		try {
+			final ResultSet rs;
+			try {
+				jdbcExecuteStatementStart();
+				rs = statement.executeQuery();
+			}
+			finally {
+				jdbcExecuteStatementEnd();
+				sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
+			}
+			postExtract( rs, statement );
+			return rs;
+		}
+		catch (SQLException e) {
+			throw sqlExceptionHelper.convert( e, "could not extract ResultSet", sql );
+		}
+	}
+
 	private void jdbcExecuteStatementEnd() {
 		jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteStatementEnd();
 	}
@@ -122,7 +147,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return rs;
 		}
 		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
+			throw sqlExceptionHelper.convert( e, "could not extract ResultSet", sql );
 		}
 	}
 
@@ -157,6 +182,36 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
+	public ResultSet execute(PreparedStatement statement, String sql) {
+		// sql logged by StatementPreparerImpl
+		long executeStartNanos = 0;
+		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
+		try {
+			final ResultSet rs;
+			try {
+				jdbcExecuteStatementStart();
+				if ( !statement.execute() ) {
+					while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
+						// do nothing until we hit the resultset
+					}
+				}
+				rs = statement.getResultSet();
+			}
+			finally {
+				jdbcExecuteStatementEnd();
+				sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
+			}
+			postExtract( rs, statement );
+			return rs;
+		}
+		catch (SQLException e) {
+			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
+		}
+	}
+
+	@Override
 	public ResultSet execute(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		long executeStartNanos = 0;
@@ -176,18 +231,20 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
 		}
 		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
+			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 	}
 
 	@Override
 	public int executeUpdate(PreparedStatement statement) {
+		assert statement != null;
+
 		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
@@ -206,6 +263,27 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
+	public int executeUpdate(PreparedStatement statement, String sql) {
+		assert statement != null;
+
+		long executeStartNanos = 0;
+		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			executeStartNanos = System.nanoTime();
+		}
+		try {
+			jdbcExecuteStatementStart();
+			return statement.executeUpdate();
+		}
+		catch (SQLException e) {
+			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
+		}
+		finally {
+			jdbcExecuteStatementEnd();
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
+		}
+	}
+
+	@Override
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		long executeStartNanos = 0;
@@ -217,11 +295,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return statement.executeUpdate( sql );
 		}
 		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
+			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
+			sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
 		}
 	}
 

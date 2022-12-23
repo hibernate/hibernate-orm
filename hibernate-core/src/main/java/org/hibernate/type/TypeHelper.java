@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
 /**
@@ -93,6 +94,35 @@ public class TypeHelper {
 	/**
 	 * Apply the {@link Type#replace} operation across a series of values.
 	 *
+	 * @param persister The EntityPersister
+	 * @param entity The source of the state
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @param copyCache A map representing a cache of already replaced state
+	 *
+	 */
+	public static void replace(
+			final EntityPersister persister,
+			final Object entity,
+			final SharedSessionContractImplementor session,
+			final Object owner,
+			final Map<Object, Object> copyCache) {
+		final Object[] values = persister.getValues( entity );
+		final Type[] types = persister.getPropertyTypes();
+		for ( int i = 0; i < types.length; i++ ) {
+			final Object oldValue = values[i];
+			final Object newValue;
+			if ( oldValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN
+					&& ( newValue = types[i].replace( values[i], values[i], session, owner, copyCache ) ) != oldValue ) {
+				persister.setValue( entity, i, newValue );
+			}
+		}
+	}
+
+	/**
+	 * Apply the {@link Type#replace} operation across a series of values.
+	 *
 	 * @param original The source of the state
 	 * @param target The target into which to replace the source values.
 	 * @param types The value types
@@ -130,7 +160,7 @@ public class TypeHelper {
 	/**
 	 * Apply the {@link Type#replace} operation across a series of values, as long as the corresponding
 	 * {@link Type} is an association.
-	 * <p/>
+	 * <p>
 	 * If the corresponding type is a component type, then apply {@link Type#replace} across the component
 	 * subtypes but do not replace the component value itself.
 	 *
@@ -168,7 +198,7 @@ public class TypeHelper {
 				Object[] targetComponentValues = target[i] == null
 						? new Object[subtypes.length]
 						: componentType.getPropertyValues( target[i], session );
-				replaceAssociations(
+				final Object[] objects = replaceAssociations(
 						origComponentValues,
 						targetComponentValues,
 						subtypes,
@@ -177,6 +207,9 @@ public class TypeHelper {
 						copyCache,
 						foreignKeyDirection
 				);
+				if ( componentType.isMutable() && target[i] != null && objects != null ) {
+					componentType.setPropertyValues( target[i], objects );
+				}
 				copied[i] = target[i];
 			}
 			else if ( !types[i].isAssociationType() ) {

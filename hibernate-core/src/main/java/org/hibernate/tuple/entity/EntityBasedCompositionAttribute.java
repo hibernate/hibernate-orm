@@ -8,17 +8,16 @@ package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.component.AbstractCompositionAttribute;
 import org.hibernate.type.CompositeType;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
+@Deprecated(forRemoval = true)
 public class EntityBasedCompositionAttribute
-		extends AbstractCompositionAttribute
-		implements AttributeSource {
+		extends AbstractCompositionAttribute {
 
 	public EntityBasedCompositionAttribute(
 			EntityPersister source,

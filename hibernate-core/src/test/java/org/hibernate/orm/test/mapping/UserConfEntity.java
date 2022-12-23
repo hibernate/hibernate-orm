@@ -12,7 +12,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -30,9 +29,8 @@ public class UserConfEntity implements Serializable{
 	
 	@Id
 	@ManyToOne
-	@JoinColumns({
-			@JoinColumn(name="cnf_key", referencedColumnName="confKey"),
-			@JoinColumn(name="cnf_value", referencedColumnName="confValue")})
+	@JoinColumn(name="cnf_key", referencedColumnName="confKey")
+	@JoinColumn(name="cnf_value", referencedColumnName="confValue")
 	private ConfEntity conf;
 
 	public ConfEntity getConf() {

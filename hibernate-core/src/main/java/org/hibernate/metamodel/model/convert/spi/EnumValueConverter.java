@@ -9,11 +9,15 @@ package org.hibernate.metamodel.model.convert.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.annotations.Remove;
+import org.hibernate.Remove;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * BasicValueConverter extension for enum-specific support
@@ -28,17 +32,4 @@ public interface EnumValueConverter<O extends Enum<O>, R> extends BasicValueConv
 
 	String toSqlLiteral(Object value);
 
-	/**
-	 * @since 6.0
-	 *
-	 * @deprecated Added temporarily in support of dual SQL execution until
-	 * fully migrated to {@link SelectStatement} and {@link JdbcOperation}
-	 */
-	@Remove
-	@Deprecated
-	void writeValue(
-			PreparedStatement statement,
-			O value,
-			int position,
-			SharedSessionContractImplementor session) throws SQLException;
 }

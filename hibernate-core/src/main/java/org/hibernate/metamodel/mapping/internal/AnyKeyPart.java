@@ -16,18 +16,16 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -56,13 +54,24 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final Integer precision;
 	private final Integer scale;
 	private final boolean nullable;
+	private final boolean insertable;
+	private final boolean updateable;
+	private final boolean partitioned;
 	private final JdbcMapping jdbcMapping;
 
 	public AnyKeyPart(
 			NavigableRole navigableRole,
-			DiscriminatedAssociationModelPart anyPart, String table,
+			DiscriminatedAssociationModelPart anyPart,
+			String table,
 			String column,
-			String columnDefinition, Long length, Integer precision, Integer scale, boolean nullable,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
 			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
@@ -73,6 +82,9 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.precision = precision;
 		this.scale = scale;
 		this.nullable = nullable;
+		this.insertable = insertable;
+		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -89,6 +101,26 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public boolean isFormula() {
 		return false;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override
@@ -157,6 +189,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
+	public int getFetchableKey() {
+		return 1;
+	}
+
+	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return this;
 	}
@@ -184,21 +221,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, column ),
-				processingState -> new ColumnReference(
-						tableReference,
-						column,
-						false,
-						null,
-						null,
-						jdbcMapping,
-						sessionFactory
-				)
+				tableReference,
+				this
 		);
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
-				getJavaType(),
+				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
 				sessionFactory.getTypeConfiguration()
 		);
@@ -208,7 +237,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchParent,
 				fetchablePath,
 				this,
-				null,
 				fetchTiming,
 				creationState
 		);
@@ -244,7 +272,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -259,17 +286,17 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return anyPart.disassemble( value, session );
+		return value;
 	}
 
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return anyPart.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		valuesConsumer.consume( offset, value, jdbcMapping );
+		return 1;
 	}
 
 	@Override
@@ -278,6 +305,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// todo (6.2) : how is this correct?
 		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
@@ -286,6 +314,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
+		// todo (6.2) : how is this correct?
 		anyPart.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
@@ -295,6 +324,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		// todo (6.2) : how is this correct?
 		anyPart.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 }

@@ -6,18 +6,17 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Map;
+
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.DiscriminatorType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -33,8 +32,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final Integer scale;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
-			EntityPersister entityDescriptor,
-			DiscriminatorType<?> discriminatorType,
+			EntityMappingType entityDescriptor,
 			String tableExpression,
 			String columnExpression,
 			boolean isFormula,
@@ -43,8 +41,10 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			Long length,
 			Integer precision,
 			Integer scale,
+			DiscriminatorType<?> discriminatorType,
+			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		super( discriminatorType.getJdbcMapping(), entityDescriptor, discriminatorType, creationProcess );
+		super( entityDescriptor, discriminatorType, valueMappings, creationProcess );
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
 		this.columnDefinition = columnDefinition;
@@ -69,20 +69,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
-		final String selectionExpression = getSelectionExpression();
-		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, selectionExpression ),
-				sqlAstProcessingState -> new ColumnReference(
-						tableReference,
-						selectionExpression,
-						columnFormula != null,
-						null,
-						null,
-						jdbcMappingToUse,
-						getSessionFactory()
-
-				)
-		);
+		return expressionResolver.resolveSqlExpression( tableReference, this );
 	}
 
 	@Override
@@ -131,7 +118,32 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
-	public boolean isPhysical() {
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isPhysical;
+	}
+
+	@Override
+	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPhysicalColumn() {
 		return isPhysical;
 	}
 }

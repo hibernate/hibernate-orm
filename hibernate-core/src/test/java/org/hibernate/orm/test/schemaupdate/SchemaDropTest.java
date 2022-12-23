@@ -55,6 +55,7 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( MyEntity.class ).buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

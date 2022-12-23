@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class Assigned implements StandardGenerator {
+public class Assigned implements IdentifierGenerator, StandardGenerator {
 	private String entityName;
 
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
@@ -34,13 +34,12 @@ public class Assigned implements StandardGenerator {
 					"ids for this class must be manually assigned before calling save(): " + entityName
 			);
 		}
-		
 		return id;
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		entityName = params.getProperty( ENTITY_NAME );
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");
 		}

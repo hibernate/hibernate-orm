@@ -14,7 +14,7 @@ import org.hibernate.service.Service;
 
 /**
  * Given an entity or collection mapping, resolve the appropriate persister class to use.
- * <p/>
+ * <p>
  * The persister class is chosen according to the following rules:<ol>
  *     <li>the persister class defined explicitly via annotation or XML</li>
  *     <li>the persister class returned by the installed {@link PersisterClassResolver}</li>

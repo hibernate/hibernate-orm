@@ -51,6 +51,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@BeforeEach
 	public void setUp() throws IOException, SQLException {
 		connection = Mockito.mock( Connection.class );
+		when ( connection.getAutoCommit() ).thenReturn( true );
 		Statement statement = Mockito.mock( Statement.class );
 		when( connection.createStatement() ).thenReturn( statement );
 		when( statement.execute( anyString() ) ).thenThrow( new SQLException( "Expected" ) );
@@ -73,7 +74,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
-			fail( "Should haave thrown IOException" );
+			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {
 			assertTrue( e instanceof PersistenceException );

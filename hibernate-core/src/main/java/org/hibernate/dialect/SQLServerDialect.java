@@ -6,7 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.*;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -20,11 +31,12 @@ import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -34,11 +46,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -53,41 +67,62 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.List;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A dialect for Microsoft SQL Server 2000 and above
+ * A dialect for Microsoft SQL Server 2008 and above
  *
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+	// See microsoft.sql.Types.GEOMETRY
+	private static final int GEOMETRY_TYPE_CODE = -157;
+	// See microsoft.sql.Types.GEOGRAPHY
+	private static final int GEOGRAPHY_TYPE_CODE = -158;
 
 	private final StandardSequenceExporter exporter;
+	private final UniqueDelegate uniqueDelegate = new AlterTableUniqueIndexDelegate(this);
 
 	public SQLServerDialect() {
-		this( DatabaseVersion.make( 8, 0 ) );
+		this( MINIMUM_VERSION );
 	}
 
 	public SQLServerDialect(DatabaseVersion version) {
@@ -105,6 +140,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
+	}
+
+	@Override
 	protected void registerDefaultKeywords() {
 		super.registerDefaultKeywords();
 		registerKeyword( "top" );
@@ -113,55 +153,51 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		// there is no 'double' type in SQL server
-		// but 'float' is double precision by default
-		if ( sqlTypeCode == DOUBLE ) {
-			return "float";
+		switch ( sqlTypeCode ) {
+			// there is no 'double' type in SQL server
+			// but 'float' is double precision by default
+			case DOUBLE:
+				return "float";
+			// Prefer 'varchar(max)' and 'varbinary(max)' to
+			// the deprecated TEXT and IMAGE types. Note that
+			// the length of a VARCHAR or VARBINARY column must
+			// be either between 1 and 8000 or exactly MAX, and
+			// the length of an NVARCHAR column must be either
+			// between 1 and 4000 or exactly MAX. (HHH-3965)
+			case CLOB:
+				return "varchar(max)";
+			case NCLOB:
+				return "nvarchar(max)";
+			case BLOB:
+				return "varbinary(max)";
+			case DATE:
+				return "date";
+			case TIME:
+				return "time";
+			case TIMESTAMP:
+				return "datetime2($p)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "datetimeoffset($p)";
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		if ( getVersion().isSameOrAfter( 9 ) ) {
-			switch ( sqlTypeCode ) {
-				// Prefer 'varchar(max)' and 'varbinary(max)' to
-				// the deprecated TEXT and IMAGE types. Note that
-				// the length of a VARCHAR or VARBINARY column must
-				// be either between 1 and 8000 or exactly MAX, and
-				// the length of an NVARCHAR column must be either
-				// between 1 and 4000 or exactly MAX. (HHH-3965)
-				case CLOB:
-					return "varchar(max)";
-				case NCLOB:
-					return "nvarchar(max)";
-				case BLOB:
-					return "varbinary(max)";
-				case DATE:
-					return getVersion().isSameOrAfter( 10 ) ? "date" : super.columnType( sqlTypeCode );
-				case TIME:
-					return getVersion().isSameOrAfter( 10 ) ? "time" : super.columnType( sqlTypeCode );
-				case TIMESTAMP:
-					return getVersion().isSameOrAfter( 10 ) ? "datetime2($p)" : super.columnType( sqlTypeCode );
-				case TIMESTAMP_WITH_TIMEZONE:
-					return getVersion().isSameOrAfter( 10 ) ? "datetimeoffset($p)" : super.columnType( sqlTypeCode );
-			}
-		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		if ( getVersion().isSameOrAfter( 9 ) ) {
-			switch ( sqlTypeCode ) {
-				case VARCHAR:
-				case LONG32VARCHAR:
-				case CLOB:
-					return "varchar(max)";
-				case NVARCHAR:
-				case LONG32NVARCHAR:
-				case NCLOB:
-					return "nvarchar(max)";
-				case VARBINARY:
-				case LONG32VARBINARY:
-				case BLOB:
-					return "varbinary(max)";
-			}
+		switch ( sqlTypeCode ) {
+			case VARCHAR:
+			case LONG32VARCHAR:
+			case CLOB:
+				return "varchar(max)";
+			case NVARCHAR:
+			case LONG32NVARCHAR:
+			case NCLOB:
+				return "nvarchar(max)";
+			case VARBINARY:
+			case LONG32VARBINARY:
+			case BLOB:
+				return "varbinary(max)";
 		}
 		return super.castType( sqlTypeCode );
 	}
@@ -170,11 +206,35 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-		}
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uniqueidentifier", this ) );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( jdbcTypeCode ) {
+			case OTHER:
+				switch ( columnTypeName ) {
+					case "uniqueidentifier":
+						jdbcTypeCode = UUID;
+						break;
+				}
+				break;
+			case GEOMETRY_TYPE_CODE:
+				jdbcTypeCode = GEOMETRY;
+				break;
+			case GEOGRAPHY_TYPE_CODE:
+				jdbcTypeCode = GEOGRAPHY;
+				break;
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override
@@ -189,7 +249,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isSameOrAfter( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
@@ -214,6 +274,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				SmallIntJdbcType.INSTANCE
 		);
 		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -234,6 +295,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						this,
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
+						"count_big",
 						"+",
 						"varchar(max)",
 						false
@@ -243,21 +305,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
-		functionFactory.truncate_round();
+		functionFactory.log_log();
+
+		functionFactory.trunc_round();
+		functionFactory.round_round();
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			functionFactory.locate_charindex();
-			functionFactory.stddevPopSamp_stdevp();
-			functionFactory.varPopSamp_varp();
-		}
+		functionFactory.locate_charindex();
+		functionFactory.stddevPopSamp_stdevp();
+		functionFactory.varPopSamp_varp();
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			queryEngine.getSqmFunctionRegistry().register(
 					"format",
-					new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() )
+					new SQLServerFormatEmulation( queryEngine.getTypeConfiguration() )
 			);
 
 			//actually translate() was added in 2017 but
@@ -303,6 +366,31 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 		}
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			functionFactory.leastGreatest();
+		}
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			switch ( specification ) {
+				case BOTH:
+					return character == ' '
+							? "trim(?1)"
+							: "trim('" + character + "' from ?1)";
+				case LEADING:
+					return character == ' '
+							? "ltrim(?1)"
+							: "ltrim(?1,'" + character + "')";
+				case TRAILING:
+					return character == ' '
+							? "rtrim(?1)"
+							: "rtrim(?1,'" + character + "')";
+			}
+			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
+		}
+		return super.trimPattern( specification, character );
 	}
 
 	@Override
@@ -376,19 +464,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			return SQLServer2012LimitHandler.INSTANCE;
 		}
-		else if ( getVersion().isSameOrAfter( 9 ) ) {
+		else {
 			//this is a stateful class, don't cache
 			//it in the Dialect!
 			return new SQLServer2005LimitHandler();
-		}
-		else {
-			return new TopLimitHandler(false);
 		}
 	}
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion().isSameOrAfter( 10 );
+		return true;
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -424,45 +514,29 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		if ( getVersion().isSameOrAfter( 9 ) ) {
-			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-			if (lockMode == null) {
-				lockMode = lockOptions.getLockMode();
-			}
-
-			final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-			final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
-
-			final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
-			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
-
-			switch ( lockMode ) {
-				case PESSIMISTIC_WRITE:
-				case WRITE:
-					return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case PESSIMISTIC_READ:
-					return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-				case UPGRADE_NOWAIT:
-					return tableName + " with (updlock,holdlock,rowlock,nowait)";
-				default:
-					return tableName;
-			}
+		LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
+		if (lockMode == null) {
+			lockMode = lockOptions.getLockMode();
 		}
-		else {
-			switch ( lockOptions.getLockMode() ) {
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_WRITE:
-				case WRITE:
-					return tableName + " with (updlock,rowlock)";
-				case PESSIMISTIC_READ:
-					return tableName + " with (holdlock,rowlock)";
-				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock,rowlock,readpast)";
-				default:
-					return tableName;
-			}
+
+		final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
+		final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+
+		final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
+		final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+
+		switch ( lockMode ) {
+			case PESSIMISTIC_WRITE:
+			case WRITE:
+				return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case PESSIMISTIC_READ:
+				return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case UPGRADE_SKIPLOCKED:
+				return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
+			case UPGRADE_NOWAIT:
+				return tableName + " with (updlock,holdlock,rowlock,nowait)";
+			default:
+				return tableName;
 		}
 	}
 
@@ -470,7 +544,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	/**
 	 * The current_timestamp is more accurate, but only known to be supported in SQL Server 7.0 and later and
 	 * Sybase not known to support it at all
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -523,17 +597,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion().isSameOrAfter( 9 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 9 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 9 );
+		return true;
 	}
 
 	@Override
@@ -590,7 +664,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion().isBefore( 10 );
+		return false;
 	}
 
 	@Override
@@ -605,7 +679,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 9 );
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
 	}
 
 	@Override
@@ -615,9 +694,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		if ( getVersion().isBefore( 9 ) ) {
-			return super.buildSQLExceptionConversionDelegate(); //null
-		}
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
@@ -675,11 +751,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			case SECOND:
 				//this should evaluate to a floating point type
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
-			case WEEK:
-				// Thanks https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
-				if ( getVersion().isBefore( 10 ) ) {
-					return "(DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',?2)/7*7,'17530104'))+6)/7)";
-				}
 			default:
 				return "datepart(?1,?2)";
 		}
@@ -789,6 +860,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
+		appender.appendSql( "cast('" );
+		appender.appendSql( literal.toString() );
+		appender.appendSql( "' as uniqueidentifier)" );
+	}
+
+	@Override
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -808,12 +886,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				//needed because the {ts ... } JDBC escape chokes on microseconds
 				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( "' as datetimeoffset)" );
 				}
 				else {
+					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
 					appender.appendSql( "' as datetime2)" );
 				}
 				break;
@@ -866,7 +945,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( "' as datetime2)" );
 				break;
 			default:
@@ -891,18 +970,58 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 13 ) ) {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );
 	}
 
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		// we only create unique indexes, as opposed to unique constraints,
+		// when the column is nullable, so safe to infer unique => nullable
+		return unique ? "create unique nonclustered index" : "create index";
+	}
+
+	@Override
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		if (unique) {
+			StringBuilder tail = new StringBuilder();
+			for ( Column column : columns ) {
+				if ( column.isNullable() ) {
+					tail.append( tail.length() == 0 ? " where " : " and " )
+							.append( column.getQuotedName( this ) )
+							.append( " is not null" );
+				}
+			}
+			return tail.toString();
+		}
+		else {
+			return "";
+		}
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
 	public Exporter<Sequence> getSequenceExporter() {
 		if ( exporter == null ) {
 			return super.getSequenceExporter();
@@ -941,4 +1060,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return false;
 	}
+
+	// disabled foreign key constraints still prevent 'truncate table'
+	// (these would help if we used 'delete' instead of 'truncate')
+
+//	@Override
+//	public String getDisableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " nocheck constraint " + name;
+//	}
+//
+//	@Override
+//	public String getEnableConstraintStatement(String tableName, String name) {
+//		return "alter table " + tableName + " with check check constraint " + name;
+//	}
 }

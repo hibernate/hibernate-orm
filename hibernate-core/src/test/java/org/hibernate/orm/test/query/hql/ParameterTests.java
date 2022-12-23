@@ -21,6 +21,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.Session;
+import org.hibernate.TransientObjectException;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
@@ -30,12 +31,15 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
@@ -172,6 +176,24 @@ public class ParameterTests extends BaseSqmUnitTest {
 								assertThat( parameter.getParameterType(), equalTo( String.class ) );
 								break;
 						}
+					}
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15341")
+	public void testTransientParamValue() {
+		inTransaction(
+				session -> {
+					try {
+						session.createQuery( "from Person p where p.mate = :p" )
+								.setParameter( "p", new Person())
+								.list();
+						Assertions.fail( "Expected TransientObjectException" );
+					}
+					catch (IllegalStateException ex) {
+						assertThat( ex.getCause(), instanceOf( TransientObjectException.class ) );
 					}
 				}
 		);

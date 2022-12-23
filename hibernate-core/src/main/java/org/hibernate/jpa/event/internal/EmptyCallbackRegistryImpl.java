@@ -6,10 +6,10 @@
  */
 package org.hibernate.jpa.event.internal;
 
-import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackType;
 
-final class EmptyCallbackRegistryImpl implements CallbackRegistryImplementor {
+final class EmptyCallbackRegistryImpl implements CallbackRegistry {
 
 	@Override
 	public boolean hasRegisteredCallbacks(final Class<?> entityClass, final CallbackType callbackType) {
@@ -53,11 +53,6 @@ final class EmptyCallbackRegistryImpl implements CallbackRegistryImplementor {
 
 	@Override
 	public void release() {
-		//no-op
-	}
-
-	@Override
-	public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
 		//no-op
 	}
 

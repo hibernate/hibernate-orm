@@ -83,13 +83,22 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
+	/**
+	 * Fetch-profile to apply, if one, when building the result-graph
+	 * for cascade fetching - for example, the result-graph used when
+	 * handling a {@linkplain org.hibernate.Session#merge merge} to
+	 * immediately load additional based on {@linkplain jakarta.persistence.CascadeType#MERGE}
+	 */
 	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
 		return enabledCascadingFetchProfile;
 	}
 
+	/**
+	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
+	 */
 	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
 		if ( sessionFactory == null ) {
-			// thats the signal that this is the immutable, context-less
+			// that's the signal that this is the immutable, context-less
 			// variety
 			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
 		}

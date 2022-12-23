@@ -184,7 +184,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		catch (PersistenceException ce) {
 			try {
-				assertTyping( ConstraintViolationException.class, ce.getCause() );
+				assertTyping( ConstraintViolationException.class, ce );
 				//success
 
 			}
@@ -397,7 +397,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 				.build();
 		}
 		catch ( AnnotationException e ) {
-			assertTrue(e.getMessage().contains( "Unidirectional one-to-many associations annotated with @OnDelete must define @JoinColumn" ));
+			assertTrue(e.getMessage().contains( "is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" ));
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -530,7 +530,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Model.class.getName() );
 		Table table = pc.getRootTable();
-		Iterator iter = table.getColumnIterator();
+        Iterator iter = table.getColumns().iterator();
 		boolean joinColumnFound = false;
 		while(iter.hasNext()) {
 			Column column = (Column) iter.next();

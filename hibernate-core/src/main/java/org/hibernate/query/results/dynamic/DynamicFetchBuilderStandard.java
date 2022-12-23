@@ -14,13 +14,11 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -28,6 +26,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -88,15 +87,14 @@ public class DynamicFetchBuilderStandard
 			);
 			final String columnAlias = columnNames.get( selectionIndex );
 			sqlExpressionResolver.resolveSqlSelection(
-					sqlExpressionResolver.resolveSqlExpression(
-							createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-							state -> {
-								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-								final int valuesArrayPosition = resultSetPosition - 1;
-								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
-							}
+					ResultsHelper.resolveSqlExpression(
+							creationStateImpl,
+							jdbcResultsMetadata,
+							tableReference,
+							selectableMapping,
+							columnAlias
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaType(),
+					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
 					domainResultCreationState.getSqlAstCreationState()
 							.getCreationContext()
@@ -115,7 +113,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+		else if ( attributeMapping instanceof EmbeddableValuedFetchable ) {
 			attributeMapping.forEachSelectable( selectableConsumer );
 			return parent.generateFetchableFetch(
 					attributeMapping,

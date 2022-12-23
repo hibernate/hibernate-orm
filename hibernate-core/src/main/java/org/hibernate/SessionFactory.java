@@ -16,8 +16,8 @@ import javax.naming.Referenceable;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.relational.SchemaManager;
 import org.hibernate.stat.Statistics;
 
 import jakarta.persistence.EntityGraph;
@@ -48,6 +48,41 @@ import jakarta.persistence.EntityManagerFactory;
  * fixed as soon as the {@code SessionFactory} is created. Of course, any
  * {@code SessionFactory} is threadsafe.
  * <p>
+ * There are some interesting exceptions to this principle:
+ * <ul>
+ * <li>Each {@code SessionFactory} has its own isolated second-level cache,
+ *     shared between the sessions it creates, and it {@link #getCache()
+ *     exposes the cache} to clients as a stateful object with entries that
+ *     may be queried and managed directly.
+ * <li>Similarly, the factory {@linkplain #getStatistics() exposes} a
+ *     {@link Statistics} object which accumulates information summarizing
+ *     the activity of sessions created by the factory. It provides statistics
+ *     about interactions with JDBC and with the second-level cache.
+ * <li>Somewhat regrettably, The JPA 2.1 specification chose to locate the
+ *     operations {@link #addNamedQuery(String, jakarta.persistence.Query)}
+ *     and {@link #addNamedEntityGraph(String, EntityGraph)} on the interface
+ *     {@link EntityManagerFactory} which {@code SessionFactory} inherits.
+ *     Of course, these methods are usually called at the time the
+ *     {@code EntityManagerFactory} is created. It's difficult to imagine a
+ *     motivation to call either method later, when the factory already has
+ *     active sessions.
+ * </ul>
+ * The {@code SessionFactory} exposes part of the information in the runtime
+ * metamodel via an {@linkplain #getMetamodel() instance} of the JPA-defined
+ * {@link jakarta.persistence.metamodel.Metamodel}. This object is sometimes
+ * used in a sophisticated way by libraries or frameworks to implement generic
+ * concerns involving entity classes.
+ * <p>
+ * The factory also {@linkplain #getSchemaManager() provides} a
+ * {@link SchemaManager} which allows, as a convenience for writing tests:
+ * <ul>
+ * <li>programmatic {@linkplain SchemaManager#exportMappedObjects(boolean)
+ *     schema export} and {@linkplain SchemaManager#dropMappedObjects(boolean)
+ *     schema removal}, and
+ * <li>an operation for {@linkplain SchemaManager#truncateMappedObjects()
+ *     cleaning up} data left behind by tests.
+ * </ul>
+ * <p>
  * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
  * method {@link EntityManagerFactory#unwrap(Class)} may be used to obtain the
@@ -77,7 +112,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link Session}.
-	 * <p/>
+	 * <p>
 	 * Any JDBC {@link Connection connection} will be obtained lazily from the
 	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
 	 * as needed to perform requested work.
@@ -136,7 +171,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	StatelessSession openStatelessSession(Connection connection);
 
 	/**
-	 * Open a Session and perform a action using it
+	 * Open a {@link Session} and use it to perform an action.
 	 */
 	default void inSession(Consumer<Session> action) {
 		try (Session session = openSession()) {
@@ -145,40 +180,37 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a {@link Session} and perform an action using the session
+	 * Open a {@link Session} and use it to perform an action
 	 * within the bounds of a transaction.
 	 */
 	default void inTransaction(Consumer<Session> action) {
 		inSession(
 				session -> {
-					final Transaction txn = session.beginTransaction();
-
+					final Transaction transaction = session.beginTransaction();
 					try {
 						action.accept( session );
-
-						if ( !txn.isActive() ) {
+						if ( !transaction.isActive() ) {
 							throw new TransactionManagementException(
 									"Execution of action caused managed transaction to be completed" );
 						}
 					}
-					catch (RuntimeException e) {
+					catch (RuntimeException exception) {
 						// an error happened in the action
-						if ( txn.isActive() ) {
+						if ( transaction.isActive() ) {
 							try {
-								txn.rollback();
+								transaction.rollback();
 							}
 							catch (Exception ignore) {
 							}
 						}
 
-						throw e;
+						throw exception;
 					}
-
-					// action completed with no errors - attempt to commit the transaction allowing
-					// 		any RollbackException to propagate.  Note that when we get here we know the
-					//		txn is active
-
-					txn.commit();
+					// The action completed without throwing an exception,
+					// so we attempt to commit the transaction, allowing
+					// any RollbackException to propagate. Note that when
+					// we get here we know that the transaction is active
+					transaction.commit();
 				}
 		);
 	}
@@ -190,7 +222,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a Session and perform an action using it.
+	 * Open a {@link Session} and use it to obtain a value.
 	 */
 	default <R> R fromSession(Function<Session,R> action) {
 		try (Session session = openSession()) {
@@ -199,40 +231,36 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a {@link Session} and perform an action using the session
+	 * Open a {@link Session} and use it to perform an action
 	 * within the bounds of a transaction.
 	 */
 	default <R> R fromTransaction(Function<Session,R> action) {
 		return fromSession(
 				session -> {
-					final Transaction txn = session.beginTransaction();
+					final Transaction transaction = session.beginTransaction();
 					try {
 						R result = action.apply( session );
-
-						if ( !txn.isActive() ) {
+						if ( !transaction.isActive() ) {
 							throw new TransactionManagementException(
 									"Execution of action caused managed transaction to be completed" );
 						}
-
-						// action completed with no errors - attempt to commit the transaction allowing
-						// 		any RollbackException to propagate.  Note that when we get here we know the
-						//		txn is active
-
-						txn.commit();
-
+						// The action completed without throwing an exception,
+						// so we attempt to commit the transaction, allowing
+						// any RollbackException to propagate. Note that when
+						// we get here we know that the transaction is active
+						transaction.commit();
 						return result;
 					}
-					catch (RuntimeException e) {
-						// an error happened in the action
-						if ( txn.isActive() ) {
+					catch (RuntimeException exception) {
+						// an error happened in the action or during commit()
+						if ( transaction.isActive() ) {
 							try {
-								txn.rollback();
+								transaction.rollback();
 							}
 							catch (Exception ignore) {
 							}
 						}
-
-						throw e;
+						throw exception;
 					}
 				}
 		);
@@ -246,13 +274,22 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	Statistics getStatistics();
 
 	/**
+	 * A {@link SchemaManager} with the same default catalog and schema as
+	 * pooled connections belonging to this factory. Intended mostly as a
+	 * convenience for writing tests.
+	 *
+	 * @since 6.2
+	 */
+	SchemaManager getSchemaManager();
+
+	/**
 	 * Destroy this {@code SessionFactory} and release all its resources,
 	 * including caches and connection pools.
-	 * <p/>
+	 * <p>
 	 * It is the responsibility of the application to ensure that there are
 	 * no open {@linkplain Session sessions} before calling this method as
 	 * the impact on those {@linkplain Session sessions} is indeterminate.
-	 * <p/>
+	 * <p>
 	 * No-ops if already {@linkplain #isClosed() closed}.
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.
@@ -282,9 +319,22 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
 	/**
-	 * Obtain the set of names of all {@link FilterDefinition defined filters}.
+	 * Return the root {@link EntityGraph} with the given name, or {@code null}
+	 * if there is no graph with the given name.
 	 *
-	 * @return The set of filter names.
+	 * @param name the name given to some {@link jakarta.persistence.NamedEntityGraph}
+	 * @return an instance of {@link RootGraph}
+	 *
+	 * @see #addNamedEntityGraph
+	 */
+	RootGraph<?> findEntityGraphByName(String name);
+
+	/**
+	 * Obtain the set of names of all {@link org.hibernate.annotations.FilterDef
+	 * defined filters}.
+	 *
+	 * @return The set of filter names given by
+	 *         {@link org.hibernate.annotations.FilterDef} annotations
 	 */
 	Set<String> getDefinedFilterNames();
 
@@ -294,16 +344,33 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @param filterName The name of the filter for which to obtain the definition.
 	 * @return The filter definition.
 	 * @throws HibernateException If no filter defined with the given name.
+	 *
+	 * @deprecated There is no plan to remove this operation, but its use should be
+	 *             avoided since {@link FilterDefinition} is an SPI type, and so this
+	 *             operation is a layer-breaker.
 	 */
+	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition(String filterName) throws HibernateException;
 
 	/**
-	 * Determine if this session factory contains a fetch profile definition
-	 * registered under the given name.
+	 * Obtain the set of names of all {@link org.hibernate.annotations.FetchProfile
+	 * defined fetch profiles}.
+	 *
+	 * @return The set of fetch profile names given by
+	 *         {@link org.hibernate.annotations.FetchProfile} annotations.
+	 *
+	 * @since 6.2
+	 */
+	Set<String> getDefinedFetchProfileNames();
+
+	/**
+	 * Determine if there is a fetch profile definition registered under the given name.
 	 *
 	 * @param name The name to check
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
-	boolean containsFetchProfileDefinition(String name);
+	default boolean containsFetchProfileDefinition(String name) {
+		return getDefinedFilterNames().contains( name );
+	}
 
 }

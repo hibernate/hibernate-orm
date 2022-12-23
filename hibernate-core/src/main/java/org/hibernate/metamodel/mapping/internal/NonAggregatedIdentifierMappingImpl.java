@@ -28,7 +28,6 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -36,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -107,13 +107,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 	}
 
-	/**
-	 * The entity whose identifier this mapping is the inverse of
-	 */
-	public EntityPersister getIdentifiedEntityDescriptor() {
-		return entityDescriptor;
-	}
-
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;
@@ -157,11 +150,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return identifierValueMapper.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return identifierValueMapper.forEachJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
@@ -179,31 +171,21 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					navigablePath,
 					getContainingTableExpression()
 			);
-			int offset = 0;
-			for ( AttributeMapping attributeMapping : identifierValueMapper.getAttributeMappings() ) {
-				offset += attributeMapping.forEachSelectable(
-						offset,
-						(columnIndex, selection) -> {
-							final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
-									? defaultTableReference
-									: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
-							final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-									.resolveSqlExpression(
-											SqlExpressionResolver.createColumnReferenceKey(
-													tableReference,
-													selection.getSelectionExpression()
-											),
-											sqlAstProcessingState -> new ColumnReference(
-													tableReference.getIdentificationVariable(),
-													selection,
-													sqlAstCreationState.getCreationContext().getSessionFactory()
-											)
-									);
+			identifierValueMapper.forEachSelectable(
+					0,
+					(columnIndex, selection) -> {
+						final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
+								? defaultTableReference
+								: tableGroup.resolveTableReference(
+								navigablePath,
+								selection.getContainingTableExpression()
+						);
+						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
+								.resolveSqlExpression( tableReference, selection );
 
-							columnReferences.add( (ColumnReference) columnReference );
-						}
-				);
-			}
+						columnReferences.add( (ColumnReference) columnReference );
+					}
+			);
 
 			return new SqlTuple( columnReferences, this );
 		}
@@ -211,8 +193,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getIdentifier( entity );
+	public Nature getNature() {
+		return Nature.VIRTUAL;
+	}
+
+	@Override
+	public String getAttributeName() {
+		return null;
 	}
 
 	@Override
@@ -222,14 +209,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					null,
 					sessionFactory
 			);
-			final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-			final List<AttributeMapping> idClassAttributeMappings = identifierValueMapper.getAttributeMappings();
-			final Object[] propertyValues = new Object[attributeMappings.size()];
+			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
 				if ( o == null ) {
-					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
+					final AttributeMapping idClassAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
 						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
 					}
@@ -239,7 +225,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				else if ( attributeMapping instanceof ToOneAttributeMapping
-						&& !( idClassAttributeMappings.get( i ) instanceof ToOneAttributeMapping ) ) {
+						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
@@ -266,44 +252,39 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
-		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
-
-		getEmbeddableTypeDescriptor().forEachAttributeMapping(
-				(position, attribute) -> {
-					final AttributeMapping mappedIdAttributeMapping = mappedIdAttributeMappings.get( position );
-					final Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
-					if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-								.getEntityPersister();
-						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
-						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						// it is conceivable there is a proxy, so check that first
-						propertyValues[position] = persistenceContext.getProxy( entityKey );
-						if ( propertyValues[position] == null ) {
-							// otherwise look for an initialized version
-							propertyValues[position] = persistenceContext.getEntity( entityKey );
-							if ( propertyValues[position] == null ) {
-								// get the association out of the entity itself
-								propertyValues[position] = entityDescriptor.getPropertyValue(
-										entity,
-										toOneAttributeMapping.getAttributeName()
-								);
-							}
-						}
-					}
-					else {
-						propertyValues[position] = o;
+		final Object[] propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		for ( int i = 0; i < propertyValues.length; i++ ) {
+			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
+			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
+			Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
+			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
+						.getEntityPersister();
+				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				// it is conceivable there is a proxy, so check that first
+				o = persistenceContext.getProxy( entityKey );
+				if ( o == null ) {
+					// otherwise look for an initialized version
+					o = persistenceContext.getEntity( entityKey );
+					if ( o == null ) {
+						// get the association out of the entity itself
+						o = entityDescriptor.getPropertyValue(
+								entity,
+								toOneAttributeMapping.getAttributeName()
+						);
 					}
 				}
-		);
-		getEmbeddableTypeDescriptor().setValues( entity, propertyValues );
+			}
+			propertyValues[i] = o;
+		}
+		embeddableTypeDescriptor.setValues( entity, propertyValues );
 	}
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		assert domainValue instanceof Object[];
 		identifierValueMapper.breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
@@ -339,6 +320,11 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public int getNumberOfFetchables() {
-		return identifierValueMapper.getNumberOfFetchables();
+		return getPartMappingType().getNumberOfFetchables();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getPartMappingType().getFetchable( position );
 	}
 }

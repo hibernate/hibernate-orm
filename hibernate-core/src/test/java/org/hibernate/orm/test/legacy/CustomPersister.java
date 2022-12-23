@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.legacy;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
@@ -20,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -50,19 +51,20 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -123,6 +125,16 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public TableDetails getMappedTableDetails() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public TableDetails getIdentifierTableDetails() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public ModelPart findSubPart(
 			String name, EntityMappingType targetType) {
 		return null;
@@ -171,11 +183,15 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return 0;
+	}
+
+	@Override
+	public boolean isExplicitPolymorphism() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -194,7 +210,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+	public AttributeMappingsMap getDeclaredAttributeMappings() {
 		return null;
 	}
 
@@ -398,7 +414,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 
@@ -448,28 +464,29 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityPersister#lock(Object, Object, Object, LockMode, EventSource)
 	 */
+	@Override
 	public void lock(
 			Object id,
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session
+			EventSource session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * @see EntityPersister#lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityPersister#lock(Object, Object, Object, LockMode, EventSource)
 	 */
 	public void lock(
 			Object id,
 			Object version,
 			Object object,
 			LockMode lockMode,
-			SharedSessionContractImplementor session
+			EventSource session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
@@ -796,11 +813,6 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return null;
-	}
-
-	@Override
 	public NaturalIdMapping getNaturalIdMapping() {
 		return null;
 	}
@@ -841,12 +853,12 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List<AttributeMapping> getAttributeMappings() {
+	public AttributeMappingsList getAttributeMappings() {
 		return null;
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 
 	}
 

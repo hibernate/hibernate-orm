@@ -54,7 +54,7 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 			return DROP_RECREATE_QUIETLY;
 		}
 
-		if ( UniqueConstraintSchemaUpdateStrategy.class.isInstance( setting ) ) {
+		if ( setting instanceof UniqueConstraintSchemaUpdateStrategy ) {
 			return (UniqueConstraintSchemaUpdateStrategy) setting;
 		}
 

@@ -15,6 +15,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -39,7 +40,8 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super(info);
+		super(createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ));
+		registerKeywords( info );
 	}
 
 	@Override
@@ -99,6 +101,11 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsNoWait() {
 		return true;
 	}
@@ -151,5 +158,4 @@ public class TiDBDialect extends MySQLDialect {
 		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
 		return duration.getSeconds();
 	}
-
 }

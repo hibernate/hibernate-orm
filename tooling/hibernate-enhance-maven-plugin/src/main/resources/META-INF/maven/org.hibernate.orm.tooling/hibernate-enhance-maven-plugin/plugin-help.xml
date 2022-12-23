@@ -57,14 +57,14 @@
           <type>java.lang.Boolean</type>
           <required>false</required>
           <editable>true</editable>
-          <description>Enable enhancement for lazy loading of attributes</description>
+          <description>DEPRECATED: Enable enhancement for lazy loading of attributes. This setting is deprecated for removal without a replacement.</description>
         </parameter>
         <parameter>
           <name>enableDirtyTracking</name>
           <type>java.lang.Boolean</type>
           <required>false</required>
           <editable>true</editable>
-          <description>Enable enhancement for tracking of dirty attributes</description>
+          <description>DEPRECATED: Enable enhancement for tracking of dirty attributes. This setting is deprecated for removal without a replacement.</description>
         </parameter>
         <parameter>
           <name>enableAssociationManagement</name>

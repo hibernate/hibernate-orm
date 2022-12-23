@@ -27,7 +27,7 @@ public class ResolvedSqlSelection extends SqlSelectionImpl {
 			int valuesArrayPosition,
 			Expression sqlExpression,
 			BasicType<Object> resolvedType) {
-		super( jdbcPosition, valuesArrayPosition, sqlExpression );
+		super( jdbcPosition, valuesArrayPosition, null, sqlExpression );
 		this.resolvedType = resolvedType;
 	}
 

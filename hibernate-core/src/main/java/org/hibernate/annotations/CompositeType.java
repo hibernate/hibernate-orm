@@ -7,20 +7,34 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.usertype.CompositeUserType;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Applies a custom {@link CompositeUserType} for the attribute mapping.
+ * Specifies a custom {@link CompositeUserType} for the annotated attribute
+ * mapping. Just like the {@link Type @Type} annotation, this annotation may
+ * be applied:
+ * <ul>
+ * <li>directly to a property or field of an entity to specify the custom
+ *     type of the property or field,
+ * <li>indirectly, as a meta-annotation of an annotation type that is then
+ *     applied to various properties and fields, or
+ * <li>by default, via a {@linkplain CompositeTypeRegistration registration}.
+ * </ul>
+ *
+ * @see CompositeUserType
+ * @see CompositeTypeRegistration
+ * @see Type
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface CompositeType {
-
 	/**
 	 * The custom type implementor class
 	 */

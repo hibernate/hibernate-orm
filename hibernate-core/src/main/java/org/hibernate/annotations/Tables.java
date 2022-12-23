@@ -13,11 +13,11 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of tables.
+ * A grouping of {@link Table}s.
  *
  * @author Emmanuel Bernard
  */
-@Target({TYPE})
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface Tables {
 	/**

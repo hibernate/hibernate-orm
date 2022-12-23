@@ -8,41 +8,31 @@ package org.hibernate.orm.tooling.gradle.metamodel;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import javax.inject.Inject;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.ClassTransformer;
-import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetOutput;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.orm.tooling.gradle.Helper;
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
+import org.hibernate.orm.tooling.gradle.metamodel.model.GenerationOptions;
 import org.hibernate.orm.tooling.gradle.metamodel.model.JpaStaticMetamodelGenerator;
-import org.hibernate.orm.tooling.gradle.metamodel.model.MetamodelClass;
 
 import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
 
@@ -55,86 +45,100 @@ import static org.hibernate.orm.tooling.gradle.HibernateOrmSpec.HIBERNATE;
  * classes based on annotations.  This task accounts for both classes and XML mappings
  */
 public class JpaMetamodelGenerationTask extends DefaultTask {
-	public static final String DSL_NAME = "generateJpaMetamodel";
-	public static final String COMPILE_DSL_NAME = "compileJpaMetamodel";
+	public static final String GEN_TASK_NAME = "generateJpaMetamodel";
+	public static final String COMPILE_META_TASK_NAME = "compileJpaMetamodel";
+
+	private final Property<SourceSet> sourceSetProperty;
+
+	private final DirectoryProperty generationOutputDirectory;
+
+	private final Property<Boolean> applyGeneratedAnnotation;
+	private final SetProperty<String> suppressions;
 
 
-	private final HibernateOrmSpec ormSpec;
-	private final DirectoryProperty resourcesOutputDir;
-	private final SourceSet mainSourceSet;
 
 	@Inject
-	@SuppressWarnings( "UnstableApiUsage" )
-	public JpaMetamodelGenerationTask(
-			HibernateOrmSpec ormSpec,
-			SourceSet mainSourceSet,
-			JavaCompile mainCompileTask,
-			Project project) {
-		this.ormSpec = ormSpec;
-		dependsOn( mainCompileTask );
+	public JpaMetamodelGenerationTask() {
+		setGroup( HIBERNATE );
+		setDescription( "Generates the JPA 'static metamodel'" );
 
-		this.mainSourceSet = mainSourceSet;
+		sourceSetProperty = getProject().getObjects().property( SourceSet.class );
 
-		final SourceSetOutput mainSourceSetOutput = mainSourceSet.getOutput();
+		generationOutputDirectory = getProject().getObjects().directoryProperty();
 
-		resourcesOutputDir = project.getObjects().directoryProperty();
-		resourcesOutputDir.set( project.getLayout().dir( project.provider( mainSourceSetOutput::getResourcesDir ) ) );
+		applyGeneratedAnnotation = getProject().getObjects().property( Boolean.class );
+		suppressions = getProject().getObjects().setProperty( String.class );
 
 	}
 
-	@InputFiles
-	@SkipWhenEmpty
-	public FileCollection getJavaClassDirs() {
-		return mainSourceSet.getOutput();
-	}
-
-	@InputFiles
-	@SkipWhenEmpty
-	public DirectoryProperty getResourcesOutputDir() {
-		// for access to XML mappings
-		return resourcesOutputDir;
+	public void injectSourceSet(Provider<SourceSet> sourceSetAccess) {
+		sourceSetProperty.set( sourceSetAccess );
 	}
 
 	@OutputDirectory
 	public DirectoryProperty getGenerationOutputDirectory() {
-		return ormSpec.getJpaMetamodelSpec().getGenerationOutputDirectory();
+		return generationOutputDirectory;
+	}
+
+	@InputFiles
+	@SkipWhenEmpty
+	public FileCollection getSources() {
+		return sourceSetProperty.get().getOutput();
+	}
+
+	@Input
+	public Property<Boolean> getApplyGeneratedAnnotation() {
+		return applyGeneratedAnnotation;
+	}
+
+	@Input
+	public SetProperty<String> getSuppressions() {
+		return suppressions;
 	}
 
 	@TaskAction
 	public void generateJpaMetamodel() {
-		final ClassLoader classLoader = determineUnitClassLoader( getProject(), mainSourceSet );
+		final ClassLoader classLoader = Helper.toClassLoader( sourceSetProperty.get().getOutput() );
 		final PersistenceUnitInfoImpl unitInfo = new PersistenceUnitInfoImpl(
 				determineUnitUrl(),
 				generateIntegrationSettings(),
 				classLoader
 		);
 
-		getJavaClassDirs().forEach(
-				classesDir -> {
-					final ConfigurableFileTree files = getProject().fileTree( classesDir );
-					files.forEach(
-							file -> {
-								if ( file.getName().endsWith( ".class" ) ) {
-									final String className = Helper.determineClassName( classesDir, file );
-									unitInfo.addManagedClassName( className );
-								}
-								else if ( isMappingFile( file ) ) {
-									unitInfo.addMappingFile( file.getName() );
-								}
-							}
-					);
-				}
-		);
 
-		resourcesOutputDir.getAsFileTree().forEach(
-				file -> {
-					if ( isMappingFile( file ) ) {
-						unitInfo.addMappingFile( file.getName() );
-					}
+		getSources().forEach( (dir) -> {
+			final ConfigurableFileTree files = getProject().fileTree( dir );
+			files.forEach( (file) -> {
+				if ( file.getName().endsWith( ".class" ) ) {
+					final String className = Helper.determineClassName( dir, file );
+					unitInfo.addManagedClassName( className );
 				}
-		);
+				else if ( isMappingFile( file ) ) {
+					unitInfo.addMappingFile( file.getName() );
+				}
+			} );
+		} );
 
-		JpaStaticMetamodelGenerator.processMetamodel( unitInfo, ormSpec.getJpaMetamodelSpec() );
+		JpaStaticMetamodelGenerator.processMetamodel( unitInfo, createGenerationOptions() );
+	}
+
+	private GenerationOptions createGenerationOptions() {
+		return new GenerationOptions() {
+			@Override
+			public Provider<Directory> getGenerationDirectory() {
+				return generationOutputDirectory;
+			}
+
+			@Override
+			public Provider<Boolean> getApplyGeneratedAnnotation() {
+				return applyGeneratedAnnotation;
+			}
+
+			@Override
+			public SetProperty<String> getSuppressions() {
+				return suppressions;
+			}
+		};
 	}
 
 	private URL determineUnitUrl() {
@@ -144,25 +148,6 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		}
 		catch (MalformedURLException e) {
 			throw new IllegalStateException( "Could not interpret project directory as URL" );
-		}
-	}
-
-	@SuppressWarnings( "UnstableApiUsage" )
-	private static ClassLoader determineUnitClassLoader(Project project, SourceSet mainSourceSet) {
-		final String compileJavaTaskName = mainSourceSet.getCompileJavaTaskName();
-		final JavaCompile javaCompileTask = (JavaCompile) project.getTasks().getByName( compileJavaTaskName );
-		final URL projectClassesDirUrl = toUrl( javaCompileTask.getDestinationDirectory().get().getAsFile() );
-
-		return new URLClassLoader( new URL[] { projectClassesDirUrl }, MetamodelClass.class.getClassLoader() );
-	}
-
-	private static URL toUrl(File file) {
-		final URI uri = file.toURI();
-		try {
-			return uri.toURL();
-		}
-		catch (MalformedURLException e) {
-			throw new GradleException( "Could not convert classpath entry into URL : " + file.getAbsolutePath(), e );
 		}
 	}
 
@@ -185,163 +170,8 @@ public class JpaMetamodelGenerationTask extends DefaultTask {
 		return fileName.endsWith( ".hbm.xml" ) || fileName.endsWith( ".orm.xml" );
 	}
 
-	private static class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
-		private final URL unitRoot;
-		private final Properties properties;
-		private final ClassLoader classLoader;
-		private final List<String> managedClassNames = new ArrayList<>();
-		private final List<String> mappingFileNames = new ArrayList<>();
-
-		public PersistenceUnitInfoImpl(URL unitRoot, Properties properties, ClassLoader classLoader) {
-			this.unitRoot = unitRoot;
-			this.properties = properties;
-			this.classLoader = classLoader;
-		}
-
-		@Override
-		public String getPersistenceUnitName() {
-			return "jpa-static-metamodel-gen";
-		}
-
-		@Override
-		public URL getPersistenceUnitRootUrl() {
-			return unitRoot;
-		}
-
-		@Override
-		public Properties getProperties() {
-			return properties;
-		}
-
-		@Override
-		public ClassLoader getClassLoader() {
-			return classLoader;
-		}
-
-		@Override
-		public List<String> getManagedClassNames() {
-			return managedClassNames;
-		}
-
-		public void addManagedClassName(String className) {
-			getManagedClassNames().add( className );
-		}
-
-		@Override
-		public List<String> getMappingFileNames() {
-			return mappingFileNames;
-		}
-
-		public void addMappingFile(String fileName) {
-			getMappingFileNames().add( fileName );
-		}
-
-
-
-
-
-		@Override
-		public String getPersistenceProviderClassName() {
-			return HibernatePersistenceProvider.class.getName();
-		}
-
-		@Override
-		public PersistenceUnitTransactionType getTransactionType() {
-			return null;
-		}
-
-		@Override
-		public DataSource getJtaDataSource() {
-			return null;
-		}
-
-		@Override
-		public DataSource getNonJtaDataSource() {
-			return null;
-		}
-
-		@Override
-		public List<URL> getJarFileUrls() {
-			return null;
-		}
-
-		@Override
-		public boolean excludeUnlistedClasses() {
-			return true;
-		}
-
-		@Override
-		public SharedCacheMode getSharedCacheMode() {
-			return null;
-		}
-
-		@Override
-		public ValidationMode getValidationMode() {
-			return null;
-		}
-
-		@Override
-		public String getPersistenceXMLSchemaVersion() {
-			return null;
-		}
-
-		@Override
-		public void addTransformer(ClassTransformer transformer) {
-
-		}
-
-		@Override
-		public ClassLoader getNewTempClassLoader() {
-			return null;
-		}
-	}
-
-	@SuppressWarnings( "UnstableApiUsage" )
-	public static void apply(HibernateOrmSpec pluginDsl, SourceSet mainSourceSet, Project project) {
-		final String mainCompileTaskName = mainSourceSet.getCompileJavaTaskName();
-		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainCompileTaskName );
-		final Task compileResourcesTask = project.getTasks().getByName( "processResources" );
-
-		final JpaMetamodelGenerationTask genTask = project.getTasks().create(
-				DSL_NAME,
-				JpaMetamodelGenerationTask.class,
-				pluginDsl,
-				mainSourceSet,
-				mainCompileTask,
-				project
-		);
-		genTask.setGroup( HIBERNATE );
-		genTask.setDescription( "Generates the JPA 'static metamodel'" );
-		genTask.onlyIf( (t) -> pluginDsl.getSupportJpaMetamodelProperty().getOrElse( true ) );
-
-		genTask.dependsOn( mainCompileTask );
-		genTask.dependsOn( compileResourcesTask );
-
-		final JavaCompile compileJpaMetamodelTask = project.getTasks().create( COMPILE_DSL_NAME, JavaCompile.class );
-		compileJpaMetamodelTask.setGroup( HIBERNATE );
-		compileJpaMetamodelTask.setDescription( "Compiles the JPA static metamodel generated by `" + DSL_NAME + "`" );
-		compileJpaMetamodelTask.setSourceCompatibility( mainCompileTask.getSourceCompatibility() );
-		compileJpaMetamodelTask.setTargetCompatibility( mainCompileTask.getTargetCompatibility() );
-		genTask.finalizedBy( compileJpaMetamodelTask );
-		mainCompileTask.finalizedBy( compileJpaMetamodelTask );
-		compileJpaMetamodelTask.dependsOn( genTask );
-		compileJpaMetamodelTask.source( project.files( pluginDsl.getJpaMetamodelSpec().getGenerationOutputDirectory() ) );
-		compileJpaMetamodelTask.getDestinationDirectory().set( pluginDsl.getJpaMetamodelSpec().getCompileOutputDirectory() );
-		compileJpaMetamodelTask.setClasspath(
-				project.getConfigurations().getByName( "runtimeClasspath" ).plus( mainSourceSet.getRuntimeClasspath() )
-		);
-
-		compileJpaMetamodelTask.doFirst(
-				(task) -> {
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-					project.getLogger().lifecycle( "compileJpaMetamodel classpath" );
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-					( (JavaCompile) task ).getClasspath().forEach(
-							entry -> project.getLogger().lifecycle( "    > {}", entry.getAbsolutePath() )
-					);
-					project.getLogger().lifecycle( "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-				}
-		);
+	public static void apply(HibernateOrmSpec pluginDsl, Project project) {
+		// todo : implement it
 	}
 
 }

@@ -12,9 +12,9 @@ import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -64,6 +63,27 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private final boolean hasConstraint;
 
 	public EmbeddedForeignKeyDescriptor(
+			String keyTable,
+			SelectableMappings keySelectableMappings,
+			EmbeddableValuedModelPart keyMappingType,
+			String targetTable,
+			SelectableMappings targetSelectableMappings,
+			EmbeddableValuedModelPart targetMappingType,
+			boolean hasConstraint,
+			MappingModelCreationProcess creationProcess) {
+		this(
+				keyMappingType,
+				targetMappingType,
+				keyTable,
+				keySelectableMappings,
+				targetTable,
+				targetSelectableMappings,
+				hasConstraint,
+				creationProcess
+		);
+	}
+
+	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart keyMappingType,
 			EmbeddableValuedModelPart targetMappingType,
 			String keyTable,
@@ -92,8 +112,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				() -> {
 					// todo (6.0) : how to make sure things we need are ready to go?
 					// 		- e.g., here, we need access to the sub-attributes
-					final List<AttributeMapping> subAttributes = targetMappingType.getEmbeddableTypeDescriptor().getAttributeMappings();
-					if ( subAttributes.isEmpty() ) {
+					if ( targetMappingType.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings() == 0 ) {
 						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
 						return false;
 					}
@@ -145,12 +164,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public ModelPart getKeyPart() {
+	public EmbeddableValuedModelPart getKeyPart() {
 		return keySide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
 	@Override
-	public ModelPart getTargetPart() {
+	public EmbeddableValuedModelPart getTargetPart() {
 		return targetSide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
 	}
 
@@ -162,6 +181,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public Side getTargetSide() {
 		return targetSide;
+	}
+
+	@Override
+	public int compare(Object key1, Object key2) {
+		return getKeyPart().getEmbeddableTypeDescriptor().compare( key1, key2 );
 	}
 
 	@Override
@@ -341,9 +365,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlAstCreationContext creationContext) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetTable
+				targetTable,
+				false
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference( keyTable );
+		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
+				null,
+				keyTable,
+				false
+		);
 
 		return generateJoinPredicate(
 				lhsTableReference,
@@ -365,14 +394,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
 							new ColumnReference(
 									targetSideReference,
-									selection,
-									creationContext.getSessionFactory()
+									selection
 							),
 							ComparisonOperator.EQUAL,
 							new ColumnReference(
 									keySideReference,
-									keySelectableMappings.getSelectable( i ),
-									creationContext.getSessionFactory()
+									keySelectableMappings.getSelectable( i )
 							)
 					);
 					predicate.add( comparisonPredicate );
@@ -459,25 +486,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		return true;
 	}
 
-	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		TableReference tableReference = lhs.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-		tableReference = tableGroup.getPrimaryTableReference().resolveTableReference( table );
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		tableReference = lhs.resolveTableReference(
-				lhs.getNavigablePath().append( getNavigableRole().getNavigableName() ),
-				table
-		);
-		if ( tableReference != null ) {
-			return tableReference;
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return keySelectableMappings.getSelectable( columnIndex );
 	}
 
 	@Override
@@ -522,33 +533,43 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		assert domainValue instanceof Object[];
-
-		final Object[] values = (Object[]) domainValue;
-
-		keySelectableMappings.forEachSelectable(
-				(index, selectable) -> valueConsumer.consume( values[ index ], selectable )
-		);
+		if ( domainValue == null ) {
+			keySelectableMappings.forEachSelectable( (index, selectable) -> {
+				valueConsumer.consume( null, selectable );
+			} );
+		}
+		else if ( domainValue instanceof Object[] ) {
+			final Object[] values = (Object[]) domainValue;
+			keySelectableMappings.forEachSelectable( (index, selectable) -> {
+				valueConsumer.consume( values[ index ], selectable );
+			} );
+		}
+		else {
+			final MutableInteger columnPosition = new MutableInteger();
+			keySide.getModelPart().breakDownJdbcValues(
+					domainValue,
+					(jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+							jdbcValue,
+							keySelectableMappings.getSelectable( columnPosition.getAndIncrement() )
+					),
+					session
+			);
+		}
 	}
 
 	@Override
 	public Object getAssociationKeyFromSide(
 			Object targetObject,
-			Nature nature,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
-		final ModelPart modelPart;
-		if ( nature == Nature.KEY ) {
-			modelPart = keySide.getModelPart();
-		}
-		else {
-			modelPart = targetSide.getModelPart();
-		}
+		final ModelPart modelPart = side.getModelPart();
+
 		// If the mapping type has an identifier type, that identifier is the key
 		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifier( targetObject );
+			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		// Otherwise, this is a key based on the target object i.e. without id-class
 		return targetObject;
@@ -567,15 +588,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return targetSide.getModelPart().disassemble( value, session );
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return keySide.getModelPart().hasPartitionedSelectionMapping();
 	}
 }

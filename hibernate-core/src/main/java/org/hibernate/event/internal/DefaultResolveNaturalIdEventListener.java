@@ -6,11 +6,7 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.concurrent.TimeUnit;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
@@ -19,6 +15,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -35,8 +34,7 @@ public class DefaultResolveNaturalIdEventListener
 
 	@Override
 	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException {
-		final Object entityId = resolveNaturalId( event );
-		event.setEntityId( entityId );
+		event.setEntityId( resolveNaturalId( event ) );
 	}
 
 	/**
@@ -93,10 +91,7 @@ public class DefaultResolveNaturalIdEventListener
 	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContextInternal()
 				.getNaturalIdResolutions()
-				.findCachedIdByNaturalId(
-						event.getOrderedNaturalIdValues(),
-						event.getEntityPersister()
-				);
+				.findCachedIdByNaturalId( event.getOrderedNaturalIdValues(), event.getEntityPersister() );
 	}
 
 	/**
@@ -124,20 +119,16 @@ public class DefaultResolveNaturalIdEventListener
 
 		if ( statisticsEnabled ) {
 			final long endTime = System.nanoTime();
-			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			statistics.naturalIdQueryExecuted(
-					event.getEntityPersister().getRootEntityName(),
-					milliseconds
-			);
+			final long milliseconds = MILLISECONDS.convert( endTime - startTime, NANOSECONDS );
+			statistics.naturalIdQueryExecuted( event.getEntityPersister().getRootEntityName(), milliseconds );
 		}
 
 		//PK can be null if the entity doesn't exist
-		if (pk != null) {
+		if ( pk != null ) {
 			session.getPersistenceContextInternal()
 					.getNaturalIdResolutions()
 					.cacheResolutionFromLoad( pk, event.getOrderedNaturalIdValues(), event.getEntityPersister() );
 		}
-
 		return pk;
 	}
 }

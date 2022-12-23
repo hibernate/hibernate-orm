@@ -29,7 +29,7 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( context.getPreferredSqlTypeCodeForUuid() );
+		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}
 
 	public String toString(UUID value) {
@@ -155,4 +155,5 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 			return new UUID( BytesHelper.asLong( bytea, 0 ), BytesHelper.asLong( bytea, 8 ) );
 		}
 	}
+
 }

@@ -27,11 +27,10 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -107,7 +106,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		);
 		assert offset == jdbcParameters.size();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory
+		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory
 				.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
@@ -121,47 +120,36 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public CollectionKey getCollectionKey() {
-						return collectionKey;
-					}
-
-					@Override
-					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						subSelectFetchableKeysHandler.addKey( entityKey, entry );
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return null;
-					}
-
-				},
+				new CollectionLoaderSingleKeyExecutionContext( session, collectionKey, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		return session.getPersistenceContext().getCollection( collectionKey );
+	}
+
+	private static class CollectionLoaderSingleKeyExecutionContext extends BaseExecutionContext {
+		private final CollectionKey collectionKey;
+		private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
+
+		CollectionLoaderSingleKeyExecutionContext(
+				SharedSessionContractImplementor session,
+				CollectionKey collectionKey,
+				SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
+			super( session );
+			this.collectionKey = collectionKey;
+			this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
+		}
+
+		@Override
+		public CollectionKey getCollectionKey() {
+			return collectionKey;
+		}
+
+		@Override
+		public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+			subSelectFetchableKeysHandler.addKey( entityKey, entry );
+		}
+
 	}
 }

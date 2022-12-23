@@ -6,10 +6,16 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -17,13 +23,15 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -47,9 +55,6 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 
@@ -60,23 +65,32 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
-	protected boolean jtdsDriver;
+	protected final boolean jtdsDriver;
+
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
 
 	public SybaseDialect() {
-		this( DatabaseVersion.make( 11, 0 ) );
+		this( MINIMUM_VERSION );
 	}
 
 	public SybaseDialect(DatabaseVersion version) {
 		super(version);
+		jtdsDriver = true;
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
 		super(info);
 		jtdsDriver = info.getDriverName() != null
 				&& info.getDriverName().contains( "jTDS" );
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -200,6 +214,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
+		functionFactory.stddev();
+		functionFactory.variance();
+		functionFactory.stddevPopSamp_stdevp();
+		functionFactory.varPopSamp_varp();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+		functionFactory.trunc_floorPower();
+		functionFactory.round_round();
+
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(
 				"count",
@@ -207,6 +230,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 						this,
 						queryEngine.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
+						"count_big",
 						"+",
 						"varchar(16384)",
 						false
@@ -309,6 +333,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return false;
+	}
+
+	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		if ( dbMetaData == null ) {
@@ -321,10 +350,31 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( getVersion().isSameOrAfter( 15 ) ) {
+		if ( jtdsDriver ) {
+			return NameQualifierSupport.CATALOG;
+		}
+		else {
 			return NameQualifierSupport.BOTH;
 		}
-		return NameQualifierSupport.CATALOG;
 	}
 
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
 }

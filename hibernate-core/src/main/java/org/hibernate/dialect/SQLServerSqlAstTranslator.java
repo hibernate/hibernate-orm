@@ -10,15 +10,16 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -35,6 +36,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for SQL Server.
@@ -49,6 +51,16 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	public SQLServerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean needsRecursiveKeywordInWithClause() {
+		return false;
+	}
+
+	@Override
+	protected boolean supportsWithClauseInSubquery() {
+		return false;
 	}
 
 	@Override
@@ -86,6 +98,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		if ( shouldInlineCte( tableGroup ) ) {
+			inlineCteTableGroup( tableGroup, lockMode );
+			return false;
+		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
@@ -130,69 +146,49 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
-			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-			switch ( lockMode ) {
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (updlock,holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case PESSIMISTIC_READ: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case UPGRADE_SKIPLOCKED: {
-					if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
-						appendSql( " with (updlock,rowlock,readpast,nowait)" );
-					}
-					else {
+		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+		switch ( lockMode ) {
+			case PESSIMISTIC_WRITE:
+			case WRITE: {
+				switch ( effectiveLockTimeout ) {
+					case LockOptions.SKIP_LOCKED:
 						appendSql( " with (updlock,rowlock,readpast)" );
-					}
-					break;
+						break;
+					case LockOptions.NO_WAIT:
+						appendSql( " with (updlock,holdlock,rowlock,nowait)" );
+						break;
+					default:
+						appendSql( " with (updlock,holdlock,rowlock)" );
+						break;
 				}
-				case UPGRADE_NOWAIT: {
-					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-					break;
-				}
+				break;
 			}
-		}
-		else {
-			switch ( lockMode ) {
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					appendSql( " with (updlock,rowlock)" );
-					break;
+			case PESSIMISTIC_READ: {
+				switch ( effectiveLockTimeout ) {
+					case LockOptions.SKIP_LOCKED:
+						appendSql( " with (updlock,rowlock,readpast)" );
+						break;
+					case LockOptions.NO_WAIT:
+						appendSql( " with (holdlock,rowlock,nowait)" );
+						break;
+					default:
+						appendSql( " with (holdlock,rowlock)" );
+						break;
 				}
-				case PESSIMISTIC_READ: {
-					appendSql( " with (holdlock,rowlock)" );
-					break;
+				break;
+			}
+			case UPGRADE_SKIPLOCKED: {
+				if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
+					appendSql( " with (updlock,rowlock,readpast,nowait)" );
 				}
-				case UPGRADE_SKIPLOCKED: {
+				else {
 					appendSql( " with (updlock,rowlock,readpast)" );
-					break;
 				}
+				break;
+			}
+			case UPGRADE_NOWAIT: {
+				appendSql( " with (updlock,holdlock,rowlock,nowait)" );
+				break;
 			}
 		}
 	}
@@ -228,7 +224,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			return null;
 		}
 		else {
-			if ( version.isBefore( 9 ) || !hasOffset ) {
+			if ( !hasOffset ) {
 				return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
 			}
 			else if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
@@ -289,7 +285,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected boolean needsRowsToSkip() {
-		return getDialect().getVersion().isBefore( 9 );
+		return false;
 	}
 
 	@Override
@@ -334,9 +330,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
-				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
-			}
 			// Note that SQL Server is very strict i.e. it requires an order by clause for TOP or OFFSET
 			final OffsetFetchClauseMode offsetFetchClauseMode = getOffsetFetchClauseMode( queryPart );
 			if ( offsetFetchClauseMode == OffsetFetchClauseMode.STANDARD ) {
@@ -377,17 +370,29 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// SQL Server does not support this, but it's just a hint anyway
-	}
-
-	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// SQL Server does not support this, but it can be emulated
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "cast(" );
+					lhs.accept( this );
+					appendSql( " as nvarchar(max))" );
+					appendSql( operator.sqlText() );
+					appendSql( "cast(" );
+					rhs.accept( this );
+					appendSql( " as nvarchar(max))" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
 
@@ -413,6 +418,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		arithmeticExpression.getLeftHandOperand().accept( this );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

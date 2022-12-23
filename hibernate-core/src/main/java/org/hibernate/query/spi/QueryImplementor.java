@@ -55,7 +55,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	@Override
 	QueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	default <T> QueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
 		Query.super.setResultTransformer( transformer );
 		//noinspection unchecked

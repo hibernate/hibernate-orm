@@ -11,4 +11,3 @@
  * part of the persister model.
  */
 package org.hibernate.persister.walking.spi;
-

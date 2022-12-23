@@ -17,20 +17,21 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
+import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -40,16 +41,16 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
@@ -73,8 +74,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
-
-	private final EntityPersister entityDescriptor;
+	private final JdbcParameter sessionUidParameter;
 
 	TableBasedInsertHandler(
 			SqmInsertStatement<?> sqmInsert,
@@ -90,8 +90,13 @@ public class TableBasedInsertHandler implements InsertHandler {
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 
-		final String targetEntityName = sqmInsert.getTarget().getEntityName();
-		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( targetEntityName );
+		final TemporaryTableSessionUidColumn sessionUidColumn = entityTable.getSessionUidColumn();
+		if ( sessionUidColumn == null ) {
+			this.sessionUidParameter = null;
+		}
+		else {
+			this.sessionUidParameter = new JdbcParameterImpl( sessionUidColumn.getJdbcMapping() );
+		}
 	}
 
 	public SqmInsertStatement<?> getSqmInsertStatement() {
@@ -146,10 +151,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
-				true,
-				sessionFactory
+				true
 		);
-		final InsertStatement insertStatement = new InsertStatement( entityTableReference );
+		final InsertSelectStatement insertStatement = new InsertSelectStatement( entityTableReference );
 
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = converterDelegate.visitInsertionTargetPaths(
 				(assigable, columnReferences) -> {
@@ -172,24 +176,24 @@ public class TableBasedInsertHandler implements InsertHandler {
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
+		final TemporaryTableSessionUidColumn sessionUidColumn = entityTable.getSessionUidColumn();
 		if ( sqmInsertStatement instanceof SqmInsertSelectStatement ) {
 			final QueryPart queryPart = converterDelegate.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmInsertStatement ).getSelectQueryPart() );
 			queryPart.visitQuerySpecs(
 					querySpec -> {
 						if ( additionalInsertValues.applySelections( querySpec, sessionFactory ) ) {
 							final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
-									.get( entityTable.getColumns().size() - 1 );
+									.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
 							final ColumnReference columnReference = new ColumnReference(
 									(String) null,
 									rowNumberColumn.getColumnName(),
 									false,
 									null,
 									null,
-									rowNumberColumn.getJdbcMapping(),
-									sessionFactory
+									rowNumberColumn.getJdbcMapping()
 							);
-							insertStatement.getTargetColumnReferences().set(
-									insertStatement.getTargetColumnReferences().size() - 1,
+							insertStatement.getTargetColumns().set(
+									insertStatement.getTargetColumns().size() - 1,
 									columnReference
 							);
 							targetPathColumns.set(
@@ -197,46 +201,52 @@ public class TableBasedInsertHandler implements InsertHandler {
 									new Assignment( columnReference, columnReference )
 							);
 						}
-						else if ( entityDescriptor.getIdentifierGenerator() instanceof OptimizableGenerator ) {
-							final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getIdentifierGenerator() ).getOptimizer();
+						else if ( entityDescriptor.getGenerator() instanceof OptimizableGenerator ) {
+							final Optimizer optimizer = ( (OptimizableGenerator) entityDescriptor.getGenerator() ).getOptimizer();
 							if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
 								if ( !sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions() ) {
 									return;
 								}
 								final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
-										.get( entityTable.getColumns().size() - 1 );
+										.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
 								final ColumnReference columnReference = new ColumnReference(
 										(String) null,
 										rowNumberColumn.getColumnName(),
 										false,
 										null,
 										null,
-										rowNumberColumn.getJdbcMapping(),
-										sessionFactory
+										rowNumberColumn.getJdbcMapping()
 								);
-								insertStatement.getTargetColumnReferences().add( columnReference );
+								insertStatement.getTargetColumns().add( columnReference );
 								targetPathColumns.add( new Assignment( columnReference, columnReference ) );
-								final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
-										.getBasicTypeForJavaType( Integer.class );
 								querySpec.getSelectClause().addSqlSelection(
 										new SqlSelectionImpl(
 												1,
 												0,
-												new Over<>(
-														new SelfRenderingFunctionSqlAstExpression(
-																"row_number",
-																(appender, args, walker) -> appender.appendSql(
-																		"row_number()" ),
-																Collections.emptyList(),
-																rowNumberType,
-																rowNumberType
-														),
-														Collections.emptyList(),
-														Collections.emptyList()
+												SqmInsertStrategyHelper.createRowNumberingExpression(
+														querySpec,
+														sessionFactory
 												)
 										)
 								);
 							}
+						}
+						if ( sessionUidColumn != null ) {
+							final ColumnReference sessionUidColumnReference = new ColumnReference(
+									(String) null,
+									sessionUidColumn.getColumnName(),
+									false,
+									null,
+									null,
+									sessionUidColumn.getJdbcMapping()
+							);
+							insertStatement.getTargetColumns().add( sessionUidColumnReference );
+							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
+							querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl(
+									insertStatement.getTargetColumns().size(),
+									insertStatement.getTargetColumns().size() - 1,
+									sessionUidParameter
+							) );
 						}
 					}
 			);
@@ -244,7 +254,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		}
 		else {
 			// Add the row number column if there is one
-			final IdentifierGenerator generator = entityDescriptor.getIdentifierGenerator();
+			final Generator generator = entityDescriptor.getGenerator();
 			final BasicType<?> rowNumberType;
 			if ( generator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();
@@ -258,10 +268,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 							false,
 							null,
 							null,
-							rowNumberColumn.getJdbcMapping(),
-							sessionFactory
+							rowNumberColumn.getJdbcMapping()
 					);
-					insertStatement.getTargetColumnReferences().add( columnReference );
+					insertStatement.getTargetColumns().add( columnReference );
 					targetPathColumns.add( new Assignment( columnReference, columnReference ) );
 				}
 				else {
@@ -270,6 +279,18 @@ public class TableBasedInsertHandler implements InsertHandler {
 			}
 			else {
 				rowNumberType = null;
+			}
+			if ( sessionUidColumn != null ) {
+				final ColumnReference sessionUidColumnReference = new ColumnReference(
+						(String) null,
+						sessionUidColumn.getColumnName(),
+						false,
+						null,
+						null,
+						sessionUidColumn.getJdbcMapping()
+				);
+				insertStatement.getTargetColumns().add( sessionUidColumnReference );
+				targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 			}
 			final List<SqmValues> sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmInsertStatement ).getValuesList();
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
@@ -283,6 +304,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 									rowNumberType
 							)
 					);
+				}
+				if ( sessionUidParameter != null ) {
+					values.getExpressions().add( sessionUidParameter );
 				}
 				valuesList.add( values );
 			}
@@ -312,6 +336,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				targetPathColumns,
 				insertStatement,
 				parameterResolutions,
+				sessionUidParameter,
 				paramTypeResolutions,
 				executionContext
 		);

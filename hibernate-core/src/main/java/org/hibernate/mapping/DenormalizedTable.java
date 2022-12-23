@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -22,6 +23,7 @@ import org.hibernate.internal.util.collections.JoinedList;
 public class DenormalizedTable extends Table {
 
 	private final Table includedTable;
+	private List<Column> reorderedColumns;
 
 	public DenormalizedTable(
 			String contributor,
@@ -88,18 +90,18 @@ public class DenormalizedTable extends Table {
 
 	@Override @Deprecated
 	public Iterator<Column> getColumnIterator() {
-		return new JoinedIterator<>(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
-		);
+		if ( reorderedColumns != null ) {
+			return reorderedColumns.iterator();
+		}
+		return new JoinedIterator<>( includedTable.getColumnIterator(), super.getColumnIterator() );
 	}
 
 	@Override
 	public Collection<Column> getColumns() {
-		return new JoinedList<>(
-				new ArrayList<>( includedTable.getColumns() ),
-				new ArrayList<>( super.getColumns() )
-		);
+		if ( reorderedColumns != null ) {
+			return reorderedColumns;
+		}
+		return new JoinedList<>( new ArrayList<>( includedTable.getColumns() ), new ArrayList<>( super.getColumns() ) );
 	}
 
 	@Override
@@ -112,7 +114,7 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		if ( !includedTable.isPhysicalTable() ) {
 			for ( UniqueKey uniqueKey : includedTable.getUniqueKeys().values() ) {
@@ -122,25 +124,30 @@ public class DenormalizedTable extends Table {
 		return getUniqueKeys().values().iterator();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterator<Index> getIndexIterator() {
-		List<Index> indexes = new ArrayList<>();
-		Iterator<Index> iter = includedTable.getIndexIterator();
-		while ( iter.hasNext() ) {
-			Index parentIndex = iter.next();
+		final List<Index> indexes = new ArrayList<>();
+		for ( Index parentIndex : includedTable.getIndexes().values() ) {
 			Index index = new Index();
 			index.setName( getName() + parentIndex.getName() );
 			index.setTable( this );
-			index.addColumns( parentIndex.getColumnIterator() );
+			index.addColumns( parentIndex.getColumns() );
 			indexes.add( index );
 		}
-		return new JoinedIterator<>(
-				indexes.iterator(),
-				super.getIndexIterator()
-		);
+		return new JoinedIterator<>( indexes.iterator(), super.getIndexIterator() );
 	}
 
 	public Table getIncludedTable() {
 		return includedTable;
+	}
+
+	@Internal
+	@Override
+	public void reorderColumns(List<Column> columns) {
+		assert includedTable.getColumns().size() + super.getColumns().size() == columns.size()
+				&& columns.containsAll( includedTable.getColumns() )
+				&& columns.containsAll( super.getColumns() )
+				&& reorderedColumns == null;
+		this.reorderedColumns = columns;
 	}
 }

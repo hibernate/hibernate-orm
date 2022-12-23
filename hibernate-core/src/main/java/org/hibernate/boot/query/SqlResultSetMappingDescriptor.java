@@ -11,15 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.ConstructorResult;
-import jakarta.persistence.EntityResult;
-import jakarta.persistence.FieldResult;
-import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -30,7 +24,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
@@ -44,8 +37,15 @@ import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.SqlResultSetMapping;
 
 /**
  * @author Steve Ebersole
@@ -387,7 +387,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				return new ModelPartResultMementoBasicImpl( path, basicPart, columnNames.get( 0 ) );
 			}
 
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Only support for basic-valued model-parts have been implemented : " + propertyPath
 					+ " [" + subPart + "]"
 			);
@@ -436,7 +436,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 						propertyPath.indexOf( "." ) + 1), null );
 				return getFetchMemento( navigablePath,subPart1 );
 			}
-			throw new NotYetImplementedFor6Exception(
+			throw new UnsupportedOperationException(
 					"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
 							+ " [" + subPart + "]"
 			);

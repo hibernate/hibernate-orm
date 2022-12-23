@@ -18,16 +18,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
-import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -55,7 +55,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -204,6 +203,11 @@ public class SqmUtil {
 
 			final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter<?> sqmParameter : sqmParameters ) {
+				final MappingModelExpressible resolvedMappingModelType = mappingModelResolutionAccess
+						.getResolvedMappingModelType( sqmParameter );
+				if ( resolvedMappingModelType != null ) {
+					domainParamBinding.setType( resolvedMappingModelType );
+				}
 				final Bindable parameterType = determineParameterType(
 						domainParamBinding,
 						queryParam,
@@ -222,10 +226,10 @@ public class SqmUtil {
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						parameterType.forEachJdbcType(
-								(position, jdbcType) -> {
+								(position, jdbcMapping) -> {
 									jdbcParameterBindings.addBinding(
 											jdbcParams.get( position ),
-											new JdbcParameterBindingImpl( jdbcType, null )
+											new JdbcParameterBindingImpl( jdbcMapping, null )
 									);
 								}
 						);
@@ -284,37 +288,32 @@ public class SqmUtil {
 					}
 				}
 				else {
-					if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter
-							|| domainParamBinding.getType() instanceof ConvertibleModelPart ) {
-						final BasicValueConverter valueConverter;
-						final JdbcMapping jdbcMapping;
+					final JdbcMapping jdbcMapping;
+					if ( domainParamBinding.getType() instanceof JdbcMapping ) {
+						jdbcMapping = (JdbcMapping) domainParamBinding.getType();
+					}
+					else if ( domainParamBinding.getBindType() instanceof BasicValuedModelPart ) {
+						jdbcMapping = ( (BasicValuedModelPart) domainParamBinding.getType() ).getJdbcMapping();
+					}
+					else {
+						jdbcMapping = null;
+					}
 
-						if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter ) {
-							final AttributeConverterTypeAdapter<?> adapter = (AttributeConverterTypeAdapter<?>) domainParamBinding.getType();
-							valueConverter = adapter.getAttributeConverter();
-							jdbcMapping = adapter.getJdbcMapping();
+					final BasicValueConverter valueConverter = jdbcMapping == null ? null : jdbcMapping.getValueConverter();
+					if ( valueConverter != null ) {
+						final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
+
+						for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+							final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
+							assert jdbcParams.size() == 1;
+							final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
+							jdbcParameterBindings.addBinding(
+									jdbcParameter,
+									new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
+							);
 						}
-						else {
-							final ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) domainParamBinding.getType();
-							valueConverter = convertibleModelPart.getValueConverter();
-							jdbcMapping = convertibleModelPart.getJdbcMapping();
-						}
 
-						if ( valueConverter != null ) {
-							final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
-
-							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-								final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
-								assert jdbcParams.size() == 1;
-								final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
-								jdbcParameterBindings.addBinding(
-										jdbcParameter,
-										new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
-								);
-							}
-
-							continue;
-						}
+						continue;
 					}
 
 					final Object bindValue = domainParamBinding.getBindValue();
@@ -350,12 +349,16 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
 		}
+		else if ( parameterType instanceof PluralAttributeMapping ) {
+			// Default to the collection element
+			parameterType = ( (PluralAttributeMapping) parameterType ).getElementDescriptor();
+		}
 
 		if ( parameterType instanceof EntityIdentifierMapping ) {
 			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityMappingType ) {
@@ -363,22 +366,25 @@ public class SqmUtil {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifier( bindValue );
+				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
 		else if ( parameterType instanceof EntityAssociationMapping ) {
 			EntityAssociationMapping association = (EntityAssociationMapping) parameterType;
-			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
-					bindValue,
-					association.getSideNature().inverse(),
-					session
-			);
-			parameterType = association.getForeignKeyDescriptor();
-		}
-		else if ( parameterType instanceof PluralAttributeMapping ) {
-			// we'd expect the values to refer to the collection element
-			// for now, let's blow up and see where this happens and fix the specifics...
-			throw new NotYetImplementedFor6Exception( "Binding parameters whose inferred type comes from plural attribute not yet implemented" );
+			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+				// If the association is the target, we must use the identifier of the EntityMappingType
+				bindValue = association.getAssociatedEntityMappingType().getIdentifierMapping()
+						.getIdentifier( bindValue );
+				parameterType = association.getAssociatedEntityMappingType().getIdentifierMapping();
+			}
+			else {
+				bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
+						bindValue,
+						association.getSideNature().inverse(),
+						session
+				);
+				parameterType = association.getForeignKeyDescriptor();
+			}
 		}
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(

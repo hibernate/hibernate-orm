@@ -14,7 +14,6 @@ import java.sql.SQLException;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.HibernateException;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -95,7 +94,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			JdbcSessionContext jdbcSessionContext,
 			boolean closed) {
 		this( jdbcConnectionAccess, jdbcSessionContext, new ResourceRegistryStandardImpl(),
-				jdbcSessionContext.getServiceRegistry().getService( JdbcServices.class )
+				jdbcSessionContext.getSessionFactory().getFastSessionServices().jdbcServices
 		);
 		this.closed = closed;
 	}

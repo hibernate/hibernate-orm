@@ -22,7 +22,7 @@ import org.hibernate.service.spi.Stoppable;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
- * <p/>
+ * <p>
  * The {@link DataSource} to use may be specified by either:<ul>
  * <li>injection using {@link #setDataSource}
  * <li>declaring the {@link DataSource} instance using the {@value Environment#DATASOURCE} config property
@@ -117,7 +117,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public Connection getConnection() throws SQLException {
 		if ( !available ) {
-			throw new HibernateException( "Provider is closed!" );
+			throw new HibernateException( "Provider is closed" );
 		}
 		return useCredentials ? dataSource.getConnection( user, pass ) : dataSource.getConnection();
 	}

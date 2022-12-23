@@ -20,12 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @Inherited
 @Retention( RetentionPolicy.RUNTIME )
-@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.TYPE, ElementType.METHOD})
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
-
-//@ExtendWith( ServiceRegistryExtension.class )
-//@ExtendWith( ServiceRegistryParameterResolver.class )
 
 @ServiceRegistryFunctionalTesting
 

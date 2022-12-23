@@ -16,10 +16,11 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 
 /**
- * Specifies the mapped column for storing the time zone information.
- * The annotation can be used in conjunction with the <code>TimeZoneStorageType.AUTO</code> and
- * <code>TimeZoneStorageType.COLUMN</code>. The column is simply ignored if <code>TimeZoneStorageType.AUTO</code>
- * is used and the database supports native time zone storage.
+ * Specifies the mapped column for storing the time zone information,
+ * for use in conjunction with {@link TimeZoneStorageType#COLUMN} or
+ * {@link TimeZoneStorageType#AUTO}. The column is simply ignored if
+ * {@code AUTO} is used and the database supports native time zone
+ * storage.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
@@ -27,6 +28,8 @@ import static java.lang.annotation.ElementType.METHOD;
  * @see TimeZoneStorage
  * @see TimeZoneStorageType#COLUMN
  * @see TimeZoneStorageType#AUTO
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)

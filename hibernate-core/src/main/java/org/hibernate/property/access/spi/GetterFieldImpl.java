@@ -41,34 +41,6 @@ public class GetterFieldImpl implements Getter {
 	@Override
 	public Object get(Object owner) {
 		try {
-			// This is needed because until JDK 9 the Reflection API
-			// does not use the same caching as used for auto-boxing.
-			// See https://bugs.openjdk.java.net/browse/JDK-5043030 for details.
-			// The code below can be removed when we move to JDK 9.
-			// double and float are intentionally not handled here because
-			// the JLS § 5.1.7 does not define caching for boxed values of
-			// this types.
-			Class<?> type = field.getType();
-			if ( type.isPrimitive() ) {
-				if ( type == Boolean.TYPE ) {
-					return field.getBoolean(owner);
-				}
-				else if ( type == Byte.TYPE ) {
-					return field.getByte(owner);
-				}
-				else if ( type == Character.TYPE ) {
-					return field.getChar(owner);
-				}
-				else if ( type == Integer.TYPE ) {
-					return field.getInt(owner);
-				}
-				else if ( type == Long.TYPE ) {
-					return field.getLong(owner);
-				}
-				else if ( type == Short.TYPE ) {
-					return field.getShort(owner);
-				}
-			}
 			return field.get( owner );
 		}
 		catch (Exception e) {

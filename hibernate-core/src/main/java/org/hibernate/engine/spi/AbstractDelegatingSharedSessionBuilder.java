@@ -24,7 +24,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder> implements SharedSessionBuilder<T> {
+public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSessionBuilder {
 
 	private final SharedSessionBuilder delegate;
 
@@ -33,8 +33,8 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	}
 
 	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
+	protected SharedSessionBuilder getThis() {
+		return this;
 	}
 
 	public SharedSessionBuilder delegate() {
@@ -47,122 +47,122 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	}
 
 	@Override
-	public T interceptor() {
+	public SharedSessionBuilder interceptor() {
 		delegate.interceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection() {
+	public SharedSessionBuilder connection() {
 		delegate.connection();
-		return getThis();
+		return this;
 	}
 
 	@Override @Deprecated(since = "6.0")
-	public T connectionReleaseMode() {
+	public SharedSessionBuilder connectionReleaseMode() {
 		delegate.connectionReleaseMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connectionHandlingMode() {
+	public SharedSessionBuilder connectionHandlingMode() {
 		delegate.connectionHandlingMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions() {
+	public SharedSessionBuilder autoJoinTransactions() {
 		delegate.autoJoinTransactions();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose() {
+	public SharedSessionBuilder autoClose() {
 		delegate.autoClose();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T interceptor(Interceptor interceptor) {
+	public SharedSessionBuilder interceptor(Interceptor interceptor) {
 		delegate.interceptor( interceptor );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T noInterceptor() {
+	public SharedSessionBuilder noInterceptor() {
 		delegate.noInterceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T statementInspector(StatementInspector statementInspector) {
+	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection(Connection connection) {
+	public SharedSessionBuilder connection(Connection connection) {
 		delegate.connection( connection );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions(boolean autoJoinTransactions) {
+	public SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose(boolean autoClose) {
+	public SharedSessionBuilder autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
+	public SharedSessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T eventListeners(SessionEventListener... listeners) {
+	public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T clearEventListeners() {
+	public SharedSessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	public SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClear(boolean autoClear) {
+	public SharedSessionBuilder autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode(FlushMode flushMode) {
+	public SharedSessionBuilder flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode() {
+	public SharedSessionBuilder flushMode() {
 		delegate.flushMode();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T jdbcTimeZone(TimeZone timeZone) {
+	public SharedSessionBuilder jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone( timeZone );
-		return getThis();
+		return this;
 	}
 }

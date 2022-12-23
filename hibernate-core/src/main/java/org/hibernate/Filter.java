@@ -35,13 +35,17 @@ public interface Filter {
 	String getName();
 
 	/**
-	 * Get the associated {@link FilterDefinition definition} of
-	 * this named filter.
+	 * Get the associated {@link FilterDefinition definition} of this
+	 * named filter.
 	 *
 	 * @return The filter definition
+	 *
+	 * @deprecated There is no plan to remove this operation, but its use
+	 *             should be avoided since {@link FilterDefinition} is an
+	 *             SPI type, and so this operation is a layer-breaker.
 	 */
+	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition();
-
 
 	/**
 	 * Set the named parameter's value for this filter.

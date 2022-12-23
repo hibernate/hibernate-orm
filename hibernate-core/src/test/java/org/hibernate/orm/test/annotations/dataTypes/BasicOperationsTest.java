@@ -16,6 +16,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
@@ -56,7 +57,7 @@ public class BasicOperationsTest {
 	public static class OracleDialectChecker implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof OracleDialect );
+			return !( dialect instanceof OracleDialect ) && !( dialect instanceof PostgresPlusDialect );
 		}
 	}
 

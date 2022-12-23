@@ -24,35 +24,24 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
-
-	enum Nature {
-		KEY,
-		TARGET;
-
-		public Nature inverse() {
-			return this == KEY ? TARGET : KEY;
-		}
-	}
-
-	interface Side {
-
-		Nature getNature();
-
-		ModelPart getModelPart();
-
-	}
+public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart {
 
 	String PART_NAME = "{fk}";
 	String TARGET_PART_NAME = "{fk-target}";
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
 
 	String getKeyTable();
 
 	String getTargetTable();
 
-	ModelPart getKeyPart();
 
-	ModelPart getTargetPart();
+	ValuedModelPart getKeyPart();
+
+	ValuedModelPart getTargetPart();
 
 	default ModelPart getPart(Nature nature) {
 		if ( nature == Nature.KEY ) {
@@ -75,6 +64,16 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 			return getTargetSide();
 		}
 	}
+
+	@Override
+	default String getContainingTableExpression() {
+		return getKeyTable();
+	}
+
+	/**
+	 * Compare the 2 values
+	 */
+	int compare(Object key1, Object key2);
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
@@ -113,9 +112,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	@Override
-	default String getPartName() {
-		return PART_NAME;
-	}
+	SelectableMapping getSelectable(int columnIndex);
 
 	/**
 	 * Visits the FK "referring" columns
@@ -125,9 +122,16 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 		return visitKeySelectables( offset, consumer );
 	}
 
-	Object getAssociationKeyFromSide(
+	default Object getAssociationKeyFromSide(
 			Object targetObject,
 			Nature nature,
+			SharedSessionContractImplementor session) {
+		return getAssociationKeyFromSide( targetObject, getSide( nature ), session );
+	}
+
+	Object getAssociationKeyFromSide(
+			Object targetObject,
+			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session);
 
 	int visitKeySelectables(int offset, SelectableConsumer consumer);
@@ -154,4 +158,19 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();
+
+	enum Nature {
+		KEY,
+		TARGET;
+
+		public Nature inverse() {
+			return this == KEY ? TARGET : KEY;
+		}
+	}
+
+	interface Side {
+		Nature getNature();
+		ValuedModelPart getModelPart();
+
+	}
 }

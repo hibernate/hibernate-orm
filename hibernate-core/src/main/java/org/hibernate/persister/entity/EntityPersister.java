@@ -26,10 +26,14 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -98,18 +102,15 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister
-		extends EntityMappingType, Loadable, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister extends EntityMappingType, RootTableGroupProducer, AttributeSource {
 
 	/**
-	 * The property name of the "special" identifier property in HQL
-	 */
-	String ENTITY_ID = "id";
-
-	/**
-	 * Finish the initialization of this object. {@link InFlightEntityMappingType#prepareMappingModel}
-	 * must be called for all entity persisters before calling this method.
-	 * <p/>
+	 * Finish the initialization of this object.
+	 * <p>
+	 * The method {@link InFlightEntityMappingType#prepareMappingModel}
+	 * must have been called for every entity persister before this method
+	 * is invoked.
+	 * <p>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
 	 * after all entity persisters have been instantiated.
 	 *
@@ -118,9 +119,10 @@ public interface EntityPersister
 	void postInstantiate() throws MappingException;
 
 	/**
-	 * Return the SessionFactory to which this persister "belongs".
+	 * Return the {@link org.hibernate.SessionFactory} to which this persister
+	 * belongs.
 	 *
-	 * @return The owning SessionFactory.
+	 * @return The owning {@code SessionFactory}.
 	 */
 	SessionFactoryImplementor getFactory();
 
@@ -157,14 +159,15 @@ public interface EntityPersister
 
 	/**
 	 * The strategy to use for SQM mutation statements where the target entity
-	 * has multiple tables.  Returns {@code null} to indicate that the entity
-	 * does not define multiple tables
+	 * has multiple tables. Returns {@code null} to indicate that the entity
+	 * does not have multiple tables.
 	 */
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
 	SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy();
+
 	/**
-	 * Retrieve the underlying entity metamodel instance...
+	 * Retrieve the underlying entity metamodel instance.
 	 *
 	 *@return The metamodel
 	 */
@@ -173,14 +176,15 @@ public interface EntityPersister
 	/**
 	 * Called from {@link EnhancementAsProxyLazinessInterceptor} to trigger load of
 	 * the entity's non-lazy state as well as the named attribute we are accessing
-	 * if it is still uninitialized after fetching non-lazy state
+	 * if it is still uninitialized after fetching non-lazy state.
 	 */
 	default Object initializeEnhancedEntityUsedAsProxy(
 			Object entity,
 			String nameOfAttributeBeingAccessed,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException(
-				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : " + getClass().getName()
+				"Initialization of entity enhancement used to act like a proxy is not supported by this EntityPersister : "
+						+ getClass().getName()
 		);
 	}
 
@@ -198,7 +202,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class only.
-	 * <p/>
+	 * <p>
 	 * For most implementations, this returns the complete set of table names
 	 * to which instances of the mapped entity are persisted (not accounting
 	 * for superclass entity mappings).
@@ -210,7 +214,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class and its subclasses.
-	 * <p/>
+	 * <p>
 	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
 	 * entity spaces.
 	 *
@@ -233,7 +237,7 @@ public interface EntityPersister
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class and its subclasses.
-	 * <p/>
+	 * <p>
 	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
 	 * entity spaces.
 	 *
@@ -280,12 +284,36 @@ public interface EntityPersister
 	boolean hasSubselectLoadableCollections();
 
 	/**
-	 * Determine whether this entity has any non-none cascading.
+	 * Determine whether this entity has any
+	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
-	 * false otherwise (aka, no cascading).
+	 *         false otherwise (aka, no cascading).
 	 */
 	boolean hasCascades();
+
+	/**
+	 * Determine whether this entity has any
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 *
+	 * @return True if the entity has any properties with a cascade other than NONE;
+	 *         false otherwise.
+	 */
+	default boolean hasCascadeDelete() {
+		//bad default implementation for compatibility
+		return hasCascades();
+	}
+
+	/**
+	 * Determine whether this entity has any owned collections.
+	 *
+	 * @return True if the entity has an owned collection;
+	 * false otherwise.
+	 */
+	default boolean hasOwnedCollections() {
+		//bad default implementation for compatibility
+		return hasCollections();
+	}
 
 	/**
 	 * Determine whether instances of this entity are considered mutable.
@@ -319,7 +347,10 @@ public interface EntityPersister
 	 * @return The type.
 	 * @throws MappingException Typically indicates an unknown
 	 * property name.
+	 *
+	 * @deprecated See {@linkplain #findAttributeMapping(String)}
 	 */
+	@Deprecated( since = "6", forRemoval = true )
 	Type getPropertyType(String propertyName) throws MappingException;
 
 	/**
@@ -357,21 +388,26 @@ public interface EntityPersister
 	/**
 	 * Determine whether detached instances of this entity carry their own
 	 * identifier value.
-	 * <p/>
+	 * <p>
 	 * The other option is the deprecated feature where users could supply
 	 * the id during session calls.
 	 *
 	 * @return True if either (1) {@link #hasIdentifierProperty()} or
-	 * (2) the identifier is an embedded composite identifier; false otherwise.
+	 * 		(2) the identifier is an embedded composite identifier; false otherwise.
+	 *
+	 * @deprecated This feature is no longer supported
 	 */
-	boolean canExtractIdOutOfEntity();
+	@Deprecated(since = "6")
+	default boolean canExtractIdOutOfEntity() {
+		return true;
+	}
 
 	/**
 	 * Determine whether optimistic locking by column is enabled for this
 	 * entity.
 	 *
-	 * @return True if optimistic locking by column (i.e., <version/> or
-	 * <timestamp/>) is enabled; false otherwise.
+	 * @return True if optimistic locking by column (i.e., {@code <version/>} or
+	 * {@code <timestamp/>}) is enabled; false otherwise.
 	 */
 	boolean isVersioned();
 
@@ -383,12 +419,9 @@ public interface EntityPersister
 	 */
 	BasicType<?> getVersionType();
 
+	@SuppressWarnings("unchecked")
 	default VersionJavaType<Object> getVersionJavaType() {
-		final BasicType<?> versionType = getVersionType();
-		//noinspection unchecked
-		return versionType == null
-				? null
-				: (VersionJavaType<Object>) versionType.getJavaTypeDescriptor();
+		return (VersionJavaType<Object>) getVersionType().getJavaTypeDescriptor();
 	}
 
 	/**
@@ -407,11 +440,12 @@ public interface EntityPersister
 	boolean hasNaturalIdentifier();
 
 	/**
-	 * If the entity defines a natural id ({@link #hasNaturalIdentifier()}), which
-	 * properties make up the natural id.
+	 * If the entity defines a natural id, that is, if
+	 * {@link #hasNaturalIdentifier()} returns {@code true}, the indices
+	 * of the properties which make up the natural id.
 	 *
-	 * @return The indices of the properties making of the natural id; or
-	 * null, if no natural id is defined.
+	 * @return The indices of the properties making up the natural id;
+	 *         or null, if no natural id is defined.
 	 */
 	int[] getNaturalIdentifierProperties();
 
@@ -428,8 +462,19 @@ public interface EntityPersister
 	 * Determine which identifier generation strategy is used for this entity.
 	 *
 	 * @return The identifier generation strategy.
+	 *
+	 * @deprecated use {@link #getGenerator()}
 	 */
+	@Deprecated
 	IdentifierGenerator getIdentifierGenerator();
+
+	default Generator getGenerator() {
+		return getIdentifierGenerator();
+	}
+
+	default BeforeExecutionGenerator getVersionGenerator() {
+		return new VersionGeneration( getVersionMapping() );
+	}
 
 	@Override
 	default AttributeMapping getAttributeMapping(int position) {
@@ -438,17 +483,16 @@ public interface EntityPersister
 
 	@Override
 	default void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> attributeMappings = getAttributeMappings();
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
+				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				attributeMapping.breakDownJdbcValues( values[ i ], valueConsumer, session );
 			}
 		}
 		else {
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
+				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
 				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
 			}
@@ -456,8 +500,8 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Determine whether this entity defines any lazy properties (ala
-	 * bytecode instrumentation).
+	 * Determine whether this entity defines any lazy properties (when bytecode
+	 * instrumentation is enabled).
 	 *
 	 * @return True if the entity has properties mapped as lazy; false otherwise.
 	 */
@@ -465,13 +509,15 @@ public interface EntityPersister
 
 	default NaturalIdLoader<?> getNaturalIdLoader() {
 		throw new UnsupportedOperationException(
-				"EntityPersister implementation `" + getClass().getName() + "` does not support `NaturalIdLoader`"
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'NaturalIdLoader'"
 		);
 	}
 
 	default MultiNaturalIdLoader<?> getMultiNaturalIdLoader() {
 		throw new UnsupportedOperationException(
-				"EntityPersister implementation `" + getClass().getName() + "` does not support `MultiNaturalIdLoader`"
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'MultiNaturalIdLoader'"
 		);
 	}
 
@@ -518,17 +564,17 @@ public interface EntityPersister
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
+	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
+	void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
+	void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session);
 
 	/**
 	 * Persist an instance
@@ -632,7 +678,8 @@ public interface EntityPersister
 	/**
 	 * Does this class have a cache.
 	 *
-	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()} depending on need
+	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()}
+	 *             depending on need
 	 */
 	@Deprecated
 	boolean hasCache();
@@ -676,8 +723,9 @@ public interface EntityPersister
 	boolean isSelectBeforeUpdateRequired();
 
 	/**
-	 * Get the current database state of the object, in a "hydrated" form, without
-	 * resolving identifiers
+	 * Get the current database state of the object, in a "hydrated" form,
+	 * without resolving identifiers.
+	 *
 	 * @return null if there is no row in the database
 	 */
 	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
@@ -685,9 +733,9 @@ public interface EntityPersister
 	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
 
 	/**
-	 * Get the current version of the object, or return null if there is no row for
-	 * the given identifier. In the case of unversioned data, return any object
-	 * if the row exists.
+	 * Get the current version of the object, or return null if there is no
+	 * row for the given identifier. In the case of unversioned data, return
+	 * any object if the row exists.
 	 */
 	Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
@@ -758,7 +806,7 @@ public interface EntityPersister
 	 * back from the database, injecting these generated values into the
 	 * given entity as well as writing this state to the
 	 * {@link org.hibernate.engine.spi.PersistenceContext}.
-	 * <p/>
+	 * <p>
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.
@@ -770,7 +818,7 @@ public interface EntityPersister
 	 * back from the database, injecting these generated values into the
 	 * given entity as well as writing this state to the
 	 * {@link org.hibernate.engine.spi.PersistenceContext}.
-	 * <p/>
+	 * <p>
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.
@@ -788,7 +836,7 @@ public interface EntityPersister
 	Class<?> getMappedClass();
 
 	/**
-	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface.
+	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface?
 	 */
 	boolean implementsLifecycle();
 
@@ -803,7 +851,7 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Set the given values to the mapped properties of the given object
+	 * Set the given values to the mapped properties of the given object.
 	 *
 	 * @deprecated Use {@link #setValues} instead
 	 */
@@ -815,7 +863,7 @@ public interface EntityPersister
 	}
 
 	/**
-	 * Set the value of a particular property
+	 * Set the value of a particular property of the given instance.
 	 *
 	 * @deprecated Use {@link #setValue} instead
 	 */
@@ -848,7 +896,8 @@ public interface EntityPersister
 	Object getPropertyValue(Object object, String propertyName);
 
 	/**
-	 * Get the identifier of an instance (throw an exception if no identifier property)
+	 * Get the identifier of an instance from the object's identifier property.
+	 * Throw an exception if it has no identifier property.
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
@@ -858,7 +907,8 @@ public interface EntityPersister
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	/**
-	 * Get the version number (or timestamp) from the object's version property (or return null if not versioned)
+	 * Get the version number (or timestamp) from the object's version property.
+	 * Return {@code null} if it is not versioned.
 	 */
 	Object getVersion(Object object) throws HibernateException;
 
@@ -883,29 +933,39 @@ public interface EntityPersister
 	boolean hasUninitializedLazyProperties(Object object);
 
 	/**
-	 * Set the identifier and version of the given instance back to its "unsaved" value.
+	 * Set the identifier and version of the given instance back to its "unsaved"
+	 * value, that is, the value it had before it was made persistent.
 	 */
 	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
 	/**
-	 * A request has already identified the entity-name of this persister as the mapping for the given instance.
-	 * However, we still need to account for possible subclassing and potentially re-route to the more appropriate
+	 * Obtain the {@code EntityPersister} for the concrete class of the given
+	 * entity instance which participates in a mapped inheritance hierarchy
+	 * with this persister. The given instance must be an instance of a subclass
+	 * of the persistent class managed by this persister.
+	 * <p>
+	 * A request has already identified the entity name of this persister as the
+	 * mapping for the given instance. However, we still need to account for
+	 * possible subclassing and potentially reroute to the more appropriate
 	 * persister.
-	 * <p/>
-	 * For example, a request names {@code Animal} as the entity-name which gets resolved to this persister.  But the
-	 * actual instance is really an instance of {@code Cat} which is a subclass of {@code Animal}.  So, here the
-	 * {@code Animal} persister is being asked to return the persister specific to {@code Cat}.
-	 * <p/>
-	 * It is also possible that the instance is actually an {@code Animal} instance in the above example in which
-	 * case we would return {@code this} from this method.
+	 * <p>
+	 * For example, a request names {@code Animal} as the entity name which gets
+	 * resolved to this persister.  But the actual instance is really an instance
+	 * of {@code Cat} which is a subclass of {@code Animal}. So, here the
+	 * {@code Animal} persister is being asked to return the persister specific
+	 * to {@code Cat}.
+	 * <p>
+	 * It's also possible that the instance is actually an {@code Animal} instance
+	 * in the above example in which case we would return {@code this} from this
+	 * method.
 	 *
 	 * @param instance The entity instance
 	 * @param factory Reference to the SessionFactory
 	 *
 	 * @return The appropriate persister
 	 *
-	 * @throws HibernateException Indicates that instance was deemed to not be a subclass of the entity mapped by
-	 * this persister.
+	 * @throws HibernateException Indicates that instance was deemed to not be a
+	 *                            subclass of the entity mapped by this persister.
 	 */
 	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
@@ -954,4 +1014,13 @@ public interface EntityPersister
 	}
 
 	boolean canUseReferenceCacheEntries();
+
+	/**
+	 * The property name of the "special" identifier property in HQL
+	 *
+	 * @deprecated this feature of HQL is now deprecated
+	 */
+	@Deprecated(since = "6.2")
+	String ENTITY_ID = "id";
+
 }

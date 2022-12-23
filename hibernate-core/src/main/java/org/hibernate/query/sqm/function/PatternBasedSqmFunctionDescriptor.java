@@ -23,7 +23,7 @@ import java.util.List;
  * Support for HQL functions that have different representations
  * in different SQL dialects, where the difference can be handled
  * via a pattern template.
- * <p/>
+ * <p>
  * In HQL we might define a function {@code concat(?1, ?2)} to
  * concatenate two strings p1 and p2. Dialects register different
  * instances of this class using the same name (concat) but with

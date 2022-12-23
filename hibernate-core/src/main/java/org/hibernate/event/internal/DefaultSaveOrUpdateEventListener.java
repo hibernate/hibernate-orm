@@ -11,6 +11,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -31,6 +32,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Defines the default listener used by Hibernate for handling save-update
@@ -56,8 +58,9 @@ public class DefaultSaveOrUpdateEventListener
 		if ( requestedId != null ) {
 			//assign the requested id to the proxy, *before*
 			//reassociating the proxy
-			if ( object instanceof HibernateProxy ) {
-				( (HibernateProxy) object ).getHibernateLazyInitializer().setIdentifier( requestedId );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
+				lazyInitializer.setIdentifier( requestedId );
 			}
 		}
 
@@ -75,7 +78,6 @@ public class DefaultSaveOrUpdateEventListener
 			//return the id in the event object
 			event.setResultId( performSaveOrUpdate( event ) );
 		}
-
 	}
 
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
@@ -154,7 +156,7 @@ public class DefaultSaveOrUpdateEventListener
 
 	/**
 	 * The given save-update event named a transient entity.
-	 * <p/>
+	 * <p>
 	 * Here, we will perform the save processing.
 	 *
 	 * @param event The save event to be handled.
@@ -203,13 +205,12 @@ public class DefaultSaveOrUpdateEventListener
 
 	/**
 	 * The given save-update event named a detached entity.
-	 * <p/>
+	 * <p>
 	 * Here, we will perform the update processing.
 	 *
 	 * @param event The update event to be handled.
 	 */
 	protected void entityIsDetached(SaveOrUpdateEvent event) {
-
 		LOG.trace( "Updating detached instance" );
 
 		final EventSource session = event.getSession();
@@ -219,15 +220,9 @@ public class DefaultSaveOrUpdateEventListener
 		}
 
 		Object entity = event.getEntity();
-
 		EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
-
-		event.setRequestedId(
-				getUpdateId( entity, persister, event.getRequestedId(), session )
-		);
-
+		event.setRequestedId( getUpdateId( entity, persister, event.getRequestedId(), session ) );
 		performUpdate( event, entity, persister );
-
 	}
 
 	/**
@@ -242,96 +237,79 @@ public class DefaultSaveOrUpdateEventListener
 	 *
 	 * @throws TransientObjectException If the entity is considered transient.
 	 */
-	protected Object getUpdateId(
-			Object entity,
-			EntityPersister persister,
-			Object requestedId,
-			SessionImplementor session) {
+	protected Object getUpdateId(Object entity, EntityPersister persister, Object requestedId, SessionImplementor session) {
 		// use the id assigned to the instance
 		Object id = persister.getIdentifier( entity, session );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated
-			throw new TransientObjectException(
-					"The given object has a null identifier: " +
-							persister.getEntityName()
-			);
+			throw new TransientObjectException( "The given object has a null identifier: "
+					+ persister.getEntityName() );
 		}
 		else {
 			return id;
 		}
-
 	}
 
-	protected void performUpdate(
-			SaveOrUpdateEvent event,
-			Object entity,
-			EntityPersister persister) throws HibernateException {
-
-		if ( LOG.isTraceEnabled() && !persister.isMutable() ) {
-			LOG.trace( "Immutable instance passed to performUpdate()" );
-		}
+	protected void performUpdate(SaveOrUpdateEvent event, Object entity, EntityPersister persister)
+			throws HibernateException {
+		final EventSource source = event.getSession();
 
 		if ( LOG.isTraceEnabled() ) {
+			if ( !persister.isMutable() ) {
+				LOG.trace( "Immutable instance passed to performUpdate()" );
+			}
 			LOG.tracev(
 					"Updating {0}",
-					MessageHelper.infoString( persister, event.getRequestedId(), event.getSession().getFactory() )
+					MessageHelper.infoString( persister, event.getRequestedId(), source.getFactory() )
 			);
 		}
 
-		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-
 		final EntityKey key = source.generateEntityKey( event.getRequestedId(), persister );
-
 		persistenceContext.checkUniqueness( key, entity );
 
 		if ( invokeUpdateLifecycle( entity, persister, source ) ) {
 			reassociate( event, event.getObject(), event.getRequestedId(), persister );
-			return;
 		}
+		else {
+			// this is a transient object with existing persistent state not loaded by the session
+			new OnUpdateVisitor( source, event.getRequestedId(), entity ).process( entity, persister );
 
-		// this is a transient object with existing persistent state not loaded by the session
+			// TODO: put this stuff back in to read snapshot from
+			// the second-level cache (needs some extra work)
+//			Object[] cachedState = null;
+//			if ( persister.hasCache() ) {
+//				CacheEntry entry = (CacheEntry) persister.getCache()
+//						.get( event.getRequestedId(), source.getTimestamp() );
+//				cachedState = entry==null ?
+//						null :
+//						entry.getState(); //TODO: half-assemble this stuff
+//			}
 
-		new OnUpdateVisitor( source, event.getRequestedId(), entity ).process( entity, persister );
-
-		// TODO: put this stuff back in to read snapshot from
-		// the second-level cache (needs some extra work)
-		/*Object[] cachedState = null;
-
-        if ( persister.hasCache() ) {
-        	CacheEntry entry = (CacheEntry) persister.getCache()
-        			.get( event.getRequestedId(), source.getTimestamp() );
-            cachedState = entry==null ?
-            		null :
-            		entry.getState(); //TODO: half-assemble this stuff
-        }*/
-
-		persistenceContext.addEntity(
-				entity,
-				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
-				null, // cachedState,
-				key,
-				persister.getVersion( entity ),
-				LockMode.NONE,
-				true,
-				persister,
-				false
-		);
-
-		persister.afterReassociate( entity, source );
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Updating {0}", MessageHelper.infoString(
+			persistenceContext.addEntity(
+					entity,
+					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+					null, // cachedState,
+					key,
+					persister.getVersion( entity ),
+					LockMode.NONE,
+					true,
 					persister,
-					event.getRequestedId(),
-					source.getFactory()
-			)
+					false
 			);
-		}
 
-		cascadeOnUpdate( event, persister, entity );
+			persister.afterReassociate( entity, source );
+
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev(
+						"Updating {0}",
+						MessageHelper.infoString( persister, event.getRequestedId(), source.getFactory() )
+				);
+			}
+
+			cascadeOnUpdate( event, persister, entity );
+		}
 	}
 
 	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Map;
 
 /**
@@ -16,7 +18,7 @@ import java.util.Map;
  *
  * @deprecated supply a {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
  */
-@Deprecated(since = "6.0")
+@Deprecated(since = "6.0") @Remove
 public interface IdentifierGeneratorStrategyProvider {
 	/**
 	 * set of strategy / generator class pairs to register as accepted strategies

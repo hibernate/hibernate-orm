@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
  * identifiable types as entities or mapped-superclasses.  Basically things to which an
  * identifier can be attached.
- * <p/>
+ * <p>
  * NOTE : Currently we only really have support for direct entities in the Hibernate metamodel
  * as the information for them is consumed into the closest actual entity subclass(es) in the
  * internal Hibernate mapping-metamodel.
@@ -148,7 +148,8 @@ public abstract class AbstractIdentifiableType<J>
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
 			final JavaType<?> attributeJavaType = attribute.getAttributeJavaType();
-			if ( !( attributeJavaType instanceof PrimitiveJavaType ) || ( (PrimitiveJavaType) attributeJavaType ).getPrimitiveClass() != javaType ) {
+			if ( !( attributeJavaType instanceof PrimitiveJavaType )
+					|| ( (PrimitiveJavaType) attributeJavaType ).getPrimitiveClass() != javaType ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Attribute [%s#%s : %s] not castable to requested type [%s]",

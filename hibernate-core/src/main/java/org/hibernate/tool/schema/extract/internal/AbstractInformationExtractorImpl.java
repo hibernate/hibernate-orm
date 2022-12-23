@@ -25,6 +25,8 @@ import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -95,17 +97,21 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					)
 			);
 		}
-		extractionContext.getJdbcEnvironment().getDialect().augmentPhysicalTableTypes( physicalTableTypesList );
+		final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
+		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
 		this.extraPhysicalTableTypes = physicalTableTypesList.toArray( new String[0] );
 
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
+			if ( dialect instanceof DB2Dialect ) {
+				tableTypesList.add( "ALIAS" );
+			}
 			tableTypesList.add( "SYNONYM" );
 		}
 		Collections.addAll( tableTypesList, extraPhysicalTableTypes );
-		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
+		dialect.augmentRecognizedTableTypes( tableTypesList );
 
 		this.tableTypes = tableTypesList.toArray( new String[0] );
 	}
@@ -255,7 +261,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog} and {@code schemaPattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getSchemas(String, String)},
 	 * and are copied here:
@@ -598,12 +604,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getColumns(String, String, String, String)},
 	 * and are copied here:
-	 * <p/>
+	 * <p>
 	 * @param catalog – a catalog name; must match the catalog name as it is
 	 *                   stored in the database; "" retrieves those without
 	 *                   a catalog; null means that the catalog name should
@@ -708,7 +714,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getTables(String, String, String, String[])},
@@ -996,11 +1002,15 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 			final int columnPosition = resultSet.getInt( getResultSetColumnPositionColumn() );
 
+			final int index = columnPosition - 1;
+			// Fill up the array list with nulls up to the desired index, because some JDBC drivers don't return results ordered by column position
+			while ( pkColumns.size() <= index ) {
+				pkColumns.add( null );
+			}
 			final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier(
 					resultSet.getString( getResultSetColumnNameLabel() )
 			);
-			final ColumnInformation column = tableInformation.getColumn( columnIdentifier );
-			pkColumns.add( columnPosition-1, column );
+			pkColumns.set( index, tableInformation.getColumn( columnIdentifier ) );
 		}
 		if ( firstPass ) {
 			// we did not find any results (no pk)
@@ -1062,12 +1072,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
 	 * and {@code columnNamePattern} parameters are as
 	 * specified by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)},
 	 * and are copied here:
-	 * <p/>
+	 * <p>
 	 * @param catalog – a catalog name; must match the catalog name as it is
 	 *                   stored in this database; "" retrieves those without
 	 *                   a catalog; null means that the catalog name should
@@ -1221,7 +1231,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *         executes successfully or not.
 	 *     </li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * The {@code catalog}, {@code schema}, and {@code table}
 	 * parameters are as specified by {@link DatabaseMetaData#getImportedKeys(String, String, String)}
 	 * and are copied here:

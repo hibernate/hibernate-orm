@@ -14,4 +14,5 @@ import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 public interface VersionAttributeSource
 		extends SingularAttributeSource, RelationalValueSourceContainer, ImplicitBasicColumnNameSource {
 	String getUnsavedValue();
+	String getSource();
 }

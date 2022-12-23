@@ -41,7 +41,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 					// output: [top1]
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					MiddleEntity middle1 = new MiddleEntity();
 
@@ -74,9 +74,9 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)" ),
-				new Batch( "insert into MiddleEntity (name, top_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity (middle_id, name, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into TopEntity (name,id) values (?,?)" ),
+				new Batch( "insert into MiddleEntity (name,top_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id,name,id) values (?,?,?)", 2 )
 		);
 	}
 
@@ -96,7 +96,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 					clearBatches();
 					session.flush();
 
-					verifyContainsBatches( new Batch( "insert into TopEntity (name, id) values (?, ?)" ) );
+					verifyContainsBatches( new Batch( "insert into TopEntity (name,id) values (?,?)" ) );
 
 					MiddleEntity middle1 = new MiddleEntity();
 
@@ -132,10 +132,10 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 		);
 
 		verifyContainsBatches(
-				new Batch( "insert into TopEntity (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into MiddleEntity (name, top_id, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity (middle_id, name, id) values (?, ?, ?)", 2 ),
-				new Batch( "insert into BottomEntity2 (middle_id, name, id) values (?, ?, ?)", 2 )
+				new Batch( "insert into TopEntity (name,id) values (?,?)", 2 ),
+				new Batch( "insert into MiddleEntity (name,top_id,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id,name,id) values (?,?,?)", 2 ),
+				new Batch( "insert into BottomEntity2 (middle_id,name,id) values (?,?,?)", 2 )
 		);
 	}
 

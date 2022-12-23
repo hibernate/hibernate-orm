@@ -12,7 +12,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,12 +20,17 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.SessionFactoryBuilderService;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +39,7 @@ import org.junit.runner.RunWith;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
 public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+		extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
@@ -43,9 +47,25 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 	}
 
 	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+	}
+
+	@Override
+	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.addService(
+				SessionFactoryBuilderService.class,
+				(SessionFactoryBuilderService) (metadata, bootstrapContext) -> {
+					SessionFactoryOptionsBuilder optionsBuilder = new SessionFactoryOptionsBuilder(
+							metadata.getMetadataBuildingOptions().getServiceRegistry(),
+							bootstrapContext
+					);
+					// This test only makes sense if association properties *can* be uninitialized.
+					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
+					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+				}
+		);
 	}
 
 	@After

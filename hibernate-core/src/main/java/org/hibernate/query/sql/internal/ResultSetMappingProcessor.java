@@ -8,7 +8,6 @@ package org.hibernate.query.sql.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +29,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
@@ -47,10 +45,11 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+
 /**
- * Responsible for processing the {@link ResultSetMapping}
- * defined by a {@link org.hibernate.query.sql.spi.NativeSelectQueryDefinition} and
- * pre-process it for consumption in {@link SQLQueryParser}.
+ * Responsible for processing the {@link ResultSetMapping} defined by a
+ * {@link org.hibernate.query.sql.spi.NativeSelectQueryDefinition} and
+ * preprocessing it for consumption by {@link SQLQueryParser}.
  *
  * @author Gavin King
  * @author Max Andersen
@@ -100,11 +99,6 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			// todo (6.0): access property results map somehow which was on NativeSQLQueryNonScalarReturn before
 			return Collections.emptyMap();
 		}
-	}
-
-	private boolean hasPropertyResultMap(String alias) {
-		Map<String, String[]> propertyMaps = internalGetPropertyResultsMap( alias );
-		return propertyMaps != null && ! propertyMaps.isEmpty();
 	}
 
 	public SQLQueryParser.ParserContext process() {
@@ -460,7 +454,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void processReturn(NativeQuery.ResultNode rtn) {
 		if ( rtn instanceof NativeQuery.RootReturn ) {
-			processRootReturn( ( NativeQuery.RootReturn ) rtn );
+			processRootReturn( (NativeQuery.RootReturn) rtn );
 		}
 		else if ( rtn instanceof NativeQuery.FetchReturn ) {
 			processFetchReturn( (NativeQuery.FetchReturn) rtn );
@@ -469,9 +463,10 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			processConstructorReturn( (NativeQuery.InstantiationResultNode<?>) rtn );
 		}
 		else if ( rtn instanceof NativeQuery.ReturnProperty ) {
-			processScalarReturn( ( NativeQuery.ReturnProperty ) rtn );
+			processScalarReturn( (NativeQuery.ReturnProperty) rtn );
 		}
 		else if ( rtn instanceof NativeQuery.ReturnableResultNode ) {
+			processPropertyReturn( (NativeQuery.ReturnableResultNode) rtn );
 		}
 		else {
 			throw new IllegalStateException(
@@ -480,8 +475,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 	}
 
-	private void processConstructorReturn(NativeQuery.InstantiationResultNode<?> rtn) {
+	private void processPropertyReturn(NativeQuery.ReturnableResultNode rtn) {
+		//nothing to do
+	}
 
+	private void processConstructorReturn(NativeQuery.InstantiationResultNode<?> rtn) {
+		//nothing to do
 	}
 
 	private void processScalarReturn(NativeQuery.ReturnProperty typeReturn) {
@@ -616,22 +615,22 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		return internalGetPropertyResultsMap( alias );
 	}
 
-	public String[] collectQuerySpaces() {
-		final HashSet<String> spaces = new HashSet<String>();
-		collectQuerySpaces( spaces );
-		return spaces.toArray( new String[ spaces.size() ] );
-	}
-
-	public void collectQuerySpaces(Collection<String> spaces) {
-		for ( EntityPersister persister : alias2Persister.values() ) {
-			Collections.addAll( spaces, (String[]) persister.getQuerySpaces() );
-		}
-		for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
-			final Type elementType = persister.getElementType();
-			if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
-				final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
-				Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
-			}
-		}
-	}
+//	public String[] collectQuerySpaces() {
+//		final HashSet<String> spaces = new HashSet<>();
+//		collectQuerySpaces( spaces );
+//		return spaces.toArray( EMPTY_STRING_ARRAY );
+//	}
+//
+//	public void collectQuerySpaces(Collection<String> spaces) {
+//		for ( EntityPersister persister : alias2Persister.values() ) {
+//			Collections.addAll( spaces, (String[]) persister.getQuerySpaces() );
+//		}
+//		for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
+//			final Type elementType = persister.getElementType();
+//			if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
+//				final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
+//				Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
+//			}
+//		}
+//	}
 }

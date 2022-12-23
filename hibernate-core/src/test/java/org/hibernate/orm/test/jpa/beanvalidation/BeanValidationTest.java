@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @Jpa(
 		annotatedClasses = { CupHolder.class },
-		integrationSettings = { @Setting(name = AvailableSettings.JPA_VALIDATION_MODE, value = "auto") }
+		integrationSettings = { @Setting(name = AvailableSettings.JAKARTA_VALIDATION_MODE, value = "auto") }
 )
 public class BeanValidationTest {
 

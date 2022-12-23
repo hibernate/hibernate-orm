@@ -30,7 +30,7 @@ import org.hibernate.type.SerializationException;
  * <li>Serialize managing finally and IOException
  * <li>Deserialize managing finally and IOException
  * </ul>
- * <p/>
+ * <p>
  * <p>This class throws exceptions for invalid <code>null</code> inputs.
  * Each method documents its behaviour in more detail.</p>
  *
@@ -54,7 +54,7 @@ public final class SerializationHelper {
 
 	/**
 	 * <p>Deep clone an <code>Object</code> using serialization.</p>
-	 * <p/>
+	 * <p>
 	 * <p>This is many times slower than writing clone methods by hand
 	 * on all objects in your object graph. However, for complex object
 	 * graphs, or for those that don't support deep cloning this can
@@ -80,11 +80,11 @@ public final class SerializationHelper {
 
 	/**
 	 * <p>Serializes an <code>Object</code> to the specified stream.</p>
-	 * <p/>
+	 * <p>
 	 * <p>The stream will be closed once the object is written.
 	 * This avoids the need for a finally clause, and maybe also exception
 	 * handling, in the application code.</p>
-	 * <p/>
+	 * <p>
 	 * <p>The stream passed in is not buffered internally within this method.
 	 * This is the responsibility of your application if desired.</p>
 	 *
@@ -151,7 +151,7 @@ public final class SerializationHelper {
 	/**
 	 * Deserializes an object from the specified stream using the Thread Context
 	 * ClassLoader (TCCL).
-	 * <p/>
+	 * <p>
 	 * Delegates to {@link #doDeserialize}
 	 *
 	 * @param inputStream the serialized object input stream, must not be null
@@ -182,11 +182,11 @@ public final class SerializationHelper {
 	 * Deserializes an object from the specified stream using the Thread Context
 	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
 	 * class is used.
-	 * <p/>
+	 * <p>
 	 * The stream will be closed once the object is read. This avoids the need
 	 * for a finally clause, and maybe also exception handling, in the application
 	 * code.
-	 * <p/>
+	 * <p>
 	 * The stream passed in is not buffered internally within this method.  This is
 	 * the responsibility of the caller, if desired.
 	 *
@@ -248,7 +248,7 @@ public final class SerializationHelper {
 	 * Deserializes an object from an array of bytes using the Thread Context
 	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
 	 * class is used.
-	 * <p/>
+	 * <p>
 	 * Delegates to {@link #deserialize(byte[], ClassLoader)}
 	 *
 	 * @param objectData the serialized object, must not be null
@@ -271,7 +271,7 @@ public final class SerializationHelper {
 
 	/**
 	 * Deserializes an object from an array of bytes.
-	 * <p/>
+	 * <p>
 	 * Delegates to {@link #deserialize(InputStream, ClassLoader)} using a
 	 * {@link ByteArrayInputStream} to wrap the array.
 	 *

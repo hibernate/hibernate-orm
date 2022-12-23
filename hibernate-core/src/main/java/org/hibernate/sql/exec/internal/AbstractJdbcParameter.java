@@ -15,7 +15,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.BindableType;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -68,6 +67,7 @@ public abstract class AbstractJdbcParameter
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
+				javaType,
 				this
 		);
 	}
@@ -151,7 +151,6 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -162,7 +161,6 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {

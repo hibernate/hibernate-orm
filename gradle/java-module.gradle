@@ -28,6 +28,7 @@ apply from: rootProject.file( 'gradle/databases.gradle' )
 apply plugin: 'org.hibernate.orm.database-service'
 
 apply plugin: 'java-library'
+apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'org.hibernate.orm.database-service'
 
 apply plugin: 'checkstyle'
@@ -61,6 +62,8 @@ dependencies {
 	implementation libs.logging
 
 	compileOnly libs.loggingAnnotations
+	// Used for compiling some Oracle specific JdbcTypes
+	compileOnly dbLibs.oracle
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5
@@ -105,6 +108,9 @@ dependencies {
 	}
 	else if ( db.startsWith( 'mariadb' ) ) {
 		testRuntimeOnly dbLibs.mariadb
+	}
+	else if ( db.startsWith( 'firebird' ) ) {
+		testRuntimeOnly dbLibs.firebird
 	}
 
 	annotationProcessor libs.loggingProcessor
@@ -231,6 +237,9 @@ if ( gradle.ext.javaToolchainEnabled ) {
 
 		// Configure JVM Options
 		jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+		if ( project.hasProperty( 'test.jdk.launcher.args' ) ) {
+			jvmArgs( project.getProperty( 'test.jdk.launcher.args' ).toString().split( ' ' ) )
+		}
 
 		// Display version of Java tools
 		doFirst {
@@ -275,6 +284,13 @@ tasks.withType( Test.class ).each { test ->
 	if ( project.name != 'hibernate-testing' ) {
 		test.dependsOn ':hibernate-testing:test'
 	}
+
+	// Allow to exclude specific tests
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		test.filter {
+			excludeTestsMatching project.property('excludeTests').toString()
+		}
+	}
 }
 
 sourceSets {
@@ -303,6 +319,7 @@ sourceSets {
 processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
+	inputs.property( "dbHost", dbHost )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {
@@ -485,9 +502,6 @@ checkstyle {
 
 // exclude generated java sources - by explicitly setting the base source dir
 tasks.checkstyleMain.source = 'src/main/java'
-// because cfg package is a mess mainly from annotation stuff
-tasks.checkstyleMain.exclude '**/org/hibernate/cfg/**'
-tasks.checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 // define a second checkstyle task for checking non-fatal violations
 task nonFatalCheckstyle(type:Checkstyle) {

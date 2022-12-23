@@ -69,7 +69,7 @@ public enum SourceType {
 			return defaultValue;
 		}
 
-		if ( SourceType.class.isInstance( value ) ) {
+		if ( value instanceof SourceType ) {
 			return (SourceType) value;
 		}
 

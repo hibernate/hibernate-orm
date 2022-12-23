@@ -48,10 +48,10 @@ public class Helper {
 	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
-			Object scriptSourceSetting,
+			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
-		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
+		if ( scriptSourceSetting instanceof Reader ) {
 			return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
 		}
 		else {
@@ -100,7 +100,7 @@ public class Helper {
 		if ( scriptTargetSetting == null ) {
 			return null;
 		}
-		else if ( Writer.class.isInstance( scriptTargetSetting ) ) {
+		else if ( scriptTargetSetting instanceof Writer ) {
 			return new ScriptTargetOutputToWriter( (Writer) scriptTargetSetting );
 		}
 		else {
@@ -169,14 +169,14 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					sqlStringGenerationContext,
+					context,
 					ddlTransactionIsolator,
 					tool
 			);

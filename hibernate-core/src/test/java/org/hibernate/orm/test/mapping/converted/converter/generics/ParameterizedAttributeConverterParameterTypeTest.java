@@ -20,7 +20,8 @@ import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.BootstrapContextImpl;
@@ -72,22 +73,22 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 
 		{
 			Property prop = pc.getProperty( "someStrings" );
-			AttributeConverterTypeAdapter type = assertTyping(
-					AttributeConverterTypeAdapter.class,
+			ConvertedBasicTypeImpl type = assertTyping(
+					ConvertedBasicTypeImpl.class,
 					prop.getType()
 			);
-
-			assertTrue( StringListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
+			JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+			assertTrue( StringListConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 		}
 
 		{
 			Property prop = pc.getProperty( "someIntegers" );
-			AttributeConverterTypeAdapter type = assertTyping(
-					AttributeConverterTypeAdapter.class,
+			ConvertedBasicTypeImpl type = assertTyping(
+					ConvertedBasicTypeImpl.class,
 					prop.getType()
 			);
-
-			assertTrue( IntegerListConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
+			JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+			assertTrue( IntegerListConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 		}
 	}
 

@@ -39,7 +39,7 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIME );
+		return context.getJdbcType( Types.TIME );
 	}
 
 	@Override
@@ -61,12 +61,12 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	public String toString(Calendar value) {
-		return DateJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcTimeJavaType.INSTANCE.toString( value.getTime() );
 	}
 
 	public Calendar fromString(CharSequence string) {
 		Calendar result = new GregorianCalendar();
-		result.setTime( DateJavaType.INSTANCE.fromString( string.toString() ) );
+		result.setTime( JdbcTimeJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
 
@@ -79,17 +79,19 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 			return false;
 		}
 
-		return one.get(Calendar.DAY_OF_MONTH) == another.get(Calendar.DAY_OF_MONTH)
-			&& one.get(Calendar.MONTH) == another.get(Calendar.MONTH)
-			&& one.get(Calendar.YEAR) == another.get(Calendar.YEAR);
+		return one.get(Calendar.MILLISECOND) == another.get(Calendar.MILLISECOND)
+			&& one.get(Calendar.SECOND) == another.get(Calendar.SECOND)
+			&& one.get(Calendar.MINUTE) == another.get(Calendar.MINUTE)
+			&& one.get(Calendar.HOUR_OF_DAY) == another.get(Calendar.HOUR_OF_DAY);
 	}
 
 	@Override
 	public int extractHashCode(Calendar value) {
 		int hashCode = 1;
-		hashCode = 31 * hashCode + value.get(Calendar.DAY_OF_MONTH);
-		hashCode = 31 * hashCode + value.get(Calendar.MONTH);
-		hashCode = 31 * hashCode + value.get(Calendar.YEAR);
+		hashCode = 31 * hashCode + value.get(Calendar.MILLISECOND);
+		hashCode = 31 * hashCode + value.get(Calendar.SECOND);
+		hashCode = 31 * hashCode + value.get(Calendar.MINUTE);
+		hashCode = 31 * hashCode + value.get(Calendar.HOUR_OF_DAY);
 		return hashCode;
 	}
 
@@ -131,6 +133,16 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		Calendar cal = new GregorianCalendar();
 		cal.setTime( (Date) value );
 		return cal;
+	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Time":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override

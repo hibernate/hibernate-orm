@@ -63,7 +63,7 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 			List<SortSpecification> withinGroup,
 			SqlAstTranslator<?> translator) {
 		if ( filter != null && !translator.supportsFilterClause() ) {
-			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]!" );
+			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );
 		}
 		sqlAppender.appendSql( getName() );
 		sqlAppender.appendSql( '(' );

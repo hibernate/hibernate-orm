@@ -43,6 +43,8 @@ public @interface Table {
 
 	/**
 	 * A check constraint, written in native SQL.
+	 * <p>
+	 * <em>Useful for secondary tables, otherwise use {@link Check}.</em>
 	 *
 	 * @see Check
 	 */
@@ -50,6 +52,8 @@ public @interface Table {
 
 	/**
 	 * Specifies comment to add to the generated DDL for the table.
+	 * <p>
+	 * <em>Useful for secondary tables, otherwise use {@link Comment}.</em>
 	 *
 	 * @see Comment
 	 */
@@ -64,35 +68,30 @@ public @interface Table {
 	ForeignKey foreignKey() default @ForeignKey( name="" );
 
 	/**
-	 * Defines a fetching strategy for the secondary table.
-	 * <ul>
-	 * <li>If set to {@link FetchMode#JOIN}, the default, Hibernate will use an inner join to
-	 * retrieve a secondary table defined by a class or its superclasses and an outer join for
-	 * a secondary table defined by a subclass.
-	 * <li>If set to {@link FetchMode#SELECT} then Hibernate will use a sequential select for
-	 * a secondary table defined on a subclass, which will be issued only if a row turns out
-	 * to represent an instance of the subclass. Inner joins will still be used to retrieve a
-	 * secondary table defined by the class and its superclasses.
-	 * </ul>
-	 * <p>
-	 * <em>Only applies to secondary tables.</em>
+	 * @deprecated This setting has no effect in Hibernate 6
 	 */
+	@Deprecated(since = "6.2")
 	FetchMode fetch() default FetchMode.JOIN;
 
 	/**
 	 * If enabled, Hibernate will never insert or update the columns of the secondary table.
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
+	 *
+	 * @deprecated use {@link SecondaryRow#owned()}
 	 */
+	@Deprecated(since = "6.2")
 	boolean inverse() default false;
 
 	/**
 	 * If enabled, Hibernate will insert a row only if the columns of the secondary table
 	 * would not all be null, and will always use an outer join to read the columns. Thus,
 	 * by default, Hibernate avoids creating a row of null values.
-	 * <p>
-	 * <em>Only applies to secondary tables.<p></em>
+	 *
+	 * @apiNote Only relevant for secondary tables
+	 * @deprecated use {@link SecondaryRow#optional()}
 	 */
+	@Deprecated(since = "6.2")
 	boolean optional() default true;
 
 	/**
@@ -100,8 +99,9 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLInsert
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLInsert sqlInsert() default @SQLInsert(sql="");
 
 	/**
@@ -109,8 +109,9 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLUpdate
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLUpdate sqlUpdate() default @SQLUpdate(sql="");
 
 	/**
@@ -118,7 +119,8 @@ public @interface Table {
 	 * <p>
 	 * <em>Only applies to secondary tables.</em>
 	 *
-	 * @see SQLDelete
+	 * @deprecated use {@link SQLInsert#table()} to specify the secondary table
 	 */
+	@Deprecated(since="6.2")
 	SQLDelete sqlDelete() default @SQLDelete(sql="");
 }

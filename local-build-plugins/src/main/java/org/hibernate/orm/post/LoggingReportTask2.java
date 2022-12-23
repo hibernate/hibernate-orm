@@ -115,7 +115,7 @@ public abstract class LoggingReportTask2 extends AbstractJandexAwareTask {
 		final ClassInfo loggerClassInfo = msgLoggerAnnUsage.target().asClass();
 		getProject().getLogger().lifecycle( "MessageLogger (`%s`) missing id-range", loggerClassInfo.simpleName() );
 
-		final List<AnnotationInstance> messageAnnUsages = loggerClassInfo.annotations().get( MSG_ANN_NAME );
+		final List<AnnotationInstance> messageAnnUsages = loggerClassInfo.annotations( MSG_ANN_NAME );
 		if ( messageAnnUsages.isEmpty() ) {
 			return null;
 		}

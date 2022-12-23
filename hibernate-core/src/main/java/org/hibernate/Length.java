@@ -17,6 +17,7 @@ package org.hibernate;
  *
  * @see jakarta.persistence.Column#length()
  *
+ * @since 6.0
  * @author Gavin King
  */
 public final class Length {
@@ -41,25 +42,42 @@ public final class Length {
 	 * {@code @JdbcTypeCode(Types.LONGVARBINARY)}.
 	 *
 	 * @see org.hibernate.type.descriptor.java.JavaType#getLongSqlLength
+	 *
+	 * @see org.hibernate.type.SqlTypes#LONGVARCHAR
+	 * @see org.hibernate.type.SqlTypes#LONGVARBINARY
 	 */
 	public static final int LONG = 32_600;
 	/**
 	 * The maximum length that fits in 16 bits.
 	 * Used to select a variable-length SQL type large
-	 * enough to contain values of maximum length 32767.
+	 * enough to accommodate values of maximum length
+	 * {@value Short#MAX_VALUE}.
 	 */
 	public static final int LONG16 = Short.MAX_VALUE;
 	/**
-	 * The maximum length of a Java string, that is,
-	 * the maximum length that fits in 32 bits.
+	 * The maximum length of a Java string or array,
+	 * that is, the maximum length that fits in 32 bits.
 	 * Used to select a variable-length SQL type large
-	 * enough to contain any Java string.
+	 * enough to accommodate any Java string up to the
+	 * maximum possible length {@value Integer#MAX_VALUE}.
+	 * <p>
+	 * This is also the default length for a column
+	 * declared using
+	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARCHAR)} or
+	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARBINARY)}.
+	 *
+	 * @see org.hibernate.type.SqlTypes#LONG32VARCHAR
+	 * @see org.hibernate.type.SqlTypes#LONG32VARBINARY
 	 */
 	public static final int LONG32 = Integer.MAX_VALUE;
 	/**
-	 * The default length for a LOB column.
+	 * The default length for a LOB column, on databases
+	 * where LOB columns have a length.
 	 *
 	 * @see org.hibernate.dialect.Dialect#getDefaultLobLength
+	 *
+	 * @see org.hibernate.type.SqlTypes#CLOB
+	 * @see org.hibernate.type.SqlTypes#BLOB
 	 */
 	public static final int LOB_DEFAULT = 1_048_576;
 

@@ -293,7 +293,7 @@ public class NativeQueryResultBuilderTests {
 
 		assertThat( attrMapping.getJavaType().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 
-		final BasicValueConverter valueConverter = attrMapping.getValueConverter();
+		final BasicValueConverter valueConverter = attrMapping.getJdbcMapping().getValueConverter();
 		assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
 		assertThat( valueConverter.getDomainJavaType(), is( attrMapping.getJavaType() ) );
 		assertThat( valueConverter.getRelationalJavaType().getJavaTypeClass(), equalTo( Character.class ) );

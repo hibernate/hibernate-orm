@@ -8,6 +8,8 @@ package org.hibernate.bytecode.spi;
 
 import java.security.ProtectionDomain;
 
+import jakarta.persistence.spi.TransformerException;
+
 /**
  * A persistence provider provides an instance of this interface
  * to the PersistenceUnitInfo.addTransformer method.
@@ -35,5 +37,5 @@ public interface ClassTransformer extends jakarta.persistence.spi.ClassTransform
 			String className,
 			Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
-			byte[] classfileBuffer);
+			byte[] classfileBuffer)  throws TransformerException;
 }

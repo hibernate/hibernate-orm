@@ -19,19 +19,11 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedSubgraph;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.EmbeddableType;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.ManagedType;
 
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -48,6 +40,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -57,12 +50,21 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  *
@@ -70,7 +72,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
-	private static final ImportInfo<?> INVALID_IMPORT = new ImportInfo<>( null, null );
 
 	private static class ImportInfo<T> {
 		final String importedName;
@@ -98,6 +99,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<Class<?>, String> entityProxyInterfaceMap = new HashMap<>();
 
 	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
+	private final Map<String,Object> knownInvalidnameToImportMap = new ConcurrentHashMap<>();
 
 
 	public JpaMetamodelImpl(TypeConfiguration typeConfiguration, JpaCompliance jpaCompliance) {
@@ -281,29 +283,42 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private <T> ImportInfo<T> resolveImport(final String name) {
 		final ImportInfo<?> importInfo = nameToImportMap.get( name );
+		//optimal path first
 		if ( importInfo != null ) {
 			//noinspection unchecked
-			return importInfo == INVALID_IMPORT ? null : (ImportInfo<T>) importInfo;
+			return (ImportInfo<T>) importInfo;
 		}
 		else {
-			// see if the name is a fully-qualified class name
-			final Class<T> loadedClass = resolveRequestedClass( name );
-			if ( loadedClass == null ) {
-				// it is NOT a fully-qualified class name - add a marker entry so we do not keep trying later
-				// note that ConcurrentHashMap does not support null value so a marker entry is needed
-				// [HHH-14948] But only add it if the cache size isn't getting too large, as in some use cases
-				// the queries are dynamically generated and this cache could lead to memory leaks when left unbounded.
-				if ( nameToImportMap.size() < 1_000 ) {
-					nameToImportMap.put( name, INVALID_IMPORT );
-				}
+			//then check the negative cache, to avoid bothering the classloader unnecessarily
+			if ( knownInvalidnameToImportMap.containsKey( name ) ) {
 				return null;
 			}
 			else {
-				// it is a fully-qualified class name - add it to the cache
-				//		so we do not keep trying later
-				final ImportInfo<T> info = new ImportInfo<>( name, loadedClass );
-				nameToImportMap.put( name, info );
-				return info;
+				// see if the name is a fully-qualified class name
+				final Class<T> loadedClass = resolveRequestedClass( name );
+				if ( loadedClass == null ) {
+					// it is NOT a fully-qualified class name - add a marker entry so we do not keep trying later
+					// note that ConcurrentHashMap does not support null value so a marker entry is needed
+					// [HHH-14948] But only add it if the cache size isn't getting too large, as in some use cases
+					// the queries are dynamically generated and this cache could lead to memory leaks when left unbounded.
+					if ( knownInvalidnameToImportMap.size() < 1_000 ) {
+						//TODO this collection might benefit from a LRU eviction algorithm,
+						//we currently have no evidence for this need but this could be explored further.
+						//To consider that we don't have a hard dependency on a cache implementation providing LRU semantics.
+						//Alternatively - even better - would be to precompute all possible valid options and
+						//store them in nameToImportMap on bootstrap: if that can be filled with all (comprehensive)
+						//valid values, then there is no need for ever bothering the classloader.
+						knownInvalidnameToImportMap.put( name, name );
+					}
+					return null;
+				}
+				else {
+					// it is a fully-qualified class name - add it to the cache
+					// so to not needing to load from the classloader again
+					final ImportInfo<T> info = new ImportInfo<>( name, loadedClass );
+					nameToImportMap.put( name, info );
+					return info;
+				}
 			}
 		}
 	}
@@ -419,36 +434,51 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		// otherwise, try to handle it as a polymorphic reference
 		{
-			EntityDomainType<T> polymorphicDomainType = (EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
+			final EntityDomainType<T> polymorphicDomainType = (EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
 			if ( polymorphicDomainType != null ) {
 				return polymorphicDomainType;
 			}
 
+			// create a set of descriptors that should be used to build the polymorphic EntityDomainType
 			final Set<EntityDomainType<?>> matchingDescriptors = new HashSet<>();
 			for ( EntityDomainType<?> entityDomainType : jpaEntityTypeMap.values() ) {
+				// see if we should add `entityDomainType` as one of the matching-descriptors.
 				if ( javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
+					// the queried type is assignable from the type of the current entity-type
+					// we should add it to the collecting set of matching descriptors.  it should
+					// be added aside from a few cases...
+
+					// it should not be added if its direct super (if one) is defined without
+					// explicit-polymorphism.  The super itself will get added and the initializers
+					// for entity mappings already handle loading subtypes - adding it would be redundant
 					final ManagedDomainType<?> superType = entityDomainType.getSuperType();
-					// If the entity super type is also assignable, skip adding this entity type
-					if ( superType instanceof EntityDomainType<?>
+					if ( superType != null
+							&& superType.getPersistenceType() == Type.PersistenceType.ENTITY
 							&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
-						final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
+						final EntityMappingType superMapping = typeConfiguration.getSessionFactory()
 								.getRuntimeMetamodels()
 								.getMappingMetamodel()
 								.getEntityDescriptor( ( (EntityDomainType<?>) superType ).getHibernateEntityName() );
-						// But only skip adding this type if the parent doesn't require explicit polymorphism
-						if ( !entityPersister.isExplicitPolymorphism() ) {
+						if ( !superMapping.isExplicitPolymorphism() ) {
 							continue;
 						}
 					}
-					final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
+
+					// it should not be added if it is mapped with explicit polymorphism itself
+					final EntityMappingType entityPersister = typeConfiguration.getSessionFactory()
 							.getRuntimeMetamodels()
 							.getMappingMetamodel()
 							.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
-					if ( !entityPersister.isExplicitPolymorphism() ) {
-						matchingDescriptors.add( entityDomainType );
+					if ( entityPersister.isExplicitPolymorphism() ) {
+						continue;
 					}
+
+					// aside from these special cases, add it
+					matchingDescriptors.add( entityDomainType );
 				}
 			}
+
+			// if we found any matching, create the virtual root EntityDomainType reference
 			if ( !matchingDescriptors.isEmpty() ) {
 				final SqmPolymorphicRootDescriptor<T> descriptor = new SqmPolymorphicRootDescriptor<>(
 						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),

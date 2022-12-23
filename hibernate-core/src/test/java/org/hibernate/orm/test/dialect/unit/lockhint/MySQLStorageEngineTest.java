@@ -8,16 +8,13 @@ package org.hibernate.orm.test.dialect.unit.lockhint;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.MySQL57Dialect;
+import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Field;
 import java.util.Properties;
@@ -26,7 +23,7 @@ public class MySQLStorageEngineTest extends BaseUnitTestCase {
 
 	@Test
 	public void testDefaultStorage() {
-		assertEquals( " engine=InnoDB", new MySQL57Dialect().getTableTypeString() );
+		assertEquals( " engine=InnoDB", new MySQLDialect().getTableTypeString() );
 	}
 
 	@Test
@@ -37,7 +34,7 @@ public class MySQLStorageEngineTest extends BaseUnitTestCase {
 		assertNotNull( systemProperties );
 		final Object previousValue = systemProperties.setProperty( AvailableSettings.STORAGE_ENGINE, "myisam" );
 		try {
-			assertEquals( " engine=MyISAM", new MySQL57Dialect().getTableTypeString() );
+			assertEquals( " engine=MyISAM", new MySQLDialect().getTableTypeString() );
 		}
 		finally {
 			if ( previousValue != null ) {

@@ -38,7 +38,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.*;
@@ -88,8 +87,10 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 				return "text";
 			case NCLOB:
 				return "ntext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
 	}
 
 	@Override
@@ -127,8 +128,8 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 		functionFactory.cot();
-		functionFactory.log();
 		functionFactory.ln_log();
+		functionFactory.log_loglog();
 		functionFactory.log10();
 		functionFactory.atan2_atn2();
 		functionFactory.mod_operator();
@@ -219,14 +220,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		final StringBuilder buffer = new StringBuilder( sql );
-
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
-			final LockMode lockMode = (LockMode) entry.getValue();
+		for ( Map.Entry<String, LockMode> entry: aliasedLockOptions.getAliasSpecificLocks() ) {
+			final LockMode lockMode = entry.getValue();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
-				final String alias = (String) entry.getKey();
+				final String alias = entry.getKey();
 				int start = -1;
 				int end = -1;
 				if ( sql.endsWith( " " + alias ) ) {
@@ -290,6 +288,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
 	}
 
 	@Override

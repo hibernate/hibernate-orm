@@ -60,4 +60,5 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 3;
 	}
+
 }

@@ -14,7 +14,10 @@ import org.hibernate.internal.util.StringHelper;
  * Naming strategy implementing the EJB3 standards
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated {@link NamingStrategy} itself has been deprecated
  */
+@Deprecated
 public class PersistenceStandardNamingStrategy implements NamingStrategy, Serializable {
 	public static final NamingStrategy INSTANCE = new PersistenceStandardNamingStrategy();
 
@@ -49,10 +52,14 @@ public class PersistenceStandardNamingStrategy implements NamingStrategy, Serial
 	}
 
 	public String foreignKeyColumnName(
-			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
-	) {
+			String propertyName,
+			String propertyEntityName,
+			String propertyTableName,
+			String referencedColumnName) {
 		String header = propertyName != null ? StringHelper.unqualify( propertyName ) : propertyTableName;
-		if ( header == null ) throw new AssertionFailure( "NamingStrategy not properly filled" );
+		if ( header == null ) {
+			throw new AssertionFailure( "NamingStrategy not properly filled" );
+		}
 		return columnName( header + "_" + referencedColumnName );
 	}
 

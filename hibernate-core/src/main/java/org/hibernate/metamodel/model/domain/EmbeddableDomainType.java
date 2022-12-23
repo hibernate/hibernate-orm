@@ -20,5 +20,5 @@ import jakarta.persistence.metamodel.EmbeddableType;
  * @author Steve Ebersole
  */
 public interface EmbeddableDomainType<J>
-		extends ManagedDomainType<J>, EmbeddableType<J>, BindableType<J>, SqmExpressible<J> {
+		extends ManagedDomainType<J>, EmbeddableType<J>, SqmExpressible<J> {
 }

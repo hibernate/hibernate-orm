@@ -17,28 +17,37 @@ import static java.lang.annotation.ElementType.METHOD;
 
 /**
  * Specifies how the time zone information of a persistent property or field should be persisted.
- * The <code>TimeZoneStorage</code> annotation may be used in conjunction with the <code>Basic</code> annotation, or in
- * conjunction with the <code>ElementCollection</code> annotation when the
- * element collection value is of basic type. If the <code>TimeZoneStorage</code> annotation is not
- * used, the <code>TimeZoneStorageType</code> value is assumed to be <code>NORMALIZED</code>.
- *
+ * This annotation may be used in conjunction with the {@link jakarta.persistence.Basic} annotation,
+ * or in conjunction with the {@link jakarta.persistence.ElementCollection} annotation when the
+ * element collection value is of basic type. If the {@code TimeZoneStorage} annotation is not used,
+ * the {@link TimeZoneStorageType} has a default value determined by the dialect and by the
+ * configuration property {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE}.
+ * <p>
+ * For example:
  * <pre>
- *   Example:
+ * {@code
+ * @Entity public class Person {
  *
- *   &#064;Entity public class Person {
- *       public OffsetDateTime getBirthDateTimeNormalized() {...}
+ *     @TimeZoneStorage(COLUMN)
+ *     @TimeZoneColumn(column = @Column(...))
+ *     public OffsetDateTime birthDate;
  *
- *       &#064;TimeZoneStorage
- *       &#064;TimeZoneColumn(column = &#064;Column(...))
- *       public OffsetDateTime getBirthDateTimeNativeOrColumn() {...}
- *       ...
+ *     @TimeZoneStorage(NATIVE)
+ *     public OffsetDateTime registrationDate;
+ *
+ *     ...
  *   }
+ *}
  * </pre>
  *
  * @author Christian Beikov
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see TimeZoneStorageType
  * @see TimeZoneColumn
+ *
+ * @since 6.0
  */
 @Incubating
 @Retention(RetentionPolicy.RUNTIME)

@@ -11,6 +11,8 @@ import java.net.URL;
 /**
  * Abstraction for locating class-path resources
  *
+ * @see ResourceStreamLocator
+ *
  * @author Steve Ebersole
  */
 @FunctionalInterface

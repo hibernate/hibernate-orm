@@ -62,7 +62,7 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		ParameterExpression<Integer[]> param = em.getCriteriaBuilder().parameter( Integer[].class, "theIntegers" );
 		criteria.where( em.getCriteriaBuilder().equal( thePath, param ) );
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( param, new Integer[] { Integer.valueOf(1), Integer.valueOf(1), Integer.valueOf(1) } );
+		query.setParameter( param, new Integer[] {1, 1, 1} );
 		assertThat( query.getParameterValue( param.getName() ), instanceOf( Integer[].class ) );
 		query.getResultList();
 		em.getTransaction().commit();
@@ -85,7 +85,7 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		);
 
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		Parameter parameter = query.getParameter( "id" );
+		Parameter<?> parameter = query.getParameter( "id" );
 		assertEquals( "id", parameter.getName() );
 
 		em.getTransaction().commit();
@@ -140,7 +140,7 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	public Class[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { MultiTypedBasicAttributesEntity.class };
 	}
 }

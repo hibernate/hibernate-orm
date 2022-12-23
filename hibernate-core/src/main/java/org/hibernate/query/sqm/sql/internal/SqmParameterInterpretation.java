@@ -14,7 +14,9 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -30,6 +32,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -116,18 +119,30 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				.getSessionFactory();
 
 		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
+		final JavaType<?> jdbcJavaType;
+		final BasicValueConverter<?, ?> converter;
+		if ( sqmExpressible instanceof JdbcMapping ) {
+			final JdbcMapping jdbcMapping = (JdbcMapping) sqmExpressible;
+			jdbcJavaType = jdbcMapping.getJdbcJavaType();
+			converter = jdbcMapping.getValueConverter();
+		}
+		else {
+			jdbcJavaType = sqmExpressible.getExpressibleJavaType();
+			converter = null;
+		}
 
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressible.getExpressibleJavaType(),
+				jdbcJavaType,
 				null,
 				sessionFactory.getTypeConfiguration()
 		);
 
-		return new BasicResult<>(
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				sqmExpressible.getExpressibleJavaType()
+				sqmExpressible.getExpressibleJavaType(),
+				converter
 		);
 	}
 
@@ -161,10 +176,18 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				.getSessionFactory();
 
 		final SqmExpressible<?> sqmExpressible = nodeType.resolveExpressible( sessionFactory );
+		final JavaType<?> jdbcJavaType;
+		if ( sqmExpressible instanceof JdbcMapping ) {
+			final JdbcMapping jdbcMapping = (JdbcMapping) sqmExpressible;
+			jdbcJavaType = jdbcMapping.getJdbcJavaType();
+		}
+		else {
+			jdbcJavaType = sqmExpressible.getExpressibleJavaType();
+		}
 
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressible.getExpressibleJavaType(),
+				jdbcJavaType,
 				null,
 				sessionFactory.getTypeConfiguration()
 		);

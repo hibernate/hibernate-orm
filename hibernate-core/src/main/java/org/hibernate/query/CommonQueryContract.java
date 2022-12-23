@@ -139,7 +139,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(String, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, Class<P> type);
@@ -147,8 +146,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, BindableType<P> type);
 
@@ -185,7 +182,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(int, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, Class<P> type);
@@ -193,8 +189,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, BindableType<P> type);
 
@@ -242,7 +236,6 @@ public interface CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> type);
@@ -276,7 +269,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
@@ -295,7 +288,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -319,7 +311,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -336,7 +328,6 @@ public interface CommonQueryContract {
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -360,7 +351,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -377,7 +368,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -400,7 +390,7 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
-	 * <p/>
+	 * <p>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
@@ -417,7 +407,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -459,7 +448,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -502,7 +490,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression

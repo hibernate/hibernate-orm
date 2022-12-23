@@ -56,13 +56,7 @@ public class PostgisTestSupport extends TestSupport {
 
 
 	public GeomCodec codec() {
-		//This appears actually no longer needed after changing to JavaType/jdbcType
-		return new GeomCodec() {
-			@Override
-			public Geometry<?> toGeometry(Object in) {
-				return (Geometry<?>)in;
-			}
-		};
+		return in -> (Geometry<?>) in;
 	}
 
 }

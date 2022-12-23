@@ -6,8 +6,11 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.io.Serializable;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -21,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 @FunctionalInterface
-public interface JdbcLiteralFormatter<T> {
+public interface JdbcLiteralFormatter<T> extends Serializable {
 	/**
 	 * Produces a string containing a SQL literal value representing the given Java value.
 	 *
@@ -31,7 +34,7 @@ public interface JdbcLiteralFormatter<T> {
 	 */
 	default String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final StringBuilder sb = new StringBuilder();
-		appendJdbcLiteral( sb::append, value, dialect, wrapperOptions );
+		appendJdbcLiteral( new StringBuilderSqlAppender( sb ), value, dialect, wrapperOptions );
 		return sb.toString();
 	}
 

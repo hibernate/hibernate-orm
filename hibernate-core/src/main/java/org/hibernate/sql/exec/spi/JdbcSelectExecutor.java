@@ -23,7 +23,7 @@ import org.hibernate.sql.results.spi.RowTransformer;
 @Incubating
 public interface JdbcSelectExecutor {
 	default <R> List<R> list(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -32,7 +32,7 @@ public interface JdbcSelectExecutor {
 	}
 
 	<R> List<R> list(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -40,14 +40,14 @@ public interface JdbcSelectExecutor {
 			ListResultsConsumer.UniqueSemantic uniqueSemantic);
 
 	<R> ScrollableResultsImplementor<R> scroll(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer);
 
 	<R> Stream<R> stream(
-			JdbcSelect jdbcSelect,
+			JdbcOperationQuerySelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer);

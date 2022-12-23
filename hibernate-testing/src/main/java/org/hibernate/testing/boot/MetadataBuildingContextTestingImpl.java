@@ -44,6 +44,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 		};
 
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
+		bootstrapContext.getTypeConfiguration().scope( this );
 	}
 
 	@Override

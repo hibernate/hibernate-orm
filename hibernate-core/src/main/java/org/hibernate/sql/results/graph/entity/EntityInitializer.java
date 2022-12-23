@@ -29,6 +29,11 @@ public interface EntityInitializer extends FetchParentAccess {
 		return this;
 	}
 
+	@Override
+	default EntityInitializer findFirstEntityInitializer() {
+		return this;
+	}
+
 	/**
 	 * Get the entity instance for the currently processing "row".
 	 *
@@ -44,4 +49,19 @@ public interface EntityInitializer extends FetchParentAccess {
 	}
 
 	EntityKey getEntityKey();
+
+	@Override
+	default boolean isEntityInitializer() {
+		return true;
+	}
+
+	@Override
+	default EntityInitializer asEntityInitializer() {
+		return this;
+	}
+
+
+	default boolean isEntityResultInitializer() {
+		return false;
+	}
 }

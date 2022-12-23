@@ -28,6 +28,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
@@ -53,7 +54,6 @@ import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
@@ -305,9 +305,29 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// push back class transformation to the environment; for the time being this only has any effect in EE
 			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 
-			final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
-			final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			final boolean dirtyTrackingEnabled;
+			Object propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+			if ( propertyValue != null ) {
+				dirtyTrackingEnabled = Boolean.parseBoolean( propertyValue.toString() );
+			}
+			else {
+				dirtyTrackingEnabled = true;
+			}
+			final boolean lazyInitializationEnabled;
+			propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			if ( propertyValue != null ) {
+				lazyInitializationEnabled = Boolean.parseBoolean( propertyValue.toString() );
+			}
+			else {
+				lazyInitializationEnabled = true;
+			}
 			final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+			if ( !lazyInitializationEnabled ) {
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION, "true" );
+			}
+			if ( !dirtyTrackingEnabled ) {
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING, "true" );
+			}
 
 			if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
 				EnhancementContext enhancementContext = getEnhancementContext(
@@ -607,7 +627,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, intgValidationMode );
 		}
 		else if ( persistenceUnit.getValidationMode() != null ) {
-			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 			mergedSettings.configurationValues.put( JAKARTA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
 		}
 
@@ -623,7 +642,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		else if ( persistenceUnit.getSharedCacheMode() != null ) {
 			mergedSettings.configurationValues.put( JAKARTA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
-			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 		}
 
 		// Apply all "integration overrides" as the last step.  By specification,
@@ -1593,7 +1611,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 		else {
 			throw new IllegalArgumentException(
-				"The provided " + settingName + " setting value [" + settingValue + "] is not supported!"
+				"The provided " + settingName + " setting value [" + settingValue + "] is not supported"
 			);
 		}
 
@@ -1603,7 +1621,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			catch (InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException(
-						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated!",
+						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated",
 						e
 				);
 			}

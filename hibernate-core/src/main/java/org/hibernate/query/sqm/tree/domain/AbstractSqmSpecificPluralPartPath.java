@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -48,10 +47,6 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
-			throw new NotYetImplementedFor6Exception();
-		}
-
 		throw new UnsupportedOperationException(  );
 	}
 

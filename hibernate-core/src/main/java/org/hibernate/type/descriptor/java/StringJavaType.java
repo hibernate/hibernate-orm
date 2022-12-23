@@ -112,4 +112,5 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 				return false;
 		}
 	}
+
 }

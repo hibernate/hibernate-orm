@@ -11,12 +11,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A foreign key constraint
+ * A mapping model object representing a {@linkplain jakarta.persistence.ForeignKey foreign key} constraint.
  *
  * @author Gavin King
  */
@@ -24,7 +25,7 @@ public class ForeignKey extends Constraint {
 	private Table referencedTable;
 	private String referencedEntityName;
 	private String keyDefinition;
-	private boolean cascadeDeleteEnabled;
+	private OnDeleteAction onDeleteAction;
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
 
@@ -55,7 +56,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	@Override
+	@Override @Deprecated(since="6.2")
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -89,9 +90,9 @@ public class ForeignKey extends Constraint {
 						referencedColumnNames,
 						isReferenceToPrimaryKey()
 				);
-		
-		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
-				? result + " on delete cascade"
+
+		return onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION && dialect.supportsCascadeDelete()
+				? result + " on delete " + onDeleteAction.toSqlString()
 				: result;
 	}
 
@@ -117,7 +118,7 @@ public class ForeignKey extends Constraint {
 
 	/**
 	 * Validates that column span of the foreign key and the primary key is the same.
-	 * <p/>
+	 * <p>
 	 * Furthermore it aligns the length of the underlying tables columns.
 	 */
 	public void alignColumns() {
@@ -127,26 +128,25 @@ public class ForeignKey extends Constraint {
 	}
 
 	private void alignColumns(Table referencedTable) {
-		final int referencedPkColumnSpan = referencedTable.getPrimaryKey().getColumnSpan();
-		if ( referencedPkColumnSpan != getColumnSpan() ) {
+		final int columnSpan = getColumnSpan();
+		final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
+		if ( primaryKey.getColumnSpan() != columnSpan ) {
 			StringBuilder sb = new StringBuilder();
 			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
 					.append( getTable().getName() )
 					.append( " [" );
-			appendColumns( sb, getColumnIterator() );
+			appendColumns( sb, getColumns().iterator() );
 			sb.append( "])" )
 					.append( ") must have same number of columns as the referenced primary key (" )
 					.append( referencedTable.getName() )
 					.append( " [" );
-			appendColumns( sb, referencedTable.getPrimaryKey().getColumnIterator() );
+			appendColumns( sb, primaryKey.getColumns().iterator() );
 			sb.append( "])" );
 			throw new MappingException( sb.toString() );
 		}
 
-		Iterator<Column> fkCols = getColumnIterator();
-		Iterator<Column> pkCols = referencedTable.getPrimaryKey().getColumnIterator();
-		while ( pkCols.hasNext() ) {
-			fkCols.next().setLength( pkCols.next().getLength() );
+		for (int i = 0; i<columnSpan; i++ ) {
+			getColumn(i).setLength( primaryKey.getColumn(i).getLength() );
 		}
 
 	}
@@ -166,30 +166,29 @@ public class ForeignKey extends Constraint {
 	public void setKeyDefinition(String keyDefinition) {
 		this.keyDefinition = keyDefinition;
 	}
-	
-	@Override
-	public String sqlDropString(SqlStringGenerationContext context,
-			String defaultCatalog, String defaultSchema) {
-		Dialect dialect = context.getDialect();
-		String tableName = getTable().getQualifiedName( context );
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append( dialect.getDropForeignKeyString() );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( dialect.quote( getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
+
+	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
+		this.onDeleteAction = onDeleteAction;
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return onDeleteAction;
+	}
+
+	/**
+	 * @deprecated use {@link #getOnDeleteAction()}
+	 */
+	@Deprecated(since = "6.2")
 	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
+		return onDeleteAction == OnDeleteAction.CASCADE;
 	}
 
+	/**
+	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
+	 */
+	@Deprecated(since = "6.2")
 	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
 	}
 
 	public boolean isPhysicalConstraint() {
@@ -228,7 +227,7 @@ public class ForeignKey extends Constraint {
 
 	public String toString() {
 		if ( !isReferenceToPrimaryKey() ) {
-			return getClass().getName()
+			return getClass().getSimpleName()
 					+ '(' + getTable().getName() + getColumns()
 					+ " ref-columns:" + '(' + getReferencedColumns() + ") as " + getName() + ")";
 		}

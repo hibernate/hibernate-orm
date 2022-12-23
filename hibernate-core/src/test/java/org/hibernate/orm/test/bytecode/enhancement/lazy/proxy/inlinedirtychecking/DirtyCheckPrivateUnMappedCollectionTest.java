@@ -26,6 +26,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,6 +36,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(BytecodeEnhancerRunner.class)
 @CustomEnhancementContext({ DirtyCheckEnhancementContext.class })
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	boolean skipTest;

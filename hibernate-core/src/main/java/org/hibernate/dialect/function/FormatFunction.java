@@ -34,6 +34,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -207,9 +208,10 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 							.getDialect();
 					Expression formatExpression = null;
 					final StringBuilder sb = new StringBuilder();
+					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
 					final String delimiter;
 					if ( supportsPatternLiterals ) {
-						dialect.appendDatetimeFormat( sb::append, "'a'" );
+						dialect.appendDatetimeFormat( sqlAppender, "'a'" );
 						delimiter = sb.substring( 0, sb.indexOf( "a" ) ).replace( "''", "'" );
 					}
 					else {
@@ -241,7 +243,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 										continue;
 									}
 									sb.setLength( 0 );
-									dialect.appendDatetimeFormat( sb::append, smallParts[l] );
+									dialect.appendDatetimeFormat( sqlAppender, smallParts[l] );
 									final String formatPart = sb.toString();
 									if ( supportsPatternLiterals ) {
 										formatExpression = concat(
@@ -333,7 +335,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 							final String formatLiteralPart;
 							if ( supportsPatternLiterals ) {
 								sb.setLength( 0 );
-								dialect.appendDatetimeFormat( sb::append, "'" + chunks[i + 1] + "'" );
+								dialect.appendDatetimeFormat( sqlAppender, "'" + chunks[i + 1] + "'" );
 								formatLiteralPart = sb.toString().replace( "''", "'" );
 							}
 							else {

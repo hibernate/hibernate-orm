@@ -13,14 +13,13 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -79,7 +78,7 @@ public class SqlTreePrinter {
 					)
 			);
 		}
-		else if ( sqlAstStatement instanceof InsertStatement) {
+		else if ( sqlAstStatement instanceof InsertSelectStatement ) {
 			final InsertStatement insertStatement = (InsertStatement) sqlAstStatement;
 			logNode(
 					"InsertStatement",
@@ -139,11 +138,7 @@ public class SqlTreePrinter {
 	}
 
 	private void logTableGroupDetails(TableGroup tableGroup) {
-		if ( tableGroup instanceof LazyTableGroup ) {
-			TableGroup underlyingTableGroup = ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup();
-			if ( underlyingTableGroup != null ) {
-				logTableGroupDetails( underlyingTableGroup );
-			}
+		if ( !tableGroup.isInitialized() ) {
 			return;
 		}
 		if ( tableGroup.getPrimaryTableReference() instanceof NamedTableReference ) {
@@ -171,8 +166,8 @@ public class SqlTreePrinter {
 				logNode(
 						"PrimaryTableReference as " + tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 						() -> {
-							QueryPart queryPart = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getQueryPart();
-							visitQueryPart( queryPart );
+							Statement statement = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getStatement();
+							visitStatement( statement );
 						}
 				);
 			}

@@ -6,14 +6,12 @@
  */
 package org.hibernate.jpa.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Registry of Callbacks by entity and type
  *
  * @author Steve Ebersole
  */
-public interface CallbackRegistry extends Serializable {
+public interface CallbackRegistry {
 	/**
 	 * Do we have any registered callbacks of the given type for the given entity?
 	 *
@@ -35,4 +33,12 @@ public interface CallbackRegistry extends Serializable {
 	void postRemove(Object entity);
 
 	boolean postLoad(Object entity);
+
+	/**
+	 * Signals that the CallbackRegistry will no longer be used.
+	 * In particular it is important to release references to class types
+	 * to avoid classloader leaks.
+	 */
+	void release();
+
 }

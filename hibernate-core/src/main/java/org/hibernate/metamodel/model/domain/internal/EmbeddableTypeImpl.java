@@ -13,7 +13,6 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddableDomainType<J>, BindableType<J>, Serializable {
+		implements EmbeddableDomainType<J>, Serializable {
 
 	private final boolean isDynamic;
 

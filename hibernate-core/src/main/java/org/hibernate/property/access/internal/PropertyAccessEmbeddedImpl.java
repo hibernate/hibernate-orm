@@ -19,7 +19,7 @@ import org.hibernate.property.access.spi.Setter;
 
 /**
  * PropertyAccess for handling non-aggregated composites.
- * <p/>
+ * <p>
  * IMPL NOTE : We actually use a singleton for the Setter; we cannot for the getter mainly
  * because we need to differentiate {@link Getter#getReturnTypeClass()}.  Ultimately I'd prefer to
  * model that "common information" on PropertyAccess itself.
@@ -31,10 +31,10 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	private final PropertyAccessStrategyEmbeddedImpl strategy;
 	private final GetterImpl getter;
 
-	@SuppressWarnings("UnusedParameters")
 	public PropertyAccessEmbeddedImpl(
 			PropertyAccessStrategyEmbeddedImpl strategy,
-			Class containerType,
+			Class<?> containerType,
+			@SuppressWarnings("UnusedParameters")
 			String propertyName) {
 		this.strategy = strategy;
 		this.getter = new GetterImpl( containerType );
@@ -56,9 +56,9 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 	}
 
 	private static class GetterImpl implements Getter {
-		private final Class containerType;
+		private final Class<?> containerType;
 
-		public GetterImpl(Class containerType) {
+		public GetterImpl(Class<?> containerType) {
 			this.containerType = containerType;
 		}
 

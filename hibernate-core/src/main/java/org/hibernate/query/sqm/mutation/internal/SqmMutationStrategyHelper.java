@@ -7,13 +7,17 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -56,7 +60,7 @@ public class SqmMutationStrategyHelper {
 
 		// todo (6.0) : add capability define strategy per-hierarchy
 
-		return sessionFactory.getServiceRegistry().getService( JdbcServices.class )
+		return sessionFactory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getDialect()
 				.getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
@@ -80,11 +84,49 @@ public class SqmMutationStrategyHelper {
 		}
 
 		// todo (6.0) : add capability define strategy per-hierarchy
+		return sessionFactory.getJdbcServices().getDialect().getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
+	}
 
-		return sessionFactory.getServiceRegistry().getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
+	public static void visitCollectionTables(
+			EntityMappingType entityDescriptor,
+			Consumer<PluralAttributeMapping> consumer) {
+		if ( ! entityDescriptor.getEntityPersister().hasCollections() ) {
+			// none to clean-up
+			return;
+		}
+
+		entityDescriptor.visitSubTypeAttributeMappings(
+				attributeMapping -> {
+					if ( attributeMapping instanceof PluralAttributeMapping ) {
+						consumer.accept( (PluralAttributeMapping) attributeMapping );
+					}
+					else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+						visitCollectionTables(
+								(EmbeddedAttributeMapping) attributeMapping,
+								consumer
+						);
+					}
+				}
+		);
+	}
+
+	private static void visitCollectionTables(
+			EmbeddedAttributeMapping attributeMapping,
+			Consumer<PluralAttributeMapping> consumer) {
+		attributeMapping.visitSubParts(
+				modelPart -> {
+					if ( modelPart instanceof PluralAttributeMapping ) {
+						consumer.accept( (PluralAttributeMapping) modelPart );
+					}
+					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+						visitCollectionTables(
+								(EmbeddedAttributeMapping) modelPart,
+								consumer
+						);
+					}
+				},
+				null
+		);
 	}
 
 	public static void cleanUpCollectionTables(
@@ -108,7 +150,47 @@ public class SqmMutationStrategyHelper {
 								executionContext
 						);
 					}
+					else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+						cleanUpCollectionTables(
+								(EmbeddedAttributeMapping) attributeMapping,
+								entityDescriptor,
+								restrictionProducer,
+								jdbcParameterBindings,
+								executionContext
+						);
+					}
 				}
+		);
+	}
+
+	private static void cleanUpCollectionTables(
+			EmbeddedAttributeMapping attributeMapping,
+			EntityMappingType entityDescriptor,
+			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		attributeMapping.visitSubParts(
+				modelPart -> {
+					if ( modelPart instanceof PluralAttributeMapping ) {
+						cleanUpCollectionTable(
+								(PluralAttributeMapping) modelPart,
+								entityDescriptor,
+								restrictionProducer,
+								jdbcParameterBindings,
+								executionContext
+						);
+					}
+					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+						cleanUpCollectionTables(
+								(EmbeddedAttributeMapping) modelPart,
+								entityDescriptor,
+								restrictionProducer,
+								jdbcParameterBindings,
+								executionContext
+						);
+					}
+				},
+				null
 		);
 	}
 
@@ -133,8 +215,7 @@ public class SqmMutationStrategyHelper {
 			final NamedTableReference tableReference = new NamedTableReference(
 					separateCollectionTable,
 					DeleteStatement.DEFAULT_ALIAS,
-					true,
-					sessionFactory
+					true
 			);
 
 			final DeleteStatement sqlAstDelete = new DeleteStatement(

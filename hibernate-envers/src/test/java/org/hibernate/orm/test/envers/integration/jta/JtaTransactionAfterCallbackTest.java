@@ -98,7 +98,7 @@ public class JtaTransactionAfterCallbackTest extends BaseEnversJPAFunctionalTest
 			}
 			catch ( PersistenceException e ) {
 				// we expect this
-				assertTrue( e.getMessage().contains( "Transaction was rolled back in a different thread!" ) );
+				assertTrue( e.getMessage().contains( "Transaction was rolled back in a different thread" ) );
 			}
 
 			// test the audit process manager was flushed

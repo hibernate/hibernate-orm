@@ -223,9 +223,10 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		MetadataSources metadataSources = new MetadataSources().addAnnotatedClass( Foobar.class );
 		try {
 			metadataSources.buildMetadata();
-			fail( "Expecting exception due to misplaced @Immutable annotation");
+//			fail( "Expecting exception due to misplaced @Immutable annotation");
 		}
 		catch (AnnotationException ignore) {
+			fail( "Exception with @Immutable on field");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();

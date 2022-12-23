@@ -14,23 +14,23 @@ import java.util.function.Supplier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementCreatorHelper;
 
@@ -90,43 +90,40 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 		// delete from the tables
 		final MutableInteger valueIndexCounter = new MutableInteger();
-		entityDescriptor.visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
-
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-							// this collection has a separate collection table, meaning it is one of:
-							//		1) element-collection
-							//		2) many-to-many
-							//		3) one-to many using a dedicated join-table
-							//
-							// in all of these cases, we should clean up the matching rows in the
-							// collection table
-							final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
-							final int valueIndex;
-							if ( fkTargetPart instanceof EntityIdentifierMapping ) {
-								valueIndex = 0;
-							}
-							else {
-								if ( valueIndexCounter.get() == 0 ) {
-									valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
-								}
-								valueIndex = valueIndexCounter.get();
-								valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
-							}
-
-							executeDelete(
-									pluralAttribute.getSeparateCollectionTable(),
-									entityDescriptor,
-									() -> fkTargetPart::forEachSelectable,
-									idsAndFks,
-									valueIndex,
-									fkTargetPart,
-									jdbcParameterBindings,
-									executionContext
-							);
+		SqmMutationStrategyHelper.visitCollectionTables(
+				entityDescriptor,
+				pluralAttribute -> {
+					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+						// this collection has a separate collection table, meaning it is one of:
+						//		1) element-collection
+						//		2) many-to-many
+						//		3) one-to many using a dedicated join-table
+						//
+						// in all of these cases, we should clean up the matching rows in the
+						// collection table
+						final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+						final int valueIndex;
+						if ( fkTargetPart instanceof EntityIdentifierMapping ) {
+							valueIndex = 0;
 						}
+						else {
+							if ( valueIndexCounter.get() == 0 ) {
+								valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
+							}
+							valueIndex = valueIndexCounter.get();
+							valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
+						}
+
+						executeDelete(
+								pluralAttribute.getSeparateCollectionTable(),
+								entityDescriptor,
+								() -> fkTargetPart::forEachSelectable,
+								idsAndFks,
+								valueIndex,
+								fkTargetPart,
+								jdbcParameterBindings,
+								executionContext
+						);
 					}
 				}
 		);
@@ -161,8 +158,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final NamedTableReference targetTableReference = new NamedTableReference(
 				targetTableExpression,
 				DeleteStatement.DEFAULT_ALIAS,
-				false,
-				sessionFactory
+				false
 		);
 
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
@@ -179,7 +175,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, matchingIdsPredicate );
 
-		final JdbcDelete jdbcOperation = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory, deleteStatement )
+		final JdbcOperationQueryDelete jdbcOperation = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory, deleteStatement )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		jdbcMutationExecutor.execute(

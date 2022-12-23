@@ -62,12 +62,12 @@ public class ImmutableManyToOneNaturalIdAnnotationTest {
 		// access by list-index should again be alphabetically sorted
 		final SingularAttributeMapping first = naturalIdMapping.getNaturalIdAttributes().get( 0 );
 		assertThat( first.getAttributeName(), is( "name" ) );
-		final AttributeMetadata firstMetadata = first.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata firstMetadata = first.getAttributeMetadata();
 		assertFalse( firstMetadata.getMutabilityPlan().isMutable() );
 
 		final SingularAttributeMapping second = naturalIdMapping.getNaturalIdAttributes().get( 1 );
 		assertThat( second.getAttributeName(), is( "parent" ) );
-		final AttributeMetadata secondMetadata = second.getAttributeMetadataAccess().resolveAttributeMetadata( null );
+		final AttributeMetadata secondMetadata = second.getAttributeMetadata();
 		assertFalse( secondMetadata.getMutabilityPlan().isMutable() );
 	}
 }

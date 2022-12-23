@@ -8,7 +8,6 @@ package org.hibernate.testing.orm.junit;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -86,7 +85,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrBuilder) {
 		ssrBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, exportSchema() ? "create-drop" : "none" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
+		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER )
+				&& !ssrBuilder.getSettings().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
 			ssrBuilder.applySetting(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
@@ -137,9 +137,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 			boolean hasLob = false;
 
-			final Iterator props = entityBinding.getPropertyClosureIterator();
-			while ( props.hasNext() ) {
-				final Property prop = (Property) props.next();
+			for ( Property prop : entityBinding.getPropertyClosure() ) {
 				if ( prop.getValue().isSimpleValue() ) {
 					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;

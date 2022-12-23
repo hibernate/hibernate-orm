@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
+import org.hibernate.Version;
+import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.orm.test.legacy.Simple;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.junit.Assert;
@@ -23,6 +27,7 @@ import java.util.List;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -54,6 +59,15 @@ public class BasicEnhancementTest {
         managedEntity.$$_hibernate_setPreviousManagedEntity( managedEntity );
         assertSame( managedEntity, managedEntity.$$_hibernate_getNextManagedEntity() );
         assertSame( managedEntity, managedEntity.$$_hibernate_getPreviousManagedEntity() );
+    }
+
+    @Test
+    @TestForIssue(jiraKey = "HHH-13439")
+    public void enhancementInfoTest() {
+        EnhancementInfo info = SimpleEntity.class.getAnnotation( EnhancementInfo.class );
+        assertNotNull( "EnhancementInfo was not applied", info );
+
+        assertEquals( Version.getVersionString(), info.version() );
     }
 
     @Test

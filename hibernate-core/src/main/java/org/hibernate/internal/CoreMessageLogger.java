@@ -19,8 +19,6 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import jakarta.transaction.Synchronization;
-import jakarta.transaction.SystemException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -33,8 +31,6 @@ import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.query.QueryLogging;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 
@@ -45,6 +41,9 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
+
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -53,7 +52,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
  * 00001 to 10000 inclusively.
- * <p/>
+ * <p>
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
@@ -61,7 +60,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
-	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions!", id = 2)
+	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions", id = 2)
 	void alreadySessionBound();
 
 	@LogMessage(level = INFO)
@@ -73,6 +72,10 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 8)
 	void autoFlushWillNotWork();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#batchContainedStatementsOnRelease} instead
+	 */
+	@Deprecated
 	@LogMessage(level = INFO)
 	@Message(value = "On release of batch it still contained JDBC statements", id = 10)
 	void batchContainedStatementsOnRelease();
@@ -445,7 +448,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Bytecode enhancement failed: %s", id = 142)
 	String bytecodeEnhancementFailed(String entityName);
 
-	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies!", id = 143)
+	@Message(value = "Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity: %s. Private constructors don't work with runtime proxies", id = 143)
 	String bytecodeEnhancementFailedBecauseOfDefaultConstructor(String entityName);
 
 	@LogMessage(level = WARN)
@@ -515,7 +518,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void narrowingProxy(Class concreteProxyClass);
 
 	@LogMessage(level = WARN)
-	@Message(value = "FirstResult/maxResults specified on polymorphic query; applying in memory!", id = 180)
+	@Message(value = "FirstResult/maxResults specified on polymorphic query; applying in memory", id = 180)
 	void needsLimit();
 
 	@LogMessage(level = WARN)
@@ -599,7 +602,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void preparedStatementAlreadyInBatch(String sql);
 
 	@LogMessage(level = WARN)
-	@Message(value = "processEqualityExpression() : No expression to process!", id = 203)
+	@Message(value = "processEqualityExpression() : No expression to process", id = 203)
 	void processEqualityExpression();
 
 	@LogMessage(level = INFO)
@@ -666,7 +669,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void readOnlyCacheConfiguredForMutableCollection(String name);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!",
+	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
 			id = 223)
 	void recognizedObsoleteHibernateNamespace(
 			String oldHibernateNamespace,
@@ -1021,8 +1024,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to evictData temporary id table after use [%s]", id = 314)
 	void unableToDropTemporaryIdTable(String message);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToExecuteBatch} instead
+	 */
 	@LogMessage(level = ERROR)
 	@Message(value = "Exception executing batch [%s], SQL: %s", id = 315)
+	@Deprecated
 	void unableToExecuteBatch(Exception e, String sql );
 
 	@LogMessage(level = WARN)
@@ -1149,8 +1156,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not read or init a hi value", id = 351)
 	void unableToReadOrInitHiValue(@Cause SQLException e);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToReleaseBatchStatement} instead
+	 */
 	@LogMessage(level = ERROR)
 	@Message(value = "Unable to release batch statement...", id = 352)
+	@Deprecated
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = ERROR)
@@ -1270,8 +1281,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unexpected literal token type [%s] passed for numeric processing", id = 380)
 	void unexpectedLiteralTokenType(int type);
 
+	/**
+	 * @deprecated Use {@link org.hibernate.engine.jdbc.JdbcLogging#unexpectedRowCounts} instead
+	 */
 	@LogMessage(level = WARN)
 	@Message(value = "JDBC driver did not return the expected number of row counts", id = 381)
+	@Deprecated
 	void unexpectedRowCounts();
 
 	@LogMessage(level = WARN)
@@ -1348,7 +1363,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void usingDialect(Dialect dialect);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!", id = 404)
+	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
 	@LogMessage(level = INFO)
@@ -1546,7 +1561,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void explicitSkipLockedLockCombo();
 
 	@LogMessage(level = INFO)
-	@Message(value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448)
+	@Message(value = "'jakarta.persistence.validation.mode' named multiple values : %s", id = 448)
 	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)
@@ -1795,5 +1810,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The %2$s version for [%s] is no longer supported, hence certain features may not work properly. The minimum supported version is %3$s. Check the community dialects project for available legacy versions.", id = 511)
 	void unsupportedDatabaseVersion(String databaseName, String actualVersion, String minimumVersion);
+
+	@LogMessage(level = WARN)
+	@Message(value = "The database version version for the Cockroach Dialect could not be determined. The minimum supported version (%s) has been set instead.", id = 512)
+	void unableToDetermineCockroachDatabaseVersion(String minimumVersion);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Unable to create the ReflectionOptimizer for [%s]",
+			id = 513)
+	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);
 
 }

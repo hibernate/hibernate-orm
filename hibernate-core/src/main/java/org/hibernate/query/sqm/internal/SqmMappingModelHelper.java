@@ -28,7 +28,6 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -36,6 +35,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 
@@ -145,16 +145,16 @@ public class SqmMappingModelHelper {
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
-		if ( sqmPath instanceof SqmTreatedPath ) {
-			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
-			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
+			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath;
+			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
 			return domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
 		}
 
 		// see if the LHS is treated
-		if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
-			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath.getLhs();
-			final EntityDomainType treatTargetType = treatedPath.getTreatTarget();
+		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> ) {
+			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath.getLhs();
+			final EntityDomainType<?> treatTargetType = treatedPath.getTreatTarget();
 			final EntityPersister container = domainModel.findEntityDescriptor( treatTargetType.getHibernateEntityName() );
 
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
@@ -175,7 +175,7 @@ public class SqmMappingModelHelper {
 			// For entity collection parts, we must return the entity mapping type,
 			// as that is the mapping type of the expression
 			if ( collectionPart instanceof EntityCollectionPart ) {
-				return ( (EntityCollectionPart) collectionPart ).getEntityMappingType();
+				return ( (EntityCollectionPart) collectionPart ).getAssociatedEntityMappingType();
 			}
 			return collectionPart;
 		}

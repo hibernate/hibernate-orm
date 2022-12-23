@@ -15,8 +15,8 @@ import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -123,28 +123,28 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {
 			final Initializer initializer = initializers.get( i );
-			if ( ! ( initializer instanceof CollectionInitializer ) ) {
+			if ( ! initializer.isCollectionInitializer() ) {
 				initializer.resolveKey( rowProcessingState );
 			}
 		}
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {
 			final Initializer initializer = initializers.get( i );
-			if ( initializer instanceof CollectionInitializer ) {
+			if ( initializer.isCollectionInitializer() ) {
 				initializer.resolveKey( rowProcessingState );
 			}
 		}
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {
 			Initializer initializer = initializers.get( i );
-			if ( !( initializer instanceof EntityDelayedFetchInitializer ) ) {
+			if ( !( initializer instanceof EntityDelayedFetchInitializer ) && ! (initializer instanceof EntitySelectFetchInitializer ) ) {
 				initializer.resolveInstance( rowProcessingState );
 			}
 		}
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {
 			Initializer initializer = initializers.get( i );
-			if ( initializer instanceof EntityDelayedFetchInitializer ) {
+			if ( initializer instanceof EntityDelayedFetchInitializer || initializer instanceof EntitySelectFetchInitializer ) {
 				initializer.resolveInstance( rowProcessingState );
 			}
 		}

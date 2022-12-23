@@ -29,7 +29,14 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
  * SQL Dialect for Sybase/SQL Anywhere
@@ -71,8 +78,15 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 			case NCLOB:
 				return "ntext";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		return super.columnType( sqlTypeCode );
+	}
+
+	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
 	}
 
 	@Override
@@ -124,7 +138,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	/**
 	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
 	 * but I suppose Hibernate use this syntax only with tables with just 1 column
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -134,10 +148,10 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	/**
 	 * ASA does not require to drop constraint before dropping tables, so disable it.
-	 * <p/>
+	 * <p>
 	 * NOTE : Also, the DROP statement syntax used by Hibernate to drop constraints is
 	 * not compatible with ASA.
-	 * <p/>
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override

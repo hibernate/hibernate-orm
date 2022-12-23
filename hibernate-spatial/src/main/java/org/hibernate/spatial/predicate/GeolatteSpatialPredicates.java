@@ -28,7 +28,9 @@ import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
  * {@link JTSSpatialPredicates}, but for geolatte-geom.
  *
  * @author Daniel Shuy
+ * @deprecated Use {@link org.hibernate.spatial.criteria.GeolatteSpatialCriteriaBuilder GeolatteSpatialCriteriaBuilder} instead
  */
+@Deprecated(since = "6.2")
 @SuppressWarnings("rawtypes")
 public class GeolatteSpatialPredicates {
 

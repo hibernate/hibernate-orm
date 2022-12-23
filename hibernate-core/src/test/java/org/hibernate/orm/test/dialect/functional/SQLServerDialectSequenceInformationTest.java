@@ -68,7 +68,7 @@ public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 		String databaseNameToken = "databaseName=";
 		String url = (String) Environment.getProperties().get( AvailableSettings.URL );
 		String[] tokens = url.split( databaseNameToken );
-		String newUrl = tokens[0] + databaseNameToken + DATABASE_NAME;
+		String newUrl = tokens[0] + databaseNameToken + DATABASE_NAME + ";trustServerCertificate=true";
 
 		Dialect dialect = DialectContext.getDialect();
 

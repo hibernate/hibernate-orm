@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -81,6 +82,27 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					criteria.from( Product.class );
 					criteria.where( builder.and() );
+					List<Product> result = entityManager.createQuery( criteria ).getResultList();
+					assertEquals( 1, result.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15452")
+	public void testGetConjunctionExpressionsAndAddPredicate(){
+		inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Product> criteria = builder.createQuery(Product.class);
+					Root<Product> rootClaseGrid = criteria.from(Product.class);
+
+					Predicate conjuncion = builder.conjunction();
+					Predicate expr = builder.equal(rootClaseGrid.get("id"), "NON existing id");
+					// Modifications to the list do not affect the query
+					List<Expression<Boolean>> expressions = conjuncion.getExpressions();
+					expressions.add( expr);
+
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
 					assertEquals( 1, result.size() );
 				}

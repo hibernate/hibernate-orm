@@ -14,6 +14,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -39,10 +42,10 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.FormatMapper;
-import org.hibernate.type.JacksonJsonFormatMapper;
-import org.hibernate.type.JacksonXmlFormatMapper;
-import org.hibernate.type.JaxbXmlFormatMapper;
-import org.hibernate.type.JsonBJsonFormatMapper;
+import org.hibernate.type.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.jackson.JacksonXmlFormatMapper;
+import org.hibernate.type.jaxb.JaxbXmlFormatMapper;
+import org.hibernate.type.jakartajson.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;
 
@@ -114,6 +117,7 @@ public class StrategySelectorBuilder {
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
+		addColumnOrderingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
 		addJsonFormatMappers( strategySelector );
 		addXmlFormatMappers( strategySelector );
@@ -143,7 +147,7 @@ public class StrategySelectorBuilder {
 		}
 	}
 
-	private void addTransactionCoordinatorBuilders(StrategySelectorImpl strategySelector) {
+	private static void addTransactionCoordinatorBuilders(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				TransactionCoordinatorBuilder.class,
 				JdbcResourceLocalTransactionCoordinatorBuilderImpl.SHORT_NAME,
@@ -173,7 +177,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
+	private static void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
 				CteMutationStrategy.SHORT_NAME,
@@ -196,7 +200,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
+	private static void addImplicitNamingStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				ImplicitNamingStrategy.class,
 				"default",
@@ -243,7 +247,20 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
+	private static void addColumnOrderingStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"default",
+				ColumnOrderingStrategyStandard.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"legacy",
+				ColumnOrderingStrategyLegacy.class
+		);
+	}
+
+	private static void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 			CacheKeysFactory.class,
 			DefaultCacheKeysFactory.SHORT_NAME,
@@ -256,7 +273,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
+	private static void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,
 				JacksonJsonFormatMapper.SHORT_NAME,
@@ -269,7 +286,7 @@ public class StrategySelectorBuilder {
 		);
 	}
 
-	private void addXmlFormatMappers(StrategySelectorImpl strategySelector) {
+	private static void addXmlFormatMappers(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,
 				JacksonXmlFormatMapper.SHORT_NAME,

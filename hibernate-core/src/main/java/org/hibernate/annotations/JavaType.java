@@ -8,6 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import org.hibernate.type.descriptor.java.BasicJavaType;
 
@@ -17,7 +18,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specify an explicit BasicJavaType to use for a particular
+ * Specify an explicit {@link BasicJavaType} to use for a particular
  * column mapping.  <ul>
  *     <li>
  *         When applied to a Map-valued attribute, describes the Map value. Use
@@ -38,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
  *
- * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for high-level discussion
  * of basic value mapping.
  *
  * @see MapKeyJavaType
@@ -49,7 +50,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 6.0
  */
 @Inherited
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface JavaType {
 	/**

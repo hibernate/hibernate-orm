@@ -92,6 +92,9 @@ public class EmptyScrollableResults implements ScrollableResultsImplementor {
 	}
 
 	@Override
+	public void setFetchSize(int fetchSize) {}
+
+	@Override
 	public Object[] get() {
 		return ArrayHelper.EMPTY_OBJECT_ARRAY;
 	}

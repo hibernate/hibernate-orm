@@ -142,12 +142,12 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 task buildTutorialZip(type: Zip) {task->
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDirectory = tasks.renderGettingStartedGuides.outputDir
-	archiveBaseName = 'hibernate-tutorials.zip'
+	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: testLibs.versions.junit4,
-			h2: dbLibs.versions.h2
+			junit: testLibs.versions.junit4.get(),
+			h2: dbLibs.versions.h2.get()
 	)
 	tasks.renderGettingStartedGuides.dependsOn task
 }
@@ -256,6 +256,7 @@ task renderOrmReports { task ->
 
 	dependsOn tasks.generateIncubationReport
 	dependsOn tasks.generateInternalsReport
+	dependsOn tasks.generateDeprecationReport
 
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task

@@ -23,6 +23,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 			T value,
 			NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
+		assert value == null || type == null || type.isInstance( value );
 		this.value = value;
 	}
 

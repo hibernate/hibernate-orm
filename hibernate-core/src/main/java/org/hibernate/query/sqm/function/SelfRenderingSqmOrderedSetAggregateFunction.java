@@ -21,12 +21,10 @@ import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 /**
@@ -145,14 +143,16 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 		sb.append( '(' );
 		int i = 1;
 		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			( (SqmSelectableNode<?>) arguments.get( 0 ) ).appendHqlString( sb );
-			sb.append( ' ' );
-			( (SqmSelectableNode<?>) arguments.get( 1 ) ).appendHqlString( sb );
-			i = 2;
+			arguments.get( 0 ).appendHqlString( sb );
+			if ( arguments.size() > 1 ) {
+				sb.append( ' ' );
+				arguments.get( 1 ).appendHqlString( sb );
+				i = 2;
+			}
 		}
 		for ( ; i < arguments.size(); i++ ) {
 			sb.append(", ");
-			( (SqmSelectableNode<?>) arguments.get( i ) ).appendHqlString( sb );
+			arguments.get( i ).appendHqlString( sb );
 		}
 
 		sb.append( ')' );

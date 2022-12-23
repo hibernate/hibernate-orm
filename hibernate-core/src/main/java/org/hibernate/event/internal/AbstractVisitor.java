@@ -133,7 +133,7 @@ public abstract class AbstractVisitor {
 		return null;
 	}
 
-	final EventSource getSession() {
+	protected final EventSource getSession() {
 		return session;
 	}
 }

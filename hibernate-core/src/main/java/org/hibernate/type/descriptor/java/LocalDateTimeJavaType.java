@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the {@link LocalDateTime} type.
  *
  * @author Steve Ebersole
  */
@@ -48,7 +48,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.TIMESTAMP );
+		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
 	@Override
@@ -149,12 +149,25 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Date) {
-			final Timestamp ts = (Timestamp) value;
-			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
+			final Date ts = (Date) value;
+			final Instant instant = ts.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "java.sql.Date":
+			case "java.sql.Timestamp":
+			case "java.util.Date":
+			case "java.util.Calendar":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override
@@ -176,4 +189,5 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			SharedSessionContractImplementor session) {
 		return LocalDateTime.now( ClockHelper.forPrecision( precision, session ) );
 	}
+
 }

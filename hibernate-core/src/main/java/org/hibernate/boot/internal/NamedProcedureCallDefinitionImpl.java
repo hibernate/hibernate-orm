@@ -15,15 +15,14 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.internal.QueryHintDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.cfg.annotations.QueryHintDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultSetMappingImpl;
 
 import jakarta.persistence.NamedStoredProcedureQuery;
@@ -55,7 +54,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 
-		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters(), hints );
+		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -94,22 +93,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 					resultClasses,
 					resultSetMapping,
 					collectedQuerySpaces::add,
-					new ResultSetMappingResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-//						@Override
-//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-//							Collections.addAll( collectedQueryReturns, queryReturns );
-//						}
-//
-//						@Override
-//						public void addQuerySpaces(String... spaces) {
-//							Collections.addAll( collectedQuerySpaces, spaces );
-//						}
-					}
+					() -> sessionFactory
 			);
 		}
 		else if ( specifiesResultSetMappings ) {
@@ -117,27 +101,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 					resultSetMappings,
 					resultSetMapping,
 					collectedQuerySpaces::add,
-					new ResultSetMappingResolutionContext() {
-						@Override
-						public SessionFactoryImplementor getSessionFactory() {
-							return sessionFactory;
-						}
-
-//						@Override
-//						public NamedResultSetMappingMemento findResultSetMapping(String name) {
-//							return sessionFactory.getQueryEngine().getNamedObjectRepository().getResultSetMappingMemento( name );
-//						}
-//
-//						@Override
-//						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-//							Collections.addAll( collectedQueryReturns, queryReturns );
-//						}
-//
-//						@Override
-//						public void addQuerySpaces(String... spaces) {
-//							Collections.addAll( collectedQuerySpaces, spaces );
-//						}
-					}
+					() -> sessionFactory
 			);
 		}
 
@@ -163,9 +127,9 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	static class ParameterDefinitions {
 		private final ParameterStrategy parameterStrategy;
-		private final ParameterDefinition[] parameterDefinitions;
+		private final ParameterDefinition<?>[] parameterDefinitions;
 
-		ParameterDefinitions(StoredProcedureParameter[] parameters, Map<String, Object> queryHintMap) {
+		ParameterDefinitions(StoredProcedureParameter[] parameters) {
 			if ( parameters == null || parameters.length == 0 ) {
 				parameterStrategy = ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[0];
@@ -177,13 +141,8 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 				parameterDefinitions = new ParameterDefinition[ parameters.length ];
 
 				for ( int i = 0; i < parameters.length; i++ ) {
-					parameterDefinitions[i] = ParameterDefinition.from(
-							parameterStrategy,
-							parameters[i],
-							// i+1 for the position because the apis say the numbers are 1-based, not zero
-							i+1,
-							queryHintMap
-					);
+					// i+1 for the position because the apis say the numbers are 1-based, not zero
+					parameterDefinitions[i] = new ParameterDefinition<>(i + 1, parameters[i]);
 				}
 			}
 		}
@@ -194,39 +153,20 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 		public List<ParameterMemento> toMementos(SessionFactoryImplementor sessionFactory) {
 			final List<ParameterMemento> mementos = new ArrayList<>();
-			for ( ParameterDefinition definition : parameterDefinitions ) {
-				mementos.add(definition.toMemento( sessionFactory ));
+			for ( ParameterDefinition<?> definition : parameterDefinitions ) {
+				mementos.add( definition.toMemento( sessionFactory ) );
 			}
 			return mementos;
 		}
 	}
 
-	static class ParameterDefinition {
+	static class ParameterDefinition<T> {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode parameterMode;
-		private final Class<?> type;
+		private final Class<T> type;
 
-		static ParameterDefinition from(
-				ParameterStrategy parameterStrategy,
-				StoredProcedureParameter parameterAnnotation,
-				int adjustedPosition,
-				Map<String, Object> queryHintMap) {
-			return new ParameterDefinition( adjustedPosition, parameterAnnotation );
-		}
-
-		private static Boolean interpretBoolean(Object value) {
-			if ( value == null ) {
-				return null;
-			}
-
-			if ( value instanceof Boolean ) {
-				return (Boolean) value;
-			}
-
-			return Boolean.valueOf( value.toString() );
-		}
-
+		@SuppressWarnings("unchecked")
 		ParameterDefinition(int position, StoredProcedureParameter annotation) {
 			this.position = position;
 			this.name = normalize( annotation.name() );
@@ -240,7 +180,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 //					? explicitPassNullSetting.booleanValue()
 //					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 
-			return new NamedCallableQueryMementoImpl.ParameterMementoImpl(
+			return new NamedCallableQueryMementoImpl.ParameterMementoImpl<>(
 					position,
 					name,
 					parameterMode,

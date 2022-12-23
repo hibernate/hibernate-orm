@@ -11,17 +11,16 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Objects;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.query.internal.BindingTypeHelper;
+import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterRegistrationImpl;
@@ -116,7 +115,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
-		final BindableType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
+		final OutputableType<T> typeToUse = (OutputableType<T>) BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null || binding.getExplicitTemporalPrecision() == null
 						? null
 						: binding.getExplicitTemporalPrecision(),
@@ -187,8 +186,11 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				};
 			}
 		}
+		else if ( typeToUse == null ) {
+			throw new IllegalArgumentException( "Cannot determine the bindable type for procedure parameter: " + name );
+		}
 		else {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -196,10 +198,9 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			BindableType<?> hibernateType,
 			ProcedureCallImplementor<?> procedureCall) {
 		final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
-				.getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry().getService( JdbcEnvironment.class )
+				.getFactory()
+				.getJdbcServices()
+				.getJdbcEnvironment()
 				.getExtractedDatabaseMetaData();
 		return procedureCall.getFunctionReturn() == null
 				&& databaseMetaData.supportsNamedParameters()

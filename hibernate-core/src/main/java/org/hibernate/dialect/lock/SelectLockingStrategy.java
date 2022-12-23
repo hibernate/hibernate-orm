@@ -16,17 +16,17 @@ import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * A locking strategy where the locks are obtained through select statements.
- * <p/>
- * For non-read locks, this is achieved through the Dialect's specific
- * SELECT ... FOR UPDATE syntax.
+ * A locking strategy where a lock is obtained via a select statement.
+ * <p>
+ * For non-read locks, this is achieved through the dialect's native
+ * {@code SELECT ... FOR UPDATE} syntax.
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)
@@ -51,7 +51,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 			Object version,
 			Object object,
 			int timeout,
-			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
+			EventSource session) throws StaleObjectStateException, JDBCException {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		final Lockable lockable = getLockable();

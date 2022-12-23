@@ -9,8 +9,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.Insert;
 
 /**
- * Nothing more than a distinguishing subclass of Insert used to indicate
- * intent.  Some subclasses of this also provided some additional
+ * Nothing more than a distinguishing subclass of {@link Insert} used to
+ * indicate intent.  Some subclasses of this also provided some additional
  * functionality or semantic to the generated SQL statement string.
  *
  * @author Steve Ebersole

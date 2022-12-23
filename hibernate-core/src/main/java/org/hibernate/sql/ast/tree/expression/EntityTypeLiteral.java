@@ -16,7 +16,6 @@ import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -28,9 +27,10 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 /**
  * @author Steve Ebersole
  */
-public class EntityTypeLiteral implements Expression, MappingModelExpressible, DomainResultProducer, JavaTypedExpressible {
+public class EntityTypeLiteral
+		implements Expression, MappingModelExpressible<Object>, DomainResultProducer<Object>, JavaTypedExpressible<Object> {
 	private final EntityPersister entityTypeDescriptor;
-	private final DiscriminatorType discriminatorType;
+	private final DiscriminatorType<?> discriminatorType;
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
@@ -72,21 +72,19 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 	@Override
 	public int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return discriminatorType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public int forEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return discriminatorType.forEachJdbcValue( value, offset, valuesConsumer, session );
 	}
 
 
@@ -99,24 +97,21 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressible, D
 	}
 
 	@Override
-	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		return new BasicResult(
-				createSqlSelection( creationState )
-						.getValuesArrayPosition(),
+	public DomainResult<Object> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		return new BasicResult<>(
+				createSqlSelection( creationState ).getValuesArrayPosition(),
 				resultVariable,
-				discriminatorType.getExpressibleJavaType()
+				discriminatorType
 		);
 	}
 
 	private SqlSelection createSqlSelection(DomainResultCreationState creationState) {
-		return creationState.getSqlAstCreationState().getSqlExpressionResolver()
-				.resolveSqlSelection(
-						this,
-						discriminatorType.getExpressibleJavaType(),
-						null,
-						creationState.getSqlAstCreationState().getCreationContext()
-								.getMappingMetamodel().getTypeConfiguration()
-				);
+		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				discriminatorType.getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
+		);
 	}
 
 	@Override

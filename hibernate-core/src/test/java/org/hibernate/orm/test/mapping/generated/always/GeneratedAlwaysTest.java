@@ -25,11 +25,12 @@ import static org.junit.Assert.assertEquals;
  */
 @DomainModel(annotatedClasses = GeneratedAlwaysTest.OrderLine.class)
 @SessionFactory
-@SkipForDialect(dialectClass = H2Dialect.class) // 'generated always' not supported until H2 2.0
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 1) // 'generated always' was added in 2.0
 @SkipForDialect(dialectClass = HSQLDialect.class)
 @SkipForDialect(dialectClass = DerbyDialect.class)
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
-@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 9)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, matchSubTypes = true)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 11, matchSubTypes = true) // 'generated always' was added in 12
 public class GeneratedAlwaysTest {
 
     @Test

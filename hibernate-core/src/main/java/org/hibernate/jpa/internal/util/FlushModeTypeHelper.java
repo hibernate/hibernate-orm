@@ -61,13 +61,13 @@ public class FlushModeTypeHelper {
 		if ( value == null ) {
 			return FlushMode.AUTO;
 		}
-		if ( FlushMode.class.isInstance( value ) ) {
+		if (value instanceof FlushMode) {
 			return (FlushMode) value;
 		}
-		else if ( FlushModeType.class.isInstance( value ) ) {
+		else if (value instanceof FlushModeType) {
 			return getFlushMode( (FlushModeType) value );
 		}
-		else if ( String.class.isInstance( value ) ) {
+		else if (value instanceof String) {
 			return interpretExternalSetting( (String) value );
 		}
 

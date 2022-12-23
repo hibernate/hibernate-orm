@@ -19,6 +19,9 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
@@ -105,11 +108,10 @@ public class EntityInstantiator {
 		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
-			if ( value instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) value;
-				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-				final String entityName = initializer.getEntityName();
-				final Object entityId = initializer.getInternalIdentifier();
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+			if ( lazyInitializer != null ) {
+				final String entityName = lazyInitializer.getEntityName();
+				final Object entityId = lazyInitializer.getInternalIdentifier();
 				if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 					final String entityClassName = enversService.getEntitiesConfigurations().get( entityName ).getEntityClassName();
 					final Class entityClass = ReflectionTools.loadClass(

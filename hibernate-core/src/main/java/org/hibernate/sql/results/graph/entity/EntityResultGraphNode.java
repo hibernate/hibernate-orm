@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -37,5 +38,12 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	@Override
 	default EntityMappingType getReferencedMappingContainer() {
 		return getEntityValuedModelPart().getEntityMappingType();
+	}
+
+	@Override
+	default boolean appliesTo(GraphImplementor graphImplementor) {
+		return graphImplementor.appliesTo(
+				getEntityValuedModelPart().getEntityMappingType().getJavaType().getJavaTypeClass()
+		);
 	}
 }

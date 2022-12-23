@@ -13,9 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -90,11 +91,12 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 	public void testSimpleConvertUsage() throws MalformedURLException {
         final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "mediaType" );
-		final AttributeConverterTypeAdapter type = assertTyping(
-				AttributeConverterTypeAdapter.class,
+		final ConvertedBasicTypeImpl type = assertTyping(
+				ConvertedBasicTypeImpl.class,
 				theDatePropertyType
 		);
-		assertTrue( MediaTypeConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
+		final JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+		assertTrue( MediaTypeConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 

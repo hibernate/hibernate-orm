@@ -18,10 +18,16 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Registers a custom composite user type implementation to be used
- * for all references to a particular {@link jakarta.persistence.Embeddable}.
- * <p/>
- * May be overridden for a specific embedded using {@link org.hibernate.annotations.CompositeType}
+ * Registers a custom {@linkplain CompositeUserType composite user type}
+ * implementation to be used by default for all references to a particular
+ * {@linkplain jakarta.persistence.Embeddable embeddable} class.
+ * <p>
+ * May be overridden for a specific entity field or property using
+ * {@link CompositeType @CompositeType}.
+ *
+ * @see CompositeUserType
+ * @see CompositeType
+ * @see TypeRegistration
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )

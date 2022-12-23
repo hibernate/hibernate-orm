@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Function;
 
 import org.hibernate.DuplicateMappingException;
@@ -20,11 +19,16 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -33,12 +37,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
-import org.hibernate.cfg.AnnotatedClassType;
-import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.PropertyData;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -55,11 +53,12 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 
 /**
- * An in-flight representation of Metadata while Metadata is being built.
+ * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.
  *
  * @author Steve Ebersole
  *
@@ -86,15 +85,15 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerComponent(Component component);
 
 	/**
-	 * Adds an import (HQL entity rename).
+	 * Adds an import (for use in HQL).
 	 *
-	 * @param entityName The entity name being renamed.
-	 * @param rename The rename
+	 * @param importName The name to be used in HQL
+	 * @param className The fully-qualified name of the class
 	 *
-	 * @throws DuplicateMappingException If rename already is mapped to another
+	 * @throws DuplicateMappingException If className already is mapped to another
 	 * entity name in this repository.
 	 */
-	void addImport(String entityName, String rename) throws DuplicateMappingException;
+	void addImport(String importName, String className) throws DuplicateMappingException;
 
 	/**
 	 * Add collection mapping metadata to this repository.
@@ -224,17 +223,37 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 	/**
-	 * Apply the descriptor for an {@link AttributeConverter}
+	 * Obtain the {@link ConverterRegistry} which may be
+	 * used to register {@link AttributeConverter}s.
 	 */
+	ConverterRegistry getConverterRegistry();
+
+	/**
+	 * Apply the descriptor for an {@link AttributeConverter}
+	 *
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	void addAttributeConverter(ConverterDescriptor descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}
+	 *
+	 * @deprecated use {@link #getConverterRegistry()}
 	 */
+	@Deprecated(since = "6.2")
 	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
 
+	/**
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	void addRegisteredConversion(RegisteredConversion conversion);
 
+	/**
+	 * @deprecated use {@link #getConverterRegistry()}
+	 */
+	@Deprecated(since = "6.2")
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 
 
@@ -306,6 +325,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerCompositeUserType(Class<?> embeddableType, Class<? extends CompositeUserType<?>> userType);
 	Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType);
 
+	void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType);
+	Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType);
+
 	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
 	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
@@ -362,9 +384,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	class CollectionTypeRegistrationDescriptor {
 		private final Class<? extends UserCollectionType> implementation;
-		private final Properties parameters;
+		private final Map<String,String> parameters;
 
-		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Properties parameters) {
+		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Map<String,String> parameters) {
 			this.implementation = implementation;
 			this.parameters = parameters;
 		}
@@ -373,7 +395,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			return implementation;
 		}
 
-		public Properties getParameters() {
+		public Map<String,String> getParameters() {
 			return parameters;
 		}
 	}

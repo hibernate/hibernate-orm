@@ -21,6 +21,7 @@
         <properties name="nameUK" unique="true">
             <property name="name"/>
         </properties>
+		<property name="versionNumber"/>
 	</class>
 
 </hibernate-mapping>

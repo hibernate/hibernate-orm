@@ -19,8 +19,10 @@ import org.hibernate.type.SortedSetType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A set with no nullable element columns. It will have a primary key
- * consisting of all table columns (ie. key columns + element columns).
+ * A mapping model object representing a collection of type {@link java.util.List}.
+ * A set has no nullable element columns (unless it is a one-to-many association).
+ * It has a primary key consisting of all columns (i.e. key columns + element columns).
+ *
  * @author Gavin King
  */
 public class Set extends Collection {
@@ -78,7 +80,11 @@ public class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			final Table collectionTable = getCollectionTable();
+			PrimaryKey pk = collectionTable.getPrimaryKey();
+			if ( pk == null ) {
+				pk = new PrimaryKey( getCollectionTable() );
+			}
 			pk.addColumns( getKey() );
 			for ( Selectable selectable : getElement().getSelectables() ) {
 				if ( selectable instanceof Column ) {
@@ -92,7 +98,7 @@ public class Set extends Collection {
 				}
 			}
 			if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
-				getCollectionTable().setPrimaryKey( pk );
+				collectionTable.setPrimaryKey( pk );
 			}
 //			else {
 				//for backward compatibility, allow a set with no not-null

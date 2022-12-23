@@ -6,26 +6,29 @@
  */
 package org.hibernate.id.uuid;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
-import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
 
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
- * UUID-based IdentifierGenerator
+ * Generates {@link UUID}s.
  *
  * @see org.hibernate.annotations.UuidGenerator
  */
-public class UuidGenerator implements StandardGenerator {
+public class UuidGenerator implements BeforeExecutionGenerator {
 	interface ValueGenerator {
 		UUID generateUuid(SharedSessionContractImplementor session);
 	}
@@ -44,13 +47,7 @@ public class UuidGenerator implements StandardGenerator {
 			generator = StandardRandomStrategy.INSTANCE;
 		}
 
-		final Class<?> propertyType;
-		if ( idMember instanceof Method ) {
-			propertyType = ( (Method) idMember ).getReturnType();
-		}
-		else {
-			propertyType = ( (Field) idMember ).getType();
-		}
+		final Class<?> propertyType = getPropertyType( idMember );
 
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
 			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
@@ -66,7 +63,16 @@ public class UuidGenerator implements StandardGenerator {
 		}
 	}
 
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	/**
+	 * @return {@link EventTypeSets#INSERT_ONLY}
+	 */
+	@Override
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
+	}
+
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return valueTransformer.transform( generator.generateUuid( session ) );
 	}
 }

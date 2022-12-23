@@ -990,19 +990,7 @@ See the <<chapters/domain/associations.adoc#associations-JoinFormula,`@JoinFormu
 [[annotations-hibernate-lazycollection]]
 ==== `@LazyCollection`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
-The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
-
-`TRUE`:: Load it when the state is requested.
-`FALSE`:: Eagerly load it.
-`EXTRA`:: Prefer extra queries over full collection loading.
-
-The `TRUE` and `FALSE` values are deprecated since you should be using the Jakarta Persistence {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
-
-The `EXTRA` value has no equivalent in the Jakarta Persistence specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
-Each element is fetched individually using a secondary query.
-
-See the <<chapters/fetching/Fetching.adoc#fetching-LazyCollection, `@LazyCollection` mapping>> section for more info.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@LazyCollection`#] annotation is deprecated.
 
 [[annotations-hibernate-lazygroup]]
 ==== `@LazyGroup`
@@ -1019,15 +1007,7 @@ See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement-lazy-loading-
 [[annotations-hibernate-lazytoone]]
 ==== `@LazyToOne`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation is used to specify the laziness options, represented by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOneOption.html[`LazyToOneOption`], available for a `@OneToOne` or `@ManyToOne` association.
-
-`LazyToOneOption` defines the following alternatives:
-
-FALSE:: Eagerly load the association. This one is not needed since the Jakarta Persistence `FetchType.EAGER` offers the same behavior.
-NO_PROXY:: This option will fetch the association lazily while returning real entity object.
-PROXY:: This option will fetch the association lazily while returning a proxy instead.
-
-See the <<chapters/domain/associations.adoc#associations-one-to-one-bidirectional-lazy,`@LazyToOne` mapping example>> section for more info.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@LazyToOne`#] annotation is deprecated.
 
 [[annotations-hibernate-listindexbase]]
 ==== `@ListIndexBase`

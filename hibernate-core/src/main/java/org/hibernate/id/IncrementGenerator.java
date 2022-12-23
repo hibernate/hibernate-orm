@@ -15,7 +15,6 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -26,7 +25,6 @@ import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -44,10 +42,10 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class IncrementGenerator implements StandardGenerator {
+public class IncrementGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
-	private Class returnClass;
+	private Class<?> returnClass;
 	private String column;
 	private List<QualifiedTableName> physicalTableNames;
 	private String sql;
@@ -71,31 +69,31 @@ public class IncrementGenerator implements StandardGenerator {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ObjectNameNormalizer normalizer =
-				(ObjectNameNormalizer) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+				(ObjectNameNormalizer) parameters.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
 
-		column = params.getProperty( "column" );
+		column = parameters.getProperty( "column" );
 		if ( column == null ) {
-			column = params.getProperty( PersistentIdentifierGenerator.PK );
+			column = parameters.getProperty( PersistentIdentifierGenerator.PK );
 		}
 		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
 
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		final String schema = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.SCHEMA )
+				parameters.getProperty( PersistentIdentifierGenerator.SCHEMA )
 		);
 		final String catalog = normalizer.toDatabaseIdentifierText(
-				params.getProperty( PersistentIdentifierGenerator.CATALOG )
+				parameters.getProperty( PersistentIdentifierGenerator.CATALOG )
 		);
 
-		String tableList = params.getProperty( "tables" );
+		String tableList = parameters.getProperty( "tables" );
 		if ( tableList == null ) {
-			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
+			tableList = parameters.getProperty( PersistentIdentifierGenerator.TABLES );
 		}
 		physicalTableNames = new ArrayList<>();
 		for ( String tableName : StringHelper.split( ", ", tableList ) ) {
@@ -106,27 +104,27 @@ public class IncrementGenerator implements StandardGenerator {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		StringBuilder buf = new StringBuilder();
+		StringBuilder union = new StringBuilder();
 		for ( int i = 0; i < physicalTableNames.size(); i++ ) {
 			final String tableName = context.format( physicalTableNames.get( i ) );
 			if ( physicalTableNames.size() > 1 ) {
-				buf.append( "select max(" ).append( column ).append( ") as mx from " );
+				union.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
-			buf.append( tableName );
+			union.append( tableName );
 			if ( i < physicalTableNames.size() - 1 ) {
-				buf.append( " union " );
+				union.append( " union " );
 			}
 		}
 		String maxColumn;
 		if ( physicalTableNames.size() > 1 ) {
-			buf.insert( 0, "( " ).append( " ) ids_" );
+			union.insert( 0, "( " ).append( " ) ids_" );
 			maxColumn = "ids_.mx";
 		}
 		else {
 			maxColumn = column;
 		}
 
-		sql = "select max(" + maxColumn + ") from " + buf.toString();
+		sql = "select max(" + maxColumn + ") from " + union;
 	}
 
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {

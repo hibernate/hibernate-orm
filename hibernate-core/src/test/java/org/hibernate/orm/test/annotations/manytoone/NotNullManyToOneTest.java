@@ -1,5 +1,15 @@
 package org.hibernate.orm.test.annotations.manytoone;
 
+import org.hibernate.boot.beanvalidation.ValidationMode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,23 +18,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.beanvalidation.ValidationMode;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-13959")
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.AUTO.name() );
+		configuration.setProperty( AvailableSettings.JAKARTA_VALIDATION_MODE, ValidationMode.AUTO.name() );
 	}
 
 	@Override

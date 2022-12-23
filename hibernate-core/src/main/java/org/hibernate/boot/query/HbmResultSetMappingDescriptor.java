@@ -79,7 +79,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 
 	/**
-	 * Constructor for an explicit `<resultset/>` mapping.
+	 * Constructor for an explicit {@code <resultset/>} mapping.
 	 */
 	public HbmResultSetMappingDescriptor(
 			JaxbHbmResultSetMappingType hbmResultSetMapping,

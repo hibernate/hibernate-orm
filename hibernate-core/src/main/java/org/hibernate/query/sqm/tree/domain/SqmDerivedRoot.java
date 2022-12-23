@@ -7,11 +7,10 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -28,16 +27,13 @@ import org.hibernate.spi.NavigablePath;
 public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	private final SqmSubQuery<T> subQuery;
-	private final boolean lateral;
 
 	public SqmDerivedRoot(
 			SqmSubQuery<T> subQuery,
-			String alias,
-			boolean lateral) {
+			String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
-				lateral,
 				new AnonymousTupleType<>( subQuery ),
 				alias
 		);
@@ -46,7 +42,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	protected SqmDerivedRoot(
 			NavigablePath navigablePath,
 			SqmSubQuery<T> subQuery,
-			boolean lateral,
 			SqmPathSource<T> pathSource,
 			String alias) {
 		super(
@@ -57,7 +52,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 				subQuery.nodeBuilder()
 		);
 		this.subQuery = subQuery;
-		this.lateral = lateral;
 	}
 
 	@Override
@@ -71,7 +65,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 				new SqmDerivedRoot<>(
 						getNavigablePath(),
 						getQueryPart().copy( context ),
-						isLateral(),
 						getReferencedPathSource(),
 						getExplicitAlias()
 				)
@@ -83,11 +76,6 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	@Override
 	public SqmSubQuery<T> getQueryPart() {
 		return subQuery;
-	}
-
-	@Override
-	public boolean isLateral() {
-		return lateral;
 	}
 
 	@Override
@@ -106,28 +94,26 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception( getClass());
-//		return new SqmCorrelatedRoot<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public <S extends T> SqmTreatedRoot<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Derived roots can not be treated!" );
+		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmTreatedRoot<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Derived roots can not be treated!" );
+		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Derived roots can not be treated!" );
+		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Derived roots can not be treated!" );
+		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 }

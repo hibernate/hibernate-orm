@@ -7,15 +7,13 @@
 package org.hibernate;
 
 /**
- * Annotation related exception.
- *
- * The EJB3 EG will probably set a generic exception.  I'll then use this one.
+ * An exception that occurs while reading mapping annotations.
  *
  * @author Emmanuel Bernard
  */
 public class AnnotationException extends MappingException {
 	/**
-	 * Constructs an AnnotationException using the given message and cause.
+	 * Constructs an {@code AnnotationException} using the given message and cause.
 	 *
 	 * @param msg The message explaining the reason for the exception.
 	 * @param cause The underlying cause.
@@ -25,7 +23,7 @@ public class AnnotationException extends MappingException {
 	}
 
 	/**
-	 * Constructs an AnnotationException using the given message.
+	 * Constructs an {@code AnnotationException} using the given message.
 	 *
 	 * @param msg The message explaining the reason for the exception.
 	 */

@@ -27,13 +27,13 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -45,8 +45,8 @@ import org.hibernate.type.Type;
  * JDBC.
  * <p>
  * Concrete implementations of this interface handle
- * {@linkplain OneToManyPersister one-to-many},
- * {@linkplain BasicCollectionPersister many-to-many}, association
+ * {@linkplain OneToManyPersister one-to-many} and
+ * {@linkplain BasicCollectionPersister many-to-many} association
  * cardinalities, and to a certain extent abstract the details of those
  * mappings from collaborators.
  * <p>
@@ -88,6 +88,13 @@ import org.hibernate.type.Type;
 public interface CollectionPersister extends Restrictable {
 	NavigableRole getNavigableRole();
 
+	String getRole();
+
+	/**
+	 * Get the persister of the entity that "owns" this collection
+	 */
+	EntityPersister getOwnerEntityPersister();
+
 	/**
 	 * Initialize the given collection with the given key
 	 */
@@ -99,14 +106,23 @@ public interface CollectionPersister extends Restrictable {
 	boolean hasCache();
 
 	/**
-	 * Get the cache
+	 * Whether {@link #remove(Object, SharedSessionContractImplementor)} might actually do something,
+	 * or if it is definitely a no-op.
+	 */
+	default boolean needsRemove() {
+		return true;
+	}
+
+	/**
+	 * Access to the collection's cache region
 	 */
 	CollectionDataAccess getCacheAccessStrategy();
 
 	/**
-	 * Get the cache structure
+	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
 	 */
 	CacheEntryStructure getCacheEntryStructure();
+
 	/**
 	 * Get the associated {@code Type}
 	 */
@@ -127,20 +143,6 @@ public interface CollectionPersister extends Restrictable {
 	 * Return the element class of an array, or null otherwise
 	 */
 	Class<?> getElementClass();
-
-	/**
-	 * The value converter for the element values of this collection
-	 */
-	default BasicValueConverter getElementConverter() {
-		return null;
-	}
-
-	/**
-	 * The value converter for index values of this collection (effectively map keys only)
-	 */
-	default BasicValueConverter getIndexConverter() {
-		return null;
-	}
 
 	/**
 	 * Is this an array or primitive values?
@@ -227,17 +229,21 @@ public interface CollectionPersister extends Restrictable {
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")
 	 */
-	String getRole();
 
 	/**
-	 * Get the persister of the entity that "owns" this collection
+	 * Get the surrogate key generation strategy (optional operation)
+	 *
+	 * @deprecated use {@link #getGenerator()}
 	 */
-	EntityPersister getOwnerEntityPersister();
+	@Deprecated
+	IdentifierGenerator getIdentifierGenerator();
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
-	IdentifierGenerator getIdentifierGenerator();
+	default BeforeExecutionGenerator getGenerator() {
+		return getIdentifierGenerator();
+	}
 
 	/**
 	 * Get the type of the surrogate key
@@ -312,42 +318,6 @@ public interface CollectionPersister extends Restrictable {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	/**
-	 * Generates the collection's key column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the key column alias generation.
-	 * @return The key column aliases.
-	 */
-	String[] getKeyColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's index column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the index column alias generation.
-	 * @return The key column aliases, or null if not indexed.
-	 */
-	String[] getIndexColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's element column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the element column alias generation.
-	 * @return The key column aliases.
-	 */
-	String[] getElementColumnAliases(String suffix);
-
-	/**
-	 * Generates the collection's identifier column aliases, based on the given
-	 * suffix.
-	 *
-	 * @param suffix The suffix to use in the key column alias generation.
-	 * @return The key column aliases.
-	 */
-	String getIdentifierColumnAlias(String suffix);
-
 	boolean isExtraLazy();
 	int getSize(Object key, SharedSessionContractImplementor session);
 	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
@@ -384,4 +354,58 @@ public interface CollectionPersister extends Restrictable {
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState);
+
+
+
+	/**
+	 * Generates the collection's key column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the key column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getKeyColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's index column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the index column alias generation.
+	 * @return The key column aliases, or null if not indexed.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getIndexColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's element column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the element column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String[] getElementColumnAliases(String suffix);
+
+	/**
+	 * Generates the collection's identifier column aliases, based on the given
+	 * suffix.
+	 *
+	 * @param suffix The suffix to use in the key column alias generation.
+	 * @return The key column aliases.
+	 *
+	 * @deprecated Read-by-position makes this irrelevant.  Currently still used
+	 * by {@link org.hibernate.query.sql.internal.SQLQueryParser}
+	 */
+	@Deprecated( since = "6", forRemoval = true )
+	String getIdentifierColumnAlias(String suffix);
 }

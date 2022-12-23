@@ -110,4 +110,5 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
+
 }

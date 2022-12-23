@@ -48,11 +48,11 @@ public abstract class BlobJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Blob.class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Blob.class );
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}
@@ -115,7 +115,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					BlobJdbcType descriptor = BLOB_BINDING;
-					if ( byte[].class.isInstance( value ) ) {
+					if ( value instanceof byte[] ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
 					}
@@ -220,6 +220,56 @@ public abstract class BlobJdbcType implements JdbcType {
 							options
 					);
 					st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
+				}
+			};
+		}
+	};
+
+	public static final BlobJdbcType MATERIALIZED = new BlobJdbcType() {
+		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(MATERIALIZED)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return byte[].class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+				}
+			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getBytes( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+					return javaType.wrap( statement.getBytes( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getBytes( name ), options );
 				}
 			};
 		}

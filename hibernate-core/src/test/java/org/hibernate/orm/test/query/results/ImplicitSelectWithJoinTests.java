@@ -162,7 +162,7 @@ public class ImplicitSelectWithJoinTests {
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Vendor vendor = new Vendor( 1, "Steve's Curios", "Acme Corp." );
-			final Product product = new Product( 10, UUID.randomUUID(), vendor );
+			final Product product = new Product( 10, UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" ), vendor );
 			session.persist( vendor );
 			session.persist( product );
 		} );

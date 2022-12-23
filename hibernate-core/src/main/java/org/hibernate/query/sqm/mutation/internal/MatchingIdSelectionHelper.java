@@ -33,8 +33,6 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -42,8 +40,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -111,7 +109,7 @@ public class MatchingIdSelectionHelper {
 							new BasicResult<>(
 									selection.getValuesArrayPosition(),
 									null,
-									jdbcMapping.getJavaTypeDescriptor()
+									jdbcMapping
 							)
 					);
 				}
@@ -165,12 +163,8 @@ public class MatchingIdSelectionHelper {
 							selection.getContainingTableExpression()
 					);
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference,
-									selection,
-									sessionFactory
-							)
+							tableReference,
+							selection
 					);
 					idSelectionQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
@@ -270,7 +264,7 @@ public class MatchingIdSelectionHelper {
 														new BasicResult<>(
 																selection.getValuesArrayPosition(),
 																null,
-																jdbcMapping.getJavaTypeDescriptor()
+																jdbcMapping
 														)
 												);
 											}
@@ -285,7 +279,7 @@ public class MatchingIdSelectionHelper {
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcEnvironment
+		final SqlAstTranslator<JdbcOperationQuerySelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, matchingIdSelection );
 
@@ -304,7 +298,7 @@ public class MatchingIdSelectionHelper {
 				,
 				executionContext.getSession()
 		);
-		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions().makeCopy();
 		final LockMode lockMode = lockOptions.getLockMode();
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setLockMode( LockMode.WRITE );
@@ -318,7 +312,7 @@ public class MatchingIdSelectionHelper {
 					}
 			);
 		}
-		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
+		final JdbcOperationQuerySelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
 				jdbcParameterBindings,
 				executionContext.getQueryOptions()
 		);

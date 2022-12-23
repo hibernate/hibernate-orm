@@ -492,6 +492,19 @@ public final class StringHelper {
 		return results;
 	}
 
+	public static int count(String text, String match) {
+		int count = 0;
+
+		int index = text.indexOf( match );
+
+		while ( index > -1 ) {
+			count++;
+			index = text.indexOf( match, index + 1 );
+		}
+
+		return count;
+	}
+
 	public static int count(String text, char match) {
 		if ( text == null ) {
 			return 0;
@@ -546,7 +559,7 @@ public final class StringHelper {
 	}
 
 	public static boolean isNotEmpty(String string) {
-		return string != null && string.length() > 0;
+		return string != null && !string.isEmpty();
 	}
 
 	public static boolean isEmpty(String string) {
@@ -839,13 +852,7 @@ public final class StringHelper {
 		final boolean isFirstExpressionNonEmpty = StringHelper.isNotEmpty( firstExpression );
 		final boolean isSecondExpressionNonEmpty = StringHelper.isNotEmpty( secondExpression );
 		if ( isFirstExpressionNonEmpty && isSecondExpressionNonEmpty ) {
-			final StringBuilder buffer = new StringBuilder();
-			buffer.append( "( " )
-					.append( firstExpression )
-					.append( " ) and ( ")
-					.append( secondExpression )
-					.append( " )" );
-			return buffer.toString();
+			return "( " + firstExpression + " ) and ( " + secondExpression + " )";
 		}
 		else if ( isFirstExpressionNonEmpty ) {
 			return firstExpression;
@@ -862,10 +869,11 @@ public final class StringHelper {
 	 * Return the interned form of a String, or null if the parameter is null.
 	 * <p>
 	 * Use with caution: excessive interning is known to cause issues.
-	 * Best to use only with strings which are known to be long lived constants,
+	 * Best to use only with strings which are known to be long-lived constants,
 	 * and for which the chances of being actual duplicates is proven.
 	 * (Even better: avoid needing interning by design changes such as reusing
 	 * the known reference)
+	 *
 	 * @param string The string to intern.
 	 * @return The interned string.
 	 */

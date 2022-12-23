@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+
 /**
  * Models Hibernate's ANY mapping (reverse discrimination) as a JPA domain model type
  *

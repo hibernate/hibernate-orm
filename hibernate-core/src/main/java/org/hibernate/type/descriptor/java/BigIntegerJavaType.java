@@ -42,11 +42,6 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	}
 
 	@Override
-	public boolean areEqual(BigInteger one, BigInteger another) {
-		return one == another || ( one != null && another != null && one.compareTo( another ) == 0 );
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
 	public <X> X unwrap(BigInteger value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {

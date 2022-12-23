@@ -13,7 +13,7 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
@@ -66,8 +66,8 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		final String[] createStrings = getDialect().getSequenceSupport().getCreateSequenceStrings( "REVISION_GENERATOR", 1, 1 );
 		final String content = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 		for ( int i = 0; i < createStrings.length; ++i ) {
-			if ( getDialect() instanceof Oracle8iDialect ) {
-				assertTrue( content.contains( ( createStrings[ i ] + " ORDER" ).toLowerCase() ) );
+			if ( getDialect() instanceof OracleDialect ) {
+				assertTrue( content.contains( ( createStrings[ i ] + " NOCACHE ORDER" ).toLowerCase() ) );
 			}
 			else {
 				assertTrue( content.contains( createStrings[ i ].toLowerCase() ) );

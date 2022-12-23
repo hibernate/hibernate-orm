@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * Encapsulates options for the execution of a HQL/Criteria/native query
@@ -171,9 +172,28 @@ public interface QueryOptions {
 			&& (limit.getFirstRow() != null || limit.getMaxRows() != null);
 	}
 
+	default ListResultsConsumer.UniqueSemantic getUniqueSemantic(){
+		return null;
+	}
+
 	/**
-	 * Singleton access
+	 * Provide singleton access for frequently needed options:
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {
 	};
+
+	QueryOptions READ_WRITE = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.FALSE;
+		}
+	};
+
+	QueryOptions READ_ONLY = new QueryOptionsAdapter() {
+		@Override
+		public Boolean isReadOnly() {
+			return Boolean.TRUE;
+		}
+	};
+
 }

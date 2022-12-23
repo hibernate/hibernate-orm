@@ -36,6 +36,11 @@ public enum Clause {
 	SET,
 
 	/**
+	 * The update set clause expression part
+	 */
+	SET_EXPRESSION,
+
+	/**
 	 * Not used in 5.x.  Intended for use in 6+ as indicator
 	 * of processing predicates (where clause) that occur in a
 	 * delete
@@ -52,6 +57,10 @@ public enum Clause {
 	FETCH,
 	FOR_UPDATE,
 	OVER,
+	/**
+	 * The clause containing CTEs
+	 */
+	WITH,
 	WITHIN_GROUP,
 	PARTITION,
 	CALL,

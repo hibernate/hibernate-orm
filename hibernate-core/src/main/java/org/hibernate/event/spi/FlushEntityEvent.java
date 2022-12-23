@@ -57,6 +57,9 @@ public class FlushEntityEvent extends AbstractEvent {
 	public void setDirtyProperties(int[] dirtyProperties) {
 		this.dirtyProperties = dirtyProperties;
 	}
+	public boolean hasDirtyProperties() {
+		return dirtyProperties != null && dirtyProperties.length != 0;
+	}
 	public boolean hasDirtyCollection() {
 		return hasDirtyCollection;
 	}

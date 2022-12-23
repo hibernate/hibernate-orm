@@ -9,6 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -18,17 +19,20 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.complete.CompleteFetchBuilder;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -39,7 +43,6 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -147,6 +150,7 @@ public class DynamicResultBuilderEntityStandard
 						tableAlias,
 						domainResultCreationState
 				),
+				null,
 				jdbcResultsMetadata,
 				domainResultCreationState
 		);
@@ -166,6 +170,7 @@ public class DynamicResultBuilderEntityStandard
 						null,
 						domainResultCreationState
 				),
+				fetchable,
 				jdbcResultsMetadata,
 				domainResultCreationState
 		);
@@ -173,12 +178,23 @@ public class DynamicResultBuilderEntityStandard
 
 	private <T> T buildResultOrFetch(
 			Function<TableGroup, T> resultOrFetchBuilder,
+			Fetchable fetchable,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 		final FromClauseAccess fromClauseAccess = domainResultCreationState.getSqlAstCreationState().getFromClauseAccess();
+		final TableGroup collectionTableGroup;
+		final NavigablePath elementNavigablePath;
+		if ( fetchable instanceof PluralAttributeMapping ) {
+			collectionTableGroup = fromClauseAccess.getTableGroup( navigablePath );
+			elementNavigablePath = navigablePath.append( fetchable.getPartName() );
+		}
+		else {
+			collectionTableGroup = null;
+			elementNavigablePath = navigablePath;
+		}
 		final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
-				navigablePath,
+				elementNavigablePath,
 				np -> {
 					final TableReference tableReference = entityMapping.createPrimaryTableReference(
 							new SqlAliasBaseConstant( tableAlias ),
@@ -189,57 +205,88 @@ public class DynamicResultBuilderEntityStandard
 					if ( lockMode != null ) {
 						domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
 					}
-					return new TableGroupImpl( navigablePath, tableAlias, tableReference, entityMapping );
+					return new TableGroupImpl( elementNavigablePath, tableAlias, tableReference, entityMapping );
 				}
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		final List<String> idColumnAliases;
-		final FetchBuilder idFetchBuilder;
+		final List<String> keyColumnAliases;
+		final FetchBuilder idFetchBuilder = findIdFetchBuilder();
 		if ( this.idColumnNames != null ) {
-			idColumnAliases = this.idColumnNames;
+			keyColumnAliases = this.idColumnNames;
 		}
-		else if ( ( idFetchBuilder = findIdFetchBuilder() ) != null ) {
-			idColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
+		else if ( idFetchBuilder != null ) {
+			keyColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
 		}
 		else {
-			idColumnAliases = null;
+			keyColumnAliases = null;
 		}
-		if ( idColumnAliases != null ) {
-			final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
-			identifierMapping.forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						resolveSqlSelection(
-								idColumnAliases.get( selectionIndex ),
-								createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-								selectableMapping.getJdbcMapping(),
-								jdbcResultsMetadata,
-								domainResultCreationState
-						);
+		if ( keyColumnAliases != null ) {
+			final ModelPart keyPart;
+			final TableGroup keyTableGroup;
+			if ( fetchable instanceof PluralAttributeMapping ) {
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+				if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany() ) {
+					keyPart = entityMapping.getIdentifierMapping();
+					keyTableGroup = tableGroup;
+				}
+				else {
+					// In here, we know that the idColumnNames refer to the columns of the join table,
+					// so we also need to resolve selections for the element identifier columns
+					final ManyToManyCollectionPart elementDescriptor = (ManyToManyCollectionPart) pluralAttributeMapping.getElementDescriptor();
+					keyPart = elementDescriptor.getForeignKeyDescriptor().getKeyPart();
+					keyTableGroup = collectionTableGroup;
+					final List<String> idColumnAliases;
+					if ( idFetchBuilder instanceof DynamicFetchBuilder ) {
+						idColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
 					}
-			);
+					else {
+						idColumnAliases = ( (CompleteFetchBuilder) idFetchBuilder ).getColumnAliases();
+					}
+
+					entityMapping
+							.getIdentifierMapping()
+							.forEachSelectable( (selectionIndex, selectableMapping) -> resolveSqlSelection(
+									idColumnAliases.get( selectionIndex ),
+									tableReference,
+									selectableMapping,
+									jdbcResultsMetadata,
+									domainResultCreationState
+							)
+					);
+				}
+			}
+			else {
+				keyPart = entityMapping.getIdentifierMapping();
+				keyTableGroup = tableGroup;
+			}
+
+			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> resolveSqlSelection(
+					keyColumnAliases.get( selectionIndex ),
+					keyTableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+					selectableMapping,
+					jdbcResultsMetadata,
+					domainResultCreationState
+			) );
 		}
 
 		if ( discriminatorColumnName != null ) {
 			resolveSqlSelection(
 					discriminatorColumnName,
-					createColumnReferenceKey(
-							tableReference,
-							entityMapping.getDiscriminatorMapping().getSelectionExpression()
-					),
-					entityMapping.getDiscriminatorMapping().getJdbcMapping(),
+					tableReference,
+					entityMapping.getDiscriminatorMapping(),
 					jdbcResultsMetadata,
 					domainResultCreationState
 			);
 		}
 
 		try {
-			final NavigablePath currentRelativePath = creationState.getCurrentRelativePath();
+			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
 			final String prefix;
 			if ( currentRelativePath == null ) {
 				prefix = "";
 			}
 			else {
-				prefix = currentRelativePath.getFullPath()
+				prefix = currentRelativePath.getKey()
 						.replace( ELEMENT_PREFIX, "" )
 						.replace( INDEX_PREFIX, "" ) + ".";
 			}
@@ -275,23 +322,25 @@ public class DynamicResultBuilderEntityStandard
 
 	private void resolveSqlSelection(
 			String columnAlias,
-			String columnKey,
-			JdbcMapping jdbcMapping,
+			TableReference tableReference,
+			SelectableMapping selectableMapping,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression(
-						columnKey,
-						state -> {
-							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-							final int valuesArrayPosition = jdbcPosition - 1;
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
-						}
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						tableReference,
+						selectableMapping,
+						columnAlias
 				),
-				jdbcMapping.getMappedJavaType(),
+				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
 		);
 	}
 

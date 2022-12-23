@@ -22,9 +22,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
@@ -43,9 +43,6 @@ import org.hibernate.usertype.UserVersionType;
  * handle the case of the wrapped type implementing them so we can pass them
  * along.
  *
- * todo (6.0) : ^^ this introduces a problem in code that relies on `instance of` checks
- * 		against any of these interfaces when the wrapped type does not
- *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -58,11 +55,13 @@ public class CustomType<J>
 
 	private final String name;
 
-	private final BasicJavaType<J> mappedJavaType;
+	private final JavaType<J> mappedJavaType;
+	private final JavaType<?> jdbcJavaType;
 	private final JdbcType jdbcType;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
+	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
 
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
@@ -70,28 +69,48 @@ public class CustomType<J>
 
 	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
 		this.userType = userType;
-		this.name = userType.getClass().getName();
+		name = userType.getClass().getName();
 
-		if ( userType instanceof BasicJavaType ) {
+		if ( userType instanceof JavaType<?> ) {
 			//noinspection unchecked
-			this.mappedJavaType = ( (BasicJavaType<J>) userType );
+			mappedJavaType = (JavaType<J>) userType;
 		}
 		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
+			mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+			mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
-			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
+			mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
-		// create a JdbcType adapter that uses the UserType binder/extract handling
-		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration);
+		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+		if ( valueConverter != null ) {
+			// When an explicit value converter is given,
+			// we configure the custom type to use that instead of adapters that delegate to UserType.
+			// This is necessary to support selecting a column with multiple domain type representations.
+			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcJavaType = valueConverter.getRelationalJavaType();
+			//noinspection unchecked
+			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
+			//noinspection unchecked
+			valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
+			//noinspection unchecked
+			jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+		}
+		else {
+			// create a JdbcType adapter that uses the UserType binder/extract handling
+			jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
+			jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			valueExtractor = jdbcType.getExtractor( mappedJavaType );
+			valueBinder = jdbcType.getBinder( mappedJavaType );
+			jdbcLiteralFormatter = userType instanceof EnhancedUserType
+					? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
+					: null;
+		}
 
-		this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
-		this.valueBinder = jdbcType.getBinder( mappedJavaType );
 		this.registrationKeys = registrationKeys;
 	}
 
@@ -110,13 +129,18 @@ public class CustomType<J>
 	}
 
 	@Override
+	public JdbcLiteralFormatter<J> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
+	}
+
+	@Override
 	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping pi) {
-		return new int[] { jdbcType.getDefaultSqlTypeCode() };
+		return new int[] { jdbcType.getDdlTypeCode() };
 	}
 
 	@Override
@@ -146,12 +170,50 @@ public class CustomType<J>
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().assemble( cached, owner);
+		final J assembled = getUserType().assemble( cached, owner );
+		// Since UserType#assemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for assembling,
+		// or if that doesn't exist, simply use the relational value as is
+		if ( assembled == null && cached != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return cached;
+			}
+			else {
+				return valueConverter.toDomainValue( cached );
+			}
+		}
+		return assembled;
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().disassemble( (J) value );
+		return (Serializable) disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return (Serializable) disassemble( value, (SharedSessionContractImplementor) null );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null && value != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return value;
+			}
+			else {
+				return valueConverter.toRelationalValue( (J) value );
+			}
+		}
+		return disassembled;
 	}
 
 	@Override
@@ -320,7 +382,13 @@ public class CustomType<J>
 	}
 
 	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return jdbcJavaType;
+	}
+
+	@Override
 	public BasicValueConverter<J, Object> getValueConverter() {
 		return userType.getValueConverter();
 	}
+
 }

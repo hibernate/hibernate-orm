@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -47,7 +47,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -69,6 +69,13 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.TableDeleteCustomSql;
+import org.hibernate.sql.model.internal.TableDeleteStandard;
+import org.hibernate.sql.model.internal.TableInsertCustomSql;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 /**
  * @author Steve Ebersole
@@ -83,7 +90,7 @@ public interface SqlAstWalker {
 
 	void visitUpdateStatement(UpdateStatement statement);
 
-	void visitInsertStatement(InsertStatement statement);
+	void visitInsertStatement(InsertSelectStatement statement);
 
 	void visitAssignment(Assignment assignment);
 
@@ -116,6 +123,8 @@ public interface SqlAstWalker {
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 
 	void visitColumnReference(ColumnReference columnReference);
+
+	void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression);
 
 	void visitExtractUnit(ExtractUnit extractUnit);
 
@@ -161,8 +170,6 @@ public interface SqlAstWalker {
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
 
-	void visitConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral);
-
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 
 	void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression);
@@ -200,4 +207,22 @@ public interface SqlAstWalker {
 	void visitDuration(Duration duration);
 
 	void visitConversion(Conversion conversion);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Model mutations
+
+	void visitStandardTableInsert(TableInsertStandard tableInsert);
+
+	void visitCustomTableInsert(TableInsertCustomSql tableInsert);
+
+	void visitStandardTableDelete(TableDeleteStandard tableDelete);
+
+	void visitCustomTableDelete(TableDeleteCustomSql tableDelete);
+
+	void visitStandardTableUpdate(TableUpdateStandard tableUpdate);
+
+	void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate);
+
+	void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment);
 }

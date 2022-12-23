@@ -73,7 +73,7 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 				return impliedType;
 			}
 		}
-		switch ( basicType.getJdbcType().getJdbcTypeCode() ) {
+		switch ( basicType.getJdbcType().getDefaultSqlTypeCode() ) {
 			case Types.SMALLINT:
 			case Types.TINYINT:
 			case Types.INTEGER:
@@ -102,7 +102,7 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 		}
 		// Resolve according to JPA spec 4.8.5
 		final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, 1 );
-		switch ( specifiedArgType.getJdbcMapping().getJdbcType().getJdbcTypeCode() ) {
+		switch ( specifiedArgType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 			case Types.SMALLINT:
 			case Types.TINYINT:
 			case Types.INTEGER:

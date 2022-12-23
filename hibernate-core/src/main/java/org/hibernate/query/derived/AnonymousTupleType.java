@@ -15,6 +15,10 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.ReturnableType;
@@ -28,6 +32,8 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
+
+import jakarta.persistence.metamodel.Attribute;
 
 
 /**
@@ -52,7 +58,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			final SqmSelectableNode<?> component = components[i];
 			final String alias = component.getAlias();
 			if ( alias == null ) {
-				throw new IllegalArgumentException( "Component at index " + i + " has no alias, but alias is required!" );
+				throw new IllegalArgumentException( "Component at index " + i + " has no alias, but alias is required" );
 			}
 			map.put( alias, i );
 		}
@@ -62,10 +68,10 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSubQuery<?> subQuery) {
 		final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
 		if ( selectClause == null || selectClause.getSelectionItems().isEmpty() ) {
-			throw new IllegalArgumentException( "Sub query has no selection items!" );
+			throw new IllegalArgumentException( "subquery has no selection items" );
 		}
-		// todo: right now, we "snapshot" the state of the sub query when creating this type, but maybe we shouldn't?
-		//  i.e. what if the sub query changes later on? Or should we somehow mark the sub query to signal,
+		// todo: right now, we "snapshot" the state of the subquery when creating this type, but maybe we shouldn't?
+		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
 		//  that changes to the select clause are invalid after a certain point?
 		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
 	}
@@ -83,6 +89,53 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
 		return new AnonymousTupleTableGroupProducer( this, aliasStem, sqlSelections, fromClauseAccess );
+	}
+
+	public List<String> determineColumnNames() {
+		final int componentCount = componentCount();
+		final List<String> columnNames = new ArrayList<>( componentCount );
+		for ( int i = 0; i < componentCount; i++ ) {
+			final SqmSelectableNode<?> selectableNode = getSelectableNode( i );
+			final String componentName = getComponentName( i );
+			if ( selectableNode instanceof SqmPath<?> ) {
+				addColumnNames(
+						columnNames,
+						( (SqmPath<?>) selectableNode ).getNodeType().getSqmPathType(),
+						componentName
+				);
+			}
+			else {
+				columnNames.add( componentName );
+			}
+		}
+		return columnNames;
+	}
+
+	private static void addColumnNames(List<String> columnNames, DomainType<?> domainType, String componentName) {
+		if ( domainType instanceof EntityDomainType<?> ) {
+			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) domainType;
+			final SingularPersistentAttribute<?, ?> idAttribute = entityDomainType.findIdAttribute();
+			final String idPath;
+			if ( idAttribute == null ) {
+				idPath = componentName;
+			}
+			else {
+				idPath = componentName + "_" + idAttribute.getName();
+			}
+			addColumnNames( columnNames, entityDomainType.getIdentifierDescriptor().getSqmPathType(), idPath );
+		}
+		else if ( domainType instanceof ManagedDomainType<?> ) {
+			for ( Attribute<?, ?> attribute : ( (ManagedDomainType<?>) domainType ).getAttributes() ) {
+				if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+					throw new IllegalArgumentException( "Only embeddables without collections are supported" );
+				}
+				final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+				addColumnNames( columnNames, attributeType, componentName + "_" + attribute.getName() );
+			}
+		}
+		else {
+			columnNames.add( componentName );
+		}
 	}
 
 	@Override
@@ -111,6 +164,10 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		return index == null ? null : components[index].getExpressible();
 	}
 
+	protected Integer getIndex(String componentName) {
+		return componentIndexMap.get( componentName );
+	}
+
 	public SqmSelectableNode<?> getSelectableNode(int index) {
 		return components[index];
 	}
@@ -126,7 +183,27 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			final SqmPath<?> sqmPath = (SqmPath<?>) component;
 			if ( sqmPath.getNodeType() instanceof SingularPersistentAttribute<?, ?> ) {
 				//noinspection unchecked,rawtypes
-				return new AnonymousTuplePersistentSingularAttribute( name, sqmPath, (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() );
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						( (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() ).getType()
+				);
+			}
+			else if ( sqmPath.getNodeType() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+				//noinspection unchecked,rawtypes
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						( (PluralPersistentAttribute<?, ?, ?>) sqmPath.getNodeType() ).getElementType()
+				);
+			}
+			else if ( sqmPath.getNodeType() instanceof EntityDomainType<?> ) {
+				//noinspection unchecked,rawtypes
+				return new AnonymousTupleSqmAssociationPathSource(
+						name,
+						sqmPath,
+						(SimpleDomainType<?>) sqmPath.getNodeType()
+				);
 			}
 			else {
 				return new AnonymousTupleSqmPathSource<>( name, sqmPath );

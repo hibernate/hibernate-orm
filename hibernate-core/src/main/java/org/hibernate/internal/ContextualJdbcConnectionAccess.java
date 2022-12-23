@@ -35,7 +35,7 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	@Override
 	public Connection obtainConnection() throws SQLException {
 		if ( tenantIdentifier == null ) {
-			throw new HibernateException( "Tenant identifier required!" );
+			throw new HibernateException( "Tenant identifier required" );
 		}
 
 		try {
@@ -50,7 +50,7 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
 		if ( tenantIdentifier == null ) {
-			throw new HibernateException( "Tenant identifier required!" );
+			throw new HibernateException( "Tenant identifier required" );
 		}
 
 		try {

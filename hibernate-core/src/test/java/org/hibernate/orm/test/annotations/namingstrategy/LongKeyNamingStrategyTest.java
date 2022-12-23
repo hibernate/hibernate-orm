@@ -63,13 +63,13 @@ public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
 				.build();
 
 		org.hibernate.mapping.ForeignKey foreignKey =
-				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding( Address.class.getName()).getTable().getForeignKeyIterator().next();
+				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
 		assertEquals( "FK_way_longer_than_the_30_char", foreignKey.getName() );
 
-		UniqueKey uniqueKey = metadata.getEntityBinding( Address.class.getName()).getTable().getUniqueKeyIterator().next();
+        UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( "UK_way_longer_than_the_30_char", uniqueKey.getName() );
 
-		org.hibernate.mapping.Index index = metadata.getEntityBinding( Address.class.getName()).getTable().getIndexIterator().next();
+        org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( "IDX_way_longer_than_the_30_cha", index.getName() );
 	}
 

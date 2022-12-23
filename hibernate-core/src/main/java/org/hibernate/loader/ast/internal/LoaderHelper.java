@@ -14,6 +14,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -22,7 +23,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class LoaderHelper {
 
-	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// The user requested a "greater" (i.e. more restrictive) form of

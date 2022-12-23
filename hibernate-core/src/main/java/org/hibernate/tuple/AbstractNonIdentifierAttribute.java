@@ -13,8 +13,9 @@ import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.type.Type;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement.
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute implements NonIdentifierAttribute {
 	private final AttributeSource source;
 	private final SessionFactoryImplementor sessionFactory;
@@ -66,11 +67,6 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	@Override
 	public boolean isUpdateable() {
 		return attributeInformation.isUpdateable();
-	}
-
-	@Override
-	public ValueGeneration getValueGenerationStrategy() {
-		return attributeInformation.getValueGenerationStrategy();
 	}
 
 	@Override

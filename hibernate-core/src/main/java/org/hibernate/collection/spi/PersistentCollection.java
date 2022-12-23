@@ -16,6 +16,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.type.Type;
 
 /**
@@ -48,7 +49,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 @Incubating
-public interface PersistentCollection<E> {
+public interface PersistentCollection<E> extends LazyInitializable {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -212,11 +213,6 @@ public interface PersistentCollection<E> {
 	Serializable getSnapshot(CollectionPersister persister);
 
 	/**
-	 * To be called internally by the session, forcing immediate initialization.
-	 */
-	void forceInitialization();
-
-	/**
 	 * Does the given element/entry exist in the collection?
 	 *
 	 * @param entry The object to check if it exists as a collection element
@@ -225,6 +221,22 @@ public interface PersistentCollection<E> {
 	 * @return {@code true} if the given entry is a collection element
 	 */
 	boolean entryExists(Object entry, int i);
+
+	/**
+	 * Whether the given entry should be included in recreation events
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInRecreate(
+			Object entry,
+			int i,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return entryExists( entry, i );
+	}
 
 	/**
 	 * Do we need to insert this element?
@@ -236,6 +248,39 @@ public interface PersistentCollection<E> {
 	 * @return {@code true} if the element needs inserting
 	 */
 	boolean needsInserting(Object entry, int i, Type elemType);
+
+	/**
+	 * Whether to include the entry for insertion operations
+	 *
+	 * @apiNote Defined to match signature of {@link InsertRowsCoordinator.EntryFilter#include}
+	 */
+	default boolean includeInInsert(
+			Object entry,
+			int entryPosition,
+			PersistentCollection<?> collection,
+			PluralAttributeMapping attributeDescriptor) {
+		assert collection == this;
+		assert attributeDescriptor != null;
+
+		return needsInserting( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
+
+	/**
+	 * Do we need to update this element?
+	 *
+	 * @param entry The collection element to check
+	 * @param entryPosition The index (for indexed collections)
+	 * @param attributeDescriptor The type for the element
+	 * @return {@code true} if the element needs updating
+	 */
+	default boolean needsUpdating(
+			Object entry,
+			int entryPosition,
+			PluralAttributeMapping attributeDescriptor) {
+		assert attributeDescriptor != null;
+
+		return needsUpdating( entry, entryPosition, attributeDescriptor.getCollectionDescriptor().getElementType() );
+	}
 
 	/**
 	 * Do we need to update this element?
@@ -279,13 +324,6 @@ public interface PersistentCollection<E> {
 	 * Is this PersistentCollection in the process of being initialized?
 	 */
 	boolean isInitializing();
-
-	/**
-	 * Is this instance initialized?
-	 *
-	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
-	 */
-	boolean wasInitialized();
 
 	/**
 	 * Called prior to the initialization of this yet-uninitialized collection.  Pairs
@@ -395,10 +433,10 @@ public interface PersistentCollection<E> {
 	/**
 	 * Was {@code collection} provided directly to this PersistentCollection
 	 * (i.e., provided as an argument to a constructor)?
-	 * <p/>
+	 * <p>
 	 * Implementors that can copy elements out of a directly provided
 	 * collection into the wrapped collection should override this method.
-	 * <p/>
+	 * <p>
 	 * @param collection The collection
 	 * @return true, if {@code collection} was provided directly to this
 	 * PersistentCollection; false, otherwise.
@@ -451,6 +489,21 @@ public interface PersistentCollection<E> {
 	 * @return The orphans
 	 */
 	Collection<E> getOrphans(Serializable snapshot, String entityName);
+
+	/**
+	 * Obtain the size of this collection without initializing it
+	 */
+	int getSize();
+
+	/**
+	 * Determine if the given element belongs to this collection without initializing it
+	 */
+	boolean elementExists(Object element);
+
+	/**
+	 * Obtain the element os this collection associated with the given index without initializing it
+	 */
+	Object elementByIndex(Object index);
 
 	void initializeEmptyCollection(CollectionPersister persister);
 

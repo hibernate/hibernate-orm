@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -19,6 +20,8 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * Algorithms related to foreign key constraint transparency
@@ -144,8 +147,8 @@ public final class ForeignKeys {
 			// or 2) returnedValue was initialized, but not nullified.
 			// When bytecode-enhancement is used for dirty-checking, the change should
 			// only be tracked when returnedValue was nullified (1)).
-			if ( value != returnedValue && returnedValue == null && self instanceof SelfDirtinessTracker ) {
-				( (SelfDirtinessTracker) self ).$$_hibernate_trackChange( propertyName );
+			if ( value != returnedValue && returnedValue == null ) {
+				ManagedTypeHelper.processIfSelfDirtinessTracker( self, SelfDirtinessTracker::$$_hibernate_trackChange, propertyName );
 			}
 			return returnedValue;
 		}
@@ -195,17 +198,28 @@ public final class ForeignKeys {
 				return false;
 			}
 
-			if ( object instanceof HibernateProxy ) {
-				// if its an uninitialized proxy it can't be transient
-				final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-				if ( li.getImplementation( session ) == null ) {
-					return false;
-					// ie. we never have to null out a reference to
-					// an uninitialized proxy
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			if ( lazyInitializer != null ) {
+				// if it's an uninitialized proxy it can only be
+				// transient if we did an unloaded-delete on the
+				// proxy itself, in which case there is no entry
+				// for it, but its key has already been registered
+				// as nullifiable
+				Object entity = lazyInitializer.getImplementation( session );
+				if ( entity == null ) {
+					return persistenceContext.containsDeletedUnloadedEntityKey(
+							session.generateEntityKey(
+									lazyInitializer.getIdentifier(),
+									session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+											.getEntityDescriptor( lazyInitializer.getEntityName() )
+							)
+					);
 				}
 				else {
 					//unwrap it
-					object = li.getImplementation( session );
+					object = entity;
 				}
 			}
 
@@ -214,7 +228,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| ( isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug() );
+					|| isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug();
 			}
 
 			// See if the entity is already bound to this session, if not look at the
@@ -222,19 +236,16 @@ public final class ForeignKeys {
 			// id is not "unsaved" (that is, we rely on foreign keys to keep
 			// database integrity)
 
-			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( object );
-			if ( entityEntry == null ) {
-				return isTransient( entityName, object, null, session );
-			}
-			else {
-				return entityEntry.isNullifiable( isEarlyInsert, session );
-			}
+			final EntityEntry entityEntry = persistenceContext.getEntry( object );
+			return entityEntry == null
+					? isTransient( entityName, object, null, session )
+					: entityEntry.isNullifiable( isEarlyInsert, session );
 		}
 	}
 
 	/**
 	 * Is this instance persistent or detached?
-	 * <p/>
+	 * <p>
 	 * If {@code assumed} is non-null, don't hit the database to make the determination, instead assume that
 	 * value; the client code must be prepared to "recover" in the case that this assumed result is incorrect.
 	 *
@@ -245,24 +256,16 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is not transient (meaning it is either detached/persistent)
 	 */
-	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
-		if ( entity instanceof HibernateProxy ) {
-			return true;
-		}
-
-		if ( session.getPersistenceContextInternal().isEntryFor( entity ) ) {
-			return true;
-		}
-
-		// todo : shouldn't assumed be reversed here?
-
-		return !isTransient( entityName, entity, assumed, session );
+		return isHibernateProxy( entity )
+			|| session.getPersistenceContextInternal().isEntryFor( entity )
+			// todo : shouldn't assumed be reversed here?
+			|| !isTransient( entityName, entity, assumed, session );
 	}
 
 	/**
 	 * Is this instance, which we know is not persistent, actually transient?
-	 * <p/>
+	 * <p>
 	 * If {@code assumed} is non-null, don't hit the database to make the determination, instead assume that
 	 * value; the client code must be prepared to "recover" in the case that this assumed result is incorrect.
 	 *
@@ -305,13 +308,12 @@ public final class ForeignKeys {
 				persister
 		);
 		return snapshot == null;
-
 	}
 
 	/**
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
-	 * <p/>
+	 * <p>
 	 * Used by OneToOneType and ManyToOneType to determine what id value should
 	 * be used for an object that may or may not be associated with the session.
 	 * This does a "best guess" using any/all info available to use (not just the

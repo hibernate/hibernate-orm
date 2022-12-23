@@ -20,13 +20,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -52,23 +53,24 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -135,6 +137,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public TableDetails getMappedTableDetails() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public TableDetails getIdentifierTableDetails() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		public ModelPart findSubPart(
 				String name, EntityMappingType targetType) {
 			return null;
@@ -183,11 +195,15 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public int forEachDisassembledJdbcValue(
 				Object value,
-				Clause clause,
 				int offset,
 				JdbcValuesConsumer valuesConsumer,
 				SharedSessionContractImplementor session) {
 			return 0;
+		}
+
+		@Override
+		public boolean isExplicitPolymorphism() {
+			return false;
 		}
 
 		@Override
@@ -206,7 +222,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public java.util.Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		public AttributeMappingsMap getDeclaredAttributeMappings() {
 			return null;
 		}
 
@@ -357,16 +373,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+		public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
 		}
 
 		@Override
@@ -706,11 +722,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public String getSubclassForDiscriminatorValue(Object value) {
-			return null;
-		}
-
-		@Override
 		public NaturalIdMapping getNaturalIdMapping() {
 			return null;
 		}
@@ -751,12 +762,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List<AttributeMapping> getAttributeMappings() {
+		public AttributeMappingsList getAttributeMappings() {
 			return null;
 		}
 
 		@Override
-		public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+		public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 
 		}
 
@@ -797,7 +808,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		public CollectionType getCollectionType() {
-			throw new NotYetImplementedException();
+			throw new UnsupportedOperationException();
 		}
 
 		public Type getKeyType() {

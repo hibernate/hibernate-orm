@@ -21,7 +21,7 @@ strategy Class name::
 [[configurations-general]]
 === General configuration
 
-`*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQL94Dialect`)::
+`*hibernate.dialect*` (e.g. `org.hibernate.dialect.PostgreSQLDialect`)::
 The class name of a Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] from which Hibernate can generate SQL optimized for a particular relational database.
 +
 In most cases, Hibernate can choose the correct https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`] implementation based on the JDBC metadata returned by the JDBC driver.
@@ -450,11 +450,11 @@ Note that the default serialization format of collections can differ depending o
 [[configurations-bytecode-enhancement]]
 === Bytecode Enhancement Properties
 
-`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
-Enable dirty tracking feature in runtime bytecode enhancement.
+`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` (default value) or `false`)::
+Enable dirty tracking feature in runtime bytecode enhancement. This setting is deprecated for removal without a replacement.
 
-`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` or `false` (default value))::
-Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
+`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` (default value) or `false`)::
+Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily. This setting is deprecated for removal without a replacement.
 
 `*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
 Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
@@ -462,8 +462,8 @@ Enable association management feature in runtime bytecode enhancement which auto
 `*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` is a valid value, as older deprecated options have been removed.
 
-`*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
-Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
+`*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` (default value) or `false`)::
+Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls. This setting is deprecated for removal without a replacement.
 
 [[configurations-query]]
 === Query settings
@@ -484,9 +484,6 @@ Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which
 
 `*hibernate.discriminator.force_in_select*` (e.g. `true` or `false` (default value))::
 For entities which do not explicitly say, should we force discriminators into SQL selects?
-
-`*hibernate.query.factory_class*` (e.g. `org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory`)::
-Chooses the HQL parser implementation.
 
 `*hibernate.query.jpaql_strict_compliance*` (e.g. `true` or `false` (default value))::
 Map from tokens in Hibernate queries to SQL tokens, such as function or literal names.
@@ -568,11 +565,20 @@ therefore reusing its execution plan.
 `*hibernate.query.mutation_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
 Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/sqm/mutation/spi/SqmMultiTableMutationStrategy.html[`org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy`] implementation for handling multi-table bulk HQL operations.
 
+`*hibernate.hql.bulk_id_strategy.global_temporary.create_tables*` (e.g. `true` (default value) or `false`)::
+For databases that don't support local tables, but just global ones, this configuration property allows you to control whether to CREATE the global tables used for multi-table bulk HQL operations at `SessionFactory` or the `EntityManagerFactory` startup.
+
 `*hibernate.hql.bulk_id_strategy.global_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
  For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
 
 `*hibernate.hql.bulk_id_strategy.local_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
-This configuration property allows you to DROP the local temporary tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed. This is useful when testing with a single connection pool against different schemas.
+This configuration property allows you to DROP the local temporary tables used for multi-table bulk HQL operations when the `SessionFactory` or `EntityManagerFactory` is closed. This is useful when testing with a single connection pool against different schemas.
+
+`*hibernate.hql.bulk_id_strategy.persistent.create_tables*` (e.g. `true` (default value) or `false`)::
+This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
+It follows a pattern similar to the ANSI SQL definition of the global temporary table using a "session id" column to segment rows from the various sessions.
++
+This configuration property allows you to control whether to CREATE the tables used for multi-table bulk HQL operations  at `SessionFactory` or `EntityManagerFactory` startup.
 
 `*hibernate.hql.bulk_id_strategy.persistent.drop_tables*` (e.g. `true` or `false` (default value))::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
@@ -636,11 +642,11 @@ Enables Hibernate to use JDBC2 scrollable resultsets. This property is only rele
 Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
 
 `*hibernate.enable_lazy_load_no_trans*` (e.g. `true` or `false` (default value))::
-Initialize Lazy Proxies or Collections outside a given Transactional Persistence Context.
+Allows a detached proxy or lazy collection to be fetched even when not associated with an open session / persistence context, by creating a temporary persistence context when the proxy or collection is accessed.
 +
-Although enabling this configuration can make `LazyInitializationException` go away, it's better to use a fetch plan that guarantees that all properties are properly initialized before the Session is closed.
+Enabling this setting can make `LazyInitializationException` go away, but it's much better to use a fetch plan to ensure that needed associations are fully initialized before the session is closed.
 +
-In reality, you shouldn't probably enable this setting anyway.
+IMPORTANT: This setting is not recommended, since it can easily break transaction isolation or lead to data aliasing.
 
 [[configurations-logging]]
 === Statement logging and statistics

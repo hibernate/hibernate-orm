@@ -18,16 +18,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Marks certain of packages, types, etc. as incubating, potentially
- * recursively.  Incubating indicates something that is still being
- * actively developed and therefore may change at a later time; a
- * "tech preview".
- * <p/>
- * Users of these types and methods are considered early adopters who
- * help shape the final definition of these types/methods, along with
- * the needs of consumers.
+ * Marks the annotated Java element as <em>incubating</em>, potentially
+ * recursively. An incubating API is one which is still being actively
+ * developed and therefore may change at a later time; a "tech preview".
+ * The user of such an API is considered an early adopter who helps shape
+ * the final definition of the API.
  *
- * @implNote Defined with RUNTIME retention so tooling can see it
+ * @implNote Defined with {@code RUNTIME} retention so tooling can see it
  *
  * @author Steve Ebersole
  */

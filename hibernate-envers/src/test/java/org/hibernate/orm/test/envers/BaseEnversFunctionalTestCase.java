@@ -76,6 +76,8 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 		super.addSettings( settings );
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+		// Envers tests expect sequences to not skip values...
+		settings.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 
 		if ( getAuditStrategy() != null ) {
 			settings.put( EnversSettings.AUDIT_STRATEGY, getAuditStrategy() );

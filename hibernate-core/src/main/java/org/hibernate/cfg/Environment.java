@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
@@ -18,6 +19,8 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 
 /**
@@ -45,6 +48,7 @@ import org.jboss.logging.Logger;
  * <li>any instance of {@link Properties} passed to {@link Configuration#addProperties}.
  * </ul>
  * <table>
+ * <caption>Configuration properties</caption>
  * <tr><td><b>Property</b></td><td><b>Interpretation</b></td></tr>
  * <tr>
  *   <td>{@value #DIALECT}</td>
@@ -71,6 +75,7 @@ import org.jboss.logging.Logger;
  *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
+ * <tr>
  *   <td>{@value #POOL_SIZE}</td>
  *   <td>the maximum size of the connection pool (only when using
  *     {@link java.sql.DriverManager})
@@ -124,8 +129,14 @@ import org.jboss.logging.Logger;
  * </table>
  *
  * @see org.hibernate.SessionFactory
+ *
+ * @apiNote This is really considered an internal contract, but leaving in place in this
+ * package as many applications use it historically.  However, consider migrating to use
+ * {@link AvailableSettings} instead.
+ *
  * @author Gavin King
  */
+@Internal
 public final class Environment implements AvailableSettings {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 
@@ -138,8 +149,7 @@ public final class Environment implements AvailableSettings {
 		Version.logVersion();
 
 		GLOBAL_PROPERTIES = new Properties();
-		//Set USE_REFLECTION_OPTIMIZER to false to fix HHH-227
-		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
+		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.TRUE.toString() );
 
 		try {
 			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
@@ -178,6 +188,9 @@ public final class Environment implements AvailableSettings {
 		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
 		if ( ENABLE_REFLECTION_OPTIMIZER ) {
 			LOG.usingReflectionOptimizer();
+		}
+		else {
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( USE_REFLECTION_OPTIMIZER, "true" );
 		}
 
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );

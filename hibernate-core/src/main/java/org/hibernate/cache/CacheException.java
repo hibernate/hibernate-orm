@@ -9,7 +9,7 @@ package org.hibernate.cache;
 import org.hibernate.HibernateException;
 
 /**
- * Something went wrong in the cache
+ * Something went wrong in the cache.
  */
 public class CacheException extends HibernateException {
 	/**

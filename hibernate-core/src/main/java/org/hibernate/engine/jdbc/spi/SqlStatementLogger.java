@@ -163,7 +163,7 @@ public class SqlStatementLogger {
 			return;
 		}
 		if ( startTimeNanos <= 0 ) {
-			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0!" );
+			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
 		}
 
 		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );

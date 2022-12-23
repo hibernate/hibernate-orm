@@ -15,8 +15,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to override how Hibernate performs load operations. naming a named query to use instead of
- * its generated SELECT SQL.
+ * Specifies that a named query should be used to load an entity,
+ * overriding the SQL that Hibernate generates by default.
  *
  * @author L�szl� Benke
  */
@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface Loader {
 	/**
-	 * THe namedQuery to use for loading.
+	 * The named query to use for loading the entity.
 	 */
 	String namedQuery() default "";
 }

@@ -57,6 +57,29 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 									"primary key (ID, CODE) )"
 					).executeUpdate();
 
+					session.createNativeQuery(
+							"create table ASSOCIATION_TABLE( " +
+									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
+									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
+									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table BUILDING_RATINGS( " +
+									"BUILDING_ID integer not null, RATING_ID integer not null," +
+									" primary key (BUILDING_ID, RATING_ID))"
+					).executeUpdate();
+
+					session.createNativeQuery(
+							"create table MATERIAL_RATINGS( " +
+									"MATERIAL_ID integer not null, RATING_ID integer not null," +
+									" primary key (MATERIAL_ID, RATING_ID))"
+					).executeUpdate();
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
@@ -65,13 +88,6 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 							.executeUpdate();
 					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" )
 							.executeUpdate();
-
-					session.createNativeQuery(
-							"create table ASSOCIATION_TABLE( " +
-									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
-									"ASSOCIATION_ID int not null, ASSOCIATION_CODE varchar(10) not null, " +
-									"primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE))"
-					).executeUpdate();
 
 					session.createNativeQuery(
 							"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
@@ -119,25 +135,12 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 					).executeUpdate();
 
 					session.createNativeQuery(
-							"create table MATERIAL_RATINGS( " +
-									"MATERIAL_ID integer not null, RATING_ID integer not null," +
-									" primary key (MATERIAL_ID, RATING_ID))"
-					).executeUpdate();
-
-					session.createNativeQuery(
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )"
 					).executeUpdate();
 
 					// add a collection element that won't be found
 					session.createNativeQuery(
 							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 2 )"
-					).executeUpdate();
-
-
-					session.createNativeQuery(
-							"create table BUILDING_RATINGS( " +
-									"BUILDING_ID integer not null, RATING_ID integer not null," +
-									" primary key (BUILDING_ID, RATING_ID))"
 					).executeUpdate();
 
 					session.createNativeQuery(

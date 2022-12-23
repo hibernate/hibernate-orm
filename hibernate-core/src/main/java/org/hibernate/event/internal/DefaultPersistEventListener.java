@@ -12,7 +12,6 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PersistContext;
@@ -26,6 +25,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.event.internal.EntityState.getEntityState;
 
 /**
  * Defines the default create event listener used by hibernate for creating
@@ -60,37 +61,55 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
-		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
-
-		final Object entity;
-		if ( object instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
-				if ( li.getSession() == source ) {
-					return; //NOTE EARLY EXIT!
-				}
-				else {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				if ( lazyInitializer.getSession() != event.getSession() ) {
 					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
 				}
 			}
-			entity = li.getImplementation();
+			else {
+				persist( event, createCache, lazyInitializer.getImplementation() );
+			}
 		}
 		else {
-			entity = object;
+			persist( event, createCache, object );
 		}
+	}
 
-		final String entityName;
-		if ( event.getEntityName() != null ) {
-			entityName = event.getEntityName();
-		}
-		else {
-			entityName = source.bestGuessEntityName( entity );
-			event.setEntityName( entityName );
-		}
-
+	private void persist(PersistEvent event, PersistContext createCache, Object entity) {
+		final EventSource source = event.getSession();
 		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
-		EntityState entityState = EntityState.getEntityState( entity, entityName, entityEntry, source, true );
+		final String entityName = entityName( event, entity );
+		switch ( entityState( event, entity, entityName, entityEntry ) ) {
+			case DETACHED:
+				throw new PersistentObjectException( "detached entity passed to persist: "
+						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
+			case PERSISTENT:
+				entityIsPersistent( event, createCache );
+				break;
+			case TRANSIENT:
+				entityIsTransient( event, createCache );
+				break;
+			case DELETED:
+				entityEntry.setStatus( Status.MANAGED );
+				entityEntry.setDeletedState( null );
+				source.getActionQueue().unScheduleDeletion( entityEntry, event.getObject() );
+				entityIsDeleted( event, createCache );
+				break;
+			default:
+				throw new ObjectDeletedException(
+						"deleted entity passed to persist",
+						null,
+						EventUtil.getLoggableName( event.getEntityName(), entity )
+				);
+		}
+	}
+
+	private static EntityState entityState(PersistEvent event, Object entity, String entityName, EntityEntry entityEntry) {
+		final EventSource source = event.getSession();
+		EntityState entityState = getEntityState( entity, entityName, entityEntry, source, true );
 		if ( entityState == EntityState.DETACHED ) {
 			// JPA 2, in its version of a "foreign generated", allows the id attribute value
 			// to be manually set by the user, even though this manual value is irrelevant.
@@ -101,64 +120,38 @@ public class DefaultPersistEventListener
 			// entity state again.
 
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
-			final EntityPersister persister = source.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
+			final EntityPersister persister = source.getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityName );
-			if ( persister.getIdentifierGenerator() instanceof ForeignGenerator ) {
+			if ( persister.getGenerator() instanceof ForeignGenerator ) {
 				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}
 				persister.setIdentifier( entity, null, source );
-				entityState = EntityState.getEntityState( entity, entityName, entityEntry, source, true );
+				entityState = getEntityState( entity, entityName, entityEntry, source, true );
 			}
 		}
+		return entityState;
+	}
 
-		switch ( entityState ) {
-			case DETACHED: {
-				throw new PersistentObjectException(
-						"detached entity passed to persist: " +
-								EventUtil.getLoggableName( event.getEntityName(), entity )
-				);
-			}
-			case PERSISTENT: {
-				entityIsPersistent( event, createCache );
-				break;
-			}
-			case TRANSIENT: {
-				entityIsTransient( event, createCache );
-				break;
-			}
-			case DELETED: {
-				entityEntry.setStatus( Status.MANAGED );
-				entityEntry.setDeletedState( null );
-				event.getSession().getActionQueue().unScheduleDeletion( entityEntry, event.getObject() );
-				entityIsDeleted( event, createCache );
-				break;
-			}
-			default: {
-				throw new ObjectDeletedException(
-						"deleted entity passed to persist",
-						null,
-						EventUtil.getLoggableName( event.getEntityName(), entity )
-				);
-			}
+	private static String entityName(PersistEvent event, Object entity) {
+		if ( event.getEntityName() != null ) {
+			return event.getEntityName();
 		}
-
+		else {
+			// changes event.entityName by side effect!
+			final String entityName = event.getSession().bestGuessEntityName( entity );
+			event.setEntityName( entityName );
+			return entityName;
+		}
 	}
 
 	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
-
 		//TODO: check that entry.getIdentifier().equals(requestedId)
-
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-
 		if ( createCache.add( entity ) ) {
-			justCascade( createCache, source, entity, persister );
-
+			justCascade( createCache, source, entity, source.getEntityPersister( event.getEntityName(), entity ) );
 		}
 	}
 
@@ -176,10 +169,8 @@ public class DefaultPersistEventListener
 	 */
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Saving transient instance" );
-
 		final EventSource source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
-
 		if ( createCache.add( entity ) ) {
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
 		}
@@ -187,21 +178,14 @@ public class DefaultPersistEventListener
 
 	private void entityIsDeleted(PersistEvent event, PersistContext createCache) {
 		final EventSource source = event.getSession();
-
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 				"un-scheduling entity deletion [%s]",
-				MessageHelper.infoString(
-					persister,
-					persister.getIdentifier( entity, source ),
-					source.getFactory()
-				)
+				MessageHelper.infoString( persister, persister.getIdentifier( entity, source ), source.getFactory() )
 			);
 		}
-
 		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );
 		}

@@ -19,6 +19,7 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -81,7 +82,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(TypeDefinition persistentClass,
 			Collection<? extends TypeDefinition> interfaces) {
 		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
-		return byteBuddy -> byteBuddy
+		return byteBuddy -> helpers.appendIgnoreAlsoAtEnd( byteBuddy
 				.ignore( helpers.getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) ) )
 				.subclass( interfaces.size() == 1 ? persistentClass : TypeDescription.OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
@@ -92,7 +93,8 @@ public class ByteBuddyProxyHelper implements Serializable {
 						.intercept( SuperMethodCall.INSTANCE )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
-						.intercept( helpers.getInterceptorFieldAccessor() );
+						.intercept( helpers.getInterceptorFieldAccessor() )
+		);
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {
@@ -114,9 +116,17 @@ public class ByteBuddyProxyHelper implements Serializable {
 					serializableProxy.getPersistentClass(),
 					serializableProxy.getInterfaces()
 			);
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.newInstance();
-			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
-			return proxy;
+			PrimeAmongSecondarySupertypes instance = (PrimeAmongSecondarySupertypes) proxyClass.getDeclaredConstructor().newInstance();
+			final ProxyConfiguration proxyConfiguration = instance.asProxyConfiguration();
+			if ( proxyConfiguration == null ) {
+				throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
+			}
+			proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
+			final HibernateProxy hibernateProxy = instance.asHibernateProxy();
+			if ( hibernateProxy == null ) {
+				throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
+			}
+			return hibernateProxy;
 		}
 		catch (Throwable t) {
 			final String message = LOG.bytecodeEnhancementFailed( serializableProxy.getEntityName() );

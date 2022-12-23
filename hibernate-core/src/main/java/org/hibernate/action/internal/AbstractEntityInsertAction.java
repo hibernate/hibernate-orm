@@ -11,19 +11,20 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.Nullability;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * A base class for entity insert actions.
@@ -52,7 +53,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object instance,
 			boolean isVersionIncrementDisabled,
 			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.isVersionIncrementDisabled = isVersionIncrementDisabled;
@@ -105,7 +106,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * maintained by this action. References to transient entities
 	 * should be nullified when an entity is made "managed" or when this
 	 * action is executed, whichever is first.
-	 * <p/>
+	 * <p>
 	 * References will only be nullified the first time this method is
 	 * called for a this object, so it can safely be called both when
 	 * the entity is made "managed" and when this action is executed.
@@ -113,7 +114,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @see #makeEntityManaged()
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
-		if ( ! areTransientReferencesNullified ) {
+		if ( !areTransientReferencesNullified ) {
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession(), getPersister() )
 					.nullifyTransientReferences( getState() );
 			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
@@ -126,8 +127,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = Versioning.getVersion( getState(), getPersister() );
-		getSession().getPersistenceContextInternal().addEntity(
+		final Object version = getVersion( getState(), getPersister() );
+		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
+		persistenceContextInternal.addEntity(
 				getInstance(),
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				getState(),
@@ -139,24 +141,25 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				isVersionIncrementDisabled
 		);
 		if ( isEarlyInsert() ) {
-			final SharedSessionContractImplementor session = getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			Object[] objects = getState();
-			for ( int i = 0; i < objects.length; i++ ) {
-				if ( objects[i] instanceof PersistentCollection<?> ) {
-					final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
-					final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
-					final CollectionKey collectionKey = new CollectionKey(
-							collectionPersister,
-							( (AbstractEntityPersister) getPersister() ).getCollectionKey(
-									collectionPersister,
-									getInstance(),
-									persistenceContext.getEntry( getInstance() ),
-									getSession()
-							)
-					);
-					persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
-				}
+			addCollectionsByKeyToPersistenceContext( persistenceContextInternal, getState() );
+		}
+	}
+
+	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
+		for ( int i = 0; i < objects.length; i++ ) {
+			if ( objects[i] instanceof PersistentCollection<?> ) {
+				final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
+				final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
+				final CollectionKey collectionKey = new CollectionKey(
+						collectionPersister,
+						( (AbstractEntityPersister) getPersister() ).getCollectionKey(
+								collectionPersister,
+								getInstance(),
+								persistenceContext.getEntry( getInstance() ),
+								getSession()
+						)
+				);
+				persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 			}
 		}
 	}
@@ -175,7 +178,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	protected abstract EntityKey getEntityKey();
 
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		super.afterDeserialize( session );
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
@@ -208,28 +211,25 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
 		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
-		if ( naturalIdMapping == null ) {
-			return;
-		}
-
-		final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
-
-		if ( isEarlyInsert() ) {
-			// with early insert, we still need to add a local (transactional) natural id cross-reference
-			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+		if ( naturalIdMapping != null ) {
+			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
+			if ( isEarlyInsert() ) {
+				// with early insert, we still need to add a local (transactional) natural id cross-reference
+				getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+						generatedId,
+						naturalIdValues,
+						getPersister(),
+						CachedNaturalIdValueSource.INSERT
+				);
+			}
+			// after save, we need to manage the shared cache entries
+			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					generatedId,
 					naturalIdValues,
+					null,
 					getPersister(),
 					CachedNaturalIdValueSource.INSERT
 			);
 		}
-		// after save, we need to manage the shared cache entries
-		getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
-				generatedId,
-				naturalIdValues,
-				null,
-				getPersister(),
-				CachedNaturalIdValueSource.INSERT
-		);
 	}
 }

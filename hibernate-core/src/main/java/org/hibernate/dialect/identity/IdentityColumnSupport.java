@@ -9,6 +9,7 @@ package org.hibernate.dialect.identity;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 
 /**
  * A set of operations providing support for identity columns
@@ -46,7 +47,7 @@ public interface IdentityColumnSupport {
 	/**
 	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
 	 * "select identity" clause to the  insert statement.
-	 * <p/>
+	 * <p>
 	 * Note, if {@link #supportsInsertSelectIdentity} == false then
 	 * the insert-string should be returned without modification.
 	 *
@@ -56,6 +57,23 @@ public interface IdentityColumnSupport {
 	 * clause attached.
 	 */
 	String appendIdentitySelectToInsert(String insertString);
+
+	/**
+	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
+	 * "select identity" clause to the  insert statement.
+	 * <p>
+	 * Note, if {@link #supportsInsertSelectIdentity} == false then
+	 * the insert-string should be returned without modification.
+	 *
+	 * @param identityColumnName The name of the identity column
+	 * @param insertString The insert command
+	 *
+	 * @return The insert command with any necessary identity select
+	 * clause attached.
+	 */
+	default String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return appendIdentitySelectToInsert( insertString );
+	}
 
 	/**
 	 * Get the select command to use to retrieve the last generated IDENTITY
@@ -92,6 +110,15 @@ public interface IdentityColumnSupport {
 	 * @return The appropriate keyword.
 	 */
 	String getIdentityInsertString();
+
+	/**
+	 * Is there a keyword used to insert a generated value into an identity column.
+	 *
+	 * @return {@code true} if the dialect does not support inserts that specify no column values.
+	 */
+	default boolean hasIdentityInsertKeyword() {
+		return getIdentityInsertString() != null;
+	}
 
 	/**
 	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys

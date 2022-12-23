@@ -29,18 +29,19 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
@@ -48,6 +49,8 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
@@ -77,7 +80,7 @@ import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.unique.DefaultUniqueDelegate;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
@@ -90,6 +93,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -101,13 +105,16 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.Query;
@@ -128,21 +135,33 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
 import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableCleaner;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
+import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
+import org.hibernate.tool.schema.internal.TableMigrator;
+import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -151,6 +170,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
@@ -202,11 +222,8 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
@@ -215,7 +232,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -230,8 +248,9 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <p>
  * Almost every subclass must, as a bare minimum, override at least:
  * <ul>
- *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)} to define a mapping from SQL
- *     {@linkplain SqlTypes type codes} to database column types, and
+ *     <li>{@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
+ *     to define a mapping from SQL {@linkplain SqlTypes type codes} to
+ *     database column types, and
  *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
@@ -280,8 +299,6 @@ public abstract class Dialect implements ConversionContext {
 
 	private final Properties properties = new Properties();
 	private final Set<String> sqlKeywords = new HashSet<>();
-
-	private final UniqueDelegate uniqueDelegate = new DefaultUniqueDelegate( this );
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl();
 
@@ -411,15 +428,41 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The column type name for a given JDBC type code defined in {@link Types} or
-	 * {@link SqlTypes}. This default implementation returns the ANSI-standard type
-	 * name.
+	 * The database column type name for a given JDBC type code defined
+	 * in {@link Types} or {@link SqlTypes}. This default implementation
+	 * returns the ANSI-standard type name.
 	 * <p>
-	 * This method may be overridden by concrete {@code Dialect}s as an alternative
-	 * to {@link #registerColumnTypes(TypeContributions, ServiceRegistry)} for simple registrations.
+	 * This method may be overridden by concrete {@code Dialect}s as an
+	 * alternative to
+	 * {@link #registerColumnTypes(TypeContributions, ServiceRegistry)}
+	 * for simple registrations.
+	 * <p>
+	 * Note that:
+	 * <ol>
+	 * <li> Implementations of this method are expected to define a
+	 *      sensible mapping for{@link Types#NCLOB} {@link Types#NCHAR},
+	 *      and {@link Types#NVARCHAR}. On some database, these types
+	 *      are simply remapped to {@code CLOB}, {@code CHAR}, and
+	 *      {@code VARCHAR}.
+	 * <li> Mappings for {@link Types#TIMESTAMP} and
+	 *      {@link Types#TIMESTAMP_WITH_TIMEZONE} should support explicit
+	 *      specification of precision if possible.
+	 * <li> As specified by {@link DdlTypeRegistry#getDescriptor(int)},
+	 *      this method never receives {@link Types#LONGVARCHAR},
+	 *      {@link Types#LONGNVARCHAR}, nor {@link Types#LONGVARBINARY},
+	 *      which are considered synonyms for their non-{@code LONG}
+	 *      counterparts.
+	 * <li> On the other hand, the types {@link SqlTypes#LONG32VARCHAR},
+	 *      {@link SqlTypes#LONG32NVARCHAR}, and
+	 *      {@link SqlTypes#LONG32VARBINARY} are <em>not</em> synonyms,
+	 *      and implementations of this method must define sensible
+	 *      mappings, for example to database-native {@code TEXT} or
+	 *      {@code CLOB} types.
+	 * </ol>
 	 *
-	 * @param sqlTypeCode a SQL type code
-	 * @return a column type name, with $l, $p, $s placeholders for length, precision, scale
+	 * @param sqlTypeCode a SQL {@link SqlTypes type code}
+	 * @return a column type name, with $l, $p, $s placeholders for
+	 *         length, precision, scale
 	 *
 	 * @see SqlTypes
 	 */
@@ -534,8 +577,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database,
-	 * or <code>null</code> if it can't be resolved.
+	 * Resolves the {@link SqlTypes} type code for the given column
+	 * type name as reported by the database, or <code>null</code>
+	 * if it can't be resolved.
 	 */
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
@@ -550,13 +594,26 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Resolves the {@link SqlTypes} type code for the given column type name as reported by the database
-	 * and the base type name (i.e. without precision/length and scale), or <code>null</code> if it can't be resolved.
+	 * Resolves the {@link SqlTypes} type code for the given column
+	 * type name as reported by the database and the base type name
+	 * (i.e. without precision, length and scale), or <code>null</code>
+	 * if it can't be resolved.
 	 */
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getDdlTypeRegistry().getSqlTypeCode( baseTypeName );
 	}
 
+	/**
+	 * Assigns an appropriate {@link JdbcType} to a column of a JDBC
+	 * result set based on the column type name, JDBC type code,
+	 * precision, and scale.
+	 *
+	 * @param columnTypeName the column type name
+	 * @param jdbcTypeCode the {@link SqlTypes type code}
+	 * @param precision the precision or 0
+	 * @param scale the scale or 0
+	 * @return an appropriate instance of {@link JdbcType}
+	 */
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -574,9 +631,7 @@ public abstract class Dialect implements ConversionContext {
 				if ( sqlTypeCode != null ) {
 					return ( (ArrayJdbcType) jdbcType ).resolveType(
 							jdbcTypeRegistry.getTypeConfiguration(),
-							jdbcTypeRegistry.getTypeConfiguration().getServiceRegistry()
-									.getService( JdbcServices.class )
-									.getDialect(),
+							this,
 							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 							null
 					);
@@ -602,42 +657,29 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
-	/**
-	 * Render a SQL check condition for a column that represents a boolean value.
-	 */
-	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
-		if ( isCharacterType(sqlType) ) {
-			return columnName + " in ('" + falseChar + "','" + trueChar + "')";
-		}
-		else if ( isNumericType(sqlType) && !supportsBitType() ) {
-			return columnName + " in (0,1)";
-		}
-		else {
-			return null;
-		}
+	public String getEnumTypeDeclaration(String[] values) {
+		return null;
 	}
 
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 */
-	public String getEnumCheckCondition(String columnName, int sqlType, Class<? extends Enum<?>> enumClass) {
-		if ( isCharacterType(sqlType) ) {
-			StringBuilder check = new StringBuilder();
-			check.append( columnName ).append( " in (" );
-			String separator = "";
-			for ( Enum<?> value : enumClass.getEnumConstants() ) {
-				check.append( separator ).append('\'').append( value.name() ).append('\'');
-				separator = ",";
-			}
-			return check.append( ')' ).toString();
+	public String getCheckCondition(String columnName, String[] values) {
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		for ( String value : values ) {
+			check.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
 		}
-		else if ( isNumericType(sqlType) ) {
-			int last = enumClass.getEnumConstants().length - 1;
-			return columnName + " between 0 and " + last;
-		}
-		else {
-			return null;
-		}
+		return check.append( ')' ).toString();
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value.
+	 */
+	public String getCheckCondition(String columnName, long min, long max) {
+		return columnName + " between " + min + " and " + max;
 	}
 
 	/**
@@ -651,124 +693,139 @@ public abstract class Dialect implements ConversionContext {
 	 * query language specification:
 	 *
 	 * <ul>
-	 * <li> avg(arg)							- aggregate function
-	 * <li> count([distinct ]arg)				- aggregate function
-	 * <li> max(arg)							- aggregate function
-	 * <li> min(arg)							- aggregate function
-	 * <li> sum(arg)							- aggregate function
+	 * <li> <code>avg(arg)</code>						- aggregate function
+	 * <li> <code>count([distinct ]arg)</code>			- aggregate function
+	 * <li> <code>max(arg)</code>						- aggregate function
+	 * <li> <code>min(arg)</code>						- aggregate function
+	 * <li> <code>sum(arg)</code>						- aggregate function
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> coalesce(arg0, arg1, ...)
-	 * <li> nullif(arg0, arg1)
+	 * <li> <code>coalesce(arg0, arg1, ...)</code>
+	 * <li> <code>nullif(arg0, arg1)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> lower(arg)
-	 * <li> upper(arg)
-	 * <li> length(arg)
-	 * <li> concat(arg0, arg1, ...)
-	 * <li> locate(pattern, string[, start])
-	 * <li> substring(string, start[, length])
-	 * <li> trim([[spec ][character ]from] string)
+	 * <li> <code>lower(arg)</code>
+	 * <li> <code>upper(arg)</code>
+	 * <li> <code>length(arg)</code>
+	 * <li> <code>concat(arg0, arg1, ...)</code>
+	 * <li> <code>locate(pattern, string[, start])</code>
+	 * <li> <code>substring(string, start[, length])</code>
+	 * <li> <code>trim([[spec ][character ]from] string)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> abs(arg)
-	 * <li> mod(arg0, arg1)
-	 * <li> sqrt(arg)
+	 * <li> <code>abs(arg)</code>
+	 * <li> <code>mod(arg0, arg1)</code>
+	 * <li> <code>sqrt(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> current date
-	 * <li> current time
-	 * <li> current timestamp
+	 * <li> <code>current date</code>
+	 * <li> <code>current time</code>
+	 * <li> <code>current timestamp</code>
 	 * </ul>
 	 *
 	 * Along with an additional set of functions defined by ANSI SQL:
 	 *
 	 * <ul>
-	 * <li> any(arg)							- aggregate function
-	 * <li> every(arg)							- aggregate function
+	 * <li> <code>any(arg)</code>						- aggregate function
+	 * <li> <code>every(arg)</code>						- aggregate function
+	 * </ul>
+	 * <ul>
+	 * <li> <code>var_samp(arg)</code>					- aggregate function
+	 * <li> <code>var_pop(arg)</code>					- aggregate function
+	 * <li> <code>stddev_samp(arg)</code>				- aggregate function
+	 * <li> <code>stddev_pop(arg)</code>				- aggregate function
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> cast(arg as Type)
-	 * <li> extract(field from arg)
+	 * <li> <code>cast(arg as Type)</code>
+	 * <li> <code>extract(field from arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> ln(arg)
-	 * <li> exp(arg)
-	 * <li> power(arg0, arg1)
-	 * <li> floor(arg)
-	 * <li> ceiling(arg)
+	 * <li> <code>ln(arg)</code>
+	 * <li> <code>exp(arg)</code>
+	 * <li> <code>power(arg0, arg1)</code>
+	 * <li> <code>floor(arg)</code>
+	 * <li> <code>ceiling(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> position(pattern in string)
-	 * <li> substring(string from start[ for length])
-	 * <li> overlay(string placing replacement from start[ for length])
+	 * <li> <code>position(pattern in string)</code>
+	 * <li> <code>substring(string from start[ for length])</code>
+	 * <li> <code>overlay(string placing replacement from start[ for length])</code>
 	 * </ul>
 	 *
-	 * And the following functions for working with java.time types:
+	 * And the following functions for working with <code>java.time</code>
+	 * types:
 	 *
 	 * <ul>
-	 * <li> local date
-	 * <li> local time
-	 * <li> local datetime
-	 * <li> offset datetime
-	 * <li> instant
+	 * <li> <code>local date</code>
+	 * <li> <code>local time</code>
+	 * <li> <code>local datetime</code>
+	 * <li> <code>offset datetime</code>
+	 * <li> <code>instant</code>
 	 * </ul>
 	 *
 	 * And a number of additional "standard" functions:
 	 *
 	 * <ul>
-	 * <li> left(string, length)
-	 * <li> right(string, length)
-	 * <li> replace(string, pattern, replacement)
-	 * <li> pad(string with length spec[ character])
+	 * <li> <code>left(string, length)</code>
+	 * <li> <code>right(string, length)</code>
+	 * <li> <code>replace(string, pattern, replacement)</code>
+	 * <li> <code>pad(string with length spec[ character])</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> log10(arg)
-	 * <li> sign(arg)
-	 * <li> sin(arg)
-	 * <li> cos(arg)
-	 * <li> tan(arg)
-	 * <li> asin(arg)
-	 * <li> acos(arg)
-	 * <li> atan(arg)
-	 * <li> atan2(arg0, arg1)
-	 * <li> round(arg0, arg1)
-	 * <li> least(arg0, arg1, ...)
-	 * <li> greatest(arg0, arg1, ...)
+	 * <li> <code>pi</code>
+	 * <li> <code>log10(arg)</code>
+	 * <li> <code>log(base, arg)</code>
+	 * <li> <code>sign(arg)</code>
+	 * <li> <code>sin(arg)</code>
+	 * <li> <code>cos(arg)</code>
+	 * <li> <code>tan(arg)</code>
+	 * <li> <code>asin(arg)</code>
+	 * <li> <code>acos(arg)</code>
+	 * <li> <code>atan(arg)</code>
+	 * <li> <code>atan2(arg0, arg1)</code>
+	 * <li> <code>round(arg0[, arg1])</code>
+	 * <li> <code>truncate(arg0[, arg1])</code>
+	 * <li> <code>sinh(arg)</code>
+	 * <li> <code>tanh(arg)</code>
+	 * <li> <code>cosh(arg)</code>
+	 * <li> <code>least(arg0, arg1, ...)</code>
+	 * <li> <code>greatest(arg0, arg1, ...)</code>
+	 * <li> <code>degrees(arg)</code>
+	 * <li> <code>radians(arg)</code>
 	 * </ul>
 	 *
 	 * <ul>
-	 * <li> format(datetime as pattern)
-	 * <li> collate(string as collation)
-	 * <li> str(arg)					- synonym of cast(a as String)
-	 * <li> ifnull(arg0, arg1)			- synonym of coalesce(a, b)
+	 * <li> <code>format(datetime as pattern)</code>
+	 * <li> <code>collate(string as collation)</code>
+	 * <li> <code>str(arg)</code>						- synonym of <code>cast(a as String)</code>
+	 * <li> <code>ifnull(arg0, arg1)</code>				- synonym of <code>coalesce(a, b)</code>
 	 * </ul>
 	 *
-	 * Finally, the following functions are defined as abbreviations
-	 * for extract(), and desugared by the parser:
+	 * Finally, the following functions are defined as abbreviations for
+	 * <code>extract()</code>, and desugared by the parser:
 	 *
 	 * <ul>
-	 * <li> second(arg)					- synonym of extract(second from a)
-	 * <li> minute(arg)					- synonym of extract(minute from a)
-	 * <li> hour(arg)					- synonym of extract(hour from a)
-	 * <li> day(arg)					- synonym of extract(day from a)
-	 * <li> month(arg)					- synonym of extract(month from a)
-	 * <li> year(arg)					- synonym of extract(year from a)
+	 * <li> <code>second(arg)</code>					- synonym of <code>extract(second from a)</code>
+	 * <li> <code>minute(arg)</code>					- synonym of <code>extract(minute from a)</code>
+	 * <li> <code>hour(arg)</code>						- synonym of <code>extract(hour from a)</code>
+	 * <li> <code>day(arg)</code>						- synonym of <code>extract(day from a)</code>
+	 * <li> <code>month(arg)</code>						- synonym of <code>extract(month from a)</code>
+	 * <li> <code>year(arg)</code>						- synonym of <code>extract(year from a)</code>
 	 * </ul>
 	 *
-	 * Note that according to this definition, the second() function returns
-	 * a floating point value, contrary to the integer type returned by the
-	 * native function with this name on many databases. Thus, we don't just
-	 * naively map these HQL functions to the native SQL functions with the
-	 * same names.
+	 * Note that according to this definition, the <code>second()</code>
+	 * function returns a floating point value, contrary to the integer
+	 * type returned by the native function with this name on many databases.
+	 * Thus, we don't just naively map these HQL functions to the native SQL
+	 * functions with the same names.
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
@@ -784,7 +841,11 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		//aggregate functions, supported on every database
+		//standard aggregate functions count(), sum(), max(), min(), avg(),
+		//supported on every database
+
+		//Note that we don't include median() in this list, since it's difficult
+		//to implement on MySQL and Sybase ASE
 
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT );
 
@@ -792,7 +853,7 @@ public abstract class Dialect implements ConversionContext {
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
 
-		functionFactory.everyAny_sumCase();
+		functionFactory.everyAny_sumCase( supportsPredicateAsExpression() );
 
 		//math functions supported on almost every database
 
@@ -805,10 +866,27 @@ public abstract class Dialect implements ConversionContext {
 		//to implement such a silly thing, it would be dog slow.
 
 		functionFactory.math();
+		functionFactory.round();
+
 
 		//trig functions supported on almost every database
 
 		functionFactory.trigonometry();
+
+		//hyperbolic sinh and tanh are very useful but not supported on most
+		//databases, so emulate them here (cosh along for the ride)
+
+		functionFactory.sinh_exp();
+		functionFactory.cosh_exp();
+		functionFactory.tanh_exp();
+
+		//pi supported on most databases, but emulate it here
+
+		functionFactory.pi_acos();
+
+		//log(base, arg) supported on most databases, but emulate it here
+
+		functionFactory.log_ln();
 
 		//coalesce() function, supported by most databases, must be emulated
 		//in terms of nvl() for platforms which don't support it natively
@@ -1242,7 +1320,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param toTemporalType true if the second argument is
 	 */
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampdiffPattern" );
 	}
 
 	/**
@@ -1255,7 +1333,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param intervalType The type of interval to add or null if it's not a native interval
 	 */
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampaddPattern" );
 	}
 
 	/**
@@ -1283,10 +1361,20 @@ public abstract class Dialect implements ConversionContext {
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-			|| isIntegral(typeCode1) && isIntegral(typeCode2)
+//			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
-			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2);
+			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
+			|| sameColumnType(typeCode1, typeCode2);
+	}
+
+	private boolean sameColumnType(int typeCode1, int typeCode2) {
+		try {
+			return Objects.equals( columnType(typeCode1), columnType(typeCode2) );
+		}
+		catch (IllegalArgumentException iae) {
+			return false;
+		}
 	}
 
 	/**
@@ -1340,29 +1428,35 @@ public abstract class Dialect implements ConversionContext {
 		// by default, not much to do...
 		registerColumnTypes( typeContributions, serviceRegistry );
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcType( NCharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( NVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( LongNVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( NClobJdbcType.DEFAULT );
+			jdbcTypeRegistry.addDescriptor( NCharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( NVarcharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( LongNVarcharJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( NClobJdbcType.DEFAULT );
 		}
 
 		if ( useInputStreamToInsertBlob() ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
+			jdbcTypeRegistry.addDescriptor(
 					Types.CLOB,
 					ClobJdbcType.STREAM_BINDING
 			);
 		}
 
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
-			typeContributions.contributeJdbcType( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		}
 		else {
-			typeContributions.contributeJdbcType( InstantAsTimestampJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( InstantAsTimestampJdbcType.INSTANCE );
 		}
 
 		if ( supportsStandardArrays() ) {
-			typeContributions.contributeJdbcType( ArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( ArrayJdbcType.INSTANCE );
+		}
+		if ( supportsMaterializedLobAccess() ) {
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_CLOB, ClobJdbcType.MATERIALIZED );
+			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_NCLOB, NClobJdbcType.MATERIALIZED );
 		}
 	}
 
@@ -1463,8 +1557,9 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator(
+				final LobCreator lobCreator = jdbcServices.getLobCreator(
 						session
 				);
 				return original == null
@@ -1472,7 +1567,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
 			}
 		}
 
@@ -1481,14 +1576,15 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createClob( "" )
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 			}
 		}
 
@@ -1497,14 +1593,15 @@ public abstract class Dialect implements ConversionContext {
 			if ( original == null && target == null ) {
 				return null;
 			}
+			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
 			try {
-				final LobCreator lobCreator = session.getFactory().getServiceRegistry().getService( JdbcServices.class ).getLobCreator( session );
+				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createNClob( "" )
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 			}
 		}
 	};
@@ -1518,7 +1615,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Resolves the native generation strategy associated to this dialect.
-	 * <p/>
+	 * <p>
 	 * Comes into play whenever the user specifies the native generator.
 	 *
 	 * @return The native generator strategy.
@@ -1569,7 +1666,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the command used to select a GUID from the underlying database.
-	 * <p/>
+	 * <p>
 	 * Optional operation.
 	 *
 	 * @return The appropriate command.
@@ -1801,21 +1898,19 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the {@code FOR UPDATE OF column_list} fragment appropriate for this
-	 * dialect given the aliases of the columns to be write locked.
+	 * Get the {@code FOR UPDATE OF} or {@code FOR SHARE OF} fragment appropriate
+	 * for this dialect given the aliases of the columns to be locked.
 	 *
-	 * @param aliases The columns to be write locked.
+	 * @param aliases The columns to be locked.
 	 * @param lockOptions the lock options to apply
 	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
-		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
-		while ( itr.hasNext() ) {
+		for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 			// seek the highest lock mode
-			final Map.Entry<String, LockMode>entry = itr.next();
 			final LockMode lm = entry.getValue();
-			if ( lm.greaterThan( lockMode ) ) {
+			if ( lm.greaterThan(lockMode) ) {
 				lockMode = lm;
 			}
 		}
@@ -1868,7 +1963,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Some dialects support an alternative means to {@code SELECT FOR UPDATE},
 	 * whereby a "lock hint" is appended to the table name in the from clause.
-	 * <p/>
+	 * <p>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
 	 * @param lockOptions The lock options to apply
@@ -1882,7 +1977,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Modifies the given SQL by applying the appropriate updates for the specified
 	 * lock modes and key columns.
-	 * <p/>
+	 * <p>
 	 * The behavior here is that of an ANSI SQL {@code SELECT FOR UPDATE}.  This
 	 * method is really intended to allow dialects which do not support
 	 * {@code SELECT FOR UPDATE} to achieve this in their own fashion.
@@ -1908,6 +2003,14 @@ public abstract class Dialect implements ConversionContext {
 		return "create table";
 	}
 
+	public String getCreateIndexString(boolean unique) {
+		return unique ? "create unique index" : "create index";
+	}
+
+	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+		return "";
+	}
+
 	/**
 	 * Command used to alter a table.
 	 *
@@ -1924,11 +2027,19 @@ public abstract class Dialect implements ConversionContext {
 		return sb.toString();
 	}
 
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return null;
+	}
+
+	public boolean supportsAlterColumnType() {
+		return false;
+	}
+
 	/**
 	 * Slight variation on {@link #getCreateTableString}.  Here, we have the
 	 * command used to create a table when there is no primary key and
 	 * duplicate rows are expected.
-	 * <p/>
+	 * <p>
 	 * Most databases do not care about the distinction; originally added for
 	 * Teradata support which does care.
 	 *
@@ -1964,6 +2075,47 @@ public abstract class Dialect implements ConversionContext {
 				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	// UDT support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Command used to create a table.
+	 *
+	 * @return The command used to create a table.
+	 */
+	public String getCreateUserDefinedTypeKindString() {
+		return "";
+	}
+
+	public String getCreateUserDefinedTypeExtensionsString() {
+		return "";
+	}
+
+	/**
+	 * For dropping a type, can the phrase "{@code if exists} be
+	 * applied before the type name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterTypeName} should return true.
+	 *
+	 * @return {@code true} if {@code if exists} can be applied before the type name
+	 */
+	public boolean supportsIfExistsBeforeTypeName() {
+		return false;
+	}
+
+	/**
+	 * For dropping a type, can the phrase {@code if exists} be
+	 * applied after the type name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeTypeName} should return true.
+	 *
+	 * @return {@code true} if {@code if exists} can be applied after the type name
+	 */
+	public boolean supportsIfExistsAfterTypeName() {
+		return false;
 	}
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2071,8 +2223,8 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Should the value returned by {@link #getCurrentTimestampSelectString}
-	 * be treated as callable.  Typically this indicates that JDBC escape
-	 * syntax is being used...
+	 * be treated as callable. Typically, this indicates that JDBC escape
+	 * syntax is being used.
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 * is callable; false otherwise.
@@ -2091,13 +2243,20 @@ public abstract class Dialect implements ConversionContext {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
 	}
 
+	/**
+	 * Does this database have an ANSI-SQL {@code current_timestamp} function?
+	 */
+	public boolean supportsStandardCurrentTimestampFunction() {
+		return true;
+	}
+
 
 	// SQLException support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
-	 * <p/>
+	 * <p>
 	 * If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
 	 * {@link SQLExceptionConversionDelegate} in addition to the following
@@ -2107,11 +2266,11 @@ public abstract class Dialect implements ConversionContext {
 	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
 	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
 	 * </ol>
-	 * <p/>
+	 * <p>
 	 * It is strongly recommended that specific Dialect implementations override this
 	 * method, since interpretation of a SQL error is much more accurate when based on
 	 * the vendor-specific ErrorCode rather than the SQLState.
-	 * <p/>
+	 * <p>
 	 * Specific Dialects may override to return whatever is most appropriate for that vendor.
 	 *
 	 * @return The SQLExceptionConversionDelegate for this dialect
@@ -2132,7 +2291,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Given a {@link Types} type code, determine an appropriate
 	 * null value to use in a select clause.
-	 * <p/>
+	 * <p>
 	 * One thing to consider here is that certain databases might
 	 * require proper casting for the nulls here since the select here
 	 * will be part of a UNION/UNION ALL.
@@ -2170,7 +2329,11 @@ public abstract class Dialect implements ConversionContext {
 	 * This is not possible on some databases.
 	 *
 	 * @return The appropriate empty values clause.
+	 *
+	 * @deprecated Override the method {@code renderInsertIntoNoColumns()} on the
+	 * {@link #getSqlAstTranslatorFactory() translator} returned by this dialect
 	 */
+	@Deprecated( since = "6" )
 	public String getNoColumnsInsertString() {
 		return "values ( )";
 	}
@@ -2236,7 +2399,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * What is the maximum length Hibernate can use for generated aliases?
-	 * <p/>
+	 * <p>
 	 * The maximum here should account for the fact that Hibernate often needs to append "uniqueing" information
 	 * to the end of generated aliases.  That "uniqueing" information will be added to the end of a identifier
 	 * generated to the length specified here; so be sure to leave some room (generally speaking 5 positions will
@@ -2265,7 +2428,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String toBooleanValueString(boolean bool) {
 		final StringBuilder sb = new StringBuilder();
-		appendBooleanValueString( sb::append, bool );
+		appendBooleanValueString( new StringBuilderSqlAppender( sb ), bool );
 		return sb.toString();
 	}
 
@@ -2294,13 +2457,13 @@ public abstract class Dialect implements ConversionContext {
 	 * Returning {@code null} is allowed and indicates that Hibernate should fallback to building a
 	 * "standard" helper.  In the fallback path, any changes made to the IdentifierHelperBuilder
 	 * during this call will still be incorporated into the built IdentifierHelper.
-	 * <p/>
+	 * <p>
 	 * The incoming builder will have the following set:<ul>
 	 *     <li>{@link IdentifierHelperBuilder#isGloballyQuoteIdentifiers()}</li>
 	 *     <li>{@link IdentifierHelperBuilder#getUnquotedCaseStrategy()} - initialized to UPPER</li>
 	 *     <li>{@link IdentifierHelperBuilder#getQuotedCaseStrategy()} - initialized to MIXED</li>
 	 * </ul>
-	 * <p/>
+	 * <p>
 	 * By default Hibernate will do the following:<ul>
 	 *     <li>Call {@link IdentifierHelperBuilder#applyIdentifierCasing(DatabaseMetaData)}
 	 *     <li>Call {@link IdentifierHelperBuilder#applyReservedWords(DatabaseMetaData)}
@@ -2353,7 +2516,23 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Apply dialect-specific quoting.
-	 * <p/>
+	 *
+	 * @param name The value to be quoted.
+	 * @return The quoted value.
+	 * @see #openQuote()
+	 * @see #closeQuote()
+	 */
+	public String toQuotedIdentifier(String name) {
+		if ( name == null ) {
+			return null;
+		}
+
+		return openQuote() + name + closeQuote();
+	}
+
+	/**
+	 * Apply dialect-specific quoting.
+	 * <p>
 	 * By default, the incoming value is checked to see if its first character
 	 * is the back-tick (`).  If so, the dialect specific quoting is applied.
 	 *
@@ -2379,15 +2558,30 @@ public abstract class Dialect implements ConversionContext {
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private final StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private final StandardUserDefinedTypeExporter userDefinedTypeExporter = new StandardUserDefinedTypeExporter( this );
 	private final StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
 	private final StandardIndexExporter indexExporter = new StandardIndexExporter( this );
 	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
 	private final StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private final StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 	private final StandardTemporaryTableExporter temporaryTableExporter = new StandardTemporaryTableExporter( this );
+	private final StandardTableMigrator tableMigrator = new StandardTableMigrator( this );
+	private final StandardTableCleaner tableCleaner = new StandardTableCleaner( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
+	}
+
+	public TableMigrator getTableMigrator() {
+		return tableMigrator;
+	}
+
+	public Cleaner getTableCleaner() {
+		return tableCleaner;
+	}
+
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
 	}
 
 	public Exporter<Sequence> getSequenceExporter() {
@@ -2594,7 +2788,17 @@ public abstract class Dialect implements ConversionContext {
 		return "";
 	}
 
+	/**
+	 * The {@code alter table} subcommand used to drop a foreign key constraint.
+	 */
 	public String getDropForeignKeyString() {
+		return " drop constraint ";
+	}
+
+	/**
+	 * The {@code alter table} subcommand used to drop a unique key constraint.
+	 */
+	public String getDropUniqueKeyString() {
 		return " drop constraint ";
 	}
 
@@ -2658,7 +2862,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the database/driver have bug in deleting rows that refer to other rows being deleted in the same query?
+	 * Does the database/driver have bug in deleting rows that refer to
+	 * other rows being deleted in the same query?
 	 *
 	 * @return {@code true} if the database/driver has this bug
 	 */
@@ -2685,7 +2890,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support commenting on tables, columns, etc?
+	 * Does this dialect support commenting on tables and columns?
 	 *
 	 * @return {@code true} if commenting is supported
 	 */
@@ -2705,6 +2910,17 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Get the comment into a form supported for UDT definition.
+	 *
+	 * @param comment The comment to apply
+	 *
+	 * @return The comment fragment
+	 */
+	public String getUserDefinedTypeComment(String comment) {
+		return "";
+	}
+
+	/**
 	 * Get the comment into a form supported for column definition.
 	 *
 	 * @param comment The comment to apply
@@ -2716,53 +2932,62 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied before the table name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterTableName} should return true
+	 * For dropping a table, can the phrase "{@code if exists} be
+	 * applied before the table name?
+	 * <p>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterTableName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the table name
+	 * @return {@code true} if {@code if exists} can be applied before the table name
 	 */
 	public boolean supportsIfExistsBeforeTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied after the table name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeTableName} should return true
+	 * For dropping a table, can the phrase {@code if exists} be
+	 * applied after the table name?
+	 * <p>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeTableName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the table name
+	 * @return {@code true} if {@code if exists} can be applied after the table name
 	 */
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied before the constraint name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterConstraintName} should return true
+	 * For dropping a constraint with an {@code alter table} statement,
+	 * can the phrase {@code if exists} be applied before the constraint
+	 * name?
+	 * <p>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied before the constraint name
+	 * @return {@code true} if {@code if exists} can be applied before the constraint name
 	 */
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
+	 * For dropping a constraint with an {@code alter table}, can the phrase
+	 * {@code if exists} be applied after the constraint name?
+	 * <p>
+	 * NOTE : Only one or the other (or neither) of this and
+	 * {@link #supportsIfExistsBeforeConstraintName} should return true.
 	 *
-	 * @return {@code true} if the "if exists" can be applied after the constraint name
+	 * @return {@code true} if {@code if exists} can be applied after the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For an "alter table", can the phrase "if exists" be applied?
+	 * For an {@code alter table}, can the phrase "{@code if exists} be applied?
 	 *
-	 * @return {@code true} if the "if exists" can be applied after ALTER TABLE
+	 * @return {@code true} if {@code if exists} can be applied after {@code alter table}
 	 * @since 5.2.11
 	 */
 	public boolean supportsIfExistsAfterAlterTable() {
@@ -2770,11 +2995,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Generate a DROP TABLE statement
+	 * Generate a {@code DROP TABLE} statement
 	 *
 	 * @param tableName The name of the table to drop
 	 *
-	 * @return The DROP TABLE command
+	 * @return The {@code DROP TABLE} statement as a string
 	 */
 	public String getDropTableString(String tableName) {
 		final StringBuilder buf = new StringBuilder( "drop table " );
@@ -2791,8 +3016,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support column-level check constraints?
 	 *
-	 * @return True if column-level CHECK constraints are supported; false
-	 * otherwise.
+	 * @return True if column-level {@code check} constraints are supported;
+	 *         false otherwise.
 	 */
 	public boolean supportsColumnCheck() {
 		return true;
@@ -2801,17 +3026,17 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does this dialect support table-level check constraints?
 	 *
-	 * @return True if table-level CHECK constraints are supported; false
-	 * otherwise.
+	 * @return True if table-level {@code check} constraints are supported;
+	 *         false otherwise.
 	 */
 	public boolean supportsTableCheck() {
 		return true;
 	}
 
 	/**
-	 * Does this dialect support cascaded delete on foreign key definitions?
+	 * Does this dialect support {@code on delete} actions in foreign key definitions?
 	 *
-	 * @return {@code true} indicates that the dialect does support cascaded delete on foreign keys.
+	 * @return {@code true} if the dialect does support the {@code on delete} clause.
 	 */
 	public boolean supportsCascadeDelete() {
 		return true;
@@ -2836,8 +3061,8 @@ public abstract class Dialect implements ConversionContext {
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Should LOBs (both BLOB and CLOB) be bound using stream operations (i.e.
-	 * {@link PreparedStatement#setBinaryStream}).
+	 * Should LOBs (both BLOB and CLOB) be bound using stream operations,
+	 * that is, using {@link PreparedStatement#setBinaryStream}).
 	 *
 	 * @return True if BLOBs and CLOBs should be bound using stream operations.
 	 * @since 3.2
@@ -2888,6 +3113,16 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect/database require casting of non-string arguments in a concat function?
+	 *
+	 * @return {@code true} if casting of non-string arguments in concat is required
+	 * @since 6.2
+	 */
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect require that integer divisions be wrapped in {@code cast()}
 	 * calls to tell the db parser the expected type.
 	 *
@@ -2904,7 +3139,7 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst}.  Certain drivers do not
 	 * allow access to these methods for forward only cursors.
-	 * <p/>
+	 * <p>
 	 * NOTE : this is highly driver dependent!
 	 *
 	 * @return True if methods like {@link ResultSet#isAfterLast} and
@@ -2931,7 +3166,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Are subselects supported as the left-hand-side (LHS) of
 	 * IN-predicates.
-	 * <p/>
+	 * <p>
 	 * In other words, is syntax like {@code ... <subquery> IN (1, 2, 3) ...} supported?
 	 *
 	 * @return True if subselects can appear as the LHS of an in-predicate;
@@ -2946,7 +3181,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Expected LOB usage pattern is such that I can perform an insert
 	 * via prepared statement with a parameter binding for a LOB value
 	 * without crazy casting to JDBC driver implementation-specific classes...
-	 * <p/>
+	 * <p>
 	 * Part of the trickiness here is the fact that this is largely
 	 * driver dependent.  For example, Oracle (which is notoriously bad with
 	 * LOB support in their drivers historically) actually does a pretty good
@@ -2965,20 +3200,20 @@ public abstract class Dialect implements ConversionContext {
 	 * values back to the database?  Talking about mutating the
 	 * internal value of the locator as opposed to supplying a new
 	 * locator instance...
-	 * <p/>
+	 * <p>
 	 * For BLOBs, the internal value might be changed by:
 	 * {@link Blob#setBinaryStream},
 	 * {@link Blob#setBytes(long, byte[])},
 	 * {@link Blob#setBytes(long, byte[], int, int)},
 	 * or {@link Blob#truncate(long)}.
-	 * <p/>
+	 * <p>
 	 * For CLOBs, the internal value might be changed by:
 	 * {@link Clob#setAsciiStream(long)},
 	 * {@link Clob#setCharacterStream(long)},
 	 * {@link Clob#setString(long, String)},
 	 * {@link Clob#setString(long, String, int, int)},
 	 * or {@link Clob#truncate(long)}.
-	 * <p/>
+	 * <p>
 	 * NOTE : I do not know the correct answer currently for
 	 * databases which (1) are not part of the cruise control process
 	 * or (2) do not {@link #supportsExpectedLobUsagePattern}.
@@ -2993,12 +3228,12 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is it supported to materialize a LOB locator outside the transaction in
-	 * which it was created?
-	 * <p/>
+	 * Is it supported to materialize a LOB locator outside the transaction
+	 * in which it was created?
+	 * <p>
 	 * Again, part of the trickiness here is the fact that this is largely
 	 * driver dependent.
-	 * <p/>
+	 * <p>
 	 * NOTE: all database I have tested which {@link #supportsExpectedLobUsagePattern()}
 	 * also support the ability to materialize a LOB outside the owning transaction...
 	 *
@@ -3010,18 +3245,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support referencing the table being mutated in
-	 * a subquery.  The "table being mutated" is the table referenced in
-	 * an UPDATE or a DELETE query.  And so can that table then be
-	 * referenced in a subquery of said UPDATE/DELETE query.
-	 * <p/>
+	 * Does this dialect support referencing the table being mutated in a
+	 * subquery? The "table being mutated" is the table referenced in an
+	 * update or delete query. And so can that table then be referenced
+	 * in a subquery of the update or delete query?
+	 * <p>
 	 * For example, would the following two syntaxes be supported:<ul>
-	 * <li>delete from TABLE_A where ID not in ( select ID from TABLE_A )</li>
-	 * <li>update TABLE_A set NON_ID = 'something' where ID in ( select ID from TABLE_A)</li>
+	 * <li>{@code delete from TABLE_A where ID not in (select ID from TABLE_A)}</li>
+	 * <li>{@code update TABLE_A set NON_ID = 'something' where ID in (select ID from TABLE_A)}</li>
 	 * </ul>
 	 *
-	 * @return True if this dialect allows references the mutating table from
-	 * a subquery.
+	 * @return True if this dialect allows references the mutating table
+	 *         from a subquery.
 	 */
 	public boolean supportsSubqueryOnMutatingTable() {
 		return true;
@@ -3030,27 +3265,30 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Does the dialect support an exists statement in the select clause?
 	 *
-	 * @return True if exists checks are allowed in the select clause; false otherwise.
+	 * @return True if exists checks are allowed in the select clause;
+	 *         false otherwise.
 	 */
 	public boolean supportsExistsInSelect() {
 		return true;
 	}
 
 	/**
-	 * For the underlying database, is READ_COMMITTED isolation implemented by
-	 * forcing readers to wait for write locks to be released?
+	 * For the underlying database, is {@code READ_COMMITTED} isolation
+	 * implemented by forcing readers to wait for write locks to be released?
 	 *
-	 * @return True if writers block readers to achieve READ_COMMITTED; false otherwise.
+	 * @return True if writers block readers to achieve {@code READ_COMMITTED};
+	 *         false otherwise.
 	 */
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return false;
 	}
 
 	/**
-	 * For the underlying database, is REPEATABLE_READ isolation implemented by
-	 * forcing writers to wait for read locks to be released?
+	 * For the underlying database, is {@code REPEATABLE_READ} isolation
+	 * implemented by forcing writers to wait for read locks to be released?
 	 *
-	 * @return True if readers block writers to achieve REPEATABLE_READ; false otherwise.
+	 * @return True if readers block writers to achieve {@code REPEATABLE_READ};
+	 *         false otherwise.
 	 */
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return false;
@@ -3060,8 +3298,9 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect support using a JDBC bind parameter as an argument
 	 * to a function or procedure call?
 	 *
-	 * @return Returns {@code true} if the database supports accepting bind params as args, {@code false} otherwise. The
-	 * default is {@code true}.
+	 * @return Returns {@code true} if the database supports accepting bind
+	 *         params as args, {@code false} otherwise. The default is
+	 *         {@code true}.
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public boolean supportsBindAsCallableArgument() {
@@ -3069,7 +3308,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support `count(a,b)`?
+	 * Does this dialect support {@code count(a,b)}?
 	 *
 	 * @return True if the database supports counting tuples; false otherwise.
 	 */
@@ -3078,7 +3317,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * If {@link #supportsTupleCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 * If {@link #supportsTupleCounts()} is true, does this dialect require
+	 * the tuple to be delimited with parens?
 	 *
 	 * @return boolean
 	 */
@@ -3087,9 +3327,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support `count(distinct a,b)`?
+	 * Does this dialect support {@code count(distinct a,b)}?
 	 *
-	 * @return True if the database supports counting distinct tuples; false otherwise.
+	 * @return True if the database supports counting distinct tuples;
+	 *         false otherwise.
 	 */
 	public boolean supportsTupleDistinctCounts() {
 		// oddly most database in fact seem to, so true is the default.
@@ -3097,7 +3338,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * If {@link #supportsTupleDistinctCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 * If {@link #supportsTupleDistinctCounts()} is true, does this dialect
+	 * require the tuple to be delimited with parens?
 	 *
 	 * @return boolean
 	 */
@@ -3106,8 +3348,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return the limit that the underlying database places on the number of elements in an {@code IN} predicate.
-	 * If the database defines no such limits, simply return zero or less-than-zero.
+	 * Return the limit that the underlying database places on the number of
+	 * elements in an {@code IN} predicate. If the database defines no such
+	 * limits, simply return zero or less-than-zero.
 	 *
 	 * @return int The limit, or zero-or-less to indicate no limit.
 	 */
@@ -3120,7 +3363,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Oracle expects all Lob values to be last in inserts and updates.
 	 *
 	 * @return boolean True if Lob values should be last, false if it
-	 * does not matter.
+	 *                 does not matter.
 	 */
 	public boolean forceLobAsLastValue() {
 		return false;
@@ -3136,12 +3379,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Some dialects have trouble applying pessimistic locking depending upon what other query options are
-	 * specified (paging, ordering, etc).  This method allows these dialects to request that locking be applied
+	 * Some dialects have trouble applying pessimistic locking depending
+	 * upon what other query options are specified (paging, ordering, etc).
+	 * This method allows these dialects to request that locking be applied
 	 * by subsequent selects.
 	 *
-	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
-	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 * @return {@code true} indicates that the dialect requests that locking
+	 *                      be applied by subsequent select;
+	 *         {@code false} (the default) indicates that locking
+	 *                      should be applied to the main SQL statement.
 	 *
 	 * @since 5.2
 	 */
@@ -3150,17 +3396,19 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the UniqueDelegate supported by this dialect
+	 * Get the {@link UniqueDelegate} supported by this dialect
 	 *
 	 * @return The UniqueDelegate
 	 */
 	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
+		return new AlterTableUniqueDelegate( this );
 	}
 
 	/**
-	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
-	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 * Apply a hint to the query. The entire query is provided, allowing
+	 * full control over the placement and syntax of the hint.
+	 * <p>
+	 * By default, ignore the hint and simply return the query.
 	 *
 	 * @param query The query to which to apply the hint.
 	 * @param hintList The  hints to apply
@@ -3172,8 +3420,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
-	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 * Apply a hint to the query.  The entire query is provided, allowing
+	 * full control over the placement and syntax of the hint.
+	 * <p>
+	 * By default, ignore the hint and simply return the query.
 	 *
 	 * @param query The query to which to apply the hint.
 	 * @param hints The  hints to apply
@@ -3184,50 +3434,99 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Certain dialects support a subset of ScrollModes.  Provide a default to be used by Criteria and Query.
+	 * Certain dialects support a subset of {@link ScrollMode}s.
+	 * Provide a default to be used by Criteria and Query.
 	 *
-	 * @return ScrollMode
+	 * @return the default {@link ScrollMode} to use.
 	 */
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.SCROLL_INSENSITIVE;
 	}
 
 	/**
-	 * Does this dialect support offset in subqueries?  Ex:
-	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)
+	 * Does this dialect support {@code offset} in subqueries?
+	 * For example:
+	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsOffsetInSubquery() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect support the order by clause in subqueries?  Ex:
-	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)
+	 * Does this dialect support the {@code order by} clause in subqueries?
+	 * For example:
+	 * {@code select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsOrderByInSubquery() {
 		return true;
 	}
 
 	/**
-	 * Does this dialect support subqueries in the select clause?  Ex:
-	 * select col1, (select col2 from Table2 where ..) from Table1
+	 * Does this dialect support subqueries in the {@code select} clause?
+	 * For example:
+	 * {@code select col1, (select col2 from Table2 where ...) from Table1}
 	 *
-	 * @return boolean
+	 * @return {@code true} if it does
 	 */
 	public boolean supportsSubqueryInSelect() {
 		return true;
 	}
 
 	/**
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code insert} statement, using native SQL syntax?
+	 * <p>
+	 * Support for identity columns is insufficient here, we require something like:
+	 * <ol>
+	 * <li>{@code insert ... returning ...}
+	 * <li>{@code select from final table (insert ... )}
+	 * </ol>
+	 *
+	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}
+	 *         works for any sort of primary key column (not just identity columns), or
+	 *         {@code false} if {@code InsertReturningDelegate} does not work, or only
+	 *         works for specialized identity/"autoincrement" columns
+	 *
+	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
+	 * @see org.hibernate.id.insert.InsertReturningDelegate
+	 *
+	 * @since 6.2
+	 */
+	public boolean supportsInsertReturning() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code insert} statement, using the JDBC method
+	 * {@link Connection#prepareStatement(String, String[])}.
+	 * <p>
+	 * Support for returning the generated value of an identity column via the JDBC
+	 * method {@link Connection#prepareStatement(String, int)} is insufficient here.
+	 *
+	 * @return {@code true} if {@link org.hibernate.id.insert.GetGeneratedKeysDelegate}
+	 *         works for any sort of primary key column (not just identity columns), or
+	 *         {@code false} if {@code GetGeneratedKeysDelegate} does not work, or only
+	 *         works for specialized identity/"autoincrement" columns
+	 *
+	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
+	 * @see org.hibernate.id.insert.GetGeneratedKeysDelegate
+	 *
+	 * @since 6.2
+	 */
+	public boolean supportsInsertReturningGeneratedKeys() {
+		return false;
+	}
+	/**
 	 * Does this dialect support the given fetch clause type.
 	 *
 	 * @param type The fetch clause type
 	 * @return {@code true} if the underlying database supports the given fetch clause type,
-	 * {@code false} otherwise.  The default is {@code false}.
+	 *         {@code false} otherwise. The default is {@code false}.
 	 */
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return false;
@@ -3237,14 +3536,15 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect support window functions like {@code row_number() over (..)}?
 	 *
 	 * @return {@code true} if the underlying database supports window functions,
-	 * {@code false} otherwise.  The default is {@code false}.
+	 *         {@code false} otherwise.  The default is {@code false}.
 	 */
 	public boolean supportsWindowFunctions() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect support the SQL lateral keyword or a proprietary alternative?
+	 * Does this dialect support the SQL {@code lateral} keyword or a
+	 * proprietary alternative?
 	 *
 	 * @return {@code true} if the underlying database supports lateral,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3330,7 +3630,8 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return boolean
 	 *
-	 * @throws SQLException Accessing the DatabaseMetaData can throw it.  Just re-throw and Hibernate will handle.
+	 * @throws SQLException Accessing the DatabaseMetaData can throw it.
+	 *                      Just rethrow and Hibernate will handle.
 	 */
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
@@ -3349,8 +3650,20 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Database has native support for SQL standard arrays which can be referred to through base type name.
-	 * Oracle for example doesn't support this, but instead has support for named arrays.
+	 * How the Dialect supports aggregate types like {@link SqlTypes#STRUCT}.
+	 *
+	 * @since 6.2
+	 */
+	public AggregateSupport getAggregateSupport() {
+		return AggregateSupportImpl.INSTANCE;
+	}
+
+	/**
+	 * Database has native support for SQL standard arrays which
+	 * can be referred to by its base type name.
+	 * <p>
+	 * Oracle doesn't allow this, but instead has support for named
+	 * arrays.
 	 *
 	 * @return boolean
 	 * @since 6.1
@@ -3365,10 +3678,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @since 6.1
 	 */
 	public String getArrayTypeName(String elementTypeName) {
-		if ( supportsStandardArrays() ) {
-			return elementTypeName + " array";
-		}
-		return null;
+		return supportsStandardArrays() ? elementTypeName + " array" : null;
 	}
 
 	public void appendArrayLiteral(
@@ -3401,10 +3711,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Is this SQL dialect known to support some kind of distinct from predicate.
-	 * <p/>
-	 * Basically, does it support syntax like
-	 * "... where FIRST_NAME IS DISTINCT FROM LAST_NAME"
+	 * Does this dialect support some kind of {@code distinct from}
+	 * predicate?
+	 * <p>
+	 * This is, does it support syntax like
+	 * {@code ... where FIRST_NAME IS DISTINCT FROM LAST_NAME}?
 	 *
 	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
 	 * @since 6.1
@@ -3439,7 +3750,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support non-query statements (e.g. INSERT, UPDATE, DELETE) with CTE (Common Table Expressions)?
+	 * Does this dialect support insert, update, and delete statements
+	 * with Common Table Expressions?
 	 *
 	 * @return {@code true} if non-query statements are supported with CTE
 	 */
@@ -3448,25 +3760,37 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) )
+	 * Does this dialect/database support recursive CTEs (Common Table Expressions)?
 	 *
-	 * @return {@code true} if VALUES list are supported
+	 * @return {@code true} if recursive CTEs are supported
+	 * @since 6.2
+	 */
+	public boolean supportsRecursiveCTE() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support {@code values} lists of form
+	 * {@code VALUES (1), (2), (3)}?
+	 *
+	 * @return {@code true} if {@code values} list are supported
 	 */
 	public boolean supportsValuesList() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) ) for insert statements.
+	 * Does this dialect support {@code values} lists of form
+	 * {@code VALUES (1), (2), (3)} in insert statements?
 	 *
-	 * @return {@code true} if VALUES list are supported for insert statements
+	 * @return {@code true} if {@code values} list are supported in insert statements
 	 */
 	public boolean supportsValuesListForInsert() {
 		return true;
 	}
 
 	/**
-	 * Does this dialect/database support SKIP_LOCKED timeout.
+	 * Does this dialect support {@code SKIP_LOCKED} timeout.
 	 *
 	 * @return {@code true} if SKIP_LOCKED is supported
 	 */
@@ -3475,18 +3799,18 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect/database support NO_WAIT timeout.
+	 * Does this dialect support {@code NO_WAIT} timeout.
 	 *
-	 * @return {@code true} if NO_WAIT is supported
+	 * @return {@code true} if {@code NO_WAIT} is supported
 	 */
 	public boolean supportsNoWait() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect/database support WAIT timeout.
+	 * Does this dialect support {@code WAIT} timeout.
 	 *
-	 * @return {@code true} if WAIT is supported
+	 * @return {@code true} if {@code WAIT} is supported
 	 */
 	public boolean supportsWait() {
 		return supportsNoWait();
@@ -3499,7 +3823,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String inlineLiteral(String literal) {
 		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
-		appendLiteral( sb::append, literal );
+		appendLiteral( new StringBuilderSqlAppender( sb ), literal );
 		return sb.toString();
 	}
 
@@ -3516,15 +3840,44 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Check whether the JDBC {@link Connection} supports creating LOBs via {@link Connection#createBlob()},
-	 * {@link Connection#createNClob()} or {@link Connection#createClob()}.
+	 * Check whether the JDBC {@link Connection} supports creating LOBs via
+	 * {@link Connection#createBlob()}, {@link Connection#createNClob()}, or
+	 * {@link Connection#createClob()}.
 	 *
-	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used if LOB creation is supported only starting from a given Driver version
+	 * @param databaseMetaData JDBC {@link DatabaseMetaData} which can be used
+	 *                         if LOB creation is supported only starting from
+	 *                         a given driver version
 	 *
 	 * @return {@code true} if LOBs can be created via the JDBC Connection.
 	 */
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return true;
+	}
+
+	/**
+	 * Check whether the JDBC driver allows setting LOBs via {@link PreparedStatement#setBytes(int, byte[])},
+	 * {@link PreparedStatement#setNString(int, String)} or {@link PreparedStatement#setString(int, String)} APIs.
+	 *
+	 * @return {@code true} if LOBs can be set with the materialized APIs.
+	 * @since 6.2
+	 */
+	public boolean supportsMaterializedLobAccess() {
+		// Most drivers support this
+		return true;
+	}
+
+	/**
+	 * Whether to switch from {@code VARCHAR}-like types to {@link SqlTypes#MATERIALIZED_CLOB},
+	 * {@code NVARCHAR}-like types to {@link SqlTypes#MATERIALIZED_NCLOB}
+	 * and {@code VARBINARY}-like types to {@link SqlTypes#MATERIALIZED_BLOB} types,
+	 * when the requested size for a type exceeds the {@link #getMaxVarcharCapacity()}, {@link #getMaxNVarcharCapacity()}
+	 * and {@link #getMaxVarbinaryCapacity()} respectively.
+	 *
+	 * @return {@code true} if materialized LOBs should be used for capacity exceeding types.
+	 * @since 6.2
+	 */
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return supportsMaterializedLobAccess();
 	}
 
 	/**
@@ -3559,10 +3912,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an HqlTranslator specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
-	 *
-	 * Note that {@link SessionFactoryOptions#getCustomHqlTranslator()} has higher precedence
+	 * Return an {@link HqlTranslator} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
+	 * <p>
+	 * Note that {@link SessionFactoryOptions#getCustomHqlTranslator()}
+	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.hql.internal.StandardHqlTranslator
 	 * @see QueryEngine#getHqlTranslator()
@@ -3572,11 +3926,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an SqmToSqlAstConverterFactory specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
-	 *
-	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()} has higher
-	 * precedence as it comes directly from the user config
+	 * Return a {@link SqmTranslatorFactory} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
+	 * <p>
+	 * Note that {@link SessionFactoryOptions#getCustomSqmTranslatorFactory()}
+	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmTranslator
 	 * @see QueryEngine#getSqmTranslatorFactory()
@@ -3586,8 +3940,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Return an SqlAstTranslatorFactory specific for the Dialect.  Return {@code null}
-	 * to use Hibernate's standard translator.
+	 * Return a {@link SqlAstTranslatorFactory} specific to this dialect.
+	 * Return {@code null} to use Hibernate's standard translator.
 	 *
 	 * @see StandardSqlAstTranslatorFactory
 	 * @see JdbcEnvironment#getSqlAstTranslatorFactory()
@@ -3605,7 +3959,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#VARCHAR}-like column.
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#VARCHAR}-like type.
 	 * For longer column lengths, use some sort of {@code text}-like type for the
 	 * column.
 	 */
@@ -3615,8 +3969,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#NVARCHAR}-like column.
-	 * For longer column lengths, use some sort of {@code text}-like type for the
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#NVARCHAR}-like type.
+	 * For longer column lengths, use some sort of {@code ntext}-like type for the
 	 * column.
 	 */
 	public int getMaxNVarcharLength() {
@@ -3625,13 +3979,40 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * The longest possible length of a {@link java.sql.Types#VARBINARY}-like column.
+	 * The biggest size value that can be supplied as argument to a {@link java.sql.Types#VARBINARY}-like type.
 	 * For longer column lengths, use some sort of {@code image}-like type for the
 	 * column.
 	 */
 	public int getMaxVarbinaryLength() {
 		//for most databases it's the same as for VARCHAR
 		return getMaxVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code clob}-like type for the
+	 * column.
+	 */
+	public int getMaxVarcharCapacity() {
+		return getMaxVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#NVARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code nclob}-like type for the
+	 * column.
+	 */
+	public int getMaxNVarcharCapacity() {
+		return getMaxNVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARBINARY}-like column.
+	 * For longer column lengths, use some sort of {@code blob}-like type for the
+	 * column.
+	 */
+	public int getMaxVarbinaryCapacity() {
+		return getMaxVarbinaryLength();
 	}
 
 	public long getDefaultLobLength() {
@@ -3740,6 +4121,14 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Whether a predicate like `a > 0` can appear in an expression context e.g. a select item list.
+	 */
+	protected boolean supportsPredicateAsExpression() {
+		// Most databases seem to allow that
+		return true;
+	}
+
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "X'" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -3763,22 +4152,139 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
+	/**
+	 * The {@code generated as} clause, or similar, for generated column
+	 * declarations in DDL statements.
+	 *
+	 * @param generatedAs a SQL expression used to generate the column value
+	 * @return The {@code generated as} clause containing the given expression
+	 */
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ") stored";
 	}
 
+	/**
+	 * Is an explicit column type required for {@code generated as} columns?
+	 *
+	 * @return {@code true} if an explicit type is required
+	 */
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return true;
 	}
 
-    /**
-	 * Pluggable strategy for determining the Size to use for columns of
-	 * a given SQL type.
+	public MutationOperation createUpsertOperation(
+			EntityMutationTarget mutationTarget,
+			TableUpsert tableUpsert,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, tableUpsert, factory );
+	}
+
+	/**
+	 * Is there some way to disable foreign key constraint checking while
+	 * truncating tables? (If there's no way to do it, and if we can't
+	 * {@linkplain #canBatchTruncate() batch truncate}, we must drop and
+	 * recreate the constraints instead.)
 	 *
-	 * Allows Dialects, integrators and users a chance to apply
-	 * column size defaults and limits in certain situations based on the mapped
-	 * SQL and Java types.  E.g. when mapping a UUID to a VARCHAR column
-	 * we know the default Size should be `Size#length == 36`.
+	 * @return {@code true} if there is some way to do it
+	 *
+	 * @see #getDisableConstraintsStatement()
+	 * @see #getDisableConstraintStatement(String, String)
+	 */
+	public boolean canDisableConstraints() {
+		return false;
+	}
+
+	/**
+	 * A SQL statement that temporarily disables foreign key constraint
+	 * checking for all tables.
+	 */
+	public String getDisableConstraintsStatement() {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that re-enables foreign key constraint checking for
+	 * all tables.
+	 */
+	public String getEnableConstraintsStatement() {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that temporarily disables checking of the given
+	 * foreign key constraint.
+	 *
+	 * @param tableName the name of the table
+	 * @param name the name of the constraint
+	 */
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	/**
+	 * A SQL statement that re-enables checking of the given foreign key
+	 * constraint.
+	 *
+	 * @param tableName the name of the table
+	 * @param name the name of the constraint
+	 */
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	/**
+	 * Does the {@link #getTruncateTableStatement(String) truncate table}
+	 * statement accept multiple tables?
+	 *
+	 * @return {@code true} if it does
+	 */
+	public boolean canBatchTruncate() {
+		return false;
+	}
+
+	/**
+	 * A SQL statement or statements that truncate the given tables.
+	 *
+	 * @param tableNames the names of the tables
+	 */
+	public String[] getTruncateTableStatements(String[] tableNames) {
+		if ( canBatchTruncate() ) {
+			StringBuilder builder = new StringBuilder();
+			for ( String tableName : tableNames ) {
+				if ( builder.length() > 0 ) {
+					builder.append(", ");
+				}
+				builder.append( tableName );
+			}
+			return new String[] { getTruncateTableStatement( builder.toString() ) };
+		}
+		else {
+			String[] statements = new String[tableNames.length];
+			for ( int i = 0; i < tableNames.length; i++ ) {
+				statements[i] = getTruncateTableStatement( tableNames[i] );
+			}
+			return statements;
+		}
+	}
+
+	/**
+	 * A SQL statement that truncates the given table.
+	 *
+	 * @param tableName the name of the table
+	 */
+	public String getTruncateTableStatement(String tableName) {
+		return "truncate table " + tableName;
+	}
+
+	/**
+	 * Pluggable strategy for determining the {@link Size} to use for
+	 * columns of a given SQL type.
+	 * <p>
+	 * Allows dialects, integrators, and users a chance to apply column
+	 * size defaults and limits in certain situations based on the mapped
+	 * SQL and Java types. For example, when mapping a {@code UUID} to a
+	 * {@code VARCHAR} column, we know the default {@code Size} should
+	 * have {@link Size#getLength() Size.length == 36}.
 	 */
 	public interface SizeStrategy {
 		/**
@@ -3804,13 +4310,13 @@ public abstract class Dialect implements ConversionContext {
 				Integer scale,
 				Long length) {
 			final Size size = new Size();
-			int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
+			final int ddlTypeCode = jdbcType.getDdlTypeCode();
 			// Set the explicit length to null if we encounter the JPA default 255
 			if ( length != null && length == Size.DEFAULT_LENGTH ) {
 				length = null;
 			}
 
-			switch ( jdbcTypeCode ) {
+			switch ( ddlTypeCode ) {
 				case SqlTypes.BIT:
 				case SqlTypes.CHAR:
 				case SqlTypes.NCHAR:
@@ -3837,7 +4343,7 @@ public abstract class Dialect implements ConversionContext {
 						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
-					if (precision != null) {
+					if ( precision != null ) {
 						// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
 						// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
 						precision = (int) ceil( precision * LOG_BASE2OF10 );
@@ -3882,8 +4388,8 @@ public abstract class Dialect implements ConversionContext {
 	 * native datetime formatting function for this
 	 * database (often the {@code to_char()} function).
 	 * <p>
-	 * Since it's never possible to translate all of
-	 * the pattern letter sequences understood by
+	 * Since it's never possible to translate every
+	 * pattern letter sequences understood by
 	 * {@code DateTimeFormatter}, only the following
 	 * subset of pattern letters is accepted by
 	 * Hibernate:
@@ -4017,7 +4523,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:
@@ -4039,7 +4545,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:
@@ -4065,7 +4571,7 @@ public abstract class Dialect implements ConversionContext {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:
@@ -4078,7 +4584,13 @@ public abstract class Dialect implements ConversionContext {
 		appender.appendSql( literal.getSeconds() );
 		appender.appendSql( '.' );
 		appender.appendSql( literal.getNano() );
-		appender.appendSql( '\'' );
+		appender.appendSql( "' second" );
+	}
+
+	public void appendUUIDLiteral(SqlAppender appender, UUID literal) {
+		appender.appendSql( "cast('" );
+		appender.appendSql( literal.toString() );
+		appender.appendSql( "' as uuid)" );
 	}
 
 	/**
@@ -4093,5 +4605,17 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NONE;
+	}
+
+	/**
+	 * The SchemaManagementTool to use if none explicitly specified.
+	 * <p>
+	 * Allows Dialects to override how schema tooling works by default
+	 */
+	@Incubating
+	public SchemaManagementTool getFallbackSchemaManagementTool(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry) {
+		return new HibernateSchemaManagementTool();
 	}
 }

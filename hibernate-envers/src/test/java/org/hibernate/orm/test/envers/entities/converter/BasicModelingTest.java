@@ -8,9 +8,9 @@ package org.hibernate.orm.test.envers.entities.converter;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.AbstractEnversTest;
 import org.hibernate.mapping.PersistentClass;
@@ -37,7 +37,8 @@ public class BasicModelingTest extends AbstractEnversTest {
 					.applyAttributeConverter( SexConverter.class )
 					.build();
 
-			( (MetadataImpl) metadata ).validate();
+			( (MetadataImplementor) metadata ).orderColumns( false );
+			( (MetadataImplementor) metadata ).validate();
 
 			PersistentClass personBinding = metadata.getEntityBinding( Person.class.getName() );
 			assertNotNull( personBinding );

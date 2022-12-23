@@ -25,6 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * disabled. They're therefore much less flexible than {@link Filter filters}.
  *
  * @see Filter
+ * @see DialectOverride.Where
  *
  * @author Emmanuel Bernard
  */

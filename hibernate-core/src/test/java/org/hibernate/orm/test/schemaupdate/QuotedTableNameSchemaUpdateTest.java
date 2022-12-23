@@ -66,6 +66,7 @@ public class QuotedTableNameSchemaUpdateTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( QuotedTable.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		new SchemaExport()

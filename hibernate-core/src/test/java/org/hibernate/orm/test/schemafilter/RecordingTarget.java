@@ -11,9 +11,9 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 class RecordingTarget implements GenerationTarget {
 	public enum Category {
 		SCHEMA_CREATE( Pattern.compile( "create schema (.*)" ) ),
-		SCHEMA_DROP( Pattern.compile( "drop schema (.*)" ) ),
+		SCHEMA_DROP( Pattern.compile( "drop schema(?: if exists)? (.*)" ) ),
 		TABLE_CREATE( Pattern.compile( "create table (\\S+) .*" ) ),
-		TABLE_DROP( Pattern.compile( "drop table (.*)" ) ),
+		TABLE_DROP( Pattern.compile( "drop table(?: if exists)? (.*)" ) ),
 		SEQUENCE_CREATE(Pattern.compile( "create sequence (.*) start (.*)" )),
 		SEQUENCE_DROP(Pattern.compile( "drop sequence if exists (.*)" ));
 

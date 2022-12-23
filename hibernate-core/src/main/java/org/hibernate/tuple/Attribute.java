@@ -9,10 +9,9 @@ package org.hibernate.tuple;
 import org.hibernate.type.Type;
 
 /**
- * Contract for attributes
- *
- * @author Steve Ebersole
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.AttributeMapping}
  */
+@Deprecated(forRemoval = true)
 public interface Attribute {
 	String getName();
 	Type getType();

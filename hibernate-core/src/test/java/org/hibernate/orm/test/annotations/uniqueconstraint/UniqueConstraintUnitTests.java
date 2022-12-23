@@ -61,9 +61,9 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 			}
 
 			assertTrue( "Could not find the expected tables.", tableA != null && tableB != null );
-			assertFalse(
-					tableA.getUniqueKeyIterator().next().getName().equals(
-							tableB.getUniqueKeyIterator().next().getName()
+            assertFalse(
+					tableA.getUniqueKeys().values().iterator().next().getName().equals(
+							tableB.getUniqueKeys().values().iterator().next().getName()
 					)
 			);
 		}

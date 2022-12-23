@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -20,7 +19,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 /**
  * @author Christian Beikov
  */
-public abstract class QueryPart implements SqlAstNode, Expression, DomainResultProducer {
+public abstract class QueryPart implements SqlAstNode {
 	private final boolean isRoot;
 
 	private boolean hasPositionalSortItem;
@@ -113,7 +112,7 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 		}
 		else {
 			if ( fetchClauseType == null ) {
-				throw new IllegalArgumentException( "Fetch clause may not be null!" );
+				throw new IllegalArgumentException( "Fetch clause may not be null" );
 			}
 			this.fetchClauseExpression = fetchClauseExpression;
 			this.fetchClauseType = fetchClauseType;

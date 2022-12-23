@@ -21,6 +21,7 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -186,7 +187,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 							? javaType.extractHashCode( bindValue )
 							: 0;
 
-					hashCode = 31 * hashCode + valueHashCode;
+					hashCode = 37 * hashCode + valueHashCode;
 				}
 			}
 			else {
@@ -199,7 +200,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 						? javaType.extractHashCode( bindValue )
 						: 0;
 
-				hashCode = 31 * hashCode + valueHashCode;
+				hashCode = 37 * hashCode + valueHashCode;
 			}
 		}
 
@@ -214,8 +215,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			}
 		}
 
-		if ( binding.getType() != null ) {
-			return binding.getType();
+		final MappingModelExpressible<?> type = binding.getType();
+		if ( type != null ) {
+			if ( type instanceof EntityMappingType ) {
+				return ( (EntityMappingType) type ).getIdentifierMapping();
+			}
+			return type;
 		}
 
 		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();

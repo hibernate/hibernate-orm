@@ -1,0 +1,5 @@
+insert into Books (isbn, title) values ('9781932394887','Java Persistence with Hibernate')
+insert into Authors (name) values ('Gavin King')
+insert into Authors (name) values ('Christian Bauer')
+insert into BooksByAuthor (books_isbn, Author_name) values ('9781932394887','Gavin King')
+insert into BooksByAuthor (books_isbn, Author_name) values ('9781932394887','Christian Bauer')

@@ -18,9 +18,9 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
  * @asciidoc
@@ -56,7 +56,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	private final EntityPersister rootDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final SqmCteTable idCteTable;
+	private final CteTable idCteTable;
 
 	public CteMutationStrategy(
 			EntityMappingType rootEntityType,
@@ -70,10 +70,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(
@@ -89,7 +86,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.idCteTable = SqmCteTable.createIdTable( ID_TABLE_NAME, rootDescriptor );
+		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME, rootDescriptor );
 	}
 
 	@Override

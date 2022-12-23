@@ -20,6 +20,9 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.junit.Test;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+
 /**
  * @author Tomasz Bech
  */
@@ -114,10 +117,9 @@ public class RelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	static Class<?> getClassWithoutInitializingProxy(Object object) {
-		if (object instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) object;
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			return li.getPersistentClass();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getPersistentClass();
 		}
 		else {
 			return object.getClass();

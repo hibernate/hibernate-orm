@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL91Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 
 /**
  * @author Vlad Mihalcea
@@ -23,7 +23,7 @@ public class PostgreSQLIdleConnectionCounter implements IdleConnectionCounter {
 
 	@Override
 	public boolean appliesTo(Class<? extends Dialect> dialect) {
-		return PostgreSQL91Dialect.class.isAssignableFrom( dialect );
+		return PostgreSQLDialect.class.isAssignableFrom( dialect );
 	}
 
 	@Override

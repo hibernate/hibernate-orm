@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.cache.internal.CacheKeyValueDescriptor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -18,17 +18,17 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
  * Marker interface for basic types.
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, CacheKeyValueDescriptor {
+public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
@@ -77,10 +77,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJavaTypeDescriptor();
 	}
 
-	/**
-	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
-	 * or <code>null</code> if there is no conversion.
-	 */
+	@Override
 	@Incubating
 	default BasicValueConverter<T, ?> getValueConverter() {
 		return null;
@@ -97,6 +94,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
+	default JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
+	}
+
+	@Override
 	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
@@ -110,7 +112,6 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default int forEachDisassembledJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
@@ -118,14 +119,39 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return getJdbcTypeCount();
 	}
 
-	@Override
-	default int forEachJdbcValue(
-			Object value,
-			Clause clause,
-			int offset,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
-		return getJdbcTypeCount();
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 * @since 6.2
+	 */
+	@Incubating
+	default String getCheckCondition(String columnName, Dialect dialect) {
+		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
+		String checkCondition = null;
+		if ( valueConverter != null ) {
+			checkCondition = valueConverter.getCheckCondition(
+					columnName,
+					getJdbcType(),
+					dialect
+			);
+		}
+		if ( checkCondition == null ) {
+			checkCondition = getJdbcType().getCheckCondition(
+					columnName,
+					getMappedJavaType(),
+					dialect
+			);
+		}
+		return checkCondition;
+	}
+
+	@Incubating
+	default String getSpecializedTypeDeclaration(Dialect dialect) {
+		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
+		return valueConverter == null ? null : valueConverter.getSpecializedTypeDeclaration( getJdbcType(), dialect );
 	}
 }

@@ -14,9 +14,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -77,8 +78,9 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 	public void testSimpleConvertUsage() throws MalformedURLException {
         final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(TheEntity.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
-		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
-		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
+		final ConvertedBasicTypeImpl type = assertTyping( ConvertedBasicTypeImpl.class, theDatePropertyType );
+		final JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 

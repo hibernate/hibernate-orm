@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -14,6 +15,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -67,6 +69,11 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 	}
 
 	@Override
+	public List<String> getColumnAliases() {
+		return columnAliases;
+	}
+
+	@Override
 	public Fetch buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,
@@ -80,18 +87,16 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 		modelPart.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, selectableMapping.getContainingTableExpression() );
-					final String mappedColumn = selectableMapping.getSelectionExpression();
 					final String columnAlias = columnAliases.get( selectionIndex );
 					creationStateImpl.resolveSqlSelection(
-							creationStateImpl.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( tableReference, mappedColumn ),
-									processingState -> {
-										final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-										final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
-									}
+							ResultsHelper.resolveSqlExpression(
+									creationStateImpl,
+									jdbcResultsMetadata,
+									tableReference,
+									selectableMapping,
+									columnAlias
 							),
-							modelPart.getJavaType(),
+							selectableMapping.getJdbcMapping().getJdbcJavaType(),
 							null,
 							creationStateImpl.getSessionFactory().getTypeConfiguration()
 					);

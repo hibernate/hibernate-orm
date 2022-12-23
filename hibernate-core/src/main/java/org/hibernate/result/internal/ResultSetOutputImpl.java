@@ -17,13 +17,13 @@ import org.hibernate.result.ResultSetOutput;
  * @author Steve Ebersole
  */
 class ResultSetOutputImpl implements ResultSetOutput {
-	private final Supplier<List> resultSetSupplier;
+	private final Supplier<List<?>> resultSetSupplier;
 
-	public ResultSetOutputImpl(List results) {
+	public ResultSetOutputImpl(List<?> results) {
 		this.resultSetSupplier = () -> results;
 	}
 
-	public ResultSetOutputImpl(Supplier<List> resultSetSupplier) {
+	public ResultSetOutputImpl(Supplier<List<?>> resultSetSupplier) {
 		this.resultSetSupplier = resultSetSupplier;
 	}
 
@@ -33,14 +33,13 @@ class ResultSetOutputImpl implements ResultSetOutput {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public List getResultList() {
+	public List<?> getResultList() {
 		return resultSetSupplier.get();
 	}
 
 	@Override
 	public Object getSingleResult() {
-		final List results = getResultList();
+		final List<?> results = getResultList();
 		if ( results == null || results.isEmpty() ) {
 			return null;
 		}

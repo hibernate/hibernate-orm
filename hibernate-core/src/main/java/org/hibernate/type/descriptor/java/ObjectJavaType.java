@@ -31,4 +31,5 @@ public class ObjectJavaType extends AbstractClassJavaType<Object> {
 	public <X> Object wrap(X value, WrapperOptions options) {
 		return value;
 	}
+
 }

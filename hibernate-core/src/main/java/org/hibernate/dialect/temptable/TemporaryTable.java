@@ -14,13 +14,15 @@ import java.util.function.Function;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Contributable;
@@ -36,7 +38,11 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -57,6 +63,7 @@ public class TemporaryTable implements Exportable, Contributable {
 
 	private final TemporaryTableSessionUidColumn sessionUidColumn;
 	private final List<TemporaryTableColumn> columns;
+	private final List<TemporaryTableColumn> columnsForExport;
 
 	private final Dialect dialect;
 
@@ -64,44 +71,74 @@ public class TemporaryTable implements Exportable, Contributable {
 			EntityMappingType entityDescriptor,
 			Function<String, String> temporaryTableNameAdjuster,
 			Dialect dialect,
+			RuntimeModelCreationContext creationContext,
 			Function<TemporaryTable, List<TemporaryTableColumn>> columnInitializer) {
 		this.entityDescriptor = entityDescriptor;
-
+		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
+		final EntityPersister rootEntityPersister = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
+		final String persisterQuerySpace = entityPersister.getSynchronizedQuerySpaces()[0];
+		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( persisterQuerySpace );
 		// The table name might be a sub-query, which is inappropriate for a temporary table name
-		final String originalTableName = entityDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0];
-		final String name;
-		if ( Identifier.isQuoted( originalTableName ) ) {
-			name = dialect.quote( temporaryTableNameAdjuster.apply( Identifier.unQuote( originalTableName ) ) );
+		final String tableBaseName;
+		if ( rootEntityPersister != entityPersister && rootEntityPersister instanceof SingleTableEntityPersister ) {
+			// In this case, the descriptor is a subclass of a single table inheritance.
+			// To avoid name collisions, we suffix the table name with the subclass number
+			tableBaseName = nameParts.getObjectName().getText() + ArrayHelper.indexOf(
+					( (SingleTableEntityPersister) rootEntityPersister ).getSubclassClosure(),
+					entityPersister.getEntityName()
+			);
 		}
 		else {
-			name = temporaryTableNameAdjuster.apply( originalTableName );
+			tableBaseName = nameParts.getObjectName().getText();
 		}
-		if ( name.length() > dialect.getMaxIdentifierLength() ) {
-			this.qualifiedTableName = name.substring( 0, dialect.getMaxIdentifierLength() );
+		final QualifiedNameParser.NameParts adjustedNameParts = QualifiedNameParser.INSTANCE.parse(
+				temporaryTableNameAdjuster.apply( tableBaseName )
+		);
+		final String temporaryTableName = adjustedNameParts.getObjectName().getText();
+		final Identifier tableNameIdentifier;
+		if ( temporaryTableName.length() > dialect.getMaxIdentifierLength() ) {
+			tableNameIdentifier = new Identifier(
+					temporaryTableName.substring( 0, dialect.getMaxIdentifierLength() ),
+					nameParts.getObjectName().isQuoted()
+			);
 		}
 		else {
-			this.qualifiedTableName = name;
+			tableNameIdentifier = new Identifier( temporaryTableName, nameParts.getObjectName().isQuoted() );
 		}
+		this.qualifiedTableName = creationContext.getSessionFactory().getSqlStringGenerationContext().format(
+				new QualifiedTableName(
+						adjustedNameParts.getCatalogName() != null
+								? adjustedNameParts.getCatalogName()
+								: nameParts.getCatalogName(),
+						adjustedNameParts.getSchemaName() != null
+								? adjustedNameParts.getSchemaName()
+								: nameParts.getSchemaName(),
+						tableNameIdentifier
+				)
+		);
 		this.dialect = dialect;
 		if ( dialect.getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT ) {
-			final TypeConfiguration typeConfiguration = entityDescriptor.getEntityPersister()
+			final TypeConfiguration typeConfiguration = entityPersister
 					.getFactory()
 					.getTypeConfiguration();
-			final BasicType<UUID> uuidType = typeConfiguration
-					.getBasicTypeForJavaType( UUID.class );
+			final BasicType<UUID> uuidType = typeConfiguration.getBasicTypeRegistry().resolve(
+					StandardBasicTypes.UUID_CHAR
+			);
+			final Size size = dialect.getSizeStrategy().resolveSize(
+					uuidType.getJdbcType(),
+					uuidType.getJavaTypeDescriptor(),
+					null,
+					null,
+					null
+			);
 			this.sessionUidColumn = new TemporaryTableSessionUidColumn(
 					this,
 					uuidType,
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
-							uuidType.getJdbcType().getDefaultSqlTypeCode(),
-							dialect.getSizeStrategy().resolveSize(
-									uuidType.getJdbcType(),
-									uuidType.getJavaTypeDescriptor(),
-									null,
-									null,
-									null
-							)
-					)
+							uuidType.getJdbcType().getDdlTypeCode(),
+							size
+					),
+					size
 			);
 		}
 		else {
@@ -112,6 +149,16 @@ public class TemporaryTable implements Exportable, Contributable {
 			columns.add( sessionUidColumn );
 		}
 		this.columns = columns;
+
+		if ( columns.size() > 1 ) {
+			final ArrayList<TemporaryTableColumn> columnsForExport = new ArrayList<>( columns );
+			creationContext.getBootModel().getMetadataBuildingOptions().getColumnOrderingStrategy()
+					.orderTemporaryTableColumns( columnsForExport, creationContext.getMetadata() );
+			this.columnsForExport = columnsForExport;
+		}
+		else {
+			this.columnsForExport = columns;
+		}
 	}
 
 	public static TemporaryTable createIdTable(
@@ -123,6 +170,7 @@ public class TemporaryTable implements Exportable, Contributable {
 				entityDescriptor,
 				temporaryTableNameAdjuster,
 				dialect,
+				runtimeModelCreationContext,
 				temporaryTable -> {
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
@@ -143,6 +191,10 @@ public class TemporaryTable implements Exportable, Contributable {
 												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
+										column.getColumnSize(
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
 										column.isNullable(),
 										true
 								)
@@ -157,7 +209,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									if ( pluralAttribute.getSeparateCollectionTable() != null ) {
 										// Ensure that the FK target columns are available
 										ForeignKeyDescriptor keyDescriptor = pluralAttribute.getKeyDescriptor();
-										if ( keyDescriptor==null ) {
+										if ( keyDescriptor == null ) {
 											// This is expected to happen when processing a
 											// PostInitCallbackEntry because the callbacks
 											// are not ordered. The exception is caught in
@@ -179,10 +231,14 @@ public class TemporaryTable implements Exportable, Contributable {
 															columns.add(
 																	new TemporaryTableColumn(
 																			temporaryTable,
-																			selectable.getText( dialect ),
+																			column.getText( dialect ),
 																			selection.getJdbcMapping(),
 																			column.getSqlType(
 																					runtimeModelCreationContext.getTypeConfiguration(),
+																					dialect,
+																					runtimeModelCreationContext.getMetadata()
+																			),
+																			column.getColumnSize(
 																					dialect,
 																					runtimeModelCreationContext.getMetadata()
 																			),
@@ -211,14 +267,14 @@ public class TemporaryTable implements Exportable, Contributable {
 				entityDescriptor,
 				temporaryTableNameAdjuster,
 				dialect,
+				runtimeModelCreationContext,
 				temporaryTable -> {
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final IdentifierGenerator identifierGenerator = entityDescriptor.getEntityPersister()
-							.getIdentifierGenerator();
-					final boolean identityColumn = identifierGenerator instanceof PostInsertIdentifierGenerator;
+					final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
+					final boolean identityColumn = identifierGenerator.generatedOnExecution();
 					final boolean hasOptimizer;
 					if ( identityColumn ) {
 						hasOptimizer = false;
@@ -238,8 +294,12 @@ public class TemporaryTable implements Exportable, Contributable {
 													runtimeModelCreationContext.getMetadata()
 											) + " " +
 											dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) ),
+											column.getColumnSize(
+													dialect,
+													runtimeModelCreationContext.getMetadata()
+											),
 											// Always report as nullable as the identity column string usually includes the not null constraint
-											true, //column.isNullable()
+											true,//column.isNullable()
 											true
 									)
 							);
@@ -269,6 +329,10 @@ public class TemporaryTable implements Exportable, Contributable {
 												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
+										column.getColumnSize(
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
 										// We have to set the identity column after the root table insert
 										column.isNullable() || identityColumn || hasOptimizer,
 										!identityColumn && !hasOptimizer
@@ -286,6 +350,10 @@ public class TemporaryTable implements Exportable, Contributable {
 										discriminatorMapping.getJdbcMapping(),
 										discriminator.getSqlType(
 												runtimeModelCreationContext.getTypeConfiguration(),
+												dialect,
+												runtimeModelCreationContext.getMetadata()
+										),
+										discriminator.getColumnSize(
 												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
@@ -317,6 +385,10 @@ public class TemporaryTable implements Exportable, Contributable {
 																			dialect,
 																			runtimeModelCreationContext.getMetadata()
 																	),
+																	column.getColumnSize(
+																			dialect,
+																			runtimeModelCreationContext.getMetadata()
+																	),
 																	// Treat regular temporary table columns as nullable for simplicity
 																	true
 															)
@@ -334,7 +406,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						final String rowNumberType;
 						if ( dialect.supportsWindowFunctions() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
@@ -346,7 +418,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
@@ -354,13 +426,13 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null
 									)
-							) + " " +
-									dialect.getIdentityColumnSupport().getIdentityColumnString( integerBasicType.getJdbcType().getJdbcTypeCode() );
+							) + " " + dialect.getIdentityColumnSupport()
+									.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
 						else {
 							LOG.multiTableInsertNotAvailable( entityBinding.getEntityName() );
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
-									integerBasicType.getJdbcType().getJdbcTypeCode(),
+									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
 											integerBasicType.getJdbcType(),
 											integerBasicType.getJavaTypeDescriptor(),
@@ -376,6 +448,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										"rn_",
 										integerBasicType,
 										rowNumberType,
+										Size.nil(),
 										false,
 										true
 								)
@@ -396,6 +469,10 @@ public class TemporaryTable implements Exportable, Contributable {
 
 	public List<TemporaryTableColumn> getColumns() {
 		return columns;
+	}
+
+	public List<TemporaryTableColumn> getColumnsForExport() {
+		return columnsForExport;
 	}
 
 	public TemporaryTableSessionUidColumn getSessionUidColumn() {

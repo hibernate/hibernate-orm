@@ -218,7 +218,7 @@ public class RelationalValueSourceHelper {
 		}
 
 		final RelationalValueSource result = sources.get( 0 );
-		if ( !ColumnSource.class.isInstance( result ) ) {
+		if ( !(result instanceof ColumnSource) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
 					&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
@@ -266,7 +266,7 @@ public class RelationalValueSourceHelper {
 
 		final List<ColumnSource> columnSources = CollectionHelper.arrayList( sources.size() );
 		for ( RelationalValueSource source : sources ) {
-			if ( !ColumnSource.class.isInstance( source ) ) {
+			if ( !(source instanceof ColumnSource) ) {
 				final String errorMessage;
 				if ( columnsAndFormulasSource.getSourceType().canBeNamed()
 						&& StringHelper.isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {

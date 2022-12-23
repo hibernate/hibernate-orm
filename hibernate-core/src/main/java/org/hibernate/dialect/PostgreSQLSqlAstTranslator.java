@@ -6,21 +6,27 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for PostgreSQL.
@@ -34,8 +40,42 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
+	}
+
+
+	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
+	}
+
+	@Override
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "cast(" );
+					lhs.accept( this );
+					appendSql( " as text)" );
+					appendSql( operator.sqlText() );
+					appendSql( "cast(" );
+					rhs.accept( this );
+					appendSql( " as text)" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
+		renderComparisonStandard( lhs, operator, rhs );
 	}
 
 	@Override
@@ -51,6 +91,26 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
+	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+		final Expression expression = nullnessPredicate.getExpression();
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		if ( isStruct( expressionType ) ) {
+			// Surprise, the null predicate checks if all components of the struct are null or not,
+			// rather than the column itself, so we have to use the distinct from predicate to implement this instead
+			expression.accept( this );
+			if ( nullnessPredicate.isNegated() ) {
+				appendSql( " is distinct from null" );
+			}
+			else {
+				appendSql( " is not distinct from null" );
+			}
+		}
+		else {
+			super.visitNullnessPredicate( nullnessPredicate );
+		}
+	}
+
+	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
 		if ( getDialect().getVersion().isSameOrAfter( 12 ) ) {
 			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
@@ -58,6 +118,16 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 			}
 			appendSql( "materialized " );
 		}
+	}
+
+	@Override
+	protected boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	protected boolean supportsArrayConstructor() {
+		return true;
 	}
 
 	@Override
@@ -117,13 +187,27 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected void renderSearchClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it's just a hint anyway
+	protected boolean supportsRecursiveSearchClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
-	protected void renderCycleClause(CteStatement cte) {
-		// PostgreSQL does not support this, but it can be emulated
+	protected boolean supportsRecursiveCycleClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected boolean supportsRecursiveCycleUsingClause() {
+		return getDialect().getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	protected void renderStandardCycleClause(CteStatement cte) {
+		super.renderStandardCycleClause( cte );
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+			appendSql( " using " );
+			appendSql( determineCyclePathColumnName( cte ) );
+		}
 	}
 
 	@Override
@@ -152,7 +236,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 				// This could theoretically be emulated by rendering all grouping variations of the query and
 				// connect them via union all but that's probably pretty inefficient and would have to happen
 				// on the query spec level
-				throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+				throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 			}
 		}
 		else {
@@ -186,6 +270,15 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else {
 			appendSql( " escape ''" );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		arithmeticExpression.getLeftHandOperand().accept( this );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 }

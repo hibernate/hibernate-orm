@@ -31,6 +31,7 @@ public class CompositeNaturalIdMappingTest {
 					.addAnnotatedClass( PostalCarrier.class )
 					.addAnnotatedClass( PostalCode.class )
 					.buildMetadata();
+			( (MetadataImplementor) meta ).orderColumns( false );
 			( (MetadataImplementor) meta ).validate();
 		}
 		finally {

@@ -19,8 +19,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
@@ -31,10 +29,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -175,7 +170,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			return;
 		}
 
-		Collections.addAll( affectedTableNames, (String[]) entityDescriptor.getQuerySpaces());
+		Collections.addAll( affectedTableNames, (String[]) entityDescriptor.getQuerySpaces() );
 	}
 
 	@Override
@@ -248,7 +243,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities
 				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
-						&& !hasJoinFetches( entityResult.getFetches() ) ) {
+						&& !entityResult.hasJoinFetches() ) {
 					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
 							.getEntityPersister();
@@ -305,25 +300,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		}
 	}
 
-	private static boolean hasJoinFetches(List<Fetch> fetches) {
-		for ( int i = 0; i < fetches.size(); i++ ) {
-			final Fetch fetch = fetches.get( i );
-			if ( fetch instanceof BasicFetch<?> || fetch.getTiming() == FetchTiming.DELAYED ) {
-				// That's fine
-			}
-			else if ( fetch instanceof EmbeddableResultGraphNode ) {
-				// Check all these fetches as well
-				if ( hasJoinFetches( ( (EmbeddableResultGraphNode) fetch ).getFetches() ) ) {
-					return true;
-				}
-			}
-			else {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	private DomainResult<?> makeImplicitDomainResult(
 			int valuesArrayPosition,
 			Consumer<SqlSelection> sqlSelectionConsumer,
@@ -337,12 +313,16 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) jdbcMapping );
 		sqlSelectionConsumer.accept( sqlSelection );
 
-		return new BasicResult( valuesArrayPosition, name, jdbcMapping.getJavaTypeDescriptor() );
+		return new BasicResult(
+				valuesArrayPosition,
+				name,
+				jdbcMapping
+		);
 	}
 
 	@Override
 	public NamedResultSetMappingMemento toMemento(String name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -35,7 +35,7 @@ public enum AccessType {
 
 	private final String externalName;
 
-	private AccessType(String externalName) {
+	AccessType(String externalName) {
 		this.externalName = externalName;
 	}
 

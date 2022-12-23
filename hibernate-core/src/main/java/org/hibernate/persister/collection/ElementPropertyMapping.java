@@ -7,12 +7,17 @@
 package org.hibernate.persister.collection;
 
 import org.hibernate.QueryException;
+import org.hibernate.Remove;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.Type;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.CollectionPart}
  */
+@Deprecated(since = "6", forRemoval = true)
+@Remove
 public class ElementPropertyMapping implements PropertyMapping {
 
 	private final String[] elementColumns;

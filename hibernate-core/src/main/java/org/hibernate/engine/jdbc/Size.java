@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 /**
  * Models size restrictions/requirements on a column's datatype.
- * <p/>
+ * <p>
  * IMPL NOTE: since we do not necessarily know the datatype up front, and therefore do not necessarily know
  * whether length or precision/scale sizing is needed, we simply account for both here.  Additionally LOB
  * definitions, by standard, are allowed a "multiplier" consisting of 'K' (Kb), 'M' (Mb) or 'G' (Gb).

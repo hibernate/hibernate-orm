@@ -9,6 +9,7 @@ package org.hibernate.orm.test.sql.exec;
 import org.hibernate.orm.test.mapping.SecondaryTableTests;
 import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -44,6 +45,15 @@ public class HqlUpdateExecutionTests {
 		scope.inTransaction(
 				session -> session.createQuery( "update BasicEntity set data = :p" )
 						.setParameter( "p", "xyz" )
+						.executeUpdate()
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-15361")
+	public void testSimpleUpdateAssignability(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "update EntityOfBasics set theDate = current_date" )
 						.executeUpdate()
 		);
 	}

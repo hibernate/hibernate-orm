@@ -61,6 +61,7 @@ dependencies {
         transitive = true
     }
     testImplementation "joda-time:joda-time:2.3"
+    testImplementation dbLibs.h2
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
@@ -132,15 +133,26 @@ xjc {
     }
 }
 
-task copyBundleResources (type: Copy) {
+task copyBundleResourcesXml (type: Copy) {
     inputs.property( "db", db )
+    inputs.property( "dbHost", dbHost )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
-        bundleTokens = dbBundle[db]
+        // Escape
+        bundleTokens = [
+                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
+                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
+                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
+                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
+                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
+        ]
         ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
-    from file('src/test/bundles/templates')
+    from('src/test/bundles/templates') {
+        include '**/*.xml'
+    }
     into ext.bundlesTargetDir
     filter( ReplaceTokens, tokens: ext.bundleTokens)
 
@@ -149,9 +161,35 @@ task copyBundleResources (type: Copy) {
     }
 }
 
+task copyBundleResourcesNonXml (type: Copy) {
+    inputs.property( "db", db )
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        // Escape
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+    }
+
+    from('src/test/bundles/templates') {
+        exclude '**/*.xml'
+    }
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+task copyBundleResources (type: Copy) {
+    inputs.property( "db", db )
+    dependsOn tasks.copyBundleResourcesXml
+    dependsOn tasks.copyBundleResourcesNonXml
+}
+
 processTestResources {
     dependsOn copyBundleResources
-    duplicatesStrategy = DuplicatesStrategy.WARN
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 sourcesJar {
@@ -203,12 +241,64 @@ tasks.withType( Test.class ).each { test ->
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
-
-    // Allow to exclude specific tests
-    if (project.hasProperty('excludeTests')) {
-        test.filter {
-            excludeTestsMatching project.property('excludeTests').toString()
-        }
-    }
 }
 
+// Tests with records
+if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+
+    // Add a new source set, which contains tests that can run on JDK17+
+    sourceSets {
+        testJava17 {
+            java {
+                srcDirs = ['src/test/java17']
+            }
+            // Refer to the main test resources to avoid processing variables twice
+            resources {
+                srcDir 'target/resources/test'
+            }
+        }
+    }
+
+    // For the new source set, we need to configure the source and target version to 17
+    compileTestJava17Java {
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = gradle.ext.javaVersions.test.compiler
+        }
+        sourceCompatibility = 17
+        targetCompatibility = 17
+        // We also depend on the main test resources
+        dependsOn( tasks.processTestResources )
+    }
+
+    // The source set gets a custom configuration which extends the normal test implementation config
+    configurations {
+        testJava17Implementation.extendsFrom(testImplementation, testRuntimeOnly)
+    }
+
+    // Add the output from src/main/java as dependency
+    dependencies {
+        testJava17Implementation files(sourceSets.main.output.classesDirs) {
+            builtBy compileJava
+        }
+    }
+
+    // We execute the Java 17 tests in a custom test task
+    task testJava17(type: Test) {
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = gradle.ext.javaVersions.test.launcher
+        }
+        useJUnitPlatform()
+        testClassesDirs = sourceSets.testJava17.output.classesDirs
+        classpath = sourceSets.testJava17.runtimeClasspath
+
+        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
+                                 " Setting 'net.bytebuddy.experimental=true'." )
+            systemProperty 'net.bytebuddy.experimental', true
+        }
+    }
+
+    testClasses.dependsOn compileTestJava17Java
+    // And run this as part of the check task by default
+    check.dependsOn testJava17
+}

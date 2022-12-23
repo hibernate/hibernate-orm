@@ -6,29 +6,59 @@
  */
 package org.hibernate.annotations;
 
+import static java.util.Locale.ROOT;
+
 /**
- * Possible actions for on-delete.
+ * Enumerates the possible actions for the {@code on delete} clause
+ * of a foreign key constraint. Specifies what action the database
+ * should take when deletion of a row would result in a violation of
+ * the constraint.
  *
  * @author Emmanuel Bernard
+ *
+ * @see OnDelete
  */
 public enum OnDeleteAction {
-	/**
-	 * Take no action.  The default.
-	 */
-	NO_ACTION( "no-action" ),
-	/**
-	 * Use cascade delete capabilities of the database foreign-key.
-	 */
-	CASCADE( "cascade" );
 
-	private final String alternativeName;
+	/**
+	 * No action. The default. An error is raised if rows still reference
+	 * the parent when the constraint is checked, possibly later in the
+	 * transaction.
+	 */
+	NO_ACTION,
 
-	OnDeleteAction(String alternativeName) {
-		this.alternativeName = alternativeName;
-	}
+	/**
+	 * Cascade deletion of the parent to the child.
+	 */
+	CASCADE,
+
+	/**
+	 * Prevents deletion of the parent by raising an error immediately.
+	 *
+	 * @since 6.2
+	 */
+	RESTRICT,
+
+	/**
+	 * Set the referencing foreign key to null.
+	 *
+	 * @since 6.2
+	 */
+	SET_NULL,
+
+	/**
+	 * Set the referencing foreign key to its default value.
+	 *
+	 * @since 6.2
+	 */
+	SET_DEFAULT;
 
 	public String getAlternativeName() {
-		return alternativeName;
+		return toString().toLowerCase(ROOT).replace('_', '-');
+	}
+
+	public String toSqlString() {
+		return toString().toLowerCase(ROOT).replace('_', ' ');
 	}
 
 	public static OnDeleteAction fromExternalForm(Object value) {
@@ -49,7 +79,7 @@ public enum OnDeleteAction {
 		}
 
 		for ( OnDeleteAction checkAction : values() ) {
-			if ( checkAction.alternativeName.equalsIgnoreCase( valueString ) ) {
+			if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
 				return checkAction;
 			}
 		}

@@ -411,9 +411,10 @@ public abstract class AbstractManagedType<J>
 	// Plural attributes
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<PluralAttribute<? super J, ?, ?>> getPluralAttributes() {
-		HashSet attributes = declaredPluralAttributes == null ? new HashSet<PluralAttribute<? super J, ?, ?>>() : new HashSet<PluralAttribute<? super J, ?, ?>>( declaredPluralAttributes.values() );
+		Set<PluralAttribute<? super J, ?, ?>> attributes = declaredPluralAttributes == null
+				? new HashSet<>()
+				: new HashSet<>( declaredPluralAttributes.values() );
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getPluralAttributes() );
 		}
@@ -422,30 +423,26 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public Set<PluralAttribute<J, ?, ?>> getDeclaredPluralAttributes() {
-		return declaredPluralAttributes == null ?
-				Collections.EMPTY_SET : new HashSet<>( declaredPluralAttributes.values() );
+		return declaredPluralAttributes == null
+				? Collections.emptySet()
+				: new HashSet<>( declaredPluralAttributes.values() );
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "RedundantIfStatement"})
-	public PluralPersistentAttribute findPluralAttribute(String name) {
+	public PluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(String name) {
 		PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( getSuperType() != null ) {
-			attribute = getSuperType().findDeclaredPluralAttribute( name );
-			if ( attribute != null ) {
-				return attribute;
-			}
+		else if ( getSuperType() != null ) {
+			return getSuperType().findDeclaredPluralAttribute( name );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public PluralPersistentAttribute<? super J, ?, ?> findDeclaredPluralAttribute(String name) {
 		return declaredPluralAttributes == null ? null : declaredPluralAttributes.get( name );
 	}
@@ -474,7 +471,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public BagPersistentAttribute<? super J, ?> getCollection(String name) {
-		PluralPersistentAttribute attribute = findPluralAttribute( name );
+		PluralPersistentAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().findPluralAttribute( name );
@@ -505,7 +502,7 @@ public abstract class AbstractManagedType<J>
 	public <E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
-		return (BagPersistentAttribute) attribute;
+		return (BagPersistentAttribute<? super J, E>) attribute;
 	}
 
 	private <E> void checkCollectionElementType(PluralAttribute<?,?,?> attribute, String name, Class<E> elementType) {
@@ -515,9 +512,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> CollectionAttribute<J, E> getDeclaredCollection(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
-		return (CollectionAttribute) attribute;
+		return (CollectionAttribute<J, E>) attribute;
 	}
 
 
@@ -527,9 +524,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public SetPersistentAttribute<? super J, ?> getSet(String name) {
-		final PluralAttribute attribute = findPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicSetCheck( attribute, name );
-		return (SetPersistentAttribute) attribute;
+		return (SetPersistentAttribute<? super J, ?>) attribute;
 	}
 
 	private void basicSetCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -544,7 +541,7 @@ public abstract class AbstractManagedType<J>
 	public SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicSetCheck( attribute, name );
-		return (SetPersistentAttribute) attribute;
+		return (SetPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
@@ -562,7 +559,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> SetAttribute<J, E> getDeclaredSet(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkSetElementType( attribute, name, elementType );
 		return ( SetAttribute<J, E> ) attribute;
 	}
@@ -576,7 +573,7 @@ public abstract class AbstractManagedType<J>
 	public ListPersistentAttribute<? super J, ?> getList(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicListCheck( attribute, name );
-		return (ListPersistentAttribute) attribute;
+		return (ListPersistentAttribute<? super J, ?>) attribute;
 	}
 
 	private void basicListCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -591,7 +588,7 @@ public abstract class AbstractManagedType<J>
 	public ListPersistentAttribute<J, ?> getDeclaredList(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicListCheck( attribute, name );
-		return (ListPersistentAttribute) attribute;
+		return (ListPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
@@ -609,7 +606,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E> ListAttribute<J, E> getDeclaredList(String name, Class<E> elementType) {
-		final PluralAttribute attribute = findDeclaredPluralAttribute( name );
+		final PluralAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		checkListElementType( attribute, name, elementType );
 		return ( ListAttribute<J, E> ) attribute;
 	}
@@ -623,7 +620,7 @@ public abstract class AbstractManagedType<J>
 	public MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
 		PluralAttribute<? super J, ?, ?> attribute = findPluralAttribute( name );
 		basicMapCheck( attribute, name );
-		return (MapPersistentAttribute) attribute;
+		return (MapPersistentAttribute<? super J, ?, ?>) attribute;
 	}
 
 	private void basicMapCheck(PluralAttribute<? super J, ?, ?> attribute, String name) {
@@ -638,7 +635,7 @@ public abstract class AbstractManagedType<J>
 	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
 		final PluralPersistentAttribute<? super J, ?, ?> attribute = findDeclaredPluralAttribute( name );
 		basicMapCheck( attribute, name );
-		return (MapPersistentAttribute) attribute;
+		return (MapPersistentAttribute<J, ?, ?>) attribute;
 	}
 
 	@Override
@@ -672,10 +669,9 @@ public abstract class AbstractManagedType<J>
 	}
 
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public SubGraphImplementor<J> makeSubGraph() {
-		return new SubGraphImpl( this, true, jpaMetamodel() );
+		return new SubGraphImpl<>( this, true, jpaMetamodel() );
 	}
 
 	@Override
@@ -749,5 +745,10 @@ public abstract class AbstractManagedType<J>
 		public void finishUp() {
 			inFlightAccess = null;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "[" + hibernateTypeName + "]";
 	}
 }

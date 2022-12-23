@@ -26,7 +26,7 @@ package org.hibernate.query.sqm;
  * @author Gavin King
  */
 public enum CastType {
-	STRING,
+	STRING, CLOB,
 	BOOLEAN, INTEGER_BOOLEAN, YN_BOOLEAN, TF_BOOLEAN,
 	INTEGER, LONG, FLOAT, DOUBLE, FIXED,
 	DATE, TIME, TIMESTAMP,

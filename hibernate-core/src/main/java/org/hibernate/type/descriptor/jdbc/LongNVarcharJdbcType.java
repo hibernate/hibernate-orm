@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -46,10 +47,13 @@ public class LongNVarcharJdbcType extends NVarcharJdbcType {
 		if ( indicators.isLob() ) {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
 		}
+		else if ( shouldUseMaterializedLob( indicators ) ) {
+			jdbcTypeCode = indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
+		}
 		else {
 			jdbcTypeCode = indicators.isNationalized() ? Types.LONGNVARCHAR : Types.LONGVARCHAR;
 		}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 }

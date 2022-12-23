@@ -86,6 +86,9 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public JavaType<J> getAssembledJavaType() {
+		if ( valueConverter != null ) {
+			return valueConverter.getDomainJavaType();
+		}
 		return assembledJavaType;
 	}
 

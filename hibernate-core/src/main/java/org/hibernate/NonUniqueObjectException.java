@@ -9,9 +9,9 @@ package org.hibernate;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * This exception is thrown when an operation would break session-scoped identity. This occurs if the
- * user tries to associate two different instances of the same Java class with a particular identifier,
- * in the scope of a single Session.
+ * This exception is thrown when an operation would break session-scoped identity.
+ * This occurs if the user tries to associate two different instances of the same
+ * Java class with a particular identifier, in the scope of a single Session.
  *
  * @author Gavin King
  */
@@ -20,8 +20,9 @@ public class NonUniqueObjectException extends HibernateException {
 	private final String entityName;
 
 	/**
-	 * Constructs a NonUniqueObjectException using the given information.
-	 *  @param message A message explaining the exception condition
+	 * Constructs a {@code NonUniqueObjectException} using the given information.
+	 *
+	 * @param message A message explaining the exception condition
 	 * @param entityId The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
@@ -32,8 +33,10 @@ public class NonUniqueObjectException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a NonUniqueObjectException using the given information, using a standard message.
-	 *  @param entityId The identifier of the entity
+	 * Constructs a {@code NonUniqueObjectException} using the given information,
+	 * and using a standard message.
+	 *
+	 * @param entityId The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
 	public NonUniqueObjectException(Object entityId, String entityName) {

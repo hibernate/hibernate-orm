@@ -19,7 +19,7 @@ public class RefreshEvent extends AbstractEvent {
 	private final Object object;
 	private String entityName;
 
-	private LockOptions lockOptions = new LockOptions().setLockMode(LockMode.READ);
+	private LockOptions lockOptions = new LockOptions(LockMode.READ);
 
 	public RefreshEvent(Object object, EventSource source) {
 		super(source);

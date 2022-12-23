@@ -28,10 +28,14 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * A base implementation of EntityEntry
@@ -42,6 +46,7 @@ import org.hibernate.proxy.HibernateProxy;
  * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
+
 	protected final Object id;
 	protected Object[] loadedState;
 	protected Object version;
@@ -95,13 +100,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		if ( status != Status.READ_ONLY ) {
 			this.loadedState = loadedState;
 		}
-		this.id=id;
-		this.rowId=rowId;
+		this.id = id;
+		this.rowId = rowId;
 		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
-		this.version=version;
+		this.version = version;
 		setCompressedValue( EnumState.LOCK_MODE, lockMode );
 		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
-		this.persister=persister;
+		this.persister = persister;
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -218,6 +223,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
+	public void postInsert(Object version) {
+		this.version = version;
+	}
+
+	@Override
 	public EntityPersister getPersister() {
 		return persister;
 	}
@@ -254,19 +264,23 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		this.loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
-		if ( getPersister().isVersioned() ) {
+		final EntityPersister persister = getPersister();
+		if ( persister.isVersioned() ) {
 			this.version = nextVersion;
-			getPersister().setValue( entity, getPersister().getVersionProperty(), nextVersion );
+			persister.setValue( entity, persister.getVersionProperty(), nextVersion );
 		}
 
-		if( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
 
-		getPersistenceContext().getSession()
+		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
+		session
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+				.resetDirty( entity, persister, session.asSessionImplementor() );
+	}
+
+	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
+		entity.$$_hibernate_clearDirtyAttributes();
 	}
 
 	@Override
@@ -300,7 +314,8 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			return null;
 		}
 		else {
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final AttributeMapping attributeMapping = persister.findAttributeMapping( propertyName );
+			final int propertyIndex = attributeMapping.getStateArrayPosition();
 			return loadedState[propertyIndex];
 		}
 	}
@@ -312,7 +327,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			assert propertyName != null;
 			assert loadedState != null;
 
-			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			final int propertyIndex = persister.findAttributeMapping( propertyName ).getStateArrayPosition();
 			loadedState[propertyIndex] = collection;
 		}
 	}
@@ -325,28 +340,27 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if ( entity instanceof SelfDirtinessTracker ) {
+		if ( ManagedTypeHelper.isSelfDirtinessTracker( entity ) ) {
 			boolean uninitializedProxy = false;
-			if ( entity instanceof PersistentAttributeInterceptable ) {
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+			if ( isPersistentAttributeInterceptable( entity ) ) {
+				final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
 					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames();
 				}
 			}
-			else if ( entity instanceof HibernateProxy ) {
-				uninitializedProxy = ( (HibernateProxy) entity ).getHibernateLazyInitializer()
-						.isUninitialized();
+			else if ( isHibernateProxy( entity ) ) {
+				uninitializedProxy = HibernateProxy.extractLazyInitializer( entity ).isUninitialized();
 			}
 			// we never have to check an uninitialized proxy
 			return uninitializedProxy || !persister.hasCollections()
 					&& !persister.hasMutableProperties()
-					&& !( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+					&& !ManagedTypeHelper.asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) entity;
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// we never have to check an uninitialized proxy
@@ -356,8 +370,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				getPersistenceContext().getSession().getFactory().getCustomEntityDirtinessStrategy();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) getPersistenceContext().getSession() ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) getPersistenceContext().getSession() );
+		final Session session = getPersistenceContext().getSession().asSessionImplementor();
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session  ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
 		}
 
 		if ( getPersister().hasMutableProperties() ) {

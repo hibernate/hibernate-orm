@@ -9,13 +9,10 @@ package org.hibernate.metamodel.model.convert.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -26,25 +23,19 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
-public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E, Number>, Serializable {
+public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> implements EnumValueConverter<E, N>, Serializable {
 
 	private final EnumJavaType<E> enumJavaType;
 	private final JdbcType jdbcType;
-	private final JavaType<Number> relationalJavaType;
-
-	private transient ValueExtractor<Number> valueExtractor;
-	private transient ValueBinder<Number> valueBinder;
+	private final JavaType<N> relationalJavaType;
 
 	public OrdinalEnumValueConverter(
 			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
-			JavaType<Number> relationalJavaType) {
+			JavaType<N> relationalJavaType) {
 		this.enumJavaType = enumJavaType;
 		this.jdbcType = jdbcType;
 		this.relationalJavaType = relationalJavaType;
-
-		this.valueExtractor = jdbcType.getExtractor( relationalJavaType );
-		this.valueBinder = jdbcType.getBinder( relationalJavaType );
 	}
 
 	@Override
@@ -52,14 +43,14 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 		return enumJavaType.fromOrdinal( relationalForm == null ? null : relationalForm.intValue() );
 	}
 
-	@Override
-	public Number toRelationalValue(E domainForm) {
-		return enumJavaType.toOrdinal( domainForm );
+	@Override @SuppressWarnings("unchecked")
+	public N toRelationalValue(E domainForm) {
+		return (N) enumJavaType.toOrdinal( domainForm );
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcType.getJdbcTypeCode();
+		return jdbcType.getDefaultSqlTypeCode();
 	}
 
 	@Override
@@ -68,7 +59,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public JavaType<Number> getRelationalJavaType() {
+	public JavaType<N> getRelationalJavaType() {
 		return relationalJavaType;
 	}
 
@@ -78,16 +69,9 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 		return Integer.toString( ( (Enum) value ).ordinal() );
 	}
 
-	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
-		stream.defaultReadObject();
-
-		this.valueExtractor = jdbcType.getExtractor( relationalJavaType );
-		this.valueBinder = jdbcType.getBinder( relationalJavaType );
-	}
-
 	@Override
-	public void writeValue(PreparedStatement statement, E value, int position, SharedSessionContractImplementor session)
-			throws SQLException {
-		valueBinder.bind( statement, toRelationalValue( value ), position, session );
+	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
+		int max = getDomainJavaType().getJavaTypeClass().getEnumConstants().length - 1;
+		return dialect.getCheckCondition( columnName, 0, max );
 	}
 }

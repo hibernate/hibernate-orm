@@ -15,6 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.SelectBeforeUpdate;
@@ -173,6 +174,7 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 	}
 
 	@Entity(name = "Foo")
+	@Table(name = "FooSBU")
 	@SelectBeforeUpdate
 	public static class Foo {
 		@Id
@@ -228,6 +230,7 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 	}
 
 	@Entity(name = "Bar")
+	@Table(name = "BarSBU")
 	public static class Bar {
 		@Id
 		private Integer id;
@@ -280,6 +283,7 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 	}
 
 	@Embeddable
+	@Table(name = "CommentSBU")
 	public static class Comment {
 		@Column(name = "bar_comment")
 		private String comment;

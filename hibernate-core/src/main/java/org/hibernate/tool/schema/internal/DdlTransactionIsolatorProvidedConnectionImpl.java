@@ -40,8 +40,17 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 
 	@Override
 	public Connection getIsolatedConnection() {
+		return getIsolatedConnection(true);
+	}
+
+	@Override
+	public Connection getIsolatedConnection(boolean autocommit) {
 		try {
-			return jdbcContext.getJdbcConnectionAccess().obtainConnection();
+			Connection connection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
+			if ( connection.getAutoCommit() != autocommit ) {
+				throw new SchemaManagementException( "User-provided Connection via JdbcConnectionAccessProvidedConnectionImpl has wrong auto-commit mode" );
+			}
+			return connection;
 		}
 		catch (SQLException e) {
 			// should never happen

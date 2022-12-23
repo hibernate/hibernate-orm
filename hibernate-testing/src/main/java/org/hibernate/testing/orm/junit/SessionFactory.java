@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Steve Ebersole
  */
 @Inherited
-@Target( ElementType.TYPE )
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )
 
 @TestInstance( TestInstance.Lifecycle.PER_CLASS )
@@ -51,7 +51,7 @@ public @interface SessionFactory {
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
 	/**
-	 * Short hand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
+	 * Shorthand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
 	 *
 	 * @see SQLStatementInspector
 	 */

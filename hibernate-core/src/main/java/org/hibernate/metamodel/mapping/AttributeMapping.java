@@ -9,7 +9,8 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.generator.Generator;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 
@@ -19,7 +20,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
  * @author Steve Ebersole
  */
 public interface AttributeMapping
-		extends ModelPart, ValueMapping, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
+		extends ValuedModelPart, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
 	/**
 	 * The name of the mapped attribute
 	 */
@@ -38,7 +39,7 @@ public interface AttributeMapping
 	/**
 	 * Access to AttributeMetadata
 	 */
-	AttributeMetadataAccess getAttributeMetadataAccess();
+	AttributeMetadata getAttributeMetadata();
 
 	/**
 	 * The managed type that declares this attribute
@@ -69,7 +70,7 @@ public interface AttributeMapping
 	 *
 	 * @apiNote Only relevant for non-id attributes
 	 */
-	ValueGeneration getValueGeneration();
+	Generator getGenerator();
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {
@@ -78,6 +79,17 @@ public interface AttributeMapping
 
 	@Override
 	default MutabilityPlan<?> getExposedMutabilityPlan() {
-		return getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan();
+		return getAttributeMetadata().getMutabilityPlan();
 	}
+
+	default int compare(Object value1, Object value2) {
+		//noinspection unchecked,rawtypes
+		return ( (JavaType) getJavaType() ).getComparator().compare( value1, value2 );
+	}
+
+	@Override //Overrides multiple interfaces!
+	default AttributeMapping asAttributeMapping() {
+		return this;
+	}
+
 }

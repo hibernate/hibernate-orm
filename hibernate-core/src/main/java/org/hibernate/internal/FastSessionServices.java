@@ -10,19 +10,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -32,6 +30,7 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEventListener;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -68,6 +67,10 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.FormatMapper;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.PessimisticLockScope;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
@@ -154,7 +157,7 @@ public final class FastSessionServices {
 	final MultiTenantConnectionProvider multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	final JdbcServices jdbcServices;
+	public final JdbcServices jdbcServices;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
 	final FlushMode initialSessionFlushMode;
@@ -163,8 +166,12 @@ public final class FastSessionServices {
 	final LockOptions defaultLockOptions;
 	final int defaultJdbcBatchSize;
 
+	//Some fields are handy as public - still considered internal.
+	public final EntityCopyObserverFactory entityCopyObserverFactory;
+	public final BatchBuilder batchBuilder;
+	public final Dialect dialect;
+
 	//Private fields:
-	private final Dialect dialect;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
@@ -231,6 +238,7 @@ public final class FastSessionServices {
 		this.classLoaderService = sr.getService( ClassLoaderService.class );
 		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = sr.getService( JdbcServices.class );
+		this.entityCopyObserverFactory = sr.getService( EntityCopyObserverFactory.class );
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sf, transactionCoordinatorBuilder );
 
@@ -245,6 +253,7 @@ public final class FastSessionServices {
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
+		this.batchBuilder = sr.getService( BatchBuilder.class );
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -374,10 +383,20 @@ public final class FastSessionServices {
 	}
 
 	public FormatMapper getJsonFormatMapper() {
+		if ( jsonFormatMapper == null ) {
+			throw new HibernateException(
+					"Could not find a FormatMapper for the JSON format, which is required for mapping JSON types. JSON FormatMapper configuration is automatic, but requires that you have either Jackson or a JSONB implementation like Yasson on the class path."
+			);
+		}
 		return jsonFormatMapper;
 	}
 
 	public FormatMapper getXmlFormatMapper() {
+		if ( xmlFormatMapper == null ) {
+			throw new HibernateException(
+					"Could not find a FormatMapper for the XML format, which is required for mapping XML types. XML FormatMapper configuration is automatic, but requires that you have either Jackson XML or a JAXB implementation like Glassfish JAXB on the class path."
+			);
+		}
 		return xmlFormatMapper;
 	}
 }

@@ -24,6 +24,7 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
+ * Adaptor between {@link UserType} and {@link org.hibernate.type.descriptor.java.JavaType}.
  *
  * @author Steve Ebersole
  */
@@ -81,7 +82,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
+		return context.getJdbcType( userType.getSqlType() );
 	}
 
 	@Override
@@ -132,8 +133,6 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
-		assert value == null || userType.returnedClass().isInstance( value );
-
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
 		if ( value != null && !type.isInstance( value ) && valueConverter != null ) {
 			final Object relationalValue = valueConverter.toRelationalValue( value );
@@ -145,8 +144,6 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public <X> J wrap(X value, WrapperOptions options) {
-//		assert value == null || userType.returnedClass().isInstance( value );
-
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
 		if ( value != null && !userType.returnedClass().isInstance( value ) && valueConverter != null ) {
 			final J domainValue = valueConverter.toDomainValue( value );

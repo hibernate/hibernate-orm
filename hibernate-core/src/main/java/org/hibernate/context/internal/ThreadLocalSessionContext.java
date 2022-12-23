@@ -128,7 +128,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Strictly provided for sub-classing purposes; specifically to allow long-session
 	 * support.
-	 * <p/>
+	 * <p>
 	 * This implementation always just opens a new session.
 	 *
 	 * @return the built or (re)obtained session.

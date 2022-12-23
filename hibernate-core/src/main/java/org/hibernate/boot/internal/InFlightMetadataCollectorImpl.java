@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,11 +27,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
@@ -40,13 +41,26 @@ import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AggregateComponentSecondPass;
+import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.internal.CreateKeySecondPass;
+import org.hibernate.boot.model.internal.FkSecondPass;
+import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
+import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.QuerySecondPass;
+import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
+import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
+import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
+import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -60,25 +74,14 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
-import org.hibernate.cfg.AnnotatedClassType;
+import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.CreateKeySecondPass;
-import org.hibernate.cfg.FkSecondPass;
-import org.hibernate.cfg.IdGeneratorResolverSecondPass;
-import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.PropertyData;
-import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.cfg.RecoverableException;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.SecondaryTableFromAnnotationSecondPass;
-import org.hibernate.cfg.SecondaryTableSecondPass;
-import org.hibernate.cfg.SetBasicValueTypeSecondPass;
-import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -107,6 +110,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
@@ -114,15 +118,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 /**
- * The implementation of the in-flight Metadata collector contract.
- *
+ * The implementation of the {@linkplain InFlightMetadataCollector in-flight
+ * metadata collector contract}.
+ * <p>
  * The usage expectation is that this class is used until all Metadata info is
  * collected and then {@link #buildMetadataInstance} is called to generate
  * the complete (and immutable) Metadata object.
  *
  * @author Steve Ebersole
  */
-public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector {
+public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector, ConverterRegistry {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final BootstrapContext bootstrapContext;
@@ -161,7 +166,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
-	private Map<Class, MappedSuperclass> mappedSuperClasses;
+	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
@@ -232,6 +237,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public Set<String> getContributors() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void orderColumns(boolean forceOrdering) {
+		// nothing to do
 	}
 
 	@Override
@@ -316,7 +326,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( matchingPersistentClass != null ) {
 			throw new DuplicateMappingException(
 					String.format(
-							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed!",
+							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed",
 							matchingPersistentClass.getClassName(),
 							persistentClass.getClassName(),
 							jpaEntityName
@@ -427,8 +437,25 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return registeredCompositeUserTypes.get( embeddableType );
 	}
 
-	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
+	private Map<Class<?>, Class<? extends UserType<?>>> registeredUserTypes;
+	@Override
+	public void registerUserType(Class<?> basicType, Class<? extends UserType<?>> userType) {
+		if ( registeredUserTypes == null ) {
+			registeredUserTypes = new HashMap<>();
+		}
+		registeredUserTypes.put( basicType, userType );
+	}
 
+	@Override
+	public Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType) {
+		if ( registeredUserTypes == null ) {
+			return null;
+		}
+
+		return registeredUserTypes.get( basicType );
+	}
+
+	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
 
 	@Override
 	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
@@ -456,9 +483,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		final Properties parameters;
+		final Map<String,String> parameters;
 		if ( registrationAnnotation.parameters().length > 0 ) {
-			parameters = new Properties();
+			parameters = new HashMap<>();
 			for ( Parameter parameter : registrationAnnotation.parameters() ) {
 				parameters.put( parameter.name(), parameter.value() );
 			}
@@ -473,10 +500,28 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters
 
+
+	@Override
+	public ConverterRegistry getConverterRegistry() {
+		return this;
+	}
+
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		attributeConverterManager.addConverter(
 				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
+		);
+	}
+
+	@Override
+	public void addOverridableConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+		attributeConverterManager.addConverter(
+				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() ) {
+					@Override
+					public boolean overrideable() {
+						return true;
+					}
+				}
 		);
 	}
 
@@ -807,12 +852,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addImport(String importName, String entityName) {
-		if ( importName == null || entityName == null ) {
+	public void addImport(String importName, String className) {
+		if ( importName == null || className == null ) {
 			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
-		log.tracev( "Import: {0} -> {1}", importName, entityName );
-		String old = imports.put( importName, entityName );
+		log.tracev( "Import: {0} -> {1}", importName, className);
+		String old = imports.put( importName, className);
 		if ( old != null ) {
 			log.debugf( "import name [%s] overrode previous [{%s}]", importName, old );
 		}
@@ -1009,8 +1054,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 */
 	private class TableColumnNameBinding implements Serializable {
 		private final String tableName;
-		private Map<Identifier, String> logicalToPhysical = new HashMap<>();
-		private Map<String, Identifier> physicalToLogical = new HashMap<>();
+		private final Map<Identifier, String> logicalToPhysical = new HashMap<>();
+		private final Map<String, Identifier> physicalToLogical = new HashMap<>();
 
 		private TableColumnNameBinding(String tableName) {
 			this.tableName = tableName;
@@ -1105,18 +1150,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		Table currentTable = table;
-		String physicalName = null;
-
 		while ( currentTable != null ) {
 			final TableColumnNameBinding binding = columnNameBindingByTableMap.get( currentTable );
 			if ( binding != null ) {
-				physicalName = binding.logicalToPhysical.get( logicalName );
+				final String physicalName = binding.logicalToPhysical.get( logicalName );
 				if ( physicalName != null ) {
-					break;
+					return physicalName;
 				}
 			}
 
-			if ( DenormalizedTable.class.isInstance( currentTable ) ) {
+			if ( currentTable instanceof DenormalizedTable ) {
 				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
 			}
 			else {
@@ -1124,12 +1167,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			}
 		}
 
-		if ( physicalName == null ) {
-			throw new MappingException(
-					"Unable to find column with logical name " + logicalName.render() + " in table " + table.getName()
-			);
-		}
-		return physicalName;
+		throw new MappingException( "Unable to find column with logical name " + logicalName.render()
+				+ " in table " + table.getName() );
 	}
 
 	@Override
@@ -1190,21 +1229,27 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public AnnotatedClassType addClassType(XClass clazz) {
-		AnnotatedClassType type;
-		if ( clazz.isAnnotationPresent( Entity.class ) ) {
-			type = AnnotatedClassType.ENTITY;
-		}
-		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
-			type = AnnotatedClassType.EMBEDDABLE;
-		}
-		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
-			type = AnnotatedClassType.MAPPED_SUPERCLASS;
-		}
-		else {
-			type = AnnotatedClassType.NONE;
-		}
+		final AnnotatedClassType type = getAnnotatedClassType(clazz);
 		annotatedClassTypeMap.put( clazz.getName(), type );
 		return type;
+	}
+
+	private static AnnotatedClassType getAnnotatedClassType(XClass clazz) {
+		if ( clazz.isAnnotationPresent( Entity.class ) ) {
+			return AnnotatedClassType.ENTITY;
+		}
+		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+			return AnnotatedClassType.EMBEDDABLE;
+		}
+		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
+			return AnnotatedClassType.MAPPED_SUPERCLASS;
+		}
+		else if ( clazz.isAnnotationPresent( Imported.class ) ) {
+			return AnnotatedClassType.IMPORTED;
+		}
+		else {
+			return AnnotatedClassType.NONE;
+		}
 	}
 
 
@@ -1595,6 +1640,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
+	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
@@ -1616,6 +1662,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof SetBasicValueTypeSecondPass ) {
 			addSetBasicValueTypeSecondPass( (SetBasicValueTypeSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof AggregateComponentSecondPass ) {
+			addAggregateComponentSecondPass( (AggregateComponentSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof FkSecondPass ) {
 			addFkSecondPass( (FkSecondPass) secondPass, onTopOfTheQueue );
@@ -1661,6 +1710,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			setBasicValueTypeSecondPassList = new ArrayList<>();
 		}
 		addSecondPass( secondPass, setBasicValueTypeSecondPassList, onTopOfTheQueue );
+	}
+
+	private void addAggregateComponentSecondPass(AggregateComponentSecondPass secondPass, boolean onTopOfTheQueue) {
+		if ( aggregateComponentSecondPassList == null ) {
+			aggregateComponentSecondPassList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, aggregateComponentSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1720,12 +1776,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * Ugh!  But we need this done before we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
+		assert !inSecondPass;
 		inSecondPass = true;
 
 		try {
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
+			processSecondPasses( aggregateComponentSecondPassList );
 
 			composites.forEach( Component::sortProperties );
 
@@ -1831,7 +1889,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
 	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
 	 * on some sort of table name sorting which failed in certain circumstances.
-	 * <p/>
+	 * <p>
 	 * See {@code ANN-722} and {@code ANN-730}
 	 *
 	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready
@@ -1845,24 +1903,21 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			Map<String, Set<FkSecondPass>> isADependencyOf,
 			String startTable,
 			String currentTable) {
-
 		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
-
-		// bottom out
-		if ( dependencies == null || dependencies.size() == 0 ) {
-			return;
-		}
-
-		for ( FkSecondPass sp : dependencies ) {
-			String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
-			if ( dependentTable.compareTo( startTable ) == 0 ) {
-				throw new AnnotationException( "Foreign key circularity dependency involving the following tables: " + startTable + ", " + dependentTable );
-			}
-			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
-			if ( !orderedFkSecondPasses.contains( sp ) ) {
-				orderedFkSecondPasses.add( 0, sp );
+		if ( dependencies != null ) {
+			for ( FkSecondPass sp : dependencies ) {
+				String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
+				if ( dependentTable.compareTo( startTable ) == 0 ) {
+					throw new AnnotationException( "Circular foreign key dependency involving tables '"
+							+ startTable + "' and '" + dependentTable + "'" );
+				}
+				buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
+				if ( !orderedFkSecondPasses.contains( sp ) ) {
+					orderedFkSecondPasses.add( 0, sp );
+				}
 			}
 		}
+		// else bottom out
 	}
 
 	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {
@@ -1940,45 +1995,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				Identifier nameIdentifier;
 
-				ImplicitForeignKeyNameSource foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
-					final List<Identifier> columnNames = extractColumnNames( foreignKey.getColumns() );
-					List<Identifier> referencedColumnNames = null;
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return columnNames;
-					}
-
-					@Override
-					public Identifier getReferencedTableName() {
-						return foreignKey.getReferencedTable().getNameIdentifier();
-					}
-
-					@Override
-					public List<Identifier> getReferencedColumnNames() {
-						if ( referencedColumnNames == null ) {
-							referencedColumnNames = extractColumnNames( foreignKey.getReferencedColumns() );
-						}
-						return referencedColumnNames;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return foreignKey.getName() != null ? Identifier.toIdentifier( foreignKey.getName() ) : null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-				};
-
-				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(foreignKeyNameSource);
+				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+						.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
 
 				foreignKey.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
@@ -2035,7 +2053,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), buildingContext );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.isNameExplicit(), holder.getColumns(), buildingContext );
 			}
 		}
 
@@ -2045,14 +2063,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void buildUniqueKeyFromColumnNames(
 			Table table,
 			String keyName,
+			boolean nameExplicit,
 			String[] columnNames,
 			MetadataBuildingContext buildingContext) {
-		buildUniqueKeyFromColumnNames( table, keyName, columnNames, null, true, buildingContext );
+		buildUniqueKeyFromColumnNames( table, keyName, nameExplicit, columnNames, null, true, buildingContext );
 	}
 
 	private void buildUniqueKeyFromColumnNames(
 			final Table table,
 			String keyName,
+			boolean nameExplicit,
 			final String[] columnNames,
 			String[] orderings,
 			boolean unique,
@@ -2064,130 +2084,126 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		for ( int index = 0; index < size; index++ ) {
 			final String logicalColumnName = columnNames[index];
 			try {
-				final String physicalColumnName = getPhysicalColumnName( table, logicalColumnName );
-				columns[index] = new Column( physicalColumnName );
-				unbound.add( columns[index] );
+				Column column = table.getColumn( buildingContext.getMetadataCollector(), logicalColumnName );
+				if ( column == null ) {
+					throw new AnnotationException(
+							"Table '" + table.getName() + "' has no column named '" + logicalColumnName
+									+ "' matching the column specified in '@UniqueConstraint'"
+					);
+				}
+				columns[index] = column;
+				unbound.add( column );
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {
-				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.  In order
-				// to exhaustively report all of the unbound columns at once, w/o an NPE in
+				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.
+				// In order to exhaustively report all the unbound columns at once, w/o an NPE in
 				// Constraint#generateName's array sorting, simply create a fake Column.
 				columns[index] = new Column( logicalColumnName );
 				unboundNoLogical.add( columns[index] );
 			}
 		}
 
-		final String originalKeyName = keyName;
-
-		if ( unique ) {
-			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
-				new ImplicitUniqueKeyNameSource() {
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					private List<Identifier> columnNameIdentifiers;
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						// be lazy about building these
-						if ( columnNameIdentifiers == null ) {
-							columnNameIdentifiers = toIdentifiers( columnNames );
-						}
-						return columnNameIdentifiers;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
-					}
-				}
-			);
-			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
-				if ( table.containsColumn( column ) ) {
-					uk.addColumn( column, order );
-					unbound.remove( column );
-				}
-			}
-		}
-		else {
-			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineIndexName(
-				new ImplicitIndexNameSource() {
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-
-					@Override
-					public Identifier getTableName() {
-						return table.getNameIdentifier();
-					}
-
-					private List<Identifier> columnNameIdentifiers;
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						// be lazy about building these
-						if ( columnNameIdentifiers == null ) {
-							columnNameIdentifiers = toIdentifiers( columnNames );
-						}
-						return columnNameIdentifiers;
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
-					}
-				}
-			);
-			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-			Index index = table.getOrCreateIndex( keyName );
-			for ( int i = 0; i < columns.length; i++ ) {
-				Column column = columns[i];
-				String order = orderings != null ? orderings[i] : null;
-				if ( table.containsColumn( column ) ) {
-					index.addColumn( column, order );
-					unbound.remove( column );
-				}
-			}
-		}
+		createIndexOrUniqueKey( table, keyName, nameExplicit, columnNames, orderings, unique, buildingContext, columns, unbound );
 
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			StringBuilder sb = new StringBuilder( "Unable to create " );
-			if ( unique ) {
-				sb.append( "unique key constraint (" );
-			}
-			else {
-				sb.append( "index (" );
-			}
-			for ( String columnName : columnNames ) {
-				sb.append( columnName ).append( ", " );
-			}
-			sb.setLength( sb.length() - 2 );
-			sb.append( ") on table " ).append( table.getName() ).append( ": database column " );
-			for ( Column column : unbound ) {
-				sb.append("'").append( column.getName() ).append( "', " );
-			}
-			for ( Column column : unboundNoLogical ) {
-				sb.append("'").append( column.getName() ).append( "', " );
-			}
-			sb.setLength( sb.length() - 2 );
-			sb.append( " not found. Make sure that you use the correct column name which depends on the naming strategy in use (it may not be the same as the property name in the entity, especially for relational types)" );
-			throw new AnnotationException( sb.toString() );
+			throwUnableToCreateConstraint( table, columnNames, unique, unbound, unboundNoLogical );
 		}
+	}
+
+	private void createIndexOrUniqueKey(
+			Table table,
+			String originalKeyName,
+			boolean nameExplicit,
+			String[] columnNames,
+			String[] orderings,
+			boolean unique,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		if (unique) {
+			createUniqueKey( table, originalKeyName, nameExplicit, columnNames, orderings, buildingContext, columns, unbound );
+		}
+		else {
+			createIndex( table, originalKeyName, columnNames, orderings, buildingContext, columns, unbound );
+		}
+	}
+
+	private void createIndex(
+			Table table,
+			String originalKeyName,
+			String[] columnNames,
+			String[] orderings,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+				.determineIndexName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
+		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+
+		final Index index = table.getOrCreateIndex( keyName );
+		for (int i = 0; i < columns.length; i++ ) {
+			Column column = columns[i];
+			String order = orderings != null ? orderings[i] : null;
+			if ( table.containsColumn( column ) ) {
+				index.addColumn( column, order );
+				unbound.remove( column );
+			}
+		}
+	}
+
+	private void createUniqueKey(
+			Table table,
+			String originalKeyName,
+			boolean nameExplicit,
+			String[] columnNames,
+			String[] orderings,
+			MetadataBuildingContext buildingContext,
+			Column[] columns,
+			Set<Column> unbound) {
+		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+				.determineUniqueKeyName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
+		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+
+		final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
+		uk.setNameExplicit(nameExplicit);
+		for (int i = 0; i < columns.length; i++ ) {
+			Column column = columns[i];
+			String order = orderings != null ? orderings[i] : null;
+			if ( table.containsColumn( column ) ) {
+				uk.addColumn( column, order );
+				unbound.remove( column );
+			}
+		}
+	}
+
+	private static void throwUnableToCreateConstraint(
+			Table table,
+			String[] columnNames,
+			boolean unique,
+			Set<Column> unbound,
+			Set<Column> unboundNoLogical) {
+		final StringBuilder message = new StringBuilder( "Unable to create " );
+		if (unique) {
+			message.append( "unique key constraint (" );
+		}
+		else {
+			message.append( "index (" );
+		}
+		for ( String columnName : columnNames) {
+			message.append( columnName ).append( ", " );
+		}
+		message.setLength( message.length() - 2 );
+		message.append( ") on table '" ).append( table.getName() ).append( "' since the column " );
+		for ( Column column : unbound) {
+			message.append("'").append( column.getName() ).append( "', " );
+		}
+		for ( Column column : unboundNoLogical) {
+			message.append("'").append( column.getName() ).append( "', " );
+		}
+		message.setLength( message.length() - 2 );
+		message.append( " was not found (specify the correct column name, which depends on the naming strategy, and may not be the same as the entity property name)" );
+		throw new AnnotationException( message.toString() );
 	}
 
 	private void processJPAIndexHolders(MetadataBuildingContext buildingContext) {
@@ -2202,6 +2218,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				buildUniqueKeyFromColumnNames(
 						table,
 						holder.getName(),
+						!holder.getName().isEmpty(),
 						holder.getColumns(),
 						holder.getOrdering(),
 						holder.isUnique(),
@@ -2292,7 +2309,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 */
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
-		processExportableProducers( );
+		processExportableProducers();
 
 		try {
 			return new MetadataImpl(
@@ -2361,13 +2378,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		It was done this way in the old code too, so no "regression" here; but
 		//		it could be done better
 		try {
-			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
+			final Generator generator = identifierValueBinding.createGenerator(
 					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
 					entityBinding
 			);
 
-			ig.registerExportables( getDatabase() );
+			if ( generator instanceof ExportableProducer ) {
+				( (ExportableProducer) generator ).registerExportables( getDatabase() );
+			}
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed
@@ -2383,5 +2402,94 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return null;
 		}
 		return identifier.render( dialect );
+	}
+
+	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
+		private final MetadataBuildingContext buildingContext;
+		private final Table table;
+		private final String[] columnNames;
+		private final String originalKeyName;
+
+		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
+			this.buildingContext = buildingContext;
+			this.table = table;
+			this.columnNames = columnNames;
+			this.originalKeyName = originalKeyName;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return buildingContext;
+		}
+
+		@Override
+		public Identifier getTableName() {
+			return table.getNameIdentifier();
+		}
+
+		private List<Identifier> columnNameIdentifiers;
+
+		@Override
+		public List<Identifier> getColumnNames() {
+			// be lazy about building these
+			if ( columnNameIdentifiers == null ) {
+				columnNameIdentifiers = toIdentifiers(columnNames);
+			}
+			return columnNameIdentifiers;
+		}
+
+		@Override
+		public Identifier getUserProvidedIdentifier() {
+			return originalKeyName != null ? Identifier.toIdentifier(originalKeyName) : null;
+		}
+	}
+
+	private class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
+		final List<Identifier> columnNames;
+		private final ForeignKey foreignKey;
+		private final Table table;
+		private final MetadataBuildingContext buildingContext;
+		List<Identifier> referencedColumnNames;
+
+		public ForeignKeyNameSource(ForeignKey foreignKey, Table table, MetadataBuildingContext buildingContext) {
+			this.foreignKey = foreignKey;
+			this.table = table;
+			this.buildingContext = buildingContext;
+			columnNames = extractColumnNames(foreignKey.getColumns());
+			referencedColumnNames = null;
+		}
+
+		@Override
+		public Identifier getTableName() {
+			return table.getNameIdentifier();
+		}
+
+		@Override
+		public List<Identifier> getColumnNames() {
+			return columnNames;
+		}
+
+		@Override
+		public Identifier getReferencedTableName() {
+			return foreignKey.getReferencedTable().getNameIdentifier();
+		}
+
+		@Override
+		public List<Identifier> getReferencedColumnNames() {
+			if ( referencedColumnNames == null ) {
+				referencedColumnNames = extractColumnNames( foreignKey.getReferencedColumns() );
+			}
+			return referencedColumnNames;
+		}
+
+		@Override
+		public Identifier getUserProvidedIdentifier() {
+			return foreignKey.getName() != null ? Identifier.toIdentifier( foreignKey.getName() ) : null;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return buildingContext;
+		}
 	}
 }

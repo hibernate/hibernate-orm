@@ -8,6 +8,7 @@
 package org.hibernate.spatial.dialect.cockroachdb;
 
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
@@ -17,4 +18,7 @@ import org.hibernate.spatial.SpatialDialect;
  */
 @Deprecated
 public class CockroachDB202SpatialDialect extends CockroachDialect implements SpatialDialect {
+	public CockroachDB202SpatialDialect() {
+		super( DatabaseVersion.make( 19, 2 ) );
+	}
 }

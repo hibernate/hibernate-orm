@@ -9,19 +9,25 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Wrap collections in a Hibernate collection wrapper.
@@ -46,7 +52,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType collectionType)
+	protected Object processCollection(Object collection, CollectionType collectionType)
 			throws HibernateException {
 
 		if ( collection == null || collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -76,10 +82,10 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			final CollectionPersister persister = session.getFactory()
+			final MappingMetamodelImplementor mappingMetamodel = session.getFactory()
 					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( collectionType.getRole() );
+					.getMappingMetamodel();
+			final CollectionPersister persister = mappingMetamodel.getCollectionDescriptor( collectionType.getRole() );
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!
@@ -98,16 +104,36 @@ public class WrapVisitor extends ProxyVisitor {
 				return null;
 			}
 			else {
-				if ( entity instanceof PersistentAttributeInterceptable ) {
-					PersistentAttributeInterceptor attributeInterceptor =
-							((PersistentAttributeInterceptable) entity).$$_hibernate_getInterceptor();
+				if ( isPersistentAttributeInterceptable( entity ) ) {
+					PersistentAttributeInterceptor attributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 					if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
+					}
+					else if ( attributeInterceptor != null
+							&& ((LazyAttributeLoadingInterceptor)attributeInterceptor).isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
+						// the collection has not been initialized and new collection values have been assigned,
+						// we need to be sure to delete all the collection elements before inserting the new ones
+						final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) mappingMetamodel.getEntityDescriptor( entity.getClass() );
+						final Object key = entityDescriptor.getCollectionKey(
+								persister,
+								entity,
+								persistenceContext.getEntry( entity ),
+								session
+						);
+						final PersistentCollection<?> collectionInstance = persister.getCollectionSemantics().instantiateWrapper(
+								key,
+								persister,
+								session
+						);
+						collectionInstance.setOwner( entity );
+						persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+
+						final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
+						collectionEntry.setDoremove( true );
 					}
 				}
 
 				final PersistentCollection<?> persistentCollection = collectionType.wrap( session, collection );
-
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {
@@ -120,7 +146,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void processValue(int i, Object[] values, Type[] types) {
+	protected void processValue(int i, Object[] values, Type[] types) {
 		Object result = processValue( values[i], types[i] );
 		if ( result != null ) {
 			substitute = true;
@@ -129,7 +155,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	protected Object processComponent(Object component, CompositeType componentType) throws HibernateException {
 		if ( component != null ) {
 			Object[] values = componentType.getPropertyValues( component, getSession() );
 			Type[] types = componentType.getSubtypes();

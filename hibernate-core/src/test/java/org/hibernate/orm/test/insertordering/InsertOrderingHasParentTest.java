@@ -49,10 +49,10 @@ public class InsertOrderingHasParentTest extends BaseInsertOrderingTest {
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into book_comment (book_comment, id) values (?, ?)", 2 ),
-				new Batch( "insert into Book (comment_id, title, id) values (?, ?, ?)" ),
-				new Batch( "insert into Author (book_id, name, id) values (?, ?, ?)" ),
-				new Batch( "insert into Book_book_comment (Book_id, comments_id) values (?, ?)" )
+				new Batch( "insert into book_comment (book_comment,id) values (?,?)", 2 ),
+				new Batch( "insert into Book (comment_id,title,id) values (?,?,?)" ),
+				new Batch( "insert into Author (book_id,name,id) values (?,?,?)" ),
+				new Batch( "insert into Book_book_comment (Book_id,comments_id) values (?,?)" )
 		);
 	}
 

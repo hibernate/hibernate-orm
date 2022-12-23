@@ -63,6 +63,10 @@ public class MigrationTest extends BaseUnitTestCase {
 				v1metadata
 		);
 
+		v1schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
 		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
@@ -74,8 +78,56 @@ public class MigrationTest extends BaseUnitTestCase {
 				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
 				v2metadata
 		);
+
+		v2schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
 		
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
+
+	}
+
+	@Test
+	public void testSimpleColumnTypeChange() {
+		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
+		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";
+
+		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( resource1 )
+				.buildMetadata();
+
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v1metadata );
+
+		final SchemaUpdate v1schemaUpdate = new SchemaUpdate();
+		v1schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v1metadata
+		);
+
+		v1schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
+		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
+
+		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( resource4 )
+				.buildMetadata();
+
+		final SchemaUpdate v2schemaUpdate = new SchemaUpdate();
+		v2schemaUpdate.execute(
+				EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ),
+				v2metadata
+		);
+
+		v2schemaUpdate.getExceptions().forEach(
+				e -> System.out.println( e.getCause().getMessage() )
+		);
+
+		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
+
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
 	}

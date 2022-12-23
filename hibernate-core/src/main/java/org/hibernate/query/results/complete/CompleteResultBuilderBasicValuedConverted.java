@@ -18,6 +18,7 @@ import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -82,42 +83,12 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			columnName = explicitColumnName;
 		}
 		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
+			columnName = jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
 		}
-
-
-//		final int jdbcPosition;
-//		if ( explicitColumnName != null ) {
-//			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-//		}
-//		else {
-//			jdbcPosition = resultPosition + 1;
-//		}
-//
-//		final BasicValuedMapping basicType;
-//		if ( explicitType != null ) {
-//			basicType = explicitType;
-//		}
-//		else {
-//			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType );
-//		}
-//
-//		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-//				creationStateImpl.resolveSqlExpression(
-//						columnName,
-//						processingState -> {
-//							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-//							return new SqlSelectionImpl( valuesArrayPosition, basicType );
-//						}
-//				),
-//				basicType.getExpressibleJavaType(),
-//				sessionFactory.getTypeConfiguration()
-//		);
-
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
-						columnName,
+						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						processingState -> {
 							final int jdbcPosition;
 							if ( explicitColumnName != null ) {
@@ -131,7 +102,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
 				),
-				valueConverter.getDomainJavaType(),
+				valueConverter.getRelationalJavaType(),
 				null,
 				sessionFactory.getTypeConfiguration()
 		);

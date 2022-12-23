@@ -28,10 +28,12 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Convenience base class for {@link BasicType} implementations
+ * Convenience base class for {@link BasicType} implementations.
+ * Packages a {@link JavaType} with a {@link JdbcType}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -44,14 +46,16 @@ public abstract class AbstractStandardBasicType<T>
 	private final int[] sqlTypes;
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
+	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
+		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.javaType = javaType;
 
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
+		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
 	}
 
 	@Override
@@ -62,6 +66,11 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public ValueBinder<T> getJdbcValueBinder() {
 		return jdbcValueBinder;
+	}
+
+	@Override
+	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 
 	@Override
@@ -326,8 +335,19 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public CastType getCastType() {
+		// The following is only necessary because we interpret a model part, e.g.
+		//
+		// @JdbcTypeCode( Types.INTEGER )
+		// Boolean bool;
+		//
+		// as BasicTypeImpl( IntegerJdbcType, BooleanJavaType ) instead of
+		// as ConvertedBasicTypeImpl( NumericBooleanConverter ).
+		//
+		// Due to that, we have to handle some conversions in wrap/unwrap of BooleanJavaType
+		// and the cast type determination here. Note that we interpret the converter in ConvertedBasicTypeImpl
+		// to properly determine the correct cast type
 		final JdbcType jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+		final int jdbcTypeCode = jdbcType.getDdlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:
@@ -340,9 +360,7 @@ public abstract class AbstractStandardBasicType<T>
 			case Types.CHAR:
 			case Types.NCHAR:
 				if ( getJavaType() == Boolean.class ) {
-					return (Boolean) getJavaTypeDescriptor().wrap( 'Y', null )
-							? CastType.YN_BOOLEAN
-							: CastType.TF_BOOLEAN;
+					return CastType.YN_BOOLEAN;
 				}
 				break;
 			case Types.TIMESTAMP_WITH_TIMEZONE:

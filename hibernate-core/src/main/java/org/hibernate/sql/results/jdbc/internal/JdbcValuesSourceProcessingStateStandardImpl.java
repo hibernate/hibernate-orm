@@ -47,7 +47,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryConsumer;
 
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
-	private Map<EntityKey, Initializer> initializerMap;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -63,9 +62,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		this.processingOptions = processingOptions;
 		this.loadingEntityEntryConsumer = loadingEntityEntryListener;
 
-		if ( executionContext.getSession() instanceof EventSource ) {
-			preLoadEvent = new PreLoadEvent( (EventSource) executionContext.getSession() );
-			postLoadEvent = new PostLoadEvent( (EventSource) executionContext.getSession() );
+		if ( executionContext.getSession().isEventSource() ) {
+			final EventSource eventSource = executionContext.getSession().asEventSource();
+			preLoadEvent = new PreLoadEvent( eventSource );
+			postLoadEvent = new PostLoadEvent( eventSource );
 		}
 		else {
 			preLoadEvent = null;
@@ -114,18 +114,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerInitilaizer(
-			EntityKey entityKey,
-			Initializer initializer) {
-		if ( initializerMap == null ) {
-			initializerMap = new HashMap<>();
-		}
-		initializerMap.put( entityKey, initializer );
-
-	}
-
-	@Override
-	public void registerInitilaizer(EntityUniqueKey entityKey, Initializer initializer) {
+	public void registerInitializer(EntityUniqueKey entityKey, Initializer initializer) {
 		if ( initializerByUniquKeyMap == null ) {
 			initializerByUniquKeyMap = new HashMap<>();
 		}
@@ -135,11 +124,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	@Override
 	public Initializer findInitializer(EntityUniqueKey entityKey) {
 		return initializerByUniquKeyMap == null ? null : initializerByUniquKeyMap.get( entityKey );
-	}
-
-	@Override
-	public Initializer findInitializer(EntityKey entityKey) {
-		return initializerMap == null ? null : initializerMap.get( entityKey );
 	}
 
 	@Override

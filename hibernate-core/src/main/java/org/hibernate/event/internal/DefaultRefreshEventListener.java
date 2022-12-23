@@ -56,42 +56,45 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 * @param event The refresh event to be handled.
 	 */
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
-
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-
-		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
-			boolean isTransient = event.getEntityName() != null
-					? !source.contains(event.getEntityName(), event.getObject())
-					: !source.contains(event.getObject());
-			if ( isTransient ) {
-				source.setReadOnly( event.getObject(), source.isDefaultReadOnly() );
+		final Object object = event.getObject();
+		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
+			if ( isTransient( event, source, object ) ) {
+				source.setReadOnly( object, source.isDefaultReadOnly() );
 			}
-			return;
 		}
-
-		final Object object = persistenceContext.unproxyAndReassociate( event.getObject() );
-
-		if ( !refreshedAlready.add( object ) ) {
-			LOG.trace( "Already refreshed" );
-			return;
+		else {
+			final Object entity = persistenceContext.unproxyAndReassociate( object );
+			if ( refreshedAlready.add( entity) ) {
+				refresh( event, refreshedAlready, entity );
+			}
+			else {
+				LOG.trace( "Already refreshed" );
+			}
 		}
+	}
 
+	private static boolean isTransient(RefreshEvent event, EventSource source, Object object) {
+		final String entityName = event.getEntityName();
+		return entityName != null ? !source.contains( entityName, object) : !source.contains(object);
+	}
+
+	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
+		final EventSource source = event.getSession();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.getEntry( object );
+
 		final EntityPersister persister;
 		final Object id;
-
 		if ( entry == null ) {
 			//refresh() does not pass an entityName
-			persister = source.getEntityPersister( event.getEntityName(), object );
-			id = persister.getIdentifier( object, event.getSession() );
+			persister = source.getEntityPersister( event.getEntityName(), object);
+			id = persister.getIdentifier(object, event.getSession() );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
-						"Refreshing transient {0}", MessageHelper.infoString(
-						persister,
-						id,
-						source.getFactory()
-				)
+						"Refreshing transient {0}",
+						MessageHelper.infoString( persister, id, source.getFactory() )
 				);
 			}
 			final EntityKey key = source.generateEntityKey( id, persister );
@@ -105,11 +108,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		else {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
-						"Refreshing ", MessageHelper.infoString(
-						entry.getPersister(),
-						entry.getId(),
-						source.getFactory()
-				)
+						"Refreshing ",
+						MessageHelper.infoString( entry.getPersister(), entry.getId(), source.getFactory() )
 				);
 			}
 			if ( !entry.isExistsInDatabase() ) {
@@ -118,7 +118,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						"this instance does not yet exist as a row in the database"
 				);
 			}
-
 			persister = entry.getPersister();
 			id = entry.getId();
 		}
@@ -141,6 +140,17 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 
+		evictEntity( object, persister, id, source);
+		evictCachedCollections( persister, id, source);
+
+		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
+				CascadingFetchProfile.REFRESH,
+				() -> doRefresh(event, source, object, entry, persister, id, persistenceContext)
+		);
+		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
+	}
+
+	private static void evictEntity(Object object, EntityPersister persister, Object id, EventSource source) {
 		if ( persister.canWriteToCache() ) {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
@@ -160,40 +170,26 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			cache.remove( source, ck );
 			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 		}
-
-		evictCachedCollections( persister, id, source );
-
-		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
-				CascadingFetchProfile.REFRESH,
-				() -> doRefresh( event, source, object, entry, persister, id, persistenceContext )
-		);
-
-		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
-
 	}
 
-	private Object doRefresh(
+	private static Object doRefresh(
 			RefreshEvent event,
 			EventSource source,
 			Object object,
-			EntityEntry e,
+			EntityEntry entry,
 			EntityPersister persister,
 			Object id,
 			PersistenceContext persistenceContext) {
-
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
-
 		LockOptions lockOptionsToUse = event.getLockOptions();
-
 		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
 		LockMode postRefreshLockMode = null;
-
-		if ( e != null ) {
-			final LockMode currentLockMode = e.getLockMode();
+		if ( entry != null ) {
+			final LockMode currentLockMode = entry.getLockMode();
 			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
 				// the requested lock-mode is less restrictive than the current one
 				//		- pass along the current lock-mode (after accounting for WRITE)
-				lockOptionsToUse = LockOptions.copy( event.getLockOptions(), new LockOptions() );
+				lockOptionsToUse = event.getLockOptions().makeCopy();
 				if ( currentLockMode == LockMode.WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {
@@ -205,7 +201,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					// WRITE specially because the Loader/Locker mechanism does not allow for WRITE
 					// locks
 					lockOptionsToUse.setLockMode( LockMode.READ );
-
 					// and prepare to reset the entry lock-mode to the previous lock mode after
 					// the refresh completes
 					postRefreshLockMode = currentLockMode;
@@ -217,7 +212,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		final Object result = persister.load( id, object, lockOptionsToUse, source );
-
 		if ( result != null ) {
 			// apply `postRefreshLockMode`, if needed
 			if ( postRefreshLockMode != null ) {
@@ -233,17 +227,17 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				source.setReadOnly( result, true );
 			}
 			else {
-				source.setReadOnly( result, e == null ? source.isDefaultReadOnly() : e.isReadOnly() );
+				source.setReadOnly( result, entry == null ? source.isDefaultReadOnly() : entry.isReadOnly() );
 			}
 		}
 		return result;
 	}
 
-	private void evictCachedCollections(EntityPersister persister, Object id, EventSource source) {
+	private static void evictCachedCollections(EntityPersister persister, Object id, EventSource source) {
 		evictCachedCollections( persister.getPropertyTypes(), id, source );
 	}
 
-	private void evictCachedCollections(Type[] types, Object id, EventSource source)
+	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
 		final ActionQueue actionQueue = source.getActionQueue();
 		final SessionFactoryImplementor factory = source.getFactory();
@@ -251,7 +245,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
 				final String role = ((CollectionType) type).getRole();
-				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor(role);
+				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(

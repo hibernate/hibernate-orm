@@ -6,8 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -22,25 +21,27 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
+import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -51,7 +52,8 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -60,6 +62,9 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
@@ -82,11 +87,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final LockMode lockMode;
 
 	private final DomainResultAssembler identifierAssembler;
-	private final DomainResultAssembler discriminatorAssembler;
+	private final BasicResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 	private final DomainResultAssembler<Object> rowIdAssembler;
 
-	private final Map<AttributeMapping, DomainResultAssembler> assemblerMap;
+	private final DomainResultAssembler[][] assemblers;
 
 	// per-row state
 	private EntityPersister concreteDescriptor;
@@ -136,7 +141,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( discriminatorFetch != null ) {
-			discriminatorAssembler = discriminatorFetch.createAssembler( this, creationState );
+			discriminatorAssembler = (BasicResultAssembler) discriminatorFetch.createAssembler( this, creationState );
 		}
 		else {
 			discriminatorAssembler = null;
@@ -163,32 +168,39 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.rowIdAssembler = null;
 		}
 
-		assemblerMap = new IdentityHashMap<>( entityDescriptor.getNumberOfAttributeMappings() );
+		final Collection<EntityMappingType> subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
+		assemblers = new DomainResultAssembler[subMappingTypes.size() + 1][];
+		assemblers[rootEntityDescriptor.getSubclassId()] = new DomainResultAssembler[rootEntityDescriptor.getNumberOfFetchables()];
 
-		entityDescriptor.visitFetchables(
-				fetchable -> {
-					final AttributeMapping attributeMapping = (AttributeMapping) fetchable;
+		for ( EntityMappingType subMappingType : subMappingTypes ) {
+			assemblers[subMappingType.getSubclassId()] = new DomainResultAssembler[subMappingType.getNumberOfFetchables()];
+		}
 
-					// todo (6.0) : somehow we need to track whether all state is loaded/resolved
-					//		note that lazy proxies or uninitialized collections count against
-					//		that in the affirmative
+		final int size = entityDescriptor.getNumberOfFetchables();
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable fetchable = entityDescriptor.getFetchable( i );
+			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
+			// todo (6.0) : somehow we need to track whether all state is loaded/resolved
+			//		note that lazy proxies or uninitialized collections count against
+			//		that in the affirmative
+			final Fetch fetch = resultDescriptor.findFetch( attributeMapping );
+			final DomainResultAssembler<?> stateAssembler;
+			if ( fetch == null ) {
+				stateAssembler = new NullValueAssembler<>(
+						attributeMapping.getMappedType().getMappedJavaType()
+				);
+			}
+			else {
+				stateAssembler = fetch.createAssembler( this, creationState );
+			}
 
-					final Fetch fetch = resultDescriptor.findFetch( fetchable );
-
-					final DomainResultAssembler<?> stateAssembler;
-					if ( fetch == null ) {
-						stateAssembler = new NullValueAssembler<>(
-								attributeMapping.getMappedType().getMappedJavaType()
-						);
-					}
-					else {
-						stateAssembler = fetch.createAssembler( this, creationState );
-					}
-
-					assemblerMap.put( attributeMapping, stateAssembler );
-				},
-				null
-		);
+			final int stateArrayPosition = attributeMapping.getStateArrayPosition();
+			final EntityMappingType declaringType = (EntityMappingType) attributeMapping.getDeclaringType();
+			assemblers[declaringType.getSubclassId()][stateArrayPosition] = stateAssembler;
+			for ( EntityMappingType subMappingType : declaringType.getSubMappingTypes() ) {
+				assemblers[subMappingType.getSubclassId()][stateArrayPosition] = stateAssembler;
+			}
+		}
 	}
 
 	private static void deepCopy(
@@ -196,25 +208,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			Object[] source,
 			Object[] target,
 			EntityPersister concreteDescriptor) {
-		containerDescriptor.visitAttributeMappings(
-				attributeMapping -> {
-					if ( attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable() ) {
-						final int position = attributeMapping.getStateArrayPosition();
-						Object result;
-						if ( source[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-								|| source[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-							result = source[position];
-						}
-						else {
-							result = attributeMapping.getAttributeMetadataAccess()
-									.resolveAttributeMetadata(null)
-									.getMutabilityPlan()
-									.deepCopy( source[position] );
-						}
-						target[position] = result;
-					}
+		final int numberOfAttributeMappings = containerDescriptor.getNumberOfAttributeMappings();
+		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
+			final AttributeMapping attributeMapping = containerDescriptor.getAttributeMapping( i );
+			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
+			if ( attributeMetadata.isUpdatable() ) {
+				final int position = attributeMapping.getStateArrayPosition();
+				Object result;
+				if ( source[position] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| source[position] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					result = source[position];
 				}
-		);
+				else {
+					result = attributeMetadata.getMutabilityPlan().deepCopy( source[position] );
+				}
+				target[position] = result;
+			}
+		}
 	}
 
 	@Override
@@ -332,35 +342,26 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return entityDescriptor;
 		}
 
-		final Object discriminatorValue = discriminatorAssembler.assemble(
-				rowProcessingState,
-				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
-		);
+		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		assert discriminatorMapping != null;
 
-		final String concreteEntityName = entityDescriptor.getDiscriminatorMapping().getConcreteEntityNameForDiscriminatorValue( discriminatorValue );
+		final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
 
-		if ( concreteEntityName == null ) {
+		final DiscriminatorValueDetails discriminatorDetails = discriminatorMapping.resolveDiscriminatorValue( discriminator );
+		if ( discriminatorDetails == null ) {
 			return entityDescriptor;
 		}
 
-		final EntityPersister concreteType = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor( concreteEntityName );
-
-		if ( concreteType == null || !concreteType.isTypeOrSuperType( entityDescriptor ) ) {
+		if ( !discriminatorDetails.getIndicatedEntity().isTypeOrSuperType( entityDescriptor ) ) {
 			throw new WrongClassException(
-					concreteEntityName,
+					discriminatorDetails.getIndicatedEntity().getEntityName(),
 					null,
 					entityDescriptor.getEntityName(),
-					discriminatorValue
+					discriminator
 			);
 		}
 
-		// verify that the `entityDescriptor` is either == concreteType or its super-type
-		assert concreteType.isTypeOrSuperType( entityDescriptor );
-
-		return concreteType;
+		return discriminatorDetails.getIndicatedEntity().getEntityPersister();
 	}
 
 	protected void resolveEntityKey(RowProcessingState rowProcessingState) {
@@ -383,10 +384,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		//		2) build the EntityKey
 		this.entityKey = new EntityKey( id, concreteDescriptor );
-
-		if ( jdbcValuesSourceProcessingState.findInitializer( entityKey ) == null ) {
-			jdbcValuesSourceProcessingState.registerInitilaizer( entityKey, this );
-		}
 
 		//		3) schedule the EntityKey for batch loading, if possible
 		if ( concreteDescriptor.isBatchLoadable() ) {
@@ -456,7 +453,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.getEntityInstance();
 		if ( proxy != null && ( proxy instanceof MapProxy
 				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) ) ) {
-			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			if ( this.isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -469,7 +466,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingEntity != null ) {
 				this.entityInstance = existingEntity;
 			}
-			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			else if ( this.isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -583,7 +580,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// We have to query the second level cache if reference cache entries are used
 		if ( instance == null && entityDescriptor.canUseReferenceCacheEntries() ) {
 			instance = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					(EventSource) rowProcessingState.getSession(),
+					rowProcessingState.getSession().asEventSource(),
 					null,
 					lockMode,
 					entityDescriptor,
@@ -592,6 +589,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			if ( instance != null ) {
 				// EARLY EXIT!!!
+				// because the second level cache has reference cache entries, the entity is initialized
+				isInitialized = true;
 				return instance;
 			}
 		}
@@ -640,9 +639,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		if ( entityInstance instanceof HibernateProxy ) {
-			LazyInitializer hibernateLazyInitializer = ( (HibernateProxy) entityInstance ).getHibernateLazyInitializer();
-
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+		if ( lazyInitializer != null ) {
 			Object instance = persistenceContext.getEntity( entityKey );
 			if ( instance == null ) {
 				instance = resolveInstance(
@@ -654,7 +652,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			}
 
-			hibernateLazyInitializer.setImplementation( instance );
+			lazyInitializer.setImplementation( instance );
 			entityInstanceForNotify = instance;
 		}
 		else {
@@ -679,8 +677,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 
-		final Object entity = persistenceContext.getEntity( entityKey );
-		assert entity == null || entity == toInitialize;
+		// Only call PersistenceContext#getEntity within the assert expression, as it is costly
+		assert NullnessHelper.coalesce( persistenceContext.getEntity( entityKey ), toInitialize ) == toInitialize;
 
 		final Object entityIdentifier = entityKey.getIdentifier();
 
@@ -702,11 +700,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		entityDescriptor.setIdentifier( toInitialize, entityIdentifier, session );
 
-		resolvedEntityState = concreteDescriptor.extractConcreteTypeStateValues(
-				assemblerMap,
-				rowProcessingState
-		);
+		resolvedEntityState = extractConcreteTypeStateValues( rowProcessingState );
 
+		if ( isPersistentAttributeInterceptable( toInitialize ) ) {
+			PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
+			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// if we do this after the entity has been initialized the BytecodeLazyAttributeInterceptor#isAttributeLoaded(String fieldName) would return false;
+				concreteDescriptor.getBytecodeEnhancementMetadata().injectInterceptor(
+						toInitialize,
+						entityIdentifier,
+						session
+				);
+			}
+		}
 		concreteDescriptor.setPropertyValues( toInitialize, resolvedEntityState );
 
 		persistenceContext.addEntity( entityKey, toInitialize );
@@ -717,7 +723,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				final AssociationType associationType = (AssociationType) propertyType;
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
-					final int index = ( (UniqueKeyLoadable) concreteDescriptor ).getPropertyIndex( ukName );
+					final int index = concreteDescriptor.findAttributeMapping( ukName ).getStateArrayPosition();
 					final Type type = concreteDescriptor.getPropertyTypes()[index];
 
 					// polymorphism not really handled completely correctly,
@@ -849,10 +855,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			isReallyReadOnly = true;
 		}
 		else {
-			if ( entityInstance instanceof HibernateProxy) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+			if ( lazyInitializer != null ) {
 				// there is already a proxy for this impl
 				// only set the status to read-only if the proxy is read-only
-				isReallyReadOnly = 	( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().isReadOnly();
+				isReallyReadOnly = 	lazyInitializer.isReadOnly();
 			}
 		}
 		if ( isReallyReadOnly ) {
@@ -889,6 +896,24 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
+	private Object[] extractConcreteTypeStateValues(RowProcessingState rowProcessingState) {
+		final Object[] values = new Object[concreteDescriptor.getNumberOfAttributeMappings()];
+		final DomainResultAssembler[] concreteAssemblers = assemblers[concreteDescriptor.getSubclassId()];
+		for ( int i = 0; i < values.length; i++ ) {
+			final DomainResultAssembler assembler = concreteAssemblers[i];
+			final Object value;
+			if ( assembler == null ) {
+				value = UNFETCHED_PROPERTY;
+			}
+			else {
+				value = assembler.assemble( rowProcessingState );
+			}
+
+			values[i] = value;
+		}
+		return values;
+	}
+
 	private boolean skipInitialization(
 			Object toInitialize,
 			RowProcessingState rowProcessingState,
@@ -897,8 +922,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return true;
 		}
 
-		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
+		if ( isPersistentAttributeInterceptable( toInitialize ) ) {
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				if ( entry.getStatus() != Status.LOADING ) {
 					// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,
@@ -934,7 +959,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private void preLoad(RowProcessingState rowProcessingState) {
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 
-		if ( session instanceof EventSource ) {
+		if ( session.isEventSource() ) {
 			final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
 			assert preLoadEvent != null;
 

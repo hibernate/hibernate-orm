@@ -11,6 +11,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.boot.model.internal.CollectionPropertyHolder;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -24,26 +40,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Test for {@link org.hibernate.cfg.CollectionPropertyHolder}.
+ * Test for {@link CollectionPropertyHolder}.
  *
  * Tests that {@link jakarta.persistence.AttributeConverter}s are considered correctly for {@link jakarta.persistence.ElementCollection}.
  *
@@ -65,12 +67,12 @@ public class ElementCollectionTests {
 
 		Property setAttributeBinding = entityBinding.getProperty( "set" );
 		Collection setBinding = (Collection) setAttributeBinding.getValue();
-		assertTyping( AttributeConverterTypeAdapter.class, setBinding.getElement().getType() );
+		assertTyping( ConvertedBasicTypeImpl.class, setBinding.getElement().getType() );
 
 		Property mapAttributeBinding = entityBinding.getProperty( "map" );
 		IndexedCollection mapBinding = (IndexedCollection) mapAttributeBinding.getValue();
-		assertTyping( AttributeConverterTypeAdapter.class, mapBinding.getIndex().getType() );
-		assertTyping( AttributeConverterTypeAdapter.class, mapBinding.getElement().getType() );
+		assertTyping( ConvertedBasicTypeImpl.class, mapBinding.getIndex().getType() );
+		assertTyping( ConvertedBasicTypeImpl.class, mapBinding.getElement().getType() );
 
 		// now lets try to use the model, integration-testing-style!
 		TheEntity entity = new TheEntity( 1 );

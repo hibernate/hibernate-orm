@@ -7,9 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.List;
-import java.util.function.Supplier;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
@@ -25,12 +23,14 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -40,6 +40,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
  * @author Steve Ebersole
@@ -69,7 +70,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final Object[] rowState;
 	private Boolean stateAllNull;
 	private Boolean stateInjected;
-	private Object compositeInstance;
+	protected Object compositeInstance;
 
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
@@ -90,22 +91,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
 		this.usesStandardInstantiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
 
-		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
-		this.rowState = new Object[ numOfAttrs ];
-		this.assemblers = arrayList( numOfAttrs );
-
-		embeddableTypeDescriptor.visitFetchables(
-				stateArrayContributor -> {
-					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
-
-					final DomainResultAssembler<?> stateAssembler = fetch == null
-							? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-							: fetch.createAssembler( this, creationState );
-
-					assemblers.add( stateAssembler );
-				},
-				null
-		);
+		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+		this.rowState = new Object[ size ];
+		this.assemblers = arrayList( size );
 
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
@@ -114,6 +102,24 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
 		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
+		initializeAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
+	}
+
+	protected void initializeAssemblers(
+			EmbeddableResultGraphNode resultDescriptor,
+			AssemblerCreationState creationState,
+			EmbeddableMappingType embeddableTypeDescriptor) {
+		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+		for ( int i = 0; i < size; i++ ) {
+			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
+			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
+
+			final DomainResultAssembler<?> stateAssembler = fetch == null
+					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
+					: fetch.createAssembler( this, creationState );
+
+			assemblers.add( stateAssembler );
+		}
 	}
 
 	@Override
@@ -121,6 +127,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return embedded;
 	}
 
+	@Override
 	public FetchParentAccess getFetchParentAccess() {
 		return fetchParentAccess;
 	}
@@ -137,6 +144,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public FetchParentAccess findFirstEntityDescriptorAccess() {
 		return getFetchParentAccess().findFirstEntityDescriptorAccess();
+	}
+
+	@Override
+	public EntityInitializer findFirstEntityInitializer() {
+		return findFirstEntityDescriptorAccess().findFirstEntityInitializer();
 	}
 
 	@Override
@@ -185,7 +197,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		stateInjected = false;
-
+		// We need to possibly wrap the processing state if the embeddable is within an aggregate
+		processingState = wrapProcessingState( processingState );
 		extractRowState( processingState );
 		prepareCompositeInstance( processingState );
 		handleParentInjection( processingState );
@@ -193,7 +206,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		if ( compositeInstance != NULL_MARKER ) {
 			notifyResolutionListeners( compositeInstance );
 
-			if ( compositeInstance instanceof HibernateProxy ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+			if ( lazyInitializer != null ) {
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
@@ -212,7 +226,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 							.getInstantiator()
 							.instantiate( this, sessionFactory);
 					stateInjected = true;
-					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+					lazyInitializer.setImplementation( target );
 				}
 			}
 			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {
@@ -265,7 +279,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
-			rowState[i] = contributorValue;
+			if ( contributorValue == BATCH_PROPERTY ) {
+				rowState[i] = null;
+			}
+			else {
+				rowState[i] = contributorValue;
+			}
 			if ( contributorValue != null ) {
 				stateAllNull = false;
 			}
@@ -320,9 +339,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return NULL_MARKER;
 		}
 
-		final Supplier<Object[]> valuesAccess = stateAllNull == TRUE
-				? null
-				: () -> rowState;
 		final Object instance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
 		stateInjected = true;
 
@@ -416,15 +432,16 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final Initializer parentInitializer = processingState.resolveInitializer( parentPath );
 
-		if ( parentInitializer instanceof CollectionInitializer ) {
+		if ( parentInitializer.isCollectionInitializer() ) {
 			return ( (CollectionInitializer) parentInitializer ).getCollectionInstance().getOwner();
 		}
 
-		if ( parentInitializer instanceof EntityInitializer ) {
-			return ( (EntityInitializer) parentInitializer ).getEntityInstance();
+		final EntityInitializer parentEntityInitializer = parentInitializer.asEntityInitializer();
+		if ( parentEntityInitializer != null ) {
+			return parentEntityInitializer.getEntityInstance();
 		}
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

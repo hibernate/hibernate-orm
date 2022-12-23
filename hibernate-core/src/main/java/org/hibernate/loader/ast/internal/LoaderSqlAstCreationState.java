@@ -32,20 +32,21 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * Helper used when generating the database-snapshot select query
  */
 public class LoaderSqlAstCreationState
-		implements SqlAstProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
+		implements SqlAstQueryPartProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
 	public interface FetchProcessor {
-		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
+		ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
 	}
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -76,7 +77,7 @@ public class LoaderSqlAstCreationState
 		this.sf = sf;
 		this.processingState = new SqlAstQueryPartProcessingStateImpl(
 				queryPart,
-				this,
+				null,
 				this,
 				() -> Clause.IRRELEVANT,
 				true
@@ -91,6 +92,11 @@ public class LoaderSqlAstCreationState
 	@Override
 	public SqlAstProcessingState getCurrentProcessingState() {
 		return this;
+	}
+
+	@Override
+	public QueryPart getInflightQueryPart() {
+		return processingState.getInflightQueryPart();
 	}
 
 	@Override
@@ -110,12 +116,21 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
-		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings!" );
+		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings" );
 	}
 
 	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return fetchProcessor.visitFetches( fetchParent, processingState.getInflightQueryPart().getFirstQuerySpec(), this );
+	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
+		return fetchProcessor.visitFetches( fetchParent, this );
+	}
+
+	@Override
+	public ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
+		processingState.setNestingFetchParent( fetchParent );
+		final ImmutableFetchList fetches = fetchProcessor.visitFetches( fetchParent, this );
+		processingState.setNestingFetchParent( nestingFetchParent );
+		return fetches;
 	}
 
 	@Override

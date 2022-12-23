@@ -38,31 +38,30 @@ package org.hibernate.community.dialect;
  * The following steps assume that the directory where Cach&eacute; was installed is C:\CacheSys.
  * This is the default installation directory for  Cach&eacute;.
  * The default installation directory for Hibernate is assumed to be C:\Hibernate.
- * <p/>
+ * <p>
  * If either product is installed in a different location, the pathnames that follow should be modified appropriately.
- * <p/>
+ * <p>
  * Cach&eacute; version 2007.1 and above is recommended for use with
  * Hibernate.  The next step depends on the location of your
  * CacheDB.jar depending on your version of Cach&eacute;.
  * <ol>
  * <li>Copy C:\CacheSys\dev\java\lib\JDK15\CacheDB.jar to C:\Hibernate\lib\CacheDB.jar.</li>
- * <p/>
  * <li>Insert the following files into your Java classpath:
- * <p/>
+ * <p>
  * <ul>
  * <li>All jar files in the directory C:\Hibernate\lib</li>
  * <li>The directory (or directories) where hibernate.properties and/or hibernate.cfg.xml are kept.</li>
  * </ul>
  * </li>
- * <p/>
  * <li>In the file, hibernate.properties (or hibernate.cfg.xml),
  * specify the Cach&eacute; dialect and the Cach&eacute; version URL settings.</li>
  * </ol>
- * <p/>
+ * <p>
  * For example, in Hibernate 3.2, typical entries in hibernate.properties would have the following
  * "name=value" pairs:
- * <p/>
- * <table cols=3 border="" cellpadding=5 cellspacing=0>
+ * <p>
+ * <table border="">
+ * <caption>Properties</caption>
  * <tr>
  * <th>Property Name</th>
  * <th>Property Value</th>
@@ -88,7 +87,7 @@ package org.hibernate.community.dialect;
  * <td>jdbc:Cache://127.0.0.1:1972/USER</td>
  * </tr>
  * </table>
- * <p/>
+ * <p>
  * <b>NOTE:</b> Please contact your administrator for the userid and password you should use when
  *         attempting access via JDBC.  By default, these are chosen to be "_SYSTEM" and "SYS" respectively
  *         as noted in the SQL standard.
@@ -102,11 +101,10 @@ package org.hibernate.community.dialect;
  * <h2>CACH&Eacute; DIALECTS</h2>
  * Choices for Dialect are:
  * <br>
- * <p/>
+ * <p>
  * <ol>
  * <li>org.hibernate.community.dialect.Cache71Dialect (requires Cach&eacute;
  * 2007.1 or above)</li>
- * <p/>
  * </ol>
  * <br>
  * <h2>SUPPORT FOR IDENTITY COLUMNS</h2>
@@ -115,7 +113,7 @@ package org.hibernate.community.dialect;
  * generator.
  * <br>
  * <h2>SEQUENCE DIALECTS SUPPORT SEQUENCES</h2>
- * <p/>
+ * <p>
  * To use Hibernate sequence support with Cach&eacute; in a namespace, you must FIRST load the following file into that namespace:
  * <pre>
  *     etc\CacheSequences.xml
@@ -134,7 +132,7 @@ package org.hibernate.community.dialect;
  *     &lt;/id&gt;
  * </pre>
  * <br>
- * <p/>
+ * <p>
  * Some versions of Hibernate under some circumstances call
  * getSelectSequenceNextValString() in the dialect.  If this happens
  * you will receive the error message: new MappingException( "Dialect
@@ -142,7 +140,7 @@ package org.hibernate.community.dialect;
  * <br>
  * <h2>HIBERNATE FILES ASSOCIATED WITH CACH&Eacute; DIALECT</h2>
  * The following files are associated with Cach&eacute; dialect:
- * <p/>
+ * <p>
  * <ol>
  * <li>src\org\hibernate\dialect\Cache71Dialect.java</li>
  * <li>src\org\hibernate\dialect\function\ConditionalParenthesisFunction.java</li>

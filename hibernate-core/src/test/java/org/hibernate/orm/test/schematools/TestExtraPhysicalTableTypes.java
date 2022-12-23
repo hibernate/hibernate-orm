@@ -172,6 +172,7 @@ public class TestExtraPhysicalTableTypes {
 		}
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 
@@ -202,6 +203,11 @@ public class TestExtraPhysicalTableTypes {
 
 		@Override
 		public Connection getIsolatedConnection() {
+			return null;
+		}
+
+		@Override
+		public Connection getIsolatedConnection(boolean autocommit) {
 			return null;
 		}
 

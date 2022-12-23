@@ -20,15 +20,17 @@ import java.util.WeakHashMap;
 import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.AbstractLazyLoadInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Central delegate for handling calls from:<ul>
@@ -50,7 +52,7 @@ public final class PersistenceUtilHelper {
 	/**
 	 * Determine if the given object reference represents loaded state.  The reference may be to an entity or a
 	 * persistent collection.
-	 * <p/>
+	 * <p>
 	 * Return is defined as follows:<ol>
 	 *     <li>
 	 *         If the reference is a {@link HibernateProxy}, we return {@link LoadState#LOADED} if
@@ -78,12 +80,13 @@ public final class PersistenceUtilHelper {
 	 * @return The appropriate LoadState (see above)
 	 */
 	public static LoadState isLoaded(Object reference) {
-		if ( reference instanceof HibernateProxy ) {
-			final boolean isInitialized = !( (HibernateProxy) reference ).getHibernateLazyInitializer().isUninitialized();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( reference );
+		if ( lazyInitializer != null ) {
+			final boolean isInitialized = !lazyInitializer.isUninitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
-		else if ( reference instanceof PersistentAttributeInterceptable ) {
-			boolean isInitialized = isInitialized( (PersistentAttributeInterceptable) reference );
+		else if ( isPersistentAttributeInterceptable( reference ) ) {
+			boolean isInitialized = isInitialized( asPersistentAttributeInterceptable( reference ) );
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( reference instanceof PersistentCollection ) {
@@ -116,22 +119,22 @@ public final class PersistenceUtilHelper {
 	 */
 	public static LoadState isLoadedWithoutReference(Object entity, String attributeName, MetadataCache cache) {
 		boolean sureFromUs = false;
-		if ( entity instanceof HibernateProxy ) {
-			LazyInitializer li = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
 				return LoadState.NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
-				entity = li.getImplementation();
+				entity = lazyInitializer.getImplementation();
 			}
 			sureFromUs = true;
 		}
 
 		// we are instrumenting but we can't assume we are the only ones
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( (PersistentAttributeInterceptable) entity );
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( asPersistentAttributeInterceptable( entity ) );
 			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
 			LoadState state;
 			if (isInitialized && interceptor != null) {
@@ -198,15 +201,15 @@ public final class PersistenceUtilHelper {
 	 * @return The LoadState
 	 */
 	public static LoadState isLoadedWithReference(Object entity, String attributeName, MetadataCache cache) {
-		if ( entity instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-			if ( li.isUninitialized() ) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
 				return LoadState.NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
-				entity = li.getImplementation();
+				entity = lazyInitializer.getImplementation();
 			}
 		}
 
@@ -378,7 +381,7 @@ public final class PersistenceUtilHelper {
 					return new NoSuchAttributeAccess( specifiedClass, attributeName );
 				}
 			};
-			return System.getSecurityManager() != null ? AccessController.doPrivileged( action ) : action.run();
+			return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
 		}
 	}
 

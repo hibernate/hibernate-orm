@@ -12,11 +12,10 @@ import java.util.List;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.EmptyScrollableResults;
-import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.NotYetImplementedFor6Exception;
 
 /**
  * @author Steve Ebersole
@@ -75,6 +74,6 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return EmptyScrollableResults.INSTANCE;
 		}
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 }

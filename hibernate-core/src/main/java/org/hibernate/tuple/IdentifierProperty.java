@@ -6,22 +6,19 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;
 
 /**
- * Represents a defined entity identifier property within the Hibernate
- * runtime-metamodel.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement; see {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping}
  */
+@Deprecated(forRemoval = true)
 public class IdentifierProperty extends AbstractAttribute implements IdentifierAttribute {
 
 	private final boolean virtual;
 	private final boolean embedded;
-	private final IdentifierGenerator identifierGenerator;
+	private final Generator identifierGenerator;
 	private final boolean identifierAssignedByInsert;
 	private final boolean hasIdentifierMapper;
 
@@ -39,13 +36,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			String name,
 			Type type,
 			boolean embedded,
-			IdentifierGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( name, type );
 		this.virtual = false;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = false;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	/**
@@ -60,13 +57,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			Type type,
 			boolean embedded,
 			boolean hasIdentifierMapper,
-			IdentifierGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( null, type );
 		this.virtual = true;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	@Override
@@ -81,6 +78,11 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 
 	@Override
 	public IdentifierGenerator getIdentifierGenerator() {
+		return (IdentifierGenerator) identifierGenerator;
+	}
+
+	@Override
+	public Generator getGenerator() {
 		return identifierGenerator;
 	}
 

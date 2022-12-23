@@ -8,7 +8,6 @@ package org.hibernate.id.factory.internal;
 
 import java.util.Properties;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
@@ -32,7 +31,6 @@ public class AutoGenerationTypeStrategy implements GenerationTypeStrategy {
 			GeneratorDefinitionResolver definitionResolver,
 			ServiceRegistry serviceRegistry) {
 		assert generationType == null || generationType == GenerationType.AUTO;
-
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "`" + getClass().getName() + "#createIdentifierGenerator not yet implemented" );
 	}
 }

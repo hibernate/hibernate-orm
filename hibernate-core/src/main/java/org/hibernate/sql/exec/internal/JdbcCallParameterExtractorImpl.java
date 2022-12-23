@@ -9,10 +9,8 @@ package org.hibernate.sql.exec.internal;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 
 /**
@@ -24,23 +22,17 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
-	private final BasicDomainType ormType;
+	private final OutputableType<T> ormType;
 
 	public JdbcCallParameterExtractorImpl(
 			String callableName,
 			String parameterName,
 			int parameterPosition,
-			BindableType ormType) {
-		if ( ! (ormType instanceof BasicDomainType ) ) {
-			throw new NotYetImplementedFor6Exception(
-					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"
-			);
-		}
-
+			OutputableType<T> ormType) {
 		this.callableName = callableName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
-		this.ormType = (BasicDomainType) ormType;
+		this.ormType = ormType;
 	}
 
 	@Override
@@ -54,7 +46,6 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T extractValue(
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
@@ -68,10 +59,10 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 
 		try {
 			if ( useNamed ) {
-				return (T) ormType.extract( callableStatement, parameterName, session );
+				return ormType.extract( callableStatement, parameterName, session );
 			}
 			else {
-				return (T) ormType.extract( callableStatement, parameterPosition, session );
+				return ormType.extract( callableStatement, parameterPosition, session );
 			}
 		}
 		catch (SQLException e) {

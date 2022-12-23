@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  * @author Pawel Stawicki
  */
 @SessionFactory
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8)
+@RequiresDialect(value = PostgreSQLDialect.class)
 @DomainModel(annotatedClasses = {
 		ParentEntity.class, InheritingEntity.class
 })
@@ -34,14 +34,14 @@ public class PersistChildEntitiesWithDiscriminatorTest {
 				session -> {
 					// we need the 2 inserts so that the id is incremented on the second get-generated-keys-result set, since
 					// on the first insert both the pk and the discriminator values are 1
-					session.save( new InheritingEntity( "yabba" ) );
-					session.save( new InheritingEntity( "dabba" ) );
+					session.persist( new InheritingEntity( "yabba" ) );
+					session.persist( new InheritingEntity( "dabba" ) );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete ParentEntity" ).executeUpdate();
+					session.createQuery( "delete ParentEntity", null ).executeUpdate();
 
 				}
 		);

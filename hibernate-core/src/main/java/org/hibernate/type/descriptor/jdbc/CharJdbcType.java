@@ -51,6 +51,6 @@ public class CharJdbcType extends VarcharJdbcType {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
 		}
 
-		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 }

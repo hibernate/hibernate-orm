@@ -41,7 +41,7 @@ public class FilterSourceImpl
 		String conditionContent = null;
 
 		for ( Serializable content : filterElement.getContent() ) {
-			if ( String.class.isInstance( content ) ) {
+			if ( content instanceof String ) {
 				final String str = content.toString();
 				if ( !StringHelper.isBlank( str ) ) {
 					conditionContent = str.trim();

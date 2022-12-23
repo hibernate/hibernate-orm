@@ -49,8 +49,8 @@ public class InsertOrderingWithBidirectionalOneToOne extends BaseInsertOrderingT
 		} );
 
 		verifyContainsBatches(
-				new Batch( "insert into Address (street, ID) values (?, ?)", 2 ),
-				new Batch( "insert into Person (address_ID, name, ID) values (?, ?, ?)", 2 )
+				new Batch( "insert into Address (street,ID) values (?,?)", 2 ),
+				new Batch( "insert into Person (address_ID,name,ID) values (?,?,?)", 2 )
 		);
 	}
 

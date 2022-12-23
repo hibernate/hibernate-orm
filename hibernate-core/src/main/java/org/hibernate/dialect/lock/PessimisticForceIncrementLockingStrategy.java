@@ -9,14 +9,15 @@ package org.hibernate.dialect.lock;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * A pessimistic locking strategy that increments the version immediately (obtaining an exclusive write lock).
- * <p/>
- * This strategy is valid for LockMode.PESSIMISTIC_FORCE_INCREMENT
+ * A pessimistic locking strategy where a lock is obtained by incrementing
+ * the version immediately, obtaining an exclusive write lock by side effect.
+ * <p>
+ * This strategy is valid for {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
  *
  * @author Scott Marlow
  * @since 3.5
@@ -41,7 +42,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}

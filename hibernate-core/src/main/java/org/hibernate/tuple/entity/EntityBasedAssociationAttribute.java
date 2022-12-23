@@ -12,8 +12,9 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AssociationType;
 
 /**
-* @author Steve Ebersole
-*/
+ * @deprecated No direct replacement
+ */
+@Deprecated(forRemoval = true)
 public class EntityBasedAssociationAttribute
 		extends AbstractEntityBasedAttribute {
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
@@ -13,28 +14,24 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Handles conversion to/from Boolean as `T` or `F`
+ * Handles conversion to/from {@code Boolean} as {@code 'T'} or {@code 'F'}
  *
  * @author Steve Ebersole
  */
 @Converter
-public class TrueFalseConverter implements AttributeConverter<Boolean, Character>,
-		BasicValueConverter<Boolean, Character> {
+public class TrueFalseConverter extends CharBooleanConverter {
 	/**
 	 * Singleton access
 	 */
 	public static final TrueFalseConverter INSTANCE = new TrueFalseConverter();
+	private static final String[] VALUES = {"F", "T"};
 
 	@Override
-	public Character convertToDatabaseColumn(Boolean attribute) {
-		return toRelationalValue( attribute );
-	}
-
-	@Override
-	public Boolean convertToEntityAttribute(Character dbData) {
-		return toDomainValue( dbData );
+	protected String[] getValues() {
+		return VALUES;
 	}
 
 	@Override
@@ -59,15 +56,5 @@ public class TrueFalseConverter implements AttributeConverter<Boolean, Character
 		}
 
 		return domainForm ? 'T' : 'F';
-	}
-
-	@Override
-	public JavaType<Boolean> getDomainJavaType() {
-		return BooleanJavaType.INSTANCE;
-	}
-
-	@Override
-	public JavaType<Character> getRelationalJavaType() {
-		return CharacterJavaType.INSTANCE;
 	}
 }

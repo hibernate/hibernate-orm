@@ -17,7 +17,8 @@ import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 /**
- * A one-to-one association mapping
+ * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
+ *
  * @author Gavin King
  */
 public class OneToOne extends ToOne {

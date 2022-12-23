@@ -24,6 +24,8 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
@@ -39,7 +41,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@code Collection<T>} handling.
+ * Descriptor for handling persistent collections.
  *
  * @author Christian Beikov
  */
@@ -65,10 +67,11 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		final int preferredSqlTypeCodeForArray = indicators.getPreferredSqlTypeCodeForArray();
 		// Always determine the recommended type to make sure this is a valid basic java type
+		// (even though we only use this inside the if block, we want it to throw here if something wrong)
 		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( preferredSqlTypeCodeForArray );
+		final JdbcType jdbcType = indicators.getJdbcType( preferredSqlTypeCodeForArray );
 		if ( jdbcType instanceof ArrayJdbcType ) {
+			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 			return ( (ArrayJdbcType) jdbcType ).resolveType(
 					typeConfiguration,
 					typeConfiguration.getServiceRegistry()
@@ -78,7 +81,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 					ColumnTypeInformation.EMPTY
 			);
 		}
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( preferredSqlTypeCodeForArray );
+		return jdbcType;
 	}
 
 	public CollectionSemantics<C, E> getSemantics() {
@@ -92,7 +95,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation) {
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
-		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
+		if ( elementType instanceof BasicPluralType<?, ?>
+				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
 		}
 		final BasicCollectionJavaType<C, E> collectionJavaType;
@@ -227,8 +231,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			glue = ",";
 		}
 		sb.append( '}' );
-		final String result = sb.toString();
-		return result;
+		return sb.toString();
 	}
 
 	@Override
@@ -236,7 +239,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		if ( charSequence == null ) {
 			return null;
 		}
-		java.util.ArrayList<String> lst = new java.util.ArrayList<>();
+		java.util.ArrayList<String> list = new java.util.ArrayList<>();
 		StringBuilder sb = null;
 		char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		char firstChar = charSequence.charAt( 0 );
@@ -249,7 +252,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			char c = charSequence.charAt( i );
 			if ( c == '"' ) {
 				if (inquote) {
-					lst.add( sb.toString() );
+					list.add( sb.toString() );
 				}
 				else {
 					sb = new StringBuilder();
@@ -264,7 +267,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 				else if ( c == ',' ) {
 					// treat no-value between commas to mean null
 					if ( sb == null ) {
-						lst.add( null );
+						list.add( null );
 					}
 					else {
 						sb = null;
@@ -278,7 +281,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 							&& charSequence.charAt( i + 1 ) == 'u'
 							&& charSequence.charAt( i + 2 ) == 'l'
 							&& charSequence.charAt( i + 3 ) == 'l') {
-						lst.add( null );
+						list.add( null );
 						i += 4;
 						continue;
 					}
@@ -286,19 +289,20 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 						break;
 					}
 					throw new IllegalArgumentException( "Cannot parse given string into array of strings."
-																+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
+							+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
 				}
 			}
-			else if ( c == '\\' && i + 2 < len && (charSequence.charAt( i + 1 ) == '\\' || charSequence.charAt( i + 1 ) == '"')) {
+			else if ( c == '\\' && i + 2 < len && (charSequence.charAt( i + 1 ) == '\\'
+					|| charSequence.charAt( i + 1 ) == '"') ) {
 				c = charSequence.charAt( ++i );
 			}
 			// If there is ever a null-pointer here, the if-else logic before is incomplete
 			sb.append( c );
 		}
-		final C result = semantics.instantiateRaw( lst.size(), null );
-		for ( int i = 0; i < lst.size(); i ++ ) {
-			if ( lst.get( i ) != null ) {
-				result.add( componentJavaType.fromString( lst.get( i ) ) );
+		final C result = semantics.instantiateRaw( list.size(), null );
+		for ( int i = 0; i < list.size(); i ++ ) {
+			if ( list.get( i ) != null ) {
+				result.add( componentJavaType.fromString( list.get( i ) ) );
 			}
 		}
 		return result;
@@ -451,7 +455,16 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			if ( value == null ) {
 				return null;
 			}
-			final C copy = semantics.instantiateRaw( value.size(), null );
+			final C copy;
+			if ( semantics.getCollectionClassification() == CollectionClassification.SET ) {
+				// Retain the original order as we currently only map to the JDBC array type which is order sensitive
+				//noinspection unchecked
+				copy = (C) CollectionHelper.linkedSetOfSize( value.size() );
+			}
+			else {
+				copy = semantics.instantiateRaw( value.size(), null );
+			}
+
 			for ( E element : value ) {
 				copy.add( componentPlan.deepCopy( element ) );
 			}

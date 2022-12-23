@@ -28,6 +28,9 @@ public class GlobalTemporaryTableStrategy {
 	private static final Logger log = Logger.getLogger( GlobalTemporaryTableStrategy.class );
 
 	public static final String SHORT_NAME = "global_temporary";
+
+	public static final String CREATE_ID_TABLES = "hibernate.hql.bulk_id_strategy.global_temporary.create_tables";
+
 	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
@@ -35,6 +38,7 @@ public class GlobalTemporaryTableStrategy {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean prepared;
+
 	private boolean dropIdTables;
 
 	public GlobalTemporaryTableStrategy(
@@ -56,6 +60,19 @@ public class GlobalTemporaryTableStrategy {
 		}
 
 		prepared = true;
+
+		final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
+				.getBootstrapContext()
+				.getServiceRegistry().getService( ConfigurationService.class );
+		boolean createIdTables = configService.getSetting(
+				CREATE_ID_TABLES,
+				StandardConverters.BOOLEAN,
+				true
+		);
+
+		if ( !createIdTables ) {
+			return;
+		}
 
 		log.debugf( "Creating global-temp ID table : %s", getTemporaryTable().getTableExpression() );
 
@@ -79,9 +96,6 @@ public class GlobalTemporaryTableStrategy {
 
 		try {
 			temporaryTableCreationWork.execute( connection );
-			final ConfigurationService configService = mappingModelCreationProcess.getCreationContext()
-					.getBootstrapContext()
-					.getServiceRegistry().getService( ConfigurationService.class );
 			this.dropIdTables = configService.getSetting(
 					DROP_ID_TABLES,
 					StandardConverters.BOOLEAN,
@@ -118,7 +132,10 @@ public class GlobalTemporaryTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debugf( "Unable to obtain JDBC connection; unable to drop global-temp ID table : %s", getTemporaryTable().getTableExpression() );
+			log.debugf(
+					"Unable to obtain JDBC connection; unable to drop global-temp ID table : %s",
+					getTemporaryTable().getTableExpression()
+			);
 			return;
 		}
 		catch (SQLException e) {

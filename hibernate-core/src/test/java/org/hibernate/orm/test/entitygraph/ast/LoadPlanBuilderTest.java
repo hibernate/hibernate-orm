@@ -73,12 +73,12 @@ public class LoadPlanBuilderTest {
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getFetches() ).hasSize( 2 );
 
-		final Fetch txtFetch = entityResult.getFetches().get( 0 );
+		final Fetch txtFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "msgTxt" ) );
 		assertThat( txtFetch ).isNotNull();
 		assertThat( txtFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "msgTxt" );
 		assertThat( txtFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 
-		final Fetch posterFetch = entityResult.getFetches().get( 1 );
+		final Fetch posterFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "poster" ) );
 		assertThat( posterFetch ).isNotNull();
 		assertThat( posterFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "poster" );
 		assertThat( posterFetch.getTiming() ).isEqualTo( FetchTiming.DELAYED );
@@ -114,12 +114,12 @@ public class LoadPlanBuilderTest {
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getFetches() ).hasSize( 2 );
 
-		final Fetch txtFetch = entityResult.getFetches().get( 0 );
+		final Fetch txtFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "msgTxt" ) );
 		assertThat( txtFetch ).isNotNull();
 		assertThat( txtFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "msgTxt" );
 		assertThat( txtFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 
-		final Fetch posterFetch = entityResult.getFetches().get( 1 );
+		final Fetch posterFetch = entityResult.getFetches().get( entityDescriptor.findAttributeMapping( "poster" ) );
 		assertThat( posterFetch ).isNotNull();
 		assertThat( posterFetch.getFetchedMapping().getFetchableName() ).isEqualTo( "poster" );
 		assertThat( posterFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );

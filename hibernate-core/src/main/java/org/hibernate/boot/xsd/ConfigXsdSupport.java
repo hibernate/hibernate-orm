@@ -36,7 +36,7 @@ public class ConfigXsdSupport {
 	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[7];
 
 	public XsdDescriptor latestJpaDescriptor() {
-		return getJPA30();
+		return getJPA31();
 	}
 
 	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {

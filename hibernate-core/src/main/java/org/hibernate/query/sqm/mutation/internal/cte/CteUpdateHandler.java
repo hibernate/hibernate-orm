@@ -25,7 +25,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
-import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -43,7 +42,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -62,7 +61,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 	private static final String INSERT_RESULT_TABLE_NAME_PREFIX = "insert_cte_";
 
 	public CteUpdateHandler(
-			SqmCteTable cteTable,
+			CteTable cteTable,
 			SqmUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
@@ -174,8 +173,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				}
 				final CteTable dmlResultCte = new CteTable(
 						insertCteTableName,
-						idSelectCte.getCteTable().getCteColumns(),
-						factory
+						idSelectCte.getCteTable().getCteColumns()
 				);
 				final NamedTableReference dmlTableReference = resolveUnionTableReference(
 						updatingTableReference,
@@ -184,8 +182,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final NamedTableReference existsTableReference = new NamedTableReference(
 						tableExpression,
 						"dml_",
-						false,
-						factory
+						false
 				);
 				final List<ColumnReference> existsKeyColumns = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 				final String[] keyColumns = entityPersister.getKeyColumns( i );
@@ -195,8 +192,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 									new ColumnReference(
 											existsTableReference,
 											keyColumns[selectionIndex],
-											selectableMapping.getJdbcMapping(),
-											factory
+											selectableMapping.getJdbcMapping()
 									)
 							);
 						}
@@ -256,7 +252,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					);
 				}
 
-				final InsertStatement dmlStatement = new InsertStatement( dmlTableReference, existsKeyColumns );
+				final InsertSelectStatement dmlStatement = new InsertSelectStatement( dmlTableReference, existsKeyColumns );
 				dmlStatement.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 				dmlStatement.setSourceSelectStatement( querySpec );
 				statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
@@ -272,8 +268,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					}
 					final CteTable dmlResultCte = new CteTable(
 							cteTableName,
-							idSelectCte.getCteTable().getCteColumns(),
-							factory
+							idSelectCte.getCteTable().getCteColumns()
 					);
 					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 							updatingTableGroup.getNavigablePath(),
@@ -294,8 +289,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 							(index, selectable) -> columnReferences.add(
 									new ColumnReference(
 											dmlTableReference,
-											selectable,
-											factory
+											selectable
 									)
 							)
 					);

@@ -10,17 +10,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.HSQLSequenceSupport;
@@ -36,11 +28,9 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
@@ -63,8 +53,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHS
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -79,10 +67,6 @@ import static org.hibernate.type.SqlTypes.NCLOB;
  * @author Fred Toussi
  */
 public class HSQLDialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			HSQLDialect.class.getName()
-	);
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 6, 1 );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
@@ -146,7 +130,7 @@ public class HSQLDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
 
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
@@ -355,9 +339,9 @@ public class HSQLDialect extends Dialect {
 		return OffsetFetchLimitHandler.INSTANCE;
 	}
 
-	// Note : HSQLDB actually supports [IF EXISTS] before AND after the <tablename>
-	// But as CASCADE has to be AFTER IF EXISTS in case it's after the tablename,
-	// We put the IF EXISTS before the tablename to be able to add CASCADE after.
+	// Note: HSQLDB actually supports IF EXISTS before AND after the table name.
+	// But as CASCADE has to be after IF EXISTS in case it's after the table name,
+	// we put the IF EXISTS before the table name to be able to add CASCADE after.
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
@@ -375,7 +359,6 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		// this assumes schema support, which is present in 1.8.0 and later...
 		return "select * from information_schema.sequences";
 	}
 
@@ -394,11 +377,8 @@ public class HSQLDialect extends Dialect {
 		return EXTRACTOR_20;
 	}
 
-	/**
-	 * HSQLDB 2.0 messages have changed
-	 * messages may be localized - therefore use the common, non-locale element " table: "
-	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_20 =
+			// messages may be localized, therefore use the common, non-locale element " table: "
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
 					case -8:
@@ -415,44 +395,33 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		String literal;
 		switch ( sqlType ) {
 			case Types.LONGVARCHAR:
 			case Types.VARCHAR:
 			case Types.CHAR:
-				literal = "cast(null as varchar(100))";
-				break;
+				return "cast(null as varchar(100))";
 			case Types.LONGVARBINARY:
 			case Types.VARBINARY:
 			case Types.BINARY:
-				literal = "cast(null as varbinary(100))";
-				break;
+				return "cast(null as varbinary(100))";
 			case Types.CLOB:
-				literal = "cast(null as clob)";
-				break;
+				return "cast(null as clob)";
 			case Types.BLOB:
-				literal = "cast(null as blob)";
-				break;
+				return "cast(null as blob)";
 			case Types.DATE:
-				literal = "cast(null as date)";
-				break;
+				return "cast(null as date)";
 			case Types.TIMESTAMP:
 			case Types.TIMESTAMP_WITH_TIMEZONE:
-				literal = "cast(null as timestamp)";
-				break;
+				return "cast(null as timestamp)";
 			case Types.BOOLEAN:
-				literal = "cast(null as boolean)";
-				break;
+				return "cast(null as boolean)";
 			case Types.BIT:
-				literal = "cast(null as bit)";
-				break;
+				return "cast(null as bit)";
 			case Types.TIME:
-				literal = "cast(null as time)";
-				break;
+				return "cast(null as time)";
 			default:
-				literal = "cast(null as int)";
+				return "cast(null as int)";
 		}
-		return literal;
 	}
 
 	@Override
@@ -475,11 +444,11 @@ public class HSQLDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		return new LocalTemporaryTableMutationStrategy(
-				// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
+				// With HSQLDB 2.0, the table name is qualified with SESSION to assist the drop
 				// statement (in-case there is a global name beginning with HT_)
 				TemporaryTable.createIdTable(
 						rootEntityDescriptor,
-						basename -> "MODULE." + TemporaryTable.ID_TABLE_PREFIX + basename,
+						basename -> "session." + TemporaryTable.ID_TABLE_PREFIX + basename,
 						this,
 						runtimeModelCreationContext
 				),
@@ -502,11 +471,11 @@ public class HSQLDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		return new LocalTemporaryTableInsertStrategy(
-				// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
+				// With HSQLDB 2.0, the table name is qualified with SESSION to assist the drop
 				// statement (in-case there is a global name beginning with HT_)
 				TemporaryTable.createEntityTable(
 						rootEntityDescriptor,
-						name -> "MODULE." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						name -> "session." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
 						this,
 						runtimeModelCreationContext
 				),
@@ -536,14 +505,6 @@ public class HSQLDialect extends Dialect {
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * HSQLDB 1.8.x requires CALL CURRENT_TIMESTAMP but this should not
-	 * be treated as a callable statement. It is equivalent to
-	 * "select current_timestamp from dual" in some databases.
-	 * HSQLDB 2.0 also supports VALUES CURRENT_TIMESTAMP
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
@@ -556,30 +517,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "call current_timestamp";
-	}
-
-	/**
-	 * For HSQLDB 2.0, this is a copy of the base class implementation.
-	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteSelectLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadSelectLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
-		}
-		return new SelectLockingStrategy( lockable, lockMode );
+		return "values current_timestamp";
 	}
 
 	@Override
@@ -616,7 +554,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
+		// 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
 		return true;
 	}
 
@@ -697,8 +635,8 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		builder.setAutoQuoteInitialUnderscore( true );
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override

@@ -134,7 +134,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		String entityName = entityPersister.getEntityName();
 		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
 
-		if ( this.lockOptions != null ) {
+		if ( lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
 			context.fireLoad( event, LoadEventListener.LOAD );
 			return (T) event.getResult();
@@ -179,7 +179,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		String entityName = entityPersister.getEntityName();
 		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
 
-		if ( this.lockOptions != null ) {
+		if ( lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
 			context.fireLoad( event, LoadEventListener.GET );
 			final Object result = event.getResult();

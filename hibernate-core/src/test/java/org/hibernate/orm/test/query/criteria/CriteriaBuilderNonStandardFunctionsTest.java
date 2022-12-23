@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -329,6 +330,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach has unreliable support for numeric types in log function")
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -337,12 +339,12 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 			query.multiselect(
 					cb.log10( from.get( "theInt" ) ),
-					cb.log( 10, from.get( "theInt" ) )
+					cb.log( 2, from.get( "theInt" ) )
 			).where( cb.equal( from.get( "id" ), 1 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
-			assertEquals( 0.698970, result.get( 0, Double.class ), 1e-6 );
-			assertEquals( 0.698970, result.get( 1, Double.class ), 1e-6 );
+			assertEquals( Math.log10( 5 ), result.get( 0, Double.class ), 1e-6 );
+			assertEquals( Math.log( 5 ) / Math.log( 2 ), result.get( 1, Double.class ), 1e-6 );
 		} );
 	}
 
@@ -351,7 +353,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Double> query = cb.createQuery( Double.class ).select( cb.pi() );
-			assertEquals( 3.141592, session.createQuery( query ).getSingleResult(), 1e-6 );
+			assertEquals( Math.PI, session.createQuery( query ).getSingleResult(), 1e-6 );
 		} );
 	}
 

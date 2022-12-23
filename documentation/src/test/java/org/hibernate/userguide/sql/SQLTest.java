@@ -194,6 +194,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15914" )
 	public void test_sql_hibernate_custom_column_selection_scalar_query_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
@@ -496,6 +497,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15914" )
 	public void test_sql_hibernate_multi_entity_query_alias_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);

@@ -112,7 +112,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty, propertyIndex );
 				component.addProperty( property );
 			}
-			propertyIndex++;
+			if(referencedPersistentClass.getIdentifierProperty() != null) {
+				propertyIndex++;
+			}
 		}
 	}
 
@@ -150,7 +152,9 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty, propertyIndex );
 				value.addProperty( componentProperty );
 			}
-			propertyIndex++;
+			if(referencedPersistentClass.getIdentifierProperty() != null) {
+				propertyIndex++;
+			}
 		}
 
 		return property;

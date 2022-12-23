@@ -14,10 +14,11 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -27,8 +28,8 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -140,7 +141,9 @@ public class EmbeddedAttributeMapping
 		super(
 				inverseModelPart.getFetchableName(),
 				-1,
-				null,
+				inverseModelPart instanceof AttributeMapping
+						? inverseModelPart.asAttributeMapping().getAttributeMetadataAccess()
+						: null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
 				inverseModelPart instanceof PropertyBasedMapping ?

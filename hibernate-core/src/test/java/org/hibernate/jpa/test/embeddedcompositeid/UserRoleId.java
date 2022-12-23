@@ -8,6 +8,7 @@ import javax.persistence.Embedded;
 
 /**
  * @author Habib Zerai
+ *
  */
 @Embeddable
 public class UserRoleId implements Serializable {

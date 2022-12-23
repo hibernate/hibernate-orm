@@ -24,7 +24,7 @@ import org.hibernate.Incubating;
 public interface SchemaManager {
 	/**
 	 * Export database objects mapped by Hibernate entities.
-	 *
+	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
 	 *
 	 * @param createSchemas if {@code true}, attempt to create schemas,

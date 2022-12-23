@@ -102,6 +102,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			index.set( 0 );
 		}
 		int propertyIndex = 0;
+		boolean hasFkFromDifferentReference = ((Component) component.getOwner().getIdentifier()).getPropertySpan() > 0;
 		while ( properties.hasNext() ) {
 			Property referencedProperty = properties.next();
 			if ( referencedProperty.isComposite() ) {
@@ -112,7 +113,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				Property property = createSimpleProperty( referencedPersistentClass, isExplicitReference, columnByReferencedName, index, referencedProperty, propertyIndex );
 				component.addProperty( property );
 			}
-			if(referencedPersistentClass.getIdentifierProperty() != null) {
+			if(hasFkFromDifferentReference) {
 				propertyIndex++;
 			}
 		}
@@ -141,6 +142,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		Iterator<Property> propertyIterator = referencedValue.getPropertyIterator();
 		int propertyIndex = 0;
+		boolean hasFkFromDifferentReference = ((Component) component.getOwner().getIdentifier()).getPropertySpan() > 0;
 		while(propertyIterator.hasNext()) {
 			Property referencedComponentProperty = propertyIterator.next();
 
@@ -152,7 +154,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 				Property componentProperty = createSimpleProperty( referencedValue.getOwner(), isExplicitReference, columnByReferencedName, index, referencedComponentProperty, propertyIndex );
 				value.addProperty( componentProperty );
 			}
-			if(referencedPersistentClass.getIdentifierProperty() != null) {
+			if(hasFkFromDifferentReference) {
 				propertyIndex++;
 			}
 		}

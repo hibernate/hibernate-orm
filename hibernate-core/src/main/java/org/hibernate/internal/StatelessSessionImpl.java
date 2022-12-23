@@ -26,11 +26,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -44,6 +41,8 @@ import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Concrete implementation of the {@link StatelessSession} API.
@@ -129,9 +128,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
-		EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifier( entity, this );
-		Object version = persister.getVersion( entity );
+		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final Object id = persister.getIdentifier( entity, this );
+		final Object version = persister.getVersion( entity );
 		persister.delete( id, version, entity, this );
 	}
 
@@ -147,13 +146,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
-		EntityPersister persister = getEntityPersister( entityName, entity );
-		Object id = persister.getIdentifier( entity, this );
-		Object[] state = persister.getValues( entity );
-		Object oldVersion;
+		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final Object id = persister.getIdentifier( entity, this );
+		final Object[] state = persister.getValues( entity );
+		final Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = incrementVersion( entity, oldVersion, persister, this );
+			final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
 			setVersion( state, newVersion, persister );
 			persister.setValues( entity, state );
 		}
@@ -185,15 +184,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor = getEntityPersister( entityName );
 		final Object result = entityDescriptor.load( id, null, getNullSafeLockMode( lockMode ), this );
 
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
 		return result;
+	}
+
+	private EntityPersister getEntityPersister(String entityName) {
+		return getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -213,20 +214,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
-		final EntityPersister persister = this.getEntityPersister( entityName, entity );
+		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( persister, id, this.getFactory() ) );
+			LOG.tracev( "Refreshing transient {0}", infoString( persister, id, getFactory() ) );
 		}
-		// TODO : can this ever happen???
-//		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
-//		if ( source.getPersistenceContext().getEntry( key ) != null ) {
-//			throw new PersistentObjectException(
-//					"attempted to refresh transient instance when persistent " +
-//					"instance was already associated with the Session: " +
-//					MessageHelper.infoString( persister, id, source.getFactory() )
-//			);
-//		}
 
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
@@ -241,7 +233,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		String previousFetchProfile = getLoadQueryInfluencers().getInternalFetchProfile();
+		final String previousFetchProfile = getLoadQueryInfluencers().getInternalFetchProfile();
 		Object result;
 		try {
 			getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
@@ -276,10 +268,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object instantiate(
 			String entityName,
 			Object id) throws HibernateException {
-		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-		return instantiate( entityDescriptor, id );
+		return instantiate( getEntityPersister( entityName ), id );
 	}
 
 	@Override
@@ -296,10 +285,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) throws HibernateException {
 		checkOpen();
 
-		final EntityPersister entityDescriptor = getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
-		final EntityKey entityKey = generateEntityKey( id, entityDescriptor );
+		final EntityPersister persister = getEntityPersister( entityName );
+		final EntityKey entityKey = generateEntityKey( id, persister );
 
 		// first, try to load it from the temp PC associated to this SS
 		final PersistenceContext persistenceContext = getPersistenceContext();
@@ -316,24 +303,24 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final EntityMetamodel entityMetamodel = entityDescriptor.getEntityMetamodel();
+			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
-				if ( entityDescriptor.getRepresentationStrategy().getProxyFactory() != null ) {
+				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
 					final Object proxy = persistenceContext.getProxy( entityKey );
 
 					if ( proxy != null ) {
 						if ( LOG.isTraceEnabled() ) {
 							LOG.trace( "Entity proxy found in session cache" );
 						}
-						if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
+						if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
-						return persistenceContext.narrowProxy( proxy, entityDescriptor, entityKey, null );
+						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
 					}
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
@@ -352,10 +339,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				// The entity will get loaded below.
 			}
 			else {
-				if ( entityDescriptor.hasProxy() ) {
+				if ( persister.hasProxy() ) {
 					final Object existingProxy = persistenceContext.getProxy( entityKey );
 					if ( existingProxy != null ) {
-						return persistenceContext.narrowProxy( existingProxy, entityDescriptor, entityKey, null );
+						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
 					}
 					else {
 						return createProxy( entityKey );
@@ -387,7 +374,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void fetch(Object association) {
 		checkOpen();
 		PersistenceContext persistenceContext = getPersistenceContext();
-		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( association );
+		final LazyInitializer initializer = extractLazyInitializer( association );
 		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
 				String entityName = initializer.getEntityName();
@@ -411,9 +398,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else if ( isPersistentAttributeInterceptable( association ) ) {
-			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
-				EnhancementAsProxyLazinessInterceptor proxyInterceptor =
+				final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
 						(EnhancementAsProxyLazinessInterceptor) interceptor;
 				proxyInterceptor.setSession( this );
 				try {
@@ -428,13 +416,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else if ( association instanceof PersistentCollection ) {
-			PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
+			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
 			if ( !persistentCollection.wasInitialized() ) {
 
 				final CollectionPersister collectionDescriptor = getFactory().getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getCollectionDescriptor( persistentCollection.getRole() );
-				Object key = persistentCollection.getKey();
+				final Object key = persistentCollection.getKey();
 				persistenceContext.addUninitializedCollection( collectionDescriptor, persistentCollection, key );
 				persistentCollection.setCurrentSession(this);
 				try {
@@ -460,7 +448,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return isAutoCloseSessionEnabled() && !isClosed();
 	}
 
-
 	private boolean isFlushModeNever() {
 		return false;
 	}
@@ -479,30 +466,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			object = lazyInitializer.getImplementation();
 		}
 		return guessEntityName( object );
 	}
-
-//	@Override
-//	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-//		checkOpen();
-//		queryParameters.validateParameters();
-//		HQLQueryPlan plan = getQueryPlan( query, false );
-//		boolean success = false;
-//		int result = 0;
-//		try {
-//			result = plan.performExecuteUpdate( queryParameters, this );
-//			success = true;
-//		}
-//		finally {
-//			afterOperation( success );
-//		}
-//		temporaryPersistenceContext.clear();
-//		return result;
-//	}
 
 	@Override
 	public CacheMode getCacheMode() {
@@ -535,17 +504,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public EntityPersister getEntityPersister(String entityName, Object object)
 			throws HibernateException {
 		checkOpen();
-		if ( entityName == null ) {
-			return getFactory().getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( guessEntityName( object ) );
-		}
-		else {
-			return getFactory().getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( entityName )
-					.getSubclassEntityPersister( object, getFactory() );
-		}
+		return entityName == null
+				? getEntityPersister( guessEntityName(object) )
+				: getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 	}
 
 	@Override
@@ -582,16 +543,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return null;
 	}
 
-	@Override
-	public boolean isEventSource() {
-		return false;
-	}
-
-	@Override
-	public EventSource asEventSource() {
-		throw new HibernateException( "Illegal Cast to EventSource - guard by invoking isEventSource() first" );
-	}
-
 	public boolean isDefaultReadOnly() {
 		return false;
 	}
@@ -606,23 +557,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!
 
-//	@Override
-//	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-//		checkOpen();
-//		queryParameters.validateParameters();
-//		HQLQueryPlan plan = getQueryPlan( query, false );
-//		boolean success = false;
-//		List results = Collections.EMPTY_LIST;
-//		try {
-//			results = plan.performList( queryParameters, this );
-//			success = true;
-//		}
-//		finally {
-//			afterOperation( success );
-//		}
-//		temporaryPersistenceContext.clear();
-//		return results;
-//	}
 
 	public void afterOperation(boolean success) {
 		temporaryPersistenceContext.clear();
@@ -656,30 +590,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return false;
 	}
 
-//	@Override
-//	public int executeNativeUpdate(
-//			NativeSQLQuerySpecification nativeSQLQuerySpecification,
-//			QueryParameters queryParameters) throws HibernateException {
-//		checkOpen();
-//		queryParameters.validateParameters();
-//		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeSQLQuerySpecification );
-//
-//		boolean success = false;
-//		int result = 0;
-//		try {
-//			result = plan.performExecuteUpdate( queryParameters, this );
-//			success = true;
-//		}
-//		finally {
-//			afterOperation( success );
-//		}
-//		temporaryPersistenceContext.clear();
-//		return result;
-//	}
-
 	@Override
 	public void afterTransactionBegin() {
-
 	}
 
 	@Override
@@ -703,14 +615,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void flushBeforeTransactionCompletion() {
 		boolean flush;
 		try {
-			flush = (
-					!isClosed()
-							&& !isFlushModeNever()
-							&& !JtaStatusHelper.isRollback(
-							getJtaPlatform().getCurrentStatus()
-					) );
+			flush = !isClosed()
+					&& !isFlushModeNever()
+					&& !JtaStatusHelper.isRollback( getJtaPlatform().getCurrentStatus() );
 		}
-		catch (SystemException se) {
+		catch ( SystemException se ) {
 			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
 		}
 		if ( flush ) {

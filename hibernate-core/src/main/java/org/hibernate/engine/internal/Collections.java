@@ -92,7 +92,7 @@ public final class Collections {
 			}
 			final EntityEntry e = persistenceContext.getEntry( owner );
 			//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
-			if ( e != null && e.getStatus() != Status.DELETED && e.getStatus() != Status.GONE ) {
+			if ( e != null && !e.getStatus().isDeletedOrGone() ) {
 				throw new HibernateException(
 						"A collection with cascade=\"all-delete-orphan\" was no longer referenced by the owning entity instance: " +
 						loadedPersister.getRole()

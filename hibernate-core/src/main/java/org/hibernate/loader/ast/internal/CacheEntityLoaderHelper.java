@@ -77,8 +77,7 @@ public class CacheEntityLoaderHelper {
 			// this object was already loaded
 			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
-				Status status = oldEntry.getStatus();
-				if ( status == Status.DELETED || status == Status.GONE ) {
+				if ( oldEntry.getStatus().isDeletedOrGone() ) {
 					LoadingLogger.LOGGER.debug(
 							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
 					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
@@ -136,8 +135,7 @@ public class CacheEntityLoaderHelper {
 			// this object was already loaded
 			EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
 			if ( options.isCheckDeleted() ) {
-				Status status = oldEntry.getStatus();
-				if ( status == Status.DELETED || status == Status.GONE ) {
+				if ( oldEntry.getStatus().isDeletedOrGone() ) {
 					LoadingLogger.LOGGER.debug(
 							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
 					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );

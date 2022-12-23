@@ -60,7 +60,7 @@ public class PooledOptimizerTest extends BaseEntityManagerFunctionalTestCase {
 		)
 		@GenericGenerator(
 			name = "product_generator",
-			strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+			type = org.hibernate.id.enhanced.SequenceStyleGenerator.class,
 			parameters = {
 				@Parameter(name = "sequence_name", value = "product_sequence"),
 				@Parameter(name = "initial_value", value = "1"),

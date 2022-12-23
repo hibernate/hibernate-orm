@@ -74,7 +74,7 @@ public class StringMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfStrings").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfStrings").executeUpdate()
 		);
 	}
 

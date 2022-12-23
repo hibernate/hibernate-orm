@@ -115,7 +115,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.name = :name")
+				"where p.name = :name", Person.class)
 			.setParameter("name", "John Doe")
 			.setCacheable(true)
 			.list();
@@ -142,7 +142,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.id > :id")
+				"where p.id > :id", Person.class)
 			.setParameter("id", 0L)
 			.setCacheable(true)
 			.setCacheRegion("query.cache.person")
@@ -171,7 +171,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.id > :id")
+				"where p.id > :id", Person.class)
 			.setParameter("id", 0L)
 			.setCacheable(true)
 			.setCacheRegion("query.cache.person")
@@ -237,7 +237,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-management-cache-mode-query-native-example[]
 			List<Person> persons = session.createQuery(
-				"select p from Person p")
+				"select p from Person p", Person.class)
 			.setCacheable(true)
 			.setCacheMode(CacheMode.REFRESH)
 			.list();

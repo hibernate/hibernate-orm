@@ -76,7 +76,7 @@ public class ByteMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfBytes").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfBytes").executeUpdate()
 		);
 	}
 

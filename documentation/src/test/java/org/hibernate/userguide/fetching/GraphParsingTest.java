@@ -141,7 +141,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 					Employee.class,
 					userId,
 					Collections.singletonMap(
-							GraphSemantic.FETCH.getJpaHintName(),
+							GraphSemantic.FETCH.getJakartaHintName(),
 							GraphParser.parse(Employee.class, "username, accessLevel, department", entityManager)
 					)
 			);
@@ -164,7 +164,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 			
 			TypedQuery<Employee> query1 = entityManager.createQuery(queryString, Employee.class);
 			query1.setHint(
-					GraphSemantic.FETCH.getJpaHintName(),
+					GraphSemantic.FETCH.getJakartaHintName(),
 					graph
 			);
 			//end::fetching-strategies-dynamic-fetching-entity-graph-apply-example-query[]

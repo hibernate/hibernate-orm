@@ -56,8 +56,7 @@ public class CascadeLockTest extends BaseEntityManagerFunctionalTestCase {
 			assertFalse(entityManager.contains(phone));
 
 			entityManager.unwrap(Session.class)
-					.buildLockRequest(new LockOptions(LockMode.NONE))
-					.lock(person);
+					.lock(person, new LockOptions(LockMode.NONE));
 
 			assertTrue(entityManager.contains(person));
 			assertTrue(entityManager.contains(phone));

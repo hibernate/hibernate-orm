@@ -75,7 +75,7 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-native-evict-example[]
 			Session session = entityManager.unwrap(Session.class);
-			for(Person person : (List<Person>) session.createQuery("select p from Person p").list()) {
+			for(Person person : (List<Person>) session.createSelectionQuery("select p from Person p").list()) {
 				dtos.add(toDTO(person));
 				session.evict(person);
 			}

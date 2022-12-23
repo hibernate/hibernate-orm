@@ -374,25 +374,22 @@ If not supported, the Hibernate dialect ignores this query hint.
 The `jakarta.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the Jakarta Persistence standard.
 ====
 
-[[locking-buildLockRequest]]
-=== The `buildLockRequest` API
+[[locking-session-lock]]
+=== Session.lock()
 
-Traditionally, Hibernate offered the `Session#lock()` method for acquiring an optimistic or a pessimistic lock on a given entity.
-Because varying the locking options was difficult when using a single `LockMode` parameter, Hibernate has added the `Session#buildLockRequest()` method API.
+The following example shows how to obtain a shared database lock.
 
-The following example shows how to obtain a shared database lock without waiting for the lock acquisition request.
-
-[[locking-buildLockRequest-example]]
-.`buildLockRequest` example
+[[locking-session-lock-example]]
+.`session.lock()` example
 ====
 [source, JAVA,indent=0]
 ----
-include::{sourcedir}/ExplicitLockingTest.java[tags=locking-buildLockRequest-example,indent=0]
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-session-lock-example,indent=0]
 ----
 
 [source, SQL,indent=0]
 ----
-include::{extrasdir}/locking-buildLockRequest-example.sql[]
+include::{extrasdir}/locking-sessionlock-example.sql[]
 ----
 ====
 

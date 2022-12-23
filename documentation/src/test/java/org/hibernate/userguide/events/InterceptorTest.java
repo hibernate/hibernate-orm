@@ -13,7 +13,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
@@ -135,11 +135,11 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	//tag::events-interceptors-example[]
-	public static class LoggingInterceptor extends EmptyInterceptor {
+	public static class LoggingInterceptor implements Interceptor {
 		@Override
 		public boolean onFlushDirty(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] currentState,
 			Object[] previousState,
 			String[] propertyNames,
@@ -150,7 +150,7 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 					Arrays.toString(previousState),
 					Arrays.toString(currentState)
 				);
-				return super.onFlushDirty(entity, id, currentState,
+				return Interceptor.super.onFlushDirty(entity, id, currentState,
 					previousState, propertyNames, types
 			);
 		}

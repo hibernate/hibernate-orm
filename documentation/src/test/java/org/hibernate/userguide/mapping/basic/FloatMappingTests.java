@@ -80,7 +80,7 @@ public class FloatMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfFloats").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfFloats").executeUpdate()
 		);
 	}
 

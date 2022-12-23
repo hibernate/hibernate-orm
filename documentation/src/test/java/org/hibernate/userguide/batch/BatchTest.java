@@ -93,7 +93,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			Session session = entityManager.unwrap(Session.class);
 			//tag::batch-bulk-hql-update-example[]
-			int updatedEntities = session.createQuery(
+			int updatedEntities = session.createMutationQuery(
 				"update Person " +
 				"set name = :newName " +
 				"where name = :oldName")
@@ -110,7 +110,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			Session session = entityManager.unwrap(Session.class);
 			//tag::batch-bulk-hql-update-version-example[]
-			int updatedEntities = session.createQuery(
+			int updatedEntities = session.createMutationQuery(
 				"update versioned Person " +
 				"set name = :newName " +
 				"where name = :oldName")
@@ -138,7 +138,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			Session session = entityManager.unwrap(Session.class);
 			//tag::batch-bulk-hql-insert-example[]
-			int insertedEntities = session.createQuery(
+			int insertedEntities = session.createMutationQuery(
 				"insert into Partner (id, name) " +
 				"select p.id, p.name " +
 				"from Person p ")
@@ -152,7 +152,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 
 			Session session = entityManager.unwrap(Session.class);
 			//tag::batch-bulk-hql-delete-example[]
-			int deletedEntities = session.createQuery(
+			int deletedEntities = session.createMutationQuery(
 				"delete Person " +
 				"where name = :name")
 			.setParameter("name", name)
@@ -243,7 +243,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 
 			scrollableResults = session
-				.createQuery("select p from Person p")
+				.createSelectionQuery("select p from Person p")
 				.setCacheMode(CacheMode.IGNORE)
 				.scroll(ScrollMode.FORWARD_ONLY);
 
@@ -288,7 +288,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			txn.begin();
 
 			scrollableResults = statelessSession
-				.createQuery("select p from Person p")
+				.createSelectionQuery("select p from Person p")
 				.scroll(ScrollMode.FORWARD_ONLY);
 
 			while (scrollableResults.next()) {

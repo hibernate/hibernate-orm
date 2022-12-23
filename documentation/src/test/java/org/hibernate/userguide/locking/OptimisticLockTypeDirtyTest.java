@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -56,7 +55,6 @@ public class OptimisticLockTypeDirtyTest extends BaseEntityManagerFunctionalTest
 	@Entity(name = "Person")
 	@OptimisticLocking(type = OptimisticLockType.DIRTY)
 	@DynamicUpdate
-	@SelectBeforeUpdate
 	public static class Person {
 
 		@Id

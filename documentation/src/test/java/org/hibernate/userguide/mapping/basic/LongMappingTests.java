@@ -74,7 +74,7 @@ public class LongMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfLongs").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfLongs").executeUpdate()
 		);
 	}
 

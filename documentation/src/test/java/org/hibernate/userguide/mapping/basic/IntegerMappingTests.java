@@ -74,7 +74,7 @@ public class IntegerMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfIntegers").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfIntegers").executeUpdate()
 		);
 	}
 

@@ -55,7 +55,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-selection-query-query[]
 			// cannot be validated until execution
-			Query query = session.createQuery( "delete Person" );
+			Query query = session.createQuery( "delete Person", Person.class );
 			query.getResultList();
 			//end::example-hql-selection-query-query[]
 		} );

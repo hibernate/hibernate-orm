@@ -66,7 +66,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	protected void cleanupTest() {
 		inTransaction(
 				session -> {
-					session.createQuery( "delete from JsonHolder h" ).executeUpdate();
+					session.createMutationQuery( "delete from JsonHolder h" ).executeUpdate();
 				}
 		);
 	}
@@ -213,7 +213,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete JsonHolder b where b.theJson is not null" ).executeUpdate();
+					entityManager.createMutationQuery( "delete JsonHolder b where b.theJson is not null" ).executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ) );
 
 				}
@@ -224,7 +224,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testUpdateAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update JsonHolder b set b.theJson = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.theJson = null" ).executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
@@ -235,7 +235,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update JsonHolder b set b.theJson.nested.theString = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.theJson.nested.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					assertStructEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
@@ -248,7 +248,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update JsonHolder b set b.theJson.nested.theString = null, b.theJson.nested.theUuid = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.theJson.nested.theString = null, b.theJson.nested.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
@@ -263,7 +263,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
-					entityManager.createQuery(
+					entityManager.createMutationQuery(
 							"update JsonHolder b set " +
 									"b.theJson.nested.theInt = :theInt," +
 									"b.theJson.nested.theDouble = :theDouble," +

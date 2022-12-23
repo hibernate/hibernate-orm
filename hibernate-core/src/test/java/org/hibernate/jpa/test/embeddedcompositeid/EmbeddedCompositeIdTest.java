@@ -10,6 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 

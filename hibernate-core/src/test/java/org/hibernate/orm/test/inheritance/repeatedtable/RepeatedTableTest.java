@@ -13,6 +13,8 @@ import java.util.List;
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.InheritanceType.JOINED;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
@@ -20,7 +22,7 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{
 				DataType.class,
 				ObjectType.class,
@@ -81,6 +83,9 @@ public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 		}
 		try (Session sess = openSession()) {
 			SimpleType simpleType = sess.find(SimpleType.class, sId);
+			assertNotNull( simpleType );
+			SimpleType wrongType = sess.find(SimpleType.class, id);
+			assertNull( wrongType );
 		}
 
 		try (Session sess = openSession()) {

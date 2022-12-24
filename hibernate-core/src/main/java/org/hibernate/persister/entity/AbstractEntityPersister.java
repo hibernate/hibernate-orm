@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -111,7 +112,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.LazyValue;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -191,6 +191,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -203,7 +204,6 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
 import org.hibernate.persister.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.SemanticException;
@@ -275,6 +275,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -284,6 +285,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
@@ -297,6 +299,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallLi
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.discriminatorLiteral;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -452,7 +455,7 @@ public abstract class AbstractEntityPersister
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
-	private final String[] fullDiscriminatorSQLValues;
+//	private final String[] fullDiscriminatorSQLValues;
 	private final Object[] fullDiscriminatorValues;
 
 	/**
@@ -800,34 +803,34 @@ public abstract class AbstractEntityPersister
 				&& shouldInvalidateCache( bootDescriptor, creationContext );
 
 		final List<Object> values = new ArrayList<>();
-		final List<String> sqlValues = new ArrayList<>();
+//		final List<String> sqlValues = new ArrayList<>();
 
 		if ( bootDescriptor.isPolymorphic() && bootDescriptor.getDiscriminator() != null ) {
 			if ( !getEntityMetamodel().isAbstract() ) {
-				Object discriminatorValue = DiscriminatorHelper.getDiscriminatorValue( bootDescriptor );
-				String discriminatorSQLValue = DiscriminatorHelper.getDiscriminatorSQLValue( bootDescriptor, dialect, factory );
-				values.add( discriminatorValue );
-				sqlValues.add( discriminatorSQLValue );
+				values.add( DiscriminatorHelper.getDiscriminatorValue( bootDescriptor ) );
+//				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( bootDescriptor, dialect, factory ) );
 			}
 
 			final List<Subclass> subclasses = bootDescriptor.getSubclasses();
 			for ( int k = 0; k < subclasses.size(); k++ ) {
-				Subclass subclass = subclasses.get( k );
+				final Subclass subclass = subclasses.get( k );
 				//copy/paste from EntityMetamodel:
-				boolean subclassAbstract = subclass.isAbstract() == null
-						? subclass.hasPojoRepresentation() && ReflectHelper.isAbstractClass( subclass.getMappedClass() )
-						: subclass.isAbstract();
-
-				if ( !subclassAbstract ) {
-					Object subclassDiscriminatorValue = DiscriminatorHelper.getDiscriminatorValue( subclass );
-					values.add( subclassDiscriminatorValue );
-					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect, factory ) );
+				if ( !isAbstract( subclass ) ) {
+					values.add( DiscriminatorHelper.getDiscriminatorValue( subclass ) );
+//					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect, factory ) );
 				}
 			}
 		}
 
-		fullDiscriminatorSQLValues = toStringArray( sqlValues );
+//		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = toObjectArray( values );
+	}
+
+	static boolean isAbstract(PersistentClass subclass) {
+		final Boolean knownAbstract = subclass.isAbstract();
+		return knownAbstract == null
+				? subclass.hasPojoRepresentation() && isAbstractClass( subclass.getMappedClass() )
+				: knownAbstract;
 	}
 
 	private boolean shouldUseReferenceCacheEntries() {
@@ -2225,12 +2228,9 @@ public abstract class AbstractEntityPersister
 		String[] templates = getSubclassPropertyFormulaTemplateClosure()[i];
 		String[] result = new String[cols.length];
 		for ( int j = 0; j < cols.length; j++ ) {
-			if ( cols[j] == null ) {
-				result[j] = StringHelper.replace( templates[j], Template.TEMPLATE, alias );
-			}
-			else {
-				result[j] = StringHelper.qualify( alias, cols[j] );
-			}
+			result[j] = cols[j] == null
+					? StringHelper.replace( templates[j], Template.TEMPLATE, alias )
+					: StringHelper.qualify( alias, cols[j] );
 		}
 		return result;
 	}
@@ -2926,6 +2926,8 @@ public abstract class AbstractEntityPersister
 			} );
 		}
 	}
+
+	public abstract Map<Object, String> getSubclassByDiscriminatorValue();
 
 	protected abstract boolean needsDiscriminator();
 
@@ -4929,7 +4931,7 @@ public abstract class AbstractEntityPersister
 		else {
 			rowIdMapping = creationProcess.processSubPart(
 					rowIdName,
-					(role, process) -> new EntityRowIdMappingImpl( rowIdName, this.getTableName(), this )
+					(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
 			);
 		}
 
@@ -5064,7 +5066,7 @@ public abstract class AbstractEntityPersister
 	protected EntityDiscriminatorMapping generateDiscriminatorMapping(
 			PersistentClass bootEntityDescriptor,
 			MappingModelCreationProcess modelCreationProcess) {
-		if ( getDiscriminatorType() == null) {
+		if ( getDiscriminatorType() == null ) {
 			return null;
 		}
 		else {
@@ -5074,7 +5076,7 @@ public abstract class AbstractEntityPersister
 			final Integer precision;
 			final Integer scale;
 			if ( getDiscriminatorFormulaTemplate() == null ) {
-				Column column = bootEntityDescriptor.getDiscriminator() == null
+				final Column column = bootEntityDescriptor.getDiscriminator() == null
 						? null
 						: bootEntityDescriptor.getDiscriminator().getColumns().get( 0 );
 				discriminatorColumnExpression = getDiscriminatorColumnReaders();
@@ -5098,7 +5100,7 @@ public abstract class AbstractEntityPersister
 				precision = null;
 				scale = null;
 			}
-			return new ExplicitColumnDiscriminatorMappingImpl (
+			return new ExplicitColumnDiscriminatorMappingImpl(
 					this,
 					getTableName(),
 					discriminatorColumnExpression,
@@ -5106,16 +5108,38 @@ public abstract class AbstractEntityPersister
 					isPhysicalDiscriminator(),
 					columnDefinition, length, precision, scale,
 					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-					buildDiscriminatorValueMappings( bootEntityDescriptor, modelCreationProcess ),
+					buildDiscriminatorValueMappings( modelCreationProcess ),
 					modelCreationProcess
 			);
 		}
 	}
 
-	protected abstract Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
-			PersistentClass bootEntityDescriptor,
-			MappingModelCreationProcess modelCreationProcess);
+	@Override
+	public abstract BasicType<?> getDiscriminatorType();
 
+	protected Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
+			MappingModelCreationProcess modelCreationProcess) {
+		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
+				.getSessionFactory()
+				.getMappingMetamodel();
+
+		//noinspection unchecked
+		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter =
+				(JdbcLiteralFormatter<Object>) getDiscriminatorType().getJdbcLiteralFormatter();
+		final Dialect dialect = modelCreationProcess.getCreationContext()
+				.getSessionFactory().getJdbcServices().getDialect();
+
+		final Map<Object, DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
+		getSubclassByDiscriminatorValue().forEach( (value, entityName) -> {
+			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
+					value,
+					discriminatorLiteral( jdbcLiteralFormatter, dialect, value ),
+					mappingModel.findEntityDescriptor( entityName )
+			);
+			valueMappings.put( value, valueMapping );
+		} );
+		return valueMappings;
+	}
 
 	protected EntityVersionMapping generateVersionMapping(
 			Supplier<?> templateInstanceCreator,

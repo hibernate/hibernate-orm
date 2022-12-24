@@ -641,9 +641,11 @@ public class EntityBinder {
 		processDiscriminatorOptions();
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processSingleTableDiscriminatorProperties( inheritanceState );
 		if ( !inheritanceState.hasParents() ) { // todo : sucks that this is separate from RootClass distinction
+			final RootClass rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
-				bindDiscriminatorColumnToRootPersistentClass( (RootClass) persistentClass, discriminatorColumn, holder );
+				bindDiscriminatorColumnToRootPersistentClass(rootClass, discriminatorColumn, holder );
+				rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 			}
 		}
 	}
@@ -668,13 +670,15 @@ public class EntityBinder {
 
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processJoinedDiscriminatorProperties( state );
 		if ( !state.hasParents() ) {  // todo : sucks that this is separate from RootClass distinction
+			final RootClass rootClass = (RootClass) persistentClass;
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
 			if ( discriminatorColumn != null ) {
 				// we do have a discriminator column
 				if ( state.hasSiblings() || !discriminatorColumn.isImplicit() ) {
-					bindDiscriminatorColumnToRootPersistentClass( (RootClass) persistentClass, discriminatorColumn, holder );
+					bindDiscriminatorColumnToRootPersistentClass(rootClass, discriminatorColumn, holder );
+					rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 				}
 			}
 		}
@@ -750,7 +754,6 @@ public class EntityBinder {
 					new NullableDiscriminatorColumnSecondPass( rootClass.getEntityName() )
 			);
 		}
-		rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 		if ( insertableDiscriminator != null ) {
 			rootClass.setDiscriminatorInsertable( insertableDiscriminator );
 		}

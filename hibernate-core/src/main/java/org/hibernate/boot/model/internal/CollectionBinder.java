@@ -450,9 +450,8 @@ public abstract class CollectionBinder {
 		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
 		if ( oneToManyAnn != null ) {
 			if ( joinColumns.isSecondary() ) {
-				throw new AssertionFailure(
-						"Collections having FK in secondary table - " + getPath( propertyHolder, inferredData )
-				);
+				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )
+						+ "' has foreign key in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
@@ -465,9 +464,8 @@ public abstract class CollectionBinder {
 		}
 		else if ( elementCollectionAnn != null ) {
 			if ( joinColumns.isSecondary() ) {
-				throw new AssertionFailure(
-						"Collections having FK in secondary table - " + getPath( propertyHolder, inferredData )
-				);
+				throw new AnnotationException( "Collection '" + getPath( propertyHolder, inferredData )
+						+ "' has foreign key in secondary table" );
 			}
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = null;

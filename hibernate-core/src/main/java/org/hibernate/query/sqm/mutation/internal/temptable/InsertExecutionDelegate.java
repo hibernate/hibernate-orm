@@ -323,8 +323,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final QuerySpec querySpec = new QuerySpec( true );
 		final NamedTableReference temporaryTableReference = new NamedTableReference(
 				insertStatement.getTargetTable().getTableExpression(),
-				updatingTableReference.getIdentificationVariable(),
-				false
+				updatingTableReference.getIdentificationVariable()
 		);
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
@@ -687,8 +686,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				null,
 				new NamedTableReference(
 						insertStatement.getTargetTable().getTableExpression(),
-						updatingTableReference.getIdentificationVariable(),
-						false
+						updatingTableReference.getIdentificationVariable()
 				),
 				entityDescriptor
 		);

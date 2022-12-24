@@ -29,6 +29,12 @@ public class NamedTableReference extends AbstractTableReference {
 
 	public NamedTableReference(
 			String tableExpression,
+			String identificationVariable) {
+		this( tableExpression, identificationVariable, false );
+	}
+
+	public NamedTableReference(
+			String tableExpression,
 			String identificationVariable,
 			boolean isOptional) {
 		super( identificationVariable, isOptional );

@@ -1886,13 +1886,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	/**
-	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
+	 * Recursively builds a list of {@link FkSecondPass} instances ready to be processed in this order.
 	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
 	 * on some sort of table name sorting which failed in certain circumstances.
 	 * <p>
 	 * See {@code ANN-722} and {@code ANN-730}
 	 *
-	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready
+	 * @param orderedFkSecondPasses The list containing the {@link FkSecondPass} instances ready
 	 * for processing.
 	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
 	 * @param startTable Table name to start recursive algorithm.
@@ -1905,15 +1905,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			String currentTable) {
 		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
 		if ( dependencies != null ) {
-			for ( FkSecondPass sp : dependencies ) {
-				String dependentTable = sp.getValue().getTable().getQualifiedTableName().render();
-				if ( dependentTable.compareTo( startTable ) == 0 ) {
-					throw new AnnotationException( "Circular foreign key dependency involving tables '"
-							+ startTable + "' and '" + dependentTable + "'" );
+			for ( FkSecondPass pass : dependencies ) {
+				String dependentTable = pass.getValue().getTable().getQualifiedTableName().render();
+				if ( dependentTable.compareTo( startTable ) != 0 ) {
+					buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
 				}
-				buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
-				if ( !orderedFkSecondPasses.contains( sp ) ) {
-					orderedFkSecondPasses.add( 0, sp );
+				if ( !orderedFkSecondPasses.contains( pass ) ) {
+					orderedFkSecondPasses.add( 0, pass );
 				}
 			}
 		}

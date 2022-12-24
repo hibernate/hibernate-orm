@@ -259,6 +259,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public UnionTableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver expressionResolver,
+			SqlAstCreationContext creationContext) {
+		return new UnionTableReference( getTableName(), subclassTableExpressions, sqlAliasBase.generateNewAlias() );
+	}
+
+	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
@@ -268,19 +276,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			SqlExpressionResolver expressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final UnionTableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
-
-		return new UnionTableGroup( canUseInnerJoins, navigablePath, tableReference, this, explicitSourceAlias );
+		return new UnionTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				createPrimaryTableReference( sqlAliasBase, expressionResolver, creationContext ),
+				this,
+				explicitSourceAlias
+		);
 	}
 
 	@Override
-	protected UnionTableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
-		return new UnionTableReference(
-				getTableName(),
-				subclassTableExpressions,
-				sqlAliasBase.generateNewAlias(),
-				false
-		);
+	protected boolean needsDiscriminator() {
+		return false;
 	}
 
 	@Override

@@ -638,6 +638,7 @@ public class EntityBinder {
 	}
 
 	private void singleTableInheritance(InheritanceState inheritanceState, PropertyHolder holder) {
+		processDiscriminatorOptions();
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processSingleTableDiscriminatorProperties( inheritanceState );
 		if ( !inheritanceState.hasParents() ) { // todo : sucks that this is separate from RootClass distinction
 			if ( inheritanceState.hasSiblings()
@@ -648,10 +649,12 @@ public class EntityBinder {
 	}
 
 	private void joinedInheritance(InheritanceState state, PersistentClass superEntity, PropertyHolder holder) {
+		processDiscriminatorOptions();
+
 		if ( state.hasParents() ) {
 			final AnnotatedJoinColumns joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
 			final JoinedSubclass jsc = (JoinedSubclass) persistentClass;
-			final DependantValue key = new DependantValue(context, jsc.getTable(), jsc.getIdentifier() );
+			final DependantValue key = new DependantValue( context, jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
 			handleForeignKeys( annotatedClass, context, key );
 			final OnDelete onDelete = annotatedClass.getAnnotation( OnDelete.class );
@@ -753,6 +756,14 @@ public class EntityBinder {
 		}
 	}
 
+	private void processDiscriminatorOptions() {
+		final DiscriminatorOptions discriminatorOptions = annotatedClass.getAnnotation( DiscriminatorOptions.class );
+		if ( discriminatorOptions != null ) {
+			forceDiscriminator = discriminatorOptions.force();
+			insertableDiscriminator = discriminatorOptions.insert();
+		}
+	}
+
 	/**
 	 * Process all discriminator-related metadata per rules for "single table" inheritance
 	 */
@@ -773,12 +784,6 @@ public class EntityBinder {
 		if ( discriminatorColumn != null && !isRoot ) {
 			//TODO: shouldn't this be an error?!
 			LOG.invalidDiscriminatorAnnotation( annotatedClass.getName() );
-		}
-
-		final DiscriminatorOptions discriminatorOptions = annotatedClass.getAnnotation( DiscriminatorOptions.class );
-		if ( discriminatorOptions != null ) {
-			forceDiscriminator = discriminatorOptions.force();
-			insertableDiscriminator = discriminatorOptions.insert();
 		}
 
 		return discriminator;

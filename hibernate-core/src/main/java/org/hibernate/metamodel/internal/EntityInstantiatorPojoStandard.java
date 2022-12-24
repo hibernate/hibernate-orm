@@ -40,15 +40,10 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
 		super( entityMetamodel, persistentClass, javaType );
-
 		this.entityMetamodel = entityMetamodel;
-		this.proxyInterface = persistentClass.getProxyInterface();
-
-		this.constructor = isAbstract()
-				? null
-				: resolveConstructor( getMappedPojoClass() );
-
-		this.applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		proxyInterface = persistentClass.getProxyInterface();
+		constructor = isAbstract() ? null : resolveConstructor( getMappedPojoClass() );
+		applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -57,9 +52,8 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 		}
 		catch ( PropertyNotFoundException e ) {
 			LOG.noDefaultConstructor( mappedPojoClass.getName() );
+			return null;
 		}
-
-		return null;
 	}
 
 	@Override
@@ -69,27 +63,26 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 
 	@Override
 	protected Object applyInterception(Object entity) {
-		if ( !applyBytecodeInterception ) {
-			return entity;
+		if ( applyBytecodeInterception ) {
+			asPersistentAttributeInterceptable( entity )
+					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
+							entityMetamodel.getName(),
+							null,
+							entityMetamodel.getBytecodeEnhancementMetadata()
+									.getLazyAttributesMetadata()
+									.getLazyAttributeNames(),
+							null
+					) );
 		}
-
-		PersistentAttributeInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				entityMetamodel.getName(),
-				null,
-				entityMetamodel.getBytecodeEnhancementMetadata()
-						.getLazyAttributesMetadata()
-						.getLazyAttributeNames(),
-				null
-		);
-		asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;
+
 	}
 
 	@Override
 	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-		return super.isInstance( object, sessionFactory ) ||
-				//this one needed only for guessEntityMode()
-				( proxyInterface!=null && proxyInterface.isInstance(object) );
+		return super.isInstance( object, sessionFactory )
+			//this one needed only for guessEntityMode()
+			|| proxyInterface != null && proxyInterface.isInstance( object );
 	}
 
 	@Override

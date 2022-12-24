@@ -56,7 +56,7 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
-	@Override @Deprecated(since="6.2")
+	@Override @Deprecated(since="6.2", forRemoval = true)
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,
@@ -76,17 +76,12 @@ public class ForeignKey extends Constraint {
 			referencedColumnNames[i] = referencedColumns.get(i).getQuotedName( dialect );
 		}
 
-		final String result = keyDefinition != null ?
-				dialect.getAddForeignKeyConstraintString(
-						constraintName,
-						keyDefinition
-				) :
-				dialect.getAddForeignKeyConstraintString(
+		final String result = keyDefinition != null
+				? dialect.getAddForeignKeyConstraintString( constraintName, keyDefinition )
+				: dialect.getAddForeignKeyConstraintString(
 						constraintName,
 						columnNames,
-						referencedTable.getQualifiedName(
-								context
-						),
+						referencedTable.getQualifiedName( context ),
 						referencedColumnNames,
 						isReferenceToPrimaryKey()
 				);
@@ -111,8 +106,6 @@ public class ForeignKey extends Constraint {
 	}
 
 	public void setReferencedTable(Table referencedTable) throws MappingException {
-		//if( isReferenceToPrimaryKey() ) alignColumns(referencedTable); // TODO: possibly remove to allow more piecemal building of a foreignkey.  
-
 		this.referencedTable = referencedTable;
 	}
 

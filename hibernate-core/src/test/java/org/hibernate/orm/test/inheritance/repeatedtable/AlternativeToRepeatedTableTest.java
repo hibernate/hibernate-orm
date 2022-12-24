@@ -1,17 +1,29 @@
 package org.hibernate.orm.test.inheritance.repeatedtable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import jakarta.persistence.*;
 import java.util.List;
 
 import static jakarta.persistence.CascadeType.ALL;
-import static jakarta.persistence.InheritanceType.JOINED;
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
@@ -19,7 +31,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
-public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
+public class AlternativeToRepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -89,17 +101,22 @@ public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 		}
 
 		try (Session sess = openSession()) {
-			assertEquals( 2, sess.createQuery("from RepeatedTableTest$DataType").getResultList().size() );
-			assertEquals( 1, sess.createQuery("from RepeatedTableTest$ObjectType").getResultList().size() );
-			assertEquals( 1, sess.createQuery("from RepeatedTableTest$SimpleType").getResultList().size() );
+			assertEquals( "Prop1",
+					sess.createQuery("select p.name from AlternativeToRepeatedTableTest$ObjectType ot join ot.properties p")
+							.getSingleResult() );
+		}
+
+		try (Session sess = openSession()) {
+			assertEquals( 2, sess.createQuery("from AlternativeToRepeatedTableTest$DataType").getResultList().size() );
+			assertEquals( 1, sess.createQuery("from AlternativeToRepeatedTableTest$ObjectType").getResultList().size() );
+			assertEquals( 1, sess.createQuery("from AlternativeToRepeatedTableTest$SimpleType").getResultList().size() );
 		}
 	}
 
 	@Entity
 	@Table(name = "DATA_TYPE")
-	@Inheritance(strategy = JOINED)
+	@Inheritance(strategy = SINGLE_TABLE)
 	@DiscriminatorColumn(name = "supertype_id")
-	@DiscriminatorOptions(force = true)
 	public static abstract class DataType {
 
 		private Long id;
@@ -129,14 +146,15 @@ public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@DiscriminatorValue("8")
-	@Table(name = "OBJ_TYPE")
-	@PrimaryKeyJoinColumn(name = "TYPE_ID")
+	@SecondaryTable(name = "OBJ_TYPE",
+			pkJoinColumns = @PrimaryKeyJoinColumn(name = "TYPE_ID", referencedColumnName = "ID"))
+	@SecondaryRow(optional = false)
 	public static class ObjectType extends DataType {
 
 		private String description;
 		private List<Prop> properties;
 
-		@Column(name = "descr")
+		@Column(name = "descr", table = "OBJ_TYPE")
 		public String getDescription() {
 			return description;
 		}
@@ -183,7 +201,9 @@ public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 			this.name = name;
 		}
 
-		@JoinColumn(name = "OBJ_TYPE_ID")
+//		@JoinColumn(name = "OBJ_TYPE_ID")
+//		@JoinColumn(name = "OBJ_TYPE_ID", referencedColumnName = "ID")
+		@JoinColumn(name = "OBJ_TYPE_ID", referencedColumnName = "TYPE_ID")
 		@ManyToOne
 		public ObjectType getObjectType() {
 			return objectType;
@@ -196,7 +216,6 @@ public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@DiscriminatorValue("2")
-	@Table(name = "DATA_TYPE")
 	public static class SimpleType extends DataType {
 		Integer count;
 

@@ -8,7 +8,6 @@ package org.hibernate.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -84,7 +83,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -116,6 +114,9 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
+
+import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -1957,10 +1958,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 	}
 
-	protected void secondPassCompileForeignKeys(
-			final Table table,
-			Set<ForeignKey> done,
-			final MetadataBuildingContext buildingContext) throws MappingException {
+	protected void secondPassCompileForeignKeys(Table table, Set<ForeignKey> done, MetadataBuildingContext buildingContext)
+			throws MappingException {
 		table.createForeignKeys();
 
 		for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
@@ -1968,34 +1967,27 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				done.add( foreignKey );
 				final String referencedEntityName = foreignKey.getReferencedEntityName();
 				if ( referencedEntityName == null ) {
-					throw new MappingException(
-							"An association from the table " +
-									foreignKey.getTable().getName() +
-									" does not specify the referenced entity"
-					);
+					throw new MappingException( "An association from the table '" + foreignKey.getTable().getName() +
+							"' does not specify the referenced entity" );
 				}
 
 				log.debugf( "Resolving reference to class: %s", referencedEntityName );
 				final PersistentClass referencedClass = getEntityBinding( referencedEntityName );
 				if ( referencedClass == null ) {
-					throw new MappingException(
-							"An association from the table " +
-									foreignKey.getTable().getName() +
-									" refers to an unmapped class: " +
-									referencedEntityName
-					);
+					throw new MappingException( "An association from the table '" + foreignKey.getTable().getName() +
+							"' refers to an unmapped class '" + referencedEntityName + "'" );
 				}
 				if ( referencedClass.isJoinedSubclass() ) {
 					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext );
 				}
 
-				foreignKey.setReferencedTable( referencedClass.getTable() );
+				// the ForeignKeys created in the first pass did not have their referenced table initialized
+				if ( foreignKey.getReferencedTable() == null ) {
+					foreignKey.setReferencedTable( referencedClass.getTable() );
+				}
 
-				Identifier nameIdentifier;
-
-				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
+				final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
 						.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
-
 				foreignKey.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
 				foreignKey.alignColumns();
@@ -2005,10 +1997,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private List<Identifier> toIdentifiers(String[] names) {
 		if ( names == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 
-		final List<Identifier> columnNames = CollectionHelper.arrayList( names.length );
+		final List<Identifier> columnNames = arrayList( names.length );
 		for ( String name : names ) {
 			columnNames.add( getDatabase().toIdentifier( name ) );
 		}
@@ -2018,10 +2010,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@SuppressWarnings("unchecked")
 	private List<Identifier> extractColumnNames(List columns) {
 		if ( columns == null || columns.isEmpty() ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 
-		final List<Identifier> columnNames = CollectionHelper.arrayList( columns.size() );
+		final List<Identifier> columnNames = arrayList( columns.size() );
 		for ( Column column : (List<Column>) columns ) {
 			columnNames.add( getDatabase().toIdentifier( column.getQuotedName() ) );
 		}

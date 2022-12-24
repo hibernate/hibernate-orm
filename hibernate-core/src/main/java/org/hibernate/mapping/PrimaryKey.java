@@ -78,7 +78,7 @@ public class PrimaryKey extends Constraint {
 		return buf.append(')').toString();
 	}
 
-	@Override @Deprecated(since="6.2")
+	@Override @Deprecated(since="6.2", forRemoval = true)
 	public String sqlConstraintString(SqlStringGenerationContext context, String constraintName, String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder();

@@ -336,11 +336,11 @@ public class BinderHelper {
 		}
 		embeddedComponent.sortProperties();
 		final Property result = new SyntheticProperty();
-		result.setName(syntheticPropertyName);
-		result.setPersistentClass(ownerEntity);
+		result.setName( syntheticPropertyName );
+		result.setPersistentClass( ownerEntity );
 		result.setUpdateable( false );
 		result.setInsertable( false );
-		result.setValue(embeddedComponent);
+		result.setValue( embeddedComponent );
 		result.setPropertyAccessorName( "embedded" );
 		ownerEntity.addProperty( result );
 		embeddedComponent.createUniqueKey(); //make it unique

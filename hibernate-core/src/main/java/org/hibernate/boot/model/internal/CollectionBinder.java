@@ -2551,7 +2551,7 @@ public abstract class CollectionBinder {
 
 	private static void checkFilterConditions(Collection collection) {
 		//for now it can't happen, but sometime soon...
-		if ( ( collection.getFilters().size() != 0 || isNotEmpty( collection.getWhere() ) )
+		if ( ( !collection.getFilters().isEmpty() || isNotEmpty( collection.getWhere() ) )
 				&& collection.getFetchMode() == FetchMode.JOIN
 				&& !( collection.getElement() instanceof SimpleValue ) //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
 				&& collection.getElement().getFetchMode() != FetchMode.JOIN ) {
@@ -2623,7 +2623,7 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			boolean unique) {
-		if (isUnownedCollection()) {
+		if ( isUnownedCollection() ) {
 			bindUnownedManyToManyInverseForeignKey( targetEntity, joinColumns, value );
 		}
 		else {
@@ -2663,7 +2663,7 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final Property property = targetEntity.getRecursiveProperty( mappedBy );
-		final List<Selectable> mappedByColumns = mappedByColumns(targetEntity, property );
+		final List<Selectable> mappedByColumns = mappedByColumns( targetEntity, property );
 		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 		for ( Selectable selectable: mappedByColumns ) {
 			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value);

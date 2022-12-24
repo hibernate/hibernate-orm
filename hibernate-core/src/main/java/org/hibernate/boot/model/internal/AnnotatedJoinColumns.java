@@ -284,8 +284,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	 * the primary key of the given {@link PersistentClass}, or whether they reference
 	 * some other combination of mapped columns.
 	 */
-	public ForeignKeyType getReferencedColumnsType(
-			PersistentClass referencedEntity) {
+	public ForeignKeyType getReferencedColumnsType(PersistentClass referencedEntity) {
 		if ( columns.isEmpty() ) {
 			return ForeignKeyType.IMPLICIT_PRIMARY_KEY_REFERENCE; //shortcut
 		}
@@ -298,7 +297,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						+ firstColumn.getReferencedColumn() + "' but the target entity '"
 						+ referencedEntity.getEntityName() + "' has no property which maps to this column" );
 			}
-			catch (MappingException me) {
+			catch ( MappingException me ) {
 				// we throw a recoverable exception here in case this
 				// is merely an ordering issue, so that the SecondPass
 				// will get reprocessed later
@@ -306,7 +305,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			}
 		}
 		final Table table = table( columnOwner );
-		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
+//		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
+		final List<? extends Selectable> keyColumns = table.getPrimaryKey() == null
+				? referencedEntity.getKey().getSelectables()
+				: table.getPrimaryKey().getColumns();
 		boolean explicitColumnReference = false;
 		for ( AnnotatedJoinColumn column : columns ) {
 			if ( !column.isReferenceImplicit() ) {
@@ -342,7 +344,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			return new Column( context.getMetadataCollector()
 					.getPhysicalColumnName( table, logicalReferencedColumnName ) );
 		}
-		catch (MappingException me) {
+		catch  (MappingException me ) {
 			throw new MappingException( "No column with logical name '" + logicalReferencedColumnName
 					+ "' in table '" + table.getName() + "'" );
 		}

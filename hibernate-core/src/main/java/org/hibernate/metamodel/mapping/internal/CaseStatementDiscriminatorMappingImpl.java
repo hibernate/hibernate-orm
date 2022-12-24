@@ -55,7 +55,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			MappingModelCreationProcess creationProcess) {
 		super( entityDescriptor, incomingDiscriminatorType, valueMappings, creationProcess );
 
- 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
+		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			if ( !discriminatorAbstract[i] ) {
 				final String tableName = tableNames[notNullColumnTableNumbers[i]];
 				final String subEntityName = subEntityNameByTableName.get( tableName );

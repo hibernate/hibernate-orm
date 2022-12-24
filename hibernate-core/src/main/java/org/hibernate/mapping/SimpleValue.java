@@ -29,6 +29,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -342,12 +343,19 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public void createForeignKey() throws MappingException {}
 
+	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) throws MappingException {}
+
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
-			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setOnDeleteAction( onDeleteAction );
-			return fk;
+			final ForeignKey foreignKey = table.createForeignKey(
+					getForeignKeyName(),
+					getConstraintColumns(),
+					entityName,
+					getForeignKeyDefinition()
+			);
+			foreignKey.setOnDeleteAction( onDeleteAction );
+			return foreignKey;
 		}
 
 		return null;

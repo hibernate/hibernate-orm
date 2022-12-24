@@ -554,7 +554,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setTable( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
-			for (Column keyColumn : keyColumns) {
+			for ( Column keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}
 			if ( referencedColumns != null ) {

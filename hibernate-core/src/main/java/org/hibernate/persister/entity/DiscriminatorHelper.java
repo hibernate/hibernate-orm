@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.InFragment;

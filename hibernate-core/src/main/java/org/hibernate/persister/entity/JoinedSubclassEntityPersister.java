@@ -754,6 +754,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
 	protected boolean needsDiscriminator() {
 		return forceDiscriminator;
 	}

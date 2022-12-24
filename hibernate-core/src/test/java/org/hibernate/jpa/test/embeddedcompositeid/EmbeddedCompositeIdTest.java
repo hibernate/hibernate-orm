@@ -35,31 +35,29 @@ public class EmbeddedCompositeIdTest extends BaseEntityManagerFunctionalTestCase
 	public void testEmbeddedCompositeId() throws Exception {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
-		try {
-			Role role = new Role();
-			role.setIdentifier("ADMIN");
-			role = entityManager.merge(role);
-			entityManager.flush();
+		Role role = new Role();
+		role.setIdentifier("ADMIN");
+		role = entityManager.merge(role);
+		entityManager.flush();
 
-			Role roleFromDb = entityManager.find(Role.class, role.getCodeObject());
-			UserRole userRole = new UserRole();
-			userRole.setRole(roleFromDb);
+		Role roleFromDb = entityManager.find(Role.class, role.getCodeObject());
+		UserRole userRole = new UserRole();
+		userRole.setRole(roleFromDb);
 
-			User user = new User();
-			user.setIdentifier("hzerai");
-			user.setVersion(1);
-			user.addUserRole(userRole);
-			userRole.setUser(user);
-			entityManager.merge(user);
+		User user = new User();
+		user.setIdentifier("hzerai");
+		user.setVersion(1);
+		user.addUserRole(userRole);
+		userRole.setUser(user);
+		entityManager.merge(user);
 
-			entityManager.flush();
-			entityManager.clear();
+		entityManager.flush();
+		entityManager.clear();
 
-			TypedQuery<UserRole> query = entityManager.createQuery("select a from userRole a", UserRole.class);
-			List<UserRole> r = query.getResultList();
-			assertEquals(1, r.size());
-		} finally {
-			entityManager.close();
-		}
+		TypedQuery<UserRole> query = entityManager.createQuery("select a from userRole a", UserRole.class);
+		List<UserRole> r = query.getResultList();
+		assertEquals(1, r.size());
+		
+		entityManager.getTransaction().commit();
 	}
 }

@@ -95,17 +95,17 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	@Override
 	public Object instantiate(SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
-			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", getMappedPojoClass() );
+			throw new InstantiationException( "Cannot instantiate abstract class or interface", getMappedPojoClass() );
 		}
 		else if ( constructor == null ) {
-			throw new InstantiationException( "No default constructor for entity: ", getMappedPojoClass() );
+			throw new InstantiationException( "No default constructor for entity", getMappedPojoClass() );
 		}
 		else {
 			try {
 				return applyInterception( constructor.newInstance( (Object[]) null ) );
 			}
 			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+				throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 			}
 		}
 	}

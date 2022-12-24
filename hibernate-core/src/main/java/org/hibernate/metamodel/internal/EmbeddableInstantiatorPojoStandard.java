@@ -50,7 +50,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
-					"Cannot instantiate abstract class or interface: ", getMappedPojoClass()
+					"Cannot instantiate abstract class or interface", getMappedPojoClass()
 			);
 		}
 
@@ -76,7 +76,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 			return instance;
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 }

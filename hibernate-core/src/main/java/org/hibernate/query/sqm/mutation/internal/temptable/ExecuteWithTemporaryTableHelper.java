@@ -67,8 +67,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
-				InsertSelectStatement.DEFAULT_ALIAS,
-				false
+				InsertSelectStatement.DEFAULT_ALIAS
 		);
 		final InsertSelectStatement idTableInsert = new InsertSelectStatement( idTableReference );
 

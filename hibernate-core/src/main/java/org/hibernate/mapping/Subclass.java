@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
@@ -242,14 +241,13 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public boolean isJoinedSubclass() {
-		return getTable()!=getRootTable();
+		return getTable() != getRootTable();
 	}
 
 	public void createForeignKey() {
-		if ( !isJoinedSubclass() ) {
-			throw new AssertionFailure( "not a joined-subclass" );
+		if ( isJoinedSubclass() ) {
+			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 		}
-		getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 	}
 
 	@Override

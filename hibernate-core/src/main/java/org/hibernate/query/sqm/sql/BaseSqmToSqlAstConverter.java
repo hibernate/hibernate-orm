@@ -2836,7 +2836,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				navigablePath,
 				sqlAliasBase,
 				tableGroupProducer,
-				new NamedTableReference( cteName, identifierVariable, false ),
+				new NamedTableReference( cteName, identifierVariable ),
 				tableGroupProducer.getCompatibleTableExpressions()
 		);
 	}

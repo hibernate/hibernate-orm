@@ -297,8 +297,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					(tableExpression, tableKeyColumnVisitationSupplier) -> {
 						final NamedTableReference tableReference = new NamedTableReference(
 								tableExpression,
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-								false
+								tableGroup.getPrimaryTableReference().getIdentificationVariable()
 						);
 						final QuerySpec idMatchingSubQuerySpec;
 						// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup

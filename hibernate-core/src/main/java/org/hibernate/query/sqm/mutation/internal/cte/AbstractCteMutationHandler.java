@@ -167,7 +167,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				.buildSelectTranslator( factory, statement );
 
 		final Expression count = createCountStar( factory, sqmConverter );
-		//noinspection rawtypes,unchecked
 		domainResults.add(
 				new BasicResult<>(
 						0,
@@ -180,8 +179,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				new CteTableGroup(
 						new NamedTableReference(
 								idSelectCte.getCteTable().getTableExpression(),
-								CTE_TABLE_IDENTIFIER,
-								false
+								CTE_TABLE_IDENTIFIER
 						)
 				)
 		);
@@ -270,8 +268,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			SessionFactoryImplementor factory) {
 		final NamedTableReference idSelectTableReference = new NamedTableReference(
 				idSelectCte.getCteTable().getTableExpression(),
-				CTE_TABLE_IDENTIFIER,
-				false
+				CTE_TABLE_IDENTIFIER
 		);
 		final List<CteColumn> cteColumns = idSelectCte.getCteTable().getCteColumns();
 		final int size = cteColumns.size();

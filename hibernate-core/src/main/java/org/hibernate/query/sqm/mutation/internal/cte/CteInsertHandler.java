@@ -412,13 +412,7 @@ public class CteInsertHandler implements InsertHandler {
 			{
 				final QuerySpec rowsWithSequenceQuery = new QuerySpec( true );
 				rowsWithSequenceQuery.getFromClause().addRoot(
-						new CteTableGroup(
-								new NamedTableReference(
-										baseTableName,
-										"e",
-										false
-								)
-						)
+						new CteTableGroup( new NamedTableReference( baseTableName, "e" ) )
 				);
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
@@ -469,18 +463,13 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new NamedTableReference(
-								baseTableName,
-								"e",
-								false
-						),
+						new NamedTableReference( baseTableName, "e" ),
 						null
 				);
 				final TableGroup rowsWithSequenceTableGroup = new CteTableGroup(
 						new NamedTableReference(
 								ROW_NUMBERS_WITH_SEQUENCE_VALUE,
-								"t",
-								false
+								"t"
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -639,8 +628,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								// We want to return the insertion count of the base table
 								baseInsertCte,
-								CTE_TABLE_IDENTIFIER,
-								false
+								CTE_TABLE_IDENTIFIER
 						)
 				)
 		);
@@ -815,11 +803,7 @@ public class CteInsertHandler implements InsertHandler {
 				final String baseTableName = "base_" + queryCte.getCteTable().getTableExpression();
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
-								new NamedTableReference(
-										baseTableName,
-										"e",
-										false
-								)
+								new NamedTableReference( baseTableName, "e" )
 						)
 				);
 				final CteColumn rowNumberColumn = queryCte.getCteTable().getCteColumns().get(
@@ -864,18 +848,13 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new NamedTableReference(
-								baseTableName,
-								"e",
-								false
-						),
+						new NamedTableReference( baseTableName, "e" ),
 						null
 				);
 				final TableGroup rootInsertCteTableGroup = new CteTableGroup(
 						new NamedTableReference(
 								getCteTableName( tableExpression ),
-								"t",
-								false
+								"t"
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -947,8 +926,7 @@ public class CteInsertHandler implements InsertHandler {
 						new CteTableGroup(
 							new NamedTableReference(
 									dmlResultCte.getTableExpression(),
-									"e",
-									false
+									"e"
 							)
 						)
 				);
@@ -997,8 +975,7 @@ public class CteInsertHandler implements InsertHandler {
 						new CteTableGroup(
 								new NamedTableReference(
 										queryCte.getCteTable().getTableExpression(),
-										"e",
-										false
+										"e"
 								)
 						)
 				);

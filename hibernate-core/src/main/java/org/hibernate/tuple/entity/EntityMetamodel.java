@@ -34,9 +34,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
@@ -58,6 +56,11 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
+import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
+import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -365,16 +368,16 @@ public class EntityMetamodel implements Serializable {
 				mutableIndexes.set( i );
 			}
 
-			mapPropertyToIndex(property, i);
+			mapPropertyToIndex( property, i );
 		}
 
-		if (naturalIdNumbers.size()==0) {
+		if ( naturalIdNumbers.isEmpty() ) {
 			naturalIdPropertyNumbers = null;
 			hasImmutableNaturalId = false;
 			hasCacheableNaturalId = false;
 		}
 		else {
-			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
+			naturalIdPropertyNumbers = toIntArray( naturalIdNumbers );
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
 			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
@@ -392,25 +395,26 @@ public class EntityMetamodel implements Serializable {
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
 		if ( hasLazyProperties ) {
-			LOG.lazyPropertyFetchingAvailable(name);
+			LOG.lazyPropertyFetchingAvailable( name );
 		}
 
 		lazy = persistentClass.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
 				!persistentClass.hasPojoRepresentation() ||
-				!ReflectHelper.isFinalClass( persistentClass.getProxyInterface() )
+				!isFinalClass( persistentClass.getProxyInterface() )
 		);
 		mutable = persistentClass.isMutable();
 		if ( persistentClass.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
-			isAbstract = persistentClass.hasPojoRepresentation() &&
-					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
+			isAbstract = persistentClass.hasPojoRepresentation()
+					&& isAbstractClass( persistentClass.getMappedClass() );
 		}
 		else {
 			isAbstract = persistentClass.isAbstract();
-			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
-					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
-				LOG.entityMappedAsNonAbstract(name);
+			if ( !isAbstract
+					&& persistentClass.hasPojoRepresentation()
+					&& isAbstractClass( persistentClass.getMappedClass() ) ) {
+				LOG.entityMappedAsNonAbstract( name );
 			}
 		}
 
@@ -447,7 +451,7 @@ public class EntityMetamodel implements Serializable {
 			subclassEntityNamesLocal.add( subclass.getEntityName() );
 		}
 		subclassEntityNamesLocal.add( name );
-		subclassEntityNames = CollectionHelper.toSmallSet( subclassEntityNamesLocal );
+		subclassEntityNames = toSmallSet( subclassEntityNamesLocal );
 
 		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
 		if ( persistentClass.hasPojoRepresentation() ) {
@@ -456,7 +460,7 @@ public class EntityMetamodel implements Serializable {
 				entityNameByInheritanceClassMapLocal.put( subclass.getMappedClass(), subclass.getEntityName() );
 			}
 		}
-		entityNameByInheritanceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
+		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
 	private static boolean generatedWithNoParameter(Generator generator) {
@@ -738,7 +742,7 @@ public class EntityMetamodel implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityMetamodel(" + name + ':' + ArrayHelper.toString(properties) + ')';
+		return "EntityMetamodel(" + name + ':' + ArrayHelper.toString( properties ) + ')';
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

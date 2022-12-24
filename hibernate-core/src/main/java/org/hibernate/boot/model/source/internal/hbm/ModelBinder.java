@@ -2523,48 +2523,55 @@ public class ModelBinder {
 			// NOTE : Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
-			final GenerationTiming timing = singularAttributeSource.getGenerationTiming();
-			if ( timing != null ) {
-				if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
-						&& property.getValue() instanceof SimpleValue
-						&& ((SimpleValue) property.getValue()).isVersion() ) {
-					// this is enforced by DTD, but just make sure
-					throw new MappingException(
-							"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
-							mappingDocument.getOrigin()
-					);
-				}
-				if ( timing != GenerationTiming.NEVER ) {
-					property.setValueGeneratorCreator( context -> new GeneratedGeneration( timing.getEquivalent() ) );
-
-					// generated properties can *never* be insertable...
-					if ( property.isInsertable() && timing.includesInsert() ) {
-						log.debugf(
-								"Property [%s] specified %s generation, setting insertable to false : %s",
-								propertySource.getName(),
-								timing.name(),
-								mappingDocument.getOrigin()
-						);
-						property.setInsertable( false );
-					}
-
-					// properties generated on update can never be updatable...
-					if ( property.isUpdateable() && timing.includesUpdate() ) {
-						log.debugf(
-								"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
-								propertySource.getName(),
-								mappingDocument.getOrigin()
-						);
-						property.setUpdateable( false );
-					}
-				}
-			}
+			handleGenerationTiming( mappingDocument, propertySource, property, singularAttributeSource.getGenerationTiming() );
 		}
 
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
+		}
+	}
+
+	private static void handleGenerationTiming(
+			MappingDocument mappingDocument,
+			AttributeSource propertySource,
+			Property property,
+			GenerationTiming timing) {
+		if ( timing != null ) {
+			if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
+					&& property.getValue() instanceof SimpleValue
+					&& ((SimpleValue) property.getValue()).isVersion() ) {
+				// this is enforced by DTD, but just make sure
+				throw new MappingException(
+						"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
+						mappingDocument.getOrigin()
+				);
+			}
+			if ( timing != GenerationTiming.NEVER ) {
+				property.setValueGeneratorCreator(context -> new GeneratedGeneration( timing.getEquivalent() ) );
+
+				// generated properties can *never* be insertable...
+				if ( property.isInsertable() && timing.includesInsert() ) {
+					log.debugf(
+							"Property [%s] specified %s generation, setting insertable to false : %s",
+							propertySource.getName(),
+							timing.name(),
+							mappingDocument.getOrigin()
+					);
+					property.setInsertable( false );
+				}
+
+				// properties generated on update can never be updatable...
+				if ( property.isUpdateable() && timing.includesUpdate() ) {
+					log.debugf(
+							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+							propertySource.getName(),
+							mappingDocument.getOrigin()
+					);
+					property.setUpdateable( false );
+				}
+			}
 		}
 	}
 

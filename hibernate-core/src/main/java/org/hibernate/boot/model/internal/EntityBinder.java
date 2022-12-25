@@ -644,7 +644,7 @@ public class EntityBinder {
 			final RootClass rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
-				bindDiscriminatorColumnToRootPersistentClass(rootClass, discriminatorColumn, holder );
+				bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
 				rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 			}
 		}
@@ -674,10 +674,16 @@ public class EntityBinder {
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
-			if ( discriminatorColumn != null ) {
+			if ( discriminatorColumn == null ) {
+				if ( isForceDiscriminatorInSelects() ) {
+					throw new AnnotationException( "Entity '" + rootClass.getEntityName()
+							+ "' with 'JOINED' inheritance is annotated '@DiscriminatorOptions(force=true)' but has no discriminator column" );
+				}
+			}
+			else {
 				// we do have a discriminator column
 				if ( state.hasSiblings() || !discriminatorColumn.isImplicit() ) {
-					bindDiscriminatorColumnToRootPersistentClass(rootClass, discriminatorColumn, holder );
+					bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
 					rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 				}
 			}

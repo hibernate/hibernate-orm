@@ -27,7 +27,6 @@ import org.hibernate.annotations.WhereJoinTable;
  */
 @Entity
 @Table(name = "tbl_group")
-@FilterDef(name="Groupfilter")
 public class GroupWithSet {
 	private Integer id;
 	private Set<Permission> permissions;

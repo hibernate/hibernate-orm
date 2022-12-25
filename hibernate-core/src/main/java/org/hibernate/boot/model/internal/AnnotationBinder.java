@@ -147,6 +147,7 @@ import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
+import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -305,11 +306,11 @@ public final class AnnotationBinder {
 
 		handleIdGenerators( annotatedPackage, context );
 
-		handleTypeDescriptorRegistrations( annotatedPackage, context );
+		bindTypeDescriptorRegistrations( annotatedPackage, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedPackage, context );
 		bindUserTypeRegistrations( annotatedPackage, context );
 		bindCompositeUserTypeRegistrations( annotatedPackage, context );
-		handleConverterRegistrations( annotatedPackage, context );
+		bindConverterRegistrations( annotatedPackage, context );
 
 		bindGenericGenerators( annotatedPackage, context );
 		bindQueries( annotatedPackage, context );
@@ -520,31 +521,20 @@ public final class AnnotationBinder {
 
 		detectMappedSuperclassProblems( annotatedClass );
 
-		switch ( context.getMetadataCollector().getClassType( annotatedClass ) ) {
-			case MAPPED_SUPERCLASS:
-				// Allow queries and filters to be declared by a @MappedSuperclass
-				bindQueries( annotatedClass, context );
-				bindFilterDefs( annotatedClass, context );
-				//fall through:
-			case IMPORTED:
-				handleImport( annotatedClass, context );
-			case EMBEDDABLE:
-			case NONE:
-				return;
-		}
-
-		// try to find class level generators
-		final Map<String, IdentifierGeneratorDefinition> generators = buildGenerators( annotatedClass, context );
-		handleTypeDescriptorRegistrations( annotatedClass, context );
+		bindQueries( annotatedClass, context );
+		handleImport( annotatedClass, context );
+		bindFilterDefs( annotatedClass, context );
+		bindTypeDescriptorRegistrations( annotatedClass, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedClass, context );
 		bindUserTypeRegistrations( annotatedClass, context );
 		bindCompositeUserTypeRegistrations( annotatedClass, context );
-		handleConverterRegistrations( annotatedClass, context );
+		bindConverterRegistrations( annotatedClass, context );
 
-		bindQueries( annotatedClass, context );
-		bindFilterDefs( annotatedClass, context );
-
-		EntityBinder.bindEntityClass( annotatedClass, inheritanceStatePerClass, generators, context );
+		// try to find class level generators
+		final Map<String, IdentifierGeneratorDefinition> generators = buildGenerators( annotatedClass, context );
+		if ( context.getMetadataCollector().getClassType( annotatedClass ) == ENTITY ) {
+			EntityBinder.bindEntityClass( annotatedClass, inheritanceStatePerClass, generators, context );
+		}
 	}
 
 	private static void handleImport(XClass annotatedClass, MetadataBuildingContext context) {
@@ -570,7 +560,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void handleTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+	private static void bindTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
 		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
@@ -726,7 +716,7 @@ public final class AnnotationBinder {
 		);
 	}
 
-	private static void handleConverterRegistrations(XAnnotatedElement container, MetadataBuildingContext context) {
+	private static void bindConverterRegistrations(XAnnotatedElement container, MetadataBuildingContext context) {
 		final ConverterRegistration converterRegistration = container.getAnnotation( ConverterRegistration.class );
 		if ( converterRegistration != null ) {
 			handleConverterRegistration( converterRegistration, context );
@@ -769,6 +759,10 @@ public final class AnnotationBinder {
 
 	private static void bindFilterDef(FilterDef filterDef, MetadataBuildingContext context) {
 		final Map<String, JdbcMapping> explicitParamJaMappings = filterDef.parameters().length == 0 ? null : new HashMap<>();
+		final String name = filterDef.name();
+		if ( context.getMetadataCollector().getFilterDefinition( name ) != null ) {
+			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
+		}
 		for ( ParamDef paramDef : filterDef.parameters() ) {
 			final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
 			if ( jdbcMapping == null ) {
@@ -777,14 +771,14 @@ public final class AnnotationBinder {
 								Locale.ROOT,
 								"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
 								paramDef.name(),
-								filterDef.name()
+								name
 						)
 				);
 			}
 			explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
 		}
 		final FilterDefinition filterDefinition =
-				new FilterDefinition( filterDef.name(), filterDef.defaultCondition(), explicitParamJaMappings );
+				new FilterDefinition(name, filterDef.defaultCondition(), explicitParamJaMappings );
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
@@ -2484,7 +2478,6 @@ public final class AnnotationBinder {
 			final InheritanceState state = new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
-				//FIXME if an entity has subclasses annotated @MappedSuperclass wo sub @Entity this is wrong
 				superclassState.setHasSiblings( true );
 				final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
 				state.setHasParents( superEntityState != null );
@@ -2493,7 +2486,12 @@ public final class AnnotationBinder {
 					state.setType( superclassState.getType() );
 				}
 			}
-			inheritanceStatePerClass.put( clazz, state );
+			switch ( buildingContext.getMetadataCollector().getClassType( clazz ) ) {
+				case ENTITY:
+				case MAPPED_SUPERCLASS:
+				case EMBEDDABLE:
+					inheritanceStatePerClass.put( clazz, state );
+			}
 		}
 		return inheritanceStatePerClass;
 	}

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -37,9 +36,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
-import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole
@@ -114,14 +111,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			//noinspection unchecked
 			converterRegistry.addAttributeConverter( (Class<? extends AttributeConverter<?,?>>) annotatedClass );
 		}
-		else if ( xClass.isAnnotationPresent( Entity.class )
-				|| xClass.isAnnotationPresent( MappedSuperclass.class )
-				|| xClass.isAnnotationPresent( Embeddable.class )
-				|| xClass.isAnnotationPresent( Imported.class ) ) {
-			xClasses.add( xClass );
-		}
 		else {
-			log.debugf( "Encountered a non-categorized annotated class [%s]; ignoring", annotatedClass.getName() );
+			xClasses.add( xClass );
 		}
 	}
 

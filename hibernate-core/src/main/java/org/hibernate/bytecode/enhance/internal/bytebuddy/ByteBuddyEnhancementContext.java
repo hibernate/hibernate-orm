@@ -63,6 +63,10 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.hasLazyLoadableAttributes( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
+	public boolean addSuppressFBWarnings(TypeDescription classDescriptor) {
+		return enhancementContext.addSuppressFBWarnings( new UnloadedTypeDescription( classDescriptor ) );
+	}
+
 	public boolean isPersistentField(AnnotatedFieldDescription field) {
 		return enhancementContext.isPersistentField( field );
 	}

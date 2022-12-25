@@ -120,6 +120,11 @@ public class EnhancementHelper {
 			}
 
 			@Override
+			public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+				return enhancementDsl.getAddSuppressFBWarnings().get();
+			}
+
+			@Override
 			public boolean isLazyLoadable(UnloadedField field) {
 				return enhancementDsl.getEnableLazyInitialization().get();
 			}

@@ -38,6 +38,11 @@ public class EnhancerTestContext extends DefaultEnhancementContext {
 	}
 
 	@Override
+	public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+		return true;
+	}
+
+	@Override
 	public boolean isLazyLoadable(UnloadedField field) {
 		return true;
 	}

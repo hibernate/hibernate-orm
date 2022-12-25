@@ -62,6 +62,7 @@ dependencies {
     }
     testImplementation "joda-time:joda-time:2.3"
     testImplementation dbLibs.h2
+    testImplementation testLibs.archunitJUnit4
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld

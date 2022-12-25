@@ -23,4 +23,5 @@ public @interface EnhancementOptions {
 	boolean inlineDirtyChecking() default false;
 	boolean lazyLoading() default false;
 	boolean extendedEnhancement() default false;
+	boolean addSuppressFBWarnings() default false;
 }

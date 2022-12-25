@@ -111,6 +111,11 @@ public class BytecodeEnhancerRunner extends Suite {
 				}
 
 				@Override
+				public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+					return options.addSuppressFBWarnings() && super.addSuppressFBWarnings( classDescriptor );
+				}
+
+				@Override
 				public boolean isLazyLoadable(UnloadedField field) {
 					return options.lazyLoading() && super.isLazyLoadable( field );
 				}

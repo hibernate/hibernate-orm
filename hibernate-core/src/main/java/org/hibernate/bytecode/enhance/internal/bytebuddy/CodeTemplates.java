@@ -543,6 +543,23 @@ class CodeTemplates {
 
 	}
 
+	/**
+	 * Used to suppress <a href="https://spotbugs.readthedocs.io">SpotBugs</a> warnings.
+	 */
+	@Retention(RetentionPolicy.CLASS)
+	@interface SuppressFBWarnings {
+		/**
+		 * @see "https://spotbugs.readthedocs.io/en/latest/bugDescriptions.html"
+		 */
+		String[] value();
+
+		/**
+		 * Reason why the warning is suppressed. Use a SpotBugs issue id where appropriate.
+		 */
+		String justification();
+	}
+
+
 	// mapping to get private field from superclass by calling the enhanced reader, for use when field is not visible
 	static class GetterMapping implements Advice.OffsetMapping {
 

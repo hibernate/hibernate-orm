@@ -28,7 +28,7 @@ public class EnhancementSpec {
 	private final Property<Boolean> enableDirtyTracking;
 	private final Property<Boolean> enableAssociationManagement;
 	private final Property<Boolean> enableExtendedEnhancement;
-
+	private final Property<Boolean> addSuppressFBWarnings;
 
 	@Inject
 	public EnhancementSpec(HibernateOrmSpec ormDsl, Project project) {
@@ -38,13 +38,15 @@ public class EnhancementSpec {
 		enableDirtyTracking = makeProperty( project ).convention( true );
 		enableAssociationManagement = makeProperty( project );
 		enableExtendedEnhancement = makeProperty( project );
+		addSuppressFBWarnings = makeProperty( project );
 	}
 
 	public boolean hasAnythingToDo() {
 		return enableLazyInitialization.get()
 				|| enableDirtyTracking.get()
 				|| enableAssociationManagement.get()
-				|| enableExtendedEnhancement.get();
+				|| enableExtendedEnhancement.get()
+				|| addSuppressFBWarnings.get();
 	}
 
 	@Deprecated(forRemoval = true)
@@ -115,7 +117,6 @@ public class EnhancementSpec {
 		setEnableAssociationManagement( enable );
 	}
 
-
 	public Property<Boolean> getEnableExtendedEnhancement() {
 		return enableExtendedEnhancement;
 	}
@@ -124,12 +125,24 @@ public class EnhancementSpec {
 		enableExtendedEnhancement.set( enable );
 	}
 
+	public void setAddSuppressFBWarnings(boolean enable) {
+		addSuppressFBWarnings.set( enable );
+	}
+
 	public void enableExtendedEnhancement(boolean enable) {
 		setEnableExtendedEnhancement( enable );
 	}
 
 	public void extendedEnhancement(boolean enable) {
 		setEnableExtendedEnhancement( enable );
+	}
+
+	public void addSuppressFBWarnings(boolean enable) {
+		setAddSuppressFBWarnings( enable );
+	}
+
+	public Property<Boolean> getAddSuppressFBWarnings() {
+		return addSuppressFBWarnings;
 	}
 
 	@SuppressWarnings( "UnstableApiUsage" )

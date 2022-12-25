@@ -81,6 +81,14 @@
           <editable>true</editable>
           <description>Enable enhancement of field access</description>
         </parameter>
+        <parameter>
+          <name>addSuppressFBWarnings</name>
+          <type>java.lang.Boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>Adds @SuppressFBWarnings annotation to generated nodes which is useful if you want to
+            run FindBugs on your class files.</description>
+        </parameter>
       </parameters>
       <configuration>
         <base>${project.build.outputDirectory}</base>
@@ -90,6 +98,7 @@
         <enableDirtyTracking>false</enableDirtyTracking>
         <enableAssociationManagement>false</enableAssociationManagement>
         <enableExtendedEnhancement>false</enableExtendedEnhancement>
+        <addSuppressFBWarnings>false</addSuppressFBWarnings>
       </configuration>
       <requirements>
         <requirement>

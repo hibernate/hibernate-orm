@@ -107,8 +107,7 @@ public class ManyToOne extends ToOne {
 							getForeignKeyDefinition(),
 							new ArrayList<>( property.getColumns() )
 					);
-					//TODO: if the property belongs to a secondary table,
-					//      need to call foreignKey.setReferencedTable(table)
+					foreignKey.setReferencedTable( property.getValue().getTable() );
 					foreignKey.setOnDeleteAction( getOnDeleteAction() );
 				}
 			}

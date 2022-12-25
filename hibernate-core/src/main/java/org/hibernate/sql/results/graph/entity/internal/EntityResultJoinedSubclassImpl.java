@@ -11,22 +11,20 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * @author Andrea Boriero
  */
 public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
+
 	public EntityResultJoinedSubclassImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
 			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		super( navigablePath, entityValuedModelPart, tableGroup, resultVariable, creationState );
+			String resultVariable) {
+		super( navigablePath, entityValuedModelPart, tableGroup, resultVariable );
 	}
 
 	@Override

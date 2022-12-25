@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
@@ -392,20 +391,11 @@ public class DefaultCatalogAndSchemaTest {
 
 		verifyOnlyQualifier( insertSqls, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 
-		try {
-			verifyOnlyQualifierOptional( persister.getIdentitySelectString(), SqlType.RUNTIME,
-					jpaEntityName, expectedQualifier );
+		String identitySelectString = persister.getIdentitySelectString();
+		if ( identitySelectString != null ) {
+			verifyOnlyQualifierOptional( identitySelectString, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 		}
-		catch (MappingException e) {
-			if ( e.getMessage().contains( "does not support identity key generation" ) ) {
-				// For some reason Oracle12cIdentityColumnSupport#supportsInsertSelectIdentity() returns true,
-				// but getIdentitySelectString is not implemented, resulting in runtime exceptions.
-				// Whatever, we'll just ignore this for now.
-			}
-			else {
-				throw e;
-			}
-		}
+
 		final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticUpdateGroup();
 		final String[] sqlUpdateStrings = new String[staticSqlUpdateGroup.getNumberOfOperations()];
 		staticSqlUpdateGroup.forEachOperation( (tablePosition, operation) -> {

@@ -47,8 +47,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 				navigablePath,
 				toOneMapping,
 				tableGroup,
-				null,
-				creationState
+				null
 		);
 
 		this.entityResult.afterInitialize( this, creationState );
@@ -69,8 +68,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 				navigablePath,
 				collectionPart,
 				tableGroup,
-				null,
-				creationState
+				null
 		);
 
 		this.entityResult.afterInitialize( this, creationState );

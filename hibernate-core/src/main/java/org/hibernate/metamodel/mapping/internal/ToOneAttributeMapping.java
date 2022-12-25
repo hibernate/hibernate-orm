@@ -1481,8 +1481,7 @@ public class ToOneAttributeMapping
 					navigablePath,
 					this,
 					tableGroupToUse,
-					null,
-					creationState
+					null
 			);
 			entityResult.afterInitialize( entityResult, creationState );
 			//noinspection unchecked

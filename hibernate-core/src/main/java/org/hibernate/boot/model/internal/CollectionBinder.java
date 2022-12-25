@@ -137,6 +137,8 @@ import jakarta.persistence.UniqueConstraint;
 import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
+import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
+import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
@@ -2126,7 +2128,7 @@ public abstract class CollectionBinder {
 
 		final XClass elementClass = isPrimitive( elementType.getName() ) ? null : elementType;
 		final AnnotatedClassType classType = annotatedElementType( isEmbedded, property, elementType );
-		final boolean primitive = classType == AnnotatedClassType.NONE;
+		final boolean primitive = classType == NONE;
 		if ( !primitive ) {
 			parentPropertyHolder.startingProperty( property );
 		}
@@ -2143,7 +2145,7 @@ public abstract class CollectionBinder {
 
 		final Class<? extends CompositeUserType<?>> compositeUserType =
 				resolveCompositeUserType( property, elementClass, buildingContext );
-		if ( classType == AnnotatedClassType.EMBEDDABLE || compositeUserType != null ) {
+		if ( classType == EMBEDDABLE || compositeUserType != null ) {
 			handleCompositeCollectionElement( collection, property, hqlOrderBy, elementClass, holder, compositeUserType );
 		}
 		else {
@@ -2248,7 +2250,7 @@ public abstract class CollectionBinder {
 			XProperty property,
 			XClass elementType) {
 		if ( isPrimitive( elementType.getName() ) ) {
-			return AnnotatedClassType.NONE;
+			return NONE;
 		}
 		else {
 			//force in case of attribute override
@@ -2256,7 +2258,7 @@ public abstract class CollectionBinder {
 					|| property.isAnnotationPresent( AttributeOverrides.class );
 			// todo : force in the case of Convert annotation(s) with embedded paths (beyond key/value prefixes)?
 			return isEmbedded || attributeOverride
-					? AnnotatedClassType.EMBEDDABLE
+					? EMBEDDABLE
 					: buildingContext.getMetadataCollector().getClassType( elementType );
 		}
 	}

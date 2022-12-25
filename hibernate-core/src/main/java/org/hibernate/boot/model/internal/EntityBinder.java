@@ -121,6 +121,7 @@ import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
@@ -2100,7 +2101,7 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(org.hibernate.annotations.Table table) {
 		if ( table != null ) {
-			Table appliedTable = findTable( table.appliesTo() );
+			final Table appliedTable = findTable( table.appliesTo() );
 			if ( !table.comment().isEmpty() ) {
 				appliedTable.setComment( table.comment() );
 			}
@@ -2141,11 +2142,11 @@ public class EntityBinder {
 		return propertyAccessType;
 	}
 
-	public void setPropertyAccessType(AccessType propertyAccessor) {
+	public void setPropertyAccessType(AccessType propertyAccessType) {
 		this.propertyAccessType = getExplicitAccessType( annotatedClass );
 		// only set the access type if there is no explicit access type for this class
-		if( this.propertyAccessType == null ) {
-			this.propertyAccessType = propertyAccessor;
+		if ( this.propertyAccessType == null ) {
+			this.propertyAccessType = propertyAccessType;
 		}
 	}
 
@@ -2174,7 +2175,7 @@ public class EntityBinder {
 		XClass classToProcess = annotatedClass.getSuperclass();
 		while ( classToProcess != null ) {
 			final AnnotatedClassType classType = context.getMetadataCollector().getClassType( classToProcess );
-			if ( classType == AnnotatedClassType.MAPPED_SUPERCLASS ) {
+			if ( classType == MAPPED_SUPERCLASS ) {
 				bindFilters( classToProcess );
 			}
 			else {

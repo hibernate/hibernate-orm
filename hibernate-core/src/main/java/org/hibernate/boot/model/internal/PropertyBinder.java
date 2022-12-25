@@ -55,6 +55,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Version;
 
+import static org.hibernate.boot.model.internal.BasicValueBinder.isOptional;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotation;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -324,19 +325,15 @@ public class PropertyBinder {
 	}
 
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
-		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation =
-				property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
-		if ( propertyAnnotation != null ) {
-			return propertyAnnotation.value();
+		if ( property.isAnnotationPresent( org.hibernate.annotations.EmbeddableInstantiator.class ) ) {
+			return property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class ).value();
 		}
-
-		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation =
-				embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
-		if ( classAnnotation != null ) {
-			return classAnnotation.value();
+		else if ( property.isAnnotationPresent( org.hibernate.annotations.EmbeddableInstantiator.class ) ) {
+			return embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class ).value();
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	//used when the value is provided and the binding is done elsewhere
@@ -351,48 +348,58 @@ public class PropertyBinder {
 		property.setCascade( cascade );
 		property.setPropertyAccessorName( accessType.getType() );
 		property.setReturnedClassName( returnedClassName );
-
-		if ( this.property != null ) {
-			if ( entityBinder != null ) {
-				handleNaturalId( property );
-				property.setValueGeneratorCreator( getValueGenerationFromAnnotations( this.property ) );
-			}
-			// HHH-4635 -- needed for dialect-specific property ordering
-			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
-		}
-
 		property.setPropertyAccessStrategy( propertyAccessStrategy );
-
-		handleImmutable( property );
-
+		handleValueGeneration( property );
+		handleNaturalId( property );
+		handleLob( property );
+		handleMutability( property );
+		handleOptional( property );
 		inferOptimisticLocking( property );
-
-		property.setInsertable( insertable );
-		property.setUpdateable( updatable );
-
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
-
 		return property;
 	}
 
-	private void handleImmutable(Property property) {
+	private void handleValueGeneration(Property property) {
+		if ( this.property!=null ) {
+			property.setValueGeneratorCreator( getValueGenerationFromAnnotations( this.property ) );
+		}
+	}
+
+	private void handleLob(Property property) {
+		if ( this.property != null ) {
+			// HHH-4635 -- needed for dialect-specific property ordering
+			property.setLob( this.property.isAnnotationPresent( Lob.class ) );
+		}
+	}
+
+	private void handleMutability(Property property) {
 		if ( this.property != null && this.property.isAnnotationPresent( Immutable.class ) ) {
 			updatable = false;
+		}
+		property.setInsertable( insertable );
+		property.setUpdateable( updatable );
+	}
+
+	private void handleOptional(Property property) {
+		if ( this.property != null ) {
+			property.setOptional( !isId && isOptional( this.property ) );
 		}
 	}
 
 	private void handleNaturalId(Property property) {
-		final NaturalId naturalId = this.property.getAnnotation(NaturalId.class);
-		if ( naturalId != null ) {
-			if ( !entityBinder.isRootEntity() ) {
-				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
-						+ "' belongs to an entity subclass and may not be annotated '@NaturalId'" +
-						" (only a property of a root '@Entity' or a '@MappedSuperclass' may be a '@NaturalId')" );
+		if ( this.property != null && entityBinder != null ) {
+			final NaturalId naturalId = this.property.getAnnotation( NaturalId.class );
+			if ( naturalId != null ) {
+				if ( !entityBinder.isRootEntity() ) {
+					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+							+ "' belongs to an entity subclass and may not be annotated '@NaturalId'" +
+							" (only a property of a root '@Entity' or a '@MappedSuperclass' may be a '@NaturalId')" );
+				}
+				if ( !naturalId.mutable() ) {
+					updatable = false;
+				}
+				property.setNaturalIdentifier( true );
 			}
-			if ( !naturalId.mutable() ) {
-				updatable = false;
-			}
-			property.setNaturalIdentifier( true );
 		}
 	}
 
@@ -401,8 +408,8 @@ public class PropertyBinder {
 		if ( value instanceof Collection ) {
 			property.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
 		}
-		else if ( this.property != null && this.property.isAnnotationPresent(OptimisticLock.class) ) {
-			final OptimisticLock optimisticLock = this.property.getAnnotation(OptimisticLock.class);
+		else if ( this.property != null && this.property.isAnnotationPresent( OptimisticLock.class ) ) {
+			final OptimisticLock optimisticLock = this.property.getAnnotation( OptimisticLock.class );
 			validateOptimisticLock( optimisticLock );
 			property.setOptimisticLocked( !optimisticLock.excluded() );
 		}
@@ -413,15 +420,15 @@ public class PropertyBinder {
 
 	private void validateOptimisticLock(OptimisticLock optimisticLock) {
 		if ( optimisticLock.excluded() ) {
-			if ( property.isAnnotationPresent(Version.class) ) {
+			if ( property.isAnnotationPresent( Version.class ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Version'" );
 			}
-			if ( property.isAnnotationPresent(Id.class) ) {
+			if ( property.isAnnotationPresent( Id.class ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Id'" );
 			}
-			if ( property.isAnnotationPresent(EmbeddedId.class) ) {
+			if ( property.isAnnotationPresent( EmbeddedId.class ) ) {
 				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}

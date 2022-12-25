@@ -554,7 +554,7 @@ public abstract class AbstractEntityPersister
 				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName()
 						+ "] : " + bootDescriptor.getLoaderName() );
 			}
-			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl<>(this, namedQueryMemento );
+			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
 		}
 		else if ( batchSize > 1 ) {
 			singleIdEntityLoader = createBatchingIdEntityLoader( this, batchSize, factory );
@@ -4723,17 +4723,17 @@ public abstract class AbstractEntityPersister
 		creationProcess.registerInitializationCallback(
 				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
+					final ImmutableAttributeMappingList.Builder builder =
+							new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
+					visitSubTypeAttributeMappings( builder::add );
+					assert superMappingType != null || builder.assertFetchableIndexes();
+					staticFetchableList = builder.build();
 					if ( hasInsertGeneratedProperties() ) {
 						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT );
 					}
 					if ( hasUpdateGeneratedProperties() ) {
 						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
 					}
-					final ImmutableAttributeMappingList.Builder builder =
-							new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
-					visitSubTypeAttributeMappings( builder::add );
-					assert superMappingType != null || builder.assertFetchableIndexes();
-					staticFetchableList = builder.build();
 					return true;
 				}
 		);

@@ -1090,6 +1090,7 @@ public class ModelBinder {
 						(PluralAttributeSource) attributeSource,
 						entityDescriptor
 				);
+				attribute.setOptional( true );
 				entityDescriptor.addProperty( attribute );
 			}
 			else {
@@ -1116,9 +1117,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1151,9 +1150,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1186,9 +1183,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1208,6 +1203,9 @@ public class ModelBinder {
 							new OneToOne( mappingDocument, table, entityDescriptor ),
 							entityDescriptor.getClassName()
 					);
+
+					attribute.setOptional( attribute.getValue().isNullable() );
+
 					entityDescriptor.addProperty( attribute );
 
 					handleNaturalIdBinding(
@@ -1243,9 +1241,7 @@ public class ModelBinder {
 							entityDescriptor.getEntityName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1258,6 +1254,11 @@ public class ModelBinder {
 				}
 			}
 		}
+	}
+
+	private static boolean isOptional(Join secondaryTableJoin, Property attribute) {
+		return secondaryTableJoin != null && secondaryTableJoin.isOptional()
+			|| attribute.getValue().isNullable();
 	}
 
 	private void handleNaturalIdBinding(
@@ -2785,6 +2786,8 @@ public class ModelBinder {
 				);
 			}
 
+			attribute.setOptional( attribute.getValue().isNullable() );
+
 			component.addProperty( attribute );
 		}
 	}
@@ -3286,19 +3289,20 @@ public class ModelBinder {
 				// for non-inverse one-to-many, with a not-null fk, add a backref!
 				final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
 				final PersistentClass referenced = getReferencedEntityBinding( entityName );
-				final Backref prop = new Backref();
-				prop.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
-				prop.setUpdateable( false );
-				prop.setSelectable( false );
-				prop.setCollectionRole( collectionBinding.getRole() );
-				prop.setEntityName( collectionBinding.getOwner().getEntityName() );
-				prop.setValue( collectionBinding.getKey() );
-				referenced.addProperty( prop );
+				final Backref backref = new Backref();
+				backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
+				backref.setOptional( true );
+				backref.setUpdateable( false );
+				backref.setSelectable( false );
+				backref.setCollectionRole( collectionBinding.getRole() );
+				backref.setEntityName( collectionBinding.getOwner().getEntityName() );
+				backref.setValue( collectionBinding.getKey() );
+				referenced.addProperty( backref );
 
 				if ( log.isDebugEnabled() ) {
 					log.debugf(
 							"Added virtual backref property [%s] : %s",
-							prop.getName(),
+							backref.getName(),
 							pluralAttributeSource.getAttributeRole().getFullPath()
 					);
 				}
@@ -3748,14 +3752,15 @@ public class ModelBinder {
 					&& !indexIsFormula ) {
 				final String entityName = ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName();
 				final PersistentClass referenced = getMappingDocument().getMetadataCollector().getEntityBinding( entityName );
-				final IndexBackref ib = new IndexBackref();
-				ib.setName( '_' + getCollectionBinding().getOwnerEntityName() + "." + getPluralAttributeSource().getName() + "IndexBackref" );
-				ib.setUpdateable( false );
-				ib.setSelectable( false );
-				ib.setCollectionRole( getCollectionBinding().getRole() );
-				ib.setEntityName( getCollectionBinding().getOwner().getEntityName() );
-				ib.setValue( getCollectionBinding().getIndex() );
-				referenced.addProperty( ib );
+				final IndexBackref backref = new IndexBackref();
+				backref.setName( '_' + getCollectionBinding().getOwnerEntityName() + "." + getPluralAttributeSource().getName() + "IndexBackref" );
+				backref.setOptional( true );
+				backref.setUpdateable( false );
+				backref.setSelectable( false );
+				backref.setCollectionRole( getCollectionBinding().getRole() );
+				backref.setEntityName( getCollectionBinding().getOwner().getEntityName() );
+				backref.setValue( getCollectionBinding().getIndex() );
+				referenced.addProperty( backref );
 			}
 		}
 	}
@@ -3826,14 +3831,15 @@ public class ModelBinder {
 				&& !collectionBinding.isInverse() ) {
 			final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
 			final PersistentClass referenced = mappingDocument.getMetadataCollector().getEntityBinding( entityName );
-			final IndexBackref ib = new IndexBackref();
-			ib.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "IndexBackref" );
-			ib.setUpdateable( false );
-			ib.setSelectable( false );
-			ib.setCollectionRole( collectionBinding.getRole() );
-			ib.setEntityName( collectionBinding.getOwner().getEntityName() );
-			ib.setValue( collectionBinding.getIndex() );
-			referenced.addProperty( ib );
+			final IndexBackref backref = new IndexBackref();
+			backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "IndexBackref" );
+			backref.setOptional( true );
+			backref.setUpdateable( false );
+			backref.setSelectable( false );
+			backref.setCollectionRole( collectionBinding.getRole() );
+			backref.setEntityName( collectionBinding.getOwner().getEntityName() );
+			backref.setValue( collectionBinding.getIndex() );
+			referenced.addProperty( backref );
 		}
 	}
 

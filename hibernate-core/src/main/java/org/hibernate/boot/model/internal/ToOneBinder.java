@@ -94,11 +94,10 @@ public class ToOneBinder {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
-		final boolean mandatory = isMandatory( manyToOne.optional(), property, notFoundAction );
 		bindManyToOne(
 				getCascadeStrategy( manyToOne.cascade(), hibernateCascade, false, forcePersist ),
 				joinColumns,
-				!mandatory,
+				!isMandatory( manyToOne.optional(), property, notFoundAction ),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),

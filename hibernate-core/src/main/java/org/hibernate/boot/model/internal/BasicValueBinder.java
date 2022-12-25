@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -105,6 +107,26 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicValueBinder.class.getName() );
 
+	static boolean isOptional(XProperty property) {
+		if ( property.isAnnotationPresent( Basic.class ) ) {
+			final Basic basic = property.getAnnotation( Basic.class );
+			return basic.optional();
+		}
+		else {
+			return property.isArray() || !property.getClassOrElementClass().isPrimitive();
+		}
+	}
+
+	static boolean isLazy(XProperty property) {
+		if ( property.isAnnotationPresent( Basic.class ) ) {
+			final Basic basic = property.getAnnotation( Basic.class );
+			return basic.fetch() == FetchType.LAZY;
+		}
+		else {
+			return false;
+		}
+	}
+
 	public enum Kind {
 		ATTRIBUTE( ValueMappingAccess.INSTANCE ),
 		ANY_DISCRIMINATOR( AnyDiscriminatorMappingAccess.INSTANCE ),
@@ -143,7 +165,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private ConverterDescriptor converterDescriptor;
 
-	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
 	private EnumType enumType;
@@ -266,7 +287,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	// in-flight handling
 
 	public void setVersion(boolean isVersion) {
-		this.isVersion = isVersion;
 		if ( isVersion && basicValue != null ) {
 			basicValue.makeVersion();
 		}
@@ -511,7 +531,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		// todo (6.0) - handle generator
-		final String generator = collectionIdAnn.generator();
+//		final String generator = collectionIdAnn.generator();
 	}
 
 	private ManagedBeanRegistry getManagedBeanRegistry() {
@@ -523,17 +543,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareMapKey(
 			XProperty mapAttribute,
 			XClass modelPropertyTypeXClass) {
-		final XClass mapKeyClass;
-		if ( modelPropertyTypeXClass == null ) {
-			mapKeyClass = mapAttribute.getMapKey();
-		}
-		else {
-			mapKeyClass = modelPropertyTypeXClass;
-		}
+		final XClass mapKeyClass = modelPropertyTypeXClass == null ? mapAttribute.getMapKey() : modelPropertyTypeXClass;
 		final java.lang.reflect.Type javaType = resolveJavaType( mapKeyClass );
-		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
-
-		implicitJavaTypeAccess = (typeConfiguration) -> javaType;
+		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
 		final MapKeyEnumerated mapKeyEnumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
 		if ( mapKeyEnumeratedAnn != null ) {
@@ -570,8 +582,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaType<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
 				if ( jdbcTypeImpl != null ) {
-					final ManagedBean<? extends BasicJavaType> jdbcTypeBean = getManagedBeanRegistry().getBean( jdbcTypeImpl );
-					return jdbcTypeBean.getBeanInstance();
+					return getManagedBeanRegistry().getBean( jdbcTypeImpl ).getBeanInstance();
 				}
 			}
 

@@ -18,6 +18,41 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SequenceGenerators;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.TableGenerators;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -111,42 +146,6 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
-
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.NamedStoredProcedureQueries;
-import jakarta.persistence.NamedStoredProcedureQuery;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.SequenceGenerators;
-import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.SqlResultSetMappings;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.TableGenerators;
-import jakarta.persistence.Version;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
@@ -1252,7 +1251,6 @@ public final class AnnotationBinder {
 					isIdentifierMapper,
 					context,
 					inheritanceStatePerClass,
-					property,
 					columnsBuilder.getColumns(),
 					propertyBinder
 			);
@@ -1349,7 +1347,6 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
-			XProperty annotatedProperty,
 			AnnotatedColumns columns,
 			PropertyBinder propertyBinder) {
 		checkVersionProperty( propertyHolder, isIdentifierMapper );
@@ -1565,32 +1562,12 @@ public final class AnnotationBinder {
 			AnnotatedColumns columns,
 			PropertyBinder propertyBinder,
 			boolean isOverridden) {
-		//provide the basic property mapping
-		final boolean optional;
-		final boolean lazy;
-		if ( property.isAnnotationPresent( Basic.class ) ) {
-			final Basic basic = property.getAnnotation( Basic.class );
-			optional = basic.optional();
-			lazy = basic.fetch() == FetchType.LAZY;
-		}
-		else {
-			optional = true;
-			lazy = false;
+
+		if ( shouldForceNotNull( nullability, propertyBinder, isOptional( property ) ) ) {
+			forceColumnsNotNull( propertyHolder, inferredData, columns, propertyBinder );
 		}
 
-		//implicit type will check basic types and Serializable classes
-		if ( propertyBinder.isId() || !optional && nullability != Nullability.FORCED_NULL ) {
-			//force columns to not null
-			for ( AnnotatedColumn column : columns.getColumns() ) {
-				if ( propertyBinder.isId() && column.isFormula() ) {
-					throw new CannotForceNonNullableException( "Identifier property '"
-							+ getPath( propertyHolder, inferredData ) + "' cannot map to a '@Formula'" );
-				}
-				column.forceNotNull();
-			}
-		}
-
-		propertyBinder.setLazy( lazy );
+		propertyBinder.setLazy( BasicValueBinder.isLazy( property ) );
 		propertyBinder.setColumns( columns );
 		if ( isOverridden ) {
 			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
@@ -1604,6 +1581,36 @@ public final class AnnotationBinder {
 
 		propertyBinder.makePropertyValueAndBind();
 	}
+
+	private static void forceColumnsNotNull(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			AnnotatedColumns columns,
+			PropertyBinder propertyBinder) {
+		for ( AnnotatedColumn column : columns.getColumns() ) {
+			if ( propertyBinder.isId() && column.isFormula() ) {
+				throw new CannotForceNonNullableException( "Identifier property '"
+						+ getPath( propertyHolder, inferredData ) + "' cannot map to a '@Formula'" );
+			}
+			column.forceNotNull();
+		}
+	}
+
+	private static boolean shouldForceNotNull(Nullability nullability, PropertyBinder propertyBinder, boolean optional) {
+		return propertyBinder.isId()
+			|| !optional && nullability != Nullability.FORCED_NULL;
+	}
+
+	static boolean isOptional(XProperty property) {
+		if ( property.isAnnotationPresent( Basic.class ) ) {
+			final Basic basic = property.getAnnotation( Basic.class );
+			return basic.optional();
+		}
+		else {
+			return true;
+		}
+	}
+
 
 	private static PropertyBinder createCompositeBinder(
 			PropertyHolder propertyHolder,

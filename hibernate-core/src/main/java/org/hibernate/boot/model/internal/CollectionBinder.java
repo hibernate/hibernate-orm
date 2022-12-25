@@ -1629,6 +1629,7 @@ public abstract class CollectionBinder {
 				+ '_' + foreignJoinColumns.getColumns().get(0).getLogicalColumnName()
 				+ "Backref";
 		backref.setName( backrefName );
+		backref.setOptional( true );
 		backref.setUpdateable( false);
 		backref.setSelectable( false );
 		backref.setCollectionRole( collection.getRole() );

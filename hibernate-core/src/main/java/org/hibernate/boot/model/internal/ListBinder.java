@@ -104,6 +104,7 @@ public class ListBinder extends CollectionBinder {
 			final PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
 			final IndexBackref backref = new IndexBackref();
 			backref.setName( '_' + propertyName + "IndexBackref" );
+			backref.setOptional( true );
 			backref.setUpdateable( false );
 			backref.setSelectable( false );
 			backref.setCollectionRole( collection.getRole() );

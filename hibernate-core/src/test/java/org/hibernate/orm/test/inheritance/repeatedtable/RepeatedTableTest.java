@@ -4,6 +4,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -19,6 +20,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
+@TestForIssue(jiraKey = "HHH-14526")
 public class RepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override

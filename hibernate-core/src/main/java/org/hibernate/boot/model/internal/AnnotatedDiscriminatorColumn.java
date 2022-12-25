@@ -43,18 +43,26 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 	}
 
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
-			DiscriminatorType type,
 			DiscriminatorColumn discriminatorColumn,
 			DiscriminatorFormula discriminatorFormula,
 			MetadataBuildingContext context) {
 		final AnnotatedColumns parent = new AnnotatedColumns();
 		parent.setBuildingContext( context );
 		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn();
+		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
+			final DiscriminatorType type = discriminatorFormula.discriminatorType();
+			if ( type == DiscriminatorType.STRING ) {
+				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.discriminatorType();
+			}
+			else {
+				discriminatorType = type;
+			}
 			column.setImplicit( false );
 			column.setFormula( discriminatorFormula.value() );
 		}
 		else if ( discriminatorColumn != null ) {
+			discriminatorType = discriminatorColumn.discriminatorType();
 			column.setImplicit( false );
 			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
 				column.setSqlType( discriminatorColumn.columnDefinition() );
@@ -65,9 +73,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			column.setNullable( false );
 		}
 		else {
+			discriminatorType = DiscriminatorType.STRING;
 			column.setImplicit( true );
 		}
-		setDiscriminatorType( type, discriminatorColumn, column );
+		setDiscriminatorType( discriminatorType, discriminatorColumn, column );
 		column.setParent( parent );
 		column.bind();
 		return column;

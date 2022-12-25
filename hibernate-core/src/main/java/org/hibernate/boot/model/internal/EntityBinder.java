@@ -779,16 +779,13 @@ public class EntityBinder {
 	private AnnotatedDiscriminatorColumn processSingleTableDiscriminatorProperties(InheritanceState inheritanceState) {
 
 		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotation( DiscriminatorColumn.class );
-		final DiscriminatorType discriminatorType = discriminatorColumn != null
-				? discriminatorColumn.discriminatorType()
-				: DiscriminatorType.STRING;
 
 		final DiscriminatorFormula discriminatorFormula =
 				getOverridableAnnotation( annotatedClass, DiscriminatorFormula.class, context );
 
 		final boolean isRoot = !inheritanceState.hasParents();
 		final AnnotatedDiscriminatorColumn discriminator = isRoot
-				? buildDiscriminatorColumn( discriminatorType, discriminatorColumn, discriminatorFormula, context )
+				? buildDiscriminatorColumn( discriminatorColumn, discriminatorFormula, context )
 				: null;
 		if ( discriminatorColumn != null && !isRoot ) {
 			//TODO: shouldn't this be an error?!
@@ -835,10 +832,7 @@ public class EntityBinder {
 			}
 
 			if ( generateDiscriminatorColumn ) {
-				final DiscriminatorType discriminatorType = discriminatorColumn != null
-						? discriminatorColumn.discriminatorType()
-						: DiscriminatorType.STRING;
-				return buildDiscriminatorColumn( discriminatorType, discriminatorColumn, null, context );
+				return buildDiscriminatorColumn( discriminatorColumn, null, context );
 			}
 		}
 		else {

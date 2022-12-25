@@ -8,7 +8,6 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
 @Entity
-@Access(AccessType.FIELD)
 @DiscriminatorValue("1")
 public class ConcreteChild1 extends AbstractChild {
 	@Basic(optional = false)

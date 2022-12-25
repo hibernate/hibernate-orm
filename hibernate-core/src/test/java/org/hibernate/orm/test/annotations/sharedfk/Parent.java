@@ -19,8 +19,8 @@ public class Parent {
 	@OneToMany( fetch= FetchType.EAGER)
 	@JoinColumn(name = "PARENT_ID")
 	@OrderColumn(name = "ORDER_C")
-
 	List<ConcreteChild1> child1s = new LinkedList<>();
+
 	@OneToMany( fetch= FetchType.EAGER)
 	@JoinColumn(name = "PARENT_ID")
 	@OrderColumn(name = "ORDER_C")

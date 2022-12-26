@@ -16,10 +16,12 @@ import java.lang.annotation.Target;
  * SQL when querying the {@link jakarta.persistence.JoinTable join table}
  * of a collection.
  * <p>
- * For example, {@code @Where("deleted = false")} could be used to hide
+ * For example, {@code @Where("status <> 'DELETED'")} could be used to hide
  * associations which have been soft-deleted from an association table.
  *
  * @author Emmanuel Bernard
+ *
+ * @see Where
  */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

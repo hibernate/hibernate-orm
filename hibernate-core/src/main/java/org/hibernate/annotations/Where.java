@@ -51,6 +51,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see Filter
  * @see DialectOverride.Where
  * @see org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS
+ * @see WhereJoinTable
  *
  * @author Emmanuel Bernard
  */

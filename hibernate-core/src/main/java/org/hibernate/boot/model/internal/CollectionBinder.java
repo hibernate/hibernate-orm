@@ -1752,9 +1752,12 @@ public abstract class CollectionBinder {
 	}
 
 	private String getWhereOnClassClause() {
-		if ( useEntityWhereClauseForCollections() && property.getElementClass() != null ) {
+		if ( property.getElementClass() != null ) {
 			final Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
-			return whereOnClass != null ? whereOnClass.clause() : null;
+			return whereOnClass != null
+				&& ( whereOnClass.applyInToManyFetch() || useEntityWhereClauseForCollections() )
+					? whereOnClass.clause()
+					: null;
 		}
 		else {
 			return null;

@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -96,6 +94,8 @@ import jakarta.persistence.Version;
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 
 /**
+ * A stateful binder responsible for creating instances of {@link BasicValue}.
+ *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
@@ -106,26 +106,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	//		but as always the "design" of these classes make it unclear exactly how to change it properly.
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicValueBinder.class.getName() );
-
-	static boolean isOptional(XProperty property) {
-		if ( property.isAnnotationPresent( Basic.class ) ) {
-			final Basic basic = property.getAnnotation( Basic.class );
-			return basic.optional();
-		}
-		else {
-			return property.isArray() || !property.getClassOrElementClass().isPrimitive();
-		}
-	}
-
-	static boolean isLazy(XProperty property) {
-		if ( property.isAnnotationPresent( Basic.class ) ) {
-			final Basic basic = property.getAnnotation( Basic.class );
-			return basic.fetch() == FetchType.LAZY;
-		}
-		else {
-			return false;
-		}
-	}
 
 	public enum Kind {
 		ATTRIBUTE( ValueMappingAccess.INSTANCE ),

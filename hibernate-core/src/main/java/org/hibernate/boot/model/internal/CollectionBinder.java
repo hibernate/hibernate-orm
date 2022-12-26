@@ -79,12 +79,10 @@ import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrati
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Collection;
@@ -135,6 +133,8 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.UniqueConstraint;
 
 import static jakarta.persistence.AccessType.PROPERTY;
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
+import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
@@ -145,27 +145,30 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFrom
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
-import static org.hibernate.boot.model.internal.AnnotationBinder.fillComponent;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
- * Base class for binding different types of collections to mapping model objects
- * of type {@link Collection}.
+ * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
  *
  * @author inger
  * @author Emmanuel Bernard
@@ -337,7 +340,7 @@ public abstract class CollectionBinder {
 		}
 		if ( property.isAnnotationPresent( CollectionId.class ) ) { //do not compute the generators unless necessary
 			final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>(classGenerators);
-			localGenerators.putAll( AnnotationBinder.buildGenerators( property, context ) );
+			localGenerators.putAll( buildGenerators( property, context ) );
 			collectionBinder.setLocalGenerators( localGenerators );
 
 		}
@@ -1497,7 +1500,7 @@ public abstract class CollectionBinder {
 	}
 
 	XClass getElementType() {
-		if ( AnnotationBinder.isDefault( targetEntity, buildingContext ) ) {
+		if ( isDefault( targetEntity, buildingContext ) ) {
 			if ( collectionElementType != null ) {
 				return collectionElementType;
 			}
@@ -1759,12 +1762,12 @@ public abstract class CollectionBinder {
 	}
 
 	private boolean useEntityWhereClauseForCollections() {
-		return ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
+		return getBoolean(
+				USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
 				buildingContext
 						.getBuildingOptions()
 						.getServiceRegistry()
-						.getService(ConfigurationService.class)
+						.getService( ConfigurationService.class )
 						.getSettings(),
 				true
 		);
@@ -1891,13 +1894,9 @@ public abstract class CollectionBinder {
 		return orderByFragment;
 	}
 
-	private DependantValue buildCollectionKey(
-			Collection collection,
-			AnnotatedJoinColumns joinColumns,
-			OnDeleteAction onDeleteAction,
-			boolean noConstraintByDefault,
-			XProperty property,
-			PropertyHolder propertyHolder) {
+	private DependantValue buildCollectionKey(AnnotatedJoinColumns joinColumns, OnDeleteAction onDeleteAction) {
+
+		final boolean noConstraintByDefault = buildingContext.getBuildingOptions().isNoConstraintByDefault();
 
 		// give a chance to override the referenced property name
 		// has to do that here because the referencedProperty creation happens in a FKSecondPass for ManyToOne yuk!
@@ -1928,8 +1927,8 @@ public abstract class CollectionBinder {
 				final CollectionTable collectionTableAnn = property.getAnnotation( CollectionTable.class );
 				if ( collectionTableAnn != null ) {
 					final ForeignKey foreignKey = collectionTableAnn.foreignKey();
-					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT
-							|| foreignKey.value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
+					if ( foreignKey.value() == NO_CONSTRAINT
+							|| foreignKey.value() == PROVIDER_DEFAULT && noConstraintByDefault ) {
 						key.disableForeignKey();
 					}
 					else {
@@ -1957,12 +1956,12 @@ public abstract class CollectionBinder {
 								foreignKeyName = joinColumnAnn.foreignKey().name();
 								foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 							}
-							if ( foreignKeyValue != ConstraintMode.NO_CONSTRAINT ) {
+							if ( foreignKeyValue != NO_CONSTRAINT ) {
 								foreignKeyValue = joinColumnAnn.foreignKey().value();
 							}
 						}
-						if ( foreignKeyValue == ConstraintMode.NO_CONSTRAINT
-								|| foreignKeyValue == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
+						if ( foreignKeyValue == NO_CONSTRAINT
+								|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
 							key.disableForeignKey();
 						}
 						else {
@@ -2003,8 +2002,8 @@ public abstract class CollectionBinder {
 
 	private static void handleForeignKeyConstraint(boolean noConstraintByDefault, DependantValue key, ForeignKey foreignKey) {
 		final ConstraintMode constraintMode = foreignKey.value();
-		if ( constraintMode == ConstraintMode.NO_CONSTRAINT
-				|| constraintMode == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault) {
+		if ( constraintMode == NO_CONSTRAINT
+				|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault) {
 			key.disableForeignKey();
 		}
 		else {
@@ -2195,7 +2194,7 @@ public abstract class CollectionBinder {
 			CollectionPropertyHolder holder,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
-		final Component component = fillComponent(
+		final Component component = fillEmbeddable(
 				holder,
 				getSpecialMembers( elementClass ),
 				accessType( property, collection.getOwner() ),
@@ -2303,7 +2302,7 @@ public abstract class CollectionBinder {
 		element.setReferencedEntityName( elementType.getName() );
 		//element.setFetchMode( fetchMode );
 		//element.setLazy( fetchMode != FetchMode.JOIN );
-		//make the second join non lazy
+		//make the second join non-lazy
 		element.setFetchMode( FetchMode.JOIN );
 		element.setLazy( false );
 		element.setNotFoundAction( notFoundAction );
@@ -2328,8 +2327,8 @@ public abstract class CollectionBinder {
 						foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 					}
 				}
-				if ( joinTableAnn.inverseForeignKey().value() == ConstraintMode.NO_CONSTRAINT
-						|| joinTableAnn.inverseForeignKey().value() == ConstraintMode.PROVIDER_DEFAULT
+				if ( joinTableAnn.inverseForeignKey().value() == NO_CONSTRAINT
+						|| joinTableAnn.inverseForeignKey().value() == PROVIDER_DEFAULT
 								&& buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
 					element.disableForeignKey();
 				}
@@ -2570,7 +2569,7 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumns joinColumns,
 			OnDeleteAction onDeleteAction) {
 
-		if ( !isUnownedCollection()) {
+		if ( !isUnownedCollection() ) {
 			createSyntheticPropertyReference(
 					joinColumns,
 					collection.getOwner(),
@@ -2582,19 +2581,11 @@ public abstract class CollectionBinder {
 			);
 		}
 
-		final DependantValue key = buildCollectionKey(
-				collection,
-				joinColumns,
-				onDeleteAction,
-				buildingContext.getBuildingOptions().isNoConstraintByDefault(),
-				property,
-				propertyHolder
-		);
-
 		if ( property.isAnnotationPresent( ElementCollection.class ) ) {
 			joinColumns.setElementCollection( true );
 		}
 
+		final DependantValue key = buildCollectionKey( joinColumns, onDeleteAction );
 		TableBinder.bindForeignKey(
 				collection.getOwner(),
 				targetEntity,

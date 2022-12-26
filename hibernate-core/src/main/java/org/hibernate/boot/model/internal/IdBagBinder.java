@@ -26,7 +26,7 @@ import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
-import static org.hibernate.boot.model.internal.BinderHelper.makeIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
 /**
  * A {@link CollectionBinder} for {@link org.hibernate.collection.spi.PersistentIdentifierBag id bags}

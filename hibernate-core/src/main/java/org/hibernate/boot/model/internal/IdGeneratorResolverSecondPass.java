@@ -16,7 +16,7 @@ import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 
-import static org.hibernate.boot.model.internal.BinderHelper.makeIdGenerator;
+import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
 /**
  * @author Andrea Boriero

@@ -115,6 +115,7 @@ public interface EntityEntry {
 	 * <li>the entity is not read-only</li>
 	 * <li>if the current status is Status.DELETED, then the entity was not read-only when it was deleted</li>
 	 * </ul>
+	 * 
 	 * @return true, if the entity is modifiable; false, otherwise,
 	 */
 	boolean isModifiableEntity();

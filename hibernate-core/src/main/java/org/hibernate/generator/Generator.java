@@ -34,6 +34,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  *	   SQL {@code select}, though in certain cases this additional round trip may be avoided.
  *	   An important example is id generation using an identity column.
  * </ul>
+ * <p>
  * Generically, a generator may be integrated with the program using the meta-annotation
  * {@link org.hibernate.annotations.ValueGenerationType}, which associates the generator with
  * a Java annotation type, called the <em>generator annotation</em>. A generator may receive
@@ -45,6 +46,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  * <li>declare a constructor which accepts just the annotation instance, or
  * <li>declare a only default constructor, in which case it will not receive parameters.
  * </ul>
+ * <p>
  * A generator must implement {@link #getEventTypes()} to specify the events for which it should be
  * called to produce a new value. {@link EventTypeSets} provides a convenient list of possibilities.
  * <p>

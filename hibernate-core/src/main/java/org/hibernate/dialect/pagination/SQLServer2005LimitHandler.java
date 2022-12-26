@@ -69,7 +69,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * select [alias-list] from query_
 	 * where rownumber_ &gt;= ? and rownumber_ &lt; ?
 	 * </pre>
-	 *
+	 * <p>
 	 * Where {@code [original-query]} is the original SQL query, with a
 	 * {@code top()} clause added iff the query has an {@code order by}
 	 * clause, and with generated aliases added to any elements of the

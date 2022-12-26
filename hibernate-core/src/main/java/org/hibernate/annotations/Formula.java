@@ -19,26 +19,26 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A {@code Formula} mapping defines a "derived" attribute, whose state is determined
  * from other columns and functions when an entity is read from the database.
  *
- * <pre><code>
- *     // perform calculations using SQL operators
- *     &#064;Formula("sub_total + (sub_total * tax)")
- *     long getTotalCost() { ... }
- * </code></pre>
+ * <pre>
+ * // perform calculations using SQL operators
+ * &#64;Formula("sub_total + (sub_total * tax)")
+ * long getTotalCost() { ... }
+ * </pre>
  *
- * <pre><code>
- *     // call native SQL functions
- *     &#064;Formula("upper(substring(middle_name, 1))")
- *     Character getMiddleInitial() { ... }
- * </code></pre>
- *
+ * <pre>
+ * // call native SQL functions
+ * &#64;Formula("upper(substring(middle_name, 1))")
+ * Character getMiddleInitial() { ... }
+ * </pre>
+ * <p>
  * {@link ColumnTransformer} is an alternative, allowing the use of native SQL to
  * read and write values.
  *
- * <pre><code>
- *     // it might be better to use @ColumnTransformer in this case
- *     &#064;Formula("decrypt(credit_card_num)")
- *     String getCreditCardNumber() { ... }
- * </code></pre>
+ * <pre>
+ * // it might be better to use &#64;ColumnTransformer in this case
+ * &#064;Formula("decrypt(credit_card_num)")
+ * String getCreditCardNumber() { ... }
+ * </pre>
  *
  * @see ColumnTransformer
  * @see DiscriminatorFormula

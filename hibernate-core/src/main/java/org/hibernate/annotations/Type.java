@@ -26,23 +26,27 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     applied to various properties and fields, or
  * <li>by default, via a {@linkplain TypeRegistration registration}.
  * </ul>
+ * <p>
  * For example, as an alternative to:
- * <pre>{@code
- * @Type(MonetaryAmountUserType.class)
+ * <pre>
+ * &#64;Type(MonetaryAmountUserType.class)
  * BigDecimal amount;
- * }</pre>
+ * </pre>
+ * <p>
  * we may define an annotation type:
- * <pre>{@code
- * @Retention(RUNTIME)
- * @Target({METHOD,FIELD})
- * @Type(MonetaryAmountUserType.class)
+ * <pre>
+ * &#64;Retention(RUNTIME)
+ * &#64;Target({METHOD,FIELD})
+ * &#64;Type(MonetaryAmountUserType.class)
  * public @interface MonetaryAmount {}
- * }</pre>
+ * </pre>
+ * <p>
  * and then write:
- * <pre>{@code
- * @MonetaryAmount
+ * <pre>
+ * &#64;MonetaryAmount
  * BigDecimal amount;
- * }</pre>
+ * </pre>
+ * <p>
  * which is much cleaner.
  * <p>
  * The use of a {@code UserType} is usually mutually exclusive with the

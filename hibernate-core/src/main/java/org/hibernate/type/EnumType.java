@@ -107,6 +107,7 @@ public class EnumType<T extends Enum<T>>
 	 * <li>one for {@code hbm.xml}-based mapping, and
 	 * <li>another for annotation-based or {@code orm.xml}-based mapping.
 	 * </ul>
+	 * <p>
 	 * In the case of annotations or {@code orm.xml}, a {@link ParameterType} is passed to
 	 * {@link #setParameterValues} under the key {@value #PARAMETER_TYPE}.
 	 * <p>

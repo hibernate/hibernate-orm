@@ -20,22 +20,24 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * For example, {@code @Where} could be used to hide entity instances which
  * have been soft-deleted, either for the entity class itself:
- * <pre>{@code
- * @Entity
- * @Where(clause = "status <> 'DELETED'")
+ * <pre>
+ * &#64;Entity
+ * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
  * class Document {
  *     ...
- *     @Enumerated(STRING)
+ *     &#64;Enumerated(STRING)
  *     Status status;
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * or, at the level of an association to the entity:
- * <pre>{@code
- * @OneToMany(mappedBy = "owner")
- * @Where(clause = "status <> 'DELETED'")
- * List<Document> documents;
- * }</pre>
+ * <pre>
+ * &#64;OneToMany(mappedBy = "owner")
+ * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
+ * List&lt;Document&gt; documents;
+ * </pre>
+ * <p>
  * By default, {@code @Where} restrictions declared for an entity are not
  * applied when loading a collection of that entity type. This behavior is
  * controlled by:

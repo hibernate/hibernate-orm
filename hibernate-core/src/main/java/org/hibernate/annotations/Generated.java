@@ -39,6 +39,7 @@ import static org.hibernate.generator.EventType.INSERT;
  *     property of the entity, or {@linkplain #writable() transforms} the
  *     value currently assigned to the annotated property.
  * </ul>
+ * <p>
  * On the other hand:
  * <ul>
  * <li>for identity/autoincrement columns mapped to an identifier property,
@@ -85,6 +86,7 @@ public @interface Generated {
 	 *     selected after each SQL {@code insert} or {@code update}
 	 *     statement is executed.
 	 * </ul>
+	 * 
 	 * @deprecated use {@link #event()}
 	 */
 	@Deprecated(since = "6.2")

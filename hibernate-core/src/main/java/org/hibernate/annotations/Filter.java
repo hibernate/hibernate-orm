@@ -24,16 +24,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * For example, we might apply a filter named {@code Current} to
  * an entity like this:
  * <pre>
- * {@code
- * @Entity
- * @Filter(name = "Current",
+ * &#64;Entity
+ * &#64;Filter(name = "Current",
  *         deduceAliasInjectionPoints = false,
  *         condition = "{alias}.year = extract(year from current_date)")
  * class Course {
- *     @Id @GeneratedValue Long id;
+ *     &#64;Id &#64;GeneratedValue Long id;
  *     int year;
  *     ...
- * }
  * }
  * </pre>
  * <p>

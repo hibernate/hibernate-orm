@@ -287,6 +287,7 @@ public interface SharedSessionContractImplementor
 	 *     though it might return an existing proxy; if it does not exist, a
 	 *     {@code null} value is returned.
 	 * </ul>
+	 * <p>
 	 * When {@code eager = true}, the object is eagerly fetched from the database.
 	 */
 	Object internalLoad(String entityName, Object id, boolean eager, boolean nullable)

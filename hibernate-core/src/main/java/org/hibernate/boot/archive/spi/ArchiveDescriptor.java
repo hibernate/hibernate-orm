@@ -13,7 +13,7 @@ package org.hibernate.boot.archive.spi;
  *     <li>an exploded directory</li>
  *     <li>etc</li>
  * </ul>
- * <p/>
+ * <p>
  * Used mainly for scanning purposes via {@linkplain #visitArchive visitation}
  *
  * @author Steve Ebersole

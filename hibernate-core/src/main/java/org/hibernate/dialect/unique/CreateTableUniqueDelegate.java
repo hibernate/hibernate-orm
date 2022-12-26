@@ -24,6 +24,7 @@ import org.hibernate.mapping.UniqueKey;
  * <li>For unique keys with no explicit name, it results in {@code unique(x, y)} after the
  *     column list.
  * </ul>
+ * <p>
  * Counterintuitively, this class extends {@link AlterTableUniqueDelegate}, since it falls back
  * to using {@code alter table} for {@linkplain org.hibernate.tool.schema.spi.SchemaMigrator
  * schema migration}.

@@ -25,39 +25,42 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
  * <li>a property specified using the parameter named {@code "key"}.
  * </ul>
+ * <p>
  * The second approach is provided for backward compatibility with older versions of
  * Hibernate.
  * <p>
  * This generator is intended for use with primary keys assigned by a database trigger
  * or something similar, for example:
- * <pre>{@code
- * @Entity @Table(name="TableWithPKAssignedByTrigger")
- * @GenericGenerator(name = "triggered", type = SelectGenerator.class)
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
+ * &#64;GenericGenerator(name = "triggered", type = SelectGenerator.class)
  * public class TriggeredEntity {
- *     @Id @GeneratedValue(generator = "triggered")
+ *     &#64;Id @GeneratedValue(generator = "triggered")
  *     private Long id;
  *
- *     @NaturalId
+ *     &#64;NaturalId
  *     private String name;
  *
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * However, after a very long working life, this generator is now handing over its
  * work to {@link org.hibernate.generator.internal.GeneratedGeneration}, and the
  * above code may be written as:
- * <pre>{@code
- * @Entity @Table(name="TableWithPKAssignedByTrigger")
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
  * public class TriggeredEntity {
- *     @Id @Generated
+ *     &#64;Id &#64;Generated
  *     private Long id;
  *
- *     @NaturalId
+ *     &#64;NaturalId
  *     private String name;
  *
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * For tables with identity/autoincrement columns, use {@link IdentityGenerator}.
  * <p>
  * The actual work involved in retrieving the primary key value is the job of

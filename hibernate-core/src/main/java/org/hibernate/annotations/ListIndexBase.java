@@ -20,6 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>When an element is written to the database, the base value is added to
  *     the list or array index to determine the order column value.
  *</ul>
+ * <p>
  * By default, the base value for an order column is zero, as required by JPA.
  * <p>
  * This annotation is usually used in conjunction with the JPA-defined

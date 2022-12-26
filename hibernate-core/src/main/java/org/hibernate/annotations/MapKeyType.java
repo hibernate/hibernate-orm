@@ -18,7 +18,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link Type} for use with map-keys
+ * Form of {@link Type} for use with map keys.
  *
  * @since 6.0
  */

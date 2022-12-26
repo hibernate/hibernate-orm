@@ -23,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@link Generated @Generated}, to populate an entity attribute with
  *         the defaulted value of a database column.
  * </ul>
+ * <p>
  * If {@code @Generated} is not used, a {@code default} value can cause state
  * held in memory to lose synchronization with the database.
  *

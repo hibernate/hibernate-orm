@@ -50,6 +50,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  * <li>{@linkplain org.hibernate.annotations.Parameter parameters} specified
  *     using {@link org.hibernate.annotations.GenericGenerator#parameters()}.
  * </ul>
+ * <p>
  * Instances of {@code IdentifierGenerator} are usually created and configured
  * by the {@link org.hibernate.id.factory.IdentifierGeneratorFactory} service.
  * It is not usually correct to use an {@code IdentifierGenerator} with the

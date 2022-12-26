@@ -30,6 +30,7 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
  * <li>building the SQL {@code insert} statement, and
  * <li>retrieving the generated identifier value using JDBC.
  * </ul>
+ * <p>
  * The implementation should be written to handle any instance of
  * {@link org.hibernate.generator.OnExecutionGenerator}.
  *

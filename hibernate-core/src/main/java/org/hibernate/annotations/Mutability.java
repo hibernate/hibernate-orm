@@ -23,8 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specifies a {@link MutabilityPlan} for a basic value mapping.
  * <ul>
  *     <li>
- *         When applied to a Map-valued attribute, describes the
- *         {@code Map} value. Use {@link MapKeyMutability} to
+ *         When applied to a {@code Map}-valued attribute, describes
+ *         the {@code Map} value. Use {@link MapKeyMutability} to
  *         describe the key instead.
  *     </li>
  *     <li>
@@ -44,15 +44,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         {@link ManyToAny}), describes the discriminator value.
  *     </li>
  * </ul>
- *
+ * <p>
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}.
- *
- * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a> for a
- * high-level discussion of basic value mapping.
+ * <p>
+ * See <a href="package-summary.html#basic-value-mapping">basic-value-mapping</a>
+ * for a high-level discussion of basic value mapping.
  *
  * @apiNote Valid on {@link ElementType#TYPE} in very limited cases.
- * At the moment it is only supported on implementations of
- * {@link jakarta.persistence.AttributeConverter}.
+ *          At the moment it is only supported on implementations of
+ *          {@link jakarta.persistence.AttributeConverter}.
  *
  * @see Immutable
  *

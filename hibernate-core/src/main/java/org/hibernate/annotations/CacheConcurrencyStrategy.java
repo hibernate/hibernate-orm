@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.access.AccessType;
  * <li>read extremely frequently, and
  * <li>written infrequently.
  * </ul>
+ * <p>
  * When an entity or collection is marked {@linkplain Cache cacheable},
  * it must indicate the policy which governs concurrent access to its
  * second-level cache, by selecting a {@code CacheConcurrencyStrategy}
@@ -108,6 +109,7 @@ public enum CacheConcurrencyStrategy {
 	 *     with something that might not quite be the latest
 	 *     version.
 	 * </ul>
+	 * <p>
 	 * This concurrency strategy is not compatible with
 	 * serializable transaction isolation.
 	 *

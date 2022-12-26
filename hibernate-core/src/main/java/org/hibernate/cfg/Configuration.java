@@ -72,11 +72,12 @@ import jakarta.persistence.SharedCacheMode;
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
  *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
+ * <p>
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
- * <pre>{@code
+ * <pre>
  *  SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations
  *     .addAnnotatedClass(Item.class)
@@ -88,7 +89,8 @@ import jakarta.persistence.SharedCacheMode;
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
  *     .getSessionFactory();
- * }</pre>
+ * </pre>
+ * <p>
  * In addition, there are convenience methods for adding
  * {@link #addAttributeConverter attribute converters},
  * {@link #registerTypeContributor type contributors},

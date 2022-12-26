@@ -8,8 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +29,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -56,7 +53,6 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -89,8 +85,8 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.query.results.ResultsHelper.attributeName;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Builder for SQL AST trees used by {@link Loader} implementations.
@@ -128,7 +124,7 @@ public class LoaderSelectBuilder {
 				sessionFactory,
 				loadable,
 				partsToSelect,
-				Collections.singletonList( restrictedPart ),
+				singletonList( restrictedPart ),
 				cachedDomainResult,
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
@@ -220,7 +216,7 @@ public class LoaderSelectBuilder {
 	public static SelectStatement createSubSelectFetchSelect(
 			PluralAttributeMapping attributeMapping,
 			SubselectFetch subselect,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
@@ -244,7 +240,7 @@ public class LoaderSelectBuilder {
 	private final Loadable loadable;
 	private final List<? extends ModelPart> partsToSelect;
 	private final List<ModelPart> restrictedParts;
-	private final DomainResult cachedDomainResult;
+	private final DomainResult<?> cachedDomainResult;
 	private final int numberOfKeysToLoad;
 	private final boolean forceIdentifierSelection;
 	private final LoadQueryInfluencers loadQueryInfluencers;
@@ -262,7 +258,7 @@ public class LoaderSelectBuilder {
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
 			List<ModelPart> restrictedParts,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
@@ -287,7 +283,7 @@ public class LoaderSelectBuilder {
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
 			List<ModelPart> restrictedParts,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
@@ -312,7 +308,7 @@ public class LoaderSelectBuilder {
 			Loadable loadable,
 			List<? extends ModelPart> partsToSelect,
 			ModelPart restrictedPart,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
@@ -321,7 +317,7 @@ public class LoaderSelectBuilder {
 				creationContext,
 				loadable,
 				partsToSelect,
-				Arrays.asList( restrictedPart ),
+				singletonList( restrictedPart ),
 				cachedDomainResult,
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
@@ -356,7 +352,7 @@ public class LoaderSelectBuilder {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
 				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
-				final RootGraphImplementor rootGraphImplementor = effectiveEntityGraph.getGraph();
+				final RootGraphImplementor<?> rootGraphImplementor = effectiveEntityGraph.getGraph();
 				if ( graphSemantic != null && rootGraphImplementor != null ) {
 					return new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
 				}
@@ -458,7 +454,7 @@ public class LoaderSelectBuilder {
 			}
 
 			//noinspection unchecked
-			domainResults = Collections.singletonList( domainResult );
+			domainResults = singletonList( domainResult );
 		}
 
 		for ( ModelPart restrictedPart : restrictedParts ) {
@@ -655,11 +651,7 @@ public class LoaderSelectBuilder {
 		}
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
-				fetchParent,
-				creationState,
-				fetches
-		);
+		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
@@ -759,7 +751,7 @@ public class LoaderSelectBuilder {
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
 					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping().getAttributeMetadata()
 							.getCascadeStyle();
-					final CascadingAction cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
+					final CascadingAction<?> cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
 							.getCascadingAction();
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
@@ -853,7 +845,6 @@ public class LoaderSelectBuilder {
 								creationState
 						);
 						applyOrdering(
-								querySpec,
 								fetchablePath,
 								pluralAttributeMapping,
 								creationState
@@ -901,7 +892,6 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyOrdering(
-			QuerySpec ast,
 			NavigablePath navigablePath,
 			PluralAttributeMapping pluralAttributeMapping,
 			LoaderSqlAstCreationState sqlAstCreationState) {
@@ -988,7 +978,7 @@ public class LoaderSelectBuilder {
 
 		return new SelectStatement(
 				rootQuerySpec,
-				List.of(
+				singletonList(
 						new CollectionDomainResult(
 								rootNavigablePath,
 								attributeMapping,
@@ -1006,9 +996,6 @@ public class LoaderSelectBuilder {
 			TableGroup rootTableGroup,
 			SubselectFetch subselect,
 			LoaderSqlAstCreationState sqlAstCreationState) {
-		final SqlAstCreationContext sqlAstCreationContext = sqlAstCreationState.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationContext.getSessionFactory();
-
 		assert loadable instanceof PluralAttributeMapping;
 
 		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
@@ -1053,11 +1040,8 @@ public class LoaderSelectBuilder {
 						fkExpression,
 						generateSubSelect(
 								attributeMapping,
-								rootTableGroup,
 								subselect,
-								jdbcTypeCount,
-								sqlAstCreationState,
-								sessionFactory
+								sqlAstCreationState
 						),
 						false
 				)
@@ -1066,11 +1050,8 @@ public class LoaderSelectBuilder {
 
 	private QueryPart generateSubSelect(
 			PluralAttributeMapping attributeMapping,
-			TableGroup rootTableGroup,
 			SubselectFetch subselect,
-			int jdbcTypeCount,
-			LoaderSqlAstCreationState creationState,
-			SessionFactoryImplementor sessionFactory) {
+			LoaderSqlAstCreationState creationState) {
 		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 
 		final QuerySpec subQuery = new QuerySpec( false );

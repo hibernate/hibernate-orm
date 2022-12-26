@@ -46,16 +46,26 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 
-import static org.hibernate.boot.model.internal.AnnotationBinder.matchIgnoreNotFoundWithFetchType;
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
+import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
+import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
+ * Responsible for interpreting {@link ManyToOne} and {@link OneToOne} associations
+ * and producing mapping model objects of type {@link org.hibernate.mapping.ManyToOne}
+ * and {@link org.hibernate.mapping.OneToOne}.
+ *
+ * @implNote This class is stateless, unlike most of the other "binders".
+ *
  * @author Emmanuel Bernard
  */
 public class ToOneBinder {
@@ -94,11 +104,10 @@ public class ToOneBinder {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
-		final boolean mandatory = isMandatory( manyToOne.optional(), property, notFoundAction );
 		bindManyToOne(
 				getCascadeStrategy( manyToOne.cascade(), hibernateCascade, false, forcePersist ),
 				joinColumns,
-				!mandatory,
+				!isMandatory( manyToOne.optional(), property, notFoundAction ),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
 				getTargetEntity( inferredData, context ),
@@ -244,7 +253,8 @@ public class ToOneBinder {
 			PropertyData inferredData,
 			boolean isIdentifierMapper,
 			PropertyBinder propertyBinder,
-			org.hibernate.mapping.ManyToOne value, XProperty property,
+			org.hibernate.mapping.ManyToOne value,
+			XProperty property,
 			boolean hasSpecjManyToOne,
 			String propertyName) {
 
@@ -266,7 +276,7 @@ public class ToOneBinder {
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );
 		propertyBinder.setProperty( property );
-		propertyBinder.setXToMany( true );
+		propertyBinder.setToMany( true );
 
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
@@ -347,7 +357,7 @@ public class ToOneBinder {
 			// LazyToOne takes precedent
 			final LazyToOne lazy = property.getAnnotation( LazyToOne.class );
 			boolean eager = lazy.value() == LazyToOneOption.FALSE;
-			if ( eager && fetchType == FetchType.LAZY ) {
+			if ( eager && fetchType == LAZY ) {
 				// conflicts with non-default setting
 				throw new AnnotationException("Association '" + getPath(propertyHolder, inferredData)
 						+ "' is marked 'fetch=LAZY' and '@LazyToOne(FALSE)'");
@@ -355,7 +365,7 @@ public class ToOneBinder {
 			return eager;
 		}
 		else {
-			return fetchType == FetchType.EAGER;
+			return fetchType == EAGER;
 		}
 	}
 
@@ -580,20 +590,20 @@ public class ToOneBinder {
 		}
 		else {
 			ConstraintMode mode = joinColumns.value();
-			return mode == ConstraintMode.NO_CONSTRAINT
-				|| mode == ConstraintMode.PROVIDER_DEFAULT && context.getBuildingOptions().isNoConstraintByDefault();
+			return mode == NO_CONSTRAINT
+				|| mode == PROVIDER_DEFAULT && context.getBuildingOptions().isNoConstraintByDefault();
 		}
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, MetadataBuildingContext context) {
-		return AnnotationBinder.isDefault( targetEntity, context )
+		return isDefault( targetEntity, context )
 				? propertyData.getClassOrElementName()
 				: targetEntity.getName();
 	}
 
 	public static String getReferenceEntityName(PropertyData propertyData, MetadataBuildingContext context) {
 		final XClass targetEntity = getTargetEntity( propertyData, context );
-		return AnnotationBinder.isDefault( targetEntity, context )
+		return isDefault( targetEntity, context )
 				? propertyData.getClassOrElementName()
 				: targetEntity.getName();
 	}
@@ -613,5 +623,15 @@ public class ToOneBinder {
 			return oneToOne.targetEntity();
 		}
 		throw new AssertionFailure("Unexpected discovery of a targetEntity: " + property.getName() );
+	}
+
+	private static void matchIgnoreNotFoundWithFetchType(
+			String entity,
+			String association,
+			NotFoundAction notFoundAction,
+			FetchType fetchType) {
+		if ( notFoundAction != null && fetchType == LAZY ) {
+			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
+		}
 	}
 }

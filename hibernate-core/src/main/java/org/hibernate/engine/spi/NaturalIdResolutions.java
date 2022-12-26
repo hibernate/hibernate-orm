@@ -36,8 +36,7 @@ public interface NaturalIdResolutions {
 	 */
 	Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
-	void cacheResolutionFromLoad(
-			Object id, Object naturalId, EntityMappingType entityDescriptor);
+	void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
 	 * Ensures that the necessary local cross-reference exists.  Specifically, this

@@ -49,7 +49,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 			return constructor.newInstance( values );
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 
@@ -78,7 +78,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 				return constructor.newInstance( values );
 			}
 			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+				throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 			}
 		}
 	}

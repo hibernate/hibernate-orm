@@ -22,7 +22,7 @@ public class UniqueKey extends Constraint {
 	private final Map<Column, String> columnOrderMap = new HashMap<>();
 	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
 
-	@Override @Deprecated(since="6.2")
+	@Override @Deprecated(since="6.2", forRemoval = true)
 	public String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,

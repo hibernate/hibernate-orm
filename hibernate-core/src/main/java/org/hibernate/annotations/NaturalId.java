@@ -18,11 +18,53 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the natural id of the entity. This annotation is very useful when
  * the primary key of an entity class is a surrogate key, that is,
  * a {@linkplain jakarta.persistence.GeneratedValue system-generated}
- * synthetic identifier, with no domain-model semantics. Then should
+ * synthetic identifier, with no domain-model semantics. There should
  * always be some other field or combination of fields which uniquely
  * identifies an instance of the entity from the point of view of the
  * user of the system. This is the <em>natural id</em> of the entity.
  * <p>
+ * A natural id may be a single field or property of the entity:
+ * <pre>{@code
+ * @Entity
+ * @Cache @NaturalIdCache
+ * class Person {
+ *
+ *     //synthetic id
+ *     @GeneratedValue @Id
+ *     Long id;
+ *
+ *     @NotNull
+ *     String name;
+ *
+ *     //simple natural id
+ *     @NotNull @NaturalId
+ *     String ssn;
+ *
+ *     ...
+ * }
+ * }</pre>
+ * or it may be a composite value:
+ * <pre>{@code
+ * @Entity
+ * @Cache @NaturalIdCache
+ * class Vehicle {
+ *
+ *     //synthetic id
+ *     @GeneratedValue @Id
+ *     Long id;
+ *
+ *     //composite natural id
+ *
+ *     @Enumerated
+ *     @NotNull @NaturalId
+ *     Region region;
+ *
+ *     @NotNull @NaturalId
+ *     String registration;
+ *
+ *     ...
+ * }
+ * }</pre>
  * The {@link org.hibernate.Session} interface offers several methods
  * that allow an entity instance to be retrieved by its
  * {@linkplain org.hibernate.Session#bySimpleNaturalId(Class) simple}

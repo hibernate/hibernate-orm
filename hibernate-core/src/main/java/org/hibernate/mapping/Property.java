@@ -16,7 +16,6 @@ import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -138,12 +137,16 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
-	public boolean isPrimitive(Class clazz) {
-		return getGetter(clazz).getReturnTypeClass().isPrimitive();
+	/**
+	 * @deprecated this method is no longer used
+	 */
+	@Deprecated(since = "6", forRemoval = true)
+	public boolean isPrimitive(Class<?> clazz) {
+		return getGetter( clazz ).getReturnTypeClass().isPrimitive();
 	}
 
 	public CascadeStyle getCascadeStyle() throws MappingException {
-		Type type = value.getType();
+		final Type type = value.getType();
 		if ( type.isComponentType() ) {
 			return getCompositeCascadeStyle( (CompositeType) type, cascade );
 		}
@@ -292,28 +295,27 @@ public class Property implements Serializable, MetaAttributable {
 	/**
 	 * Is this property lazy in the "bytecode" sense?
 	 * <p>
-	 * Lazy here means whether we should push *something* to the entity
-	 * instance for this field in its "base fetch group".  Mainly it affects
-	 * whether we should list this property's columns in the SQL select
-	 * for the owning entity when we load its "base fetch group".
-	 * <p>
-	 * The "something" we push varies based on the nature (basic, etc) of
-	 * the property.
+	 * Lazy here means whether we initialize this field of the entity
+	 * instance in its "base fetch group". It affects whether we list
+	 * this property's columns in the SQL select for the owning entity
+	 * when we load its "base fetch group". The actual value that is set
+	 * varies based on the nature (basic, etc) of the property.
 	 *
-	 * @apiNote This form reports whether the property is considered part of the
-	 * base fetch group based solely on the mapping information.  However,
-	 * {@link EnhancementHelper#includeInBaseFetchGroup} is used internally to make that
-	 * decision to account for other details
+	 * @apiNote This method reports whether the property is considered
+	 * part of the base fetch group based solely on the information in
+	 * the mapping but {@link EnhancementHelper#includeInBaseFetchGroup}
+	 * is also accounts for other details.
 	 */
 	public boolean isLazy() {
 		if ( value instanceof ToOne ) {
-			// For a many-to-one, this is always false.  Whether the
-			// association is EAGER, PROXY or NO-PROXY we want the fk
-			// selected
+			// For a many-to-one, this is always false. Whether the
+			// association is EAGER, PROXY or NO-PROXY we always want
+			// to select the foreign key
 			return false;
 		}
-
-		return lazy;
+		else {
+			return lazy;
+		}
 	}
 
 	public String getLazyGroup() {
@@ -333,7 +335,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 	
 	public boolean isOptional() {
-		return optional || isNullable();
+		return optional;
 	}
 	
 	public void setOptional(boolean optional) {
@@ -361,12 +363,12 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	// todo : remove
-	public Getter getGetter(Class clazz) throws PropertyNotFoundException, MappingException {
+	public Getter getGetter(Class clazz) throws MappingException {
 		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
 	// todo : remove
-	public Setter getSetter(Class clazz) throws PropertyNotFoundException, MappingException {
+	public Setter getSetter(Class clazz) throws MappingException {
 		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getSetter();
 	}
 
@@ -454,27 +456,27 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Property copy() {
-		final Property prop = new Property();
-		prop.setName( getName() );
-		prop.setValue( getValue() );
-		prop.setCascade( getCascade() );
-		prop.setUpdateable( isUpdateable() );
-		prop.setInsertable( isInsertable() );
-		prop.setSelectable( isSelectable() );
-		prop.setOptimisticLocked( isOptimisticLocked() );
-		prop.setValueGeneratorCreator( getValueGeneratorCreator() );
-		prop.setPropertyAccessorName( getPropertyAccessorName() );
-		prop.setPropertyAccessStrategy( getPropertyAccessStrategy() );
-		prop.setLazy( isLazy() );
-		prop.setLazyGroup( getLazyGroup() );
-		prop.setOptional( isOptional() );
-		prop.setMetaAttributes( getMetaAttributes() );
-		prop.setPersistentClass( getPersistentClass() );
-		prop.setNaturalIdentifier( isNaturalIdentifier() );
-		prop.setLob( isLob() );
-		prop.addCallbackDefinitions( getCallbackDefinitions() );
-		prop.setReturnedClassName( getReturnedClassName() );
-		return prop;
+		final Property property = new Property();
+		property.setName( getName() );
+		property.setValue( getValue() );
+		property.setCascade( getCascade() );
+		property.setUpdateable( isUpdateable() );
+		property.setInsertable( isInsertable() );
+		property.setSelectable( isSelectable() );
+		property.setOptimisticLocked( isOptimisticLocked() );
+		property.setValueGeneratorCreator( getValueGeneratorCreator() );
+		property.setPropertyAccessorName( getPropertyAccessorName() );
+		property.setPropertyAccessStrategy( getPropertyAccessStrategy() );
+		property.setLazy( isLazy() );
+		property.setLazyGroup( getLazyGroup() );
+		property.setOptional( isOptional() );
+		property.setMetaAttributes( getMetaAttributes() );
+		property.setPersistentClass( getPersistentClass() );
+		property.setNaturalIdentifier( isNaturalIdentifier() );
+		property.setLob( isLob() );
+		property.addCallbackDefinitions( getCallbackDefinitions() );
+		property.setReturnedClassName( getReturnedClassName() );
+		return property;
 	}
 
 	private class PropertyGeneratorCreationContext implements GeneratorCreationContext {

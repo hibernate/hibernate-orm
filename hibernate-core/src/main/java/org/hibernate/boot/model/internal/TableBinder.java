@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -27,6 +28,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -49,7 +51,7 @@ import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
- * Table related operations
+ * Stateful binder responsible for producing instances of {@link Table}.
  *
  * @author Emmanuel Bernard
  */
@@ -64,7 +66,6 @@ public class TableBinder {
 	private String name;
 	private boolean isAbstract;
 	private List<UniqueConstraintHolder> uniqueConstraints;
-	//	private List<String[]> uniqueConstraints;
 	String constraints;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
@@ -552,7 +553,7 @@ public class TableBinder {
 		else {
 			bindExplicitColumns( referencedEntity, joinColumns, value, buildingContext, associatedClass );
 		}
-		value.createForeignKey();
+		value.createForeignKey( referencedEntity, joinColumns );
 		if ( unique ) {
 			value.createUniqueKey();
 		}
@@ -616,41 +617,71 @@ public class TableBinder {
 			( (Component) key).sortProperties();
 		}
 		// works because the pk has to be on the primary table
-		final Dialect dialect = buildingContext.getMetadataCollector().getDatabase()
-				.getJdbcEnvironment().getDialect();
-		for ( Column column: key.getColumns() ) {
-			boolean match = false;
-			// for each PK column, find the associated FK column.
-			final String quotedName = column.getQuotedName( dialect );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
-				final String referencedColumn = buildingContext.getMetadataCollector()
-						.getPhysicalColumnName( referencedEntity.getTable(), joinColumn.getReferencedColumn() );
-				// in JPA 2 referencedColumnName is case-insensitive
-				if ( referencedColumn.equalsIgnoreCase( quotedName ) ) {
-					// correct join column
-					if ( joinColumn.isNameDeferred() ) {
-						joinColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
-					}
-					else {
-						joinColumn.linkWithValue( value );
-					}
-					joinColumn.overrideFromReferencedColumnIfNecessary( column );
-					match = true;
-					break;
-				}
-			}
-			if ( !match ) {
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final Dialect dialect = metadataCollector.getDatabase().getJdbcEnvironment().getDialect();
+		for ( int j = 0; j < key.getColumnSpan(); j++ ) {
+			if ( !matchUpJoinColumnsWithKeyColumns( referencedEntity, joinColumns, value, metadataCollector, dialect, j ) ) {
 				// we can only get here if there's a dupe PK column in the @JoinColumns
 				throw new AnnotationException(
 						"An association that targets entity '" + referencedEntity.getEntityName()
 								+ "' from entity '" + associatedClass.getEntityName()
-								+ "' has no '@JoinColumn' referencing column '"+ column.getName()
+								+ "' has no '@JoinColumn' referencing column '" + key.getColumns().get(j).getName() + "'"
 				);
 			}
 		}
 		if ( value instanceof ToOne ) {
 			( (ToOne) value).setSorted( true );
 		}
+	}
+
+	private static boolean matchUpJoinColumnsWithKeyColumns(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumns joinColumns,
+			SimpleValue value,
+			InFlightMetadataCollector metadataCollector,
+			Dialect dialect,
+			int index) {
+		// for each PK column, find the associated FK column.
+		for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
+			final String referencedNamed = joinColumn.getReferencedColumn();
+			String referencedColumn = null;
+			List<Column> columns = null;
+			try {
+				final Table referencedTable = referencedEntity.getTable();
+				referencedColumn = metadataCollector.getPhysicalColumnName( referencedTable, referencedNamed );
+				columns = referencedEntity.getKey().getColumns();
+			}
+			catch ( MappingException me ) {
+				for ( Join join : referencedEntity.getJoins() ) {
+					try {
+						final Table referencedTable = join.getTable();
+						referencedColumn = metadataCollector.getPhysicalColumnName( referencedTable, referencedNamed );
+						columns = referencedTable.getPrimaryKey().getColumns();
+						break;
+					}
+					catch ( MappingException i ) {
+					}
+				}
+				if ( referencedColumn == null ) {
+					throw me;
+				}
+			}
+			final Column column = columns.get( index );
+			final String quotedName = column.getQuotedName( dialect );
+			// in JPA 2 referencedColumnName is case-insensitive
+			if ( referencedColumn.equalsIgnoreCase( quotedName ) ) {
+				// correct join column
+				if ( joinColumn.isNameDeferred() ) {
+					joinColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value );
+				}
+				else {
+					joinColumn.linkWithValue( value );
+				}
+				joinColumn.overrideFromReferencedColumnIfNecessary( column );
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void bindNonPrimaryKeyReference(

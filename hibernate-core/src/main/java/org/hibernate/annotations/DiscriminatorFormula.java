@@ -6,9 +6,12 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.DiscriminatorType;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static jakarta.persistence.DiscriminatorType.STRING;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -18,6 +21,40 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the hierarchy.
  * <p>
  * Used in place of the JPA {@link jakarta.persistence.DiscriminatorColumn}.
+ * <p>
+ * For example, we might declare a supertype as follows:
+ * <pre>{@code
+ * @Entity
+ * @DiscriminatorFormula(discriminatorType = INTEGER,
+ * 		value = "case when value1 is not null then 1 when value2 is not null then 2 end")
+ * public abstract class AbstractChild {
+ *     @Id
+ *     @GeneratedValue
+ *     Integer id;
+ *     ...
+ * }
+ * }</pre>
+ * and then each concrete subclass must specify a matching discriminator value:
+ * <pre>{@code
+ * @Entity
+ * @DiscriminatorValue("1")
+ * public class ConcreteChild1 extends AbstractChild {
+ *     @Basic(optional = false)
+ *     @Column(name = "VALUE1")
+ *     String value;
+ *     ...
+ * }
+ * }</pre>
+ * <pre>{@code
+ * @Entity
+ * @DiscriminatorValue("2")
+ * public class ConcreteChild2 extends AbstractChild {
+ *     @Basic(optional = false)
+ *     @Column(name = "VALUE2")
+ *     String value;
+ *     ...
+ * }
+ * }</pre>
  *
  * @see Formula
  * @see DialectOverride.DiscriminatorFormula
@@ -25,11 +62,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-@Target({TYPE})
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface DiscriminatorFormula {
 	/**
 	 * The formula string.
 	 */
 	String value();
+
+	/**
+	 * The type of value returned by the formula.
+	 * <p>
+	 * This is required, unless the {@linkplain #value()
+	 * expression} is of type {@code varchar} or similar.
+	 */
+	DiscriminatorType discriminatorType() default STRING;
 }

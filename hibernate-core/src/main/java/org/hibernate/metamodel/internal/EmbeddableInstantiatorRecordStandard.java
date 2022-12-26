@@ -38,7 +38,7 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 			return constructor.newInstance( valuesAccess.getValues() );
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 }

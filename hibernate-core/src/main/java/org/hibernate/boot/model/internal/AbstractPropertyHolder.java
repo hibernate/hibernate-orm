@@ -45,7 +45,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
 
-import static org.hibernate.boot.model.internal.AnnotationBinder.useColumnForTimeZoneStorage;
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
 
 /**
  * @author Emmanuel Bernard

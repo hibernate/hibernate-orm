@@ -14,6 +14,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -686,6 +687,9 @@ public interface AvailableSettings {
 	 * the JPA defined defaults for these absent annotations.
 	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 * <p>
+	 * This setting defaults to {@code false}, meaning that implicit discriminator columns
+	 * are never inferred to exist for joined inheritance hierarchies.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
@@ -705,6 +709,9 @@ public interface AvailableSettings {
 	 * inheritance.
 	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 * <p>
+	 * This setting defaults to {@code false}, meaning that explicit discriminator columns
+	 * are never ignored.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
@@ -1360,6 +1367,9 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.RegionFactory}, or
 	 *     <li>he name of a class implementing {@link org.hibernate.cache.spi.RegionFactory}.
 	 * </ul>
+	 * Defaults to {@link NoCachingRegionFactory}, so that caching is disabled.
+	 *
+	 * @see #USE_SECOND_LEVEL_CACHE
 	 */
 	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
 
@@ -1375,7 +1385,7 @@ public interface AvailableSettings {
 	 *
 	 * @since 5.2
 	 *
-	 * @deprecated this is only honored for hibernate-infinispan
+	 * @deprecated this is only honored for {@code hibernate-infinispan}
 	 */
 	@Deprecated
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
@@ -1387,6 +1397,7 @@ public interface AvailableSettings {
 	 * is not the {@link org.hibernate.cache.internal.NoCachingRegionFactory}, then
 	 * the second-level cache is enabled. Otherwise, the second-level cache is disabled.
 	 *
+	 * @see #CACHE_REGION_FACTORY
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applySecondLevelCacheSupport(boolean)
 	 */
 	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";

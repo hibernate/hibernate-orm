@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -15,13 +14,11 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 
 /**
@@ -38,18 +35,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,
 			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		this( navigablePath, entityValuedModelPart, tableGroup, resultVariable, null, creationState );
-	}
-
-	public EntityResultImpl(
-			NavigablePath navigablePath,
-			EntityValuedModelPart entityValuedModelPart,
-			TableGroup tableGroup,
-			String resultVariable,
-			EntityMappingType targetType,
-			DomainResultCreationState creationState) {
+			String resultVariable) {
 		super( entityValuedModelPart, navigablePath );
 		this.tableGroup = tableGroup;
 		this.resultVariable = resultVariable;

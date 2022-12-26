@@ -22,6 +22,8 @@ import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -37,14 +39,11 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -55,18 +54,13 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
@@ -74,7 +68,6 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFor
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -83,8 +76,6 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  * @author Emmanuel Bernard
  */
 public class BinderHelper {
-
-	private static final Logger log = CoreLogging.logger( BinderHelper.class );
 
 	private BinderHelper() {
 	}
@@ -336,11 +327,11 @@ public class BinderHelper {
 		}
 		embeddedComponent.sortProperties();
 		final Property result = new SyntheticProperty();
-		result.setName(syntheticPropertyName);
-		result.setPersistentClass(ownerEntity);
+		result.setName( syntheticPropertyName );
+		result.setPersistentClass( ownerEntity );
 		result.setUpdateable( false );
 		result.setInsertable( false );
-		result.setValue(embeddedComponent);
+		result.setValue( embeddedComponent );
 		result.setPropertyAccessorName( "embedded" );
 		ownerEntity.addProperty( result );
 		embeddedComponent.createUniqueKey(); //make it unique
@@ -597,7 +588,7 @@ public class BinderHelper {
 				}
 			}
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			try {
 				//if we do not find it try to check the identifier mapper
 				if ( associatedClass.getIdentifierMapper() == null ) {
@@ -617,7 +608,7 @@ public class BinderHelper {
 					}
 				}
 			}
-			catch (MappingException ee) {
+			catch ( MappingException ee ) {
 				return null;
 			}
 		}
@@ -731,129 +722,6 @@ public class BinderHelper {
 		return null;
 	}
 
-	/**
-	 * Apply an id generation strategy and parameters to the
-	 * given {@link SimpleValue} which represents an identifier.
-	 */
-	public static void makeIdGenerator(
-			SimpleValue id,
-			XProperty property,
-			String generatorType,
-			String generatorName,
-			MetadataBuildingContext buildingContext,
-			Map<String, IdentifierGeneratorDefinition> localGenerators) {
-		log.debugf( "#makeIdGenerator(%s, %s, %s, %s, ...)", id, property, generatorType, generatorName );
-
-		final Table table = id.getTable();
-		table.setIdentifierValue( id );
-		//generator settings
-		id.setIdentifierGeneratorStrategy( generatorType );
-
-		final Map<String,Object> parameters = new HashMap<>();
-
-		//always settable
-		parameters.put( PersistentIdentifierGenerator.TABLE, table.getName() );
-
-		if ( id.getColumnSpan() == 1 ) {
-			parameters.put( PersistentIdentifierGenerator.PK, id.getColumns().get(0).getName() );
-		}
-		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-		parameters.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, buildingContext.getObjectNameNormalizer() );
-		parameters.put( IdentifierGenerator.GENERATOR_NAME, generatorName );
-
-		if ( !generatorName.isEmpty() ) {
-			//we have a named generator
-			final IdentifierGeneratorDefinition definition = makeIdentifierGeneratorDefinition(
-					generatorName,
-					property,
-					localGenerators,
-					buildingContext
-			);
-			if ( definition == null ) {
-				throw new AnnotationException( "No id generator was declared with the name '" + generatorName
-						+ "' specified by '@GeneratedValue'"
-						+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
-			}
-			//This is quite vague in the spec but a generator could override the generator choice
-			final String identifierGeneratorStrategy = definition.getStrategy();
-			//yuk! this is a hack not to override 'AUTO' even if generator is set
-			final boolean avoidOverriding = identifierGeneratorStrategy.equals( "identity" )
-					|| identifierGeneratorStrategy.equals( "seqhilo" );
-			if ( generatorType == null || !avoidOverriding ) {
-				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
-				if ( identifierGeneratorStrategy.equals( "assigned" ) ) {
-					id.setNullValue( "undefined" );
-				}
-			}
-			//checkIfMatchingGenerator(definition, generatorType, generatorName);
-			parameters.putAll( definition.getParameters() );
-		}
-		if ( DEFAULT_ID_GEN_STRATEGY.equals( generatorType ) ) {
-			id.setNullValue( "undefined" );
-		}
-		id.setIdentifierGeneratorParameters( parameters );
-	}
-
-	/**
-	 * apply an id generator to a SimpleValue
-	 */
-	public static void makeIdGenerator(
-			SimpleValue id,
-			XProperty idXProperty,
-			String generatorType,
-			String generatorName,
-			MetadataBuildingContext buildingContext,
-			IdentifierGeneratorDefinition foreignKGeneratorDefinition) {
-		Map<String, IdentifierGeneratorDefinition> localIdentifiers = null;
-		if ( foreignKGeneratorDefinition != null ) {
-			localIdentifiers = new HashMap<>();
-			localIdentifiers.put( foreignKGeneratorDefinition.getName(), foreignKGeneratorDefinition );
-		}
-		makeIdGenerator( id, idXProperty, generatorType, generatorName, buildingContext, localIdentifiers );
-	}
-
-	private static IdentifierGeneratorDefinition makeIdentifierGeneratorDefinition(
-			String name,
-			XProperty idXProperty,
-			Map<String, IdentifierGeneratorDefinition> localGenerators,
-			MetadataBuildingContext buildingContext) {
-		if ( localGenerators != null ) {
-			final IdentifierGeneratorDefinition result = localGenerators.get( name );
-			if ( result != null ) {
-				return result;
-			}
-		}
-
-		final IdentifierGeneratorDefinition globalDefinition =
-				buildingContext.getMetadataCollector().getIdentifierGenerator( name );
-		if ( globalDefinition != null ) {
-			return globalDefinition;
-		}
-
-		log.debugf( "Could not resolve explicit IdentifierGeneratorDefinition - using implicit interpretation (%s)", name );
-
-		final GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
-		if ( generatedValue == null ) {
-			// this should really never happen, but it's easy to protect against it...
-			return new IdentifierGeneratorDefinition( DEFAULT_ID_GEN_STRATEGY, DEFAULT_ID_GEN_STRATEGY );
-		}
-
-		return IdentifierGeneratorDefinition.createImplicit(
-				name,
-				buildingContext
-						.getBootstrapContext()
-						.getReflectionManager()
-						.toClass( idXProperty.getType() ),
-				generatedValue.generator(),
-				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter(),
-				interpretGenerationType( generatedValue )
-		);
-	}
-
-	private static GenerationType interpretGenerationType(GeneratedValue generatedValueAnn) {
-		return generatedValueAnn.strategy() == null ? GenerationType.AUTO : generatedValueAnn.strategy();
-	}
-
 	public static Any buildAnyValue(
 			jakarta.persistence.Column discriminatorColumn,
 			Formula discriminatorFormula,
@@ -946,11 +814,8 @@ public class BinderHelper {
 
 		final AnyDiscriminatorValues valuesAnn = property.getAnnotation( AnyDiscriminatorValues.class );
 		if ( valuesAnn != null ) {
-			final AnyDiscriminatorValue[] valueAnns = valuesAnn.value();
-			if ( valueAnns != null && valueAnns.length > 0 ) {
-				for ( AnyDiscriminatorValue ann : valueAnns ) {
-					consumer.accept(ann);
-				}
+			for ( AnyDiscriminatorValue discriminatorValue : valuesAnn.value() ) {
+				consumer.accept( discriminatorValue );
 			}
 		}
 	}
@@ -1007,9 +872,9 @@ public class BinderHelper {
 	
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> ret = new HashMap<>();
-		for ( SqlFragmentAlias aliase : aliases ) {
-			if ( isNotEmpty( aliase.table() ) ) {
-				ret.put( aliase.alias(), aliase.table() );
+		for ( SqlFragmentAlias alias : aliases ) {
+			if ( isNotEmpty( alias.table() ) ) {
+				ret.put( alias.alias(), alias.table() );
 			}
 		}
 		return ret;
@@ -1017,9 +882,9 @@ public class BinderHelper {
 	
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias aliase : aliases ) {
-			if ( aliase.entity() != void.class ) {
-				result.put( aliase.alias(), aliase.entity().getName() );
+		for ( SqlFragmentAlias alias : aliases ) {
+			if ( alias.entity() != void.class ) {
+				result.put( alias.alias(), alias.entity().getName() );
 			}
 		}
 		return result;
@@ -1070,8 +935,9 @@ public class BinderHelper {
 								type.getDeclaredMethod("before").invoke(annotation);
 						final DialectOverride.Version sameOrAfter = (DialectOverride.Version)
 								type.getDeclaredMethod("sameOrAfter").invoke(annotation);
-						if ( dialect.getVersion().isBefore( before.major(), before.minor() )
-							&& dialect.getVersion().isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
+						DatabaseVersion version = dialect.getVersion();
+						if ( version.isBefore( before.major(), before.minor() )
+							&& version.isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
 							//noinspection unchecked
 							return (T) type.getDeclaredMethod("override").invoke(annotation);
 						}
@@ -1097,7 +963,7 @@ public class BinderHelper {
 	}
 
 	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
-		switch (cascade) {
+		switch ( cascade ) {
 			case ALL:
 				return CascadeType.ALL;
 			case PERSIST:
@@ -1117,7 +983,7 @@ public class BinderHelper {
 
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] ejbCascades) {
 		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
-		if ( ejbCascades != null && ejbCascades.length > 0 ) {
+		if ( ejbCascades != null ) {
 			for ( jakarta.persistence.CascadeType cascade: ejbCascades ) {
 				cascadeTypes.add( convertCascadeType( cascade ) );
 			}
@@ -1185,4 +1051,16 @@ public class BinderHelper {
 		return cascade.length() > 0 ? cascade.substring( 1 ) : "none";
 	}
 
+	static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
+		return context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled();
+	}
+
+	static boolean isCompositeId(XClass entityClass, XProperty idProperty) {
+		return entityClass.isAnnotationPresent( Embeddable.class )
+			|| idProperty.isAnnotationPresent( EmbeddedId.class );
+	}
+
+	public static boolean isDefault(XClass clazz, MetadataBuildingContext context) {
+		return context.getBootstrapContext().getReflectionManager().equals( clazz, void.class );
+	}
 }

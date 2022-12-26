@@ -17,7 +17,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -36,7 +35,6 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
@@ -63,8 +61,10 @@ import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
+import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
+import static org.hibernate.jdbc.Expectations.appropriateExpectation;
 
 /**
  * An {@link EntityPersister} implementing the
@@ -136,7 +136,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLInsertCheckStyle();
 		customSQLInsert = new String[] {sql};
 		insertCallable = new boolean[] {callable};
-		insertExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
+		insertExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
 
 		sql = persistentClass.getCustomSQLUpdate();
 		callable = sql != null && persistentClass.isCustomUpdateCallable();
@@ -147,7 +147,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLUpdateCheckStyle();
 		customSQLUpdate = new String[] {sql};
 		updateCallable = new boolean[] {callable};
-		updateExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
+		updateExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
 
 		sql = persistentClass.getCustomSQLDelete();
 		callable = sql != null && persistentClass.isCustomDeleteCallable();
@@ -158,21 +158,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				: persistentClass.getCustomSQLDeleteCheckStyle();
 		customSQLDelete = new String[] {sql};
 		deleteCallable = new boolean[] {callable};
-		deleteExpectations = new Expectation[] { Expectations.appropriateExpectation( checkStyle ) };
+		deleteExpectations = new Expectation[] { appropriateExpectation( checkStyle ) };
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
-		discriminatorType = factory.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.INTEGER );
+		discriminatorType = factory.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
 
 		// PROPERTIES
 
 		// SUBCLASSES
-		subclassByDiscriminatorValue.put(
-				persistentClass.getSubclassId(),
-				persistentClass.getEntityName()
-		);
+		subclassByDiscriminatorValue.put( persistentClass.getSubclassId(), persistentClass.getEntityName() );
 		if ( persistentClass.isPolymorphic() ) {
 			for ( Subclass subclass : persistentClass.getSubclasses() ) {
 				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
@@ -195,7 +190,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		for ( Table table : persistentClass.getSubclassTableClosure() ) {
 			subclassTables.add( determineTableName( table ) );
 		}
-		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
+		subclassSpaces = toStringArray( subclassTables );
 
 		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
@@ -211,17 +206,17 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				tableExpressions.add( generateSubquery( subPersistentClass, creationContext.getMetadata() ) );
 			}
 		}
-		subclassTableExpressions = ArrayHelper.toStringArray( tableExpressions );
+		subclassTableExpressions = toStringArray( tableExpressions );
 
 		if ( hasMultipleTables() ) {
-			int idColumnSpan = getIdentifierColumnSpan();
-			ArrayList<String> tableNames = new ArrayList<>();
-			ArrayList<String[]> keyColumns = new ArrayList<>();
+			final int idColumnSpan = getIdentifierColumnSpan();
+			final ArrayList<String> tableNames = new ArrayList<>();
+			final ArrayList<String[]> keyColumns = new ArrayList<>();
 			for ( Table table : persistentClass.getSubclassTableClosure() ) {
 				if ( !table.isAbstractUnionTable() ) {
 					tableNames.add( determineTableName( table ) );
-					String[] key = new String[idColumnSpan];
-					List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
+					final String[] key = new String[idColumnSpan];
+					final List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
 						key[k] = columns.get(k).getQuotedName( dialect );
 					}
@@ -229,8 +224,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				}
 			}
 
-			constraintOrderedTableNames = ArrayHelper.toStringArray( tableNames );
-			constraintOrderedKeyColumnNames = ArrayHelper.to2DStringArray( keyColumns );
+			constraintOrderedTableNames = toStringArray( tableNames );
+			constraintOrderedKeyColumnNames = to2DStringArray( keyColumns );
 		}
 		else {
 			constraintOrderedTableNames = new String[] { tableName };
@@ -259,6 +254,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	public UnionTableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver expressionResolver,
+			SqlAstCreationContext creationContext) {
+		return new UnionTableReference( getTableName(), subclassTableExpressions, sqlAliasBase.generateNewAlias() );
+	}
+
+	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
@@ -268,19 +271,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			SqlExpressionResolver expressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final UnionTableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
-
-		return new UnionTableGroup( canUseInnerJoins, navigablePath, tableReference, this, explicitSourceAlias );
+		return new UnionTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				createPrimaryTableReference( sqlAliasBase, expressionResolver, creationContext ),
+				this,
+				explicitSourceAlias
+		);
 	}
 
 	@Override
-	protected UnionTableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
-		return new UnionTableReference(
-				getTableName(),
-				subclassTableExpressions,
-				sqlAliasBase.generateNewAlias(),
-				false
-		);
+	protected boolean needsDiscriminator() {
+		return false;
 	}
 
 	@Override
@@ -299,8 +301,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Type getDiscriminatorType() {
+	public BasicType<?> getDiscriminatorType() {
 		return discriminatorType;
+	}
+
+	@Override
+	public Map<Object, String> getSubclassByDiscriminatorValue() {
+		return subclassByDiscriminatorValue;
 	}
 
 	@Override
@@ -326,29 +333,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		return subclassByDiscriminatorValue.get( value );
-	}
-
-	@Override
-	protected Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> buildDiscriminatorValueMappings(PersistentClass bootEntityDescriptor, MappingModelCreationProcess modelCreationProcess) {
-		final MappingMetamodelImplementor mappingModel = modelCreationProcess.getCreationContext()
-				.getSessionFactory()
-				.getMappingMetamodel();
-
-		//noinspection unchecked
-		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = (JdbcLiteralFormatter<Object>) discriminatorType.getJdbcLiteralFormatter();
-		final Dialect dialect = modelCreationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
-
-		final Map<Object, EntityDiscriminatorMapping.DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
-
-		subclassByDiscriminatorValue.forEach( (value, entityName) -> {
-			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
-					value,
-					jdbcLiteralFormatter.toJdbcLiteral( value, dialect, null ),
-					mappingModel.findEntityDescriptor( entityName )
-			);
-			valueMappings.put( value, valueMapping );
-		} );
-		return valueMappings;
 	}
 
 	@Override
@@ -442,7 +426,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		for ( int i = 0; i < constraintOrderedTableNames.length; i++ ) {
 			final String tableName = constraintOrderedTableNames[i];
 			final int tablePosition = i;
-
 			consumer.consume(
 					tableName,
 					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
@@ -455,7 +438,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		consumer.consume(
 				tableName,
 				0,
-				() -> (columnConsumer) -> columnConsumer.accept( tableName, getIdentifierMapping(), getIdentifierColumnNames() )
+				() -> columnConsumer -> columnConsumer.accept( tableName, getIdentifierMapping(), getIdentifierColumnNames() )
 		);
 	}
 

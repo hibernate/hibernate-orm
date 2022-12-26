@@ -50,8 +50,10 @@ import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
+import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -207,7 +209,7 @@ public class MapBinder extends CollectionBinder {
 			String mapKeyType,
 			XClass keyClass) {
 		if ( isPrimitive( mapKeyType ) ) {
-			return AnnotatedClassType.NONE;
+			return NONE;
 		}
 		else {
 			// force in case of attribute override naming the key
@@ -364,7 +366,7 @@ public class MapBinder extends CollectionBinder {
 			CollectionPropertyHolder holder,
 			AccessType accessType,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
-		getMap().setIndex( AnnotationBinder.fillComponent(
+		getMap().setIndex( fillEmbeddable(
 				holder,
 				propertyPreloadedData( keyClass ),
 				accessType,

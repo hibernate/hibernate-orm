@@ -25,7 +25,7 @@ import org.hibernate.resource.jdbc.spi.JdbcObserver;
 /**
  * Helps to track statements and resultsets which need being closed.
  * This class is not threadsafe.
- *
+ * <p>
  * Note regarding performance: we had evidence that allocating Iterators
  * to implement the cleanup on each element recursively was the dominant
  * resource cost, so we decided using "forEach" and lambdas in this case.
@@ -78,7 +78,6 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
@@ -166,12 +165,13 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( s );
 	}
 
-	@SuppressWarnings("unchecked")
 	private static void close(final ResultSet resultSet) {
 		log.tracef( "Closing result set [%s]", resultSet );
 
 		try {
-			resultSet.close();
+			if ( resultSet != null ) {
+				resultSet.close();
+			}
 		}
 		catch (SQLException e) {
 			log.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );

@@ -28,6 +28,10 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
 
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
+import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
+import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+
 /**
  * Some extra data to the inheritance position of a class.
  *
@@ -73,16 +77,16 @@ public class InheritanceState {
 			setType( inhAnn == null ? null : inhAnn.strategy() );
 		}
 		else {
-			setType( inhAnn == null ? InheritanceType.SINGLE_TABLE : inhAnn.strategy() );
+			setType( inhAnn == null ? SINGLE_TABLE : inhAnn.strategy() );
 		}
 	}
 
 	public boolean hasTable() {
-		return !hasParents() || !InheritanceType.SINGLE_TABLE.equals( getType() );
+		return !hasParents() || !SINGLE_TABLE.equals( getType() );
 	}
 
 	public boolean hasDenormalizedTable() {
-		return hasParents() && InheritanceType.TABLE_PER_CLASS.equals( getType() );
+		return hasParents() && TABLE_PER_CLASS.equals( getType() );
 	}
 
 	public static InheritanceState getInheritanceStateOfSuperEntity(XClass clazz, Map<XClass, InheritanceState> states) {
@@ -167,7 +171,7 @@ public class InheritanceState {
 			return clazz;
 		}
 		else {
-			InheritanceState state = InheritanceState.getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
+			final InheritanceState state = getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
 			if ( state != null ) {
 				return state.getClassWithIdClass( true );
 			}
@@ -197,10 +201,10 @@ public class InheritanceState {
 	}
 
 	/*
-     * Get the annotated elements and determine access type from hierarchy,
-     * guessing from @Id or @EmbeddedId presence if not specified.
-     * Change EntityBinder by side effect
-     */
+	 * Get the annotated elements and determine access type from hierarchy,
+	 * guessing from @Id or @EmbeddedId presence if not specified.
+	 * Change EntityBinder by side effect
+	 */
 	private ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
 			InheritanceState inheritanceState = inheritanceStatePerClass.get( clazz );
@@ -210,7 +214,7 @@ public class InheritanceState {
 
 			accessType = determineDefaultAccessType();
 
-			ArrayList<PropertyData> elements = new ArrayList<>();
+			final ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
 
 			for ( XClass classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
@@ -219,7 +223,7 @@ public class InheritanceState {
 						clazz,
 						accessType
 				);
-				int currentIdPropertyCount = AnnotationBinder.addElementsOfClass(
+				int currentIdPropertyCount = addElementsOfClass(
 						elements,
 						propertyContainer,
 						buildingContext
@@ -238,17 +242,19 @@ public class InheritanceState {
 	}
 
 	private AccessType determineDefaultAccessType() {
-		for (XClass xclass = clazz; xclass != null; xclass = xclass.getSuperclass()) {
+		for ( XClass xclass = clazz; xclass != null; xclass = xclass.getSuperclass() ) {
 			if ( ( xclass.getSuperclass() == null || Object.class.getName().equals( xclass.getSuperclass().getName() ) )
 					&& ( xclass.isAnnotationPresent( Entity.class ) || xclass.isAnnotationPresent( MappedSuperclass.class ) )
 					&& xclass.isAnnotationPresent( Access.class ) ) {
 				return AccessType.getAccessStrategy( xclass.getAnnotation( Access.class ).value() );
 			}
 		}
-        // Guess from identifier.
-        // FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations, but without an
-        //      explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
-		for (XClass xclass = clazz; xclass != null && !Object.class.getName().equals(xclass.getName()); xclass = xclass.getSuperclass()) {
+		// Guess from identifier.
+		// FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations,
+		// but without an explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
+		for ( XClass xclass = clazz;
+				xclass != null && !Object.class.getName().equals( xclass.getName() );
+				xclass = xclass.getSuperclass() ) {
 			if ( xclass.isAnnotationPresent( Entity.class ) || xclass.isAnnotationPresent( MappedSuperclass.class ) ) {
 				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.PROPERTY.getType() ) ) {
 					final boolean isEmbeddedId = prop.isAnnotationPresent( EmbeddedId.class );

@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.sql.InFragment;
@@ -38,10 +37,7 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	static String getDiscriminatorSQLValue(
-			PersistentClass persistentClass,
-			Dialect dialect,
-			SessionFactoryImplementor factory) {
+	static String getDiscriminatorSQLValue(PersistentClass persistentClass, Dialect dialect) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
 			return InFragment.NULL;
 		}
@@ -49,11 +45,7 @@ public class DiscriminatorHelper {
 			return InFragment.NOT_NULL;
 		}
 		else {
-			return discriminatorSqlLiteral(
-					getDiscriminatorType( persistentClass ),
-					persistentClass,
-					dialect
-			);
+			return discriminatorSqlLiteral( getDiscriminatorType( persistentClass ), persistentClass, dialect );
 		}
 	}
 
@@ -62,7 +54,7 @@ public class DiscriminatorHelper {
 		try {
 			return discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new MappingException( "Could not parse discriminator value", e );
 		}
 	}
@@ -90,7 +82,7 @@ public class DiscriminatorHelper {
 		);
 	}
 
-	public static <T> String jdbcLiteral(
+	private static <T> String jdbcLiteral(
 			T value,
 			JdbcLiteralFormatter<T> formatter,
 			Dialect dialect) {
@@ -101,4 +93,11 @@ public class DiscriminatorHelper {
 			throw new MappingException( "Could not format discriminator value to SQL string", e );
 		}
 	}
+
+	static String discriminatorLiteral(JdbcLiteralFormatter<Object> formatter, Dialect dialect, Object value) {
+		return value == NULL_DISCRIMINATOR || value == NOT_NULL_DISCRIMINATOR
+				? null
+				: jdbcLiteral( value, formatter, dialect );
+	}
+
 }

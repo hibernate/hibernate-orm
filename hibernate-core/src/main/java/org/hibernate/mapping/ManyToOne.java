@@ -59,15 +59,6 @@ public class ManyToOne extends ToOne {
 		return resolvedType;
 	}
 
-	public void createForeignKey() {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
-		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
-		} 
-	}
-
 	@Override
 	public void createUniqueKey() {
 		if ( !hasFormula() ) {
@@ -75,21 +66,32 @@ public class ManyToOne extends ToOne {
 		}
 	}
 
+	/**
+	 * Creates a {@linkplain ForeignKey foreign key constraint} in the
+	 * case that the foreign key of this association does not reference
+	 * the primary key of the referenced table, but instead some other
+	 * unique key.
+	 * <p>
+	 * We depend here on having a property of the referenced entity
+	 * that does hold the referenced unique key. We might have created
+	 * a "synthetic" composite property for this purpose.
+	 */
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
 		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key
 			sortProperties();
-			PersistentClass pc = persistentClasses.get( getReferencedEntityName() );
-			
-			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
-			
-			if (property==null) {
-				throw new MappingException(
-						"Could not find property " + 
-						getReferencedPropertyName() + 
-						" on " + 
-						getReferencedEntityName() 
-					);
+
+			final String referencedEntityName = getReferencedEntityName();
+			final String referencedPropertyName = getReferencedPropertyName();
+			final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
+			if ( referencedClass == null ) {
+				throw new MappingException( "Referenced entity '" + referencedEntityName + "' does not exist" );
+
+			}
+			final Property property = referencedClass.getReferencedProperty( referencedPropertyName );
+			if ( property==null ) {
+				throw new MappingException( "Referenced entity '" + referencedEntityName
+						+ "' has no property named '" + referencedPropertyName + "'" );
 			} 
 			else {
 				// Make sure synthetic properties are sorted
@@ -98,14 +100,15 @@ public class ManyToOne extends ToOne {
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
-					ForeignKey fk = getTable().createForeignKey( 
+					final ForeignKey foreignKey = getTable().createForeignKey(
 							getForeignKeyName(), 
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
 							getForeignKeyDefinition(),
 							new ArrayList<>( property.getColumns() )
 					);
-					fk.setOnDeleteAction( getOnDeleteAction() );
+					foreignKey.setReferencedTable( property.getValue().getTable() );
+					foreignKey.setOnDeleteAction( getOnDeleteAction() );
 				}
 			}
 		}

@@ -17,6 +17,27 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedEntityGraphs;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -99,37 +120,20 @@ import org.hibernate.spi.NavigablePath;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedEntityGraphs;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.PrimaryKeyJoinColumns;
-import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.SecondaryTables;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.UniqueConstraint;
-
+import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.makeIdGenerator;
+import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
+import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
+import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -142,7 +146,8 @@ import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
 
 /**
- * Stateful holder and processor for binding Entity information
+ * Stateful binder responsible for interpreting information about an {@link Entity} class
+ * and producing a {@link PersistentClass} mapping model object.
  *
  * @author Emmanuel Bernard
  */
@@ -400,7 +405,7 @@ public class EntityBinder {
 			XClass compositeClass,
 			PropertyData baseInferredData,
 			AccessType propertyAccessor) {
-		final Component mapper = AnnotationBinder.fillComponent(
+		final Component mapper = fillEmbeddable(
 				propertyHolder,
 				new PropertyPreloadedData(
 						propertyAccessor,
@@ -434,6 +439,22 @@ public class EntityBinder {
 		return mapper;
 	}
 
+	private static PropertyData getUniqueIdPropertyFromBaseClass(
+			PropertyData inferredData,
+			PropertyData baseInferredData,
+			AccessType propertyAccessor,
+			MetadataBuildingContext context) {
+		final List<PropertyData> baseClassElements = new ArrayList<>();
+		final PropertyContainer propContainer = new PropertyContainer(
+				baseInferredData.getClassOrElement(),
+				inferredData.getPropertyClass(),
+				propertyAccessor
+		);
+		addElementsOfClass( baseClassElements, propContainer, context );
+		//Id properties are on top and there is only one
+		return baseClassElements.get( 0 );
+	}
+
 	private static boolean isIdClassPkOfTheAssociatedEntity(
 			ElementsToProcess elementsToProcess,
 			XClass compositeClass,
@@ -443,7 +464,7 @@ public class EntityBinder {
 			Map<XClass, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
 		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
-			final PropertyData idPropertyOnBaseClass = AnnotationBinder.getUniqueIdPropertyFromBaseClass(
+			final PropertyData idPropertyOnBaseClass = getUniqueIdPropertyFromBaseClass(
 					inferredData,
 					baseInferredData,
 					propertyAccessor,
@@ -488,7 +509,7 @@ public class EntityBinder {
 					+ "' is a subclass in an entity inheritance hierarchy and may not redefine the identifier of the root entity" );
 		}
 		final RootClass rootClass = (RootClass) persistentClass;
-		final Component id = AnnotationBinder.fillComponent(
+		final Component id = fillEmbeddable(
 				propertyHolder,
 				inferredData,
 				baseInferredData,
@@ -638,20 +659,25 @@ public class EntityBinder {
 	}
 
 	private void singleTableInheritance(InheritanceState inheritanceState, PropertyHolder holder) {
+		processDiscriminatorOptions();
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processSingleTableDiscriminatorProperties( inheritanceState );
 		if ( !inheritanceState.hasParents() ) { // todo : sucks that this is separate from RootClass distinction
+			final RootClass rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
-				bindDiscriminatorColumnToRootPersistentClass( (RootClass) persistentClass, discriminatorColumn, holder );
+				bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
+				rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 			}
 		}
 	}
 
 	private void joinedInheritance(InheritanceState state, PersistentClass superEntity, PropertyHolder holder) {
+		processDiscriminatorOptions();
+
 		if ( state.hasParents() ) {
 			final AnnotatedJoinColumns joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
 			final JoinedSubclass jsc = (JoinedSubclass) persistentClass;
-			final DependantValue key = new DependantValue(context, jsc.getTable(), jsc.getIdentifier() );
+			final DependantValue key = new DependantValue( context, jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
 			handleForeignKeys( annotatedClass, context, key );
 			final OnDelete onDelete = annotatedClass.getAnnotation( OnDelete.class );
@@ -665,13 +691,21 @@ public class EntityBinder {
 
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processJoinedDiscriminatorProperties( state );
 		if ( !state.hasParents() ) {  // todo : sucks that this is separate from RootClass distinction
+			final RootClass rootClass = (RootClass) persistentClass;
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
-			if ( discriminatorColumn != null ) {
+			if ( discriminatorColumn == null ) {
+				if ( isForceDiscriminatorInSelects() ) {
+					throw new AnnotationException( "Entity '" + rootClass.getEntityName()
+							+ "' with 'JOINED' inheritance is annotated '@DiscriminatorOptions(force=true)' but has no discriminator column" );
+				}
+			}
+			else {
 				// we do have a discriminator column
 				if ( state.hasSiblings() || !discriminatorColumn.isImplicit() ) {
-					bindDiscriminatorColumnToRootPersistentClass( (RootClass) persistentClass, discriminatorColumn, holder );
+					bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
+					rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 				}
 			}
 		}
@@ -747,9 +781,16 @@ public class EntityBinder {
 					new NullableDiscriminatorColumnSecondPass( rootClass.getEntityName() )
 			);
 		}
-		rootClass.setForceDiscriminator( isForceDiscriminatorInSelects() );
 		if ( insertableDiscriminator != null ) {
 			rootClass.setDiscriminatorInsertable( insertableDiscriminator );
+		}
+	}
+
+	private void processDiscriminatorOptions() {
+		final DiscriminatorOptions discriminatorOptions = annotatedClass.getAnnotation( DiscriminatorOptions.class );
+		if ( discriminatorOptions != null ) {
+			forceDiscriminator = discriminatorOptions.force();
+			insertableDiscriminator = discriminatorOptions.insert();
 		}
 	}
 
@@ -759,81 +800,84 @@ public class EntityBinder {
 	private AnnotatedDiscriminatorColumn processSingleTableDiscriminatorProperties(InheritanceState inheritanceState) {
 
 		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotation( DiscriminatorColumn.class );
-		final DiscriminatorType discriminatorType = discriminatorColumn != null
-				? discriminatorColumn.discriminatorType()
-				: DiscriminatorType.STRING;
 
 		final DiscriminatorFormula discriminatorFormula =
 				getOverridableAnnotation( annotatedClass, DiscriminatorFormula.class, context );
 
-		final boolean isRoot = !inheritanceState.hasParents();
-		final AnnotatedDiscriminatorColumn discriminator = isRoot
-				? buildDiscriminatorColumn( discriminatorType, discriminatorColumn, discriminatorFormula, context )
-				: null;
-		if ( discriminatorColumn != null && !isRoot ) {
-			//TODO: shouldn't this be an error?!
-			LOG.invalidDiscriminatorAnnotation( annotatedClass.getName() );
+		if ( !inheritanceState.hasParents() || annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
+			return buildDiscriminatorColumn( discriminatorColumn, discriminatorFormula, context );
 		}
-
-		final DiscriminatorOptions discriminatorOptions = annotatedClass.getAnnotation( DiscriminatorOptions.class );
-		if ( discriminatorOptions != null ) {
-			forceDiscriminator = discriminatorOptions.force();
-			insertableDiscriminator = discriminatorOptions.insert();
+		else {
+			// not a root entity
+			if ( discriminatorColumn != null ) {
+				throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+						+  "' is annotated '@DiscriminatorColumn' but it is not the root of the entity inheritance hierarchy");
+			}
+			if ( discriminatorFormula != null ) {
+				throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+						+  "' is annotated '@DiscriminatorFormula' but it is not the root of the entity inheritance hierarchy");
+			}
+			return null;
 		}
-
-		return discriminator;
 	}
 
 	/**
-	 * Process all discriminator-related metadata per rules for "joined" inheritance
+	 * Process all discriminator-related metadata per rules for "joined" inheritance, taking
+	 * into account {@value AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
+	 * and {@value AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}.
 	 */
 	private AnnotatedDiscriminatorColumn processJoinedDiscriminatorProperties(InheritanceState inheritanceState) {
 		if ( annotatedClass.isAnnotationPresent( DiscriminatorFormula.class ) ) {
-			throw new MappingException( "@DiscriminatorFormula on joined inheritance not supported at this time" );
+			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+  "' has 'JOINED' inheritance and is annotated '@DiscriminatorFormula'" );
 		}
 
 		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotation( DiscriminatorColumn.class );
-		if ( !inheritanceState.hasParents() ) {
-			// we want to process the discriminator column if either:
-			//		1) There is an explicit DiscriminatorColumn annotation && we are not told to ignore them
-			//		2) There is not an explicit DiscriminatorColumn annotation && we are told to create them implicitly
-			final boolean generateDiscriminatorColumn;
-			if ( discriminatorColumn != null ) {
-				generateDiscriminatorColumn = !context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
-				if ( generateDiscriminatorColumn ) {
-					LOG.applyingExplicitDiscriminatorColumnForJoined(
-							annotatedClass.getName(),
-							AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
-					);
-				}
-				else {
-					LOG.debugf( "Ignoring explicit DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
-				}
-			}
-			else {
-				generateDiscriminatorColumn = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
-				if ( generateDiscriminatorColumn ) {
-					LOG.debug( "Applying implicit DiscriminatorColumn using DiscriminatorColumn defaults" );
-				}
-				else {
-					LOG.debug( "Ignoring implicit (absent) DiscriminatorColumn" );
-				}
-			}
-
-			if ( generateDiscriminatorColumn ) {
-				final DiscriminatorType discriminatorType = discriminatorColumn != null
-						? discriminatorColumn.discriminatorType()
-						: DiscriminatorType.STRING;
-				return buildDiscriminatorColumn( discriminatorType, discriminatorColumn, null, context );
-			}
+		if ( !inheritanceState.hasParents() || annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
+			return useDiscriminatorColumnForJoined( discriminatorColumn )
+					? buildDiscriminatorColumn( discriminatorColumn, null, context )
+					: null;
 		}
 		else {
+			// not a root entity
 			if ( discriminatorColumn != null ) {
-				LOG.invalidDiscriminatorAnnotation( annotatedClass.getName() );
+				throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+						+  "' is annotated '@DiscriminatorColumn' but it is not the root of the entity inheritance hierarchy");
 			}
+			return null;
 		}
+	}
 
-		return null;
+	/**
+	 * We want to process the discriminator column if either:
+	 * <ol>
+	 * <li>there is an explicit {@link DiscriminatorColumn} annotation and we are not told to ignore it
+	 *     via {@value AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}, or
+	 * <li>there is no explicit {@link DiscriminatorColumn} annotation but we are told to create it
+	 *     implicitly via {@value AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}.
+	 * </ol>
+	 */
+	private boolean useDiscriminatorColumnForJoined(DiscriminatorColumn discriminatorColumn) {
+		if ( discriminatorColumn != null ) {
+			boolean ignore = context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
+			if ( ignore ) {
+				LOG.debugf( "Ignoring explicit @DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
+			}
+			else {
+				LOG.applyingExplicitDiscriminatorColumnForJoined(
+						annotatedClass.getName(),
+						AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+				);
+			}
+			return !ignore;
+		}
+		else {
+			boolean createImplicit = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
+			if ( createImplicit ) {
+				LOG.debugf( "Inferring implicit @DiscriminatorColumn using defaults for: %s", annotatedClass.getName() );
+			}
+			return createImplicit;
+		}
 	}
 
 	private void processIdPropertiesIfNotAlready(
@@ -853,7 +897,7 @@ public class EntityBinder {
 				boolean subclassAndSingleTableStrategy =
 						inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 								&& inheritanceState.hasParents();
-				AnnotationBinder.processElementAnnotations(
+				processElementAnnotations(
 						propertyHolder,
 						subclassAndSingleTableStrategy
 								? Nullability.FORCED_NULL
@@ -1008,17 +1052,18 @@ public class EntityBinder {
 	}
 
 	/**
-	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
-	 * after verifying that PersistentClass is indeed set here.
+	 * Delegates to {@link PersistentClass#isPropertyDefinedInHierarchy},
+	 * after verifying that there is a {@link PersistentClass} available.
 	 *
 	 * @param name The name of the property to check
 	 *
 	 * @return {@code true} if a property by that given name does already exist in the super hierarchy.
 	 */
 	public boolean isPropertyDefinedInSuperHierarchy(String name) {
-		// Yes, yes... persistentClass can be null because EntityBinder can be used
-		// to bind components as well, of course...
-		return  persistentClass != null && persistentClass.isPropertyDefinedInSuperHierarchy( name );
+		// Yes, yes... persistentClass can be null because EntityBinder
+		// can be used to bind Components (naturally!)
+		return persistentClass != null
+			&& persistentClass.isPropertyDefinedInSuperHierarchy( name );
 	}
 
 	private void bindRowManagement() {
@@ -1052,7 +1097,8 @@ public class EntityBinder {
 	}
 
 	public boolean isRootEntity() {
-		// This is the best option I can think of here since PersistentClass is most likely not yet fully populated
+		// This is the best option I can think of here since
+		// PersistentClass is most likely not yet fully populated
 		return persistentClass instanceof RootClass;
 	}
 
@@ -1136,7 +1182,7 @@ public class EntityBinder {
 
 	private void bindCustomSql() {
 		//SQL overriding
-		//TODO: tolerate non-empty table() member here
+		//TODO: tolerate non-empty table() member here if it explicitly names the main table
 
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
@@ -1236,7 +1282,7 @@ public class EntityBinder {
 			Class clazz = persisterAnn.impl();
 			if ( !EntityPersister.class.isAssignableFrom(clazz) ) {
 				throw new AnnotationException( "Persister class '" + clazz.getName()
-						+ "'  does not implement EntityPersister" );
+						+ "' does not implement 'EntityPersister'" );
 			}
 			persistentClass.setEntityPersisterClass( clazz );
 		}
@@ -1330,7 +1376,7 @@ public class EntityBinder {
 			}
 			else {
 				final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
-				proxyClass = AnnotationBinder.isDefault( reflectionManager.toXClass(proxy.proxyClass() ), context )
+				proxyClass = isDefault( reflectionManager.toXClass(proxy.proxyClass() ), context )
 						? annotatedClass
 						: reflectionManager.toXClass(proxy.proxyClass());
 			}
@@ -2092,7 +2138,7 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(org.hibernate.annotations.Table table) {
 		if ( table != null ) {
-			Table appliedTable = findTable( table.appliesTo() );
+			final Table appliedTable = findTable( table.appliesTo() );
 			if ( !table.comment().isEmpty() ) {
 				appliedTable.setComment( table.comment() );
 			}
@@ -2133,11 +2179,11 @@ public class EntityBinder {
 		return propertyAccessType;
 	}
 
-	public void setPropertyAccessType(AccessType propertyAccessor) {
+	public void setPropertyAccessType(AccessType propertyAccessType) {
 		this.propertyAccessType = getExplicitAccessType( annotatedClass );
 		// only set the access type if there is no explicit access type for this class
-		if( this.propertyAccessType == null ) {
-			this.propertyAccessType = propertyAccessor;
+		if ( this.propertyAccessType == null ) {
+			this.propertyAccessType = propertyAccessType;
 		}
 	}
 
@@ -2166,7 +2212,7 @@ public class EntityBinder {
 		XClass classToProcess = annotatedClass.getSuperclass();
 		while ( classToProcess != null ) {
 			final AnnotatedClassType classType = context.getMetadataCollector().getClassType( classToProcess );
-			if ( classType == AnnotatedClassType.MAPPED_SUPERCLASS ) {
+			if ( classType == MAPPED_SUPERCLASS ) {
 				bindFilters( classToProcess );
 			}
 			else {

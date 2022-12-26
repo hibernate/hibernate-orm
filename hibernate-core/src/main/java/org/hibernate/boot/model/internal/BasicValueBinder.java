@@ -94,6 +94,8 @@ import jakarta.persistence.Version;
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 
 /**
+ * A stateful binder responsible for creating instances of {@link BasicValue}.
+ *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
@@ -143,7 +145,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private ConverterDescriptor converterDescriptor;
 
-	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
 	private EnumType enumType;
@@ -266,7 +267,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	// in-flight handling
 
 	public void setVersion(boolean isVersion) {
-		this.isVersion = isVersion;
 		if ( isVersion && basicValue != null ) {
 			basicValue.makeVersion();
 		}
@@ -511,7 +511,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		// todo (6.0) - handle generator
-		final String generator = collectionIdAnn.generator();
+//		final String generator = collectionIdAnn.generator();
 	}
 
 	private ManagedBeanRegistry getManagedBeanRegistry() {
@@ -523,17 +523,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void prepareMapKey(
 			XProperty mapAttribute,
 			XClass modelPropertyTypeXClass) {
-		final XClass mapKeyClass;
-		if ( modelPropertyTypeXClass == null ) {
-			mapKeyClass = mapAttribute.getMapKey();
-		}
-		else {
-			mapKeyClass = modelPropertyTypeXClass;
-		}
+		final XClass mapKeyClass = modelPropertyTypeXClass == null ? mapAttribute.getMapKey() : modelPropertyTypeXClass;
 		final java.lang.reflect.Type javaType = resolveJavaType( mapKeyClass );
-		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
-
-		implicitJavaTypeAccess = (typeConfiguration) -> javaType;
+		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
 		final MapKeyEnumerated mapKeyEnumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
 		if ( mapKeyEnumeratedAnn != null ) {
@@ -570,8 +562,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaType<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
 				if ( jdbcTypeImpl != null ) {
-					final ManagedBean<? extends BasicJavaType> jdbcTypeBean = getManagedBeanRegistry().getBean( jdbcTypeImpl );
-					return jdbcTypeBean.getBeanInstance();
+					return getManagedBeanRegistry().getBean( jdbcTypeImpl ).getBeanInstance();
 				}
 			}
 

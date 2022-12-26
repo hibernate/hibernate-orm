@@ -26,10 +26,12 @@ import static java.lang.annotation.ElementType.METHOD;
  * For example:
  * <pre>
  * {@code
- * @Entity public class Person {
+ * @Entity
+ * public class Person {
  *
+ *     @Column(name = "birth_timestamp")
+ *     @TimeZoneColumn(name = "birth_zone")
  *     @TimeZoneStorage(COLUMN)
- *     @TimeZoneColumn(column = @Column(...))
  *     public OffsetDateTime birthDate;
  *
  *     @TimeZoneStorage(NATIVE)

@@ -22,6 +22,8 @@ import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
+import static org.hibernate.annotations.CascadeType.ALL;
+
 //tag::associations-many-to-any-example[]
 @Entity
 @Table(name = "property_repository")
@@ -36,7 +38,7 @@ public class PropertyRepository {
     @AnyKeyJavaClass(Long.class)
     @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
     @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    @Cascade(ALL)
     @JoinTable(name = "repository_properties",
             joinColumns = @JoinColumn(name = "repository_id"),
             inverseJoinColumns = @JoinColumn(name = "property_id")

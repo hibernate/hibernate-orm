@@ -338,8 +338,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			);
 			final NamedTableReference existsTableReference = new NamedTableReference(
 					tableExpression,
-					"dml_",
-					false
+					"dml_"
 			);
 			existsQuerySpec.getFromClause().addRoot(
 					new TableGroupImpl(

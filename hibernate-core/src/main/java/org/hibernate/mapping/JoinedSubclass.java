@@ -32,8 +32,8 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 	}
 
 	public void setTable(Table table) {
-		this.table=table;
-		getSuperclass().addSubclassTable(table);
+		this.table = table;
+		getSuperclass().addSubclassTable( table );
 	}
 
 	public KeyValue getKey() {

@@ -30,7 +30,7 @@ public class UnionSubclass extends Subclass implements TableOwner {
 
 	public void setTable(Table table) {
 		this.table = table;
-		getSuperclass().addSubclassTable(table);
+		getSuperclass().addSubclassTable( table );
 	}
 
 	public java.util.Set<String> getSynchronizedTables() {

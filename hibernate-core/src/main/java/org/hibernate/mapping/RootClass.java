@@ -18,9 +18,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * A mapping model object that represents the root class in an entity class
@@ -294,11 +295,38 @@ public class RootClass extends PersistentClass implements TableOwner {
 			);
 		}
 		checkCompositeIdentifier();
+		checkTableDuplication();
+	}
+
+	private void checkTableDuplication() {
+		if ( hasSubclasses() ) {
+			final Set<Table> tables = new HashSet<>();
+			tables.add( getTable() );
+			for ( Subclass subclass : getSubclasses() ) {
+				if ( !(subclass instanceof SingleTableSubclass) ) {
+					final Table table = subclass.getTable();
+					if ( !tables.add( table ) ) {
+						if ( getDiscriminator() == null ) {
+							throw new MappingException( "Two different subclasses of '" + getEntityName()
+									+ "' map to the table '" + table.getName()
+									+ "' and the hierarchy has no discriminator column" );
+						}
+						else {
+							// This is arguably not the right place to do this.
+							// Perhaps it's an issue better dealt with later on
+							// by the persisters.
+							forceDiscriminator = true;
+						}
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	private void checkCompositeIdentifier() {
 		if ( getIdentifier() instanceof Component ) {
-			Component id = (Component) getIdentifier();
+			final Component id = (Component) getIdentifier();
 			if ( !id.isDynamic() ) {
 				final Class<?> idClass = id.getComponentClass();
 				if ( idClass != null ) {
@@ -328,7 +356,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setCacheRegionName(String cacheRegionName) {
-		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
+		this.cacheRegionName = nullIfEmpty( cacheRegionName );
 	}
 
 	public boolean isLazyPropertiesCacheable() {
@@ -359,7 +387,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public Set<Table> getIdentityTables() {
-		Set<Table> tables = new HashSet<>();
+		final Set<Table> tables = new HashSet<>();
 		for ( PersistentClass clazz : getSubclassClosure() ) {
 			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) {
 				tables.add( clazz.getIdentityTable() );

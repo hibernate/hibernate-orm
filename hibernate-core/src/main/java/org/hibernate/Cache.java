@@ -79,11 +79,21 @@ package org.hibernate;
  * It's important to always explicitly specify an appropriate policy, taking into
  * account the expected patterns of data access, most importantly, the frequency
  * of updates.
+ * <p>
+ * Hibernate does not itself contain a high-quality implementation of a second-level
+ * cache backend with expiry, persistence, and replication, and depends on a plug-in
+ * implementation of {@link org.hibernate.cache.spi.RegionFactory} to integrate a
+ * backend storage mechanism. Therefore, the second-level cache is completely disabled
+ * by default, unless {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}
+ * is explicitly specified. For convenience, the second-level cache may also be enabled
+ * or disabled using {@value org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE}.
  *
  * @author Steve Ebersole
  *
  * @see org.hibernate.annotations.Cache
  * @see org.hibernate.annotations.CacheConcurrencyStrategy
+ * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY
+ * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
  */
 public interface Cache extends jakarta.persistence.Cache {
 	/**

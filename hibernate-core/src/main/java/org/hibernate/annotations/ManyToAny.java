@@ -21,10 +21,45 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * inheritance, using a discriminator value stored in an
  * {@linkplain jakarta.persistence.JoinTable association table}.
  * <p>
- * This is just the many-valued form of {@link Any}, and the
- * mapping options are similar, except that the
- * {@link jakarta.persistence.JoinTable @JoinTable} annotation is
- * used to specify the association table.
+ * The annotated property should be of type {@link java.util.List},
+ * {@link java.util.Set}, {@link java.util.Collection}, or
+ * {@link java.util.Map}, and the elements of the collection must be
+ * entities.
+ * <p>
+ * For example:
+ * <pre>{@code
+ * @ManyToAny
+ * @Column(name = "property_type")
+ * @AnyKeyJavaClass(Long.class)
+ * @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+ * @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
+ * @JoinTable(name = "repository_properties",
+ *            joinColumns = @JoinColumn(name = "repository_id"),
+ *            inverseJoinColumns = @JoinColumn(name = "property_id"))
+ * @Cascade(PERSIST)
+ * private List<Property<?>> properties = new ArrayList<>();
+ * }</pre>
+ * In this example, {@code Property} is not required to be an entity type,
+ * it might even just be an interface, but its subtypes {@code StringProperty}
+ * and {@code IntegerProperty} must be entity classes with the same identifier
+ * type.
+ * <p>
+ * This is just the many-valued form of {@link Any}, and the mapping
+ * options are similar, except that the
+ * {@link jakarta.persistence.JoinTable @JoinTable} annotation is used
+ * to specify the association table.
+ * <ul>
+ *     <li>{@link AnyDiscriminator}, {@link JdbcType}, or {@link JdbcTypeCode}
+ *         specifies the type of the discriminator,
+ *     <li>{@link AnyDiscriminatorValue} specifies how discriminator values
+ *         map to entity types.
+ *     <li>{@link AnyKeyJavaType}, {@link AnyKeyJavaClass}, {@link AnyKeyJdbcType},
+ *         or {@link AnyKeyJdbcTypeCode} specifies the type of the foreign key.
+ *     <li>{@link jakarta.persistence.JoinTable} specifies the name of the
+ *         association table and its foreign key columns.
+ *     <li>{@link jakarta.persistence.Column} specifies the column of the
+ *         association table in which the discriminator value is stored.
+ * </ul>
  *
  * @see Any
  *

@@ -18,6 +18,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies the mapping of a single {@linkplain Any any}-valued
  * discriminator value to its corresponding entity type.
+ * <p>
+ * This annotation may be applied:
+ * <ul>
+ * <li>directly to a field or property annotated {@link Any}, or
+ * <li>indirectly, as a meta-annotation, to a second annotation
+ *     which is then applied to various fields or properties
+ *     annotated {@link Any} with the same target entity type.
+ * </ul>
  *
  * @see Any
  * @see AnyDiscriminator

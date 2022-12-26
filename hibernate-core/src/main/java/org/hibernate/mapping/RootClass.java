@@ -298,6 +298,19 @@ public class RootClass extends PersistentClass implements TableOwner {
 		checkTableDuplication();
 	}
 
+	/**
+	 * In {@linkplain jakarta.persistence.InheritanceType#SINGLE_TABLE single table}
+	 * inheritance, subclasses share a table with the root class by definition. But
+	 * for {@linkplain jakarta.persistence.InheritanceType#JOINED joined} or
+	 * {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS union} mappings,
+	 * the subclasses are assumed to occupy distinct tables, and it's an error to map
+	 * two subclasses to the same table.
+	 * <p>
+	 * As a special exception to this, if a joined inheritance hierarchy defines an
+	 * explicit {@link jakarta.persistence.DiscriminatorColumn}, we tolerate table
+	 * duplication among the subclasses, but we must "force" the discriminator to
+	 * account for this. (See issue HHH-14526.)
+	 */
 	private void checkTableDuplication() {
 		if ( hasSubclasses() ) {
 			final Set<Table> tables = new HashSet<>();
@@ -306,6 +319,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 				if ( !(subclass instanceof SingleTableSubclass) ) {
 					final Table table = subclass.getTable();
 					if ( !tables.add( table ) ) {
+						// we encountered a duplicate table mapping
 						if ( getDiscriminator() == null ) {
 							throw new MappingException( "Two different subclasses of '" + getEntityName()
 									+ "' map to the table '" + table.getName()
@@ -314,7 +328,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 						else {
 							// This is arguably not the right place to do this.
 							// Perhaps it's an issue better dealt with later on
-							// by the persisters.
+							// by the persisters. See HHH-14526.
 							forceDiscriminator = true;
 						}
 						break;
@@ -324,6 +338,13 @@ public class RootClass extends PersistentClass implements TableOwner {
 		}
 	}
 
+	/**
+	 * Composite id classes are supposed to override {@link #equals} and
+	 * {@link #hashCode}, and programs will typically experience bugs if
+	 * they don't. But instead of actually enforcing this with an error
+	 * (because we can't anyway verify that the implementation is actually
+	 * <em>correct</em>) we simply log a warning.
+	 */
 	private void checkCompositeIdentifier() {
 		if ( getIdentifier() instanceof Component ) {
 			final Component id = (Component) getIdentifier();

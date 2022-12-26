@@ -687,6 +687,9 @@ public interface AvailableSettings {
 	 * the JPA defined defaults for these absent annotations.
 	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 * <p>
+	 * This setting defaults to {@code false}, meaning that implicit discriminator columns
+	 * are never inferred to exist for joined inheritance hierarchies.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
@@ -706,6 +709,9 @@ public interface AvailableSettings {
 	 * inheritance.
 	 * <p>
 	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 * <p>
+	 * This setting defaults to {@code false}, meaning that explicit discriminator columns
+	 * are never ignored.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS

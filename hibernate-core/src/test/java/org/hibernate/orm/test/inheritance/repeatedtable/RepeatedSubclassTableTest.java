@@ -14,7 +14,6 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -110,7 +109,6 @@ public class RepeatedSubclassTableTest extends BaseCoreFunctionalTestCase {
 	@Table(name = "DATA_TYPE")
 	@Inheritance(strategy = JOINED)
 	@DiscriminatorColumn(name = "supertype_id")
-	@DiscriminatorOptions(force = true)
 	public static abstract class DataType {
 
 		private Long id;

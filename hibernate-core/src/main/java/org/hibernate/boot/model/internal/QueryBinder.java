@@ -50,7 +50,10 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
 
 /**
- * Query binder
+ * Responsible for reading named queries defined in annotations and registering
+ * {@link org.hibernate.boot.query.NamedQueryDefinition} objects.
+ *
+ * @implNote This class is stateless, unlike most of the other "binders".
  *
  * @author Emmanuel Bernard
  */

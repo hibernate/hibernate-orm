@@ -51,7 +51,7 @@ import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
- * Table related operations
+ * Stateful binder responsible for producing instances of {@link Table}.
  *
  * @author Emmanuel Bernard
  */

@@ -13,7 +13,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.internal.AnnotationBinder;
+import org.hibernate.boot.model.internal.ToOneBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -44,10 +44,10 @@ public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityMana
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() )
+			Logger.getMessageLogger( CoreMessageLogger.class, ToOneBinder.class.getName() )
 	);
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
 
 
 	@Override

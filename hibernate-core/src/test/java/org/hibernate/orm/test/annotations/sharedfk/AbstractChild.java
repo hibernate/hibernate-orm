@@ -9,7 +9,7 @@ import static jakarta.persistence.DiscriminatorType.INTEGER;
 @Table(name = " INHERITANCE_TAB")
 //@DiscriminatorColumn(name = "DISC")
 @DiscriminatorFormula(discriminatorType = INTEGER,
-		value = "case when value1 is not null then 1 when value2 is not null then 2 end")
+		value = "CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END")
 public abstract class AbstractChild {
 	@Id
 	@GeneratedValue

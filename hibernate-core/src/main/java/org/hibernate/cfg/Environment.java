@@ -34,6 +34,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * <li><em>System-level</em> properties are shared by all factory instances and are
  * always determined by the {@code Environment} properties in {@link #getProperties()}.
  * </ul>
+ * <p>
  * The only system-level properties are {@value #USE_REFLECTION_OPTIMIZER} and
  * {@value #BYTECODE_PROVIDER}.
  * <p>

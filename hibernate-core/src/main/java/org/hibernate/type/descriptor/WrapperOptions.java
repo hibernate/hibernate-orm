@@ -75,7 +75,8 @@ public interface WrapperOptions {
 	 *     is called to write a timestamp, and
 	 *     {@link java.sql.ResultSet#getTimestamp(int, java.util.Calendar)} is called to
 	 *     read a timestamp.
-	 </ul>
+	 * </ul>
+	 * <p>
 	 * Thus, the storage {@link TimeZone} can differ from the default JVM TimeZone given
 	 * by {@link TimeZone#getDefault()}.
 	 *

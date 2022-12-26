@@ -65,6 +65,7 @@ public interface UniqueDelegate {
 	 * Get the SQL fragment used to specify the unique constraints on the given table as part of
 	 * the {@code create table} command, with a leading comma, usually something like:
 	 * <pre>{@code , unique(x,y), constraint abc unique(a,b,c)}</pre>
+	 * <p>
 	 * or return an empty string if there are no unique constraints or if the unique constraints
 	 * do not belong in the table definition.
 	 * <p>

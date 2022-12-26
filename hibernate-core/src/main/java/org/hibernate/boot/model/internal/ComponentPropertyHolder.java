@@ -35,7 +35,7 @@ import static org.hibernate.boot.model.internal.HCANNHelper.hasAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
- * PropertyHolder for composites (Embeddable/Embedded).
+ * {@link PropertyHolder} for composites (Embeddable/Embedded).
  * <p>
  * To facilitate code comments, I'll often refer to this example:
  * <pre>
@@ -56,7 +56,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  *         public Address homeAddress;
  *     }
  * </pre>
- *
+ * <p>
  * As you can see, lots of ways to specify the conversion for embeddable attributes :(
  *
  * @author Steve Ebersole

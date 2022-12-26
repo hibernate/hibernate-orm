@@ -18,6 +18,7 @@ package org.hibernate;
  *     a given {@link SessionFactory}. It stores the state of an entity instance
  *     in a destructured format, as a tuple of persistent attribute values.
  * </ul>
+ * <p>
  * By nature, a second-level cache tends to undermine the ACID properties of
  * transaction processing in a relational database. A second-level cache is often
  * by far the easiest way to improve the performance of a system, but only at the
@@ -76,6 +77,7 @@ package org.hibernate;
  * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#TRANSACTIONAL
  *     transactional access} when concurrent updates are frequent.
  * </ul>
+ * <p>
  * It's important to always explicitly specify an appropriate policy, taking into
  * account the expected patterns of data access, most importantly, the frequency
  * of updates.

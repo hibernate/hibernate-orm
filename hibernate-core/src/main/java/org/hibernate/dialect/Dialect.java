@@ -254,6 +254,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  * </ul>
+ * <p>
  * A subclass representing a dialect of SQL which deviates significantly
  * from ANSI SQL will certainly override many additional operations.
  * <p>
@@ -4410,6 +4411,7 @@ public abstract class Dialect implements ConversionContext {
 	 *     <li>s: seconds</li>
 	 *     <li>z,Z,x: timezone offset</li>
 	 * </ul>
+	 * <p>
 	 * In addition, punctuation characters and
 	 * single-quoted literal strings are accepted.
 	 * <p>

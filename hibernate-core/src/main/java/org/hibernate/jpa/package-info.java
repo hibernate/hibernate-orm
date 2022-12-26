@@ -17,6 +17,7 @@
  *    default (something Hibernate only does if it has a really good
  *    reason to do so).
  * </ul>
+ * <p>
  * Enumerates the {@linkplain jakarta.persistence.Query#setHint hints}
  * recognized by Hibernate:
  * <ul>

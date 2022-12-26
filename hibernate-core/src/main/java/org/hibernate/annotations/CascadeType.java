@@ -24,11 +24,9 @@ import org.hibernate.ReplicationMode;
  * To enable cascade {@code LOCK}, use {@link Cascade @Cascade}, for
  * example:
  * <pre>
- * {@code
- * @OneToMany(mappedBy="parent")
- * @Cascade({PERSIST,REFRESH,REMOVE,LOCK})
- * Set<Child> children;
- * }
+ * &#64;OneToMany(mappedBy="parent")
+ * &#64;Cascade({PERSIST,REFRESH,REMOVE,LOCK})
+ * Set&lt;Child&gt; children;
  * </pre>
  *
  * @see Cascade

@@ -13,7 +13,7 @@ import java.sql.Clob;
 import java.sql.NClob;
 
 /**
- * A {@link Session session's} helper for creating LOB data.
+ * A factory for instances of {@link Blob} and {@link Clob} used for writing LOB data.
  *
  * @author Steve Ebersole
  */

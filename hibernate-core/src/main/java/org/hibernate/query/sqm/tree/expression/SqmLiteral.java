@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *     <li>some.JavaEnum.VALUE</li>
  *     <li>etc</li>
  * </ul>
+ * 
  * @author Steve Ebersole
  */
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {

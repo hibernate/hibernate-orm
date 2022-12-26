@@ -34,7 +34,7 @@
  *         a "JDBC transaction", as expressed through the JDBC {@link java.sql.Connection} object
  *     </li>
  * </ul>
- *
+ * <p>
  * The corresponding concrete TransactionCoordinator implementations manage that bridging internally.
  *
  * <h2>Local Synchronization</h2>

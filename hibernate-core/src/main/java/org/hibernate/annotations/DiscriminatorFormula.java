@@ -23,38 +23,39 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Used in place of the JPA {@link jakarta.persistence.DiscriminatorColumn}.
  * <p>
  * For example, we might declare a supertype as follows:
- * <pre>{@code
- * @Entity
- * @DiscriminatorFormula(discriminatorType = INTEGER,
+ * <pre>
+ * &#64;Entity
+ * &#64;DiscriminatorFormula(discriminatorType = INTEGER,
  * 		value = "case when value1 is not null then 1 when value2 is not null then 2 end")
  * public abstract class AbstractChild {
- *     @Id
- *     @GeneratedValue
+ *     &#64;Id
+ *     &#64;GeneratedValue
  *     Integer id;
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * and then each concrete subclass must specify a matching discriminator value:
- * <pre>{@code
- * @Entity
- * @DiscriminatorValue("1")
+ * <pre>
+ * &#64;Entity
+ * &#64;DiscriminatorValue("1")
  * public class ConcreteChild1 extends AbstractChild {
- *     @Basic(optional = false)
- *     @Column(name = "VALUE1")
+ *     &#64;Basic(optional = false)
+ *     &#64;Column(name = "VALUE1")
  *     String value;
  *     ...
  * }
- * }</pre>
- * <pre>{@code
- * @Entity
- * @DiscriminatorValue("2")
+ * </pre>
+ * <pre>
+ * &#64;Entity
+ * &#64;DiscriminatorValue("2")
  * public class ConcreteChild2 extends AbstractChild {
- *     @Basic(optional = false)
- *     @Column(name = "VALUE2")
+ *     &#64;Basic(optional = false)
+ *     &#64;Column(name = "VALUE2")
  *     String value;
  *     ...
  * }
- * }</pre>
+ * </pre>
  *
  * @see Formula
  * @see DialectOverride.DiscriminatorFormula

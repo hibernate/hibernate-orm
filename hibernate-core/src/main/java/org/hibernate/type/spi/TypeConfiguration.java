@@ -263,6 +263,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <li>Binary
 	 * <li>Boolean (fragile)
 	 * </ul>
+	 * <p>
 	 * (The type names are not case-sensitive.)
 	 */
 	public BasicValuedMapping resolveCastTargetType(String name) {

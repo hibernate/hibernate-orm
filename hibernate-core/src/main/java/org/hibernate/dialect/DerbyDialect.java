@@ -867,7 +867,7 @@ public class DerbyDialect extends Dialect {
 	 * <pre>
 	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
 	 * </pre>
-	 *
+	 * <p>
 	 * {@link DB2Dialect} returns a {@link GlobalTemporaryTableMutationStrategy} that
 	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
 	 * see HHH-10238.

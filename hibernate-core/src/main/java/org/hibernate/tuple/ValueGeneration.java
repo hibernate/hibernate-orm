@@ -72,6 +72,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 	 *     by {@link org.hibernate.annotations.GeneratedColumn generated always as}, or
 	 *     using a {@linkplain org.hibernate.annotations.ColumnDefault column default value}.
 	 * </ul>
+	 * <p>
 	 * If the value is generated in Java, this method is not called, and so for backward
 	 * compatibility with Hibernate 5 it is permitted to return any value. On the other hand,
 	 * when a property value is generated in Java, the column certainly must be included in the
@@ -90,6 +91,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 	 * <li>a function call like {@code current_timestamp} or {@code nextval('mysequence')}, or
 	 * <li>a syntactic marker like {@code default}.
 	 * </ul>
+	 * <p>
 	 * When the property value is generated in Java, this method is not called, and its value is
 	 * implicitly the string {@code "?"}, that is, a JDBC parameter to which the generated value
 	 * is bound.
@@ -107,6 +109,7 @@ public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGe
 	 * <li>a function call like {@code current_timestamp} or {@code nextval('mysequence')}, or
 	 * <li>a syntactic marker like {@code default}.
 	 * </ul>
+	 * <p>
 	 * When the property value is generated in Java, this method is not called, and its value is
 	 * implicitly the string {@code "?"}, that is, a JDBC parameter to which the generated value
 	 * is bound.

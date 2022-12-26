@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
  *     <li>{@link #SerializableType(Class)} indicates a mapping using the specific class</li>
  *     <li>{@link #SerializableType(JavaType)} indicates a mapping using the specific JavaType</li>
  * </ul>
+ * <p>
  * The important distinction has to do with locating the appropriate {@link ClassLoader} to use during deserialization.
  * In the fist form we are always using the {@link ClassLoader} of the JVM (Hibernate will always fallback to trying
  * its classloader as well).  The second and third forms are better at targeting the needed {@link ClassLoader} actually needed.

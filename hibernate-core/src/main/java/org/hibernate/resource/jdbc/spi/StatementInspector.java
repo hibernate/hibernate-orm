@@ -19,6 +19,7 @@ import java.io.Serializable;
  *     org.hibernate.SessionBuilder#statementInspector registered}
  *     for a certain session.
  * </ul>
+ * <p>
  * An implementation may be specified via the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR}.
  * An implementation registered this way is shared between sessions.

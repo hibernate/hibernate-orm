@@ -24,47 +24,49 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * user of the system. This is the <em>natural id</em> of the entity.
  * <p>
  * A natural id may be a single field or property of the entity:
- * <pre>{@code
- * @Entity
- * @Cache @NaturalIdCache
+ * <pre>
+ * &#64;Entity
+ * &#64;Cache &#64;NaturalIdCache
  * class Person {
  *
  *     //synthetic id
- *     @GeneratedValue @Id
+ *     &#64;GeneratedValue @Id
  *     Long id;
  *
- *     @NotNull
+ *     &#64;NotNull
  *     String name;
  *
  *     //simple natural id
- *     @NotNull @NaturalId
+ *     &#64;NotNull @NaturalId
  *     String ssn;
  *
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * or it may be a composite value:
- * <pre>{@code
- * @Entity
- * @Cache @NaturalIdCache
+ * <pre>
+ * &#64;Entity
+ * &#64;Cache &#64;NaturalIdCache
  * class Vehicle {
  *
  *     //synthetic id
- *     @GeneratedValue @Id
+ *     &#64;GeneratedValue @Id
  *     Long id;
  *
  *     //composite natural id
  *
- *     @Enumerated
- *     @NotNull @NaturalId
+ *     &#64;Enumerated
+ *     &#64;NotNull &#64;NaturalId
  *     Region region;
  *
- *     @NotNull @NaturalId
+ *     &#64;NotNull &#64;NaturalId
  *     String registration;
  *
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * The {@link org.hibernate.Session} interface offers several methods
  * that allow an entity instance to be retrieved by its
  * {@linkplain org.hibernate.Session#bySimpleNaturalId(Class) simple}

@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *     <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
  *     <li><b>LOADS</b> : {@link #putFromLoad}</li>
  * </ul>
+ * <p>
  * Note the special case of <b>UPDATES</b> above.  Because the cache key itself has changed here we need to remove the
  * old entry as well
  * <p>

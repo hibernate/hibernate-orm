@@ -31,6 +31,7 @@ import org.hibernate.type.BasicTypeReference;
  *     <li>procedure is a named database executable we expect to call via : {@code {call procedureName(...)}}</li>
  *     <li>function is a named database executable we expect to call via : {@code {? = call functionName(...)}}</li>
  * </ul>
+ * <p>
  * Unless explicitly specified, the ProcedureCall is assumed to follow the
  * procedure call syntax.  To explicitly specify that this should be a function
  * call, use {@link #markAsFunctionCall}.  JPA users could either:<ul>

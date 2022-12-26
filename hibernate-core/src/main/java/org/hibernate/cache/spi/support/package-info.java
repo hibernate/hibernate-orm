@@ -22,6 +22,7 @@
  *     <li>{@link org.hibernate.cache.spi.support.RegionFactoryTemplate#createTimestampsRegionStorageAccess}
  *     </ul>
  * </ol>
+ * <p>
  * Voila! Functioning cache provider.
  * <p>
  * The preferred approach to "provide an integration" is through a custom

@@ -22,7 +22,7 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
- * entity.  Currently such influencers are defined as:<ul>
+ * entity.  Currently, such influencers are defined as:<ul>
  * <li>filters</li>
  * <li>fetch profiles</li>
  * <li>internal fetch profile (merge profile, etc)</li>

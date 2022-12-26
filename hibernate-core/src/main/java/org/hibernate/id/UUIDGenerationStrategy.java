@@ -27,6 +27,7 @@ public interface UUIDGenerationStrategy extends Serializable {
 	 * <li>4 = random numbers based</li>
 	 * <li>5 = name based (sha-1 hash)</li>
 	 * </ul>
+	 * <p>
 	 * Returning the values above should be reserved to those generators creating variants compliant with the
 	 * corresponding RFC definition; others can feel free to return other values as they see fit.
 	 * <p>

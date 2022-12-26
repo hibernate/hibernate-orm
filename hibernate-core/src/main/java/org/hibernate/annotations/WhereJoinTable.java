@@ -12,12 +12,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specifies a restriction written in native SQL to add to the generated
- * SQL when querying the {@link jakarta.persistence.JoinTable join table}
+ * Specifies a restriction written in native SQL to add to the generated SQL
+ * when querying the {@linkplain jakarta.persistence.JoinTable join table}
  * of a collection.
  * <p>
- * For example, {@code @Where("status <> 'DELETED'")} could be used to hide
- * associations which have been soft-deleted from an association table.
+ * For example, <code>&#64;Where("status &lt;&gt; 'DELETED'")</code> could be
+ * used to hide associations which have been soft-deleted from an association
+ * table.
  *
  * @author Emmanuel Bernard
  *

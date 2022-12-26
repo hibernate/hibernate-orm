@@ -616,6 +616,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 *	 subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
 	 *	 subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
 	 * </pre>
+	 * <p>
 	 * Note that there are only 2 entries in subclassNameClosureBySubclassTable.  That is because there are really only
 	 * 2 tables here that make up the subclass mapping, the others make up the class/superclass table mappings.  We
 	 * do not need to account for those here.  The "offset" is defined by the value of {@link #getTableSpan()}.

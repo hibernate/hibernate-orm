@@ -27,12 +27,14 @@ package org.hibernate;
  *     checking, and
  * <li>nor do operations cascade to associated instances.
  * </ul>
+ * <p>
  * Furthermore:
  * <ul>
  * <li>collections are completely ignored by a stateless session, and
  * <li>operations performed via a stateless session bypass Hibernate's event
  *     model, lifecycle callbacks, and interceptors.
  * </ul>
+ * <p>
  * Stateless sessions are vulnerable to data aliasing effects, due to the
  * lack of a first-level cache.
  * <p>

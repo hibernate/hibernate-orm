@@ -31,7 +31,7 @@ import jakarta.persistence.EntityManagerFactory;
  * affects the runtime behavior of Hibernate, and instances of services that
  * Hibernate needs to perform its duties.
  * <p>
- * Crucially, this is where a program comes to obtain {@link Session sessions}.
+ * Crucially, this is where a program comes to obtain {@linkplain Session sessions}.
  * Typically, a program has a single {@link SessionFactory} instance, and must
  * obtain a new {@link Session} instance from the factory each time it services
  * a client request.
@@ -51,7 +51,7 @@ import jakarta.persistence.EntityManagerFactory;
  * There are some interesting exceptions to this principle:
  * <ul>
  * <li>Each {@code SessionFactory} has its own isolated second-level cache,
- *     shared between the sessions it creates, and it {@link #getCache()
+ *     shared between the sessions it creates, and it {@linkplain #getCache()
  *     exposes the cache} to clients as a stateful object with entries that
  *     may be queried and managed directly.
  * <li>Similarly, the factory {@linkplain #getStatistics() exposes} a
@@ -67,6 +67,7 @@ import jakarta.persistence.EntityManagerFactory;
  *     motivation to call either method later, when the factory already has
  *     active sessions.
  * </ul>
+ * <p>
  * The {@code SessionFactory} exposes part of the information in the runtime
  * metamodel via an {@linkplain #getMetamodel() instance} of the JPA-defined
  * {@link jakarta.persistence.metamodel.Metamodel}. This object is sometimes

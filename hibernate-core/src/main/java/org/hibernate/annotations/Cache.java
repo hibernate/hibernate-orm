@@ -32,9 +32,28 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Note that entity subclasses of a root entity with a second-level
  * cache inherit the cache belonging to the root entity.
+ * <p>
+ * For example, the following entity is eligible for caching:
+ * <pre>{@code
+ * @Entity
+ * @Cache(usage = NONSTRICT_READ_WRITE)
+ * public static class Person { ... }
+ * }</pre>
+ * Similarly, this collection is cached:
+ * <pre>{@code
+ * @OneToMany(mappedBy = "person")
+ * @Cache(usage = NONSTRICT_READ_WRITE)
+ * private List<Phone> phones = new ArrayList<>();
+ * }</pre>
+ * Note that the second-level cache is disabled unless
+ * {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}
+ * is explicitly specified, and so, by default, this annotation has
+ * no effect.
  *
  * @see jakarta.persistence.Cacheable
  * @see org.hibernate.Cache
+ * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY
+ * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
  *
  * @author Emmanuel Bernard
  */

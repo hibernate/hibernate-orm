@@ -1118,13 +1118,18 @@ public interface AvailableSettings {
 	/**
 	 * Specifies a {@link org.hibernate.context.spi.CurrentSessionContext} for
 	 * scoping the {@linkplain org.hibernate.SessionFactory#getCurrentSession()
-	 * current session}, either:<ul>
+	 * current session}, either:
+	 * <ul>
 	 *     <li>{@code jta}, {@code thread}, or {@code managed}, or
 	 *     <li>the name of a class implementing
 	 *     {@code org.hibernate.context.spi.CurrentSessionContext}.
 	 * </ul>
+	 * If this property is not set, but JTA support is enabled, then
+	 * {@link org.hibernate.context.internal.JTASessionContext} is used
+	 * by default.
 	 *
 	 * @see org.hibernate.SessionFactory#getCurrentSession()
+	 * @see org.hibernate.context.spi.CurrentSessionContext
 	 */
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 

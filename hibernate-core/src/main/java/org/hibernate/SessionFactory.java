@@ -17,6 +17,7 @@ import javax.naming.Referenceable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.stat.Statistics;
 
@@ -35,6 +36,11 @@ import jakarta.persistence.EntityManagerFactory;
  * Typically, a program has a single {@link SessionFactory} instance, and must
  * obtain a new {@link Session} instance from the factory each time it services
  * a client request.
+ * <p>
+ * The {@link #inSession} and {@link #inTransaction} methods provide a convenient
+ * way to obtain a session, with or without starting a transaction, and have it
+ * cleaned up automatically, relieving the program of the need to explicitly
+ * call {@link Session#close()} and {@link Transaction#commit()}.
  * <p>
  * Depending on how Hibernate is configured, the {@code SessionFactory} itself
  * might be responsible for the lifecycle of pooled JDBC connections and
@@ -83,6 +89,12 @@ import jakarta.persistence.EntityManagerFactory;
  * <li>an operation for {@linkplain SchemaManager#truncateMappedObjects()
  *     cleaning up} data left behind by tests.
  * </ul>
+ * <p>
+ * Finally, the factory {@linkplain #getCriteriaBuilder() provides} a
+ * {@link HibernateCriteriaBuilder}, an extension to the JPA-defined interface
+ * {@link jakarta.persistence.criteria.CriteriaBuilder}, which may be used to
+ * construct {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ * queries}.
  * <p>
  * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
@@ -282,6 +294,17 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 6.2
 	 */
 	SchemaManager getSchemaManager();
+
+	/**
+	 * Obtain a {@link HibernateCriteriaBuilder} which may be used to
+	 * {@linkplain HibernateCriteriaBuilder#createQuery(Class) construct}
+	 * {@linkplain org.hibernate.query.criteria.JpaCriteriaQuery criteria
+	 * queries}.
+	 *
+	 * @see SharedSessionContract#getCriteriaBuilder()
+	 */
+	@Override
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
 	 * Destroy this {@code SessionFactory} and release all its resources,

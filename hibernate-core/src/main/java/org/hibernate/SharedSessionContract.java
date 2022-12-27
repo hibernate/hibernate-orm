@@ -9,8 +9,6 @@ package org.hibernate;
 import java.io.Closeable;
 import java.io.Serializable;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
@@ -181,11 +179,16 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	void setJdbcBatchSize(Integer jdbcBatchSize);
 
 	/**
-	 * Return an instance of {@link CriteriaBuilder}.
+	 * Obtain a {@link HibernateCriteriaBuilder} which may be used to
+	 * {@linkplain HibernateCriteriaBuilder#createQuery(Class) construct}
+	 * {@linkplain org.hibernate.query.criteria.JpaCriteriaQuery criteria
+	 * queries}.
 	 *
-	 * @return an instance of CriteriaBuilder
+	 * @return an instance of {@link HibernateCriteriaBuilder}
 	 *
 	 * @throws IllegalStateException if the session has been closed
+	 *
+	 * @see SessionFactory#getCriteriaBuilder()
 	 */
 	HibernateCriteriaBuilder getCriteriaBuilder();
 

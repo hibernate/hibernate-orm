@@ -78,9 +78,6 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * However, for processes which read many entities, a {@link StatelessSession} should
  * be used.
  * <p>
- * A {@code Session} is never threadsafe. Each thread or transaction must obtain its own
- * instance from a {@link SessionFactory}.
- * <p>
  * A session might be associated with a container-managed JTA transaction, or it might be
  * in control of its own <em>resource-local</em> database transaction. In the case of a
  * resource-local transaction, the client must demarcate the beginning and end of the
@@ -104,9 +101,17 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * }
  * </pre>
  * <p>
- * If the {@code Session} throws an exception, the current transaction must be rolled back
- * and the session must be discarded. The internal state of the {@code Session} might not
- * be consistent with the database after the exception occurs.
+ * It's crucially important to appreciate the following restrictions and why they exist:
+ * <ul>
+ * <li>If the {@code Session} throws an exception, the current transaction must be rolled
+ *     back and the session must be discarded. The internal state of the {@code Session}
+ *     cannot be expected to be consistent with the database after the exception occurs.
+ * <li>At the end of a logical transaction, the session must be explicitly {@linkplain
+ *     #close() destroyed}, so that all JDBC resources may be released.
+ * <li>A {@code Session} is never thread-safe. It contains various different sorts of
+ *     fragile mutable state. Each thread or transaction must obtain its own dedicated
+ *     instance from the {@link SessionFactory}.
+ * </ul>
  * <p>
  * A {@code Session} instance is serializable if its entities are serializable.
  * <p>

@@ -473,33 +473,33 @@ public abstract class AbstractEntityPersister
 
 	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
-			final PersistentClass bootDescriptor,
+			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final PersisterCreationContext creationContext) throws HibernateException {
-		this( bootDescriptor, cacheAccessStrategy, naturalIdRegionAccessStrategy,
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy,
 				(RuntimeModelCreationContext) creationContext );
 	}
 
 	public AbstractEntityPersister(
-			final PersistentClass bootDescriptor,
+			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
 		factory = creationContext.getSessionFactory();
-		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
-		navigableRole = new NavigableRole( bootDescriptor.getEntityName() );
+		navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
 		final SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.cacheAccessStrategy = cacheAccessStrategy;
 			this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-			canWriteToCache = determineCanWriteToCache( bootDescriptor, cacheAccessStrategy );
-			canReadFromCache = determineCanReadFromCache( bootDescriptor, cacheAccessStrategy );
-			isLazyPropertiesCacheable = bootDescriptor.getRootClass().isLazyPropertiesCacheable();
+			canWriteToCache = determineCanWriteToCache( persistentClass, cacheAccessStrategy );
+			canReadFromCache = determineCanReadFromCache( persistentClass, cacheAccessStrategy );
+			isLazyPropertiesCacheable = persistentClass.getRootClass().isLazyPropertiesCacheable();
 		}
 		else {
 			this.cacheAccessStrategy = null;
@@ -509,7 +509,7 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = new EntityMetamodel( bootDescriptor, this, creationContext );
+		entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
 
 		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE
@@ -518,7 +518,7 @@ public abstract class AbstractEntityPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
-				.resolveStrategy( bootDescriptor, this, creationContext );
+				.resolveStrategy( persistentClass, this, creationContext );
 
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
@@ -526,33 +526,33 @@ public abstract class AbstractEntityPersister
 		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
 		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
 
-		int batch = bootDescriptor.getBatchSize();
+		int batch = persistentClass.getBatchSize();
 		if ( batch == -1 ) {
 			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
-		hasSubselectLoadableCollections = bootDescriptor.hasSubselectLoadableCollections();
-		hasPartitionedSelectionMapping = bootDescriptor.hasPartitionedSelectionMapping();
+		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
+		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 
 		propertyMapping = new BasicEntityPropertyMapping( this );
 
 		// IDENTIFIER
 
-		identifierColumnSpan = bootDescriptor.getIdentifier().getColumnSpan();
+		identifierColumnSpan = persistentClass.getIdentifier().getColumnSpan();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
 		identifierAliases = new String[identifierColumnSpan];
 
-		rowIdName = bootDescriptor.getRootTable().getRowId();
+		rowIdName = persistentClass.getRootTable().getRowId();
 
-		if ( bootDescriptor.getLoaderName() != null ) {
+		if ( persistentClass.getLoaderName() != null ) {
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
 			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
-					.resolve( factory, creationContext.getBootModel(), bootDescriptor.getLoaderName() );
+					.resolve( factory, creationContext.getBootModel(), persistentClass.getLoaderName() );
 			if ( namedQueryMemento == null ) {
 				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName()
-						+ "] : " + bootDescriptor.getLoaderName() );
+						+ "] : " + persistentClass.getLoaderName() );
 			}
 			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
 		}
@@ -563,11 +563,11 @@ public abstract class AbstractEntityPersister
 			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
 		}
 
-		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, bootDescriptor, factory );
+		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, persistentClass, factory );
 
 		SqmFunctionRegistry functionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
 
-		List<Column> columns = bootDescriptor.getIdentifier().getColumns();
+		List<Column> columns = persistentClass.getIdentifier().getColumns();
 		for ( int i = 0; i < columns.size(); i++ ) {
 			Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
@@ -577,33 +577,33 @@ public abstract class AbstractEntityPersister
 					factory.getTypeConfiguration(),
 					functionRegistry
 			);
-			identifierAliases[i] = column.getAlias( dialect, bootDescriptor.getRootTable() );
+			identifierAliases[i] = column.getAlias( dialect, persistentClass.getRootTable() );
 		}
 
 		// VERSION
 
-		versionColumnName = bootDescriptor.isVersioned()
-				? bootDescriptor.getVersion().getColumns().get(0).getQuotedName( dialect )
+		versionColumnName = persistentClass.isVersioned()
+				? persistentClass.getVersion().getColumns().get(0).getQuotedName( dialect )
 				: null;
 
 		//WHERE STRING
 
-		if ( isEmpty( bootDescriptor.getWhere() ) ) {
+		if ( isEmpty( persistentClass.getWhere() ) ) {
 			sqlWhereStringTableExpression = null;
 			sqlWhereStringTemplate = null;
 		}
 		else {
-			PersistentClass containingClass = bootDescriptor;
+			PersistentClass containingClass = persistentClass;
 			while ( containingClass.getSuperclass() != null ) {
 				final PersistentClass superclass = containingClass.getSuperclass();
-				if ( !Objects.equals( bootDescriptor.getWhere(), superclass.getWhere() ) ) {
+				if ( !Objects.equals( persistentClass.getWhere(), superclass.getWhere() ) ) {
 					break;
 				}
 				containingClass = superclass;
 			}
 			sqlWhereStringTableExpression = determineTableName( containingClass.getTable() );
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
-					"(" + bootDescriptor.getWhere() + ")",
+					"(" + persistentClass.getWhere() + ")",
 					dialect,
 					factory.getTypeConfiguration(),
 					functionRegistry
@@ -628,7 +628,7 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String[]> lazyColAliases = new ArrayList<>();
 
 		final ArrayList<Integer> lobPropertiesLocalCollector = new ArrayList<>();
-		final List<Property> propertyClosure = bootDescriptor.getPropertyClosure();
+		final List<Property> propertyClosure = persistentClass.getPropertyClosure();
 		boolean foundFormula = false;
 		for ( int i = 0; i < propertyClosure.size(); i++ ) {
 			final Property prop = propertyClosure.get(i);
@@ -716,7 +716,7 @@ public abstract class AbstractEntityPersister
 		final ArrayList<Boolean> definedBySubclass = new ArrayList<>();
 		final ArrayList<Boolean> propNullables = new ArrayList<>();
 
-		for ( Property prop : bootDescriptor.getSubclassPropertyClosure() ) {
+		for ( Property prop : persistentClass.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
 			types.add( prop.getType() );
 
@@ -794,26 +794,26 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( bootDescriptor.getFilters() )
-				? new FilterHelper( bootDescriptor.getFilters(), factory )
+		filterHelper = isNotEmpty( persistentClass.getFilters() )
+				? new FilterHelper( persistentClass.getFilters(), factory )
 				: null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries();
 		cacheEntryHelper = buildCacheEntryHelper();
 		invalidateCache = sessionFactoryOptions.isSecondLevelCacheEnabled()
 				&& canWriteToCache
-				&& shouldInvalidateCache( bootDescriptor, creationContext );
+				&& shouldInvalidateCache( persistentClass, creationContext );
 
 		final List<Object> values = new ArrayList<>();
 //		final List<String> sqlValues = new ArrayList<>();
 
-		if ( bootDescriptor.isPolymorphic() && bootDescriptor.getDiscriminator() != null ) {
+		if ( persistentClass.isPolymorphic() && persistentClass.getDiscriminator() != null ) {
 			if ( !getEntityMetamodel().isAbstract() ) {
-				values.add( DiscriminatorHelper.getDiscriminatorValue( bootDescriptor ) );
-//				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( bootDescriptor, dialect, factory ) );
+				values.add( DiscriminatorHelper.getDiscriminatorValue( persistentClass ) );
+//				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect, factory ) );
 			}
 
-			final List<Subclass> subclasses = bootDescriptor.getSubclasses();
+			final List<Subclass> subclasses = persistentClass.getSubclasses();
 			for ( int k = 0; k < subclasses.size(); k++ ) {
 				final Subclass subclass = subclasses.get( k );
 				//copy/paste from EntityMetamodel:

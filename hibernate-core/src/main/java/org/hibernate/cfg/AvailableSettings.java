@@ -2013,7 +2013,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * This setting controls whether the restriction is applied when loading a
 	 * {@link jakarta.persistence.OneToMany one-to-many} or
-	 * or {@link jakarta.persistence.ManyToMany many-to-many} association whose target
+	 * {@link jakarta.persistence.ManyToMany many-to-many} association whose target
 	 * type defines the restriction.
 	 * <p>
 	 * By default, the restriction is not applied. When this setting is enabled, the
@@ -2022,7 +2022,12 @@ public interface AvailableSettings {
 	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
 	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}
 	 * association to the entity.
+	 * <p>
+	 * This behavior may now be controlled in a safer and more granular way using
+	 * {@link org.hibernate.annotations.Where#applyInToManyFetch}, and so the use
+	 * of this configuration property is no longer recommended.
 	 *
+	 * @see org.hibernate.annotations.Where#applyInToManyFetch
 	 */
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 

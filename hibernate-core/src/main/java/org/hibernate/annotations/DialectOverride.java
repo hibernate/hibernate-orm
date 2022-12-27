@@ -24,6 +24,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * For example, a {@link org.hibernate.annotations.Formula} annotation may be
  * customized for a given {@code Dialect} using the {@link Formula} annotation.
+ * <pre>
+ * &#64;Formula(value = "(rate * 100) || '%'")
+ * &#64;DialectOverride.Formula(dialect = MySQLDialect.class,
+ *                          override = &#64;Formula("concat(rate * 100, '%')"))
+ * &#64;DialectOverride.Formula(dialect = DB2Dialect.class,
+ *                          override = &#64;Formula("varchar_format(rate * 100) || '%'"))
+ * &#64;DialectOverride.Formula(dialect = OracleDialect.class,
+ *                          override = &#64;Formula("to_char(rate * 100) || '%'"))
+ * &#64;DialectOverride.Formula(dialect = SQLServerDialect.class,
+ *                          override = &#64;Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+ * &#64;DialectOverride.Formula(dialect = SybaseDialect.class,
+ *                          override = &#64;Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
+ * private String ratePercent;
+ * </pre>
+ * <p>
  * An annotation may even be customized for a specific range of <em>versions</em>
  * of the dialect by specifying a {@link Version}.
  * <ul>
@@ -34,6 +49,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@link Formula#before() before} specifies that the override applies
  *         to all versions earlier than the given version.
  * </ul>
+ * <p>
  *
  * @since 6.0
  * @author Gavin King

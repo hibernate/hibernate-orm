@@ -13,6 +13,9 @@ apply from: rootProject.file( 'gradle/base-information.gradle' )
 javadoc {
     exclude( "**/internal/*" )
     exclude( "**/generated-src/**" )
+    exclude( "**/sqm/tree/*" )
+    exclude( "**/ast/tree/*" )
+    exclude( "**/sql/results/*" )
 
     final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 

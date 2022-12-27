@@ -113,7 +113,6 @@ import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.loader.internal.IdentifierLoadAccessImpl;
 import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
@@ -150,6 +149,7 @@ import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.metamodel.Metamodel;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.*;
@@ -159,6 +159,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
+import static org.hibernate.jpa.internal.util.LockOptionsHelper.applyPropertiesToLockOptions;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -207,11 +208,11 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		this.persistenceContext = createPersistenceContext();
-		this.actionQueue = createActionQueue();
+		persistenceContext = createPersistenceContext();
+		actionQueue = createActionQueue();
 
-		this.autoClear = options.shouldAutoClear();
-		this.autoClose = options.shouldAutoClose();
+		autoClear = options.shouldAutoClear();
+		autoClose = options.shouldAutoClose();
 
 		if ( options instanceof SharedSessionCreationOptions ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -232,9 +233,9 @@ public class SessionImpl
 			statistics.openSession();
 		}
 
-		if ( this.properties != null ) {
+		if ( properties != null ) {
 			//There might be custom properties for this session that affect the LockOptions state
-			LockOptionsHelper.applyPropertiesToLockOptions( this.properties, this::getLockOptionsForWrite );
+			applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
 		setCacheMode( fastSessionServices.initialSessionCacheMode );
 
@@ -243,33 +244,37 @@ public class SessionImpl
 
 		// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
 		if ( getHibernateFlushMode() == null ) {
-			final FlushMode initialMode = this.properties == null
-					? fastSessionServices.initialSessionFlushMode
-					: ConfigurationHelper.getFlushMode(
-							getSessionProperty(FLUSH_MODE),
-							FlushMode.AUTO
-					);
-			setHibernateFlushMode( initialMode );
+			setHibernateFlushMode( getInitialFlushMode() );
 		}
 
+		setUpMultitenancy( factory );
+
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
+		}
+	}
+
+	private FlushMode getInitialFlushMode() {
+		return properties == null
+				? fastSessionServices.initialSessionFlushMode
+				: ConfigurationHelper.getFlushMode( getSessionProperty( FLUSH_MODE ), FlushMode.AUTO );
+	}
+
+	private void setUpMultitenancy(SessionFactoryImplementor factory) {
 		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
-			String tenantIdentifier = getTenantIdentifier();
+			final String tenantIdentifier = getTenantIdentifier();
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
 			else {
-				CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
-				if ( resolver==null || !resolver.isRoot(tenantIdentifier) ) {
+				final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
+				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
 					// turn on the filter, unless this is the "root" tenant with access to all partitions
 					loadQueryInfluencers
 							.enableFilter( TenantIdBinder.FILTER_NAME )
 							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
 				}
 			}
-		}
-
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), System.currentTimeMillis() );
 		}
 	}
 
@@ -2572,7 +2577,7 @@ public class SessionImpl
 		}
 		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		if ( properties != null ) {
-			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> lockOptions );
+			applyPropertiesToLockOptions( properties, () -> lockOptions );
 		}
 		return lockOptions;
 	}
@@ -2637,13 +2642,13 @@ public class SessionImpl
 			case JAKARTA_LOCK_SCOPE:
 				properties.put( JPA_LOCK_SCOPE, value);
 				properties.put( JAKARTA_LOCK_SCOPE, value);
-				LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 				break;
 			case JPA_LOCK_TIMEOUT:
 			case JAKARTA_LOCK_TIMEOUT:
 				properties.put( JPA_LOCK_TIMEOUT, value );
 				properties.put( JAKARTA_LOCK_TIMEOUT, value );
-				LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 				break;
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:

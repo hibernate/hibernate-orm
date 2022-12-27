@@ -34,37 +34,58 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 
 /**
- * Represents a native (SQL) query.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable query written in the
+ * native SQL dialect of the underlying database. Since Hibernate does not
+ * actually understand SQL, it often requires some help in interpreting the
+ * semantics of a native SQL query.
  * <p>
- * Allows the user to define certain aspects about its execution, such as:<ul>
- *     <li>
- *         result-set value mapping (see below)
- *     </li>
- *     <li>
- *         Tables used via {@link #addSynchronizedQuerySpace}, {@link #addSynchronizedEntityName} and
- *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows
- *         Hibernate to know how to properly deal with auto-flush checking as well as cached query
- *         results if the results of the query are being cached.
- *     </li>
+ * Along with the operations inherited from {@link Query}, this interface
+ * provides control over:
+ * <ul>
+ * <li>mapping the result set of the native SQL query, and
+ * <li>synchronization of the database with state held in memory before
+ *     execution of the query, via automatic flushing of the session.
  * </ul>
- *
- * In terms of result-set mapping, there are 3 approaches to defining:<ul>
- *     <li>
- *         If this represents a named sql query, the mapping could be associated with the query as part
- *         of its metadata
- *     </li>
- *     <li>
- *         A pre-defined (defined in metadata and named) mapping can be associated via
- *         {@link org.hibernate.Session#createNativeQuery(String, String)}
- *     </li>
- *     <li>
- *         Defined locally per the various {@link #addEntity}, {@link #addRoot}, {@link #addJoin},
- *         {@link #addFetch} and {@link #addScalar} methods
- *     </li>
+ * <p>
+ * A {@code NativeQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling {@link QueryProducer#createNativeQuery(String, Class)},
+ * {@link QueryProducer#createNativeQuery(String, String, Class)}, or
+ * {@link QueryProducer#createNativeMutationQuery(String)}.
+ * <p>
+ * A result set mapping may be specified by:
+ * <ul>
+ * <li>a named {@link jakarta.persistence.SqlResultSetMapping} passed to
+ *     {@link QueryProducer#createNativeQuery(String, String, Class)},
+ * <li>a named  {@link jakarta.persistence.SqlResultSetMapping} specified
+ *     using {@link jakarta.persistence.NamedNativeQuery#resultSetMapping}
+ *     for a named query, or
+ * <li>by calling the various {@link #addEntity}, {@link #addRoot},
+ *     {@link #addJoin}, {@link #addFetch} and {@link #addScalar} methods
+ *     of this object.
+ * </ul>
+ * <p>
+ * The third option is a legacy of much older versions of Hibernate and is
+ * currently disfavored.
+ * <p>
+ * To determine if an automatic {@linkplain org.hibernate.Session#flush flush}
+ * is required before execution of the query, Hibernate must know which tables
+ * affect the query result set. JPA provides no standard way to do this.
+ * Instead, this information may be provided via:
+ * <ul>
+ * <li>{@link org.hibernate.annotations.NamedNativeQuery#querySpaces} for
+ *     a named query, or
+ * <li>by calling {@link #addSynchronizedEntityClass},
+ *     {@link #addSynchronizedEntityName}, or
+ *     {@link #addSynchronizedQuerySpace}.
  * </ul>
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @see Query
+ * @see SynchronizeableQuery
+ * @see QueryProducer
  */
 public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
@@ -74,8 +95,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
 	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
-	 * @param columnAlias The column alias in the result-set to be processed
-	 * 		as a scalar result
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -85,10 +106,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a scalar query result.
 	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
-	 * {@link jakarta.persistence.ColumnResult} in annotations
+	 * {@link jakarta.persistence.ColumnResult} in annotations.
 	 *
-	 * @param columnAlias The column alias in the result-set to be processed
-	 * 		as a scalar result
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
@@ -99,10 +120,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a scalar query result.
 	 * <p>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
-	 * {@link jakarta.persistence.ColumnResult} in annotations
+	 * {@link jakarta.persistence.ColumnResult} in annotations.
 	 *
-	 * @param columnAlias The column alias in the result-set to be processed
-	 * 		as a scalar result
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
@@ -112,8 +133,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result using the specified result type.
 	 * <p>
-	 * Hibernate will implicitly determine an appropriate conversion, if
-	 * it can.  Otherwise an exception will be thrown
+	 * Hibernate will implicitly determine an appropriate conversion,
+	 * if it can. Otherwise, an exception will be thrown.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -122,12 +143,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
 
 	/**
-	 * Declare a scalar query result with an explicit conversion
+	 * Declare a scalar query result with an explicit conversion.
 	 *
 	 * @param relationalJavaType The Java type expected by the converter as its
-	 * "relational" type.
-	 * @param converter The conversion to apply.  Consumes the JDBC value based
-	 * on `relationalJavaType`.
+	 *                           "relational" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -136,11 +157,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
 
 	/**
-	 * Declare a scalar query result with an explicit conversion
+	 * Declare a scalar query result with an explicit conversion.
 	 *
-	 * @param jdbcJavaType The Java type expected by the converter as its "relational model" type.
-	 * @param domainJavaType The Java type expected by the converter as its "object model" type.
-	 * @param converter The conversion to apply.  Consumes the JDBC value based on `relationalJavaType`.
+	 * @param jdbcJavaType The Java type expected by the converter as its
+	 *                     "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its
+	 *                       "object model" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -149,12 +173,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<O,R> NativeQuery<T> addScalar(String columnAlias, Class<O> domainJavaType, Class<R> jdbcJavaType, AttributeConverter<O,R> converter);
 
 	/**
-	 * Declare a scalar query result with an explicit conversion
+	 * Declare a scalar query result with an explicit conversion.
 	 *
 	 * @param relationalJavaType The Java type expected by the converter as its
-	 * "relational" type.
-	 * @param converter The conversion to apply.  Consumes the JDBC value based
-	 * on `relationalJavaType`.
+	 *                           "relational" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -163,11 +187,14 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
 
 	/**
-	 * Declare a scalar query result with an explicit conversion
+	 * Declare a scalar query result with an explicit conversion.
 	 *
-	 * @param jdbcJavaType The Java type expected by the converter as its "relational model" type.
-	 * @param domainJavaType The Java type expected by the converter as its "object model" type.
-	 * @param converter The conversion to apply.  Consumes the JDBC value based on `jdbcJavaType`.
+	 * @param jdbcJavaType The Java type expected by the converter as its
+	 *                     "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its
+	 *                       "object model" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value
+	 *                  based on {@code relationalJavaType}.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -182,9 +209,9 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType);
 
 	/**
-	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
-	 * any conversions or other semantics defined on the attribute are automatically applied
-	 * to the mapping
+	 * Defines a result based on a specified attribute. Differs from adding
+	 * a scalar in that any conversions or other semantics defined on the
+	 * attribute are automatically applied to the mapping.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -193,9 +220,9 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
 
 	/**
-	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
-	 * any conversions or other semantics defined on the attribute are automatically applied
-	 * to the mapping
+	 * Defines a result based on a specified attribute.  Differs from adding
+	 * a scalar in that any conversions or other semantics defined on the
+	 * attribute are automatically applied to the mapping.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -204,9 +231,9 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addAttributeResult(String columnAlias, String entityName, String attributePath);
 
 	/**
-	 * Defines a result based on a specified attribute. Differs from adding a scalar in that
-	 * any conversions or other semantics defined on the attribute are automatically applied
-	 * to the mapping.
+	 * Defines a result based on a specified attribute. Differs from adding a
+	 * scalar in that any conversions or other semantics defined on the attribute
+	 * are automatically applied to the mapping.
 	 * <p>
 	 * This form accepts the JPA Attribute mapping describing the attribute
 	 *
@@ -221,7 +248,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
-	 * @param entityName The name of the entity.
+	 * @param entityName The name of the entity
 	 *
 	 * @return The return config object for further control.
 	 *
@@ -230,10 +257,11 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	/**
-	 * Add a new root return mapping, returning a {@link RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link RootReturn} to allow
+	 * further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
-	 * @param entityType The java type of the entity.
+	 * @param entityType The java type of the entity
 	 *
 	 * @return The return config object for further control.
 	 *
@@ -242,12 +270,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	RootReturn addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
-	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
-	 * same as the unqualified entity name
+	 * Declare a "root" entity, without specifying an alias. The expectation
+	 * here is that the table alias is the same as the unqualified entity name.
 	 * <p>
 	 * Use {@link #addRoot} if you need further control of the mapping
 	 *
-	 * @param entityName The entity name that is the root return of the query.
+	 * @param entityName The entity name that is the root return of the query
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -275,8 +303,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	/**
-	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
-	 * same as the unqualified entity name
+	 * Declare a "root" entity, without specifying an alias. The expectation here
+	 * is that the table alias is the same as the unqualified entity name.
 	 *
 	 * @param entityType The java type of the entity to add as a root
 	 *
@@ -298,8 +326,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a "root" entity, specifying a lock mode.
 	 *
 	 * @param tableAlias The SQL table alias
-	 * @param entityClass The entity Class
-	 * @param lockMode The lock mode for this return.
+	 * @param entityClass The entity {@link Class}
+	 * @param lockMode The lock mode for this return
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -308,9 +336,9 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a join fetch result.
 	 *
-	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
-	 * @param ownerTableAlias Identify the table alias of the owner of this association.  Should match the alias of a
-	 * previously added root or fetch
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch.
+	 * @param ownerTableAlias Identify the table alias of the owner of this association.
+	 *                        Should match the alias of a previously added root or fetch.
 	 * @param joinPropertyName The name of the property being join fetched.
 	 *
 	 * @return The return config object for further control.
@@ -322,8 +350,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a join fetch result.
 	 *
-	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
-	 * @param path The association path ([owner-alias].[property-name]).
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch.
+	 * @param path The association path of form {@code [owner-alias].[property-name]}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -333,8 +361,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a join fetch result.
 	 *
 	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
-	 * @param ownerTableAlias Identify the table alias of the owner of this association.  Should match the alias of a
-	 * previously added root or fetch
+	 * @param ownerTableAlias Identify the table alias of the owner of this association.
+	 *                        Should match the alias of a previously added root or fetch.
 	 * @param joinPropertyName The name of the property being join fetched.
 	 *
 	 * @return {@code this}, for method chaining
@@ -347,7 +375,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a join fetch result, specifying a lock mode.
 	 *
 	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
-	 * @param path The association path ([owner-alias].[property-name]).
+	 * @param path The association path of form {@code [owner-alias].[property-name]}.
 	 * @param lockMode The lock mode for this return.
 	 *
 	 * @return {@code this}, for method chaining
@@ -355,17 +383,18 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
-	 * Simple unification interface for all returns from the various `#addXYZ` methods .
-	 * Allows control over the "shape" of that particular part of the fetch graph.
+	 * Simple unification interface for all returns from the various {@code addXYZ()}
+	 * methods. Allows control over the "shape" of that particular part of the fetch
+	 * graph.
 	 * <p>
-	 * Some GraphNodes can be query results, while others simply describe a part
-	 * of one of the results.
+	 * Some nodes can be query results, while others simply describe a part of one of
+	 * the results.
 	 */
 	interface ResultNode {
 	}
 
 	/**
-	 * ResultNode which can be a query result
+	 * A {@link ResultNode} which can be a query result.
 	 */
 	interface ReturnableResultNode extends ResultNode {
 	}
@@ -380,7 +409,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	/**
 	 * Allows access to further control how properties within a root or join
-	 * fetch are mapped back from the result set.   Generally used in composite
+	 * fetch are mapped back from the result set. Generally used in composite
 	 * value scenarios.
 	 */
 	interface ReturnProperty extends ResultNode {
@@ -450,6 +479,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		ReturnProperty addProperty(String propertyName);
 	}
 
+	/**
+	 * Allows access to further control how collection returns are mapped back
+	 * from result sets.
+	 */
 	interface CollectionReturn extends ReturnableResultNode {
 
 		String getTableAlias();

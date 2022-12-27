@@ -83,7 +83,7 @@ public interface QueryProducer {
 	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) query
+	 * Create a {@link NativeQuery} instance for the given native SQL query.
 	 *
 	 * @param sqlString a native SQL query string
 	 *
@@ -97,8 +97,8 @@ public interface QueryProducer {
 	NativeQuery createNativeQuery(String sqlString);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
-	 * implicit mapping to the specified Java type.
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using implicit mapping to the specified Java type.
 	 * <p>
 	 * If the given class is an entity class, this method is equivalent to
 	 * {@code createNativeQuery(sqlString).addEntity("alias1", resultClass)}.
@@ -113,8 +113,8 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
-	 * implicit mapping to the specified Java type.
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using implicit mapping to the specified Java type.
 	 * <p>
 	 * If the given class is an entity class, this method is equivalent to
 	 * {@code createNativeQuery(sqlString).addEntity(tableAlias, resultClass)}.
@@ -130,8 +130,11 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
-	 * implicit mapping to the specified Java type.
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using an explicit mapping to the specified Java type.
+	 * <p>
+	 * The given result set mapping name must identify a mapping defined by a
+	 * {@link jakarta.persistence.SqlResultSetMapping} annotation.
 	 *
 	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name
@@ -147,8 +150,11 @@ public interface QueryProducer {
 	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
-	 * implicit mapping to the specified Java type.
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using an explicit mapping to the specified Java type.
+	 * <p>
+	 * The given result set mapping name must identify a mapping defined by a
+	 * {@link jakarta.persistence.SqlResultSetMapping} annotation.
 	 *
 	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name

@@ -39,7 +39,7 @@ import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Hibernate extensions to the JPA CriteriaBuilder.
+ * Hibernate extensions to the JPA {@link CriteriaBuilder}.
  *
  * @author Steve Ebersole
  */

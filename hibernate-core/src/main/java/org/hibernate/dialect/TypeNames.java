@@ -25,36 +25,32 @@ import java.util.TreeMap;
  * unmarked default type otherwise.
  * <p>
  * For example, setting:
- *
  * <pre>
  *	names.put( type,        "TEXT" );
  *	names.put( type,   255, "VARCHAR($l)" );
  *	names.put( type, 65534, "LONGVARCHAR($l)" );
  * </pre>
- *
+ * <p>
  * will give you back the following:
- *
  * <pre>
  *  names.get( type )         // --> "TEXT" (default)
  *  names.get( type,    100 ) // --> "VARCHAR(100)" (100 is in [0:255])
  *  names.get( type,   1000 ) // --> "LONGVARCHAR(1000)" (1000 is in [256:65534])
  *  names.get( type, 100000 ) // --> "TEXT" (default)
  * </pre>
- *
+ * <p>
  * On the other hand, simply putting:
- *
  * <pre>
  *	names.put( type, "VARCHAR($l)" );
  * </pre>
- *
+ * <p>
  * would result in:
- *
  * <pre>
  *  names.get( type )        // --> "VARCHAR($l)" (will cause trouble)
  *  names.get( type, 100 )   // --> "VARCHAR(100)"
  *  names.get( type, 10000 ) // --> "VARCHAR(10000)"
  * </pre>
- *
+ * <p>
  * Registered type names may contain the placemarkers {@code $l}, {@code $p},
  * and {@code $s}, which will be replaced by the length, precision, and size
  * passed to {@link #get(int, Long, Integer, Integer)}.

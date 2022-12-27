@@ -202,7 +202,6 @@ public class AuditEntity {
 	 * 		<li>an AuditProperty (see {@link #property(String)})</li>
 	 * 		<li>an other AuditFunction</li>
 	 * </ul>
-	 * @return
 	 */
 	public static AuditFunction function(final String function, final Object... arguments) {
 		List<Object> argumentList = new ArrayList<>();

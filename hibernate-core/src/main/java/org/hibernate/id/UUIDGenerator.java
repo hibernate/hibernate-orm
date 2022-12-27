@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  * <li>{@link #UUID_GEN_STRATEGY_CLASS} - names the {@link UUIDGenerationStrategy} class to use</li>
  * </ul>
  * <p>
- * Currently there are 2 standard implementations of {@link UUIDGenerationStrategy}:<ul>
+ * Currently, there are 2 standard implementations of {@link UUIDGenerationStrategy}:<ul>
  * <li>{@link StandardRandomStrategy} (the default, if none specified)</li>
  * <li>{@link org.hibernate.id.uuid.CustomVersionOneStrategy}</li>
  * </ul>

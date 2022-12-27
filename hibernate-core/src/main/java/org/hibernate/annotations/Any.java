@@ -29,27 +29,28 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * An {@code @Any} mapping would store the discriminator value identifying the concrete
  * type of {@code Payment} along with the state of the associated {@code Order}, instead
  * of storing it with the {@code Payment} entity itself.
- * <pre>{@code
+ * <pre>
  * interface Payment { ... }
  *
- * @Entity
+ * &#64;Entity
  * class CashPayment { ... }
  *
- * @Entity
+ * &#64;Entity
  * class CreditCardPayment { ... }
  *
- * @Entity
+ * &#64;Entity
  * class Order {
  *     ...
- *     @Any
- *     @JoinColumn(name="payment_id") //the foreign key column
- *     @Column(name="payment_type")   //the discriminator column
- *     @AnyDiscriminatorValue(discriminator="CASH", entity=CashPayment.class)
- *     @AnyDiscriminatorValue(discriminator="CREDIT", entity=CreditCardPayment.class)
+ *     &#64;Any
+ *     &#64;JoinColumn(name="payment_id") //the foreign key column
+ *     &#64;Column(name="payment_type")   //the discriminator column
+ *     &#64;AnyDiscriminatorValue(discriminator="CASH", entity=CashPayment.class)
+ *     &#64;AnyDiscriminatorValue(discriminator="CREDIT", entity=CreditCardPayment.class)
  *     Payment payment;
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * In this example, {@code Payment} is <em>not</em> be declared as an entity type, and
  * is not annotated {@link jakarta.persistence.Entity @Entity}. It might even be an
  * interface, or at most just a {@linkplain jakarta.persistence.MappedSuperclass mapped
@@ -74,6 +75,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         {@link AnyKeyJdbcTypeCode} specifies the type of the foreign key.
  *     <li>{@link jakarta.persistence.JoinColumn} specifies the foreign key column.
  * </ul>
+ * <p>
  * Of course, {@code Any} mappings are disfavored, except in extremely special cases,
  * since it's much more difficult to enforce referential integrity at the database
  * level.
@@ -92,6 +94,7 @@ public @interface Any {
 	 * <li>{@link FetchType#LAZY LAZY} allows the association to be fetched lazily, but
 	 *     this is possible only when bytecode enhancement is used.
 	 * </ul>
+	 * <p>
 	 * If not explicitly specified, the default is {@code EAGER}.
 	 */
 	FetchType fetch() default FetchType.EAGER;

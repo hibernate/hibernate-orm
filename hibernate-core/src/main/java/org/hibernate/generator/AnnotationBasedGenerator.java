@@ -21,10 +21,11 @@ import java.lang.reflect.Member;
  * <p>
  * For example, implementing {@code AnnotationBasedGenerator<AnnotationType>} is the
  * same as providing a constructor with this signature:
- * <pre>{@code
+ * <pre>
  * public GeneratorClass(AnnotationType config, Member idMember,
  *                      CustomIdGeneratorCreationContext creationContext)
- * }</pre>
+ * </pre>
+ * <p>
  * where {@code GeneratorClass} is the class that implements {@code Generator}, and
  * {@code AnnotationType} is the generator annotation type used to configure the
  * generator.

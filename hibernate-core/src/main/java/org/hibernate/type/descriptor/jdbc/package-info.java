@@ -20,6 +20,7 @@
  *     <li>{@link java.sql.Types#REF REF}</li>
  *     <li>{@link java.sql.Types#JAVA_OBJECT JAVA_OBJECT}</li>
  * </ul>
+ * <p>
  * On the other hand, we actually <em>extend</em> the set of JDBC types by enumerating
  * additional types in {@link org.hibernate.type.SqlTypes}.
  * <p>

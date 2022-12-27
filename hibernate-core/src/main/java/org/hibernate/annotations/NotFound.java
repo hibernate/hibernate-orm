@@ -30,6 +30,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@link NotFoundAction#IGNORE} specifies that this situation should
  *     be tolerated and treated as if the foreign key were null.
  * </ul>
+ * <p>
  * Note that this annotation has the side effect of making a to-one
  * association non-lazy. It does not affect the laziness of a many-to-many
  * association.

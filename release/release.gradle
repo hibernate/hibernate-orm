@@ -177,6 +177,7 @@ task aggregateJavadocs(type: Javadoc) {
     destinationDir = javadocDir
     configure( options ) {
         overview = 'src/release/javadoc/overview.html'
+        stylesheetFile = new File(projectDir, 'src/release/javadoc/stylesheet.css')
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."

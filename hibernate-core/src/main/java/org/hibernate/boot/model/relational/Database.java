@@ -91,13 +91,13 @@ public class Database {
 	}
 
 	/**
-	 * Wrap the raw name of a database object in it's Identifier form accounting for quoting from
+	 * Wrap the raw name of a database object in its Identifier form accounting for quoting from
 	 * any of:<ul>
 	 *     <li>explicit quoting in the name itself</li>
 	 *     <li>global request to quote all identifiers</li>
 	 * </ul>
-	 * <p>
-	 * NOTE : quoting from database keywords happens only when building physical identifiers
+	 *
+	 * @implNote Quoting from database keywords happens only when building physical identifiers.
 	 *
 	 * @param text The raw object name
 	 *

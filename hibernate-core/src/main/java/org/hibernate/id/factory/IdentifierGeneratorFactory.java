@@ -35,6 +35,7 @@ import jakarta.persistence.GenerationType;
  *     by the {@code @GenericGenerator} annotation, or
  * <li>a JPA-defined {@link GenerationType}.
  * </ul>
+ * <p>
  * A new generator passed a {@link Properties} object containing parameters via the
  * method {@link IdentifierGenerator#configure(Type, Properties, ServiceRegistry)}.
  * <p>

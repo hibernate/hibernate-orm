@@ -22,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     entity instance, or
  * <li>{@linkplain OptimisticLockType#ALL all fields} of the entity.
  * </ul>
+ * <p>
  * An optimistic lock is usually checked by including a restriction in a
  * SQL {@code update} or {@code delete} statement. If the database reports
  * that zero rows were updated, it is inferred that another transaction

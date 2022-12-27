@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  *     <li>A <em>logical name</em> is a name used to within annotations of Java
  *     code and XML mapping documents.
  * </ul>
+ * <p>
  * Logical names provide an additional level of indirection between the mappings
  * and the database schema, and a {@code PhysicalNamingStrategy} even allows the
  * use of more "natural" naming within the mappings in cases where the relational

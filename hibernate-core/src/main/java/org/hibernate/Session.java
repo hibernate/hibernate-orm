@@ -39,6 +39,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <li><em>detached:</em> previously persistent, but not currently associated with the
  *     {@code Session}.
  * </ul>
+ * <p>
  * At any given time, an instance may be associated with at most one open session.
  * <p>
  * Any instance returned by {@link #get(Class, Object)} or by a query is persistent.
@@ -63,11 +64,11 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * detached instance to the persistent state are now deprecated, and clients should now
  * migrate to the use of {@code merge()}.
  * <p>
- * From {@link FlushMode time to time}, the session performs a {@linkplain #flush() flushing}
- * operation, and synchronizes state held in memory with persistent state held in the
- * database by executing SQL {@code insert}, {@code update}, and {@code delete} statements.
- * Note that SQL statements are often not executed synchronously by the methods of the
- * {@code Session} interface. If synchronous execution of SQL is desired, the
+ * From {@linkplain FlushMode time to time}, a {@linkplain #flush() flush operation} is
+ * triggered, and the session synchronizes state held in memory with persistent state
+ * held in the database by executing SQL {@code insert}, {@code update}, and {@code delete}
+ * statements. Note that SQL statements are often not executed synchronously by the methods
+ * of the {@code Session} interface. If synchronous execution of SQL is desired, the
  * {@link StatelessSession} allows this.
  * <p>
  * A persistence context holds hard references to all its entities and prevents them
@@ -706,6 +707,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
@@ -735,6 +737,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
@@ -756,6 +759,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>the {@linkplain LockRequest#setLockScope(PessimisticLockScope) scope}
 	 *     that is, whether the lock extends to rows of owned collections.
 	 * </ul>
+	 * <p>
 	 * Timeout and scope are ignored if the specified {@code LockMode} represents
 	 * a flavor of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
 	 * <p>
@@ -782,6 +786,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 * <p>
@@ -803,6 +808,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 *
@@ -1264,9 +1270,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void disableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Retrieve this session's helper/delegate for creating LOB instances.
+	 * Obtain a {@linkplain LobHelper factory} for instances of {@link java.sql.Blob}
+	 * and {@link java.sql.Clob}.
 	 *
-	 * @return this session's {@link LobHelper LOB helper}
+	 * @return an instance of {@link LobHelper}
 	 */
 	LobHelper getLobHelper();
 

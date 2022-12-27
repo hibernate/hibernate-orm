@@ -38,6 +38,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * <li>simplifies the implementation of custom types, and
  * <li>hides certain SPI interfaces from user code.
  * </ul>
+ * <p>
  * The class {@link org.hibernate.type.CustomType} automatically adapts
  * between {@code UserType} and {@link org.hibernate.type.Type}.
  * <p>

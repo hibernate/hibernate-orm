@@ -142,6 +142,7 @@ import static java.util.Collections.unmodifiableSet;
  * <li> delegates JDBC {@code Connection} management to the {@code ConnectionProvider}
  * <li>factory for instances of {@code SessionImpl}
  * </ul>
+ * <p>
  * This class must appear immutable to clients, even if it does all kinds of caching
  * and pooling under the covers. It is crucial that the class is not only thread
  * safe, but also highly concurrent. Synchronization must be used extremely sparingly.

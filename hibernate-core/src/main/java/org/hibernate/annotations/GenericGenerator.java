@@ -36,21 +36,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     to specify the {@link #name()} of the generator defined using this
  *     annotation.
  * </ul>
+ * <p>
  * If neither {@link #type} not {@link #strategy} is specified, Hibernate asks
  * {@linkplain org.hibernate.dialect.Dialect#getNativeIdentifierGeneratorStrategy
  * the dialect} to decide an appropriate strategy. This is equivalent to using
  * {@link jakarta.persistence.GenerationType#AUTO AUTO} in JPA.
  * <p>
  * For example, if we define a generator using:
- * <pre>{@code
- * @GenericGenerator(name = "custom-generator",
+ * <pre>
+ * &#64;GenericGenerator(name = "custom-generator",
  *                   type = org.hibernate.eg.CustomStringGenerator.class)
  * }</pre>
+ * <p>
  * Then we may make use of it by annotating an identifier field as follows:
- * <pre>{@code
- * @Id @GeneratedValue(generator = "custom-generator")
+ * <pre>
+ * &#64;Id &#64;GeneratedValue(generator = "custom-generator")
  * private String id;
- * }</pre>
+ * </pre>
  * <p>
  * The disadvantage of this approach is the use of stringly-typed names. An
  * alternative, completely typesafe, way to declare a generator and associate

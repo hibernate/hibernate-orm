@@ -21,11 +21,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Describes the mapping for things which can be expressed in a SQL query.
- * <p/>
+ * <p>
  * Generally speaking this models a column.  However, it can also model SQL
  * tuples as well
- * <p/>
- * This includes details such as<ul>
+ * <p>
+ * This includes details such as
+ * <ul>
  *     <li>
  *         the {@linkplain #getJavaTypeDescriptor() Java type} of the mapping
  *     </li>
@@ -42,11 +43,11 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *         {@linkplain java.sql.PreparedStatement JDBC statements}
  *     </li>
  * </ul>
- * <p/>
+ * <p>
  * Some mappings will have an associated {@linkplain #getValueConverter() value converter}.
  * The {@linkplain #getJdbcValueExtractor() readers} and {@linkplain #getJdbcValueBinder() writers}
  * for such mappings will already incorporate those conversions
- * <p/>
+ * <p>
  * Some mappings support usage as SQL literals.  Such mappings will return a non-null
  * {@linkplain #getJdbcLiteralFormatter literal formatter} which handles formatting
  * values as a SQL literal

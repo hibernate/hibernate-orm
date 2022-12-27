@@ -401,6 +401,7 @@ public interface AvailableSettings {
 	 *     <li>an instance of {@link javax.sql.DataSource}, or
 	 *     <li>a JNDI name under which to obtain the {@link javax.sql.DataSource}.
 	 * </ul>
+	 * <p>
 	 * For JNDI names, see also {@link #JNDI_CLASS}, {@link #JNDI_URL}, {@link #JNDI_PREFIX}, etc.
 	 *
 	 * @see javax.sql.DataSource
@@ -459,6 +460,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} representing a class that extends {@code Dialect}, or
 	 *     <li>the name of a class that extends {@code Dialect}.
 	 * </ul>
+	 * <p>
 	 * By default, Hibernate will attempt to automatically determine the dialect from the
 	 * {@linkplain #URL JDBC URL} and JDBC metadata, so this setting is not usually necessary.
 	 *
@@ -817,6 +819,7 @@ public interface AvailableSettings {
 	 *     <li>{@code "component-path"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl}
 	 * </ul>
+	 * <p>
 	 * By default, the {@code ImplicitNamingStrategy} registered under the key
 	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
 	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl} is used.
@@ -867,6 +870,7 @@ public interface AvailableSettings {
 	 *     <li>{@code "legacy"} is an abbreviation for
 	 *     {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy}
 	 * </ul>
+	 * <p>
 	 * By default, the {@linkplain org.hibernate.boot.model.relational.ColumnOrderingStrategy} registered under the key
 	 * {@code "default"} is used. If no strategy is explicitly registered under that key,
 	 * {@link org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard} is used.
@@ -924,7 +928,6 @@ public interface AvailableSettings {
 	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
-	 * <p>
 	 *
 	 * @since 6.0
 	 */
@@ -1049,7 +1052,7 @@ public interface AvailableSettings {
 	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 
 	/**
-	 * When enabled, specifies that {@link jakarta.persistence.Version versioned}
+	 * When enabled, specifies that {@linkplain jakarta.persistence.Version versioned}
 	 * data should be included in batching.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchingForVersionedEntities(boolean)
@@ -1069,6 +1072,7 @@ public interface AvailableSettings {
 	 *     <li>an instance of {@link java.time.ZoneId}, or
 	 *     <li>a time zone ID string to be passed to {@link java.time.ZoneId#of(String)}.
 	 * </ul>
+	 * <p>
 	 * By default, the {@linkplain java.util.TimeZone#getDefault() JVM default time zone}
 	 * is assumed by the JDBC driver.
 	 *
@@ -1101,6 +1105,7 @@ public interface AvailableSettings {
 	 *         or
 	 *     <li>the name of one of its instances.
 	 * </ul>
+	 * <p>
 	 * The default is {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}.
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
@@ -1367,6 +1372,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.RegionFactory}, or
 	 *     <li>he name of a class implementing {@link org.hibernate.cache.spi.RegionFactory}.
 	 * </ul>
+	 * <p>
 	 * Defaults to {@link NoCachingRegionFactory}, so that caching is disabled.
 	 *
 	 * @see #USE_SECOND_LEVEL_CACHE
@@ -2053,6 +2059,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} representing a class that implements {@code Interceptor}, or
 	 *     <li>the name of a class that implements {@code Interceptor}.
 	 * </ul>
+	 * <p>
 	 * This setting identifies an {@code Interceptor} which is effectively a singleton
 	 * across all the sessions opened from the {@code SessionFactory} to which it is
 	 * applied; the same instance will be passed to each {@code Session}. If there
@@ -2074,6 +2081,7 @@ public interface AvailableSettings {
 	 *     <li>the name of a class that implements {@code Interceptor}, or
 	 *     <li>an instance of {@link Supplier} used to obtain the interceptor.
 	 * </ul>
+	 * <p>
 	 * Note that this setting cannot specify an {@code Interceptor} instance.
 	 * <p>
 	 * This setting identifies an {@code Interceptor} implementation that is to be
@@ -2303,6 +2311,7 @@ public interface AvailableSettings {
 	 *         setting requires DEBUG logging be enabled for
 	 *         {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
 	 * </ul>
+	 * <p>
 	 * Alternatively, the application may customize the behavior by providing an
 	 * implementation of {@link org.hibernate.event.spi.EntityCopyObserver} and setting
 	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name.
@@ -2328,6 +2337,7 @@ public interface AvailableSettings {
 	 *     <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE "inline"}
 	 *     mode inlines values as SQL literals.
 	 * </ul>
+	 * <p>
 	 * The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
 	 * @since 6.0.0
@@ -2580,6 +2590,7 @@ public interface AvailableSettings {
 	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
+	 * <p>
 	 * By default, a warning is logged.
 	 *
 	 * @since 5.2.17
@@ -2705,6 +2716,7 @@ public interface AvailableSettings {
 	 *     <li>the name of a class that implements {@code FormatMapper}, or
 	 *     <li>one of the shorthand constants {@code jackson} or {@code jsonb}.
 	 * </ul>
+	 * <p>
 	 * By default, the first of the possible providers that is available at runtime is
 	 * used, according to the listing order.
 	 *
@@ -2721,6 +2733,7 @@ public interface AvailableSettings {
 	 *     <li>the name of a class that implements {@code FormatMapper}, or
 	 *     <li>one of the shorthand constants {@code jackson} or {@code jaxb}.
 	 * </ul>
+	 * <p>
 	 * By default, the first of the possible providers that is available at runtime is
 	 * used, according to the listing order.
 	 *

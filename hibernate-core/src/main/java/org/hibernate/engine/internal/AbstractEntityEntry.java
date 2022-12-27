@@ -73,6 +73,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 *
 	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
 	 * </pre>
+	 * <p>
 	 * Use {@link #setCompressedValue(EnumState, Enum)},
 	 * {@link #getCompressedValue(EnumState)} etc
 	 * to access the enums and booleans stored in this value.

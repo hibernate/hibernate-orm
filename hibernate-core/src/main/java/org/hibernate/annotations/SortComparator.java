@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Sorting is performed in memory, by Java's {@link java.util.TreeSet} or {@link java.util.TreeMap},
  * and is maintained by any operation that mutates the collection.
  * <ul>
- * <li>Use {@link SortNatural} in its {@link java.util.Comparator natural order}.
+ * <li>Use {@link SortNatural} to sort by {@linkplain java.util.Comparator natural order}.
  * <li>Use {@link jakarta.persistence.OrderBy} to order using an expression written in HQL.
  * <li>Use {@link OrderBy} to order using an expression written in native SQL.
  * </ul>

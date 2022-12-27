@@ -28,22 +28,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * For example, if a filter is declared as follows:
  * <pre>
- * {@code
- * @FilterDef(name = "Current",
+ * &#64;FilterDef(name = "Current",
  *            defaultCondition = "status<>'DELETED'")
  * package org.hibernate.domain;
- * }
  * </pre>
+ * <p>
  * Then the filter may be applied to an entity type like this:
  * <pre>
- * {@code
- * @Entity
- * @Filter(name = "Current")
+ * &#64;Entity
+ * &#64;Filter(name = "Current")
  * class Record {
- *     @Id @GeneratedValue Long id;
- *     @Enumerated(STRING) Status status;
+ *     &#64;Id @GeneratedValue Long id;
+ *     &#64;Enumerated(STRING) Status status;
  *     ...
- * }
  * }
  * </pre>
  * <p>
@@ -51,7 +48,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * calling {@link org.hibernate.Session#enableFilter(String)},
  * passing the name of the filter, and then setting its parameters.
  * <pre>
- * {@code session.enableFilter("Current");}
+ * session.enableFilter("Current");
  * </pre>
  *
  * @author Matthew Inger

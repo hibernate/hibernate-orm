@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *     <li>how to clone values, and
  *     <li>how to assemble/disassemble values for storage in the second-level cache.
  * </ul>
+ * <p>
  * An application-defined custom types could, in principle, implement this interface directly,
  * but it's safer to implement the more stable interface {@link org.hibernate.usertype.UserType}.
  * <p>
@@ -359,10 +360,12 @@ public interface Type extends Serializable {
 	 * <pre>
 	 * {@code Objects.equals(disassemble(x,s), disassemble(y,s))} == isEqual(x,y,sf)
 	 * </pre>
+	 * <p>
 	 * and that:
 	 * <pre>
 	 * {@code Objects.equals(x, assemble(disassemble(x,s),s,o))}
 	 * </pre>
+	 * <p>
 	 * That is, the implementation must be consistent with
 	 * {@link #isEqual(Object, Object, SessionFactoryImplementor)} and with
 	 * {@link #assemble(Serializable, SharedSessionContractImplementor, Object)}.

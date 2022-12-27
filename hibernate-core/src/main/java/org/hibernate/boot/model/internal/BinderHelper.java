@@ -119,6 +119,7 @@ public class BinderHelper {
 	 *     the model that aggregates these properties and is considered
 	 *     the target of the association.
 	 * </ul>
+	 * <p>
 	 * Certain limitations arise from the way this solution is currently
 	 * implemented: for example, if a referenced column belongs to a
 	 * property of an {@code @Embeddable}, then every column of that

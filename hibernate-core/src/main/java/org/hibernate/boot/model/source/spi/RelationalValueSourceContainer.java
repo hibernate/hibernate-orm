@@ -17,10 +17,10 @@ import java.util.List;
  *     <li>plural attribute mappings</li>
  *     <li>etc</li>
  * </ul>
- *
+ * <p>
  * Not only does it provide access to the relational value sources ({@link #getRelationalValueSources()}, it also defines
  * contextual information for those sources in terms of default values.
- *
+ * <p>
  * See {@link RelationalValueSource} for additional details.
  *
  * @author Steve Ebersole

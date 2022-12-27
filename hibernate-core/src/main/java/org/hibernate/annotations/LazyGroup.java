@@ -30,6 +30,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     lazy fields at once. This annotation provides control over that
  *     behavior.
  * </ul>
+ * <p>
  * A fetch group identifies a set of related attributes that should be loaded
  * together when any one of them is accessed. By default, all non-collection
  * attributes belong to a single fetch group named {@code "DEFAULT"}. The

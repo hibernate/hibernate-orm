@@ -24,6 +24,7 @@
  *     item.
  * </li>
  * </ul>
+ * <p>
  * The <i>asynchronous</i> access strategies are: {@link org.hibernate.cache.spi.access.AccessType#READ_ONLY read-only},
  * {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE read-write} and
  * {@link org.hibernate.cache.spi.access.AccessType#NONSTRICT_READ_WRITE nonstrict-read-write}.  The only

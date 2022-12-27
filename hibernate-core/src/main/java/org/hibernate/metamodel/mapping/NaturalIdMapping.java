@@ -30,7 +30,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
  *     <li>it contains nullable values</li>
  *     <li>it contains modifiable values</li>
  * </ul>
- * <p/>
+ * <p>
  * See other sources for a more complete discussion of data modeling.
  * 
  * @see org.hibernate.Session#byNaturalId 

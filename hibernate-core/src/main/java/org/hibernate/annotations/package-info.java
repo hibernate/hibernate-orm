@@ -8,39 +8,81 @@
 /**
  * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
  *
- * <h2 id="basic-value-mapping">Basic value mapping</h2>
+ * <h2 id="basic-value-mapping">Basic value type mappings</h2>
  *
- * Hibernate supports two approaches to defining a mapping strategy for basic values:
+ * JPA supports a very limited set of built-in {@linkplain jakarta.persistence.Basic basic}
+ * types, and provides only {@linkplain jakarta.persistence.AttributeConverter converters}
+ * as a solution when the built-in types are insufficient.
+ * <p>
+ * By contrast, Hibernate has an embarrassingly rich set of abstractions for modelling
+ * "basic" types, which can be initially confusing. Note that the venerable interface
+ * {@link org.hibernate.type.Type} abstracts over all sorts of field and property types,
+ * not only basic types. In modern Hibernate, programs should avoid directly implementing
+ * this interface.
+ * <p>
+ * Instead, a program should use either a "compositional" basic type, or in more extreme
+ * cases, a {@code UserType}.
  * <ul>
- *     <li>
- *         A "compositional" approach using a combination of the following influencers for
- *         various parts of mapping<ul>
- *             <li>{@link org.hibernate.annotations.JavaType}</li>
- *             <li>{@link org.hibernate.annotations.JdbcType}</li>
- *             <li>{@link org.hibernate.annotations.JdbcTypeCode}</li>
- *             <li>{@link org.hibernate.annotations.Mutability}</li>
- *             <li>{@link jakarta.persistence.AttributeConverter} / {@link jakarta.persistence.Convert}</li>
- *             <li>{@link jakarta.persistence.Lob}</li>
- *             <li>{@link jakarta.persistence.Enumerated}</li>
- *             <li>{@link jakarta.persistence.Temporal}</li>
- *             <li>{@link org.hibernate.annotations.Nationalized}</li>
- *         </ul>
- *         Note that {@link org.hibernate.annotations.JavaType}, {@link org.hibernate.annotations.JdbcType},
- *         {@link org.hibernate.annotations.JdbcTypeCode} and {@link org.hibernate.annotations.Mutability}
- *         all have specialized forms for the various model parts such as map-key, list-index, (id-bag)
- *         collection-id, etc.
- *     </li>
- *     <li>
- *          Contracted via the {@link org.hibernate.usertype.UserType} interface and specified using
- *          {@link org.hibernate.annotations.Type}.
- *          As with the compositional approach, there are model-part specific annotations for specifying
- *          custom-types as well.
+ * <li>
+ *     A basic type is a composition of a {@link org.hibernate.type.descriptor.java.JavaType}
+ *     with a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and possibly a JPA
+ *     {@link jakarta.persistence.AttributeConverter}, and the process of composition is
+ *     usually somewhat implicit. A program may influence the choice of {@code JavaType}
+ *     or {@code JdbcType} using any of the following annotations:
+ *     <ul>
+ *     <li>{@link org.hibernate.annotations.JavaType}
+ *     <li>{@link org.hibernate.annotations.JdbcType}
+ *     <li>{@link org.hibernate.annotations.JdbcTypeCode}
+ *     <li>{@link org.hibernate.annotations.Mutability}
+ *     <li>{@link jakarta.persistence.Convert}
+ *     <li>{@link jakarta.persistence.Lob}
+ *     <li>{@link jakarta.persistence.Enumerated}
+ *     <li>{@link jakarta.persistence.Temporal}
+ *     <li>{@link org.hibernate.annotations.Nationalized}
+ *     </ul>
+ *     Note that {@link org.hibernate.annotations.JavaType}, {@link org.hibernate.annotations.JdbcType},
+ *     {@link org.hibernate.annotations.JdbcTypeCode} and {@link org.hibernate.annotations.Mutability}
+ *     all come in specialized flavors for handling map keys, list indexes, and so on.
+ * <li>
+ *     Alternatively, a program may implement the {@link org.hibernate.usertype.UserType}
+ *     interface and associate it with a field or property explicitly using the
+ *     {@link org.hibernate.annotations.Type @Type} annotation, or implicitly using the
+ *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration} annotation.
+ *     There are some specialized flavors of the {@code @Type} annotation too.
  *     </li>
  * </ul>
- * These two approaches are not intended to be mixed. Specifying a custom-type takes precedence over
- * the compositional approach. Although the compositional approach is recommended, both forms are
- * fully supported.
  * <p>
- * Please see the user guide for a more in-depth discussion.
+ * These two approaches cannot be used together. A {@code UserType} always takes precedence
+ * over the compositional approach.
+ * <p>
+ * Please see the User Guide for a more in-depth discussion.
+ *
+ * <h2 id="basic-value-mapping">Dialect-specific native SQL</h2>
+ *
+ * Many annotations in this package allow the specification of native SQL expressions or
+ * even complete statements. For example:
+ * <ul>
+ * <li>{@link org.hibernate.annotations.Formula} allows a field or property to map to an
+ *     arbitrary SQL expression instead of a column,
+ * <li>{@link org.hibernate.annotations.Check} specifies a check constraint condition,
+ * <li>{@link org.hibernate.annotations.ColumnDefault} specifies default value, and
+ *     {@link org.hibernate.annotations.GeneratedColumn} specifies a generated value,
+ * <li>{@link org.hibernate.annotations.Filter} and {@link org.hibernate.annotations.Where}
+ *     each specify a restriction written in SQL,
+ * <li>{@link org.hibernate.annotations.OrderBy} specifies an ordering written in SQL, and
+ * <li>{@link org.hibernate.annotations.SQLUpdate}, {@link org.hibernate.annotations.SQLInsert},
+ *     and {@link org.hibernate.annotations.SQLDelete} allow a whole handwritten SQL statement
+ *     to be given in place of the SQL generated by Hibernate.
+ * </ul>
+ * <p>
+ * A major disadvantage to annotation-based mappings for programs which target multiple databases
+ * is that there can be only one source of metadata which must work on every supported database.
+ * Fortunately, there's a&mdash;slightly inelegant&mdash;solution.
+ * <p>
+ * The annotations belonging to {@link org.hibernate.annotations.DialectOverride} allow native
+ * SQL to be overridden for a particular {@linkplain org.hibernate.dialect.Dialect SQL dialect}.
+ * For example {@link org.hibernate.annotations.DialectOverride.Formula @DialectOverride.Formula}
+ * may be used to customize a {@link org.hibernate.annotations.Formula @Formula} for a given version
+ * of a given database.
  */
 package org.hibernate.annotations;

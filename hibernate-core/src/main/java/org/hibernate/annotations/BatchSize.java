@@ -35,6 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *        ...
  *    }
  * </pre>
+ * <p>
  * will initialize up to 100 unfetched {@code Product} proxies in each
  * trip to the database.
  * <p>
@@ -44,6 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *    &#64;BatchSize(size = 5) /
  *    Set&lt;Product&gt; getProducts() { ... };
  * </pre>
+ * <p>
  * will initialize up to 5 unfetched collections of {@code Product}s in
  * each SQL {@code select}.
  *

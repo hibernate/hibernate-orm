@@ -27,18 +27,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * entities.
  * <p>
  * For example:
- * <pre>{@code
- * @ManyToAny
- * @Column(name = "property_type")
- * @AnyKeyJavaClass(Long.class)
- * @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
- * @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
- * @JoinTable(name = "repository_properties",
+ * <pre>
+ * &#64;ManyToAny
+ * &#64;Column(name = "property_type")
+ * &#64;AnyKeyJavaClass(Long.class)
+ * &#64;AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+ * &#64;AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
+ * &#64;JoinTable(name = "repository_properties",
  *            joinColumns = @JoinColumn(name = "repository_id"),
  *            inverseJoinColumns = @JoinColumn(name = "property_id"))
- * @Cascade(PERSIST)
- * private List<Property<?>> properties = new ArrayList<>();
- * }</pre>
+ * &#64;Cascade(PERSIST)
+ * private List&lt;Property&lt;?&gt;&gt; properties = new ArrayList&lt;&gt;();
+ * </pre>
+ * <p>
  * In this example, {@code Property} is not required to be an entity type,
  * it might even just be an interface, but its subtypes {@code StringProperty}
  * and {@code IntegerProperty} must be entity classes with the same identifier

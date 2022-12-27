@@ -194,7 +194,6 @@ processTestResources {
 
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {
@@ -301,4 +300,11 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     testClasses.dependsOn compileTestJava17Java
     // And run this as part of the check task by default
     check.dependsOn testJava17
+}
+
+javadoc {
+    configure(options) {
+        overview = 'src/main/javadoc/overview.html'
+        stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
+    }
 }

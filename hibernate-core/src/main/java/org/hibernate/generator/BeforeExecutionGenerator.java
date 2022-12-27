@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * <li>the meta-annotation {@link org.hibernate.annotations.IdGeneratorType} or
  * <li>the annotation {@link org.hibernate.annotations.GenericGenerator}.
  * </ul>
+ * <p>
  * On the other hand, generators for regular fields and properties may be integrated using
  * {@link org.hibernate.annotations.ValueGenerationType}, as for any {@link Generator}.
  *

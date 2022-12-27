@@ -107,6 +107,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *     <li>a second unique key of the entity, that is, a property annotated
 	 *         {@link org.hibernate.annotations.NaturalId @NaturalId}.
 	 * </ul>
+	 * <p>
 	 * Alternatively, if the generated id is an identity/"autoincrement" column, we can take
 	 * advantage of special platform-specific functionality to retrieve it. Taking advantage
 	 * of the specialness of identity columns is the job of one particular implementation:

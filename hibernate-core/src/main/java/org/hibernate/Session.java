@@ -1360,9 +1360,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 		boolean getScope();
 
 		/**
-		 * Check if locking extends to owned collections and associated entities.
-		 *
-		 * @return true if locking will be extended to owned collections and associated entities
+		 * Obtain the {@link PessimisticLockScope}, which determines if locking
+		 * extends to owned collections and associated entities.
 		 */
 		default PessimisticLockScope getLockScope() {
 			return getScope() ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
@@ -1383,6 +1382,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 		@Deprecated(since = "6.2")
 		LockRequest setScope(boolean scope);
 
+		/**
+		 * Set the {@link PessimisticLockScope}, which determines if locking
+		 * extends to owned collections and associated entities.
+		 */
 		default LockRequest setLockScope(PessimisticLockScope scope) {
 			return setScope( scope == PessimisticLockScope.EXTENDED );
 		}
@@ -1444,7 +1447,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}.
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
 	 */
@@ -1452,7 +1455,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}.
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
 	 */

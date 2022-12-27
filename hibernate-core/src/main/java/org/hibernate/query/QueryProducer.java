@@ -62,7 +62,7 @@ public interface QueryProducer {
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}
+	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}.
 	 */
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
@@ -222,7 +222,7 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) statement
+	 * Create a {@link NativeQuery} instance for the given native SQL statement.
 	 *
 	 * @param sqlString a native SQL statement string
 	 *
@@ -297,9 +297,6 @@ public interface QueryProducer {
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
 	 */
 	MutationQuery createNamedMutationQuery(String name);
-
-
-
 
 	/**
 	 * Create a {@link Query} instance for the named query.

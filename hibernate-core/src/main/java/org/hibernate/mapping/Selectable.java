@@ -61,8 +61,5 @@ public interface Selectable {
 	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect, Table table);
 
-	String getTemplate(
-			Dialect dialect,
-			TypeConfiguration typeConfiguration,
-			SqmFunctionRegistry functionRegistry);
+	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry);
 }

@@ -187,8 +187,6 @@ public class TemporaryTable implements Exportable, Contributable {
 										column.getText( dialect ),
 										jdbcMapping,
 										column.getSqlType(
-												runtimeModelCreationContext.getTypeConfiguration(),
-												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
 										column.getColumnSize(
@@ -234,8 +232,6 @@ public class TemporaryTable implements Exportable, Contributable {
 																			column.getText( dialect ),
 																			selection.getJdbcMapping(),
 																			column.getSqlType(
-																					runtimeModelCreationContext.getTypeConfiguration(),
-																					dialect,
 																					runtimeModelCreationContext.getMetadata()
 																			),
 																			column.getColumnSize(
@@ -289,8 +285,6 @@ public class TemporaryTable implements Exportable, Contributable {
 											ENTITY_TABLE_IDENTITY_COLUMN,
 											jdbcMapping,
 											column.getSqlType(
-													runtimeModelCreationContext.getTypeConfiguration(),
-													dialect,
 													runtimeModelCreationContext.getMetadata()
 											) + " " +
 											dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) ),
@@ -325,8 +319,6 @@ public class TemporaryTable implements Exportable, Contributable {
 										column.getText( dialect ),
 										jdbcMapping,
 										column.getSqlType(
-												runtimeModelCreationContext.getTypeConfiguration(),
-												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
 										column.getColumnSize(
@@ -349,8 +341,6 @@ public class TemporaryTable implements Exportable, Contributable {
 										discriminator.getText( dialect ),
 										discriminatorMapping.getJdbcMapping(),
 										discriminator.getSqlType(
-												runtimeModelCreationContext.getTypeConfiguration(),
-												dialect,
 												runtimeModelCreationContext.getMetadata()
 										),
 										discriminator.getColumnSize(
@@ -381,8 +371,6 @@ public class TemporaryTable implements Exportable, Contributable {
 																	selectable.getText( dialect ),
 																	selection.getJdbcMapping(),
 																	column.getSqlType(
-																			runtimeModelCreationContext.getTypeConfiguration(),
-																			dialect,
 																			runtimeModelCreationContext.getMetadata()
 																	),
 																	column.getColumnSize(

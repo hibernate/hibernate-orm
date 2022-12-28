@@ -14,7 +14,7 @@ import org.hibernate.query.Query;
  * load and lock scenarios.
  * <p>
  * Some hints are only effective in certain scenarios, which is noted on
- * each constant's documentation
+ * each constant's documentation.
  *
  * @author Steve Ebersole
  */

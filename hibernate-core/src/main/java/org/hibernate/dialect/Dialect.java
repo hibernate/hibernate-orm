@@ -48,7 +48,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -192,6 +191,9 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -345,11 +347,11 @@ public abstract class Dialect implements ConversionContext {
 	 * Set appropriate default values for configuration properties.
 	 */
 	protected void initDefaultProperties() {
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,
+		getDefaultProperties().setProperty( STATEMENT_BATCH_SIZE,
 				Integer.toString( getDefaultStatementBatchSize() ) );
-		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION,
+		getDefaultProperties().setProperty( NON_CONTEXTUAL_LOB_CREATION,
 				Boolean.toString( getDefaultNonContextualLobCreation() ) );
-		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
+		getDefaultProperties().setProperty( USE_GET_GENERATED_KEYS,
 				Boolean.toString( getDefaultUseGetGeneratedKeys() )  );
 	}
 
@@ -1388,7 +1390,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#STATEMENT_BATCH_SIZE}.
+	 * {@value org.hibernate.cfg.Environment#STATEMENT_BATCH_SIZE}.
 	 */
 	public int getDefaultStatementBatchSize() {
 		return 1;
@@ -1396,7 +1398,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#NON_CONTEXTUAL_LOB_CREATION}.
+	 * {@value org.hibernate.cfg.Environment#NON_CONTEXTUAL_LOB_CREATION}.
 	 */
 	public boolean getDefaultNonContextualLobCreation() {
 		return false;
@@ -1404,7 +1406,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#USE_GET_GENERATED_KEYS}.
+	 * {@value org.hibernate.cfg.Environment#USE_GET_GENERATED_KEYS}.
 	 */
 	public boolean getDefaultUseGetGeneratedKeys() {
 		return true;

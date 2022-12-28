@@ -11,27 +11,29 @@ import org.hibernate.annotations.OptimisticLockType;
 
 /**
  * Describes how an entity should be optimistically locked.
- * <p>
- * This enumeration is mainly for internal use, since it
- * is isomorphic to {@link OptimisticLockType}.
+ *
+ * @apiNote  This enumeration is mainly for internal use, since it
+ *           is isomorphic to {@link OptimisticLockType}. In the
+ *           future, it would be nice to replace them both with a
+ *           new {@code org.hibernate.OptimisticLockCheck} enum.
  *
  * @author Steve Ebersole
  */
 public enum OptimisticLockStyle {
 	/**
-	 * no optimistic locking
+	 * No optimistic locking.
 	 */
 	NONE,
 	/**
-	 * use a dedicated version column
+	 * Optimistic locking via a dedicated version or timestamp column.
 	 */
 	VERSION,
 	/**
-	 * dirty columns are compared
+	 * Optimistic locking via comparison of dirty columns.
 	 */
 	DIRTY,
 	/**
-	 * all columns are compared
+	 * Optimistic locking via comparison of all columns.
 	 */
 	ALL;
 

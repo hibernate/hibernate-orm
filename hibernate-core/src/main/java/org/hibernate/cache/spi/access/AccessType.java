@@ -12,6 +12,13 @@ import java.util.Locale;
  * Enumerates the policies for managing concurrent access to the shared
  * second-level cache.
  *
+ * @apiNote This enumeration is isomorphic to
+ *          {@link org.hibernate.annotations.CacheConcurrencyStrategy}.
+ *          We don't really need both, but one is part of this SPI,
+ *          and one forms part of the API of the annotations package.
+ *          In the future, it would be nice to replace them both with
+ *          a new {@code org.hibernate.CacheConcurrencyPolicy} enum.
+ *
  * @author Steve Ebersole
  */
 public enum AccessType {

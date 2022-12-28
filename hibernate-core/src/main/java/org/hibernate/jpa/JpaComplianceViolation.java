@@ -7,7 +7,7 @@
 package org.hibernate.jpa;
 
 /**
- * Contract for exceptions describing JPA compliance violations
+ * Marker interface for exceptions describing JPA compliance violations.
  *
  * @author Steve Ebersole
  */

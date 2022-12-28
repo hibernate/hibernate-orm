@@ -44,25 +44,26 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * Set multiple natural-id attribute values at once.  The passed array is
 	 * expected to have an even number of elements, with the attribute name followed
-	 * by its value.  E.g.  `using( "system", "matrix", "username", "neo" )`
+	 * by its value, for example, {@code using( "system", "matrix", "username", "neo" )}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**
-	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing
-	 * lookups?  The default is to perform "synchronization" (for correctness).
+	 * For entities with mutable natural ids, should natural ids be synchronized prior to performing a lookup?
+	 * The default, for correctness, is to synchronize.
 	 * <p>
-	 * "synchronization" here indicates updating the natural-id -> pk cross reference maintained as part of the
-	 * session.  When enabled, prior to performing the lookup, Hibernate will check all entities of the given
-	 * type associated with the session to see if its natural-id values have changed and, if so, update the
-	 * cross reference.  There is a performance impact associated with this, so if application developers are
-	 * certain the natural-ids in play have not changed, this setting can be disabled to circumvent that impact.
-	 * However, disabling this setting when natural-ids values have changed can result in incorrect results!
+	 * Here "synchronization" means updating the natural id to primary key cross-reference maintained by the
+	 * session. When enabled, prior to performing the lookup, Hibernate will check all entities of the given
+	 * type associated with the session to see if any natural id values have changed and, if so, update the
+	 * cross-reference. There is a performance penalty associated with this, so if it is completely certain
+	 * the no natural id in play has changed, this setting can be disabled to circumvent that impact.
+	 * Disabling this setting when natural id values <em>have</em> changed can result in incorrect results!
 	 *
-	 * @param enabled Should synchronization be performed?  {@code true} indicates synchronization will be performed;
-	 * {@code false} indicates it will be circumvented.
+	 * @param enabled Should synchronization be performed?
+	 *                {@code true} indicates synchronization will be performed;
+	 *                {@code false} indicates it will be circumvented.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -71,7 +72,7 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * Return the persistent instance with the natural id value(s) defined by the call(s) to {@link #using}.  This
 	 * method might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
-	 *
+	 * <p>
 	 * You should not use this method to determine if an instance exists; to check for existence, use {@link #load}
 	 * instead.  Use this only to retrieve an instance that you assume exists, where non-existence would be an
 	 * actual error.

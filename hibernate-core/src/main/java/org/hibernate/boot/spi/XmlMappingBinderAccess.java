@@ -28,8 +28,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
- * Poor naming.  Models the binder and a class-loader to be a
- * one-stop-shop in terms of binding mappings.
+ * Holds the XML binder and a classloader used for binding mappings.
+ *
+ * @apiNote This class is very poorly named.
  *
  * @author Steve Ebersole
  */

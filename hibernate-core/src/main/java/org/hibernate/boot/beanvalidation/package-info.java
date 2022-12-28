@@ -6,7 +6,7 @@
  */
 
 /**
- * Support for integrating Jakarta Bean Validation
+ * Support for integrating Jakarta Bean Validation.
  *
  * @author Steve Ebersole
  */

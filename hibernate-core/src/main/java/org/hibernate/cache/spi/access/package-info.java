@@ -32,8 +32,8 @@
  * The only <i>synchronous</i> access strategy is
  * {@linkplain org.hibernate.cache.spi.access.AccessType#TRANSACTIONAL transactional}.
  * <p>
- * Note that, for an <i>asynchronous</i> cache, cache invalidation must be a two-step process (lock->unlock or
- * lock->afterUpdate), since this is the only way to guarantee consistency with the database for a non-transactional
+ * Note that, for an <i>asynchronous</i> cache, cache invalidation must be a two-step process (lock to unlock or
+ * lock to afterUpdate), since this is the only way to guarantee consistency with the database for a non-transactional
  * cache implementation. For a <i>synchronous</i> cache, cache invalidation is a single step process (evict or update).
  * Hence, these contracts ({@link org.hibernate.cache.spi.access.EntityDataAccess} and
  * {@link org.hibernate.cache.spi.access.CollectionDataAccess}) define a three-step process to cater for both

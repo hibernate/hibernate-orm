@@ -11,9 +11,8 @@ import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
 /**
- * Statistics SPI for the Hibernate core.  This is essentially the
- * "statistic collector" API, its the contract called to collect various stats.
- * 
+ * A service SPI for collecting statistics about various events that occur at runtime.
+ *
  * @author Emmanuel Bernard
  */
 public interface StatisticsImplementor extends Statistics, Service {

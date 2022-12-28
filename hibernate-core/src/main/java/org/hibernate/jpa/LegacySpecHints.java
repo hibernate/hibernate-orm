@@ -7,12 +7,12 @@
 package org.hibernate.jpa;
 
 /**
- * Legacy form (`javax.persistence` namespace) of the hints explicitly
- * defined by the Jakarta Persistence
+ * Legacy form (the {@code javax.persistence} namespace) of the hints
+ * explicitly defined by the Jakarta Persistence.
  *
  * @apiNote These are a temporary migration aids for migrating from
- * Java Persistence (`javax.persistence` namespace) to Jakarta
- * Persistence (`jakarta.persistence` namespace)
+ *          Java Persistence ({@code javax.persistence} namespace)
+ *          to Jakarta Persistence ({@code jakarta.persistence} namespace).
  *
  * @see SpecHints
  *

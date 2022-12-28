@@ -6,8 +6,11 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+
 /**
- * Enum defining different access strategies for accessing entity values.
+ * Enumerates various access strategies for accessing entity values.
  *
  * @author Hardy Ferentschik
  */
@@ -34,7 +37,7 @@ public enum AccessType {
 
 	private final String accessType;
 
-	private AccessType(String type) {
+	AccessType(String type) {
 		this.accessType = type;
 	}
 
@@ -48,47 +51,43 @@ public enum AccessType {
 	}
 
 	/**
-	 * Resolve an externalized name to the AccessType enum value it names.
+	 * Resolve an externalized name to the {@code AccessType} value it names.
 	 *
 	 * @param externalName The external name
 	 *
-	 * @return The matching AccessType; {@link #DEFAULT} is returned rather than {@code null}
+	 * @return The matching {@code AccessType};
+	 *         {@link #DEFAULT} is returned rather than {@code null}
 	 */
 	public static AccessType getAccessStrategy(String externalName) {
 		if ( externalName == null ) {
 			return DEFAULT;
 		}
-		else if ( FIELD.getType().equals( externalName ) ) {
-			return FIELD;
+		for ( AccessType value : values() ) {
+			if ( value.accessType.equals( externalName ) ) {
+				return value;
+			}
 		}
-		else if ( PROPERTY.getType().equals( externalName ) ) {
-			return PROPERTY;
-		}
-		else if ( RECORD.getType().equals( externalName ) ) {
-			return RECORD;
-		}
-		else {
-			// TODO historically if the externalName string could not be matched default access was used. Maybe this should be an exception though!?
-			return DEFAULT;
-		}
+		return DEFAULT; // because sometimes we get passed magic values like "unsupported"
 	}
 
 	/**
-	 * Convert the JPA access type enum to the corresponding AccessType enum value.
+	 * Convert the JPA access type to the corresponding {@link AccessType} value.
 	 *
-	 * @param type The JPA enum value
+	 * @param type The JPA access type
 	 *
-	 * @return The Hibernate AccessType
+	 * @return The Hibernate {@link AccessType}
 	 */
 	public static AccessType getAccessStrategy(jakarta.persistence.AccessType type) {
-		if ( jakarta.persistence.AccessType.PROPERTY.equals( type ) ) {
-			return PROPERTY;
-		}
-		else if ( jakarta.persistence.AccessType.FIELD.equals( type ) ) {
-			return FIELD;
-		}
-		else {
+		if ( type == null ) {
 			return DEFAULT;
+		}
+		switch ( type ) {
+			case FIELD:
+				return FIELD;
+			case PROPERTY:
+				return PROPERTY;
+			default:
+				throw new AssertionFailure( "unrecognized AccessType" );
 		}
 	}
 }

@@ -41,9 +41,7 @@ public interface MappingMetamodel {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQM model -> Mapping model
 
-	/**
-	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
-	 */
+	// todo (6.0) : POC intended for use in SQM to SQL translation
 	MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath,

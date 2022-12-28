@@ -11,7 +11,10 @@ package org.hibernate.engine.transaction.spi;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @deprecated This is no longer used
  */
+@Deprecated(since = "6", forRemoval = true)
 public enum JoinStatus {
 	NOT_JOINED,
 	MARKED_FOR_JOINED,

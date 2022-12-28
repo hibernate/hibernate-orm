@@ -7425,7 +7425,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Is this dialect known to support quantified predicates.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where FIRST_NAME > ALL (select ...) ...".
+	 * {@code ... where FIRST_NAME > ALL (select ...) ...}
 	 *
 	 * @return True if this SQL dialect is known to support quantified predicates; false otherwise.
 	 */
@@ -7437,7 +7437,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Is this SQL dialect known to support some kind of distinct from predicate.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where FIRST_NAME IS DISTINCT FROM LAST_NAME"
+	 * {@code ... where FIRST_NAME IS DISTINCT FROM LAST_NAME}
 	 *
 	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
 	 */
@@ -7450,7 +7450,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax; sometimes called tuple syntax.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax; false otherwise.
@@ -7465,7 +7465,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * and <code>&ge;</code> operators.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...".
+	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax with relational comparison operators; false otherwise.
@@ -7480,7 +7480,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * and <code>is not distinct from</code> operators.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...".
+	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax with distinct from comparison operators; false otherwise.
@@ -7494,7 +7494,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * sometimes called tuple syntax, in the SET clause;
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
+	 * {@code ... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
 	 */
@@ -7507,7 +7507,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
 	 * <p>
 	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...".
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax with quantified predicates; false otherwise.
@@ -7520,7 +7520,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN lists as well?
 	 * <p>
-	 * For example, "... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ..."
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax in the IN list; false otherwise.
@@ -7533,7 +7533,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN subqueries as well?
 	 * <p>
-	 * For example, "... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ..."
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
 	 *
 	 * @return True if this SQL dialect is known to support "row value
 	 * constructor" syntax in the IN subqueries; false otherwise.

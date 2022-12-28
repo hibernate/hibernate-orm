@@ -9,12 +9,15 @@ package org.hibernate.jpa.spi;
 import jakarta.persistence.TemporalType;
 
 /**
- * Represents the value currently bound to a particular (bindable) parameter.
+ * Represents the value currently bound to a particular parameter.
  *
  * @param <T>
  *
  * @author Steve Ebersole
+ *
+ * @deprecated this is no longer used and will be removed
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface ParameterBind<T> {
 	/**
 	 * Access the bound value

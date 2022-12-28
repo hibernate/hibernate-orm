@@ -81,14 +81,14 @@ public interface TransactionCoordinator {
 	/**
 	 * Adds an observer to the coordinator.
 	 * <p>
-	 * observers are not to be cleared on transaction completion.
+	 * Observers are not to be cleared on transaction completion.
 	 *
 	 * @param observer The observer to add.
 	 */
 	void addObserver(TransactionObserver observer);
 
 	/**
-	 * Removed an observer from the coordinator.
+	 * Remove an observer from the coordinator.
 	 *
 	 * @param observer The observer to remove.
 	 */
@@ -109,8 +109,8 @@ public interface TransactionCoordinator {
 	default void invalidate(){}
 
 	/**
-	 * Provides the means for "local transactions" (as transaction drivers) to control the
-	 * underlying "physical transaction" currently associated with the TransactionCoordinator.
+	 * Provides the means for resource-local transactions (as transaction drivers) to control the
+	 * underlying "physical transaction" currently associated with the {@code TransactionCoordinator}.
 	 *
 	 * @author Steve Ebersole
 	 */

@@ -11,7 +11,10 @@ package org.hibernate.jpa.spi;
  * exposing some functionality of Hibernate's native {@link ParameterRegistration} contract
  *
  * @author Steve Ebersole
+ *
+ * @deprecated this is no longer used and will be removed
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface StoredProcedureQueryParameterRegistration<T> extends ParameterRegistration<T> {
 	/**
 	 * How will an unbound value be handled in terms of the JDBC parameter?

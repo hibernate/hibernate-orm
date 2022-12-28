@@ -9,8 +9,8 @@ package org.hibernate.boot.spi;
 import org.jboss.jandex.IndexView;
 
 /**
- * Contract for contributing to Metadata (InFlightMetadataCollector).
- *
+ * Contract for contributing to {@link org.hibernate.boot.Metadata} ({@link InFlightMetadataCollector}).
+ * <p>
  * This hook occurs just after all processing of all {@link org.hibernate.boot.MetadataSources},
  * and just before {@link AdditionalJaxbMappingProducer}.
  *

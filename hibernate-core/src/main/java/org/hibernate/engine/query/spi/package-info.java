@@ -6,6 +6,8 @@
  */
 
 /**
- * Defines support for query plans and stored metadata about queries
+ * An SPI for dealing with parameters of native queries.
+ *
+ * @see org.hibernate.engine.query.spi.NativeQueryInterpreter
  */
 package org.hibernate.engine.query.spi;

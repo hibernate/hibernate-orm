@@ -106,6 +106,9 @@ import jakarta.persistence.EntityManagerFactory;
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
  * method {@link EntityManagerFactory#unwrap(Class)} may be used to obtain the
  * underlying {@code SessionFactory}.
+ * <p>
+ * The very simplest way to obtain a new {@code SessionFactory} is using a
+ * {@link org.hibernate.cfg.Configuration}.
  *
  * @see Session
  * @see org.hibernate.cfg.Configuration

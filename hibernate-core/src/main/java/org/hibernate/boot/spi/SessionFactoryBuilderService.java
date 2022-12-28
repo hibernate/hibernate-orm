@@ -10,7 +10,7 @@ import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.service.Service;
 
 /**
- * Allows bootstrapping Hibernate ORM using a custom {@link SessionFactoryBuilderImplementor}
+ * Allows bootstrapping Hibernate ORM using a custom {@link SessionFactoryBuilderImplementor}.
  */
 public interface SessionFactoryBuilderService extends Service {
 

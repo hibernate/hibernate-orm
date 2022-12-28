@@ -6,6 +6,8 @@
  */
 
 /**
- * Support for Dialect-specific pagination strategies
+ * Support for {@link org.hibernate.dialect.Dialect}-specific pagination strategies.
+ *
+ * @see org.hibernate.dialect.pagination.LimitHandler
  */
 package org.hibernate.dialect.pagination;

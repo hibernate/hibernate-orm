@@ -13,8 +13,8 @@ import org.hibernate.metamodel.CollectionClassification;
  * Values to use as defaults in the absence of certain mapping information.
  *
  * @implSpec Designed with stacking in mind, such that the defaults can be overridden at
- * various levels using simple wrapping and delegation.  The "global" level is configuration
- * settings.
+ *           various levels using simple wrapping and delegation. The "global" level is
+ *           configuration settings.
  *
  * @author Steve Ebersole
  * @author Gail Badner

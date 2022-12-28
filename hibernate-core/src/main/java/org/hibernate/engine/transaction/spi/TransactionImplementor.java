@@ -11,6 +11,8 @@ import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
+ * Defines the "internal contract" for an implementation of {@link Transaction}.
+ *
  * @author Steve Ebersole
  */
 public interface TransactionImplementor extends Transaction {

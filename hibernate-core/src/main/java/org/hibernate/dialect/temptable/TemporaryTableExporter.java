@@ -11,6 +11,11 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
+ * An exporter for temporary tables.
+ * <p>
+ * Unlike other {@linkplain org.hibernate.tool.schema.spi.Exporter DDL exporters},
+ * this exporter is called at runtime, instead of during schema management.
+ *
  * @author Steve Ebersole
  */
 public interface TemporaryTableExporter {

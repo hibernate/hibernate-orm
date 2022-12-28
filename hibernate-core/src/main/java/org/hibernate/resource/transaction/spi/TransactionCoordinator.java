@@ -6,8 +6,6 @@
  */
 package org.hibernate.resource.transaction.spi;
 
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.jpa.spi.JpaCompliance;
 
 /**
@@ -145,7 +143,5 @@ public interface TransactionCoordinator {
 		//		org.hibernate.Transaction that might be best done by:
 		//			1) exposing registerSynchronization here (if the Transaction is just passed this)
 		//			2) using the exposed TransactionCoordinator#getLocalSynchronizations (if the Transaction is passed the TransactionCoordinator)
-		//
-		//		if
 	}
 }

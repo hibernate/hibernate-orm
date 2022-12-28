@@ -9,11 +9,11 @@ package org.hibernate.resource.transaction.backend.jdbc.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -24,13 +24,14 @@ import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * An implementation of TransactionCoordinator based on managing a transaction through the JDBC Connection
- * via {@link JdbcResourceTransaction}
+ * An implementation of {@link TransactionCoordinator} based on managing a
+ * transaction through the JDBC Connection via {@link JdbcResourceTransaction}.
  *
  * @author Steve Ebersole
  *

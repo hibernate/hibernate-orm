@@ -25,6 +25,7 @@ import jakarta.persistence.Tuple;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
@@ -569,6 +570,12 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	@Override
 	public SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		super.setForcedFlushMode( forcedFlushMode );
 		return this;
 	}
 

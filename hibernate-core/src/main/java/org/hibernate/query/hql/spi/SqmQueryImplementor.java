@@ -14,11 +14,13 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -106,6 +108,9 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 
 	@Override
 	SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmQueryImplementor<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 
 	@Override
 	SqmQueryImplementor<R> setMaxResults(int maxResult);

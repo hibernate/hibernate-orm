@@ -784,7 +784,7 @@ public class ProcedureCallImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),

@@ -18,8 +18,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 
-import org.jboss.logging.Logger;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 

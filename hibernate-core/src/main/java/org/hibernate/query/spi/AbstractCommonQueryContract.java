@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -172,7 +173,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		putIfNotNull( hints, HINT_READONLY, getQueryOptions().isReadOnly() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
@@ -541,12 +542,24 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
-		return getQueryOptions().getFlushMode();
+		FlushMode flushMode = getQueryOptions().getFlushMode();
+		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
 	}
 
 	@Override
 	public CommonQueryContract setHibernateFlushMode(FlushMode flushMode) {
 		getQueryOptions().setFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public ForcedFlushMode getForcedFlushMode() {
+		return FlushModeTypeHelper.getForcedFlushMode( getQueryOptions().getFlushMode() );
+	}
+
+	@Override
+	public CommonQueryContract setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode( forcedFlushMode ) );
 		return this;
 	}
 

@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.ParameterMetadata;
@@ -151,8 +152,11 @@ public interface SqmQuery extends CommonQueryContract {
 	SqmQuery setProperties(Object bean);
 
 	@Override
-	SqmQuery setProperties(Map bean);
+	SqmQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	SqmQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmQuery setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 }

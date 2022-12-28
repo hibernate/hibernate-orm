@@ -23,6 +23,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -39,7 +40,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.SqmExpressible;
 
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -186,17 +186,20 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		super.setForcedFlushMode( forcedFlushMode );
+		return this;
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+//		getSession().checkOpen();
+		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
+//		getSession().checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 		return this;
 	}
@@ -340,7 +343,7 @@ public abstract class AbstractQuery<R>
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
@@ -380,13 +383,6 @@ public abstract class AbstractQuery<R>
 	public QueryImplementor<R> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
-	}
-
-	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
-		assert sqmExpressible != null;
-
-		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override
@@ -457,26 +453,6 @@ public abstract class AbstractQuery<R>
 		super.setParameter( parameter, value );
 		return this;
 	}
-
-	private <P> void setParameter(Parameter<P> parameter, P value, BindableType<P> type) {
-		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter<P>) parameter, value, type );
-		}
-		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, type );
-		}
-		else if ( value instanceof Collection ) {
-			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
-			locateBinding( parameter ).setBindValues( (Collection<P>) value );
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, type );
-		}
-	}
-
-
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter list

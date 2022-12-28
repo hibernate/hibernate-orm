@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -67,6 +68,7 @@ import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -454,7 +456,7 @@ public class NativeQueryImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),
@@ -579,7 +581,7 @@ public class NativeQueryImpl<R>
 
 	private boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
-			FlushMode effectiveFlushMode = getHibernateFlushMode();
+			FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
 			if ( effectiveFlushMode == null ) {
 				effectiveFlushMode = getSession().getHibernateFlushMode();
 			}
@@ -1084,6 +1086,12 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		super.setForcedFlushMode(forcedFlushMode);
 		return this;
 	}
 

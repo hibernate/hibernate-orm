@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.Remove;
 
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -65,11 +66,22 @@ public @interface NamedNativeQuery {
 	String resultSetMapping() default "";
 
 	/**
+	 * Determines whether the session should be flushed before
+	 * executing the query.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setForcedFlushMode(ForcedFlushMode)
+	 */
+	ForcedFlushMode flush() default ForcedFlushMode.NO_FORCING;
+
+	/**
 	 * The flush mode for the query.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
+	 *
+	 * @deprecated use {@link #flush()}
 	 */
+	@Deprecated(since = "6")
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**

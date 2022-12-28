@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.Session;
 
 import jakarta.persistence.FlushModeType;
@@ -31,35 +32,65 @@ import jakarta.persistence.TemporalType;
 public interface CommonQueryContract {
 
 	/**
+	 * The {@link ForcedFlushMode} in effect for this query.
+	 * <p>
+	 * By default, this is {@link ForcedFlushMode#NO_FORCING}, and the
+	 * {@link FlushMode} of the owning {@link Session} determines whether
+	 * it is flushed.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 */
+	ForcedFlushMode getForcedFlushMode();
+
+	/**
+	 * Set the {@link ForcedFlushMode} in to use for this query.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 */
+	CommonQueryContract setForcedFlushMode(ForcedFlushMode forcedFlushMode);
+
+	/**
 	 * The JPA {@link FlushModeType} in effect for this query.  By default, the
 	 * query inherits the {@link FlushMode} of the {@link Session} from which
 	 * it originates.
 	 *
-	 * @see #getHibernateFlushMode
-	 * @see Session#getHibernateFlushMode
+	 * @see #getForcedFlushMode()
+	 * @see #getHibernateFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getForcedFlushMode()}
 	 */
+	@Deprecated(since = "6")
 	FlushModeType getFlushMode();
 
 	/**
 	 * Set the {@link FlushMode} in to use for this query.
+	 * <p>
+	 * Setting this to {@code null} ultimately indicates to use the
+	 * {@link FlushMode} of the Session. Use {@link #setHibernateFlushMode}
+	 * passing {@link FlushMode#MANUAL} instead to indicate that no automatic
+	 * flushing should occur.
 	 *
-	 * @implNote Setting to {@code null} ultimately indicates to use the
-	 * FlushMode of the Session.  Use {@link #setHibernateFlushMode} passing
-	 * {@link FlushMode#MANUAL} instead to indicate that no automatic flushing
-	 * should occur
-	 *
+	 * @see #getForcedFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setForcedFlushMode(ForcedFlushMode)}
 	 */
+	@Deprecated(since = "6")
 	CommonQueryContract setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * The {@link FlushMode} in effect for this query.  By default, the query
+	 * The {@link FlushMode} in effect for this query. By default, the query
 	 * inherits the {@code FlushMode} of the {@link Session} from which it
 	 * originates.
 	 *
-	 * @see Session#getHibernateFlushMode
+	 * @see #getForcedFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getForcedFlushMode()}
 	 */
+	@Deprecated(since = "6")
 	FlushMode getHibernateFlushMode();
 
 	/**
@@ -69,9 +100,13 @@ public interface CommonQueryContract {
 	 * {@link FlushMode} of the Session.  Use {@link FlushMode#MANUAL}
 	 * instead to indicate that no automatic flushing should occur.
 	 *
+	 * @see #getForcedFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setForcedFlushMode(ForcedFlushMode)}
 	 */
+	@Deprecated(since = "6")
 	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
 
 	/**

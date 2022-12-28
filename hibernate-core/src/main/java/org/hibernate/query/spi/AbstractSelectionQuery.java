@@ -33,6 +33,7 @@ import jakarta.persistence.criteria.CompoundSelection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -42,6 +43,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -287,21 +289,18 @@ public abstract class AbstractSelectionQuery<R>
 			if ( jpaQueryComplianceEnabled ) {
 				return;
 			}
-			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
+			verifyResultType( resultClass, sqmSelection.getNodeType() );
 		}
 	}
 
-	protected static <T> void verifyResultType(
-			Class<T> resultClass,
-			SqmExpressible<?> sqmExpressible,
-			SessionFactoryImplementor sessionFactory) {
+	protected static <T> void verifyResultType(Class<T> resultClass, SqmExpressible<?> sqmExpressible) {
 		assert sqmExpressible != null;
 		final JavaType<?> expressibleJavaType = sqmExpressible.getExpressibleJavaType();
 		assert expressibleJavaType != null;
 		final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
 		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
 			if ( expressibleJavaType instanceof PrimitiveJavaType ) {
-				if ( ( (PrimitiveJavaType) expressibleJavaType ).getPrimitiveClass() == resultClass ) {
+				if ( ( (PrimitiveJavaType<?>) expressibleJavaType ).getPrimitiveClass() == resultClass ) {
 					return;
 				}
 				throwQueryTypeMismatchException( resultClass, sqmExpressible );
@@ -391,7 +390,7 @@ public abstract class AbstractSelectionQuery<R>
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
 
-		final FlushMode effectiveFlushMode = getHibernateFlushMode();
+		final FlushMode effectiveFlushMode =  getQueryOptions().getFlushMode();
 		if ( effectiveFlushMode != null ) {
 			sessionFlushMode = getSession().getHibernateFlushMode();
 			getSession().setHibernateFlushMode( effectiveFlushMode );
@@ -530,12 +529,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public FlushModeType getFlushMode() {
-		return getQueryOptions().getFlushMode().toJpaFlushMode();
+		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
 	public SelectionQuery<R> setFlushMode(FlushModeType flushMode) {
-		getQueryOptions().setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
+		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushMode ) );
 		return this;
 	}
 
@@ -745,6 +744,12 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public SelectionQuery<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		super.setForcedFlushMode( forcedFlushMode );
+		return this;
+	}
+
+	@Override
 	public SelectionQuery<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
@@ -860,7 +865,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setParameterList(String name, Collection values) {
+	public SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
@@ -968,7 +973,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setProperties(Map map) {
+	public SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}

@@ -14,6 +14,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.Remove;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
@@ -29,6 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
@@ -184,7 +186,7 @@ public abstract class QueryBinder {
 				.setCacheMode(  getCacheMode( namedNativeQuery )  )
 				.setTimeout( namedNativeQuery.timeout() < 0 ? null : namedNativeQuery.timeout() )
 				.setFetchSize( namedNativeQuery.fetchSize() < 0 ? null : namedNativeQuery.fetchSize() )
-				.setFlushMode( getFlushMode( namedNativeQuery.flushMode() ) )
+				.setFlushMode( getFlushMode( namedNativeQuery.flush(), namedNativeQuery.flushMode() ) )
 				.setReadOnly( namedNativeQuery.readOnly() )
 				.setQuerySpaces( setOf( namedNativeQuery.querySpaces() ) )
 				.setComment(nullIfEmpty(namedNativeQuery.comment()));
@@ -341,7 +343,7 @@ public abstract class QueryBinder {
 				.setCacheMode( getCacheMode( namedQuery ) )
 				.setTimeout( namedQuery.timeout() < 0 ? null : namedQuery.timeout() )
 				.setFetchSize( namedQuery.fetchSize() < 0 ? null : namedQuery.fetchSize() )
-				.setFlushMode( getFlushMode( namedQuery.flushMode() ) )
+				.setFlushMode( getFlushMode( namedQuery.flush(), namedQuery.flushMode() ) )
 				.setReadOnly( namedQuery.readOnly() )
 				.setComment( nullIfEmpty( namedQuery.comment() ) );
 
@@ -362,6 +364,12 @@ public abstract class QueryBinder {
 	private static CacheMode getCacheMode(org.hibernate.annotations.NamedNativeQuery namedNativeQuery) {
 		CacheMode cacheMode = CacheMode.fromJpaModes( namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode() );
 		return cacheMode == null || cacheMode == CacheMode.NORMAL ? getCacheMode( namedNativeQuery.cacheMode() ) : cacheMode;
+	}
+
+	private static FlushMode getFlushMode(ForcedFlushMode forcedFlushMode, FlushModeType flushModeType) {
+		return forcedFlushMode == ForcedFlushMode.NO_FORCING
+				? getFlushMode( flushModeType )
+				: FlushModeTypeHelper.getFlushMode( forcedFlushMode );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

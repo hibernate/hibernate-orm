@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -82,7 +83,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	SqmSelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery<R> setParameterList(String name, Collection values);
+	SqmSelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -100,7 +101,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery<R> setParameterList(int position, Collection values);
+	SqmSelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
@@ -139,10 +140,13 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	SqmSelectionQuery<R> setProperties(Object bean);
 
 	@Override
-	SqmSelectionQuery<R> setProperties(Map bean);
+	SqmSelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmSelectionQuery<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 
 	@Override
 	SqmSelectionQuery<R> setCacheMode(CacheMode cacheMode);

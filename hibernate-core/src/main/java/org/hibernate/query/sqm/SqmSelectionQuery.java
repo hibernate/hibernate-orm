@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -141,8 +142,11 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	@Override
 	SqmSelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmSelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SqmSelectionQuery<R> setCacheMode(CacheMode cacheMode);

@@ -18,9 +18,16 @@ import jakarta.persistence.FlushModeType;
  * <p>
  * For example, {@link #COMMIT} specifies that the session flushes
  * automatically when the transaction is about to commit.
+ * <p>
+ * This enumeration represents options which may be
+ * {@linkplain Session#setHibernateFlushMode set at the session
+ * level}, and competes with the JPA-defined enumeration
+ * {@link jakarta.persistence.FlushModeType}. Alternatively, a
+ * {@link org.hibernate.query.QueryFlushMode QueryFlushMode} may
+ * be specified for a given query.
  *
  * @see Session#setHibernateFlushMode
- * @see org.hibernate.query.CommonQueryContract#setHibernateFlushMode
+ * @see org.hibernate.query.QueryFlushMode
  *
  * @author Gavin King
  */

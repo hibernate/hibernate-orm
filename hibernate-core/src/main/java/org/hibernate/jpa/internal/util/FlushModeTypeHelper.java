@@ -10,8 +10,8 @@ package org.hibernate.jpa.internal.util;
 import java.util.Locale;
 import jakarta.persistence.FlushModeType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.MappingException;
 
 import org.jboss.logging.Logger;
@@ -28,35 +28,55 @@ public class FlushModeTypeHelper {
 	}
 
 	public static FlushModeType getFlushModeType(FlushMode flushMode) {
-		if ( flushMode == FlushMode.ALWAYS ) {
-			log.debug( "Interpreting Hibernate FlushMode#ALWAYS to JPA FlushModeType#AUTO; may cause problems if relying on FlushMode#ALWAYS-specific behavior" );
-			return FlushModeType.AUTO;
+		if ( flushMode == null ) {
+			return null;
 		}
-		else if ( flushMode == FlushMode.MANUAL ) {
-			log.debug( "Interpreting Hibernate FlushMode#MANUAL to JPA FlushModeType#COMMIT; may cause problems if relying on FlushMode#MANUAL-specific behavior" );
-			return FlushModeType.COMMIT;
+		return switch (flushMode) {
+			case ALWAYS -> {
+				log.debug("Interpreting Hibernate FlushMode.ALWAYS as JPA FlushModeType.AUTO (may cause problems if relying on FlushMode.ALWAYS-specific behavior)");
+				yield FlushModeType.AUTO;
+			}
+			case MANUAL -> {
+				log.debug("Interpreting Hibernate FlushMode.MANUAL as JPA FlushModeType.COMMIT (may cause problems if relying on FlushMode.MANUAL-specific behavior)");
+				yield FlushModeType.COMMIT;
+			}
+			case COMMIT -> FlushModeType.COMMIT;
+			case AUTO -> FlushModeType.AUTO;
+		};
+	}
+
+	public static QueryFlushMode getForcedFlushMode(FlushMode flushMode) {
+		if ( flushMode == null ) {
+			return QueryFlushMode.DEFAULT;
 		}
-		else if ( flushMode == FlushMode.COMMIT ) {
-			return FlushModeType.COMMIT;
-		}
-		else if ( flushMode == FlushMode.AUTO ) {
-			return FlushModeType.AUTO;
-		}
-		else {
-			throw new AssertionFailure( "unhandled FlushMode " + flushMode );
-		}
+		return switch (flushMode) {
+			case ALWAYS -> QueryFlushMode.FLUSH;
+			case COMMIT, MANUAL -> QueryFlushMode.NO_FLUSH;
+			case AUTO ->
+				// this is not precisely correctly correct, but good enough
+					QueryFlushMode.DEFAULT;
+		};
 	}
 
 	public static FlushMode getFlushMode(FlushModeType flushModeType) {
-		if ( flushModeType == FlushModeType.AUTO ) {
-			return FlushMode.AUTO;
+		if ( flushModeType == null ) {
+			return null;
 		}
-		else if ( flushModeType == FlushModeType.COMMIT ) {
-			return FlushMode.COMMIT;
+		return switch (flushModeType) {
+			case AUTO -> FlushMode.AUTO;
+			case COMMIT -> FlushMode.COMMIT;
+		};
+	}
+
+	public static FlushMode getFlushMode(QueryFlushMode queryFlushMode) {
+		if ( queryFlushMode == null ) {
+			return null;
 		}
-		else {
-			throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
-		}
+		return switch (queryFlushMode) {
+			case FLUSH -> FlushMode.ALWAYS;
+			case NO_FLUSH -> FlushMode.MANUAL;
+			default -> null;
+		};
 	}
 
 	public static FlushMode interpretFlushMode(Object value) {

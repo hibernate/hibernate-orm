@@ -19,6 +19,7 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.hibernate.query.QueryFlushMode;
 
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.interpretFlushMode;
 
@@ -29,6 +30,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	private String query;
 	private Class<?> resultClass;
 	private FlushModeType flushMode;
+	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
 	int fetchSize;
@@ -44,6 +46,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	public NamedQueryAnnotation(SourceModelBuildingContext modelContext) {
 		resultClass = void.class;
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
+		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
 		fetchSize = -1;
@@ -62,6 +65,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
 		this.flushMode = annotation.flushMode();
+		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
 		this.fetchSize = annotation.fetchSize();
@@ -84,6 +88,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
 		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.cacheable = (boolean) attributeValues.get( "cacheable" );
 		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
 		this.fetchSize = (int) attributeValues.get( "fetchSize" );
@@ -126,6 +131,15 @@ public class NamedQueryAnnotation implements NamedQuery {
 
 	public void resultClass(Class<?> value) {
 		this.resultClass = value;
+	}
+
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
+	}
+
+	public void flush(QueryFlushMode value) {
+		this.flush = value;
 	}
 
 	@Override

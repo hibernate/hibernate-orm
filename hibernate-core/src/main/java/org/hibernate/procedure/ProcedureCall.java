@@ -281,7 +281,7 @@ public interface ProcedureCall
 	@Override
 	ProcedureCall setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	ProcedureCall setFlushMode(FlushModeType flushMode);
 
 	@Override

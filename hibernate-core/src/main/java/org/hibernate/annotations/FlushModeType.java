@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.query.QueryFlushMode;
+
 /**
  * Enumeration extending the {@linkplain jakarta.persistence.FlushModeType JPA flush modes}
  * with flush modes specific to Hibernate, and a "null" mode, {@link #PERSISTENCE_CONTEXT},
@@ -14,9 +16,12 @@ package org.hibernate.annotations;
  *
  * @author Carlos Gonzalez-Cadenas
  *
- * @see NamedQuery
- * @see NamedNativeQuery
+ * @see NamedQuery#flushMode
+ * @see NamedNativeQuery#flushMode
+ *
+ * @deprecated use {@link QueryFlushMode}
  */
+@Deprecated(since="7")
 public enum FlushModeType {
 	/**
 	 * Corresponds to {@link org.hibernate.FlushMode#ALWAYS}.

@@ -199,7 +199,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void flush();
 
 	/**
-	 * Set the current {@link FlushModeType JPA flush mode} for this session.
+	 * Set the current {@linkplain FlushModeType JPA flush mode} for this session.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory. The current flush mode determines

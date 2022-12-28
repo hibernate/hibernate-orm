@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
@@ -104,8 +105,11 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SqmQueryImplementor<R> setMaxResults(int maxResult);
@@ -116,7 +120,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> setHint(String hintName, Object value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override

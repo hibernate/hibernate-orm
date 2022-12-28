@@ -389,7 +389,7 @@ public interface SharedSessionContractImplementor
 	 * Set the current {@link FlushMode} for this session.
 	 * <p>
 	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
+	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.
 	 * <p>
 	 * For a logically "read-only" session, it's reasonable to set the session

@@ -27,8 +27,8 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Describes the options used while building the Metadata object (during
- * {@link org.hibernate.boot.MetadataBuilder#build()} processing).
+ * Describes the options used while building the {@link org.hibernate.boot.Metadata}
+ * object during {@link org.hibernate.boot.MetadataBuilder#build()} processing.
  *
  * @author Steve Ebersole
  *

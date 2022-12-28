@@ -35,7 +35,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.type.FormatMapper;
 
 /**
- * Aggregator of special options used to build the SessionFactory.
+ * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
  *
  * @since 5.0
  */

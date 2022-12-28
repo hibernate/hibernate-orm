@@ -13,7 +13,10 @@ import jakarta.transaction.Synchronization;
  * Manages a registry of {@link Synchronization}s.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This appears to no longer be used
  */
+@Deprecated(since = "6")
 public interface SynchronizationRegistry extends Serializable {
 	/**
 	 * Register a user {@link Synchronization} callback for this transaction.

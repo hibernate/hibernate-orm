@@ -16,22 +16,21 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 
 /**
- * User configuration options related to the {@link QueryEngine}
+ * User configuration options related to the {@link QueryEngine}.
  *
  * @author Steve Ebersole
  */
 public interface QueryEngineOptions {
 	/**
-	 * Translator for transforming HQL (as an Antlr parse tree) into
-	 * an SQM tree.
+	 * Translator for transforming HQL (as an Antlr parse tree) into an SQM tree.
 	 *
 	 * @see org.hibernate.query.hql
 	 */
 	HqlTranslator getCustomHqlTranslator();
 
 	/**
-	 * Factory for translators transforming an SQM tree into a different form.  For standard
-	 * ORM implementations this will generally be some form of SQL tree.
+	 * Factory for translators transforming an SQM tree into a different form.
+	 * For standard ORM implementations this will generally be some form of SQL tree.
 	 *
 	 * @see org.hibernate.sql.ast.tree
 	 */
@@ -39,26 +38,26 @@ public interface QueryEngineOptions {
 
 	/**
 	 * User defined SQM functions available for use in HQL and Criteria.
-	 *
+	 * <p>
 	 * Ultimately made available to the {@link SqmTranslatorFactory} for use
 	 * in translating an SQM tree.
-	 *
-	 * Can be used in conjunction with {@link #getCustomSqmFunctionRegistry()}, but generally one
-	 * or the other will be used.
+	 * <p>
+	 * Can be used in conjunction with {@link #getCustomSqmFunctionRegistry()},
+	 * but generally one or the other will be used.
 	 */
 	Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap();
 
 	/**
 	 * User supplied registry of SQM functions available for use in HQL and Criteria
-	 *
-	 * Can be used in conjunction with {@link #getCustomSqlFunctionMap()}, but generally one
-	 * or the other will be used.
+	 * <p>
+	 * Can be used in conjunction with {@link #getCustomSqlFunctionMap()}, but generally
+	 * one or the other will be used.
 	 */
 	SqmFunctionRegistry getCustomSqmFunctionRegistry();
 
 	/**
-	 * Contract for handling SQM trees representing mutation (UPDATE or DELETE) queries where the
-	 * target of the mutation is a multi-table entity.
+	 * Contract for handling SQM trees representing mutation (UPDATE or DELETE) queries
+	 * where the target of the mutation is a multi-table entity.
 	 */
 	SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy();
 

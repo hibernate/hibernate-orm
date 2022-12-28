@@ -16,7 +16,7 @@ import org.hibernate.boot.model.naming.Identifier;
  * </ol>
  * <p>
  * Also, be careful about the usage of {@link #render}.  If the intention is to get the name
- * as used in the database, the {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment} ->
+ * as used in the database, the {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment} to
  * {@link org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter#format} should be
  * used instead.
  *
@@ -28,10 +28,10 @@ public interface QualifiedName {
 	Identifier getObjectName();
 
 	/**
-	 * Returns a String-form of the qualified name.
+	 * Returns a string form of the qualified name.
 	 * <p>
-	 * Depending on intention, may not be appropriate.  May want
-	 * {@link SqlStringGenerationContext#format}
+	 * Depending on intention, may not be appropriate.
+	 * May want {@link SqlStringGenerationContext#format}
 	 * instead.
 	 *
 	 * @return The string form

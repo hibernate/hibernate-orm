@@ -33,9 +33,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.jandex.IndexView;
 
 /**
- * Defines a context for things generally available to the process of
- * bootstrapping a SessionFactory that are expected to be released after
- * the SessionFactory is built.
+ * Defines a context for things available during the process of bootstrapping
+ * a {@link org.hibernate.SessionFactory} which are expected to be cleaned up
+ * after the {@code SessionFactory} is built.
  *
  * @author Steve Ebersole
  */
@@ -57,7 +57,7 @@ public interface BootstrapContext {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * BeanInstanceProducer to use when creating custom type references.
+	 * The {@link BeanInstanceProducer} to use when creating custom type references.
 	 *
 	 * @implNote Generally this will be a {@link TypeBeanInstanceProducer}
 	 * reference
@@ -86,14 +86,15 @@ public interface BootstrapContext {
 	 *
 	 * Indicates that bootstrap was initiated from JPA bootstrapping.
 	 *
-	 * @implSpec Internally, {@code false} is the assumed value.  We
-	 * only need to call this to mark that as {@code true}.
+	 * @implSpec Internally, {@code false} is the assumed value.
+	 *           We only need to call this to mark that as {@code true}.
 	 */
 	void markAsJpaBootstrap();
 
 	/**
-	 * Access the temporary ClassLoader passed to us as defined by
-	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
+	 * Access the temporary {@link ClassLoader} passed to us, as defined by
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()},
+	 * if any.
 	 *
 	 * @return The tempo ClassLoader
 	 */
@@ -105,17 +106,17 @@ public interface BootstrapContext {
 	ClassLoaderAccess getClassLoaderAccess();
 
 	/**
-	 * Access to the shared Classmate objects used throughout Hibernate's
-	 * bootstrap process.
+	 * Access to the shared {@link ClassmateContext} object used
+	 * throughout the bootstrap process.
 	 *
-	 * @return Access to the shared Classmate delegates.
+	 * @return Access to the shared {@link ClassmateContext} delegates.
 	 */
 	ClassmateContext getClassmateContext();
 
 	/**
-	 * Access to the ArchiveDescriptorFactory to be used for scanning
+	 * Access to the {@link ArchiveDescriptorFactory} used for scanning.
 	 *
-	 * @return The ArchiveDescriptorFactory
+	 * @return The {@link ArchiveDescriptorFactory}
 	 */
 	ArchiveDescriptorFactory getArchiveDescriptorFactory();
 
@@ -127,15 +128,18 @@ public interface BootstrapContext {
 	ScanOptions getScanOptions();
 
 	/**
-	 * Access to the environment for scanning.  Consider this temporary; see discussion on
-	 * {@link ScanEnvironment}
+	 * Access to the environment for scanning.
+	 *
+	 * @apiNote Consider this temporary; see discussion on {@link ScanEnvironment}.
 	 *
 	 * @return The scan environment
 	 */
 	ScanEnvironment getScanEnvironment();
 
 	/**
-	 * Access to the Scanner to be used for scanning.  Can be:<ul>
+	 * Access to the Scanner to be used for scanning.
+	 * Can be:
+	 * <ul>
 	 *     <li>A Scanner instance</li>
 	 *     <li>A Class reference to the Scanner implementor</li>
 	 *     <li>A String naming the Scanner implementor</li>
@@ -146,13 +150,11 @@ public interface BootstrapContext {
 	Object getScanner();
 
 	/**
-	 * Retrieve the Hibernate Commons Annotations ReflectionManager to use.
+	 * Retrieve the Hibernate Commons Annotations {@link ReflectionManager}.
 	 *
-	 * @return The Hibernate Commons Annotations ReflectionManager to use.
-	 *
-	 * @apiNote Supported for internal use only.  This method will go away as
-	 * we migrate away from Hibernate Commons Annotations to Jandex for annotation
-	 * handling and XMl->annotation merging.
+	 * @apiNote Supported for internal use only. This method will go away as
+	 *          we migrate away from Hibernate Commons Annotations to Jandex for
+	 *          annotation handling and XMl to annotation merging.
 	 */
 	@Internal
 	ReflectionManager getReflectionManager();
@@ -161,67 +163,70 @@ public interface BootstrapContext {
 	 * Access to the Jandex index passed by call to
 	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
 	 * <p>
-	 * Note that Jandex is currently not used.  See https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0
+	 * @apiNote Jandex is currently not used, see
+	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
 	 *
 	 * @return The Jandex index
 	 */
 	IndexView getJandexView();
 
 	/**
-	 * Access to any SQL functions explicitly registered with the MetadataBuilder.  This
-	 * does not include Dialect defined functions, etc.
+	 * Access to any SQL functions explicitly registered with the
+	 * {@code MetadataBuilder}.
+	 * This does not include {@code Dialect}-defined functions, etc.
 	 * <p>
-	 * Should never return {@code null}
+	 * Should never return {@code null}.
 	 *
-	 * @return The SQLFunctions registered through MetadataBuilder
+	 * @return The {@link SqmFunctionDescriptor}s registered via {@code MetadataBuilder}
 	 */
 	Map<String, SqmFunctionDescriptor> getSqlFunctions();
 
 	/**
-	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This
-	 * does not include AuxiliaryDatabaseObject defined in mappings.
+	 * Access to any {@link AuxiliaryDatabaseObject}s explicitly registered with
+	 * the {@code MetadataBuilder}.
+	 * This does not include {@link AuxiliaryDatabaseObject}s defined in mappings.
 	 * <p>
-	 * Should never return {@code null}
+	 * Should never return {@code null}.
 	 *
-	 * @return The AuxiliaryDatabaseObject registered through MetadataBuilder
+	 * @return The {@link AuxiliaryDatabaseObject}s registered via {@code MetadataBuilder}
 	 */
 	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
 	/**
-	 * Access to collected AttributeConverter definitions.
+	 * Access to collected {@link jakarta.persistence.AttributeConverter} definitions.
 	 * <p>
-	 * Should never return {@code null}
+	 * Should never return {@code null}.
 	 *
-	 * @return The AttributeConverterInfo registered through MetadataBuilder
+	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
 	 */
 	Collection<ConverterDescriptor> getAttributeConverters();
 
 	/**
 	 * Access to all explicit cache region mappings.
 	 * <p>
-	 * Should never return {@code null}
+	 * Should never return {@code null}.
 	 *
 	 * @return Explicit cache region mappings
 	 */
 	Collection<CacheRegionDefinition> getCacheRegionDefinitions();
 
 	/**
-	 * See {@link ManagedTypeRepresentationResolver}
+	 * @see ManagedTypeRepresentationResolver
 	 */
 	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	/**
-	 * Releases the "bootstrap only" resources held by this BootstrapContext.
+	 * Releases the "bootstrap only" resources held by this {@code BootstrapContext}.
 	 */
 	void release();
 
 	/**
-	 * To support envers
+	 * To support Envers.
 	 */
 	void registerAdHocBasicType(BasicTypeImpl<?> basicType);
 
 	/**
-	 * To support envers
+	 * To support Envers.
 	 */
 	<T> BasicTypeImpl<T> resolveAdHocBasicType(String key);
 }

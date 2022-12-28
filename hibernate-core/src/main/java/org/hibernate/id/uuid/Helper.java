@@ -11,8 +11,6 @@ import java.net.InetAddress;
 import org.hibernate.internal.util.BytesHelper;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public final class Helper {
@@ -81,8 +79,9 @@ public final class Helper {
 	private static short counter = (short) 0;
 
 	/**
-	 * Unique in a millisecond for this JVM instance (unless there are > Short.MAX_VALUE instances created in a
-	 * millisecond)
+	 * Unique in a millisecond for this JVM instance
+	 * (unless there are more than {@value Short#MAX_VALUE}
+	 * instances created in a millisecond)
 	 */
 	public static short getCountShort() {
 		synchronized ( Helper.class ) {

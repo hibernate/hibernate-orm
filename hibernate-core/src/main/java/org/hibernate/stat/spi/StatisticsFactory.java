@@ -9,6 +9,8 @@ package org.hibernate.stat.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * Factory for custom implementations of {@link StatisticsImplementor}.
+ *
  * @author Steve Ebersole
  */
 public interface StatisticsFactory {

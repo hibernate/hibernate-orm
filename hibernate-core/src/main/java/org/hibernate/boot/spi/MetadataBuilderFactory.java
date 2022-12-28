@@ -11,8 +11,8 @@ import org.hibernate.boot.MetadataSources;
 
 /**
  * An extension point for integrators that wish to hook into the process of how a {@link Metadata} is built. Intended as
- * a "discoverable service" ({@link java.util.ServiceLoader}). There can be at most one implementation discovered that
- * returns a non-null SessionFactoryBuilder.
+ * a "discoverable service" (a {@link java.util.ServiceLoader}). There can be at most one implementation discovered that
+ * returns a non-null {@link org.hibernate.boot.MetadataBuilder}.
  *
  * @author Gunnar Morling
  */

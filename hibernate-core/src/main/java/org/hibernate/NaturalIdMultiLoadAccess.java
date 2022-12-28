@@ -8,7 +8,6 @@ package org.hibernate;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -97,7 +96,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 
 	/**
 	 * Perform a load of multiple entities by natural-id.
-	 *
+	 * <p>
 	 * See {@link #enableOrderedReturn} and {@link #enableReturnOfDeletedEntities}
 	 * for options which effect the size and "shape" of the return list.
 	 *
@@ -109,7 +108,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 
 	/**
 	 * Perform a load of multiple entities by natural-id.
-	 *
+	 * <p>
 	 * See {@link #enableOrderedReturn} and {@link #enableReturnOfDeletedEntities}
 	 * for options which effect the size and "shape" of the return list.
 	 *

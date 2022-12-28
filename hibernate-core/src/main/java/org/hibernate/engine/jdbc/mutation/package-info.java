@@ -6,8 +6,15 @@
  */
 
 /**
- * Package defining support for performing mutation SQL (INSERT, UPDATE,
- * DELETE) against an entity or collection
+ * Package defining support for executing mutation SQL statements produced
+ * by the {@linkplain org.hibernate.persister persister} for an entity or
+ * collection.
+ * <p>
+ * The {@link org.hibernate.engine.jdbc.mutation.MutationExecutor} is
+ * usually called by the various SQL insert, update, and delete
+ * {@linkplain org.hibernate.persister.entity.mutation.AbstractMutationCoordinator
+ * coordinators} defined in {@link org.hibernate.persister.entity.mutation}
+ * and {@link org.hibernate.persister.collection.mutation}.
  *
  * @author Steve Ebersole
  */

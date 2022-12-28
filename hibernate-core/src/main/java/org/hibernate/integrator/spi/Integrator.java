@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
- * Contract for stuff that integrates with Hibernate.
+ * Contract for extensions that integrate with Hibernate.
  *
  * @implNote {@link #integrate(Metadata, BootstrapContext, SessionFactoryImplementor)}
  *           is called during the process of {@linkplain SessionFactoryImplementor

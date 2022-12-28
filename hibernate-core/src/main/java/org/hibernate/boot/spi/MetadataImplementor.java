@@ -19,7 +19,7 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * The SPI-level Metadata contract.
+ * The SPI-level {@link Metadata} contract.
  *
  * @author Steve Ebersole
  *

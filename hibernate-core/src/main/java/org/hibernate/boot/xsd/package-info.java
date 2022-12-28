@@ -6,6 +6,6 @@
  */
 
 /**
- * Support for XSD handling
+ * Support for XSD handling.
  */
 package org.hibernate.boot.xsd;

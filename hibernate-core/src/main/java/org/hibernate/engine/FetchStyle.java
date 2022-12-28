@@ -7,7 +7,7 @@
 package org.hibernate.engine;
 
 /**
- * Enumeration of values describing <b>HOW</b> fetching should occur.
+ * Enumeration of values describing <em>how</em> fetching should occur.
  *
  * @author Steve Ebersole
  * @see FetchTiming

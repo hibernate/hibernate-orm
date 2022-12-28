@@ -7,7 +7,7 @@
 
 /**
  * Defines support for performing mutation operations originating
- * from persistence-context events
+ * from persistence-context events.
  *
  * @author Steve Ebersole
  */

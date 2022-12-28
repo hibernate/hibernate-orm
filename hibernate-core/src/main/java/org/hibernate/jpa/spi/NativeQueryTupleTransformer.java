@@ -18,7 +18,7 @@ import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 
 /**
- * ResultTransformer adapter for handling Tuple results from Native queries
+ * A {@link ResultTransformer} for handling JPA {@link Tuple} results from native queries.
  *
  * @author Arnold Galovics
  */

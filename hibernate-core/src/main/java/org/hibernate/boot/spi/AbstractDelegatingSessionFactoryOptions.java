@@ -38,14 +38,14 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.FormatMapper;
 
 /**
- * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
+ * Convenience base class for custom implementations of {@link SessionFactoryOptions}
+ * using delegation.
  *
- * @implNote non-abstract to ensure that all SessionFactoryOptions methods have at least
- * a default implementation
+ * @implNote Declared non-abstract to ensure that all {@link SessionFactoryOptions} methods
+ *           have at least a default implementation.
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
 	private final SessionFactoryOptions delegate;
 

@@ -12,9 +12,8 @@ import org.hibernate.boot.model.TypeContributor;
 
 /**
  * @author Brett Meyer
- * 
- * TODO: Not a fan of this name or entry point into EMFBuilderImpl
  */
+// TODO: Not a fan of this name or entry point into EMFBuilderImpl
 public interface TypeContributorList {
 	List<TypeContributor> getTypeContributors();
 }

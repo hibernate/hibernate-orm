@@ -7,16 +7,10 @@
 
 /**
  * Responsible for dealing with certain details of compliance with the
- * JPA specification, including:
- * <ul>
- * <li>{@linkplain org.hibernate.jpa.boot bootstrapping} JPA,
- * <li>calling JPA {@linkplain org.hibernate.jpa.event event listeners},
- *     and
- * <li>managing cases where Hibernate intentionally
- *    {@linkplain org.hibernate.jpa.spi violates} the specification by
- *    default (something Hibernate only does if it has a really good
- *    reason to do so).
- * </ul>
+ * JPA specification.
+ * <p>
+ * Contains an {@linkplain org.hibernate.jpa.HibernatePersistenceProvider
+ * implementation} of a JPA {@link jakarta.persistence.spi.PersistenceProvider}.
  * <p>
  * Enumerates the {@linkplain jakarta.persistence.Query#setHint hints}
  * recognized by Hibernate:
@@ -25,6 +19,17 @@
  *     defined by the JPA specification.
  * <li>{@link org.hibernate.jpa.HibernateHints} enumerates hints defined
  *     by Hibernate.
+ * </ul>
+ * <p>
+ * Concerns handled by subpackages include:
+ * <ul>
+ * <li>{@linkplain org.hibernate.jpa.boot.spi bootstrapping} JPA,
+ * <li>calling JPA {@linkplain org.hibernate.jpa.event.spi event listeners},
+ *     and
+ * <li>managing cases where Hibernate intentionally
+ *    {@linkplain org.hibernate.jpa.spi violates} the specification by
+ *    default (something Hibernate only does if it has a really good
+ *    reason to do so).
  * </ul>
  */
 package org.hibernate.jpa;

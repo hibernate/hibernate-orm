@@ -9,7 +9,7 @@ package org.hibernate.boot.spi;
 import org.hibernate.boot.MetadataSources;
 
 /**
- * A bootstrap process hook for contributing sources to MetadataSources.
+ * A bootstrap process hook for contributing sources to {@link MetadataSources}.
  *
  * @author Steve Ebersole
  *

@@ -9,9 +9,9 @@ package org.hibernate.boot.spi;
 import java.net.URL;
 
 /**
- * During the process of building this metamodel, accessing the ClassLoader
- * is very discouraged.  However, sometimes it is needed.  This contract helps
- * mitigate accessing the ClassLoader in these cases.
+ * During the process of building the metamodel, access to the {@link ClassLoader}
+ * is highly discouraged. However, sometimes it is needed. This contract helps mitigate
+ * access to the {@link ClassLoader} in these cases.
  *
  * @author Steve Ebersole
  *

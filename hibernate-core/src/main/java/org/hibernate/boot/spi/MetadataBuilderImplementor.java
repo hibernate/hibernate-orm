@@ -9,7 +9,7 @@ package org.hibernate.boot.spi;
 import org.hibernate.boot.MetadataBuilder;
 
 /**
- * Internal API for MetadataBuilder exposing the building options being collected.
+ * Internal API for {@link MetadataBuilder} exposing the building options being collected.
  *
  * @author Steve Ebersole
  */

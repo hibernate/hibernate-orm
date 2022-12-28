@@ -10,11 +10,11 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * Contract for instantiating embeddable values
+ * Contract for instantiating embeddable values.
  * 
- * NOTE : incubating until the proposed 
- * `instantiate(IntFunction valueAccess, SessionFactoryImplementor sessionFactory)`
- * form can be implemented
+ * @apiNote Incubating until the proposed
+ * {@code instantiate(IntFunction valueAccess, SessionFactoryImplementor sessionFactory)}
+ * form can be implemented.
  *
  * @see org.hibernate.annotations.EmbeddableInstantiator
  */

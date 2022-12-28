@@ -73,10 +73,8 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Inject the exception converter to use.
-	 * <p>
-	 * NOTE : {@code null} is allowed and signifies to use the default.
 	 *
-	 * @param sqlExceptionConverter The converter to use.
+	 * @param sqlExceptionConverter the converter to use, or {@code null} if the default converter should be used
 	 */
 	public void setSqlExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
 		this.sqlExceptionConverter = sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter;

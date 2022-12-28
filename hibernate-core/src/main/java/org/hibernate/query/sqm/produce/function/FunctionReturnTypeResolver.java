@@ -25,7 +25,7 @@ public interface FunctionReturnTypeResolver {
 	 * Resolve the return type for a function given its context-implied type and
 	 * the arguments to this call.
 	 * <p>
-	 * NOTE : the _context-implied_ type is the type implied by where the function's
+	 * The <em>context-implied</em> type is the type implied by where the function
 	 * occurs in the query.  E.g., for an equality predicate (`something = some_function`)
 	 * the implied type of the return from `some_function` would be defined by the type
 	 * of `some_function`.
@@ -41,7 +41,7 @@ public interface FunctionReturnTypeResolver {
 	 * Resolve the return type for a function given its context-implied type and
 	 * the arguments to this call.
 	 * <p>
-	 * NOTE : the _context-implied_ type is the type implied by where the function's
+	 * The <em>context-implied</em> type is the type implied by where the function
 	 * occurs in the query.  E.g., for an equality predicate (`something = some_function`)
 	 * the implied type of the return from `some_function` would be defined by the type
 	 * of `some_function`.

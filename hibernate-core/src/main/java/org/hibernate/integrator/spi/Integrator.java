@@ -14,9 +14,13 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * Contract for stuff that integrates with Hibernate.
- * <p>
- * IMPL NOTE: called during session factory initialization (constructor), so not all parts of the passed session factory
- * will be available.
+ *
+ * @implNote {@link #integrate(Metadata, BootstrapContext, SessionFactoryImplementor)}
+ *           is called during the process of {@linkplain SessionFactoryImplementor
+ *           session factory} initialization. In fact, it's called directly from the
+ *           constructor of {@link org.hibernate.internal.SessionFactoryImpl}. So the
+ *           passed session factory is not yet fully-initialized and is in a very
+ *           fragile state.
  *
  * @author Steve Ebersole
  * @since 4.0

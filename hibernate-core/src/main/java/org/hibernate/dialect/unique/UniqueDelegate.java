@@ -76,7 +76,7 @@ public interface UniqueDelegate {
 	 * @param table The table for which to generate the unique constraints fragment
 	 * @param context A context for SQL string generation
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique(col20)"}.
-	 *         NOTE: The leading comma is important!
+	 *         The leading comma is important!
 	 */
 	String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context);
 

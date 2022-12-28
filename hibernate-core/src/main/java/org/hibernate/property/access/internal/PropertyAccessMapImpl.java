@@ -18,8 +18,8 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
 /**
- * PropertyAccess implementation that deal with an underlying Map as the container using
- * {@link Map#get} and {@link Map#put}
+ * {@link PropertyAccess} implementation that deals with an underlying {@code Map}
+ * as the container, using {@link Map#get} and {@link Map#put}.
  *
  * @author Steve Ebersole
  * @author Gavin King

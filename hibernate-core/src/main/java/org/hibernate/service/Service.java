@@ -11,7 +11,7 @@ import java.io.Serializable;
 /**
  * Marker interface for services.
  * <p>
- * NOTE : All services must be {@link Serializable}!
+ * All services must be {@link Serializable}!
  *
  * @author Steve Ebersole
  */

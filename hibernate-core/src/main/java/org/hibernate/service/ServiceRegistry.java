@@ -32,8 +32,8 @@ public interface ServiceRegistry extends AutoCloseable {
 	/**
 	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
 	 * registered for this service role, the service will be initialized and returned.
-	 * <p>
-	 * NOTE: We cannot return {@code <R extends Service<T>>} here because the service might come from the parent...
+	 *
+	 * @apiNote We cannot return {@code <R extends Service<T>>} here because the service might come from the parent.
 	 * 
 	 * @param serviceRole The service role
 	 * @param <R> The service role type
@@ -47,8 +47,8 @@ public interface ServiceRegistry extends AutoCloseable {
 	/**
 	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
 	 * registered for this service role, the service will be initialized and returned.
-	 * <p>
-	 * NOTE: We cannot return {@code <R extends Service<T>>} here because the service might come from the parent...
+	 *
+	 * @apiNote We cannot return {@code <R extends Service<T>>} here because the service might come from the parent.
 	 *
 	 * @param serviceRole The service role
 	 * @param <R> The service role type

@@ -2097,8 +2097,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a type, can the phrase "{@code if exists} be
 	 * applied before the type name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterTypeName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the type name
@@ -2110,8 +2110,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a type, can the phrase {@code if exists} be
 	 * applied after the type name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeTypeName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the type name
@@ -2936,8 +2936,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase "{@code if exists} be
 	 * applied before the table name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterTableName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the table name
@@ -2949,8 +2949,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase {@code if exists} be
 	 * applied after the table name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeTableName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the table name
@@ -2963,8 +2963,8 @@ public abstract class Dialect implements ConversionContext {
 	 * For dropping a constraint with an {@code alter table} statement,
 	 * can the phrase {@code if exists} be applied before the constraint
 	 * name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the constraint name
@@ -2976,8 +2976,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a constraint with an {@code alter table}, can the phrase
 	 * {@code if exists} be applied after the constraint name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeConstraintName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the constraint name
@@ -3141,8 +3141,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst}.  Certain drivers do not
 	 * allow access to these methods for forward only cursors.
-	 * <p>
-	 * NOTE : this is highly driver dependent!
+	 *
+	 * @apiNote This is highly driver dependent!
 	 *
 	 * @return True if methods like {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst} are supported for forward
@@ -3215,8 +3215,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link Clob#setString(long, String)},
 	 * {@link Clob#setString(long, String, int, int)},
 	 * or {@link Clob#truncate(long)}.
-	 * <p>
-	 * NOTE : I do not know the correct answer currently for
+	 *
+	 * @implNote I do not know the correct answer currently for
 	 * databases which (1) are not part of the cruise control process
 	 * or (2) do not {@link #supportsExpectedLobUsagePattern}.
 	 *
@@ -3235,9 +3235,9 @@ public abstract class Dialect implements ConversionContext {
 	 * <p>
 	 * Again, part of the trickiness here is the fact that this is largely
 	 * driver dependent.
-	 * <p>
-	 * NOTE: all database I have tested which {@link #supportsExpectedLobUsagePattern()}
-	 * also support the ability to materialize a LOB outside the owning transaction...
+	 *
+	 * @implNote All database I have tested which {@link #supportsExpectedLobUsagePattern()}
+	 * also support the ability to materialize a LOB outside the owning transaction.
 	 *
 	 * @return True if unbounded materialization is supported; false otherwise.
 	 * @since 3.2

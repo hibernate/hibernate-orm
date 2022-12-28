@@ -11,8 +11,8 @@ import java.sql.PreparedStatement;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Helper for creating various types of
- * NOTE :
+ * Helper for creating JDBC statements.
+ *
  * @author Steve Ebersole
  */
 public class StatementCreatorHelper {

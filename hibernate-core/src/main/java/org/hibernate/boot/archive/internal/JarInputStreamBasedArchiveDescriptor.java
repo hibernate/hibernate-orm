@@ -22,8 +22,9 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * An ArchiveDescriptor implementation that works on archives accessible through a {@link JarInputStream}.
- * NOTE : This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}
+ * An {@code ArchiveDescriptor} that works on archives accessible through a {@link JarInputStream}.
+ *
+ * @implNote This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

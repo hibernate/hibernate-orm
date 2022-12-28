@@ -48,7 +48,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -192,6 +191,9 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -345,11 +347,11 @@ public abstract class Dialect implements ConversionContext {
 	 * Set appropriate default values for configuration properties.
 	 */
 	protected void initDefaultProperties() {
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,
+		getDefaultProperties().setProperty( STATEMENT_BATCH_SIZE,
 				Integer.toString( getDefaultStatementBatchSize() ) );
-		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION,
+		getDefaultProperties().setProperty( NON_CONTEXTUAL_LOB_CREATION,
 				Boolean.toString( getDefaultNonContextualLobCreation() ) );
-		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
+		getDefaultProperties().setProperty( USE_GET_GENERATED_KEYS,
 				Boolean.toString( getDefaultUseGetGeneratedKeys() )  );
 	}
 
@@ -1388,7 +1390,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#STATEMENT_BATCH_SIZE}.
+	 * {@value org.hibernate.cfg.Environment#STATEMENT_BATCH_SIZE}.
 	 */
 	public int getDefaultStatementBatchSize() {
 		return 1;
@@ -1396,7 +1398,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#NON_CONTEXTUAL_LOB_CREATION}.
+	 * {@value org.hibernate.cfg.Environment#NON_CONTEXTUAL_LOB_CREATION}.
 	 */
 	public boolean getDefaultNonContextualLobCreation() {
 		return false;
@@ -1404,7 +1406,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@value Environment#USE_GET_GENERATED_KEYS}.
+	 * {@value org.hibernate.cfg.Environment#USE_GET_GENERATED_KEYS}.
 	 */
 	public boolean getDefaultUseGetGeneratedKeys() {
 		return true;
@@ -2095,8 +2097,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a type, can the phrase "{@code if exists} be
 	 * applied before the type name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterTypeName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the type name
@@ -2108,8 +2110,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a type, can the phrase {@code if exists} be
 	 * applied after the type name?
-	 * <p/>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeTypeName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the type name
@@ -2934,8 +2936,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase "{@code if exists} be
 	 * applied before the table name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterTableName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the table name
@@ -2947,8 +2949,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a table, can the phrase {@code if exists} be
 	 * applied after the table name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeTableName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the table name
@@ -2961,8 +2963,8 @@ public abstract class Dialect implements ConversionContext {
 	 * For dropping a constraint with an {@code alter table} statement,
 	 * can the phrase {@code if exists} be applied before the constraint
 	 * name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
 	 * @return {@code true} if {@code if exists} can be applied before the constraint name
@@ -2974,8 +2976,8 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * For dropping a constraint with an {@code alter table}, can the phrase
 	 * {@code if exists} be applied after the constraint name?
-	 * <p>
-	 * NOTE : Only one or the other (or neither) of this and
+	 *
+	 * @apiNote Only one or the other (or neither) of this and
 	 * {@link #supportsIfExistsBeforeConstraintName} should return true.
 	 *
 	 * @return {@code true} if {@code if exists} can be applied after the constraint name
@@ -3139,8 +3141,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst}.  Certain drivers do not
 	 * allow access to these methods for forward only cursors.
-	 * <p>
-	 * NOTE : this is highly driver dependent!
+	 *
+	 * @apiNote This is highly driver dependent!
 	 *
 	 * @return True if methods like {@link ResultSet#isAfterLast} and
 	 * {@link ResultSet#isBeforeFirst} are supported for forward
@@ -3213,8 +3215,8 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link Clob#setString(long, String)},
 	 * {@link Clob#setString(long, String, int, int)},
 	 * or {@link Clob#truncate(long)}.
-	 * <p>
-	 * NOTE : I do not know the correct answer currently for
+	 *
+	 * @implNote I do not know the correct answer currently for
 	 * databases which (1) are not part of the cruise control process
 	 * or (2) do not {@link #supportsExpectedLobUsagePattern}.
 	 *
@@ -3233,9 +3235,9 @@ public abstract class Dialect implements ConversionContext {
 	 * <p>
 	 * Again, part of the trickiness here is the fact that this is largely
 	 * driver dependent.
-	 * <p>
-	 * NOTE: all database I have tested which {@link #supportsExpectedLobUsagePattern()}
-	 * also support the ability to materialize a LOB outside the owning transaction...
+	 *
+	 * @implNote All database I have tested which {@link #supportsExpectedLobUsagePattern()}
+	 * also support the ability to materialize a LOB outside the owning transaction.
 	 *
 	 * @return True if unbounded materialization is supported; false otherwise.
 	 * @since 3.2

@@ -66,7 +66,7 @@ public final class JdbcTypeNameMapper {
 	 * Determine whether the given JDBC type code represents a standard JDBC type
 	 * ("standard" being those defined on {@link java.sql.Types}).
 	 *
-	 * NOTE : {@link java.sql.Types#OTHER} is also "filtered out" as being non-standard.
+	 * @implNote {@link java.sql.Types#OTHER} is also "filtered out" as being non-standard.
 	 *
 	 * @param typeCode The JDBC type code to check
 	 *

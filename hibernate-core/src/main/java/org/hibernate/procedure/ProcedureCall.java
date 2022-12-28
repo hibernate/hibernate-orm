@@ -73,15 +73,15 @@ public interface ProcedureCall
 	String getProcedureName();
 
 	/**
-	 * Does this ProcedureCall represent a call to a database FUNCTION (as opposed
-	 * to a PROCEDURE call)?
+	 * Does this {@code ProcedureCall} represent a call to a database {@code FUNCTION},
+	 * as opposed to a {@code PROCEDURE}?
 	 *
-	 * NOTE : this will only report whether this ProcedureCall was marked
-	 * as a function via call to {@link #markAsFunctionCall}.  Specifically
-	 * will not return {@code true} when using JPA query hint.
+	 * @apiNote this will only report whether this {@code ProcedureCall} was marked
+	 *           as a function via call to {@link #markAsFunctionCall}. In particular,
+	 *           it will not return {@code true} when using JPA query hint.
 	 *
 	 * @return {@code true} indicates that this ProcedureCall represents a
-	 * function call; {@code false} indicates a procedure call.
+	 *         function call; {@code false} indicates a procedure call.
 	 */
 	boolean isFunctionCall();
 

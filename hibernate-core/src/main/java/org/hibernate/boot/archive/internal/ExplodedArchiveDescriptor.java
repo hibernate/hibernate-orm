@@ -24,7 +24,7 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * Descriptor for exploded (directory) archives
+ * An {@code ArchiveDescriptor} for exploded (directory) archives.
  *
  * @author Steve Ebersole
  */

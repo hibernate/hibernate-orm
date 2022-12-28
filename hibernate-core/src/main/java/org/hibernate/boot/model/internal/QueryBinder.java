@@ -223,14 +223,11 @@ public abstract class QueryBinder {
 		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
 			throw exceptionProducer.get();
 		}
-		final JdbcCall jdbcCall = parseJdbcCall(
-				sqlString,
-				exceptionProducer
-		);
+		final JdbcCall jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
 
-		AnnotationDescriptor ann = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
-		ann.setValue( "name", builder.getName() );
-		ann.setValue( "procedureName", jdbcCall.callableName );
+		AnnotationDescriptor descriptor = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
+		descriptor.setValue( "name", builder.getName() );
+		descriptor.setValue( "procedureName", jdbcCall.callableName );
 
 		for ( String parameterName : jdbcCall.parameters ) {
 			AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
@@ -249,20 +246,20 @@ public abstract class QueryBinder {
 			}
 			storedProcedureParameters.add( AnnotationFactory.create( parameterDescriptor ) );
 		}
-		ann.setValue(
+		descriptor.setValue(
 				"parameters",
 				storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
 		);
 
 		if ( builder.getResultSetMappingName() != null ) {
-			ann.setValue( "resultSetMappings", new String[]{ builder.getResultSetMappingName() } );
+			descriptor.setValue( "resultSetMappings", new String[]{ builder.getResultSetMappingName() } );
 		}
 		else {
-			ann.setValue( "resultSetMappings", new String[0]  );
+			descriptor.setValue( "resultSetMappings", new String[0]  );
 		}
 
 		if ( builder.getResultSetMappingClassName() != null ) {
-			ann.setValue(
+			descriptor.setValue(
 					"resultClasses",
 					new Class[] {
 							context.getBootstrapContext()
@@ -271,7 +268,7 @@ public abstract class QueryBinder {
 			);
 		}
 		else {
-			ann.setValue( "resultClasses", new Class[0]  );
+			descriptor.setValue( "resultClasses", new Class[0]  );
 		}
 
 		if ( builder.getQuerySpaces() != null ) {
@@ -289,9 +286,9 @@ public abstract class QueryBinder {
 			queryHints.add( AnnotationFactory.create( hintDescriptor2 ) );
 		}
 
-		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+		descriptor.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
 
-		return new NamedProcedureCallDefinitionImpl( AnnotationFactory.create( ann ) );
+		return new NamedProcedureCallDefinitionImpl( AnnotationFactory.create( descriptor ) );
 	}
 
 	public static void bindQueries(NamedQueries namedQueries, MetadataBuildingContext context, boolean isDefault) {
@@ -368,27 +365,20 @@ public abstract class QueryBinder {
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {
-		FlushMode flushMode;
 		switch ( flushModeType ) {
 			case ALWAYS:
-				flushMode = FlushMode.ALWAYS;
-				break;
+				return FlushMode.ALWAYS;
 			case AUTO:
-				flushMode = FlushMode.AUTO;
-				break;
+				return FlushMode.AUTO;
 			case COMMIT:
-				flushMode = FlushMode.COMMIT;
-				break;
+				return FlushMode.COMMIT;
 			case MANUAL:
-				flushMode = FlushMode.MANUAL;
-				break;
+				return FlushMode.MANUAL;
 			case PERSISTENCE_CONTEXT:
-				flushMode = null;
-				break;
+				return null;
 			default:
-				throw new AssertionFailure( "Unknown flushModeType: " + flushModeType );
+				throw new AssertionFailure( "Unknown FlushModeType: " + flushModeType );
 		}
-		return flushMode;
 	}
 
 	private static CacheMode getCacheMode(CacheModeType cacheModeType) {
@@ -410,60 +400,52 @@ public abstract class QueryBinder {
 
 
 	public static void bindQueries(
-			org.hibernate.annotations.NamedQueries queriesAnn,
+			org.hibernate.annotations.NamedQueries namedQueries,
 			MetadataBuildingContext context) {
-		if ( queriesAnn == null ) {
-			return;
-		}
-
-		for (org.hibernate.annotations.NamedQuery q : queriesAnn.value()) {
-			bindQuery( q, context );
+		if ( namedQueries != null ) {
+			for (org.hibernate.annotations.NamedQuery namedQuery : namedQueries.value()) {
+				bindQuery( namedQuery, context );
+			}
 		}
 	}
 
 	public static void bindNamedStoredProcedureQuery(
-			NamedStoredProcedureQuery annotation,
+			NamedStoredProcedureQuery namedStoredProcedureQuery,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( annotation == null ) {
-			return;
-		}
+		if ( namedStoredProcedureQuery != null ) {
+			if ( namedStoredProcedureQuery.name().isEmpty() ) {
+				throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
+			}
 
-		if ( annotation.name().isEmpty() ) {
-			throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
+			final NamedProcedureCallDefinitionImpl definition = new NamedProcedureCallDefinitionImpl( namedStoredProcedureQuery );
+			if ( isDefault ) {
+				context.getMetadataCollector().addDefaultNamedProcedureCall( definition );
+			}
+			else {
+				context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
+			}
+			LOG.debugf( "Bound named stored procedure query : %s => %s", definition.getRegistrationName(), definition.getProcedureName() );
 		}
-
-		final NamedProcedureCallDefinitionImpl def = new NamedProcedureCallDefinitionImpl( annotation );
-
-		if ( isDefault ) {
-			context.getMetadataCollector().addDefaultNamedProcedureCall( def );
-		}
-		else {
-			context.getMetadataCollector().addNamedProcedureCallDefinition( def );
-		}
-		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegistrationName(), def.getProcedureName() );
 	}
 
 	public static void bindSqlResultSetMappings(
-			SqlResultSetMappings ann,
+			SqlResultSetMappings resultSetMappings,
 			MetadataBuildingContext context,
 			boolean isDefault) {
-		if ( ann == null ) {
-			return;
-		}
-
-		for (SqlResultSetMapping rs : ann.value()) {
-			//no need to handle inSecondPass
-			context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( rs, context, true ) );
+		if ( resultSetMappings != null ) {
+			for ( SqlResultSetMapping resultSetMapping : resultSetMappings.value() ) {
+				bindSqlResultSetMapping( resultSetMapping, context, isDefault );
+			}
 		}
 	}
 
 	public static void bindSqlResultSetMapping(
-			SqlResultSetMapping ann,
+			SqlResultSetMapping resultSetMapping,
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		//no need to handle inSecondPass
-		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( ann, context, isDefault ) );
+		context.getMetadataCollector().addSecondPass( new ResultSetMappingSecondPass( resultSetMapping, context, isDefault ) );
 	}
 
 	private static class JdbcCall {

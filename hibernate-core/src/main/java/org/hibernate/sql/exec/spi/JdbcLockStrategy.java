@@ -18,7 +18,7 @@ public enum JdbcLockStrategy {
 	 */
 	AUTO,
 	/**
-	 * Use follow on locking.
+	 * Use follow-on locking.
 	 */
 	FOLLOW_ON,
 	/**

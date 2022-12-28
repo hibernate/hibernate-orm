@@ -38,14 +38,15 @@ import org.hibernate.Incubating;
  * An {@code ImplicitNamingStrategy} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}.
  *
+ * @apiNote The method names here mostly favor the JPA terminology,
+ *          for example, "secondary table" rather than "join".
+ *
  * @see PhysicalNamingStrategy
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface ImplicitNamingStrategy {
-	// NOTE: the method names here mostly favor the JPA terminology
-	// (for example, "secondary table" rather than "join")
 
 	/**
 	 * Determine the implicit name of an entity's primary table.

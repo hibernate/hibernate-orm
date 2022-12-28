@@ -23,12 +23,12 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests names generated for @JoinTable and @JoinColumn for unidirectional and bidirectional
- * many-to-many associations using the "legacy JPA" naming strategy, which does not comply
- * with JPA spec in all cases.  See HHH-9390 for more information.
- *
- * NOTE: expected primary table names and join columns are explicit here to ensure that
- * entity names/tables and PK columns are not changed (which would invalidate these test cases).
+ * Tests names generated for {@code @JoinTable} and {@code @JoinColumn} for unidirectional
+ * and bidirectional many-to-many associations using the "legacy JPA" naming strategy, which
+ * does not comply with JPA spec in all cases.  See HHH-9390 for more information.
+ * <p>
+ * Expected primary table names and join columns are explicit here to ensure that entity
+ * names/tables and PK columns are not changed (which would invalidate these test cases).
  *
  * @author Gail Badner
  */

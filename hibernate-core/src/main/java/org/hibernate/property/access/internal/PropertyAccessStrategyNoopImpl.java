@@ -18,8 +18,6 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
 /**
- * Yeah, right, so....  No idea...
- *
  * @author Michael Bartmann
  * @author Gavin King
  * @author Steve Ebersole

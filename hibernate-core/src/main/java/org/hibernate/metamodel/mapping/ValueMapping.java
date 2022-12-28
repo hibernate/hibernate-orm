@@ -12,12 +12,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
- * Describes a mapping related to any part of the app's domain model - e.g.
- * an attribute, an entity identifier, collection elements, etc
- *
- * NOTE : this does not include EntityPersister, which however is a ValueMappingContainer
- *
- * Used in generation of SQL AST
+ * Describes a mapping related to any part of the app's domain model,
+ * for example, an attribute, an entity identifier, collection elements, etc.
+ * Used during generation of a SQL AST.
  *
  * @author Steve Ebersole
  */

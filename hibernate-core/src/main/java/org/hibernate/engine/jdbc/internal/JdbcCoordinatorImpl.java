@@ -45,9 +45,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 
 /**
- * Standard Hibernate implementation of {@link JdbcCoordinator}
- * <p>
- * IMPL NOTE : Custom serialization handling!
+ * Standard implementation of {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer

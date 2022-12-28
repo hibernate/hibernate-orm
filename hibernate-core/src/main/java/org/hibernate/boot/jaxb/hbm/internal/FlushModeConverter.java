@@ -12,11 +12,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 
 /**
- * JAXB marshalling for the FlushMode enum
- * <p>
- * NOTE : The XML schemas define the use of {@code "never"}, which corresponds
- * to the removed FlushMode#NEVER.  Here we will also handle mapping
- * FlushMode#NEVER to FlushMode#MANUAL
+ * JAXB marshalling for the {@link FlushMode} enum.
+ *
+ * @implNote The XML schemas define the use of {@code "never"}, which corresponds
+ *           to the removed {@code FlushMode#NEVER}. Here we will also remap
+ *           {@code FlushMode#NEVER} to {@link FlushMode#MANUAL}.
  *
  * @author Steve Ebersole
  */

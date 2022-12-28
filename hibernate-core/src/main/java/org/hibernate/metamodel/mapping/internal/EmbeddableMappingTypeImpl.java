@@ -76,8 +76,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Describes a "normal" embeddable.
  *
- * NOTE: At the moment, this class is used to describe some non-normal cases: mainly
- * composite fks
+ * @apiNote At the moment, this class is also used to describe some non-"normal" things:
+ *          mainly composite foreign keys.
  */
 public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping implements SelectableMappings {
 	public static EmbeddableMappingTypeImpl from(

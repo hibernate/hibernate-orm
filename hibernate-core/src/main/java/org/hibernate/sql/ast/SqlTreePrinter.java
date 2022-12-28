@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 /**
  * Logs a debug representation of the SQL AST.
  *
- * NOTE : at the moment, we only render the from-elements
+ * @implNote At the moment, we only render the from-elements.
  *
  * @author Steve Ebersole
  */

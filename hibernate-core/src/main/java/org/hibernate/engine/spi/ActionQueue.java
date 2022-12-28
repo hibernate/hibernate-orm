@@ -1041,8 +1041,8 @@ public class ActionQueue {
 	 * certain that we do not circumvent this FK ordering to the extent of causing constraint violations.
 	 * <p>
 	 * Sorts the insert actions using more hashes.
-	 * </p>
-	 * NOTE: this class is not thread-safe.
+	 *
+	 * @implNote This class is not thread-safe.
 	 *
 	 * @author Jay Erb
 	 */

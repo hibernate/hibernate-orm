@@ -25,7 +25,7 @@ public interface EntityHierarchySource {
 	/**
 	 * The inheritance type/strategy for the hierarchy.
 	 * <p>
-	 * NOTE : The entire hierarchy must comply with the same inheritance strategy.
+	 * The entire hierarchy must have with the same inheritance strategy.
 	 *
 	 * @return The inheritance type.
 	 */

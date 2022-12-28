@@ -2904,8 +2904,9 @@ public interface AvailableSettings {
 	 * @see jakarta.persistence.CacheRetrieveMode
 	 *
 	 * @deprecated Use {@link #JAKARTA_SHARED_CACHE_RETRIEVE_MODE} instead
+	 *
+	 * @apiNote This is not a legal property for an {@code EntityManagerFactory}.
 	 */
-	//NOTE : Not a valid EMF property
 	@Deprecated
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_SHARED_CACHE_RETRIEVE_MODE = "javax.persistence.cache.retrieveMode";
@@ -2917,8 +2918,9 @@ public interface AvailableSettings {
 	 * @see jakarta.persistence.CacheStoreMode
 	 *
 	 * @deprecated Use {@link #JAKARTA_SHARED_CACHE_STORE_MODE} instead
+	 *
+	 * @apiNote This is not a legal property for an {@code EntityManagerFactory}.
 	 */
-	//NOTE: Not a valid EMF property
 	@Deprecated
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_SHARED_CACHE_STORE_MODE = "javax.persistence.cache.storeMode";

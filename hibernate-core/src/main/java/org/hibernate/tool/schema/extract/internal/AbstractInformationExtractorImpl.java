@@ -1053,8 +1053,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *                         (not statisics) is being returned.
 	 *                     </li>
 	 *                 </ul>
-	 *                 NOTE: Hibernate ignores statistics and does not
-	 *                       care about the actual type of index.
+	 *                 Note that Hibernate ignores statistics and does not care
+	 *                 about the actual type of index.
 	 *             </li>
 	 *             <li>
 	 *                 column label {@link #getResultSetColumnNameLabel} -

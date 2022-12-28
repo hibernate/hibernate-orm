@@ -18,11 +18,11 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
 /**
- * PropertyAccess for handling non-aggregated composites.
- * <p>
- * IMPL NOTE : We actually use a singleton for the Setter; we cannot for the getter mainly
- * because we need to differentiate {@link Getter#getReturnTypeClass()}.  Ultimately I'd prefer to
- * model that "common information" on PropertyAccess itself.
+ * {@link PropertyAccess} for handling non-aggregated composites.
+ *
+ * @implNote We actually use a singleton for the {@link Setter}; we cannot for the getter mainly
+ *           because we need to differentiate {@link Getter#getReturnTypeClass()}. Ultimately I'd
+ *           prefer to model that "common information" on {@link PropertyAccess} itself.
  *
  * @author Gavin King
  * @author Steve Ebersole

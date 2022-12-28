@@ -196,12 +196,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setTimeout(int timeout);
 
 	/**
-	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
-	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
+	 * query via {@link java.sql.Statement#setFetchSize(int)}. As defined by JDBC, this value is a hint to the
 	 * driver to indicate how many rows to fetch from the database when more rows are needed.
-	 * <p>
-	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
-	 * query execution and ResultSet processing depending on the driver.
+	 *
+	 * @implNote JDBC expressly defines this value as a hint. Depending on the driver, it may or may not have any
+	 *           effect on the actual query execution and {@link java.sql.ResultSet} processing .
 	 *
 	 * @return The timeout <b>in seconds</b>
 	 *
@@ -299,8 +299,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
 	 * <p>
-	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to
-	 * the entity/collection caches as we process query results. For caching
+	 * The {@link CacheMode} here describes reading-from/writing-to the
+	 * entity/collection caches as we process query results. For caching
 	 * of the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
 	 * <p>
@@ -357,8 +357,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * This is different to second level caching of any returned entities and
 	 * collections, which is controlled by {@link #getCacheMode()}.
 	 * <p>
-	 * NOTE: the query being "eligible" for caching does not necessarily mean
-	 * its results will be cached. Second-level query caching still has to be
+	 * The query being "eligible" for caching does not necessarily mean its
+	 * results will be cached. Second-level query caching still has to be
 	 * enabled on the {@link SessionFactory} for this to happen. Usually that
 	 * is controlled by the configuration setting
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.

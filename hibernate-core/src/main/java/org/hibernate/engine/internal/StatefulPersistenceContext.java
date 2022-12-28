@@ -72,12 +72,12 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
- * A <strong>stateful</strong> implementation of the {@link PersistenceContext} contract meaning that we maintain this
+ * A <em>stateful</em> implementation of the {@link PersistenceContext} contract, meaning that we maintain this
  * state throughout the life of the persistence context.
- * <p>
- * IMPL NOTE: There is meant to be a one-to-one correspondence between a {@link org.hibernate.internal.SessionImpl}
- * and a PersistentContext.  Event listeners and other Session collaborators then use the PersistentContext to drive
- * their processing.
+ *
+ * @implNote  There is meant to be a one-to-one correspondence between a {@link org.hibernate.internal.SessionImpl}
+ *            and a {@link PersistenceContext}. Event listeners and other session collaborators then use the
+ *            {@code PersistenceContext} to drive their processing.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero

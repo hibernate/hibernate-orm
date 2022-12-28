@@ -142,10 +142,10 @@ public interface MetadataBuilder {
 	 * Allows specifying a specific Jandex index to use for reading annotation information.
 	 * <p>
 	 * It is <i>important</i> to understand that if a Jandex index is passed in, it is expected that
-	 * this Jandex index already contains all entries for all classes.  No additional indexing will be
+	 * this Jandex index already contains all entries for all classes. No additional indexing will be
 	 * done in this case.
-	 * <p>
-	 * NOTE : Here for future expansion.  At the moment the passed Jandex index is not used.
+	 *
+	 * @apiNote Here for future expansion. At the moment the passed Jandex index is not used.
 	 *
 	 * @param jandexView The Jandex index to use.
 	 *

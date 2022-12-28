@@ -766,10 +766,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create a predicate that tests whether a Map is empty.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#isEmpty}
 	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#isEmpty}.
 	 *
 	 * @param mapExpression The expression resolving to a Map which we
 	 * want to check for emptiness
@@ -779,11 +778,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<M extends Map<?,?>> JpaPredicate isMapEmpty(JpaExpression<M> mapExpression);
 
 	/**
-	 * Create a predicate that tests whether a Map is
-	 * not empty.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#isNotEmpty}
+	 * Create a predicate that tests whether a Map is not empty.
+	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#isNotEmpty}
 	 *
 	 * @param mapExpression The expression resolving to a Map which we
 	 * want to check for non-emptiness
@@ -794,9 +792,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create an expression that tests the size of a map.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#size}
+	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#size}
 	 *
 	 * @param mapExpression The expression resolving to a Map for which we
 	 * want to know the size

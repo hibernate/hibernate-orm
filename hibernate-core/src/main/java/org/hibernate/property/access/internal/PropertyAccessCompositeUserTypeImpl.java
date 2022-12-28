@@ -19,7 +19,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
 /**
- * PropertyAccessor for accessing the wrapped property via get/set pair, which may be nonpublic.
+ * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
  *
  * @author Steve Ebersole
  *

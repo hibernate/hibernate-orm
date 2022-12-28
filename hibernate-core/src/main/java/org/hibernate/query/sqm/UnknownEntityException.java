@@ -10,9 +10,9 @@ import org.hibernate.query.SemanticException;
 
 /**
  * Indicates we were not able to resolve a given "path structure" as an entity name.
- * <p>
- * NOTE : JPA generally requires this to be reported as the far less useful
- * IllegalArgumentException.
+ *
+ * @apiNote JPA generally requires this to be reported as the much less useful
+ *          {@link IllegalArgumentException}.
  *
  * todo (6.0) : account for this in the "exception conversion" handling
  *

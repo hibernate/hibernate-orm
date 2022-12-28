@@ -16,7 +16,7 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  * from {@link java.sql.DatabaseMetaData} since on many databases there are better ways to get information from
  * the meta schema.
  *
- * NOTE : Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
+ * @apiNote Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
  *
  * @author Steve Ebersole
  */

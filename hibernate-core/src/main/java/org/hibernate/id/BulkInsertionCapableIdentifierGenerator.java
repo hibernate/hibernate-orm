@@ -18,9 +18,8 @@ import org.hibernate.generator.Generator;
 public interface BulkInsertionCapableIdentifierGenerator extends Generator {
 	/**
 	 * Given the configuration of this generator, is identifier generation as part of bulk insertion supported?
-	 * <p>
-	 * IMPL NOTE : Mainly here to allow stuff like SequenceStyleGenerator which *can* support this based on
-	 * configuration
+	 *
+	 * @apiNote Mainly here to allow stuff like SequenceStyleGenerator which can support this based on configuration
 	 *
 	 * @return {@code true} if bulk insertions are supported; {@code false} otherwise.
 	 */

@@ -23,7 +23,7 @@ import org.hibernate.Session;
  * tends to build up in the first-level cache of session, sessions should
  * typically not be associated with long-lived scopes.
  * <p>
- * The most typical example of s scope with which a current session might
+ * The most typical example of a scope with which a current session might
  * be associated is the HTTP request context in a web application.
  * <p>
  * An implementation of this interface must:

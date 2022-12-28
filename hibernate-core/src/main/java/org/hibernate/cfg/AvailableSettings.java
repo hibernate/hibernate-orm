@@ -1118,13 +1118,18 @@ public interface AvailableSettings {
 	/**
 	 * Specifies a {@link org.hibernate.context.spi.CurrentSessionContext} for
 	 * scoping the {@linkplain org.hibernate.SessionFactory#getCurrentSession()
-	 * current session}, either:<ul>
+	 * current session}, either:
+	 * <ul>
 	 *     <li>{@code jta}, {@code thread}, or {@code managed}, or
 	 *     <li>the name of a class implementing
 	 *     {@code org.hibernate.context.spi.CurrentSessionContext}.
 	 * </ul>
+	 * If this property is not set, but JTA support is enabled, then
+	 * {@link org.hibernate.context.internal.JTASessionContext} is used
+	 * by default.
 	 *
 	 * @see org.hibernate.SessionFactory#getCurrentSession()
+	 * @see org.hibernate.context.spi.CurrentSessionContext
 	 */
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
@@ -2013,7 +2018,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * This setting controls whether the restriction is applied when loading a
 	 * {@link jakarta.persistence.OneToMany one-to-many} or
-	 * or {@link jakarta.persistence.ManyToMany many-to-many} association whose target
+	 * {@link jakarta.persistence.ManyToMany many-to-many} association whose target
 	 * type defines the restriction.
 	 * <p>
 	 * By default, the restriction is not applied. When this setting is enabled, the
@@ -2022,7 +2027,12 @@ public interface AvailableSettings {
 	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
 	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}
 	 * association to the entity.
+	 * <p>
+	 * This behavior may now be controlled in a safer and more granular way using
+	 * {@link org.hibernate.annotations.Where#applyInToManyFetch}, and so the use
+	 * of this configuration property is no longer recommended.
 	 *
+	 * @see org.hibernate.annotations.Where#applyInToManyFetch
 	 */
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 

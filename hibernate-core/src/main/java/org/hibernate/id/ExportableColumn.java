@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;

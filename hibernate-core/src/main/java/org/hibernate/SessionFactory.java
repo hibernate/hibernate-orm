@@ -35,12 +35,18 @@ import jakarta.persistence.EntityManagerFactory;
  * Crucially, this is where a program comes to obtain {@linkplain Session sessions}.
  * Typically, a program has a single {@link SessionFactory} instance, and must
  * obtain a new {@link Session} instance from the factory each time it services
- * a client request.
+ * a client request. It is then also responsible for {@linkplain Session#close()
+ * destroying} the session at the end of the client request.
  * <p>
  * The {@link #inSession} and {@link #inTransaction} methods provide a convenient
  * way to obtain a session, with or without starting a transaction, and have it
  * cleaned up automatically, relieving the program of the need to explicitly
  * call {@link Session#close()} and {@link Transaction#commit()}.
+ * <p>
+ * Alternatively, {@link #getCurrentSession()} provides support for the notion
+ * of contextually-scoped sessions, where an implementation of the SPI interface
+ * {@link org.hibernate.context.spi.CurrentSessionContext} is responsible for
+ * creating, scoping, and destroying sessions.
  * <p>
  * Depending on how Hibernate is configured, the {@code SessionFactory} itself
  * might be responsible for the lifecycle of pooled JDBC connections and
@@ -138,9 +144,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Obtains the <em>current session</em>, an instance of {@link Session}
-	 * implicitly associated with some context. For example, the session
-	 * might be associated with the current thread, or with the current
-	 * JTA transaction.
+	 * implicitly associated with some context or scope. For example, the
+	 * session might be associated with the current thread, or with the
+	 * current JTA transaction.
 	 * <p>
 	 * The context used for scoping the current session (that is, the
 	 * definition of what precisely "current" means here) is determined
@@ -150,12 +156,16 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * {@value org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS}.
 	 * <p>
 	 * If no {@link org.hibernate.context.spi.CurrentSessionContext} is
-	 * explicitly configured, but JTA is configured, then
-	 * {@link org.hibernate.context.internal.JTASessionContext} is used.
+	 * explicitly configured, but JTA support is enabled, then
+	 * {@link org.hibernate.context.internal.JTASessionContext} is used,
+	 * and the current session is scoped to the active JTA transaction.
 	 *
 	 * @return The current session.
 	 *
 	 * @throws HibernateException Indicates an issue locating a suitable current session.
+	 *
+	 * @see org.hibernate.context.spi.CurrentSessionContext
+	 * @see org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS
 	 */
 	Session getCurrentSession() throws HibernateException;
 

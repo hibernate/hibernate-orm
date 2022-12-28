@@ -33,7 +33,7 @@ import org.hibernate.dialect.Dialect;
  * We must also consider the physical representation of the zoned datetime
  * in the database table.
  * <p>
- * The {@link #DEFAULT default strategy} guarantees that a round trip
+ * The {@linkplain #DEFAULT default strategy} guarantees that a round trip
  * preserves the instant. Whether the zone or offset is preserved depends
  * on whether the underlying database has a {@code timestamp with time zone}
  * type which preserves offsets:

@@ -36,8 +36,35 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Models a selection query returning results.  It is a slimmed down version
- * of {@link Query}, but providing only methods relevant to selection queries.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable selection query, that is,
+ * a {@code select}. It is a slimmed-down version of {@link Query}, providing
+ * only methods relevant to selection queries.
+ * <p>
+ * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createSelectionQuery(String, Class)}, passing the
+ *     HQL as a string,
+ * <li>{@link QueryProducer#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     query object}, or
+ * <li>{@link QueryProducer#createNamedSelectionQuery(String, Class)} passing
+ *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
+ *     or {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code SelectionQuery} controls how a query is executed, and allows arguments
+ * to be bound to its parameters.
+ * <ul>
+ * <li>Selection queries are usually executed using {@link #getResultList()} or
+ *     {@link #getSingleResult()}.
+ * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     control limits and pagination.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
  *
  * @author Steve Ebersole
  */

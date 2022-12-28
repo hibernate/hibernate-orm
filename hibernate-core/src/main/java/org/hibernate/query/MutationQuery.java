@@ -19,9 +19,34 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Models a mutation (insert, update, or delete) query.  It is a slimmed
- * down version of {@link Query}, but providing only methods relevant to
- * mutation queries.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable mutation query, that is,
+ * an {@code insert}, {@code update}, or {@code delete}. It is a slimmed-down
+ * version of {@link Query}, providing only methods relevant to mutation queries.
+ * <p>
+ * A {@code MutationQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createMutationQuery(String)}, passing the HQL as a
+ *     string,
+ * <li>{@link QueryProducer#createNativeMutationQuery(String)}, passing native
+ *     SQL as a string,
+ * <li>{@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
+ *     {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
+ *     passing a criteria update or delete object, or
+ * <li>{@link QueryProducer#createNamedMutationQuery(String)}, passing the
+ *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code MutationQuery} controls how the mutation query is executed, and
+ * allows arguments to be bound to its parameters.
+ * <ul>
+ * <li>Mutation queries must be executed using {@link #executeUpdate()}.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
  *
  * @author Steve Ebersole
  */

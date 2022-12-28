@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.AccessType;
 
 /**
@@ -49,7 +50,7 @@ public enum CacheConcurrencyStrategy {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 */
-	NONE( null ),
+	NONE,
 
 	/**
 	 * Read-only access to the shared second-level cache.
@@ -62,7 +63,7 @@ public enum CacheConcurrencyStrategy {
 	 *
 	 * @see AccessType#READ_ONLY
 	 */
-	READ_ONLY( AccessType.READ_ONLY ),
+	READ_ONLY,
 
 	/**
 	 * Read/write access to the shared second-level cache with no
@@ -84,7 +85,7 @@ public enum CacheConcurrencyStrategy {
 	 *
 	 * @see AccessType#NONSTRICT_READ_WRITE
 	 */
-	NONSTRICT_READ_WRITE( AccessType.NONSTRICT_READ_WRITE ),
+	NONSTRICT_READ_WRITE,
 
 	/**
 	 * Read/write access to the shared second-level cache using
@@ -115,7 +116,7 @@ public enum CacheConcurrencyStrategy {
 	 *
 	 * @see AccessType#READ_WRITE
 	 */
-	READ_WRITE( AccessType.READ_WRITE ),
+	READ_WRITE,
 
 	/**
 	 * Transactional access to the shared second-level cache.
@@ -130,22 +131,29 @@ public enum CacheConcurrencyStrategy {
 	 *
 	 * @see AccessType#TRANSACTIONAL
 	 */
-	TRANSACTIONAL( AccessType.TRANSACTIONAL );
-
-	private final AccessType accessType;
-
-	CacheConcurrencyStrategy(AccessType accessType) {
-		this.accessType = accessType;
-	}
+	TRANSACTIONAL;
 
 	/**
 	 * Get the {@link AccessType} corresponding to this concurrency strategy.
 	 *
 	 * @return The corresponding concurrency strategy. Note that this will
-	 * return {@code null} for {@link #NONE}
+	 *         return {@code null} for {@link #NONE}.
 	 */
 	public AccessType toAccessType() {
-		return accessType;
+		switch ( this ) {
+			case NONE:
+				return null;
+			case READ_ONLY:
+				return AccessType.READ_ONLY;
+			case NONSTRICT_READ_WRITE:
+				return AccessType.NONSTRICT_READ_WRITE;
+			case READ_WRITE:
+				return AccessType.READ_WRITE;
+			case TRANSACTIONAL:
+				return AccessType.TRANSACTIONAL;
+			default:
+				throw new AssertionFailure( "unknown CacheConcurrencyStrategy" );
+		}
 	}
 
 	/**
@@ -154,29 +162,25 @@ public enum CacheConcurrencyStrategy {
 	 * @param accessType The access type to convert
 	 *
 	 * @return The corresponding enum value. {@link #NONE} is returned by
-	 * default if unable to recognize the {@code accessType} or if the
-	 * {@code accessType} is {@code null}.
+	 *         default if unable to recognize the {@code accessType} or
+	 *         if the {@code accessType} is {@code null}.
 	 */
 	public static CacheConcurrencyStrategy fromAccessType(AccessType accessType) {
-		if ( null == accessType ) {
+		if ( accessType == null ) {
 			return NONE;
 		}
-
-		switch ( accessType ) {
-			case READ_ONLY: {
-				return READ_ONLY;
-			}
-			case READ_WRITE: {
-				return READ_WRITE;
-			}
-			case NONSTRICT_READ_WRITE: {
-				return NONSTRICT_READ_WRITE;
-			}
-			case TRANSACTIONAL: {
-				return TRANSACTIONAL;
-			}
-			default: {
-				return NONE;
+		else {
+			switch ( accessType ) {
+				case READ_ONLY:
+					return READ_ONLY;
+				case READ_WRITE:
+					return READ_WRITE;
+				case NONSTRICT_READ_WRITE:
+					return NONSTRICT_READ_WRITE;
+				case TRANSACTIONAL:
+					return TRANSACTIONAL;
+				default:
+					return NONE;
 			}
 		}
 	}
@@ -198,6 +202,7 @@ public enum CacheConcurrencyStrategy {
 	}
 
 	private boolean isMatch(String name) {
+		final AccessType accessType = toAccessType();
 		return accessType != null && accessType.getExternalName().equalsIgnoreCase( name )
 			|| name().equalsIgnoreCase( name );
 	}

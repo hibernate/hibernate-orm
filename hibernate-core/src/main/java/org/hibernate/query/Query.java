@@ -58,28 +58,30 @@ import jakarta.persistence.TypedQuery;
  * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
  * calling:
  * <ul>
- * <li>{@link QueryProducer#createQuery(String, Class)},
- *     {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
- *     or {@link QueryProducer#createNamedQuery(String, Class)} for
- *     selection queries, or
- * <li>{@link QueryProducer#createMutationQuery(String)},
- *    {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)},
- *    or {@link QueryProducer#createNamedMutationQuery(String)} for
- *    mutation queries.
+ * <li>{@link QueryProducer#createQuery(String, Class)}, passing the HQL as a
+ *     string,
+ * <li>{@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     object}, or
+ * <li>{@link QueryProducer#createNamedQuery(String, Class)} passing the name
+ *     of a query defined using {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
  * <p>
  * A {@code Query} controls how a query is executed, and allows arguments to be
  * bound to its parameters.
  * <ul>
  * <li>Selection queries are usually executed using {@link #getResultList()} or
- *     {@link #getSingleResult()}, and mutation queries must be executed using
- *     {@link #executeUpdate()}.
+ *     {@link #getSingleResult()}.
  * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
  *     control limits and pagination.
  * <li>The various overloads of {@link #setParameter(String, Object)} and
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * <p>
+ * Note that this interface offers no real advantages over {@link SelectionQuery}
+ * except for compatibility with the JPA-defined {@link TypedQuery} interface.
  *
  * @author Gavin King
  * @author Steve Ebersole

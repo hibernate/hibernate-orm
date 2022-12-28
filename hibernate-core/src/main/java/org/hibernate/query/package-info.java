@@ -7,5 +7,20 @@
 
 /**
  * Everything related to HQL/JPQL, native SQL, and criteria queries.
+ * <p>
+ * The important interfaces {@link org.hibernate.query.SelectionQuery},
+ * {@link org.hibernate.query.MutationQuery}, {@link org.hibernate.query.Query},
+ * and {@link org.hibernate.query.NativeQuery} provide an API for executing
+ * queries. Instances of these interfaces may be obtained from a
+ * {@link org.hibernate.query.QueryProducer}, that is, from any
+ * {@link org.hibernate.Session} or {@link org.hibernate.StatelessSession}.
+ * <p>
+ * Hibernate's extensions to the JPA criteria query API are defined in the
+ * subpackage {@link org.hibernate.query.criteria}, with
+ * {@link org.hibernate.query.criteria.HibernateCriteriaBuilder} as the
+ * entry point.
+ * <p>
+ * Other subpackages contain SPIs and internal implementation details,
+ * including the HQL parser and translator.
  */
 package org.hibernate.query;

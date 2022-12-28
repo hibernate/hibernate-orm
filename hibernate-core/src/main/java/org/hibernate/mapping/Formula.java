@@ -41,11 +41,8 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(
-			Dialect dialect,
-			TypeConfiguration typeConfiguration,
-			SqmFunctionRegistry functionRegistry) {
-		String template = Template.renderWhereStringTemplate( formula, dialect, typeConfiguration, functionRegistry );
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+		final String template = Template.renderWhereStringTemplate( formula, dialect, typeConfiguration, registry );
 		return safeInterning( StringHelper.replace( template, "{alias}", Template.TEMPLATE ) );
 	}
 

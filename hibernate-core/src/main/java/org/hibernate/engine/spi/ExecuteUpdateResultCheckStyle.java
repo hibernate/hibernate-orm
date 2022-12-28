@@ -12,6 +12,11 @@ import org.hibernate.annotations.ResultCheckStyle;
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
  * determining results (success/failure) is to be used.
  *
+ * @apiNote  This enumeration is mainly for internal use, since it
+ *           is isomorphic to {@link ResultCheckStyle}. In the
+ *           future, it would be nice to replace them both with a
+ *           new {@code org.hibernate.ResultCheck} enum.
+ *
  * @author Steve Ebersole
  */
 public enum ExecuteUpdateResultCheckStyle {

@@ -105,7 +105,7 @@ public class RelationalObjectBinder {
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
-		Table table = simpleValue.getTable();
+		final Table table = simpleValue.getTable();
 
 		final Column column = new Column();
 		column.setValue( simpleValue );

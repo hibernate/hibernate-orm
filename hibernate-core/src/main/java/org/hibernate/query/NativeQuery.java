@@ -49,9 +49,14 @@ import org.hibernate.type.BasicTypeReference;
  * </ul>
  * <p>
  * A {@code NativeQuery} may be obtained from the {@link org.hibernate.Session}
- * by calling {@link QueryProducer#createNativeQuery(String, Class)},
- * {@link QueryProducer#createNativeQuery(String, String, Class)}, or
- * {@link QueryProducer#createNativeMutationQuery(String)}.
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createNativeQuery(String, Class)}, passing
+ *     native SQL as a string, or
+ * <li>{@link QueryProducer#createNativeQuery(String, String, Class)}
+ *     passing the native SQL string and the name of a result set mapping
+ *     defined using {@link jakarta.persistence.SqlResultSetMapping}.
+ * </ul>
  * <p>
  * A result set mapping may be specified by:
  * <ul>

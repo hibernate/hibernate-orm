@@ -14,7 +14,10 @@ import java.util.Locale;
  * @see Polymorphism
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated since {@link Polymorphism} is deprecated
  */
+@Deprecated(since = "6.2")
 public enum PolymorphismType {
 	/**
 	 * Implicit polymorphism is enabled, and queries against mapped

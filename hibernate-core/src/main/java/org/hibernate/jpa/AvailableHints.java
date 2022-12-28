@@ -14,7 +14,7 @@ import org.hibernate.jpa.internal.HintsCollector;
 import jakarta.persistence.LockModeType;
 
 /**
- * Combined set of Hibernate and Jakarta Persistence hints
+ * Combined set of Hibernate and Jakarta Persistence hints.
  *
  * @see jakarta.persistence.EntityManager#setProperty(String, Object)
  * @see jakarta.persistence.EntityManager#find(Class, Object, Map)

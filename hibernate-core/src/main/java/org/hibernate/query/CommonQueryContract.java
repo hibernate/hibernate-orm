@@ -118,7 +118,11 @@ public interface CommonQueryContract {
 	CommonQueryContract setComment(String comment);
 
 	/**
-	 * Apply hints to the query.
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
 	 */
 	CommonQueryContract setHint(String hintName, Object value);
 

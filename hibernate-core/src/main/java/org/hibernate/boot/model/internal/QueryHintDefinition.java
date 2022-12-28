@@ -154,7 +154,7 @@ public class QueryHintDefinition {
 		final Integer lockTimeoutHint = specLockTimeout();
 		final Boolean followOnLocking = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
 
-		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);
+		return determineLockOptions( lockModeType, lockTimeoutHint, followOnLocking );
 	}
 
 	private Integer specLockTimeout() {

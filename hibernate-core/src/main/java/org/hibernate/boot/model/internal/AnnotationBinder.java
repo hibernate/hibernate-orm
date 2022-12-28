@@ -159,8 +159,8 @@ public final class AnnotationBinder {
 			@SuppressWarnings("unchecked")
 			List<SqlResultSetMapping> mappings = ( List<SqlResultSetMapping> ) defaults.get( SqlResultSetMapping.class );
 			if ( mappings != null ) {
-				for ( SqlResultSetMapping ann : mappings ) {
-					QueryBinder.bindSqlResultSetMapping( ann, context, true );
+				for ( SqlResultSetMapping annotation : mappings ) {
+					QueryBinder.bindSqlResultSetMapping( annotation, context, true );
 				}
 			}
 		}
@@ -262,12 +262,11 @@ public final class AnnotationBinder {
 				false
 		);
 
-		final SqlResultSetMappings ann = annotatedElement.getAnnotation( SqlResultSetMappings.class );
-		if ( ann != null ) {
-			for ( SqlResultSetMapping current : ann.value() ) {
-				QueryBinder.bindSqlResultSetMapping( current, context, false );
-			}
-		}
+		QueryBinder.bindSqlResultSetMappings(
+				annotatedElement.getAnnotation( SqlResultSetMappings.class ),
+				context,
+				false
+		);
 
 		QueryBinder.bindQuery(
 				annotatedElement.getAnnotation( NamedQuery.class ),

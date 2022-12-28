@@ -851,8 +851,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - CommonQueryContract
 
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	Query<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	Query<R> setCacheable(boolean cacheable);
@@ -914,7 +917,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setFlushMode(FlushModeType flushMode);
 
 	@Override

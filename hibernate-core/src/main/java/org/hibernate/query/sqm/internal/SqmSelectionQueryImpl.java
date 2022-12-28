@@ -24,6 +24,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -548,6 +549,12 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	public SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode(queryFlushMode);
 		return this;
 	}
 

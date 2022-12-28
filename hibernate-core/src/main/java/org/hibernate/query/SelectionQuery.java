@@ -295,11 +295,14 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
@@ -421,14 +424,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
 	 * <p>
-	 * The {@link CacheMode} here describes reading-from/writing-to the
-	 * entity/collection caches as we process query results. For caching
-	 * of the actual query results, see {@link #isCacheable()} and
-	 * {@link #getCacheRegion()}
+	 * The {@link CacheMode} here affects the use of entity and collection
+	 * caches as the query result set is processed. For caching of the actual
+	 * query results, use {@link #isCacheable()} and {@link #getCacheRegion()}.
 	 * <p>
 	 * In order for this setting to have any affect, second-level caching
-	 * would have to be enabled and the entities/collections in question
-	 * configured for caching.
+	 * must be enabled and the entities and collections must be eligible
+	 * for storage in the second-level cache.
 	 *
 	 * @see Session#getCacheMode()
 	 */
@@ -450,9 +452,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Set the current {@link CacheMode} in effect for this query.
-	 *
-	 * @implNote Setting it to {@code null} ultimately indicates to use the
-	 *           {@code CacheMode} of the session.
+	 * <p>
+	 * Set it to {@code null} to indicate that the {@code CacheMode}
+	 * of the {@link Session#getCacheMode() session} should be used.
 	 *
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode(CacheMode)

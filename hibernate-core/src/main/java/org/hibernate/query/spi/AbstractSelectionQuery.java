@@ -20,6 +20,7 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -31,6 +32,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -52,7 +54,6 @@ import jakarta.persistence.TemporalType;
 
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.CacheMode.fromJpaModes;
-import static org.hibernate.FlushMode.fromJpaFlushMode;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -167,7 +168,7 @@ public abstract class AbstractSelectionQuery<R>
 		assert sessionFlushMode == null;
 		assert sessionCacheMode == null;
 
-		final FlushMode effectiveFlushMode = getHibernateFlushMode();
+		final FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
 		if ( effectiveFlushMode != null ) {
 			sessionFlushMode = session.getHibernateFlushMode();
 			session.setHibernateFlushMode( effectiveFlushMode );
@@ -333,12 +334,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public FlushModeType getFlushMode() {
-		return getQueryOptions().getFlushMode().toJpaFlushMode();
+		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
 	public SelectionQuery<R> setFlushMode(FlushModeType flushMode) {
-		getQueryOptions().setFlushMode( fromJpaFlushMode( flushMode ) );
+		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode( flushMode ) );
 		return this;
 	}
 
@@ -563,6 +564,12 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode(queryFlushMode);
 		return this;
 	}
 

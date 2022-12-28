@@ -29,8 +29,10 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
@@ -61,6 +63,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public FlushMode getHibernateFlushMode() {
 		return getDelegate().getHibernateFlushMode();
+	}
+
+	@Override
+	public QueryFlushMode getQueryFlushMode() {
+		return getDelegate().getQueryFlushMode();
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		return getDelegate().setQueryFlushMode( queryFlushMode );
 	}
 
 	@Override

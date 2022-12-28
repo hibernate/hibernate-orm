@@ -27,6 +27,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -195,17 +196,20 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
+	public QueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode(queryFlushMode);
+		return this;
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+//		getSession().checkOpen();
+		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
+//		getSession().checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 		return this;
 	}
@@ -366,7 +370,7 @@ public abstract class AbstractQuery<R>
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );

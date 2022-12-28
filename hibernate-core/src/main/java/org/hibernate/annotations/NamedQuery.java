@@ -15,6 +15,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.CacheMode;
+import org.hibernate.query.QueryFlushMode;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
@@ -59,11 +60,24 @@ public @interface NamedQuery {
 	Class<?> resultClass() default void.class;
 
 	/**
+	 * Determines whether the session should be flushed before
+	 * executing the query.
+	 *
+	 * @see org.hibernate.query.CommonQueryContract#setQueryFlushMode(QueryFlushMode)
+	 *
+	 * @since 7.0
+	 */
+	QueryFlushMode flush() default QueryFlushMode.DEFAULT;
+
+	/**
 	 * The flush mode for this query.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
+	 *
+	 * @deprecated use {@link #flush()}
 	 */
+	@Deprecated(since = "7")
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**

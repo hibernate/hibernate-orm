@@ -9,19 +9,16 @@ package org.hibernate.orm.test.jpa.query;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.Session;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Yoann Rodiere
  */
-@JiraKey(value = "HHH-12795")
+@JiraKey("HHH-12795")
 @Jpa(annotatedClasses = {
-		NamedQueryFlushModeTest.TestEntity.class
+		NamedQueryQueryFlushModeTest.TestEntity.class
 })
-public class NamedQueryFlushModeTest {
+public class NamedQueryQueryFlushModeTest {
 
 	@Test
 	public void testNamedQueryWithFlushModeManual(EntityManagerFactoryScope scope) {
@@ -56,7 +53,7 @@ public class NamedQueryFlushModeTest {
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
 					Query<?> query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 				}
 		);
@@ -104,21 +101,25 @@ public class NamedQueryFlushModeTest {
 					query = s.getNamedQuery( queryName );
 					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
+					assertEquals( QueryFlushMode.DEFAULT, query.getQueryFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.COMMIT );
 					query = s.getNamedQuery( queryName );
 					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
+					assertEquals( QueryFlushMode.DEFAULT, query.getQueryFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.AUTO );
 					query = s.getNamedQuery( queryName );
 					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
+					assertEquals( QueryFlushMode.DEFAULT, query.getQueryFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.ALWAYS );
 					query = s.getNamedQuery( queryName );
 					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
+					assertEquals( QueryFlushMode.DEFAULT, query.getQueryFlushMode() );
 				}
 		);
 	}
@@ -131,6 +132,7 @@ public class NamedQueryFlushModeTest {
 					Session s = entityManager.unwrap( Session.class );
 					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
 					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					assertEquals( QueryFlushMode.NO_FLUSH, query.getQueryFlushMode() );
 				}
 		);
 	}
@@ -142,7 +144,8 @@ public class NamedQueryFlushModeTest {
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
 					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					assertEquals( QueryFlushMode.NO_FLUSH, query.getQueryFlushMode() );
 				}
 		);
 	}
@@ -155,6 +158,7 @@ public class NamedQueryFlushModeTest {
 					Session s = entityManager.unwrap( Session.class );
 					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
 					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
+					assertEquals( QueryFlushMode.DEFAULT, query.getQueryFlushMode() );
 				}
 		);
 	}
@@ -167,6 +171,7 @@ public class NamedQueryFlushModeTest {
 					Session s = entityManager.unwrap( Session.class );
 					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
 					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
+					assertEquals( QueryFlushMode.FLUSH, query.getQueryFlushMode() );
 				}
 		);
 	}
@@ -209,57 +214,57 @@ public class NamedQueryFlushModeTest {
 	@NamedQuery(
 			name = "NamedQueryFlushModeManual",
 			query = "select e from TestEntity e where e.text = :text",
-			flushMode = FlushModeType.MANUAL
+			flush = QueryFlushMode.NO_FLUSH
 	)
 	@NamedQuery(
 			name = "NamedQueryFlushModeCommit",
 			query = "select e from TestEntity e where e.text = :text",
-			flushMode = FlushModeType.COMMIT
+			flush = QueryFlushMode.NO_FLUSH
 	)
 	@NamedQuery(
 			name = "NamedQueryFlushModeAuto",
 			query = "select e from TestEntity e where e.text = :text",
-			flushMode = FlushModeType.AUTO
+			flush = QueryFlushMode.DEFAULT
 	)
 	@NamedQuery(
 			name = "NamedQueryFlushModeAlways",
 			query = "select e from TestEntity e where e.text = :text",
-			flushMode = FlushModeType.ALWAYS
+			flush = QueryFlushMode.FLUSH
 	)
 	@NamedQuery(
 			name = "NamedQueryFlushModePersistenceContext",
 			query = "select e from TestEntity e where e.text = :text",
-			flushMode = FlushModeType.PERSISTENCE_CONTEXT
+			flush = QueryFlushMode.DEFAULT
 	)
 	@NamedNativeQuery(
 			name = "NamedNativeQueryFlushModeManual",
 			query = "select * from TestEntity e where e.text = :text",
 			resultClass = TestEntity.class,
-			flushMode = FlushModeType.MANUAL
+			flush = QueryFlushMode.NO_FLUSH
 	)
 	@NamedNativeQuery(
 			name = "NamedNativeQueryFlushModeCommit",
 			query = "select * from TestEntity e where e.text = :text",
 			resultClass = TestEntity.class,
-			flushMode = FlushModeType.COMMIT
+			flush = QueryFlushMode.NO_FLUSH
 	)
 	@NamedNativeQuery(
 			name = "NamedNativeQueryFlushModeAuto",
 			query = "select * from TestEntity e where e.text = :text",
 			resultClass = TestEntity.class,
-			flushMode = FlushModeType.AUTO
+			flush = QueryFlushMode.DEFAULT
 	)
 	@NamedNativeQuery(
 			name = "NamedNativeQueryFlushModeAlways",
 			query = "select * from TestEntity e where e.text = :text",
 			resultClass = TestEntity.class,
-			flushMode = FlushModeType.ALWAYS
+			flush = QueryFlushMode.FLUSH
 	)
 	@NamedNativeQuery(
 			name = "NamedNativeQueryFlushModePersistenceContext",
 			query = "select * from TestEntity e where e.text = :text",
 			resultClass = TestEntity.class,
-			flushMode = FlushModeType.PERSISTENCE_CONTEXT
+			flush = QueryFlushMode.DEFAULT
 	)
 
 	public static class TestEntity {

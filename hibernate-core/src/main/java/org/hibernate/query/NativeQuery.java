@@ -554,10 +554,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - Query
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
+	NativeQuery<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setFlushMode(FlushModeType flushMode);
 
 	@Override

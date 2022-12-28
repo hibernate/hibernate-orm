@@ -24,6 +24,7 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.hibernate.query.QueryFlushMode;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -33,6 +34,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	private Class<?> resultClass;
 	private String resultSetMapping;
 	private FlushModeType flushMode;
+	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
 	int fetchSize;
@@ -51,6 +53,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		resultClass = void.class;
 		resultSetMapping = "";
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
+		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
 		fetchSize = -1;
@@ -72,6 +75,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.resultClass = annotation.resultClass();
 		this.resultSetMapping = annotation.resultSetMapping();
 		this.flushMode = annotation.flushMode();
+		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
 		this.fetchSize = annotation.fetchSize();
@@ -97,6 +101,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
 		this.resultSetMapping = (String) attributeValues.get( "resultSetMapping" );
 		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.cacheable = (boolean) attributeValues.get( "cacheable" );
 		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
 		this.fetchSize = (int) attributeValues.get( "fetchSize" );
@@ -150,6 +155,15 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void resultSetMapping(String value) {
 		this.resultSetMapping = value;
+	}
+
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
+	}
+
+	public void flush(QueryFlushMode value) {
+		this.flush = value;
 	}
 
 	@Override

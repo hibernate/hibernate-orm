@@ -16,8 +16,13 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import jakarta.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
@@ -638,6 +643,31 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static Map<Class, Method> setterMethods(final Class containerClass, final  String propertyName) {
+		Class checkClass = containerClass;
+		List<Method> setter = new ArrayList<>();
+
+		// check containerClass, and then its super types (if any)
+		while ( setter == null && checkClass != null ) {
+			if ( checkClass.equals( Object.class ) ) {
+				break;
+			}
+
+			setter.addAll(setters( checkClass, propertyName));
+
+			// if no setter found yet, check all implemented interfaces
+			if ( setter.isEmpty() ) {
+				setter.addAll(setters( checkClass.getInterfaces(), propertyName ));
+			}
+			else {
+				setter.forEach(ReflectHelper::ensureAccessibility);
+			}
+
+			checkClass = checkClass.getSuperclass();
+		}
+		return setter.stream().collect(Collectors.toMap(Method::getReturnType, m -> m));
+	}
+
 	public static Method setterMethodOrNull(final Class containerClass, final  String propertyName, final Class propertyType) {
 		Class checkClass = containerClass;
 		Method setter = null;
@@ -763,6 +793,36 @@ public final class ReflectHelper {
 		}
 
 		return potentialSetter;
+	}
+
+	private static List<Method> setters(Class theClass, String propertyName) {
+		List<Method> potentialSetter = new ArrayList<>();
+
+		for ( Method method : theClass.getDeclaredMethods() ) {
+			final String methodName = method.getName();
+			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
+				final String testOldMethod = methodName.substring( 3 );
+				final String testStdMethod = Introspector.decapitalize( testOldMethod );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					potentialSetter.add(method);
+				}
+			}
+		}
+
+		return potentialSetter;
+	}
+
+	private static List<Method> setters(Class[] interfaces, String propertyName) {
+		List<Method> setter = null;
+		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
+			final Class anInterface = interfaces[i];
+			setter = setters( anInterface, propertyName );
+			if ( setter == null ) {
+				// if no setter found yet, check all implemented interfaces of interface
+				setter = setters( anInterface.getInterfaces(), propertyName );
+			}
+		}
+		return setter;
 	}
 
 	/**

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.Map;
 
 import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
@@ -26,13 +27,15 @@ public class SetterFieldImpl implements Setter {
 	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
+	private final Map<Class, Method> setterMethods;
 	private final Method setterMethod;
 
 	public SetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
+		this.setterMethods = ReflectHelper.setterMethods( containerClass, propertyName );
+		this.setterMethod = this.setterMethods.get(field.getType());
 	}
 
 	public Class<?> getContainerClass() {
@@ -50,6 +53,14 @@ public class SetterFieldImpl implements Setter {
 	@Override
 	public void set(Object target, Object value) {
 		try {
+			if(value != null) {
+				Class<?> valueClazz = value.getClass();
+				Method setter = setterMethods.get(valueClazz);
+				if(setter != null) {
+					setter.invoke(target, value);
+					return;
+				}
+			}
 			field.set( target, value );
 		}
 		catch (Exception e) {

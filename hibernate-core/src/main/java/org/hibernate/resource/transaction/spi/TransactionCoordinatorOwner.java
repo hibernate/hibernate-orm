@@ -9,7 +9,7 @@ package org.hibernate.resource.transaction.spi;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
 /**
- * Models an owner of a TransactionCoordinator.  Mainly used in 2 ways:<ul>
+ * Models an owner of a {@link TransactionCoordinator}.  Mainly used in 2 ways:<ul>
  *     <li>
  *         First to allow the coordinator to determine if its owner is still active (open, etc).
  *     </li>

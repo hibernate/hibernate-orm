@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.CompositeOwner;
 /**
  * small low memory class to keep references to composite owners
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
 public final class CompositeOwnerTracker {
 

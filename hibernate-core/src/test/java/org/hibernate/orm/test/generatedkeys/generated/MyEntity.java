@@ -17,7 +17,7 @@ import org.hibernate.annotations.NaturalId;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * @author Steve Ebersole
  */
 @Entity @Table(name="my_entity")
 public class MyEntity {

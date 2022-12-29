@@ -15,7 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
- * An SQL {@code UPDATE} statement
+ * A SQL {@code UPDATE} statement.
  *
  * @author Gavin King
  */

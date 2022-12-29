@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * @author <a href="mailto:p.krauzowicz@visiona.pl">Piotr Krauzowicz</a>
+ * @author Piotr Krauzowicz
  * @author Gail Badner
  */
 @SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, matchSubTypes = true, reason = "BLOB/TEXT column 'id' used in key specification without a key length")

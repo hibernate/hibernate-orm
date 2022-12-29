@@ -6,6 +6,9 @@
  */
 
 /**
- * Defines contracts for accessing JDBC Connections
+ * Defines SPI contracts for obtaining JDBC {@link java.sql.Connection}s from a
+ * provider implemented as a {@linkplain org.hibernate.service.Service service}.
+ *
+ * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider
  */
 package org.hibernate.engine.jdbc.connections.spi;

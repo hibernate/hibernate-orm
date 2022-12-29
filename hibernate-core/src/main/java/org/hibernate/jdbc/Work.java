@@ -10,9 +10,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Contract for performing a discrete piece of JDBC work.
+ * A discrete piece of work making use of a {@linkplain Connection JDBC connection}.
  *
  * @author Steve Ebersole
+ *
+ * @see ReturningWork
+ * @see org.hibernate.SharedSessionContract#doWork(Work)
  */
 @FunctionalInterface
 public interface Work {

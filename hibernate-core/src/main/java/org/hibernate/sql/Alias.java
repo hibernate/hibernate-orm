@@ -8,7 +8,8 @@ package org.hibernate.sql;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An alias generator for SQL identifiers
+ * An alias generator for SQL identifiers.
+ *
  * @author Gavin King
  */
 public final class Alias {

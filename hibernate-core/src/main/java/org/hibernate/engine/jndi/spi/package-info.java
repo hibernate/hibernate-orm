@@ -6,6 +6,6 @@
  */
 
 /**
- * The SPI contracts for Hibernate JNDI support
+ * The SPI contracts for integration with JNDI.
  */
 package org.hibernate.engine.jndi.spi;

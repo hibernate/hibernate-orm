@@ -7,43 +7,55 @@
 package org.hibernate.spi;
 
 /**
- * Hibernate often deals with compound names/paths.  This interface defines a
- * standard way of interacting with them
+ * A compound name.
+ * <p>
+ * Hibernate often deals with compound names/paths.
+ * This interface defines a standard way of interacting with them.
  *
  * @author Steve Ebersole
  */
 public interface DotIdentifierSequence {
 	/**
-	 * The parent sequence part.  E.g., given the sequence `a.b.c`,
-	 * this returns `a.b`
+	 * The parent sequence part.
+	 * <p>
+	 * Given the sequence {@code a.b.c}, returns the sequence
+	 * {@code a.b}.
 	 */
 	DotIdentifierSequence getParent();
 
 	/**
-	 * The name of this sequence part.  E.g., given the sequence `a.b.c`,
-	 * this returns `c`
+	 * The name of this leaf sequence part.
+	 * <p>
+	 * Given the sequence {@code a.b.c}, returns the string
+	 * {@code "c"}.
 	 */
 	String getLocalName();
 
 	/**
-	 * The full sequence text.  E.g., given the sequence `a.b.c`,
-	 * this returns `a.b.c`
+	 * The full sequence text.
+	 * <p>
+	 * Given the sequence {@code a.b.c}, returns the string
+	 * {@code "a.b.c"}.
 	 *
 	 * @implNote This method may dynamically build the returned
-	 * String and should be avoided for critical paths (comparisons, e.g.).
+	 *           string and should be avoided for critical paths
+	 *           (comparisons,for example).
 	 */
 	String getFullPath();
 
 	/**
-	 * Add a new part to the end of this sequence, returning the new
-	 * representation.  E.g., given the sequence `a.b.c` and appending `d`
-	 * would return a new sequence `a.b.c.d`
+	 * Append a new part to the end of this sequence, returning
+	 * the new representation.
+	 * <p>
+	 * Given the sequence {@code a.b.c}, appending {@code d}
+	 * results in the new sequence {@code a.b.c.d}.
 	 */
 	DotIdentifierSequence append(String subPathName);
 
 	/**
-	 * Is this sequence node the root of the sequence.  Same as checking
-	 * the nullness of {@link #getParent()}
+	 * Is this sequence node the root of the sequence?
+	 * <p>
+	 * Same as checking the nullness of {@link #getParent()}.
 	 */
 	default boolean isRoot() {
 		return getParent() == null;

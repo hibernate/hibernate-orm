@@ -7,8 +7,7 @@
 package org.hibernate.graph;
 
 /**
- * Commonality between {@link AttributeNode} and
- * {@link Graph}.
+ * Commonality between {@link AttributeNode} and {@link Graph}.
  *
  * @author Steve Ebersole
  */

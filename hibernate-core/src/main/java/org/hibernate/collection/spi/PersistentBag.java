@@ -26,13 +26,15 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * An unordered, unkeyed collection that can contain the same element
- * multiple times. The Java collections API, curiously, has no {@code Bag}.
- * Most developers seem to use {@code List}s to represent bag semantics,
- * so Hibernate follows this practice.
+ * An unordered, un-keyed collection that can contain the same element
+ * multiple times. The Java Collections Framework, curiously, has no
+ * {@code Bag} interface. It is, however, common to use {@code List}s
+ * to represent a collection with bag semantics, so Hibernate follows
+ * this practice.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */

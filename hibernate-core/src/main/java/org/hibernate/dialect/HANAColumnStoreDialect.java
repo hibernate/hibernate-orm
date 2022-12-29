@@ -32,8 +32,8 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY
  * <p>
  * Column tables are created by this dialect when using the auto-ddl feature.
  * 
- * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
- * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
+ * @author Andrew Clemons
+ * @author Jonathan Bregler
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 

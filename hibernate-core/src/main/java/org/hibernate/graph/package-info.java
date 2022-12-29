@@ -8,7 +8,7 @@
 /**
  * Implements and extends the JPA-defined {@linkplain jakarta.persistence.EntityGraph entity graph} API.
  *
- * @apiNote This entire package (including sub-packages) is considered incubating
+ * @apiNote This entire package, including its subpackages, is considered incubating.
  */
 @Incubating
 package org.hibernate.graph;

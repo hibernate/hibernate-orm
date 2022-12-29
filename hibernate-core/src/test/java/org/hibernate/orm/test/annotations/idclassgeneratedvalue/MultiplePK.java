@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * MultiplePK
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 public class MultiplePK implements Serializable
 {

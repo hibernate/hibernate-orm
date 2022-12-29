@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 /**
  * 
- * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+ * @author Strong Liu
  */
 public abstract class Customer implements Serializable {
     private PersonID id;

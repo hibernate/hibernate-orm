@@ -6,7 +6,7 @@
  */
 
 /**
- * Package defining a SQL AST for use in creating and executing various JDBC operations.
+ * Package defining a SQL AST for use in generation of SQL.
  */
 @Incubating
 package org.hibernate.sql.ast;

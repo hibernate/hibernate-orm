@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.procedure;
 
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 public class AnnotationTest extends AbstractStoredProcedureTest {
 	@Override

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityManagerFactory;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class SessionFactoryObserverTest {
     @Test

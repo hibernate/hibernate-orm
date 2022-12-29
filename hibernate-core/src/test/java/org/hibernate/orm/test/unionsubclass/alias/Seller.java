@@ -11,7 +11,7 @@ import java.util.Set;
 
 /**
  * 
- * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+ * @author Strong Liu
  */
 public class Seller implements Serializable {
     private PersonID id;

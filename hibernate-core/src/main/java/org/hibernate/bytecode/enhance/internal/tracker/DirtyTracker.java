@@ -9,7 +9,7 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 /**
  * Interface to be implemented by dirty trackers, a simplified Set of String.
  *
- * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
+ * @author Luis Barreiro
  */
 public interface DirtyTracker {
 

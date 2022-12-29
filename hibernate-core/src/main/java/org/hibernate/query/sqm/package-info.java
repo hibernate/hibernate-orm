@@ -6,26 +6,29 @@
  */
 
 /**
- * @asciidoc
+ * This package defines a semantic model of HQL queries.
  *
- * = Semantic Query Model (SQM)
+ * <h3>Semantic Query Model (SQM)</h3>
  *
- * SQM is a tree (AST) based representation of the *semantic* interpretation of a query
- * (HQL or Criteria).  It is semantic in that it is more than a simple syntax tree.
+ * SQM is a tree (AST) based representation of the semantic interpretation of a query
+ * (HQL or Criteria). It is "semantic" in the sense that it is more than a simple syntax
+ * tree.
  *
- * == HQL
+ * <h3>HQL</h3>
  *
- * HQL is interpreted into an SQM with the help of Antlr parsing library.  The main
- * entry point into that transformation is {@link org.hibernate.query.hql.internal.SemanticQueryBuilder}
+ * HQL is interpreted into an SQM with the help of ANTRL parsed generator. The entry point
+ * into the transformation is {@link org.hibernate.query.hql.internal.SemanticQueryBuilder}.
  *
- * == Criteria
+ * <h3>Criteria queries</h3>
  *
- * The SQM tree implements the JPA Criteria contracts.  Hibernate's implementation of the
- * JPA {@link jakarta.persistence.criteria.CriteriaBuilder} contract
- * ({@link org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder}) returns SQM nodes
- * that are arranged into an SQM tree via the normal JPA Criteria building approach
+ * The SQM tree implements the JPA criteria query contracts. Our implementation of the JPA
+ * {@link jakarta.persistence.criteria.CriteriaBuilder} interface is
+ * {@link org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder}. It produced SQM nodes
+ * that are arranged into an SQM tree via the standard JPA criteria building approach.
  *
- * Note that this entire package is considered incubating
+ * @apiNote This entire package is in an incubating state.
  */
-@org.hibernate.Incubating
+@Incubating
 package org.hibernate.query.sqm;
+
+import org.hibernate.Incubating;

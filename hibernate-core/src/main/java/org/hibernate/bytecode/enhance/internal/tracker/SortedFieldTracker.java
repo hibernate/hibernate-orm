@@ -13,7 +13,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  *
  * similar to BasicTracker but where the array is kept ordered to reduce the cost of verifying duplicates
  *
- * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
+ * @author Luis Barreiro
  */
 public final class SortedFieldTracker implements DirtyTracker {
 

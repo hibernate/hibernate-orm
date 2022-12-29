@@ -28,11 +28,12 @@ import org.hibernate.type.Type;
 
 
 /**
- * A persistent wrapper for a {@code java.util.Map}. Underlying collection
+ * A persistent wrapper for a {@link java.util.Map}. Underlying collection
  * is a {@code HashMap}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */

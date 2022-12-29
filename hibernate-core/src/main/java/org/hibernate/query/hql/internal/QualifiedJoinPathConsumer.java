@@ -30,7 +30,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.jboss.logging.Logger;
 
 /**
- * Specialized "intermediate" SemanticPathPart for processing domain model paths
+ * Specialized "intermediate" SemanticPathPart for processing domain model paths.
  *
  * @author Steve Ebersole
  */

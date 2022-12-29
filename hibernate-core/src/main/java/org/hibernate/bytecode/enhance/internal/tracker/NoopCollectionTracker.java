@@ -11,7 +11,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 /**
  * small low memory class to keep track of the number of elements in a collection
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
 public final class NoopCollectionTracker implements CollectionTracker {
 

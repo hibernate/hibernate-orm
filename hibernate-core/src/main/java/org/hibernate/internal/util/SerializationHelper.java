@@ -22,8 +22,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
 
 /**
- * <p>Assists with the serialization process and performs additional functionality based
- * on serialization.</p>
+ * Assists with the serialization process and performs additional
+ * functionality based on serialization.
  * <p>
  * <ul>
  * <li>Deep clone using serialization
@@ -31,12 +31,11 @@ import org.hibernate.type.SerializationException;
  * <li>Deserialize managing finally and IOException
  * </ul>
  * <p>
- * <p>This class throws exceptions for invalid <code>null</code> inputs.
- * Each method documents its behaviour in more detail.</p>
+ * This class throws exceptions for invalid {@code null} inputs.
  *
- * @author <a href="mailto:nissim@nksystems.com">Nissim Karpenstein</a>
- * @author <a href="mailto:janekdb@yahoo.co.uk">Janek Bogucki</a>
- * @author <a href="mailto:dlr@finemaltcoding.com">Daniel Rall</a>
+ * @author Nissim Karpenstein
+ * @author Janek Bogucki
+ * @author Daniel Rall
  * @author Stephen Colebourne
  * @author Jeff Varszegi
  * @author Gary Gregory
@@ -53,15 +52,15 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * <p>Deep clone an <code>Object</code> using serialization.</p>
+	 * Deep clone an object using serialization.
 	 * <p>
-	 * <p>This is many times slower than writing clone methods by hand
+	 * This is many times slower than writing clone methods by hand
 	 * on all objects in your object graph. However, for complex object
 	 * graphs, or for those that don't support deep cloning this can
 	 * be a simple alternative implementation. Of course all the objects
-	 * must be <code>Serializable</code>.</p>
+	 * must be {@code Serializable}.
 	 *
-	 * @param object the <code>Serializable</code> object to clone
+	 * @param object the {@code Serializable} object to clone
 	 *
 	 * @return the cloned object
 	 *
@@ -79,19 +78,19 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * <p>Serializes an <code>Object</code> to the specified stream.</p>
+	 * <p>Serializes an object to the given stream.
 	 * <p>
-	 * <p>The stream will be closed once the object is written.
-	 * This avoids the need for a finally clause, and maybe also exception
-	 * handling, in the application code.</p>
+	 * The stream will be closed once the object is written.
+	 * This avoids the need for a finally clause, and maybe also
+	 * for exception handling, in the application code.
 	 * <p>
-	 * <p>The stream passed in is not buffered internally within this method.
-	 * This is the responsibility of your application if desired.</p>
+	 * The stream passed in is not buffered internally within this
+	 * method. This is the responsibility of the caller, if desired.
 	 *
 	 * @param obj the object to serialize to bytes, may be null
 	 * @param outputStream the stream to write to, must not be null
 	 *
-	 * @throws IllegalArgumentException if <code>outputStream</code> is <code>null</code>
+	 * @throws IllegalArgumentException if {@code outputStream} is null
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static void serialize(Serializable obj, OutputStream outputStream) throws SerializationException {
@@ -130,8 +129,8 @@ public final class SerializationHelper {
 	}
 
 	/**
-	 * <p>Serializes an <code>Object</code> to a byte array for
-	 * storage/serialization.</p>
+	 * Serializes an object to a byte array for storage or
+	 * externalization.
 	 *
 	 * @param obj the object to serialize to bytes
 	 *
@@ -149,8 +148,8 @@ public final class SerializationHelper {
 	//-----------------------------------------------------------------------
 
 	/**
-	 * Deserializes an object from the specified stream using the Thread Context
-	 * ClassLoader (TCCL).
+	 * Deserializes an object from the given stream using the
+	 * Thread Context ClassLoader (TCCL).
 	 * <p>
 	 * Delegates to {@link #doDeserialize}
 	 *
@@ -158,7 +157,7 @@ public final class SerializationHelper {
 	 *
 	 * @return the deserialized object
 	 *
-	 * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
+	 * @throws IllegalArgumentException if {@code inputStream} is null
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static <T> T deserialize(InputStream inputStream) throws SerializationException {
@@ -179,16 +178,16 @@ public final class SerializationHelper {
 	}
 
 	/**
-	 * Deserializes an object from the specified stream using the Thread Context
-	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
-	 * class is used.
+	 * Deserializes an object from the given stream using the
+	 * Thread Context ClassLoader (TCCL). If there is no TCCL set,
+	 * the classloader of the calling class is used.
 	 * <p>
-	 * The stream will be closed once the object is read. This avoids the need
-	 * for a finally clause, and maybe also exception handling, in the application
-	 * code.
+	 * The stream will be closed once the object is read. This
+	 * avoids the need for a finally clause, and maybe also for
+	 * exception handling, in the application code.
 	 * <p>
-	 * The stream passed in is not buffered internally within this method.  This is
-	 * the responsibility of the caller, if desired.
+	 * The stream passed in is not buffered internally within this
+	 * method. This is the responsibility of the caller, if desired.
 	 *
 	 * @param inputStream the serialized object input stream, must not be null
 	 * @param loader The classloader to use
@@ -245,9 +244,9 @@ public final class SerializationHelper {
 	}
 
 	/**
-	 * Deserializes an object from an array of bytes using the Thread Context
-	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
-	 * class is used.
+	 * Deserializes an object from an array of bytes using the
+	 * Thread Context ClassLoader (TCCL). If there is no TCCL set,
+	 * the classloader of the calling class is used.
 	 * <p>
 	 * Delegates to {@link #deserialize(byte[], ClassLoader)}
 	 *
@@ -290,10 +289,10 @@ public final class SerializationHelper {
 
 	/**
 	 * By default, to resolve the classes being deserialized JDK serialization uses the
-	 * classes loader which loaded the class which initiated the deserialization call.  Here
-	 * that would be hibernate classes.  However, there are cases where that is not the correct
+	 * classes loader which loaded the class which initiated the deserialization call. Here
+	 * that would be Hibernate classes. However, there are cases where that is not the correct
 	 * class loader to use; mainly here we are worried about deserializing user classes in
-	 * environments (app servers, etc) where Hibernate is on a parent classes loader.  To
+	 * environments (app servers, etc) where Hibernate is on a parent classes loader. To
 	 * facilitate for that we allow passing in the class loader we should use.
 	 */
 	private static final class CustomObjectInputStream extends ObjectInputStream {
@@ -312,9 +311,6 @@ public final class SerializationHelper {
 			this.loader3 = loader3;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			final String className = v.getName();

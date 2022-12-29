@@ -14,7 +14,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 
 /**
- * Represents a {@code <mapping/>} element within a cfg.xml file.
+ * Represents a {@code <mapping/>} element within a {@code cfg.xml} file.
  *
  * @author Steve Ebersole
  */

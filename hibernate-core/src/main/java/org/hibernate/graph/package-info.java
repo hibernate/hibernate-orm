@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements and extends the JPA-defined {@link jakarta.persistence.EntityGraph entity graph} API.
+ * Implements and extends the JPA-defined {@linkplain jakarta.persistence.EntityGraph entity graph} API.
  *
  * @apiNote This entire package (including sub-packages) is considered incubating
  */

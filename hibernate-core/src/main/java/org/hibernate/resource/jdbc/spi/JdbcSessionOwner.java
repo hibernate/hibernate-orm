@@ -10,12 +10,14 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
- * Contract for something that controls a JdbcSessionContext.  The name comes from the
- * design idea of a JdbcSession which encapsulates this information, which we will hopefully
- * get back to later.
+ * Contract for something that controls a {@link JdbcSessionContext}.
+ * <p>
+ * The term "JDBC session" is taken from the SQL specification which
+ * calls a connection and its associated transaction context a "session".
  *
- * The term "JDBC session" is taken from the SQL specification which calls a connection
- * and its associated transaction context a "session".
+ * @apiNote The name comes from the design idea of a {@code JdbcSession}
+ *           which encapsulates this information, which we will hopefully
+ *           get back to later.
  *
  * @author Steve Ebersole
  */

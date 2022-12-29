@@ -13,7 +13,7 @@ import java.sql.Connection;
 import org.hibernate.resource.jdbc.LogicalConnection;
 
 /**
- * SPI contract for LogicalConnection
+ * SPI contract for {@link LogicalConnection}.
  *
  * @author Steve Ebersole
  */

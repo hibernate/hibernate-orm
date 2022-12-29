@@ -9,7 +9,7 @@ package org.hibernate.resource.jdbc.spi;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 
 /**
- * Provides access to manage "transactionality" via the JDBC Connection
+ * Provides access to manage "transactionality" via the JDBC {@link java.sql.Connection}.
  *
  * @author Steve Ebersole
  */

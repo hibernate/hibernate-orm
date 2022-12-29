@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 /**
- * The contract for setting a persistent property value into its container/owner
+ * The contract for setting the value of a persistent attribute on its container/owner.
  *
  * @author Gavin King
  * @author Steve Ebersole

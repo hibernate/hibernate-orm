@@ -6,7 +6,7 @@
  */
 
 /**
- * SPI for execution of SQL statements through JDBC. The statement to execute is
+ * SPI for execution of SQL statements via JDBC. The statement to execute is
  * modelled by {@link org.hibernate.sql.exec.spi.JdbcOperationQuery} and is
  * executed via the corresponding executor.
  * <p>

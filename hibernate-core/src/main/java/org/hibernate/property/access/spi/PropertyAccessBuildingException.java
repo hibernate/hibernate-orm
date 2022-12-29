@@ -9,7 +9,7 @@ package org.hibernate.property.access.spi;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates a problem while building a PropertyAccess
+ * Indicates a problem while building a {@link PropertyAccess}.
  *
  * @author Steve Ebersole
  */

@@ -10,7 +10,7 @@ import org.hibernate.service.Service;
 
 /**
  * Contract for an initiator of services that target the specialized service registry
- * {@link SessionFactoryServiceRegistry}
+ * {@link SessionFactoryServiceRegistry}.
  *
  * @author Steve Ebersole
  */

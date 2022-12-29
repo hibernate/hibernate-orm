@@ -9,10 +9,10 @@ package org.hibernate.property.access.spi;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 
 /**
- * Describes access to a particular persistent property in terms of getting and setting
- * values.
+ * Defines how a given persistent attribute is accessed by exposing
+ * a {@link Getter} and a {@link Setter} for the attribute.
  * <p>
- * Instances are obtained from {@link PropertyAccessStrategy}
+ * Instances are obtained from a {@link PropertyAccessStrategy}.
  *
  * @see ManagedTypeRepresentationStrategy
  *
@@ -21,21 +21,21 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
  */
 public interface PropertyAccess {
 	/**
-	 * Access to the PropertyAccessStrategy that created this PropertyAccess
+	 * Access to the {@link PropertyAccessStrategy} that created this instance.
 	 *
-	 * @return The PropertyAccessStrategy that created this PropertyAccess
+	 * @return The {@code PropertyAccessStrategy}
 	 */
 	PropertyAccessStrategy getPropertyAccessStrategy();
 
 	/**
-	 * Obtain the delegate for getting values for the described persistent property
+	 * Obtain the delegate for getting values of the persistent attribute.
 	 *
 	 * @return The property getter
 	 */
 	Getter getGetter();
 
 	/**
-	 * Obtain the delegate for setting values for the described persistent property
+	 * Obtain the delegate for setting values of the persistent attribute.
 	 *
 	 * @return The property setter
 	 */

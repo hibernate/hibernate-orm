@@ -12,7 +12,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * BasicValueConverter extension for AttributeConverter-specific support
+ * {@link BasicValueConverter} extension for {@link AttributeConverter}-specific support
  *
  * @author Steve Ebersole
  */

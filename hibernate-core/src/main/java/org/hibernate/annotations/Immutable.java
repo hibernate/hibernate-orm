@@ -32,6 +32,10 @@ import static java.lang.annotation.ElementType.*;
  *     context does not need to keep track of its state. This may help reduce memory allocation.
  * </li>
  * </ul>
+ * <p>
+ * This annotation may also be used to mark a Java type handled by a JPA
+ * {@link jakarta.persistence.AttributeConverter} as immutable, circumventing the need to treat
+ * it as mutable.
  *
  * @author Emmanuel Bernard
  */

@@ -22,7 +22,9 @@ import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Standard implementation of JpaAttributeConverter
+ * Standard implementation of {@link JpaAttributeConverter}.
+ *
+ * @see AttributeConverterMutabilityPlanImpl
  *
  * @author Steve Ebersole
  */

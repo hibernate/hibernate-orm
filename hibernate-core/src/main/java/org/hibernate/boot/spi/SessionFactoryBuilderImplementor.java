@@ -9,8 +9,8 @@ package org.hibernate.boot.spi;
 import org.hibernate.boot.SessionFactoryBuilder;
 
 /**
- * Additional contract for SessionFactoryBuilder mainly intended for implementors
- * of SessionFactoryBuilderFactory.
+ * Additional contract for {@link SessionFactoryBuilder} mainly intended for implementors
+ * of {@link SessionFactoryBuilderFactory}.
  *
  * @author Steve Ebersole
  */

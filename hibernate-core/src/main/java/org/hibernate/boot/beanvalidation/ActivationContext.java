@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
- * Defines the context needed to call the {@link TypeSafeActivator}
+ * Defines the context needed to call the {@link TypeSafeActivator}.
  *
  * @author Steve Ebersole
  */

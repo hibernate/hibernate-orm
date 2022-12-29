@@ -13,13 +13,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Support for basic-value conversions.
- *
- * Conversions might be defined by:
- *
- * 		* a custom JPA {@link jakarta.persistence.AttributeConverter},
- * 		* implicitly, based on the Java type (e.g., enums)
- * 	    * etc
- *
+ * <p>
+ * Conversions might be determined by:
+ * <ul>
+ * <li>a custom JPA {@link jakarta.persistence.AttributeConverter}, or
+ * <li>implicitly, based on the Java type, for example, for Java {@code enum}s.
+ * </ul>
  * @param <D> The Java type we can use to represent the domain (object) type
  * @param <R> The Java type we can use to represent the relational type
  *

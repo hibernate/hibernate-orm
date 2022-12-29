@@ -12,7 +12,10 @@
  *     configuration properties recognized by Hibernate.
  * <li>{@link org.hibernate.cfg.Configuration} provides a simplified
  *     API for bootstrapping Hibernate, as an alternative to the more
- *     APIs extensive facilities defined under {@link org.hibernate.boot}.
+ *     extensive facilities defined under {@link org.hibernate.boot}.
  * </ul>
+ * <p>
+ * Note that all the real meat behind these APIs is defined in the package
+ * {@link org.hibernate.boot}.
  */
 package org.hibernate.cfg;

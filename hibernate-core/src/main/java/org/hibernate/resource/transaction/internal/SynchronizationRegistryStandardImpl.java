@@ -16,7 +16,7 @@ import org.hibernate.resource.transaction.NullSynchronizationException;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistryImplementor;
 
 /**
- * The standard implementation of the SynchronizationRegistry contract
+ * The standard implementation of the {@link org.hibernate.resource.transaction.spi.SynchronizationRegistry} contract.
  *
  * @author Steve Ebersole
  */

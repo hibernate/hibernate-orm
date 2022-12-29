@@ -16,7 +16,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
- * Concrete builder for resource-local TransactionCoordinator instances.
+ * Concrete builder for resource-local {@link TransactionCoordinator} instances.
  *
  * @author Steve Ebersole
  */

@@ -30,8 +30,9 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Steve Ebersole
  * @author Gunnar Morling
  * @author Guillaume Smet
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link SessionFactoryBuilder}
+ *
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
 public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;

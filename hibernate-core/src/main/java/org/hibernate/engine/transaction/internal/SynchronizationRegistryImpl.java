@@ -18,7 +18,10 @@ import org.jboss.logging.Logger;
  * Manages a registry of {@link Synchronization}s.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This appears to no longer be used
  */
+@Deprecated(since = "6")
 public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SynchronizationRegistryImpl.class.getName() );

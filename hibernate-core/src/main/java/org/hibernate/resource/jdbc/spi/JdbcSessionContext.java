@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Provides the JdbcSession implementation with contextual information it needs during its lifecycle.
+ * Provides the {@code JdbcSession} with contextual information it needs during its lifecycle.
  *
  * @author Steve Ebersole
  */

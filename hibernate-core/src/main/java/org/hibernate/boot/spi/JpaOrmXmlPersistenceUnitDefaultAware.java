@@ -7,8 +7,8 @@
 package org.hibernate.boot.spi;
 
 /**
- * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.  Only
- * MetadataBuildingOptions are supported to implement this contract.
+ * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.
+ * Only {@link MetadataBuildingOptions} are supported to implement this contract.
  *
  * @since 5.0
  *

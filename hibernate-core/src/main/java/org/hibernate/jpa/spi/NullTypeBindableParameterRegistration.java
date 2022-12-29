@@ -13,10 +13,9 @@ package org.hibernate.jpa.spi;
  *
  * @author Gail Badner
  *
- * @deprecated Not actually sure what the original intent of this
- * was; but it is not used as of 6.0, so slating for removal
+ * @deprecated this is no longer used and will be removed
  */
-@Deprecated(since = "6.0")
+@Deprecated(since = "6.0", forRemoval = true)
 public interface NullTypeBindableParameterRegistration<T> extends ParameterRegistration<T> {
 
 	/**

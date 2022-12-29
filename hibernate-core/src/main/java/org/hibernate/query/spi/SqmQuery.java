@@ -25,8 +25,6 @@ import jakarta.persistence.TemporalType;
 /**
  * Query based on an SQM tree.
  *
- * @implSpec I
- *
  * @author Steve Ebersole
  */
 public interface SqmQuery extends CommonQueryContract {

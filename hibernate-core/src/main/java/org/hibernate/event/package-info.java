@@ -12,7 +12,7 @@
  * represents a request by the session API for some work to be
  * performed, and an event listener must respond to the event and
  * do that work, usually by scheduling some sort of
- * {@linkplain  org.hibernate.action.spi.Executable action}.
+ * {@linkplain org.hibernate.action.spi.Executable action}.
  *
  * @see org.hibernate.action
  */

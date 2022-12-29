@@ -13,24 +13,30 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Hibernate specific extension to the JPA {@link jakarta.persistence.Parameter} contract as known to the
- * {@link jakarta.persistence.Query} and {@link jakarta.persistence.StoredProcedureQuery} implementations.  Used to track
- * information known about the parameter.
+ * {@link jakarta.persistence.Query} and {@link jakarta.persistence.StoredProcedureQuery} implementations.
+ * Used to track information known about the parameter.
  * <p>
  * For parameter information as known to JPA criteria queries,
  * see {@link org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter} instead.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated this is no longer used and will be removed
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface ParameterRegistration<T> extends Parameter<T> {
 	/**
-	 * JPA has a different definition of positional parameters than what legacy Hibernate HQL had.  In JPA,
-	 * the parameter holders are labelled (named :/).  At any rate the semantics are different and we often
-	 * need to understand which we are dealing with (and applications might too).
+	 * JPA has a different definition of positional parameters than what legacy Hibernate HQL had.
+	 * In JPA, the parameter holders are labelled (named). At any rate the semantics are different,
+	 * and we often need to understand which we are dealing with (and applications might too).
 	 *
-	 * @return {@code true} if this is a JPA-style ordinal parameter; {@code false} would indicate
-	 * we have either a named parameter ({@link #getName()} would return a non-{@code null} value) or a native
-	 * Hibernate positional parameter.
+	 * @return {@code true} if this is a JPA-style ordinal parameter;
+	 *         {@code false} indicated we have either a named parameter (that is, {@link #getName()}
+	 *         would return a non-{@code null} value) or a native Hibernate positional parameter.
+	 *
+	 * @deprecated this method is no longer used
 	 */
+	@Deprecated(since = "6")
 	boolean isJpaPositionalParameter();
 
 	/**
@@ -42,7 +48,7 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 
 	/**
 	 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
-	 * definition (is it an INPUT parameter?  An OUTPUT parameter? etc).
+	 * definition. (Is it an INPUT parameter?  An OUTPUT parameter?)
 	 *
 	 * @return The parameter mode.
 	 */

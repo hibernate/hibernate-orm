@@ -8,6 +8,11 @@ package org.hibernate.engine.transaction.spi;
 
 /**
  * Observer of internal transaction events.
+ * <p>
+ * A {@link TransactionObserver} must be registered with the {@link org.hibernate.resource.transaction.spi.TransactionCoordinator}
+ * by calling {@link org.hibernate.resource.transaction.spi.TransactionCoordinator#addObserver(TransactionObserver) addObserver()}.
+ *
+ * @apiNote It seems like this interface rightly belongs in {@link org.hibernate.resource.transaction.spi}.
  *
  * @author Steve Ebersole
  */

@@ -22,5 +22,7 @@
  * {@value org.hibernate.cfg.AvailableSettings#DIALECT}, but
  * this is not usually necessary unless a program uses a custom
  * implementation.
+ *
+ * @see org.hibernate.dialect.Dialect
  */
 package org.hibernate.dialect;

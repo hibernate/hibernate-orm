@@ -11,7 +11,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 
 /**
- * Details about an attribute as we process the {@linkplain org.hibernate.mapping boot model}
+ * Details about an attribute as we process the {@linkplain org.hibernate.mapping boot model}.
  */
 public interface PropertyData {
 

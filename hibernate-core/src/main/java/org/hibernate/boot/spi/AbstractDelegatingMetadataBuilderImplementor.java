@@ -36,10 +36,9 @@ import org.jboss.jandex.IndexView;
  *
  * @author Gunnar Morling
  *
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link MetadataBuilderImplementor}
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
-@SuppressWarnings("unused")
 public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends MetadataBuilderImplementor>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;

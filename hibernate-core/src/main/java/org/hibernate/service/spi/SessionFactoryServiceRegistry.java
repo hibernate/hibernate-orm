@@ -7,8 +7,9 @@
 package org.hibernate.service.spi;
 
 /**
- * Specialized {@link org.hibernate.service.ServiceRegistry} implementation that holds services which need access
- * to the {@link org.hibernate.SessionFactory} during initialization.
+ * Specialized {@link org.hibernate.service.ServiceRegistry} implementation that
+ * holds services which need access to the {@link org.hibernate.SessionFactory}
+ * during initialization.
  *
  * @author Steve Ebersole
  */

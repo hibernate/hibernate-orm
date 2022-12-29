@@ -23,7 +23,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
  * An entity-valued DynamicResultBuilder for cases when the user has not supplied
- * specific column -> attribute mappings.  Hibernate uses the column names mapped
+ * specific column to attribute mappings. Hibernate uses the column names mapped
  * by the entity mapping itself to read the entity values.
  *
  * @author Steve Ebersole

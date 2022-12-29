@@ -29,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * For example, if a filter is declared as follows:
  * <pre>
  * &#64;FilterDef(name = "Current",
- *            defaultCondition = "status<>'DELETED'")
+ *            defaultCondition = "status&lt;&gt;'DELETED'")
  * package org.hibernate.domain;
  * </pre>
  * <p>

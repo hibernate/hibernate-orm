@@ -24,8 +24,8 @@ import static java.lang.Math.log;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Standard implementation that orders columns by size and name
- * following roughly this ordering: <code>order by max(physicalSizeBytes, 4), physicalSizeBytes > 2048, name</code>
+ * Standard implementation that orders columns by size and name following roughly this ordering:
+ * {@code order by max(physicalSizeBytes, 4), physicalSizeBytes > 2048, name}
  */
 public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	public static final ColumnOrderingStrategyStandard INSTANCE = new ColumnOrderingStrategyStandard();

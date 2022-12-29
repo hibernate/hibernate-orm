@@ -14,11 +14,11 @@ import java.util.Map;
  * Provides a set of {@link org.hibernate.id.IdentifierGenerator} strategies,
  * overriding the default strategies.
  *
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  *
  * @deprecated supply a {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration} instead
  */
-@Deprecated(since = "6.0") @Remove
+@Deprecated(since = "6.0", forRemoval = true)
 public interface IdentifierGeneratorStrategyProvider {
 	/**
 	 * set of strategy / generator class pairs to register as accepted strategies

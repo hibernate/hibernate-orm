@@ -30,8 +30,8 @@ import org.jboss.logging.Logger;
 /**
  * Models the information gleaned from parsing a {@code cfg.xml} file.
  * <p>
- * A LoadedConfig is built via {@link #consume}.  An aggregated representation
- * can be maintained through calls to {@link #merge}
+ * A {@link LoadedConfig} is built via {@link #consume}. An aggregated
+ * representation can be maintained through calls to {@link #merge}.
  */
 public class LoadedConfig {
 	private static final Logger log = Logger.getLogger( LoadedConfig.class );

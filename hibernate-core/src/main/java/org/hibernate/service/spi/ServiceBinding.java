@@ -11,7 +11,7 @@ import org.hibernate.service.Service;
 import org.jboss.logging.Logger;
 
 /**
- * Models a binding for a particular service
+ * Models a binding for a particular service.
  *
  * @author Steve Ebersole
  */

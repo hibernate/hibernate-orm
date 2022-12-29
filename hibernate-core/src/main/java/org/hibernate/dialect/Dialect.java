@@ -4124,7 +4124,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Whether a predicate like `a > 0` can appear in an expression context e.g. a select item list.
+	 * Whether a predicate like {@code a > 0} can appear in an expression context,
+	 * for example, in a {@code select} list item.
 	 */
 	protected boolean supportsPredicateAsExpression() {
 		// Most databases seem to allow that

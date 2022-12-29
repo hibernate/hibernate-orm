@@ -7,7 +7,9 @@
 package org.hibernate.cfg;
 
 /**
- * Second pass operation
+ * Hibernate builds its {@linkplain org.hibernate.mapping build-time model}
+ * incrementally, often delaying operations until other pieces of information
+ * are available. A second pass represents one of these delayed operations.
  *
  * @author Emmanuel Bernard
  *

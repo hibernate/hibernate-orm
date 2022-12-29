@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 /**
  * A DomainAdmin.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 @Entity
 @Table(name = "domainadmin")

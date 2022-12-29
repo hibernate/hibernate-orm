@@ -17,7 +17,7 @@ package org.hibernate.dialect;
  * <p>
  * Column tables are created by this dialect when using the auto-ddl feature.
  * 
- * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
+ * @author Jonathan Bregler
  *
  * @deprecated use HANAColumnStoreDialect(400)
  */

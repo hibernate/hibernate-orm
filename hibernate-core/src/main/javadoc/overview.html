@@ -10,36 +10,40 @@
 
 <p>
     Hibernate is a library for object/relation mapping (ORM). It provides:
-    <ul>
-        <li>
-            a <em>native API</em> centered around {@link org.hibernate.SessionFactory} and
-            {@link org.hibernate.Session},
-        </li>
-        <li>
-            an implementation of the <em>Java (or Jakarta) Persistence API</em> (JPA),
-            where the equivalent central interfaces are {@link jakarta.persistence.EntityManagerFactory}
-            and {@link jakarta.persistence.EntityManager}, and
-        </li>
-        <li>
-            a set of <em>mapping annotations</em> which augment the O/R mapping annotations defined
-            by JPA, and which may be used with either API.
-        </li>
-    </ul>
 </p>
+<ul>
+    <li>
+        a <em>native API</em> centered around {@link org.hibernate.SessionFactory} and
+        {@link org.hibernate.Session},
+    </li>
+    <li>
+        an implementation of the <em>Java (or Jakarta) Persistence API</em> (JPA),
+        where the equivalent central interfaces are {@link jakarta.persistence.EntityManagerFactory}
+        and {@link jakarta.persistence.EntityManager}, and
+    </li>
+    <li>
+        a set of <em>mapping annotations</em> which augment the O/R mapping annotations defined
+        by JPA, and which may be used with either API.
+    </li>
+</ul>
 
 <h3>Native API</h3>
 
 <p>
     Along with {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}, applications
     using the native API will often make use of the following interfaces:
-    <ul>
-        <li>{@link org.hibernate.cfg.Configuration} to configure and bootstrap Hibernate,</li>
-        <li>{@link org.hibernate.StatelessSession} for processes involving many entity instances,</li>
-        <li>{@link org.hibernate.Cache} to manage the second-level cache,</li>
-        <li>{@link org.hibernate.Transaction} to control local transactions, and</li>
-        <li>{@link org.hibernate.query.Query} to execute HQL queries.</li>
-    </ul>
 </p>
+<ul>
+    <li>{@link org.hibernate.cfg.Configuration} to configure and bootstrap Hibernate,</li>
+    <li>{@link org.hibernate.StatelessSession} for processes involving many entity instances,</li>
+    <li>{@link org.hibernate.Cache} to manage the second-level cache,</li>
+    <li>{@link org.hibernate.Transaction} to control local transactions</li>
+    <li>{@link org.hibernate.query.Query} to execute HQL queries,</li>
+    <li>{@link org.hibernate.query.NativeQuery} to execute native SQL queries,</li>
+    <li>{@link org.hibernate.query.criteria.HibernateCriteriaBuilder} to construct criteria queries,
+        and</li>
+    <li>{@link org.hibernate.relational.SchemaManager} to execute DDL in tests.</li>
+</ul>
 
 <h3>JPA</h3>
 
@@ -70,33 +74,64 @@
     The full power of Hibernate can only be unlocked via judicious use of these extra annotations.
 </p>
 
+<h3>Popular extension points</h3>
+
+<p>
+    Hibernate offers an enormous wealth of extension points for customizing almost any aspect of
+    its implementation. Most of these extension points are far too technical to be of interest to
+    the typical application developer.
+</p>
+<p>
+    However, the following extension points are of quite general interest:
+</p>
+<ul>
+    <li>
+        {@link org.hibernate.usertype} defines support for user-defined custom attribute types,
+    </li>
+    <li>
+        {@link org.hibernate.generator} defines support for generated attribute values,
+    </li>
+    <li>
+        {@link org.hibernate.context.spi} defines support for context-bound "current" sessions
+        and contextual multi-tenancy,
+    </li>
+    <li>
+        {@link org.hibernate.cache.spi} defines an SPI for integrating with second-level cache
+        providers,
+    </li>
+    <li>
+        {@link org.hibernate.engine.jdbc.connections.spi} defines an SPI for integrating with
+        JDBC connection pools.
+    </li>
+</ul>
+
 <h3>Package categories</h3>
 
 <p>
     The organization of code into packages is based on the following classification:
-    <ul>
-        <li>
-            <strong>API packages</strong> include classes and interfaces which are used directly by
-            a typical application. These packages never have <code>spi</code> nor <code>internal</code>
-            in their name, and are not under the namespace <code>org.hibernate.testing</code>.
-        </li>
-        <li>
-            <strong>SPI packages</strong> include classes and interfaces which are used by integrators,
-            library developers, and framework developers to develop extensions to Hibernate, or to alter
-            its behavior in some way. These packages usually have <code>spi</code> in their name.
-        </li>
-        <li>
-            Some classes and interfaces are considered part of the internal implementation of Hibernate.
-            This category includes packages with <code>internal</code> in their name, along with any class
-            or interface annotated {@link org.hibernate.Internal @Internal}. Clients should avoid depending
-            directly on these types.
-        </li>
-        <li>
-            The <code>hibernate-testing</code> module, and the namespace <code>org.hibernate.testing</code>
-            contain <strong>testing support</strong> used in the Hibernate test suite.
-        </li>
-    </ul>
 </p>
+<ul>
+    <li>
+        <strong>API packages</strong> include classes and interfaces which are used directly by
+        a typical application. These packages never have <code>spi</code> nor <code>internal</code>
+        in their name, and are not under the namespace <code>org.hibernate.testing</code>.
+    </li>
+    <li>
+        <strong>SPI packages</strong> include classes and interfaces which are used by integrators,
+        library developers, and framework developers to develop extensions to Hibernate, or to alter
+        its behavior in some way. These packages usually have <code>spi</code> in their name.
+    </li>
+    <li>
+        Some classes and interfaces are considered part of the internal implementation of Hibernate.
+        This category includes packages with <code>internal</code> in their name, along with any class
+        or interface annotated {@link org.hibernate.Internal @Internal}. Clients should avoid depending
+        directly on these types.
+    </li>
+    <li>
+        The <code>hibernate-testing</code> module, and the namespace <code>org.hibernate.testing</code>
+        contain <strong>testing support</strong> used in the Hibernate test suite.
+    </li>
+</ul>
 
 <h3>More information</h3>
 

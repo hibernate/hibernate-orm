@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Parses SQL fragments specified in mapping documents
+ * Parses SQL fragments specified in mapping documents.
  *
  * @author Gavin King
  */

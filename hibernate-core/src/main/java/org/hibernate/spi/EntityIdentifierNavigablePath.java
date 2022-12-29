@@ -10,8 +10,8 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 
 /**
- * Specialized NavigablePath implementation for handling special cases
- * pertaining to entity identifiers
+ * Specialized implementation of {@link NavigablePath} for handling special cases
+ * pertaining to entity identifiers.
  *
  * @author Andrea Boriero
  */

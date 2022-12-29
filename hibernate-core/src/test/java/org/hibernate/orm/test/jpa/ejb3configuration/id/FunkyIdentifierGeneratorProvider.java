@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class FunkyIdentifierGeneratorProvider implements org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider {
 	public Map<String, Class<?>> getStrategies() {

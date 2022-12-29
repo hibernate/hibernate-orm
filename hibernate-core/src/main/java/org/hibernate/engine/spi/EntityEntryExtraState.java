@@ -10,7 +10,7 @@ package org.hibernate.engine.spi;
 /**
  * Navigation methods for extra state objects attached to {@link EntityEntry}.
  *
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public interface EntityEntryExtraState {
 

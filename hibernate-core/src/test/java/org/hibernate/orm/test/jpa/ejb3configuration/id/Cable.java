@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 @Entity
 public class Cable {

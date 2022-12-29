@@ -7,21 +7,25 @@
 package org.hibernate.proxy;
 import java.io.Serializable;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 
 /**
- * Marker interface for entity proxies
+ * Interface implemented directly by entity proxies, exposing
+ * access to the associated {@link LazyInitializer}.
  *
  * @author Gavin King
  */
 public interface HibernateProxy extends Serializable, PrimeAmongSecondarySupertypes {
 
 	/**
-	 * Extract the LazyInitializer from the object, if
-	 * and only if the object is actually an HibernateProxy.
-	 * If not, null is returned.
-	 * @param object any entity
-	 * @return either null (if object is not an HibernateProxy) or the LazyInitializer of the HibernateProxy.
+	 * Extract the {@link LazyInitializer} from the given object,
+	 * if and only if the object is actually a proxy. Otherwise,
+	 * return a null value.
+	 *
+	 * @param object any reference to an entity
+	 * @return the associated {@link LazyInitializer} if the given
+	 *         object is a proxy, or {@code null} otherwise.
 	 */
 	static LazyInitializer extractLazyInitializer(final Object object) {
 		if ( object instanceof PrimeAmongSecondarySupertypes ) {
@@ -42,17 +46,21 @@ public interface HibernateProxy extends Serializable, PrimeAmongSecondarySuperty
 	Object writeReplace();
 
 	/**
-	 * Get the underlying lazy initialization handler.
+	 * Get the {@linkplain LazyInitializer lazy initialization handler}
+	 * for this object.
 	 *
-	 * @return The lazy initializer.
+	 * @return The associated {@link LazyInitializer}.
 	 */
 	LazyInitializer getHibernateLazyInitializer();
 
 	/**
-	 * Special internal contract to optimize type checking
+	 * Special internal contract to optimize type checking.
+	 *
 	 * @see PrimeAmongSecondarySupertypes
-	 * @return this same instance
+	 *
+	 * @return this instance
 	 */
+	@Internal
 	@Override
 	default HibernateProxy asHibernateProxy() {
 		return this;

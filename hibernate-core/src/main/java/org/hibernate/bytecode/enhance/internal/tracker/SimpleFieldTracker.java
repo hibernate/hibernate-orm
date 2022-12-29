@@ -16,7 +16,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  * uses an array as a set (under the assumption that the number of elements will be low) to avoid having to instantiate an HashSet.
  * if the assumption does not, hold the array can be kept ordered to reduce the cost of verifying duplicates
  *
- * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
+ * @author Luis Barreiro
  */
 public final class SimpleFieldTracker implements DirtyTracker {
 

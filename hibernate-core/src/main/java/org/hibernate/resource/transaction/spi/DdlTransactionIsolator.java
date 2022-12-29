@@ -11,9 +11,9 @@ import java.sql.Connection;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
- * Provides access to a Connection that is isolated from
- * any "current transaction" with the designed purpose of
- * performing DDL commands
+ * Provides access to a {@link Connection} that is isolated from any
+ * "current transaction" with the designated purpose of performing DDL
+ * commands.
  *
  * @author Steve Ebersole
  */

@@ -20,7 +20,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */

@@ -13,7 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An SQL {@code DELETE} statement
+ * A SQL {@code DELETE} statement.
  *
  * @author Gavin King
  */

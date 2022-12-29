@@ -17,7 +17,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.id.SelectGenerator;
 
 /**
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * @author Steve Ebersole
  */
 @Entity @Table(name="my_entity")
 @GenericGenerator(name = "triggered", type = SelectGenerator.class)

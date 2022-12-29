@@ -6,18 +6,20 @@
  */
 
 /**
- * Support for defining result-set mappings used in {@link org.hibernate.query.NativeQuery}
- * and {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}.
- * These result-set mappings are used to map the values in the JDBC {@link java.sql.ResultSet}
- * into the query result graph.
+ * Support for defining result set mappings used in {@link org.hibernate.query.NativeQuery},
+ * {@link org.hibernate.procedure.ProcedureCall}, and {@link jakarta.persistence.StoredProcedureQuery}.
+ * These result set mappings are used to map the values in the JDBC {@link java.sql.ResultSet} into
+ * the query result graph.
  * <p>
- * Handling the different sources of results and fetches is split into multiple packages and
- * multiple impls for performance reasons. The classes in {@link org.hibernate.query.results.complete}
- * represent result/fetch definitions that are completely known up-front and are faster to
- * resolve. The definitions in {@link org.hibernate.query.results.dynamic} are built incrementally
- * via Hibernate's {@link org.hibernate.query.NativeQuery} contract need to resolve themselves
- * against other dynamic result/fetch definitions and therefore take more resources to resolve.
- * The classes in {@link org.hibernate.query.results.implicit} represent results that are implied.
+ * Subpackages handle different sources of result set mappings:
+ * <ul>
+ * <li>{@link org.hibernate.query.results.complete} handles result set mappings which are completely
+ *     known upfront and are faster to resolve.
+ * <li>{@link org.hibernate.query.results.dynamic} handles result set mappings which are defined
+ *     incrementally via the {@link org.hibernate.query.NativeQuery} interface and need to resolve
+ *     themselves against other dynamic mappings. These take more resources to resolve.
+ * <li>{@link org.hibernate.query.results.implicit} handles implicit result set mappings.
+ * </ul>
  *
  * @see org.hibernate.query.results.ResultSetMapping
  *

@@ -7,7 +7,7 @@
 package org.hibernate.engine.spi;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
 public interface CompositeTracker extends PrimeAmongSecondarySupertypes {
 

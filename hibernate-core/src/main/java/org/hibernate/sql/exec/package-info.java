@@ -6,7 +6,7 @@
  */
 
 /**
- * Support for execution of SQL statements through JDBC.
+ * Support for execution of SQL statements via JDBC.
  */
 @Incubating
 package org.hibernate.sql.exec;

@@ -12,8 +12,8 @@ import java.util.Currency;
 /**
  * Represents a monetary amount as value and currency.
  *
- * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
- * @author <a href="mailto:christian@hibernate.org">Christian Bauer</a>
+ * @author Gavin King
+ * @author Christian Bauer
  */
 public class MonetaryAmount implements Serializable {
 

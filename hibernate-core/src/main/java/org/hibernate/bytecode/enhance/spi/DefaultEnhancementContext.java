@@ -19,7 +19,7 @@ import jakarta.persistence.Transient;
 /**
  * default implementation of EnhancementContext. May be sub-classed as needed.
  *
- * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
+ * @author Luis Barreiro
  */
 public class DefaultEnhancementContext implements EnhancementContext {
 

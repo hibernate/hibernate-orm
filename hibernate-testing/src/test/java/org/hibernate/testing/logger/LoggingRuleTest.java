@@ -17,7 +17,7 @@ import org.junit.Test;
 /**
  * Example usage for the JUnit rule to assert logging events
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 @TestForIssue(jiraKey = "HHH-9658")
 public class LoggingRuleTest {

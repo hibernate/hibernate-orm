@@ -23,14 +23,15 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 
 /**
  * A collection of {@link EntityGraph} utilities.
- * These methods really belong inside other classes that we cannot modify, hence here.
+ *
+ * @apiNote These methods really belong inside other classes that we cannot modify.
  * 
  * @author asusnjar
  */
 public final class EntityGraphs {
 	/**
-	 * Merges multiple entity graphs into a single graph that specifies the fetching/loading of all attributes the input
-	 * graphs specify.
+	 * Merges multiple entity graphs into a single graph that specifies the
+	 * fetching/loading of all attributes the input graphs specify.
 	 * 
 	 * @param <T>      Root entity type of the query and graph.
 	 * 
@@ -70,8 +71,8 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Convenience method for {@linkplain Query#getResultList() executing} the Query, applying the
-	 * given EntityGraph using the specified semantic
+	 * Convenience method for {@linkplain Query#getResultList() executing the query},
+	 * applying the given {@link EntityGraph} using the specified semantic
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
@@ -85,15 +86,16 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Form of {@link #executeList(Query, EntityGraph, GraphSemantic)} accepting a TypedQuery.
+	 * Form of {@link #executeList(Query, EntityGraph, GraphSemantic)} accepting a
+	 * {@link TypedQuery}.
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
 	 * @param semantic The semantic to use when applying the graph
 	 *
-	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
-	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
-	 * far the most common usage.
+	 * @apiNote This signature assumes that the Query's return is an entity and that
+	 *          the graph applies to that entity's type. JPA does not necessarily
+	 *          require that, but it is by far the most common usage.
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
@@ -101,9 +103,9 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Convenience method for {@linkplain Query#getResultList() executing} the Query, applying the
-	 * given EntityGraph using the named semantic using JPA's "hint name" - see
-	 * {@link GraphSemantic#fromHintName}
+	 * Convenience method for {@linkplain Query#getResultList() executing the query},
+	 * applying the given {@link EntityGraph} using the named semantic using JPA's
+	 * "hint name". See {@link GraphSemantic#fromHintName}.
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
@@ -119,15 +121,16 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a TypedQuery
+	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a
+	 * {@link TypedQuery}.
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
 	 * @param semanticJpaHintName See {@link GraphSemantic#fromHintName}
 	 *
-	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
-	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
-	 * far the most common usage.
+	 * @apiNote This signature assumes that the Query's return is an entity and that
+	 *          the graph applies to that entity's type. JPA does not necessarily
+	 *          require that, but it is by far the most common usage.
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, String semanticJpaHintName) {
@@ -135,16 +138,16 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Convenience method for {@linkplain Query#getResultList() executing} the Query using the
-	 * given EntityGraph
+	 * Convenience method for {@linkplain Query#getResultList() executing the query}
+	 * using the given {@link EntityGraph}.
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
 	 *
-	 * @apiNote operates on the assumption that the "default" semantic for an
-	 * entity graph applied to a Query is {@link GraphSemantic#FETCH}.  This is simply
-	 * knowledge from JPA EG discussions, nothing that is specifically mentioned or
-	 * discussed in the spec.
+	 * @apiNote Operates on the assumption that the "default" semantic for an
+	 *          entity graph applied to a query is {@link GraphSemantic#FETCH}.
+	 *          This is simply knowledge from JPA EG discussions, nothing that
+	 *          is specifically mentioned or discussed in the spec.
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static List executeList(Query query, EntityGraph graph) {
@@ -154,14 +157,15 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a TypedQuery
+	 * Form of {@link #executeList(Query, EntityGraph, String)} accepting a
+	 * {@link TypedQuery}.
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
 	 *
-	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
-	 * applies to that entity's type.  JPA does not necessarily require that, but it is by
-	 * far the most common usage.
+	 * @apiNote This signature assumes that the Query's return is an entity and that
+	 *          the graph applies to that entity's type. JPA does not necessarily
+	 *          require that, but it is by far the most common usage.
 	 */
 	@SuppressWarnings("unused")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph) {
@@ -172,9 +176,9 @@ public final class EntityGraphs {
 	//		but really, I think unwrapping as Hibernate's Query and using our
 	//		"proprietary" methods is better (this class is "proprietary" too).
 
-
 	/**
-	 * Compares two entity graphs and returns {@code true} if they are equal, ignoring attribute order.
+	 * Compares two entity graphs and returns {@code true} if they are equal,
+	 * ignoring attribute order.
 	 * 
 	 * @param <T>  Root entity type of BOTH graphs.
 	 * @param a    Graph to compare.
@@ -213,8 +217,8 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Compares two entity graph attribute node and returns {@code true} if they are equal, ignoring subgraph attribute
-	 * order.
+	 * Compares two entity graph attribute node and returns {@code true} if they are equal,
+	 * ignoring subgraph attribute order.
 	 */
 	public static boolean areEqual(AttributeNode<?> a, AttributeNode<?> b) {
 		if ( a == b ) {
@@ -232,7 +236,8 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Compares two entity subgraph maps and returns {@code true} if they are equal, ignoring order.
+	 * Compares two entity subgraph maps and returns {@code true} if they are equal,
+	 * ignoring order.
 	 */
 	public static boolean areEqual(@SuppressWarnings("rawtypes") Map<Class, Subgraph> a, @SuppressWarnings("rawtypes") Map<Class, Subgraph> b) {
 		if ( a == b ) {
@@ -264,7 +269,8 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Compares two entity subgraphs and returns {@code true} if they are equal, ignoring attribute order.
+	 * Compares two entity subgraphs and returns {@code true} if they are equal,
+	 * ignoring attribute order.
 	 */
 	public static boolean areEqual(@SuppressWarnings("rawtypes") Subgraph a, @SuppressWarnings("rawtypes") Subgraph b) {
 		if ( a == b ) {

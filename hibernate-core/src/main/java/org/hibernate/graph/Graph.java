@@ -14,30 +14,33 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 /**
  * A container for {@link AttributeNode} references.
  * <p>
- * Acts as a "bridge" between JPA's {@link jakarta.persistence.EntityGraph} and {@link jakarta.persistence.Subgraph}
+ * Acts as a "bridge" between JPA's {@link jakarta.persistence.EntityGraph}
+ * and {@link jakarta.persistence.Subgraph}.
  *
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Graph<J> extends GraphNode<J> {
 	/**
-	 * Graphs apply only to ManagedTypes.  Returns the ManagedType being graphed here.
+	 * Graphs apply only to {@link jakarta.persistence.metamodel.ManagedType}s.
+	 *
+	 * @return the {@code ManagedType} being graphed here.
 	 */
 	ManagedDomainType<J> getGraphedType();
 
 	/**
-	 * Create a named (if passed `name` != null) root Graph.  The `mutable`
-	 * parameter controls whether the created Graph is mutable.
+	 * Create a named root {@link Graph} if the given name is not null.
 	 *
-	 * @throws CannotBecomeEntityGraphException For named attributes
-	 * that are not entity valued
+	 * @param mutable controls whether the resulting {@code Graph} is mutable
+	 *
+	 * @throws CannotBecomeEntityGraphException If the named attribute is not entity-valued
 	 */
 	RootGraph<J> makeRootGraph(String name, boolean mutable) throws CannotBecomeEntityGraphException;
 
 	/**
-	 * Create a (mutable/immutable) SubGraph based on this Graph
+	 * Create a (mutable or immutable) {@link SubGraph} rooted at this {@link Graph}.
 	 */
 	SubGraph<J> makeSubGraph(boolean mutable);
 

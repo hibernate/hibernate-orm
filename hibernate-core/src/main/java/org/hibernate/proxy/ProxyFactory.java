@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.CompositeType;
 
 /**
- * Contract for run-time, proxy-based lazy initialization proxies.
+ * Contract for runtime, proxy-based lazy initialization proxies.
  *
  * @author Gavin King
  */

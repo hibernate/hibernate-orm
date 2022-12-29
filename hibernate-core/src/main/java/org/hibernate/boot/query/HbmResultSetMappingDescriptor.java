@@ -65,7 +65,7 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
 
 /**
- * Boot-time descriptor of a result-set mapping as defined in an `hbm.xml` file
+ * Boot-time descriptor of a result set mapping as defined in an {@code hbm.xml} file
  * either implicitly or explicitly
  *
  * @author Steve Ebersole

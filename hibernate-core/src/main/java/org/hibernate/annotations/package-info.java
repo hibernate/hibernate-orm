@@ -55,7 +55,8 @@
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
  * over the compositional approach.
  * <p>
- * Please see the User Guide for a more in-depth discussion.
+ * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for a more
+ * in-depth discussion.
  *
  * <h2 id="basic-value-mapping">Dialect-specific native SQL</h2>
  *

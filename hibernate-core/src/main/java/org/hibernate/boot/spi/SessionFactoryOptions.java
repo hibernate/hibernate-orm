@@ -32,7 +32,7 @@ import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
-import org.hibernate.type.FormatMapper;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
@@ -314,8 +314,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Incubating
 	int getPreferredSqlTypeCodeForArray();
 
+	@Incubating
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
+	/**
+	 * The format mapper to use for serializing/deserializing JSON data.
+	 *
+	 * @since 6.0
+	 */
+	@Incubating
 	FormatMapper getJsonFormatMapper();
 
 	/**
@@ -323,5 +330,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 6.0.1
 	 */
+	@Incubating
 	FormatMapper getXmlFormatMapper();
 }

@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.format;
 
+import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -25,8 +26,12 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @see org.hibernate.boot.spi.SessionFactoryOptions#getJsonFormatMapper()
  * @see org.hibernate.boot.spi.SessionFactoryOptions#getXmlFormatMapper()
  *
+ * @see org.hibernate.type.descriptor.jdbc.JsonJdbcType
+ * @see org.hibernate.type.descriptor.jdbc.XmlJdbcType
+ *
  * @author Christian Beikov
  */
+@Incubating
 public interface FormatMapper {
 
 	/**

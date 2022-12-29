@@ -35,7 +35,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.type.FormatMapper;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * Convenience base class for custom implementations of {@link SessionFactoryOptions}

@@ -6,6 +6,6 @@
  */
 
 /**
- * Implementations of {@link org.hibernate.type.FormatMapper} using Jackson.
+ * An implementation of {@link org.hibernate.type.format.FormatMapper} using JAXB.
  */
-package org.hibernate.type.jackson;
+package org.hibernate.type.format.jaxb;

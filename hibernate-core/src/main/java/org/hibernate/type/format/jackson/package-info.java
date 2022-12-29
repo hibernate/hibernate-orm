@@ -6,6 +6,6 @@
  */
 
 /**
- * An implementations of {@link org.hibernate.type.FormatMapper} using Jakarta JSON.
+ * Implementations of {@link org.hibernate.type.format.FormatMapper} using Jackson.
  */
-package org.hibernate.type.jakartajson;
+package org.hibernate.type.format.jackson;

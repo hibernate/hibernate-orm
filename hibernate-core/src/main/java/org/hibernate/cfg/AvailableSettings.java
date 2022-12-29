@@ -2727,8 +2727,8 @@ public interface AvailableSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Specifies a {@link org.hibernate.type.FormatMapper} used for JSON serialization
-	 * and deserialization, either:
+	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for JSON
+	 * serialization and deserialization, either:
 	 * <ul>
 	 *     <li>an instance of {@code FormatMapper},
 	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
@@ -2741,11 +2741,12 @@ public interface AvailableSettings {
 	 *
 	 * @since 6.0
 	 */
+	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
 
 	/**
-	 * Specifies a {@link org.hibernate.type.FormatMapper} used for XML serialization
-	 * and deserialization, either:
+	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for XML
+	 * serialization and deserialization, either:
 	 * <ul>
 	 *     <li>an instance of {@code FormatMapper},
 	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
@@ -2758,6 +2759,7 @@ public interface AvailableSettings {
 	 *
 	 * @since 6.0.1
 	 */
+	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**

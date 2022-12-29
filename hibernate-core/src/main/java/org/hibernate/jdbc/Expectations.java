@@ -135,7 +135,7 @@ public class Expectations {
 			try {
 				return toCallableStatement( statement ).getInt( parameterPosition );
 			}
-			catch (SQLException sqle) {
+			catch ( SQLException sqle ) {
 				sqlExceptionHelper.logExceptions( sqle, "could not extract row counts from CallableStatement" );
 				throw new GenericJDBCException( "could not extract row counts from CallableStatement", sqle );
 			}
@@ -174,17 +174,15 @@ public class Expectations {
 
 
 	public static Expectation appropriateExpectation(ExecuteUpdateResultCheckStyle style) {
-		if ( style == ExecuteUpdateResultCheckStyle.NONE ) {
-			return NONE;
-		}
-		else if ( style == ExecuteUpdateResultCheckStyle.COUNT ) {
-			return BASIC;
-		}
-		else if ( style == ExecuteUpdateResultCheckStyle.PARAM ) {
-			return PARAM;
-		}
-		else {
-			throw new HibernateException( "unknown check style : " + style );
+		switch ( style ) {
+			case NONE:
+				return NONE;
+			case COUNT:
+				return BASIC;
+			case PARAM:
+				return PARAM;
+			default:
+				throw new HibernateException( "unknown check style : " + style );
 		}
 	}
 

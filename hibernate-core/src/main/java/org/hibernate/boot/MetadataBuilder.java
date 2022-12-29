@@ -205,7 +205,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case
-	 * of joined-subclasses.  The legacy behavior of Hibernate was to ignore the
+	 * of joined subclasses? The legacy behavior of Hibernate was to ignore the
 	 * discriminator annotations because Hibernate (unlike some providers) does
 	 * not need discriminators to determine the concrete type when it comes to
 	 * joined inheritance.  However, for portability reasons we do now allow using
@@ -363,8 +363,16 @@ public interface MetadataBuilder {
 	@Deprecated(since = "6", forRemoval = true)
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
+	/**
+	 * Contribute a {@link SqmFunctionDescriptor} to HQL.
+	 *
+	 * @see org.hibernate.dialect.function.StandardSQLFunction
+	 */
 	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);
 
+	/**
+	 * Contribute an {@link AuxiliaryDatabaseObject}.
+	 */
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
@@ -417,6 +425,10 @@ public interface MetadataBuilder {
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply);
 
+	/**
+	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
+	 */
+	@Deprecated(since = "6")
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
 	/**

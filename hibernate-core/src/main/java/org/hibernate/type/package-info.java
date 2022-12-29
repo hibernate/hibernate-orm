@@ -14,5 +14,9 @@
  * <li>a {@link org.hibernate.type.descriptor.java.JavaType}, with a
  * <li>a {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
  * </ul>
+ *
+ * @see org.hibernate.type.Type
+ * @see org.hibernate.type.SqlTypes
+ * @see org.hibernate.type.FormatMapper
  */
 package org.hibernate.type;

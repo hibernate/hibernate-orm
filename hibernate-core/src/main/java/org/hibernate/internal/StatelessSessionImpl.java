@@ -47,9 +47,10 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 /**
  * Concrete implementation of the {@link StatelessSession} API.
  * <p>
- * Exposes two interfaces:<ul>
- * <li>{@link StatelessSession} to the application</li>
- * <li>{@link org.hibernate.engine.spi.SharedSessionContractImplementor} to other Hibernate components (SPI)</li>
+ * Exposes two interfaces:
+ * <ul>
+ * <li>{@link StatelessSession} to the application, and
+ * <li>{@link org.hibernate.engine.spi.SharedSessionContractImplementor} (an SPI interface) to other subsystems.
  * </ul>
  * <p>
  * This class is not thread-safe.

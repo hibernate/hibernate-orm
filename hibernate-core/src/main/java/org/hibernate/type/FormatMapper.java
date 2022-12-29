@@ -11,8 +11,19 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * A mapper for mapping objects to and from a format.
+ * <ul>
+ * <li>A {@code FormatMapper} for JSON may be selected using the configuration
+ *     property {@value org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER}.
+ * <li>A {@code FormatMapper} for XML may be selected using the configuration
+ *     property {@value org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER}.
+ * </ul>
+ *
  *
  * @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
+ * @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
+ *
+ * @see org.hibernate.boot.spi.SessionFactoryOptions#getJsonFormatMapper()
+ * @see org.hibernate.boot.spi.SessionFactoryOptions#getXmlFormatMapper()
  *
  * @author Christian Beikov
  */

@@ -7,19 +7,38 @@
 package org.hibernate.type.descriptor.converter;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * The standard approach for defining a MutabilityPlan for converted (AttributeConverter)
- * values is to always assume that they are immutable to make sure that dirty checking,
- * deep copying and second-level caching all work properly no matter what.  That was work
- * done under https://hibernate.atlassian.net/browse/HHH-10111
+ * The default {@link org.hibernate.type.descriptor.java.MutabilityPlan} for a
+ * {@linkplain jakarta.persistence.AttributeConverter converted value} assumes,
+ * in the absence of additional evidence, that the value is <em>mutable</em>, so
+ * that dirty checking, deep copying, and second-level caching all work correctly
+ * in the case where it really is mutable.
+ * <p>
+ * As an exception to this, Java primitive types and {@code enum}s are inferred
+ * to be <em>immutable</em>.
+ * <p>
+ * To explicitly mark a converted value is immutable and avoid the extra processing
+ * required for a mutable value, either:
+ * <ul>
+ * <li>mark the Java type of the attribute, the type passed to the converter, as
+ *     {@link org.hibernate.annotations.Immutable @Immutable},
+ * <li>explicitly specify a {@code MutabilityPlan} using
+ *     {@link org.hibernate.annotations.Mutability @Mutability}, or
+ * <li>explicitly specify its {@link org.hibernate.boot.model.JavaTypeDescriptor}
+ *     using {@link org.hibernate.annotations.JavaType @JavaType}.
+ * </ul>
  *
- * However a series of approaches to tell Hibernate that the values are immutable were
- * documented as part of https://hibernate.atlassian.net/browse/HHH-10127
+ * @see <a href="https://hibernate.atlassian.net/browse/HHH-10111">HHH-10111</a>
+ * @see <a href="https://hibernate.atlassian.net/browse/HHH-10127">HHH-10127</a>
+ *
+ * @see org.hibernate.type.descriptor.java.spi.RegistryHelper#determineMutabilityPlan(Type, TypeConfiguration)
  *
  * @author Steve Ebersole
  */

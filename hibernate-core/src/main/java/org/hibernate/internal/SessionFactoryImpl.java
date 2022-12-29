@@ -134,21 +134,18 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
- * Concrete implementation of the {@code SessionFactory} interface. Has the following
- * responsibilities:
+ * Concrete implementation of the {@link SessionFactory} API.
+ * <p>
+ * Exposes two interfaces:
  * <ul>
- * <li>caches configuration settings (immutably)
- * <li>caches "compiled" mappings ie. {@code EntityPersister}s and
- *     {@code CollectionPersister}s (immutable)
- * <li>caches "compiled" queries (memory sensitive cache)
- * <li>manages {@code PreparedStatement}s
- * <li> delegates JDBC {@code Connection} management to the {@code ConnectionProvider}
- * <li>factory for instances of {@code SessionImpl}
+ * <li>{@link SessionFactory} to the application, and</li>
+ * <li>{@link SessionImplementor} (an SPI interface) to other subsystems.</li>
  * </ul>
  * <p>
+ * This class is not thread-safe.
  * This class must appear immutable to clients, even if it does all kinds of caching
- * and pooling under the covers. It is crucial that the class is not only thread
- * safe, but also highly concurrent. Synchronization must be used extremely sparingly.
+ * and pooling under the covers. It is crucial that the class is not only thread-safe,
+ * but also highly concurrent. Synchronization must be used extremely sparingly.
  *
  * @author Gavin King
  * @author Steve Ebersole

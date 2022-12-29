@@ -131,6 +131,12 @@ import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.extractPropertyValue;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * In-flight state of {@link SessionFactoryOptions}
@@ -365,20 +371,20 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 		this.delayBatchFetchLoaderCreations = cfgService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
-		this.defaultBatchFetchSize = ConfigurationHelper.getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
-		this.maximumFetchDepth = ConfigurationHelper.getInteger( MAX_FETCH_DEPTH, configurationSettings );
-		final String defaultNullPrecedence = ConfigurationHelper.getString(
+		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
+		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, configurationSettings );
+		final String defaultNullPrecedence = getString(
 				AvailableSettings.DEFAULT_NULL_ORDERING, configurationSettings, "none", "first", "last"
 		);
 		this.defaultNullPrecedence = NullPrecedence.parse( defaultNullPrecedence );
-		this.orderUpdatesEnabled = ConfigurationHelper.getBoolean( ORDER_UPDATES, configurationSettings );
-		this.orderInsertsEnabled = ConfigurationHelper.getBoolean( ORDER_INSERTS, configurationSettings );
+		this.orderUpdatesEnabled = getBoolean( ORDER_UPDATES, configurationSettings );
+		this.orderInsertsEnabled = getBoolean( ORDER_INSERTS, configurationSettings );
 
-		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
+		this.callbacksEnabled = getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
-		final String hqlTranslatorImplFqn = ConfigurationHelper.extractPropertyValue(
+		final String hqlTranslatorImplFqn = extractPropertyValue(
 				AvailableSettings.SEMANTIC_QUERY_PRODUCER,
 				configurationSettings
 		);
@@ -388,7 +394,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategySelector
 		);
 
-		final String sqmTranslatorFactoryImplFqn = ConfigurationHelper.extractPropertyValue(
+		final String sqmTranslatorFactoryImplFqn = extractPropertyValue(
 				AvailableSettings.SEMANTIC_QUERY_TRANSLATOR,
 				configurationSettings
 		);
@@ -398,7 +404,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 
-		final String sqmMutationStrategyImplName = ConfigurationHelper.extractPropertyValue(
+		final String sqmMutationStrategyImplName = extractPropertyValue(
 				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
 				configurationSettings
 		);
@@ -440,7 +446,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					configurationSettings.get( QUERY_CACHE_FACTORY ),
 					StandardTimestampsCacheFactory.INSTANCE
 			);
-			this.cacheRegionPrefix = ConfigurationHelper.extractPropertyValue(
+			this.cacheRegionPrefix = extractPropertyValue(
 					CACHE_REGION_PREFIX,
 					configurationSettings
 			);
@@ -488,42 +494,42 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			}
 		}
 
-		this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
+		this.jdbcBatchSize = getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
 		if ( !meta.supportsBatchUpdates() ) {
 			this.jdbcBatchSize = 0;
 		}
 
-		this.jdbcBatchVersionedData = ConfigurationHelper.getBoolean( BATCH_VERSIONED_DATA, configurationSettings, true );
-		this.scrollableResultSetsEnabled = ConfigurationHelper.getBoolean(
+		this.jdbcBatchVersionedData = getBoolean( BATCH_VERSIONED_DATA, configurationSettings, true );
+		this.scrollableResultSetsEnabled = getBoolean(
 				USE_SCROLLABLE_RESULTSET,
 				configurationSettings,
 				meta.supportsScrollableResults()
 		);
-		this.getGeneratedKeysEnabled = ConfigurationHelper.getBoolean(
+		this.getGeneratedKeysEnabled = getBoolean(
 				USE_GET_GENERATED_KEYS,
 				configurationSettings,
 				meta.supportsGetGeneratedKeys()
 		);
-		this.jdbcFetchSize = ConfigurationHelper.getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
+		this.jdbcFetchSize = getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
 
 		this.connectionHandlingMode = interpretConnectionHandlingMode( configurationSettings, serviceRegistry );
-		this.connectionProviderDisablesAutoCommit = ConfigurationHelper.getBoolean(
+		this.connectionProviderDisablesAutoCommit = getBoolean(
 				AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
 				configurationSettings,
 				false
 		);
 
-		this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
+		this.commentsEnabled = getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
-		this.preferUserTransaction = ConfigurationHelper.getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
+		this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
 
-		this.allowOutOfTransactionUpdateOperations = ConfigurationHelper.getBoolean(
+		this.allowOutOfTransactionUpdateOperations = getBoolean(
 				ALLOW_UPDATE_OUTSIDE_TRANSACTION,
 				configurationSettings,
 				false
 		);
 
-		this.releaseResourcesOnCloseEnabled = ConfigurationHelper.getBoolean(
+		this.releaseResourcesOnCloseEnabled = getBoolean(
 				DISCARD_PC_ON_CLOSE,
 				configurationSettings,
 				false
@@ -549,7 +555,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
 		);
-		this.criteriaCopyTreeEnabled = ConfigurationHelper.getBoolean(
+		this.criteriaCopyTreeEnabled = getBoolean(
 				AvailableSettings.CRITERIA_COPY_TREE,
 				configurationSettings,
 				jpaBootstrap
@@ -558,7 +564,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		this.jpaCompliance = context.getJpaCompliance();
 
-		this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
+		this.failOnPaginationOverCollectionFetchEnabled = getBoolean(
 				FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 				configurationSettings,
 				false
@@ -568,16 +574,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
 
-		this.defaultCatalog = ConfigurationHelper.getString( DEFAULT_CATALOG, configurationSettings );
-		this.defaultSchema = ConfigurationHelper.getString( DEFAULT_SCHEMA, configurationSettings );
+		this.defaultCatalog = getString( DEFAULT_CATALOG, configurationSettings );
+		this.defaultSchema = getString( DEFAULT_SCHEMA, configurationSettings );
 
-		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
+		this.inClauseParameterPaddingEnabled =  getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
 				configurationSettings,
 				false
 		);
 
-		this.queryStatisticsMaxSize = ConfigurationHelper.getInt(
+		this.queryStatisticsMaxSize = getInt(
 				QUERY_STATISTICS_MAX_SIZE,
 				configurationSettings,
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
@@ -686,7 +692,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			String producerName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
-		if ( StringHelper.isEmpty( producerName ) ) {
+		if ( isEmpty( producerName ) ) {
 			return null;
 		}
 
@@ -707,7 +713,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmTranslatorFactory resolveSqmTranslator(
 			String translatorImplFqn,
 			StrategySelector strategySelector) {
-		if ( StringHelper.isEmpty( translatorImplFqn ) ) {
+		if ( isEmpty( translatorImplFqn ) ) {
 			return null;
 		}
 
@@ -721,16 +727,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			Map<String,Object> configurationSettings,
 			StrategySelector strategySelector) {
 		Object setting = configurationSettings.get( INTERCEPTOR );
-		if ( setting == null ) {
-			// try the legacy (deprecated) JPA name
-			setting = configurationSettings.get( org.hibernate.cfg.AvailableSettings.INTERCEPTOR );
-			if ( setting != null ) {
-				DEPRECATION_LOGGER.deprecatedSetting(
-						org.hibernate.cfg.AvailableSettings.INTERCEPTOR,
-						INTERCEPTOR
-				);
-			}
-		}
 
 		return strategySelector.resolveStrategy(
 				Interceptor.class,

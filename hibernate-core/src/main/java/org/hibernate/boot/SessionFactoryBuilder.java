@@ -356,8 +356,7 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * Specifies a {@link CurrentTenantIdentifierResolver} that is responsible for
-	 * resolving the current tenant identifier when
-	 * {@link org.hibernate.SessionFactory#getCurrentSession()} is used.
+	 * resolving the current tenant identifier.
 	 *
 	 * @param resolver The resolution strategy to use.
 	 *

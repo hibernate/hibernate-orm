@@ -23,10 +23,9 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	/**
 	 * Exposes access to the "real" {@link Connection}.
 	 *
-	 * @todo : expose Connection as here?  or accept(WorkInConnection) where WorkInConnection is given access to Connection?
-	 *
 	 * @return The connection
 	 */
+	// todo : expose Connection as here? Or accept(Work) where Work is given access to Connection?
 	Connection getPhysicalConnection();
 
 	PhysicalConnectionHandlingMode getConnectionHandlingMode();

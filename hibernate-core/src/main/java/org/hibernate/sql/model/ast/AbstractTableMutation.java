@@ -22,7 +22,7 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
- * Base TableMutation support
+ * Base {@link TableMutation} support
  *
  * @author Steve Ebersole
  */

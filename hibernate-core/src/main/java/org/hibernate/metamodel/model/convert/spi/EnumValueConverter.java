@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
 
 /**
- * BasicValueConverter extension for enum-specific support
+ * {@link BasicValueConverter} extension for enum-specific support
  *
  * @author Steve Ebersole
  */

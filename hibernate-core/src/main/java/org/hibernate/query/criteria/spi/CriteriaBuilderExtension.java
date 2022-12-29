@@ -10,8 +10,8 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.service.Service;
 
 /**
- * Interface which allows to extend {@link HibernateCriteriaBuilder}
- * with additional functionality by registering a {@link Service}
+ * Interface which allows extension of {@link HibernateCriteriaBuilder}
+ * with additional functionality by registering a {@link Service}.
  *
  * @author Marco Belladelli
  */

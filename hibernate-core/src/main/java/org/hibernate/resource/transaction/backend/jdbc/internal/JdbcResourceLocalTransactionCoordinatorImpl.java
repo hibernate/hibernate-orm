@@ -29,8 +29,8 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * An implementation of TransactionCoordinator based on managing a transaction through the JDBC Connection
- * via {@link JdbcResourceTransaction}
+ * An implementation of {@link TransactionCoordinator} based on managing a
+ * transaction through the JDBC Connection via {@link JdbcResourceTransaction}.
  *
  * @author Steve Ebersole
  *

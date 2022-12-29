@@ -6,6 +6,9 @@
  */
 
 /**
- * Integration contracts related with {@link org.hibernate.property.access.spi.PropertyAccessStrategy}
+ * An SPI abstracting how persistent attributes of an entity or embeddable type
+ * are accessed by Hibernate.
+ *
+ * @see org.hibernate.property.access.spi.PropertyAccessStrategy
  */
 package org.hibernate.property.access.spi;

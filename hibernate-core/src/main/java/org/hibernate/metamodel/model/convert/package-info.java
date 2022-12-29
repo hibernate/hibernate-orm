@@ -6,11 +6,15 @@
  */
 
 /**
- * Support for basic-value conversions.  The main contract is
+ * Support for basic-value conversions. The main contract is
  * {@link org.hibernate.metamodel.model.convert.spi.BasicValueConverter}.
- *
+ * <p>
  * All basic value conversions are defined by this package including:
- * 		* Enum conversions - {@link org.hibernate.metamodel.model.convert.spi.EnumValueConverter}
- * 		* AttributeConverter - {@link org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter}
+ * <ul>
+ * <li>Java {@code enum} conversions via
+ *     {@link org.hibernate.metamodel.model.convert.spi.EnumValueConverter}
+ * <li>support for {@link jakarta.persistence.AttributeConverter} via
+ *     {@link org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter}
+ * </ul>
  */
 package org.hibernate.metamodel.model.convert;

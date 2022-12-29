@@ -73,18 +73,20 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * Defines a set of available Type instances as isolated from other configurations.  The
- * isolation is defined by each instance of a TypeConfiguration.
+ * Defines a set of available {@link Type} instances as isolated from other configurations.
+ * The isolation is defined by each instance of a {@code TypeConfiguration}.
  * <p>
- * Note that each Type is inherently "scoped" to a TypeConfiguration.  We only ever access
- * a Type through a TypeConfiguration - specifically the TypeConfiguration in effect for
- * the current persistence unit.
+ * Note that each {@code Type} is inherently "scoped" to a {@code TypeConfiguration}. We only
+ * ever access a {@code Type} via its {@code TypeConfiguration}, more specifically, via the
+ * {@code TypeConfiguration} in effect for the current persistence unit.
  * <p>
- * Even though each Type instance is scoped to a TypeConfiguration, Types do not inherently
- * have access to that TypeConfiguration (mainly because Type is an extension contract - meaning
- * that Hibernate does not manage the full set of Types available in ever TypeConfiguration).
- * However Types will often want access to the TypeConfiguration, which can be achieved by the
- * Type simply implementing the {@link TypeConfigurationAware} interface.
+ * Even though each {@code Type} instance is scoped to a {@code TypeConfiguration}, a {@code Type}
+ * does not inherently have access to its {@code TypeConfiguration}, mainly because {@code Type}
+ * is an extension contract and so Hibernate does not have full control over every {@code Type}
+ * available in a {@code TypeConfiguration}.
+ * <p>
+ * However, a {@code Type} will often want access to the  {@code TypeConfiguration}, which can be
+ * achieved by the {@code Type} simply implementing the {@link TypeConfigurationAware} interface.
  *
  * @author Steve Ebersole
  *

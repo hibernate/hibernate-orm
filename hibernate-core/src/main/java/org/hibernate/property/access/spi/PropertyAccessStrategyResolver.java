@@ -10,12 +10,12 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.service.Service;
 
 /**
- * Contract for resolving the PropertyAccessStrategy to use.
- * <p>
- * todo : moving forward I'd prefer this not be a service, but instead a strategy on the MetadataBuildingContext or MetadataBuildingOptions
+ * Contract for resolving the {@link PropertyAccessStrategy} to use.
  *
  * @author Steve Ebersole
  */
+//TODO: moving forward I'd prefer this not be a service, but instead a
+//      strategy on the MetadataBuildingContext or MetadataBuildingOptions
 public interface PropertyAccessStrategyResolver extends Service {
 	/**
 	 * Resolve the PropertyAccessStrategy to use

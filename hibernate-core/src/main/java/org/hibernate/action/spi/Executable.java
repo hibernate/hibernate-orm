@@ -12,8 +12,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 
 /**
- * An operation which may be scheduled for later execution.  Usually, the operation is a database
- * insert/update/delete, together with required second-level cache management.
+ * An operation which may be scheduled for later execution. Usually, the
+ * operation is a database insert/update/delete, together with required
+ * second-level cache management.
  * 
  * @author Gavin King
  * @author Steve Ebersole

@@ -18,7 +18,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Abstract support (template pattern) for ManagedBeanRegistry implementations
+ * Abstract support (template pattern) for {@link ManagedBeanRegistry} implementations
  *
  * @author Steve Ebersole
  */

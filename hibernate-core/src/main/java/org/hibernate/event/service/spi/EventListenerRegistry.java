@@ -11,8 +11,9 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
 
 /**
- * Service for accessing each {@link EventListenerGroup} by {@link EventType}, as well as convenience
- * methods for managing the listeners registered in each {@link EventListenerGroup}.
+ * Service for accessing each {@link EventListenerGroup} by {@link EventType},
+ * along with  convenience methods for managing the listeners registered in
+ * each {@link EventListenerGroup}.
  *
  * @author Steve Ebersole
  */

@@ -19,7 +19,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * The standard ConfigurationService implementation
+ * The standard {@link ConfigurationService} implementation.
  *
  * @author Steve Ebersole
  */

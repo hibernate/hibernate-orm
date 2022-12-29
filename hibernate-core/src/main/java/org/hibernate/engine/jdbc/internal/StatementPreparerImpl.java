@@ -22,7 +22,7 @@ import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
- * Standard implementation of StatementPreparer
+ * Standard implementation of {@link StatementPreparer}.
  *
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -17,7 +17,7 @@ public interface BatchKey {
 	/**
 	 * How many statements will be in this batch?
 	 * <p>
-	 * Note that this is distinctly different than the size of the batch.
+	 * Note that this is distinctly different to the size of the batch.
 	 *
 	 * @return The number of statements.
 	 *

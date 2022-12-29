@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import org.hibernate.Incubating;
 
 /**
- * Grouping of {@link java.sql.PreparedStatement} references
+ * Grouping of {@link java.sql.PreparedStatement} references.
  *
  * @author Steve Ebersole
  */

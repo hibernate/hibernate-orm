@@ -9,9 +9,12 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.PreparedStatement;
 
 /**
- * Contracting for creating {@link PreparedStatement} instances related to mutations
+ * Interface to the object that prepares JDBC {@link PreparedStatement}s related to mutations
+ * on behalf of a {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
+ *
+ * @see JdbcCoordinator#getMutationStatementPreparer()
  */
 public interface MutationStatementPreparer {
 	/**

@@ -23,7 +23,8 @@
  * <p>
  * Concerns handled by subpackages include:
  * <ul>
- * <li>{@linkplain org.hibernate.jpa.boot.spi bootstrapping} JPA,
+ * <li>{@linkplain org.hibernate.jpa.boot.spi bootstrapping} JPA and
+ *     integrating with the bootstrap process,
  * <li>calling JPA {@linkplain org.hibernate.jpa.event.spi event listeners},
  *     and
  * <li>managing cases where Hibernate intentionally

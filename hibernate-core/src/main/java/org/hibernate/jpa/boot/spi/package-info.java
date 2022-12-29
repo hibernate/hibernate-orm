@@ -6,8 +6,8 @@
  */
 
 /**
- * An SPI for bootstrapping a Jakarta Persistence
- * {@link jakarta.persistence.EntityManagerFactory}
+ * An SPI controlling and integrating with the bootstrap process for the
+ * Jakarta Persistence {@link jakarta.persistence.EntityManagerFactory}.
  *
  * @author Steve Ebersole
  */

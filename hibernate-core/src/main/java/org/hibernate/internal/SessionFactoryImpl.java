@@ -135,7 +135,7 @@ import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
  * Concrete implementation of the {@code SessionFactory} interface. Has the following
- * responsibilities
+ * responsibilities:
  * <ul>
  * <li>caches configuration settings (immutably)
  * <li>caches "compiled" mappings ie. {@code EntityPersister}s and
@@ -289,7 +289,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				close();
 			}
 			catch (Exception closeException) {
-				LOG.debugf( "Eating error closing SF on failed attempt to start it" );
+				LOG.debugf( "Eating error closing the SessionFactory after a failed attempt to start it" );
 			}
 			throw e;
 		}

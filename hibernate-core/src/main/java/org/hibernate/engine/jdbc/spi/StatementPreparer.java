@@ -12,10 +12,13 @@ import java.sql.Statement;
 import org.hibernate.ScrollMode;
 
 /**
- * Contracting for preparing SQL statements
+ * Interface to the object that prepares JDBC {@link Statement}s and {@link PreparedStatement}s
+ * on behalf of a {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ *
+ * @see JdbcCoordinator#getStatementPreparer()
  */
 public interface StatementPreparer {
 	/**

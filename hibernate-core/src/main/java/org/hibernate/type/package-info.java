@@ -8,7 +8,8 @@
 /**
  * A Hibernate {@link org.hibernate.type.Type} is a strategy for mapping a Java
  * property type to a JDBC type or types. Every persistent attribute of an entity
- * or embeddable object has a {@code org.hibernate.type.Type}.
+ * or embeddable object has a {@code Type}, even attributes which represent
+ * associations or hold references to embedded objects.
  * <p>
  * On the other hand, in modern Hibernate, {@code Type} itself is of receding
  * importance to application developers, though it remains a very important
@@ -66,6 +67,23 @@
  *     way to handle multi-column type mappings, and is a much more flexible form of
  *     {@link jakarta.persistence.Embeddable} object mapping.
  * </ul>
+ *
+ * <h3>Built-in converters for boolean mappings</h3>
+ *
+ * In older version of Hibernate there were dedicated {@code Type}s mapping Java
+ * {@code boolean} to {@code char(1)} or {@code integer} database columns. These
+ * have now been replaced by the converters:
+ * <ul>
+ * <li>{@link org.hibernate.type.TrueFalseConverter}, which encodes a boolean value
+ *     as {@code 'T'} or {@code 'F'},
+ * <li>{@link org.hibernate.type.YesNoConverter}, which encodes a boolean value
+ *     as {@code 'Y'} or {@code 'N'}, and
+ * <li>{@link org.hibernate.type.NumericBooleanConverter}, which encodes a boolean
+ *     value as {@code 1} or {@code 0}.
+ * </ul>
+ * <p>
+ * These converters may be applied, as usual, using the JPA-defined
+ * {@link jakarta.persistence.Converter} annotation.
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.SqlTypes

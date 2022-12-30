@@ -17,7 +17,7 @@ import jakarta.persistence.Converter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Handles conversion to/from Boolean as `0` (false) or `1` (true)
+ * Handles conversion to/from {@code Boolean} as {@code 0} (false) or {@code 1} (true)
  *
  * @author Steve Ebersole
  */

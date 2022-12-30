@@ -10,6 +10,9 @@ import org.hibernate.boot.MetadataBuilder;
 
 /**
  * A bootstrap process hook for contributing settings to {@link MetadataBuilder}.
+ * <p>
+ * In implementation may be registered with the JPA provider using the property
+ * {@value org.hibernate.jpa.boot.spi.JpaSettings#METADATA_BUILDER_CONTRIBUTOR}.
  *
  * @author Vlad Mihalcea
  *

@@ -17,7 +17,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.generator.OnExecutionGenerator;
 
 /**
- * An SQL {@code INSERT} statement
+ * A SQL {@code INSERT} statement.
  *
  * @author Gavin King
  */

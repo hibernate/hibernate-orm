@@ -20,7 +20,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
- * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
+ * @author Manuel Bernhardt
  * @author Brett Meyer
  */
 @SkipForDialect(value = SybaseDialect.class,

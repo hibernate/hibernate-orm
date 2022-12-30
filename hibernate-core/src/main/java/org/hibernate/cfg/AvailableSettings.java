@@ -747,6 +747,7 @@ public interface AvailableSettings {
 	 *         type when no column type is explicitly specified using
 	 *         {@link jakarta.persistence.Column#columnDefinition()}.
 	 * </ol>
+	 * <p>
 	 * This setting is <em>disabled</em> by default, and so Unicode character data
 	 * may not be persisted correctly for databases with explicit nationalization
 	 * support.
@@ -2252,17 +2253,26 @@ public interface AvailableSettings {
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
 	/**
-	 * [EXPERIMENTAL] Enable instantiation of composite/embedded objects when all
-	 * attribute values are {@code null}. The default (and historical) behavior is
-	 * that a {@code null} reference will be used to represent the composite when
-	 * all of its attributes are {@code null}.
-	 * <p>
-	 * This is an experimental feature that has known issues. It should not be used
-	 * in production until it is stabilized. See Hibernate JIRA issue HHH-11936 for
-	 * details.
+	 * Enable instantiation of composite/embedded objects when all attribute values
+	 * are {@code null}. The default (and historical) behavior is that a {@code null}
+	 * reference will be used to represent the composite value when all of its
+	 * attributes are {@code null}.
+	 *
+	 * @apiNote This is an experimental feature that has known issues. It should not
+	 *          be used in production until it is stabilized. See Hibernate JIRA issue
+	 *          HHH-11936 for details.
+	 *
+	 * @deprecated It makes no sense at all to enable this at the global level for a
+	 *             persistence unit. If anything, it could be a setting specific to
+	 *             a given embeddable class. But, four years after the introduction of
+	 *             this feature, it's still marked experimental and has multiple known
+	 *             unresolved bugs. It's therefore time for those who advocated for
+	 *             this feature to accept defeat.
 	 *
 	 * @since 5.1
 	 */
+	@Incubating
+	@Deprecated(since = "6")
 	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
 
 	/**
@@ -2718,8 +2728,8 @@ public interface AvailableSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Specifies a {@link org.hibernate.type.FormatMapper} used for JSON serialization
-	 * and deserialization, either:
+	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for JSON
+	 * serialization and deserialization, either:
 	 * <ul>
 	 *     <li>an instance of {@code FormatMapper},
 	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
@@ -2732,11 +2742,12 @@ public interface AvailableSettings {
 	 *
 	 * @since 6.0
 	 */
+	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
 
 	/**
-	 * Specifies a {@link org.hibernate.type.FormatMapper} used for XML serialization
-	 * and deserialization, either:
+	 * Specifies a {@link org.hibernate.type.format.FormatMapper} used for XML
+	 * serialization and deserialization, either:
 	 * <ul>
 	 *     <li>an instance of {@code FormatMapper},
 	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
@@ -2749,6 +2760,7 @@ public interface AvailableSettings {
 	 *
 	 * @since 6.0.1
 	 */
+	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**

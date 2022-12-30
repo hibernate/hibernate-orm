@@ -21,8 +21,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Base descriptor, within the mapping model, for any part of the
- * application's domain model - an attribute,
- * an entity identifier, collection elements, etc
+ * application's domain model: an attribute, an entity identifier,
+ * collection elements, and so on.
  *
  * @see DomainResultProducer
  * @see jakarta.persistence.metamodel.Bindable

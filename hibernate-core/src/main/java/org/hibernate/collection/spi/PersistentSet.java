@@ -26,11 +26,12 @@ import org.hibernate.type.Type;
 
 
 /**
- * A persistent wrapper for a {@code java.util.Set}. The underlying
+ * A persistent wrapper for a {@link java.util.Set}. The underlying
  * collection is a {@code HashSet}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */

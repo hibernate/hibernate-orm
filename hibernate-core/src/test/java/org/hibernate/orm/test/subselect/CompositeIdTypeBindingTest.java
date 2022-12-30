@@ -16,7 +16,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 @TestForIssue( jiraKey = "HHH-8312")
 public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {

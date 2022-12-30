@@ -14,7 +14,7 @@ import java.util.StringTokenizer;
 import jakarta.persistence.Index;
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 public class JPAIndexHolder {
 	private final String name;

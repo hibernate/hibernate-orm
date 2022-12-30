@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Handles fetching of the underlying entity for a proxy
+ * Handles fetching of the underlying entity for a proxy.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -20,6 +20,8 @@ public interface LazyInitializer {
 	 * Initialize the proxy, fetching the target entity if necessary.
 	 *
 	 * @throws HibernateException Indicates a problem initializing the proxy.
+	 *
+	 * @see org.hibernate.Hibernate#initialize(Object)
 	 */
 	void initialize() throws HibernateException;
 
@@ -33,8 +35,9 @@ public interface LazyInitializer {
 	}
 
 	/**
-	 * Retrieve the identifier value for the entity our owning proxy represents.
-	 *
+	 * Retrieve the identifier value for the entity our owning proxy represents,
+	 * without initializing the proxy.
+	 * <p>
 	 * When JPA proxy compliance is enabled the proxy is initialized.
 	 *
 	 * @return The identifier value.
@@ -66,6 +69,8 @@ public interface LazyInitializer {
 	 * Is the proxy uninitialized?
 	 *
 	 * @return True if uninitialized; false otherwise.
+	 *
+	 * @see org.hibernate.Hibernate#isInitialized(Object)
 	 */
 	boolean isUninitialized();
 
@@ -104,10 +109,10 @@ public interface LazyInitializer {
 
 	/**
 	 * Is the proxy read-only?
-	 *
+	 * <p>
 	 * The read-only/modifiable setting is not available when the proxy is
 	 * detached or its associated session is closed.
-	 *
+	 * <p>
 	 * To check if the read-only/modifiable setting is available:
 	 *
 	 * @return true, if this proxy is read-only; false, otherwise
@@ -126,7 +131,7 @@ public interface LazyInitializer {
 	 * proxy is initialized, its implementation will have the same read-only/
 	 * modifiable setting as the proxy. In read-only mode, no snapshot is
 	 * maintained and the instance is never dirty checked.
-	 *
+	 * <p>
 	 * If the associated proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *

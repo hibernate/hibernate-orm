@@ -24,6 +24,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
+ * In {@link Integrator} for Bean Validation.
+ *
  * @author Steve Ebersole
  */
 public class BeanValidationIntegrator implements Integrator {

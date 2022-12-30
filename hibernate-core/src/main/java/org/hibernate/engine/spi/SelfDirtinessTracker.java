@@ -16,7 +16,7 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
  * also introduced into the entity when using bytecode enhancement and requesting
  * that entities track their own dirtiness.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Ståle W. Pedersen
  */
 public interface SelfDirtinessTracker extends PrimeAmongSecondarySupertypes {
 	/**

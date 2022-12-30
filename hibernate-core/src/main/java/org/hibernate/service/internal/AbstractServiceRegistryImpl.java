@@ -36,7 +36,7 @@ import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Basic implementation of the ServiceRegistry and ServiceRegistryImplementor contracts
+ * Basic implementation of the {@link ServiceRegistry} and {@link ServiceRegistryImplementor} contracts.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero

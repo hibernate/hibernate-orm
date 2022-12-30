@@ -6,18 +6,20 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 
 /**
- * For a full explanation of the purpose of this interface
- * see {@link ManagedTypeHelper}.
- * This is an internal, private marking interface; it's exposed in the spi
- * package as bytecode enhanced usercode needs to be able to refer to it.
+ * For a full explanation of the purpose of this interface see {@link ManagedTypeHelper}.
+ *
+ * @apiNote This is an internal, private marking interface; it's exposed in the SPI
+ *          package as bytecode enhanced user code needs to be able to reference it.
  *
  * @author Sanne Grinovero
  */
+@Internal
 public interface PrimeAmongSecondarySupertypes {
 
 	default ManagedEntity asManagedEntity() {

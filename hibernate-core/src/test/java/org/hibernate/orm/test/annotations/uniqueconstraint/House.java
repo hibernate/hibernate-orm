@@ -14,7 +14,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
+ * @author Manuel Bernhardt
  */
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})

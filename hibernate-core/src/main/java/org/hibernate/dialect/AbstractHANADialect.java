@@ -160,8 +160,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <p>
  * Note: This dialect is configured to create foreign keys with {@code on update cascade}.
  *
- * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
- * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
+ * @author Andrew Clemons
+ * @author Jonathan Bregler
  */
 public abstract class AbstractHANADialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );

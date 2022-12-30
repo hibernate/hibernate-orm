@@ -6,8 +6,10 @@
  */
 
 /**
- * An SPI for bootstrapping a Jakarta Persistence
- * {@link jakarta.persistence.EntityManagerFactory}
+ * An SPI used to {@linkplain org.hibernate.jpa.boot.spi.Bootstrap initiate}
+ * and {@linkplain org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder control}
+ * the JPA bootstrap process, along with SPI interfaces allowing certain sorts of
+ * extensions to be contributed during the bootstrap process.
  *
  * @author Steve Ebersole
  */

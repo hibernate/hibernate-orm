@@ -20,11 +20,6 @@ import org.hibernate.mapping.UserDefinedType;
  * A pluggable contract that allows ordering of columns within {@link org.hibernate.mapping.Table},
  * {@link org.hibernate.mapping.Constraint} and {@link org.hibernate.mapping.UserDefinedType}.
  * <p>
- * Whenever reasonable, the use of a custom {@linkplain ColumnOrderingStrategy} is highly
- * recommended in preference to tedious and repetitive explicit table and column name
- * mappings. It's anticipated that most projects using Hibernate will feature a custom
- * implementation of {@code ImplicitNamingStrategy}.
- * <p>
  * An {@linkplain ColumnOrderingStrategy} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}.
  */

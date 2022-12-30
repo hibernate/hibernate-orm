@@ -61,7 +61,7 @@ import jakarta.persistence.metamodel.Metamodel;
  * Another difference with SessionDelegatorBaseImpl is that
  * this type only implements Session.
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2022 Red Hat Inc.
+ * @author Sanne Grinovero
  */
 public class SessionLazyDelegator implements Session {
 

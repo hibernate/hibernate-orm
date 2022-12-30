@@ -23,7 +23,7 @@ import org.apache.logging.log4j.spi.AbstractLogger;
  * A {@code Logger} implementation which delegates to Log4J2 but makes it possible
  * to test for events being logged (not logged).
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 public final class Log4J2DelegatingLogger extends Logger {
 

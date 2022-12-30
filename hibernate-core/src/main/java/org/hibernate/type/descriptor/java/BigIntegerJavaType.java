@@ -71,6 +71,9 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 		if ( Float.class.isAssignableFrom( type ) ) {
 			return (X) Float.valueOf( value.floatValue() );
 		}
+		if ( String.class.isAssignableFrom( type ) ) {
+			return (X) value.toString();
+		}
 		throw unknownUnwrap( type );
 	}
 
@@ -87,6 +90,9 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 		}
 		if ( value instanceof Number ) {
 			return BigInteger.valueOf( ( (Number) value ).longValue() );
+		}
+		if ( value instanceof String ) {
+			return new BigInteger( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

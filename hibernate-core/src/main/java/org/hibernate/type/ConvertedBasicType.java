@@ -9,7 +9,8 @@ package org.hibernate.type;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 
 /**
- * Extension for BasicType impls which have an implied conversion
+ * Extension for implementations of {@link BasicType} which have an implied
+ * {@linkplain BasicValueConverter conversion}.
  */
 public interface ConvertedBasicType<J> extends BasicType<J> {
 	BasicValueConverter<J,?> getValueConverter();

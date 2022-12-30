@@ -14,8 +14,10 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Contract for value types to hold collections and have cascades, etc.  The notion is that of composition.  JPA terms
- * this an embeddable.
+ * Represents a <em>composite</em> type, a type which itself has typed attributes.
+ * <p>
+ * For example, a type representing an {@linkplain jakarta.persistence.Embeddable embeddable}
+ * class is a composite type.
  *
  * @author Steve Ebersole
  */

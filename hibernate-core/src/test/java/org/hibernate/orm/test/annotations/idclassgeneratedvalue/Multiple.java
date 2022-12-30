@@ -18,7 +18,7 @@ import org.hibernate.annotations.GenericGenerator;
 /**
  * An Entity containing a composite key with two generated values.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 @Entity
 @IdClass(MultiplePK.class)

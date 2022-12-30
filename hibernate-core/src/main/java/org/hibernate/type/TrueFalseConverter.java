@@ -6,15 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
-import org.hibernate.type.descriptor.java.CharacterJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Handles conversion to/from {@code Boolean} as {@code 'T'} or {@code 'F'}

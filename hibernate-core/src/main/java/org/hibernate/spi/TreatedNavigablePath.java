@@ -9,7 +9,7 @@ package org.hibernate.spi;
 import org.hibernate.Incubating;
 
 /**
- * NavigablePath implementation with special handling for treated paths
+ * An implementation of {@link NavigablePath} with special handling for treated paths.
  *
  * @author Christian Beikov
  */

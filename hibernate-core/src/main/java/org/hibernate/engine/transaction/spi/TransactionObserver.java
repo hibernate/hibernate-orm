@@ -7,33 +7,10 @@
 package org.hibernate.engine.transaction.spi;
 
 /**
- * Observer of internal transaction events.
- * <p>
- * A {@link TransactionObserver} must be registered with the {@link org.hibernate.resource.transaction.spi.TransactionCoordinator}
- * by calling {@link org.hibernate.resource.transaction.spi.TransactionCoordinator#addObserver(TransactionObserver) addObserver()}.
- *
- * @apiNote It seems like this interface rightly belongs in {@link org.hibernate.resource.transaction.spi}.
- *
  * @author Steve Ebersole
+ *
+ * @deprecated use {@link org.hibernate.resource.transaction.spi.TransactionObserver}
  */
-public interface TransactionObserver {
-	/**
-	 * Callback for processing the beginning of a transaction.
-	 * <p>
-	 * Do not rely on this being called as the transaction may be started in a manner other than through the
-	 * {@link org.hibernate.Transaction} API.
-	 */
-	void afterBegin();
-
-	/**
-	 * Callback for processing the initial phase of transaction completion.
-	 */
-	void beforeCompletion();
-
-	/**
-	 * Callback for processing the last phase of transaction completion.
-	 *
-	 * @param successful Was the transaction successful?
-	 */
-	void afterCompletion(boolean successful, boolean delayed);
+@Deprecated(since = "6")
+public interface TransactionObserver extends org.hibernate.resource.transaction.spi.TransactionObserver {
 }

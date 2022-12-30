@@ -20,9 +20,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * An EntityEntry implementation for mutable entities.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
 

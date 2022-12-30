@@ -16,6 +16,8 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 /**
+ * A SQL {FOR UPDATE} clause.
+ *
  * @author Gavin King
  */
 public class ForUpdateFragment {

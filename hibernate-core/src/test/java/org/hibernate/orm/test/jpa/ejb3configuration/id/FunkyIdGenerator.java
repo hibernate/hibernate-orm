@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class FunkyIdGenerator implements IdentifierGenerator {
 	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {

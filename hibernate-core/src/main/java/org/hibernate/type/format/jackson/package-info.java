@@ -4,14 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.sql;
-
 
 /**
- * TODO : javadoc
- *
- * @author Steve Ebersole
+ * Implementations of {@link org.hibernate.type.format.FormatMapper} using Jackson.
  */
-public interface AliasGenerator {
-	String generateAlias(String sqlExpression);
-}
+package org.hibernate.type.format.jackson;

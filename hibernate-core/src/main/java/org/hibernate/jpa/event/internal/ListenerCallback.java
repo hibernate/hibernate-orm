@@ -18,7 +18,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 /**
  * Represents a JPA callback using a dedicated listener
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 class ListenerCallback extends AbstractCallback {

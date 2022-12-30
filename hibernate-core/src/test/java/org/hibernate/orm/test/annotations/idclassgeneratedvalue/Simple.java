@@ -13,7 +13,7 @@ import jakarta.persistence.IdClass;
 /**
  * A Simple entity class.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 @Entity
 @IdClass(SimplePK.class)

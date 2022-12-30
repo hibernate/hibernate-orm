@@ -22,8 +22,8 @@ public interface JpaCompliance {
 	 * translating a query as JPQL instead of HQL, as well as whether calls
 	 * to the {@link jakarta.persistence.Query} methods always throw the
 	 * exceptions defined by the specification.
-	 *
-	 * Deviations result in an exception if enabled
+	 * <p>
+	 * Deviations result in an exception, if enabled.
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
 	 *

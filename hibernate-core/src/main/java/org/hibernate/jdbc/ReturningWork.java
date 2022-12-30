@@ -10,9 +10,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * A discrete piece of work following the lines of {@link Work} but returning a result.
+ * A discrete piece of work making use of a {@linkplain Connection JDBC connection}
+ * and returning a result.
  *
  * @author Steve Ebersole
+ *
+ * @see Work
+ * @see org.hibernate.SharedSessionContract#doReturningWork(ReturningWork)
  */
 @FunctionalInterface
 public interface ReturningWork<T> {

@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 @TestForIssue( jiraKey = "HHH-6039, HHH-6100" )
 @Jpa(

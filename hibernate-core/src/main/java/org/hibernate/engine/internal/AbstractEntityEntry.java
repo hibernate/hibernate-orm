@@ -41,9 +41,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * A base implementation of EntityEntry
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 

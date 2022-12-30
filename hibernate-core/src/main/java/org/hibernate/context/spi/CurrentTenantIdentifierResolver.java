@@ -8,8 +8,10 @@ package org.hibernate.context.spi;
 
 /**
  * A callback registered with the {@link org.hibernate.SessionFactory} that is responsible
- * for resolving the current tenant identifier for use with {@link CurrentSessionContext}
- * and {@link org.hibernate.SessionFactory#getCurrentSession()}.
+ * for resolving the current tenant identifier.
+ * <p>
+ * An implementation may be selected by setting the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER}.
  *
  * @see org.hibernate.annotations.TenantId
  *

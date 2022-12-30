@@ -73,6 +73,9 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		if ( Float.class.isAssignableFrom( type ) ) {
 			return (X) Float.valueOf( value.floatValue() );
 		}
+		if ( String.class.isAssignableFrom( type ) ) {
+			return (X) value.toString();
+		}
 		throw unknownUnwrap( type );
 	}
 
@@ -88,6 +91,9 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		}
 		if ( value instanceof Number ) {
 			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		}
+		if ( value instanceof String ) {
+			return new BigDecimal( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

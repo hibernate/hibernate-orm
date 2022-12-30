@@ -6,9 +6,9 @@
  */
 
 /**
- * Package contains specialized SQL AST nodes and builders for
- * table mutations for model parts originating from normal
- * persistence-context events related to flush, etc.
+ * Package contains specialized SQL AST nodes and builders for table mutations
+ * of {@linkplain org.hibernate.metamodel.mapping.ModelPart model parts}
+ * originating from normal persistence-context events.
  *
  * @author Steve Ebersole
  */

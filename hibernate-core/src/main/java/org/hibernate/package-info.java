@@ -16,7 +16,7 @@
  * <p>
  * Playing important supporting roles here, we also have
  * {@link org.hibernate.Transaction}, {@link org.hibernate.Filter},
- * and {@link org.hibernate.Cache}
+ * and {@link org.hibernate.Cache}.
  * <p>
  * APIs related to querying are now defined under the namespace
  * {@link org.hibernate.query}.

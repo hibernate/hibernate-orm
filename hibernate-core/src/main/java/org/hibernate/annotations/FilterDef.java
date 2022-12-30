@@ -50,6 +50,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * session.enableFilter("Current");
  * </pre>
+ * <p>
+ * A filter has no effect unless it is explicitly enabled.
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard

@@ -14,7 +14,7 @@ import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 
 /**
- * Lazy initializer for POJOs
+ * Lazy initializer for plain Java objects.
  *
  * @author Gavin King
  */

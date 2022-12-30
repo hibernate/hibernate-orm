@@ -6,8 +6,10 @@
  */
 
 /**
- * An SPI for extensions which integrate with Hibernate via the
- * {@link org.hibernate.service.Service} mechanism.
+ * An SPI for extensions which integrate with Hibernate via the Java {@link java.util.ServiceLoader} facility.
+ * <p>
+ * Example {@linkplain org.hibernate.integrator.spi.Integrator integrators} include: Envers, Hibernate Search,
+ * Hibernate Reactive, and {@linkplain org.hibernate.boot.beanvalidation.BeanValidationIntegrator Bean Validation}.
  *
  * @see org.hibernate.integrator.spi.Integrator
  */

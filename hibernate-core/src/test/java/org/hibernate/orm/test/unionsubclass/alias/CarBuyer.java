@@ -9,7 +9,7 @@ package org.hibernate.orm.test.unionsubclass.alias;
 
 /**
  * 
- * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+ * @author Strong Liu
  */
 public class CarBuyer extends Customer {
     private String sellerName;

@@ -1160,6 +1160,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Enable the named {@linkplain Filter filter} for this current session.
+	 * <p>
+	 * The returned {@link Filter} object must be used to bind arguments
+	 * to parameters of the filter, and every parameter must be set before
+	 * any other operation of this session is called.
 	 *
 	 * @param filterName the name of the filter to be enabled.
 	 *

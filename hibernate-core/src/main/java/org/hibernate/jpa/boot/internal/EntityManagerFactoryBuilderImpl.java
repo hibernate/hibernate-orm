@@ -64,6 +64,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -140,22 +141,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	/**
 	 * Names a {@link IntegratorProvider}
 	 */
-	public static final String INTEGRATOR_PROVIDER = "hibernate.integrator_provider";
+	public static final String INTEGRATOR_PROVIDER = JpaSettings.INTEGRATOR_PROVIDER;
 	
 	/**
 	 * Names a {@link StrategyRegistrationProviderList}
 	 */
-	public static final String STRATEGY_REGISTRATION_PROVIDERS = "hibernate.strategy_registration_provider";
+	public static final String STRATEGY_REGISTRATION_PROVIDERS = JpaSettings.STRATEGY_REGISTRATION_PROVIDERS;
 	
 	/**
 	 * Names a {@link TypeContributorList}
 	 */
-	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
+	public static final String TYPE_CONTRIBUTORS = JpaSettings.TYPE_CONTRIBUTORS;
 
 	/**
-	 * Names a {@link MetadataBuilderImplementor}
+	 * Names a {@link MetadataBuilderContributor}
 	 */
-	public static final String METADATA_BUILDER_CONTRIBUTOR = "hibernate.metadata_builder_contributor";
+	public static final String METADATA_BUILDER_CONTRIBUTOR = JpaSettings.METADATA_BUILDER_CONTRIBUTOR;
 
 	/**
 	 * Names a Jandex {@link Index} instance to use.

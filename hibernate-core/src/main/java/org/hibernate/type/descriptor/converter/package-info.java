@@ -8,5 +8,7 @@
 /**
  * Support for handling JPA {@link jakarta.persistence.AttributeConverter}
  * instances as part of the Hibernate {@link org.hibernate.type.Type} system.
+ *
+ * @see org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl
  */
 package org.hibernate.type.descriptor.converter;

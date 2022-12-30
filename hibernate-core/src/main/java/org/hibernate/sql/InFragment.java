@@ -14,9 +14,7 @@ import org.hibernate.Internal;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * An SQL IN expression.
- * <p>
- * <code>... in(...)</code>
+ * A SQL {@code IN} expression.
  *
  * @author Gavin King
  */

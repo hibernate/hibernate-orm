@@ -35,7 +35,7 @@ import java.util.List;
  * last parameter may be a vararg, indicated with the syntax
  * {@code (?1 || ?2...)}.
  *
- * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Alexey Loubyansky
  */
 public class PatternBasedSqmFunctionDescriptor
 		extends AbstractSqmSelfRenderingFunctionDescriptor {

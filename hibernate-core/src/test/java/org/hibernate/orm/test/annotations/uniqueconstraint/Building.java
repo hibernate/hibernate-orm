@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 
 /**
- * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
+ * @author Manuel Bernhardt
  */
 @MappedSuperclass
 public class Building {

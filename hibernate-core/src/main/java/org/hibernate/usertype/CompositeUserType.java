@@ -23,16 +23,16 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * <p>
  * A value type managed by a {@code CompositeUserType} may be used in
  * almost every way that a regular embeddable type may be used. It may
- * even contain many-to-one associations.
+ * even contain {@linkplain jakarta.persistence.ManyToOne many to one}
+ * associations.
  * <p>
  * To "map" the attributes of a composite custom type, each
  * {@code CompositeUserType} provides a {@linkplain #embeddable()
  * regular embeddable class} with the same logical structure as the
- * {@linkplain #returnedClass() value type managed by the custom
- * type}.
+ * {@linkplain #returnedClass() value type managed by the custom type}.
  * <p>
- * For example, if we implement a {@code CompositeUserType} for a
- * {@code MonetaryAmount} class, we would also provide a
+ * For example, if we were to implement a {@code CompositeUserType}
+ * for a {@code MonetaryAmount} class, we would also provide a
  * {@code MonetaryAmountEmbeddable} class with a field for each
  * logical persistent attribute of the custom type. Of course,
  * {@code MonetaryAmountEmbeddable} is never instantiated at runtime,

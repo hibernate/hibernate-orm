@@ -14,10 +14,13 @@ import java.sql.Statement;
 /**
  * Contract for extracting {@link ResultSet}s from {@link Statement}s, executing the statements,
  * managing resources, and logging statement calls.
+ * <p>
  * Generally the methods here for dealing with {@link CallableStatement} are extremely limited
  *
  * @author Brett Meyer
  * @author Steve Ebersole
+ *
+ * @see JdbcCoordinator#getResultSetReturn()
  */
 //TODO: This could eventually utilize the new Return interface. It would be great to have a common API.
 public interface ResultSetReturn {

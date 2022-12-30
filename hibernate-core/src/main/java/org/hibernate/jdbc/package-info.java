@@ -6,10 +6,15 @@
  */
 
 /**
- * Abstracts certain very specific aspects of the low-level interaction between Hibernate
- * and JDBC.
+ * Defines the notion of a unit of JDBC work that may be executed by the session
+ * at the request of the client.
  * <p>
- * Defines {@link org.hibernate.jdbc.Work}, {@link org.hibernate.jdbc.ReturningWork} and
- * {@link org.hibernate.jdbc.Expectation}, along with some exceptions
+ * Execution of a unit of work may be requested by calling
+ * {@link org.hibernate.SharedSessionContract#doWork(org.hibernate.jdbc.Work)} or
+ * {@link org.hibernate.SharedSessionContract#doReturningWork(org.hibernate.jdbc.ReturningWork)}.
+ *
+ * @see org.hibernate.jdbc.Work
+ * @see org.hibernate.jdbc.ReturningWork
+ * @see org.hibernate.jdbc.Expectation
  */
 package org.hibernate.jdbc;

@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+ * @author Strong Liu
  */
 @TestForIssue( jiraKey = "HHH-4825" )
 public class SellCarTest extends BaseCoreFunctionalTestCase {

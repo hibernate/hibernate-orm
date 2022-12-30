@@ -18,7 +18,7 @@ import org.jboss.logging.DelegatingBasicLogger;
  * For this to work, it requires JBoss Logging to pick up our custom
  * implementation {@code Log4DelegatingLogger} via ServiceLoader.
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 public final class LogInspectionHelper {
 

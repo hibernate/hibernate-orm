@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.cfg.persister;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class GoofyException extends RuntimeException {
 	private Class<?> value;

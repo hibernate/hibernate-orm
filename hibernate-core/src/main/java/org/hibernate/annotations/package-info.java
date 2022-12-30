@@ -11,8 +11,8 @@
  * The JPA specification perfectly nails many aspects of the O/R persistence problem, but
  * here we address some areas where it falls short.
  *
- * <h3 id="basic-value-mapping">Basic value type mappings</h3>
- *
+ * <h3 id="basic-value-mapping">Basic types in JPA</h3>
+ * <p>
  * A <em>basic type</em> handles the persistence of an attribute of an entity or embeddable
  * object that is stored in exactly one database column.
  * <p>
@@ -82,6 +82,8 @@
  * JPA does provide {@linkplain jakarta.persistence.AttributeConverter converters} as an
  * extensibility mechanism, but its converters are only useful for classes which have an
  * equivalent representation as one of the types listed above.
+ *
+ * <h3 id="basic-value-mapping">Basic value type mappings</h3>
  * <p>
  * By contrast, Hibernate has an embarrassingly rich set of abstractions for modelling
  * basic types, which can be initially confusing.
@@ -93,29 +95,34 @@
  * Instead, a program should use either a "compositional" basic type, or in more extreme
  * cases, a {@code UserType}.
  * <ul>
- * <li>
+ * <li><p>
  *     A basic type is a composition of a {@link org.hibernate.type.descriptor.java.JavaType}
  *     with a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and possibly a JPA
  *     {@link jakarta.persistence.AttributeConverter}, and the process of composition is
  *     usually somewhat implicit.
  *     <ol>
- *     <li>A converter may be selected using the JPA {@link jakarta.persistence.Convert}
- *         annotation.
- *     <li>A {@code JavaType} or {@code JdbcType} may be indicated <em>explicitly</em>
+ *     <li><p>
+ *         A converter may be selected using the JPA {@link jakarta.persistence.Convert}
+ *         annotation, or it may be {@linkplain jakarta.persistence.Converter#autoApply()
+ *         applied implicitly}.
+ *     <li><p>
+ *         A {@code JavaType} or {@code JdbcType} may be indicated <em>explicitly</em>
  *         using the following annotations:
  *         <ul>
  *         <li>{@link org.hibernate.annotations.JavaType}
  *         <li>{@link org.hibernate.annotations.JdbcType}
  *         <li>{@link org.hibernate.annotations.JdbcTypeCode}
  *         </ul>
- *     <li>But these annotation also influence the choice:
+ *     <li><p>
+ *         But these annotation also influence the choice:
  *         <ul>
  *         <li>{@link jakarta.persistence.Lob}
  *         <li>{@link jakarta.persistence.Enumerated}
  *         <li>{@link jakarta.persistence.Temporal}
  *         <li>{@link org.hibernate.annotations.Nationalized}
  *         </ul>
- *     <li>A compositional type mapping also comes with a
+ *     <li><p>
+ *         A compositional type mapping also comes with a
  *         {@link org.hibernate.type.descriptor.java.MutabilityPlan}, which is usually
  *         chosen by the {@code JavaType}, but which may be overridden using the
  *         {@link org.hibernate.annotations.Mutability} annotation.
@@ -124,14 +131,14 @@
  *     Note that {@link org.hibernate.annotations.JavaType}, {@link org.hibernate.annotations.JdbcType},
  *     {@link org.hibernate.annotations.JdbcTypeCode} and {@link org.hibernate.annotations.Mutability}
  *     all come in specialized flavors for handling map keys, list indexes, and so on.
- * <li>
+ * <li><p>
  *     Alternatively, a program may implement the {@link org.hibernate.usertype.UserType}
  *     interface and associate it with a field or property explicitly using the
  *     {@link org.hibernate.annotations.Type @Type} annotation, or implicitly using the
  *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration} annotation.
  *     <p>
  *     There are some specialized flavors of the {@code @Type} annotation too.
- *     </li>
+ * </li>
  * </ul>
  * <p>
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
@@ -145,7 +152,7 @@
  * discussion.
  *
  * <h3 id="second-level-cache">Second level cache</h3>
- *
+ * <p>
  * When we make a decision to store an entity in the second-level cache, we must decide
  * much more than just whether "to cache or not to cache". Among other considerations:
  * <ul>
@@ -177,7 +184,7 @@
  * advocated above.
  *
  * <h3 id="generated-values-natural-ids">Generated values</h3>
- *
+ * <p>
  * JPA supports {@linkplain jakarta.persistence.GeneratedValue generated} identifiers,
  * that is, surrogate primary keys, with four useful built-in
  * {@linkplain jakarta.persistence.GenerationType types} of id generation.
@@ -212,7 +219,7 @@
  * {@link org.hibernate.annotations.GeneratedColumn}.
  *
  * <h3 id="natural-ids">Natural ids</h3>
- *
+ * <p>
  * The use of surrogate keys is highly recommended, making it much easier to evolve
  * a database schema over time. But every entity should also have a "natural" unique
  * key: a subset of fields which, taken together, uniquely identify an instance of
@@ -226,7 +233,7 @@
  * by natural id is a very common thing to do, and so the cache can often be helpful.
  *
  * <h3 id="filters">Filters</h3>
- *
+ * <p>
  * Filters are an extremely powerful feature of Hibernate, allowing the definition of
  * parameterized families of filtered "views" of the domain data. They're also easy
  * to use, with the minor caveat that they require the developer to express filtering
@@ -246,7 +253,7 @@
  * particular session.
  *
  * <h3 id="dialect-specific-sql">Dialect-specific native SQL</h3>
- *
+ * <p>
  * Many annotations in this package allow the specification of native SQL expressions or
  * even complete statements. For example:
  * <ul>

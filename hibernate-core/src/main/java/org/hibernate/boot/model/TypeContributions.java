@@ -17,7 +17,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
- * Defines the target contributing types, whether via dialects or {@link TypeContributor}
+ * Allows custom types and type descriptors to be contributed to the eventual
+ * {@link TypeConfiguration}, either by a {@link org.hibernate.dialect.Dialect}
+ * or by a {@link TypeContributor}.
+ *
+ * @see TypeContributor
  *
  * @author Steve Ebersole
  */
@@ -25,31 +29,31 @@ public interface TypeContributions {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Add the JavaType to the {@link TypeConfiguration}'s
-	 * {@link JavaTypeRegistry}
+	 * Add the given {@link JavaType} to the {@link JavaTypeRegistry}
+	 * of the eventual {@link TypeConfiguration}.
 	 */
 	default void contributeJavaType(JavaType<?> descriptor) {
 		getTypeConfiguration().getJavaTypeRegistry().addDescriptor( descriptor );
 	}
 
 	/**
-	 * Add the JdbcType to the {@link TypeConfiguration}'s
-	 * {@link JdbcTypeRegistry}
+	 * Add the given {@link JdbcType} to the {@link JdbcTypeRegistry}
+	 * of the eventual {@link TypeConfiguration}.
 	 */
 	default void contributeJdbcType(JdbcType descriptor) {
 		getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( descriptor );
 	}
 
 	/**
-	 * Registers a UserType as the implicit (auto-applied) type
-	 * for values of type {@link UserType#returnedClass()}
+	 * Register a {@link UserType} as the implicit (auto-applied)
+	 * type for values of type {@link UserType#returnedClass()}
 	 */
 	default <T> void contributeType(UserType<T> type) {
 		contributeType( type, type.returnedClass().getName() );
 	}
 
 	/**
-	 * @deprecated See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
+	 * @deprecated See discussion of {@code TypeContributor} in User Guide.
 	 */
 	@Deprecated(since = "6.0")
 	default void contributeType(BasicType<?> type) {

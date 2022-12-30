@@ -234,7 +234,8 @@ public interface MetadataBuilder {
 	 * Again the premise here is JPA portability, bearing in mind that some
 	 * JPA provider need these discriminators.
 	 * <p>
-	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
+	 * Its default is defined by the
+	 * {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
 	 * @param enabled Should we implicitly create discriminator for joined
@@ -309,7 +310,8 @@ public interface MetadataBuilder {
 	MetadataBuilder applyBasicType(UserType<?> type, String... keys);
 
 	/**
-	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)
+	 * Apply an explicit {@link TypeContributor}
+	 * (implicit application via {@link java.util.ServiceLoader} will still happen too)
 	 *
 	 * @param typeContributor The contributor to apply
 	 *
@@ -318,8 +320,8 @@ public interface MetadataBuilder {
 	MetadataBuilder applyTypes(TypeContributor typeContributor);
 
 	/**
-	 * Apply a CacheRegionDefinition to be applied to an entity, collection or query while building the
-	 * Metadata object.
+	 * Apply a {@link CacheRegionDefinition} to be applied to an entity, collection,
+	 * or query while building the {@link Metadata} object.
 	 *
 	 * @param cacheRegionDefinition The cache region definition to apply
 	 *
@@ -328,26 +330,30 @@ public interface MetadataBuilder {
 	MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition);
 
 	/**
-	 * Apply a ClassLoader for use while building the Metadata.
+	 * Apply a {@link ClassLoader} for use while building the {@link Metadata}.
 	 * <p>
-	 * Ideally we should avoid accessing ClassLoaders when perform 1st phase of bootstrap.  This
-	 * is a ClassLoader that can be used in cases when we have to.  IN EE managed environments, this
-	 * is the ClassLoader mandated by
-	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}.  This ClassLoader
-	 * is thrown away by the container afterwards.  The idea being that the Class can still be enhanced
-	 * in the application ClassLoader.  In other environments, pass a ClassLoader that performs the
-	 * same function if desired.
+	 * Ideally we should avoid accessing {@code ClassLoader}s when perform 1st phase of bootstrap.
+	 * This is a {@code ClassLoader} that can be used in cases where we absolutely must.
+	 * <p>
+	 * In EE managed environments, this is the {@code ClassLoader} mandated by
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}.
+	 * This {@code ClassLoader} is discarded by the container afterward, the idea being that the
+	 * {@link Class} can still be enhanced in the application {@code ClassLoader}.
+	 * <p>
+	 * In other environments, pass a {@code ClassLoader} that performs the same function, if desired.
 	 *
-	 * @param tempClassLoader ClassLoader for use during building the Metadata
+	 * @param tempClassLoader {@code ClassLoader} for use while building the {@code Metadata}
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
 
 	/**
-	 * Apply a specific ordering to the processing of sources.  Note that unlike most
-	 * of the methods on this contract that deal with multiple values internally, this
-	 * one *replaces* any already set (its more a setter) instead of adding to.
+	 * Apply a specific ordering to the processing of sources.
+	 * <p>
+	 * Unlike most of the methods of this interface (which deal with multiple
+	 * values internally), this one <em>replaces</em> any source processing
+	 * order that was already set.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
 	 * setting if using property-based configuration.
@@ -395,7 +401,8 @@ public interface MetadataBuilder {
 	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass);
 
 	/**
-	 * Adds an AttributeConverter by its Class plus a boolean indicating whether to auto apply it.
+	 * Adds an {@link AttributeConverter} by {@code Class},
+	 * explicitly indicating whether to auto-apply it.
 	 *
 	 * @param attributeConverterClass The AttributeConverter class.
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
@@ -415,7 +422,8 @@ public interface MetadataBuilder {
 	<O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter);
 
 	/**
-	 * Adds an AttributeConverter instance, explicitly indicating whether to auto-apply.
+	 * Adds an {@link AttributeConverter} instance,
+	 * explicitly indicating whether to auto-apply it.
 	 *
 	 * @param attributeConverter The AttributeConverter instance.
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified

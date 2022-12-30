@@ -87,10 +87,14 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * <p>
  * However, a {@code Type} will often want access to the  {@code TypeConfiguration}, which can be
  * achieved by the {@code Type} simply implementing the {@link TypeConfigurationAware} interface.
+ * <p>
+ * A {@code TypeConfiguration} may be configured via {@link org.hibernate.boot.model.TypeContributions}.
  *
  * @author Steve Ebersole
  *
  * @since 5.3
+ *
+ * @see org.hibernate.boot.model.TypeContributions
  */
 @Incubating
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {

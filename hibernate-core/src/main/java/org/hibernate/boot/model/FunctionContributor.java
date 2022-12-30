@@ -14,12 +14,15 @@
 
 package org.hibernate.boot.model;
 
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-
 /**
- * Contract for contributing functions
+ * On object that contributes custom types and type descriptors, eventually
+ * to a {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}, via an
+ * instance of {@link FunctionContributions}.
+ * <p>
+ * The most common way to integrate a {@code FunctionContributor} is by making
+ * it discoverable via the Java {@link java.util.ServiceLoader} facility.
  *
- * @see SqmFunctionRegistry
+ * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
  *
  * @author Karel Maesen
  */

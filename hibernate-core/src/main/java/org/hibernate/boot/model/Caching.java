@@ -11,7 +11,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Models the caching options for an entity, natural-id or collection.
+ * Models the caching options for an entity, natural id, or collection.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik

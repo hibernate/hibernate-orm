@@ -19,15 +19,23 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Simplified API allowing users to contribute
+ * Simplified API allowing users to easily contribute named
  * {@link org.hibernate.query.sqm.function.SqmFunctionDescriptor}s
  * to HQL.
  *
  * @author David Channon
+ *
+ * @apiNote For internally-registered functions, we use the builders from
+ *          {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  */
 public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	private final BasicTypeReference<?> type;
 
+	/**
+	 * @deprecated It's much better to specify the return type using
+	 *             {@link #StandardSQLFunction(String,BasicTypeReference)}.
+	 */
+	@Deprecated
 	public StandardSQLFunction(String name) {
 		this( name, null );
 	}
@@ -37,22 +45,28 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	}
 
 	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
-		super( name, useParentheses, null, new FunctionReturnTypeResolver() {
-			@Override
-			public ReturnableType<?> resolveFunctionReturnType(
-					ReturnableType<?> impliedType,
-					List<? extends SqmTypedNode<?>> arguments,
-					TypeConfiguration typeConfiguration) {
-				return type == null ? null : typeConfiguration.getBasicTypeRegistry().resolve( type );
-			}
+		super(
+				name,
+				useParentheses,
+				null,
+				new FunctionReturnTypeResolver() {
+					@Override
+					public ReturnableType<?> resolveFunctionReturnType(
+							ReturnableType<?> impliedType,
+							List<? extends SqmTypedNode<?>> arguments,
+							TypeConfiguration typeConfiguration) {
+						return type == null ? null : typeConfiguration.getBasicTypeRegistry().resolve( type );
+					}
 
-			@Override
-			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
-				return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
+					@Override
+					public BasicValuedMapping resolveFunctionReturnType(
+							Supplier<BasicValuedMapping> impliedTypeAccess,
+							List<? extends SqlAstNode> arguments) {
+						return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
+					}
+				} );
+				this.type = type;
 			}
-		} );
-		this.type = type;
-	}
 
 	public BasicTypeReference<?> getType() {
 		return type;

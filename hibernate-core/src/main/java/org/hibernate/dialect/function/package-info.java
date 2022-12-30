@@ -8,5 +8,9 @@
 /**
  * Contains implementations of {@link org.hibernate.query.sqm.function.SqmFunctionDescriptor}
  * describing a range of relatively-sophisticated SQL functions available in various dialects.
+ * <p>
+ * The simplified implementations {@link org.hibernate.dialect.function.StandardSQLFunction} and
+ * {@link org.hibernate.dialect.function.SQLFunctionTemplate} are provided to ease migration
+ * from older version of Hibernate.
  */
 package org.hibernate.dialect.function;

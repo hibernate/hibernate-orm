@@ -49,12 +49,32 @@ public class PatternBasedSqmFunctionDescriptor
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
+			String functionName,
+			FunctionKind functionKind) {
+		this(
+				renderer,
+				argumentsValidator,
+				returnTypeResolver,
+				null,
+				functionName,
+				functionKind,
+				null
+		);
+	}
+
+	/**
+	 * Constructs a pattern-based function template
+	 */
+	public PatternBasedSqmFunctionDescriptor(
+			PatternRenderer renderer,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
 			FunctionArgumentTypeResolver argumentTypeResolver,
-			String name,
+			String functionName,
 			FunctionKind functionKind,
 			String argumentListSignature) {
 		super(
-				name,
+				functionName,
 				functionKind,
 				argumentsValidator != null
 						? argumentsValidator

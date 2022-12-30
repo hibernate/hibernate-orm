@@ -7,8 +7,8 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 
 /**
  * Initializer implementation for initializing entity references.

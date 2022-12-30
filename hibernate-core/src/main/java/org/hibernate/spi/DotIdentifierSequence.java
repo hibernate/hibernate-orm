@@ -6,6 +6,11 @@
  */
 package org.hibernate.spi;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.metamodel.mapping.SelectablePath;
+
 /**
  * A compound name.
  * <p>
@@ -51,6 +56,19 @@ public interface DotIdentifierSequence {
 	 * results in the new sequence {@code a.b.c.d}.
 	 */
 	DotIdentifierSequence append(String subPathName);
+
+	default DotIdentifierSequence[] getParts() {
+		final List<DotIdentifierSequence> list = new ArrayList<>();
+		parts( list );
+		return list.toArray(new DotIdentifierSequence[0]);
+	}
+
+	private void parts(List<DotIdentifierSequence> list) {
+		if ( getParent() != null ) {
+			getParent().parts( list );
+		}
+		list.add( this );
+	}
 
 	/**
 	 * Is this sequence node the root of the sequence?

@@ -49,6 +49,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	protected boolean isInitialized;
 
+	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
+
 	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(

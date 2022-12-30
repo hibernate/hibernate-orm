@@ -24,6 +24,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
@@ -49,9 +50,10 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -151,7 +153,7 @@ public class ToOneAttributeMapping
 	 Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
 	 It may be null if the referenced property is a non-entity.
 	 */
-	private final String bidirectionalAttributeName;
+	private final SelectablePath bidirectionalAttributePath;
 	private final TableGroupProducer declaringTableGroupProducer;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
@@ -217,6 +219,8 @@ public class ToOneAttributeMapping
 		this.unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
 
+		this.navigableRole = navigableRole;
+		this.declaringTableGroupProducer = resolveDeclaringTableGroupProducer( declaringEntityPersister, navigableRole );
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
 			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
@@ -229,7 +233,10 @@ public class ToOneAttributeMapping
 			final PersistentClass entityBinding = manyToOne.getMetadata()
 					.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
-				String bidirectionalAttributeName = null;
+				SelectablePath bidirectionalAttributeName = null;
+				final String propertyPath = bootValue.getPropertyName() == null
+						? name
+						: bootValue.getPropertyName();
 				if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE ) {
 					// Handle join table cases
 					for ( Join join : entityBinding.getJoinClosure() ) {
@@ -238,47 +245,35 @@ public class ToOneAttributeMapping
 								&& join.getTable() == manyToOne.getTable()
 								&& equal( join.getKey(), manyToOne ) ) {
 							//noinspection deprecation
-							bidirectionalAttributeName = join.getPropertyIterator().next().getName();
+							bidirectionalAttributeName = SelectablePath.parse( join.getPropertyIterator().next().getName() );
 							break;
 						}
 					}
 					// Simple one-to-one mapped by cases
 					if ( bidirectionalAttributeName == null ) {
-						for ( Property property : entityBinding.getPropertyClosure() ) {
-							final Value value = property.getValue();
-							if ( value instanceof OneToOne ) {
-								final OneToOne oneToOne = (OneToOne) value;
-								if ( name.equals( oneToOne.getMappedByProperty() )
-										&& oneToOne.getReferencedEntityName()
-										.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
-									bidirectionalAttributeName = property.getName();
-									break;
-								}
-							}
-						}
+						bidirectionalAttributeName = findBidirectionalOneToOneAttributeName(
+								propertyPath,
+								declaringType,
+								null,
+								entityBinding.getPropertyClosure()
+						);
 					}
 				}
 				else {
-					for ( Property property : entityBinding.getPropertyClosure() ) {
-						final Value value = property.getValue();
-						if ( value instanceof Collection ) {
-							final Collection collection = (Collection) value;
-							if ( name.equals(collection.getMappedByProperty() )
-									&& collection.getElement().getType().getName()
-									.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
-								bidirectionalAttributeName = property.getName();
-								break;
-							}
-						}
-					}
+					bidirectionalAttributeName = findBidirectionalOneToManyAttributeName(
+							propertyPath,
+							declaringType,
+							null,
+							entityBinding.getPropertyClosure()
+					);
 				}
-				this.bidirectionalAttributeName = bidirectionalAttributeName;
+				this.bidirectionalAttributePath = bidirectionalAttributeName;
 			}
 			else {
 				// Only set the bidirectional attribute name if the referenced property can actually be circular i.e. an entity type
 				final Property property = entityBinding.getProperty( referencedPropertyName );
-				this.bidirectionalAttributeName = property != null && property.getValue() instanceof EntityType
-						? referencedPropertyName
+				this.bidirectionalAttributePath = property != null && property.getValue() instanceof EntityType
+						? SelectablePath.parse( referencedPropertyName )
 						: null;
 			}
 			if ( bootValue.isNullable() ) {
@@ -293,7 +288,7 @@ public class ToOneAttributeMapping
 							navigableRole.getParent().getParent().getFullPath().substring( declaringEntityPersister.getNavigableRole().getFullPath().length() + 1 )  );
 					assert pluralAttribute != null;
 
-					final QueryableCollection persister = (QueryableCollection) pluralAttribute.getCollectionDescriptor();
+					final AbstractCollectionPersister persister = (AbstractCollectionPersister) pluralAttribute.getCollectionDescriptor();
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}
 				else {
@@ -355,21 +350,12 @@ public class ToOneAttributeMapping
 				the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part,
 				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 		 	*/
-			// todo (6.0): find a better solution for the embeddable part name not in the NavigablePath
 			final OneToOne oneToOne = (OneToOne) bootValue;
-			String bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
-					oneToOne.getMappedByProperty(),
-					'.'
-			);
-
-			if ( bidirectionalAttributeName == null ) {
-				this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
-						referencedPropertyName,
-						'.'
-				);
+			if ( oneToOne.getMappedByProperty() == null ) {
+				this.bidirectionalAttributePath = SelectablePath.parse( referencedPropertyName );
 			}
 			else {
-				this.bidirectionalAttributeName = bidirectionalAttributeName;
+				this.bidirectionalAttributePath = SelectablePath.parse( oneToOne.getMappedByProperty() );
 			}
 			notFoundAction = null;
 			isKeyTableNullable = isNullable();
@@ -377,8 +363,7 @@ public class ToOneAttributeMapping
 			isInternalLoadNullable = isNullable();
 		}
 
-		this.navigableRole = navigableRole;
-		this.declaringTableGroupProducer = resolveDeclaringTableGroupProducer( declaringEntityPersister );
+
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -520,6 +505,75 @@ public class ToOneAttributeMapping
 		}
 	}
 
+	private static SelectablePath findBidirectionalOneToManyAttributeName(
+			String propertyPath,
+			ManagedMappingType declaringType,
+			SelectablePath parentSelectablePath,
+			java.util.Collection<Property> properties) {
+		for ( Property property : properties ) {
+			final Value value = property.getValue();
+			if ( value instanceof Component ) {
+				final SelectablePath bidirectionalAttributeName = findBidirectionalOneToManyAttributeName(
+						propertyPath,
+						declaringType,
+						parentSelectablePath == null
+								? SelectablePath.parse( property.getName() )
+								: parentSelectablePath.append( property.getName() ),
+						( (Component) value ).getProperties()
+				);
+				if ( bidirectionalAttributeName != null ) {
+					return bidirectionalAttributeName;
+				}
+			}
+			if ( value instanceof Collection ) {
+				final Collection collection = (Collection) value;
+				if ( propertyPath.equals( collection.getMappedByProperty() )
+						&& collection.getElement().getType().getName()
+						.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+					return parentSelectablePath == null
+							? SelectablePath.parse( property.getName() )
+							: parentSelectablePath.append( property.getName() );
+				}
+			}
+		}
+		return null;
+	}
+
+	private SelectablePath findBidirectionalOneToOneAttributeName(
+			String propertyPath,
+			ManagedMappingType declaringType,
+			SelectablePath parentSelectablePath,
+			java.util.Collection<Property> properties) {
+		for ( Property property : properties ) {
+			final Value value = property.getValue();
+			if ( value instanceof Component ) {
+				final SelectablePath bidirectionalAttributeName = findBidirectionalOneToOneAttributeName(
+						propertyPath,
+						declaringType,
+						parentSelectablePath == null
+								? SelectablePath.parse( property.getName() )
+								: parentSelectablePath.append( property.getName() ),
+						( (Component) value ).getProperties()
+				);
+				if ( bidirectionalAttributeName != null ) {
+					return bidirectionalAttributeName;
+				}
+			}
+			else if ( value instanceof OneToOne ) {
+				final OneToOne oneToOne = (OneToOne) value;
+				if (declaringTableGroupProducer.getNavigableRole().getLocalName().equals( oneToOne.getReferencedEntityName() )
+				&& propertyPath.equals( oneToOne.getMappedByProperty() )
+						&& oneToOne.getReferencedEntityName()
+						.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
+					return parentSelectablePath == null
+									? SelectablePath.parse( property.getName() )
+									: parentSelectablePath.append( property.getName() );
+				}
+			}
+		}
+		return null;
+	}
+
 	private static FetchTiming adjustFetchTiming(FetchTiming mappedFetchTiming, ToOne bootValue) {
 		if ( bootValue instanceof ManyToOne ) {
 			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
@@ -529,9 +583,9 @@ public class ToOneAttributeMapping
 		return mappedFetchTiming;
 	}
 
-	private TableGroupProducer resolveDeclaringTableGroupProducer(EntityPersister declaringEntityPersister) {
+	private static TableGroupProducer resolveDeclaringTableGroupProducer(EntityPersister declaringEntityPersister, NavigableRole navigableRole) {
 		// Also handle cases where a collection contains an embeddable, that contains an association
-		NavigableRole parentRole = getNavigableRole().getParent();
+		NavigableRole parentRole = navigableRole.getParent();
 		String collectionRole = null;
 		do {
 			final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
@@ -579,7 +633,7 @@ public class ToOneAttributeMapping
 		this.targetKeyPropertyName = original.targetKeyPropertyName;
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 		this.cardinality = original.cardinality;
-		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
+		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
 	}
@@ -676,7 +730,7 @@ public class ToOneAttributeMapping
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		if ( cardinality == Cardinality.ONE_TO_ONE && bidirectionalAttributeName != null ) {
+		if ( cardinality == Cardinality.ONE_TO_ONE && bidirectionalAttributePath != null ) {
 			this.sideNature = ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
@@ -795,7 +849,7 @@ public class ToOneAttributeMapping
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 
 		if ( creationState.isAssociationKeyVisited( associationKey )
-				|| bidirectionalAttributeName != null && !creationState.isRegisteringVisitedAssociationKeys() ) {
+				|| bidirectionalAttributePath != null && !creationState.isRegisteringVisitedAssociationKeys() ) {
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
@@ -906,7 +960,8 @@ public class ToOneAttributeMapping
 			ModelPart parentModelPart,
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
-		if ( bidirectionalAttributeName == null ) {
+
+		if ( bidirectionalAttributePath == null ) {
 			/*
 				check if mappedBy is on the other side of the association
 			 */
@@ -929,7 +984,7 @@ public class ToOneAttributeMapping
 			 */
 			if ( parentModelPart instanceof ToOneAttributeMapping ) {
 				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) parentModelPart;
-				if ( toOneAttributeMapping.bidirectionalAttributeName != null ) {
+				if ( toOneAttributeMapping.bidirectionalAttributePath != null ) {
 					return toOneAttributeMapping.isBidirectionalAttributeName(
 							fetchablePath,
 							this,
@@ -954,7 +1009,31 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		if ( cardinality == Cardinality.MANY_TO_ONE ) {
+		else if ( parentNavigablePath.getParent() != null && creationState.resolveModelPart( parentNavigablePath.getParent() ) instanceof EmbeddedCollectionPart ) {//todo: handle recursively?
+			/*
+				class EntityA{
+					@OneToOne(mappedBy = "identicallyNamedAssociation", fetch = FetchType.EAGER)
+					private EntityB b;
+				}
+
+				class EntityB {
+					@OneToOne
+					private EntityA identicallyNamedAssociation;
+
+					private EmbeddableB embeddable;
+				}
+
+				@Embeddable
+				class EmbeddableB {
+					>>>>>>>> this association is not bidirectional <<<<<<<<
+					@OneToOne
+					private EntityA identicallyNamedAssociation;
+				}
+
+			 */
+			return false;
+		}
+		else if ( cardinality == Cardinality.MANY_TO_ONE ) {
 			/*
 				class Child {
 					@OneToOne(mappedBy = "biologicalChild")
@@ -973,12 +1052,12 @@ public class ToOneAttributeMapping
 			final NavigablePath grandparentNavigablePath = parentNavigablePath.getParent();
 			if ( parentNavigablePath.getLocalName().equals( CollectionPart.Nature.ELEMENT.getName() )
 					&& grandparentNavigablePath != null
-					&& grandparentNavigablePath.getLocalName().equals( bidirectionalAttributeName ) ) {
+					&& grandparentNavigablePath.isSuffix( bidirectionalAttributePath ) ) {
 				final NavigablePath parentPath = grandparentNavigablePath.getParent();
 				// This can be null for a collection loader
 				if ( parentPath == null ) {
 					return grandparentNavigablePath.getFullPath().equals(
-							entityMappingType.findSubPart( bidirectionalAttributeName ).getNavigableRole().getFullPath()
+							entityMappingType.findByPath( bidirectionalAttributePath ).getNavigableRole().getFullPath()
 					);
 				}
 				else {
@@ -999,11 +1078,7 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName );
-	}
-
-	public String getBidirectionalAttributeName(){
-		return bidirectionalAttributeName;
+		return parentNavigablePath.isSuffix( bidirectionalAttributePath );
 	}
 
 	private Fetch createCircularBiDirectionalFetch(
@@ -1419,7 +1494,7 @@ public class ToOneAttributeMapping
 		else {
 			// case 1.1
 			// Make sure the entity identifier is not a target key property i.e. this really is a unique key mapping
-			return bidirectionalAttributeName != null && (
+			return bidirectionalAttributePath != null && (
 					!( entityMappingType.getIdentifierMapping() instanceof SingleAttributeIdentifierMapping )
 							|| !targetKeyPropertyNames.contains(
 							entityMappingType.getIdentifierMapping().getAttributeName()
@@ -1503,8 +1578,8 @@ public class ToOneAttributeMapping
 			DomainResultCreationState creationState) {
 		final boolean added = creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
 		AssociationKey additionalAssociationKey = null;
-		if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributeName != null ) {
-			final ModelPart bidirectionalModelPart = entityMappingType.findSubPart( bidirectionalAttributeName );
+		if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributePath != null ) {
+			final ModelPart bidirectionalModelPart = entityMappingType.findByPath( bidirectionalAttributePath );
 			// Add the inverse association key side as well to be able to resolve to a CircularFetch
 			if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
 				assert bidirectionalModelPart.getPartMappingType() == declaringTableGroupProducer;

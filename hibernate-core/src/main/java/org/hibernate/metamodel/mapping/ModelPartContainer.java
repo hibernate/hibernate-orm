@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.DotIdentifierSequence;
 
 /**
  * Access to a group of ModelPart by name or for iteration.
@@ -38,5 +39,26 @@ public interface ModelPartContainer extends ModelPart {
 			nextStart = dotIndex + 1;
 		}
 		return modelPartContainer.findSubPart( path.substring( nextStart ), null );
+	}
+
+	default ModelPart findByPath(DotIdentifierSequence path) {
+		ModelPartContainer modelPartContainer = this;
+		final DotIdentifierSequence endPart;
+		if ( path.getParent() != null ) {
+			final DotIdentifierSequence[] parts = path.getParts();
+			final int end = parts.length - 1;
+			for ( int i = 0; i < end; i++ ) {
+				DotIdentifierSequence part = parts[i];
+				modelPartContainer = (ModelPartContainer) modelPartContainer.findSubPart(
+						part.getLocalName(),
+						null
+				);
+			}
+			endPart = parts[end];
+		}
+		else {
+			endPart = path;
+		}
+		return modelPartContainer.findSubPart( endPart.getLocalName(), null );
 	}
 }

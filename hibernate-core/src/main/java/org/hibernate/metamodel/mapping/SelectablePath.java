@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 import org.hibernate.Incubating;
+import org.hibernate.spi.DotIdentifierSequence;
 
 /**
  * The path for a selectable.
@@ -19,7 +20,7 @@ import org.hibernate.Incubating;
  * @author Christian Beikov
  */
 @Incubating
-public class SelectablePath implements Serializable {
+public class SelectablePath implements Serializable, DotIdentifierSequence {
 	private final SelectablePath parent;
 	private final String name;
 	private final int index;
@@ -34,6 +35,18 @@ public class SelectablePath implements Serializable {
 		this.parent = parent;
 		this.name = name;
 		this.index = parent.index + 1;
+	}
+
+	public static SelectablePath parse(String path) {
+		if ( path == null || path.isEmpty() ) {
+			return null;
+		}
+		final String[] parts = path.split( "\\." );
+		SelectablePath selectablePath = new SelectablePath( parts[0] );
+		for ( int i = 1; i < parts.length; i++ ) {
+			selectablePath = selectablePath.append( parts[i] );
+		}
+		return selectablePath;
 	}
 
 	public SelectablePath[] getParts() {
@@ -72,12 +85,24 @@ public class SelectablePath implements Serializable {
 		return name;
 	}
 
+	@Override
 	public SelectablePath getParent() {
 		return parent;
 	}
 
+	@Override
 	public SelectablePath append(String selectableName) {
 		return new SelectablePath( this, selectableName );
+	}
+
+	@Override
+	public String getLocalName() {
+		return name;
+	}
+
+	@Override
+	public String getFullPath() {
+		return toString();
 	}
 
 	@Override

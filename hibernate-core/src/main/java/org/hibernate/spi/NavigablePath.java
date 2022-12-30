@@ -193,6 +193,19 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	/**
+	 * Determine whether the given path is a suffix of this path
+	 */
+	public boolean isSuffix(DotIdentifierSequence dotIdentifierSequence) {
+		if ( dotIdentifierSequence == null ) {
+			return true;
+		}
+		if ( !getLocalName().equals( dotIdentifierSequence.getLocalName() ) ) {
+			return false;
+		}
+		return getParent() != null && getParent().isSuffix( dotIdentifierSequence.getParent() );
+	}
+
+	/**
 	 * Determine whether this path is part of the given path's parent
 	 */
 	public boolean isParentOrEqual(NavigablePath navigablePath) {

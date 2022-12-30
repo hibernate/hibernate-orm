@@ -242,6 +242,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	}
 
 	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
+
+	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return getEntityDescriptor();
 	}

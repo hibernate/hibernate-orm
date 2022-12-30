@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.convert.spi;
 
 import jakarta.persistence.AttributeConverter;
 
+import org.hibernate.Incubating;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -16,6 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JpaAttributeConverter<O,R> extends BasicValueConverter<O,R> {
 	JavaType<? extends AttributeConverter<O,R>> getConverterJavaType();
 

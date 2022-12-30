@@ -55,6 +55,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *          {@link jakarta.persistence.AttributeConverter}.
  *
  * @see Immutable
+ * @see MutabilityPlan
  *
  * @since 6.0
  *

@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Specialized type mapping for {@code SQLXML} and the XML SQL data type.
+ * Specialized type mapping for {@link SQLXML} and the XML SQL data type.
  *
  * @author Christian Beikov
  */

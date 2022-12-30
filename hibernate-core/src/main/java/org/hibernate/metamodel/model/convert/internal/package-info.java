@@ -6,8 +6,11 @@
  */
 
 /**
- * Implements the SPI for basic-value conversions.
+ * Implements the SPI for basic-typed value conversions.
  *
  * @see org.hibernate.metamodel.model.convert.spi.BasicValueConverter
  */
+@Incubating
 package org.hibernate.metamodel.model.convert.internal;
+
+import org.hibernate.Incubating;

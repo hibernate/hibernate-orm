@@ -6,7 +6,7 @@
  */
 
 /**
- * Support for basic-value conversions. The main contract is
+ * Support for basic-typed value conversions. The main contract is
  * {@link org.hibernate.metamodel.model.convert.spi.BasicValueConverter}.
  * <p>
  * All basic value conversions are defined by this package including:
@@ -17,4 +17,7 @@
  *     {@link org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter}
  * </ul>
  */
+@Incubating
 package org.hibernate.metamodel.model.convert;
+
+import org.hibernate.Incubating;

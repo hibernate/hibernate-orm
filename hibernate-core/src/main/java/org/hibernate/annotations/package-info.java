@@ -8,14 +8,79 @@
 /**
  * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
  *
- * <h2 id="basic-value-mapping">Basic value type mappings</h2>
+ * <h3 id="basic-value-mapping">Basic value type mappings</h3>
  *
+ * A <em>basic type</em> handles the persistence of an attribute of an entity or embeddable
+ * object that is stored in exactly one database column.
+ * <p>
  * JPA supports a very limited set of built-in {@linkplain jakarta.persistence.Basic basic}
- * types, and provides only {@linkplain jakarta.persistence.AttributeConverter converters}
- * as a solution when the built-in types are insufficient.
+ * types.
+ * <table style="border-spacing: 10px">
+ * <thead style="font-weight:bold">
+ * <tr>
+ * <td>Category</td><td>Package</td><td>Types</td>
+ * </tr>
+ * </thead>
+ * <tbody>
+ * <tr>
+ *     <td>Primitive types</td>
+ *     <td></td>
+ *     <td>{@code boolean}, {@code int}, {@code double}, etc.</td>
+ * </tr>
+ * <tr>
+ *     <td>Primitive wrappers</td>
+ *     <td>{@code java.lang}</td>
+ *     <td>{@code Boolean}, {@code Integer}, {@code Double}, etc.</td>
+ * </tr>
+ * <tr>
+ *     <td>Strings</td><td>{@code java.lang}</td>
+ *     <td>{@code String}</td>
+ * </tr>
+ * <tr>
+ *     <td>Arbitrary-precision numeric types</td>
+ *     <td>{@code java.math}</td><td>{@code BigInteger}, {@code BigDecimal}</td>
+ * </tr>
+ * <tr>
+ *     <td>Date/time types</td><td>{@code java.time}</td>
+ *     <td>{@code LocalDate}, {@code LocalTime}, {@code LocalDateTime}, {@code OffsetDateTime}, {@code Instant}</td>
+ * </tr>
+ * <tr>
+ *     <td>Deprecated date/time types</td>
+ *     <td>{@code java.util}</td>
+ *     <td>{@code Date}, {@code Calendar}</td>
+ * </tr>
+ * <tr>
+ *     <td>Deprecated JDBC date/time types</td>
+ *     <td>{@code java.sql}</td>
+ *     <td>{@code Date}, {@code Time}, {@code Timestamp}</td>
+ * </tr>
+ * <tr>
+ *     <td>Binary and character arrays</td>
+ *     <td></td>
+ *     <td>{@code byte[]}, {@code char[]}</td>
+ * </tr>
+ * <tr>
+ *     <td>UUIDs</td><td>{@code java.util}</td>
+ *     <td>{@code UUID}</td>
+ * </tr>
+ * <tr>
+ *     <td>Enumerated types</td>
+ *     <td></td>
+ *     <td>Any {@code enum}</td>
+ * </tr>
+ * <tr>
+ *     <td>Serializable types</td>
+ *     <td></td>
+ *     <td>Any {@code java.io.Serializable}</td>
+ * </tr>
+ * </tbody>
+ * </table>
+ * <p>
+ * JPA provides only {@linkplain jakarta.persistence.AttributeConverter converters} as a
+ * solution when the built-in types are insufficient.
  * <p>
  * By contrast, Hibernate has an embarrassingly rich set of abstractions for modelling
- * "basic" types, which can be initially confusing. Note that the venerable interface
+ * basic types, which can be initially confusing. Note that the venerable interface
  * {@link org.hibernate.type.Type} abstracts over all sorts of field and property types,
  * not only basic types. In modern Hibernate, programs should avoid directly implementing
  * this interface.
@@ -27,19 +92,30 @@
  *     A basic type is a composition of a {@link org.hibernate.type.descriptor.java.JavaType}
  *     with a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and possibly a JPA
  *     {@link jakarta.persistence.AttributeConverter}, and the process of composition is
- *     usually somewhat implicit. A program may influence the choice of {@code JavaType}
- *     or {@code JdbcType} using any of the following annotations:
- *     <ul>
- *     <li>{@link org.hibernate.annotations.JavaType}
- *     <li>{@link org.hibernate.annotations.JdbcType}
- *     <li>{@link org.hibernate.annotations.JdbcTypeCode}
- *     <li>{@link org.hibernate.annotations.Mutability}
- *     <li>{@link jakarta.persistence.Convert}
- *     <li>{@link jakarta.persistence.Lob}
- *     <li>{@link jakarta.persistence.Enumerated}
- *     <li>{@link jakarta.persistence.Temporal}
- *     <li>{@link org.hibernate.annotations.Nationalized}
- *     </ul>
+ *     usually somewhat implicit.
+ *     <ol>
+ *     <li>A converter may be selected using the JPA {@link jakarta.persistence.Convert}
+ *         annotation.
+ *     <li>A {@code JavaType} or {@code JdbcType} may be indicated <em>explicitly</em>
+ *         using the following annotations:
+ *         <ul>
+ *         <li>{@link org.hibernate.annotations.JavaType}
+ *         <li>{@link org.hibernate.annotations.JdbcType}
+ *         <li>{@link org.hibernate.annotations.JdbcTypeCode}
+ *         </ul>
+ *     <li>But these annotation also influence the choice:
+ *         <ul>
+ *         <li>{@link jakarta.persistence.Lob}
+ *         <li>{@link jakarta.persistence.Enumerated}
+ *         <li>{@link jakarta.persistence.Temporal}
+ *         <li>{@link org.hibernate.annotations.Nationalized}
+ *         </ul>
+ *     <li>A compositional type mapping also comes with a
+ *         {@link org.hibernate.type.descriptor.java.MutabilityPlan}, which is usually
+ *         chosen by the {@code JavaType}, but which may be overridden using the
+ *         {@link org.hibernate.annotations.Mutability} annotation.
+ *     </ol>
+ *     <p>
  *     Note that {@link org.hibernate.annotations.JavaType}, {@link org.hibernate.annotations.JdbcType},
  *     {@link org.hibernate.annotations.JdbcTypeCode} and {@link org.hibernate.annotations.Mutability}
  *     all come in specialized flavors for handling map keys, list indexes, and so on.
@@ -55,10 +131,12 @@
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
  * over the compositional approach.
  * <p>
- * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for a more
- * in-depth discussion.
+ * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for further
+ * discussion. The packages {@link org.hibernate.type.descriptor.java} and
+ * {@link org.hibernate.type.descriptor.jdbc} contain the built-in implementations of
+ * {@code JavaType} and {@code JdbcType}, respectively.
  *
- * <h2 id="basic-value-mapping">Dialect-specific native SQL</h2>
+ * <h3 id="basic-value-mapping">Dialect-specific native SQL</h3>
  *
  * Many annotations in this package allow the specification of native SQL expressions or
  * even complete statements. For example:

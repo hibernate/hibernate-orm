@@ -7,12 +7,22 @@
 
 /**
  * A Hibernate {@link org.hibernate.type.Type} is a strategy for mapping a Java
- * property type to a JDBC type or types. In modern Hibernate, {@code Type} itself
- * is now of receding importance, and we prefer to work directly with the combination
- * of:
+ * property type to a JDBC type or types. Every persistent attribute of an entity
+ * or embeddable object has a {@code org.hibernate.type.Type}.
+ * <p>
+ * On the other hand, in modern Hibernate, {@code Type} itself is of receding
+ * importance to application developers, though it remains a very important
+ * internal abstraction.
+ *
+ * <h3>Basic types</h3>
+ *
+ * For {@linkplain jakarta.persistence.Basic basic} types, we prefer to model the
+ * type mapping in terms the combination of:
  * <ul>
  * <li>a {@link org.hibernate.type.descriptor.java.JavaType}, with
- * <li>a {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
+ * <li>a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and,
+ * <li>possibly, a {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter
+ *     converter}, though this is not usually needed.
  * </ul>
  * <p>
  * A {@code JdbcType} is able to read and write a single Java type to one, or
@@ -32,9 +42,30 @@
  * This approach provides quite some flexibility in allowing a given Java type to
  * map to a range of JDBC types. However, when the built-in conversions don't handle
  * a particular mapping, a
- * {@link org.hibernate.metamodel.model.convert.spi.BasicValueConverter} may assist
- * in the conversion process. For example, a JPA
+ * {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter converter}
+ * may assist in the conversion process. For example, a JPA
  * {@link jakarta.persistence.AttributeConverter} might be provided.
+ * <p>
+ * A {@code JavaType} comes with a built-in
+ * {@link org.hibernate.type.descriptor.java.MutabilityPlan}, but this may be
+ * overridden when types are composed.
+ * <p>
+ * See {@link org.hibernate.annotations} for information on how to influence basic
+ * type mappings using annotations.
+ *
+ * <h3>Custom types</h3>
+ *
+ * The package {@link org.hibernate.usertype} provides a way for application developers
+ * to define new types without being exposed to the full complexity of the {@code Type}
+ * framework defined in this package.
+ * <ul>
+ * <li>A {@link org.hibernate.usertype.UserType} may be used to define single-column
+ *     type mappings, and thus competes with the "compositional" approach to basic type
+ *     mappings described above.
+ * <li>On the other hand, a {@link org.hibernate.usertype.CompositeUserType} defines a
+ *     way to handle multi-column type mappings, and is a much more flexible form of
+ *     {@link jakarta.persistence.Embeddable} object mapping.
+ * </ul>
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.SqlTypes

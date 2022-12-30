@@ -23,6 +23,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
@@ -44,7 +45,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -365,10 +365,10 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.overlay();
@@ -405,9 +405,9 @@ public class CockroachDialect extends Dialect {
 		functionFactory.corr();
 		functionFactory.regrLinearRegressionAggregates();
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"format",
-				new FormatFunction( "experimental_strftime", queryEngine.getTypeConfiguration() )
+				new FormatFunction( "experimental_strftime", functionContributions.getTypeConfiguration() )
 		);
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );

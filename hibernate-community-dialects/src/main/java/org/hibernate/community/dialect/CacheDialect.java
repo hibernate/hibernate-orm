@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CacheSequenceSupport;
@@ -40,7 +41,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -110,11 +110,11 @@ public class CacheDialect extends Dialect {
 		return 15;
 	}
 
-	private static void useJdbcEscape(QueryEngine queryEngine, String name) {
+	private static void useJdbcEscape(FunctionContributions queryEngine, String name) {
 		//Yep, this seems to be truly necessary for certain functions
-		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape(
+		queryEngine.getFunctionRegistry().wrapInJdbcEscape(
 				name,
-				queryEngine.getSqmFunctionRegistry().findFunctionDescriptor(name)
+				queryEngine.getFunctionRegistry().findFunctionDescriptor(name)
 		);
 	}
 
@@ -149,10 +149,10 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.repeat();
 		functionFactory.trim2();
 		functionFactory.substr();
@@ -182,42 +182,42 @@ public class CacheDialect extends Dialect {
 		functionFactory.varPopSamp();
 		functionFactory.lastDay();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+				functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"$find(?2,?1)",
 				"$find(?2,?1,?3)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 		functionFactory.bitLength_pattern( "($length(?1)*8)" );
 
-		useJdbcEscape(queryEngine, "sin");
-		useJdbcEscape(queryEngine, "cos");
-		useJdbcEscape(queryEngine, "tan");
-		useJdbcEscape(queryEngine, "asin");
-		useJdbcEscape(queryEngine, "acos");
-		useJdbcEscape(queryEngine, "atan");
-		useJdbcEscape(queryEngine, "atan2");
-		useJdbcEscape(queryEngine, "exp");
-		useJdbcEscape(queryEngine, "log");
-		useJdbcEscape(queryEngine, "log10");
-		useJdbcEscape(queryEngine, "pi");
-		useJdbcEscape(queryEngine, "truncate");
+		useJdbcEscape(functionContributions, "sin");
+		useJdbcEscape(functionContributions, "cos");
+		useJdbcEscape(functionContributions, "tan");
+		useJdbcEscape(functionContributions, "asin");
+		useJdbcEscape(functionContributions, "acos");
+		useJdbcEscape(functionContributions, "atan");
+		useJdbcEscape(functionContributions, "atan2");
+		useJdbcEscape(functionContributions, "exp");
+		useJdbcEscape(functionContributions, "log");
+		useJdbcEscape(functionContributions, "log10");
+		useJdbcEscape(functionContributions, "pi");
+		useJdbcEscape(functionContributions, "truncate");
 
-		useJdbcEscape(queryEngine, "left");
-		useJdbcEscape(queryEngine, "right");
+		useJdbcEscape(functionContributions, "left");
+		useJdbcEscape(functionContributions, "right");
 
-		useJdbcEscape(queryEngine, "hour");
-		useJdbcEscape(queryEngine, "minute");
-		useJdbcEscape(queryEngine, "second");
-		useJdbcEscape(queryEngine, "week");
-		useJdbcEscape(queryEngine, "quarter");
-		useJdbcEscape(queryEngine, "dayname");
-		useJdbcEscape(queryEngine, "monthname");
-		useJdbcEscape(queryEngine, "dayofweek");
-		useJdbcEscape(queryEngine, "dayofmonth");
-		useJdbcEscape(queryEngine, "dayofyear");
+		useJdbcEscape(functionContributions, "hour");
+		useJdbcEscape(functionContributions, "minute");
+		useJdbcEscape(functionContributions, "second");
+		useJdbcEscape(functionContributions, "week");
+		useJdbcEscape(functionContributions, "quarter");
+		useJdbcEscape(functionContributions, "dayname");
+		useJdbcEscape(functionContributions, "monthname");
+		useJdbcEscape(functionContributions, "dayofweek");
+		useJdbcEscape(functionContributions, "dayofmonth");
+		useJdbcEscape(functionContributions, "dayofyear");
 
 	}
 

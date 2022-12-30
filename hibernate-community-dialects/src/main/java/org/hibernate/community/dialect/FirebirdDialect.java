@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
@@ -57,7 +58,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
@@ -250,17 +250,17 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<byte[]> byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
 		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 		final BasicType<Short> shortType = basicTypeRegistry.resolve( StandardBasicTypes.SHORT );
 		final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 		final BasicType<Character> characterType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// Firebird needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -297,14 +297,14 @@ public class FirebirdDialect extends Dialect {
 		functionFactory.bitandorxornot_binAndOrXorNot();
 		functionFactory.leastGreatest_minMaxValue();
 
-		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		functionRegistry.registerBinaryTernaryPattern(
 				"locate",
 				integerType,
 				"position(?1 in ?2)",
 				"position(?1,?2,?3)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature( "(pattern, string[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )

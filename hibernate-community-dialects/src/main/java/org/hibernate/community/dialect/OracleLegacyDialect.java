@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.BooleanDecoder;
@@ -67,7 +68,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -175,11 +175,11 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.cosh();
@@ -225,14 +225,14 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.bitLength_pattern( "lengthb(?1)*8", "dbms_lob.getlength(?1)*16" );
 
 		if ( getVersion().isBefore( 9 ) ) {
-			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+			functionContributions.getFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 		}
 		else {
 			//Oracle has had coalesce() since 9.0.1
 			functionFactory.coalesce();
 		}
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
@@ -251,7 +251,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		// Oracle has a regular aggregate function named stats_mode
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);

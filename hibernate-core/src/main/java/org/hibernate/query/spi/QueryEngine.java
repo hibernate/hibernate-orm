@@ -178,27 +178,14 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		this.typeConfiguration = typeConfiguration;
 		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
-		dialect.initializeFunctionRegistry( this );
+
+		final FunctionContributions functionContributions = new FunctionContributionsImpl( serviceRegistry );
+
+		dialect.initializeFunctionRegistry( functionContributions );
 		if ( userDefinedRegistry != null ) {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
 		}
 
-		final FunctionContributions functionContributions = new FunctionContributions() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			@Override
-			public SqmFunctionRegistry getFunctionRegistry() {
-				return sqmFunctionRegistry;
-			}
-
-			@Override
-			public ServiceRegistry getServiceRegistry() {
-				return serviceRegistry;
-			}
-		};
 		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
 			contributor.contributeFunctions( functionContributions );
 		}
@@ -231,7 +218,8 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();
 		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
-		dialect.initializeFunctionRegistry( this );
+
+		dialect.contributeFunctions( new FunctionContributionsImpl( serviceRegistry ) );
 
 		SessionFactoryImplementor sessionFactory = jpaMetamodel.getTypeConfiguration().getSessionFactory();
 		this.queryParameterBindingTypeResolver = sessionFactory;
@@ -417,6 +405,7 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 		return preferredSqlTypeCodeForBoolean;
 	}
 
+
 	@Override
 	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
 		return queryParameterBindingTypeResolver.resolveParameterBindType( bindValue );
@@ -425,5 +414,28 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 	@Override
 	public <T> BindableType<T> resolveParameterBindType(Class<T> clazz) {
 		return queryParameterBindingTypeResolver.resolveParameterBindType( clazz );
+	}
+
+	private class FunctionContributionsImpl implements FunctionContributions {
+		private final ServiceRegistry serviceRegistry;
+
+		public FunctionContributionsImpl(ServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return sqmFunctionRegistry;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 	}
 }

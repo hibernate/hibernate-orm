@@ -6,10 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -87,18 +87,18 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
 		// full-text search functions
-		queryEngine.getSqmFunctionRegistry().registerNamed(
+		functionContributions.getFunctionRegistry().registerNamed(
 				"score",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
 		);
-		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerNamed( "snippets" );
+		functionContributions.getFunctionRegistry().registerNamed( "highlighted" );
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"contains",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
 				"contains(?1,?2)",

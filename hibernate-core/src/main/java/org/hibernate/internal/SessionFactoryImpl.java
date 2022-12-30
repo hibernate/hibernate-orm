@@ -77,7 +77,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -1148,7 +1147,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
-		return getRuntimeMetamodels().getMappingMetamodel().resolveQueryParameterType( javaType );
+		return getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
 	/**

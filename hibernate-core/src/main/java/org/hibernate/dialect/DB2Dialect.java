@@ -14,6 +14,7 @@ import java.sql.Types;
 import java.util.List;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.DB2AggregateSupport;
@@ -44,7 +45,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
@@ -233,10 +233,10 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
@@ -252,17 +252,17 @@ public class DB2Dialect extends Dialect {
 		functionFactory.trim2();
 		functionFactory.space();
 		functionFactory.repeat();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substr" )
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "substr" )
 				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+						functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length])" )
 				.register();
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"substring",
-				new DB2SubstringFunction( queryEngine.getTypeConfiguration() )
+				new DB2SubstringFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionFactory.translate();
 		functionFactory.bitand();
@@ -300,17 +300,17 @@ public class DB2Dialect extends Dialect {
 		}
 		else {
 			// Before version 11, the position function required the use of the code units
-			queryEngine.getSqmFunctionRegistry().register(
+			functionContributions.getFunctionRegistry().register(
 					"position",
-					new DB2PositionFunction( queryEngine.getTypeConfiguration() )
+					new DB2PositionFunction( functionContributions.getTypeConfiguration() )
 			);
 			// Before version 11, the overlay function required the use of the code units
 			functionFactory.overlayLength_overlay( true );
 			// ordered set aggregate functions are only available as of version 11, and we can't reasonably emulate them
 			// so no percent_rank, cume_dist, median, mode, percentile_cont or percentile_disc
-			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "stddev_pop", "stddev" );
+			functionContributions.getFunctionRegistry().registerAlternateKey( "stddev_pop", "stddev" );
 			functionFactory.stddevSamp_sumCount();
-			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
+			functionContributions.getFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
 			functionFactory.varSamp_sumCount();
 		}
 
@@ -320,27 +320,27 @@ public class DB2Dialect extends Dialect {
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		// DB2 wants parameter operands to be casted to allow lengths bigger than 255
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"concat",
 				new CastingConcatFunction(
 						this,
 						"||",
 						true,
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-						queryEngine.getTypeConfiguration()
+						functionContributions.getTypeConfiguration()
 				)
 		);
 		// For the count distinct emulation distinct
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"count",
 				new CountFunction(
 						this,
-						queryEngine.getTypeConfiguration(),
+						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"||",
-						queryEngine.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
 								.getCastTypeName(
-										queryEngine.getTypeConfiguration()
+										functionContributions.getTypeConfiguration()
 												.getBasicTypeRegistry()
 												.resolve( StandardBasicTypes.STRING ),
 										null,
@@ -351,22 +351,22 @@ public class DB2Dialect extends Dialect {
 				)
 		);
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"format",
-				new DB2FormatEmulation( queryEngine.getTypeConfiguration() )
+				new DB2FormatEmulation( functionContributions.getTypeConfiguration() )
 		);
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "atan2", "atan2(?2,?1)" )
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "atan2", "atan2(?2,?1)" )
 				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+						functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
 				)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "posstr" )
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "posstr" )
 				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
+						functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
 				)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)

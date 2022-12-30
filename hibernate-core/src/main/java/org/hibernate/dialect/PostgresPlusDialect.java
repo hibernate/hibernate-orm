@@ -13,11 +13,11 @@ import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
@@ -45,10 +45,10 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();

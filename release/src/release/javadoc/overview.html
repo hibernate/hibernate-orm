@@ -56,7 +56,7 @@
 </p>
 <p>
     Note that since Hibernate 5.2, the native API extends the JPA API rather than wrapping it.
-    For example,<code>SessionFactory</code> extends <code>EntityManagerFactory</code>, and
+    For example, <code>SessionFactory</code> extends <code>EntityManagerFactory</code>, and
     <code>Session</code> extends <code>EntityManager</code>.
 </p>
 
@@ -73,6 +73,36 @@
 </p>
 <p>
     The full power of Hibernate can only be unlocked via judicious use of these extra annotations.
+</p>
+
+<h3>Bootstrapping Hibernate</h3>
+
+<p>
+    There are four basic ways to obtain an instance of Hibernate:
+</p>
+<ul>
+    <li>
+        as a JPA <em>persistence provider</em>, by using
+        {@link jakarta.persistence.Persistence#createEntityManagerFactory},
+    </li>
+    <li>
+        by using the "simplified" {@link org.hibernate.cfg.Configuration} API,
+    </li>
+    <li>
+        for those who enjoy dirty hands, by using the APIs in {@link org.hibernate.boot}, or
+    </li>
+    <li>
+        in a <em>container environment</em> like
+        <a href="https://www.wildfly.org">WildFly</a> or <a href="https://quarkus.io">Quarkus</a>,
+        by letting the container take care of the bootstrap process and of injecting the
+        {@code EntityManagerFactory} or {@code SessionFactory}.
+    </li>
+</ul>
+<p>
+    All major Java application servers and microservice frameworks come with built-in support for
+    Hibernate. Such container environments also typically feature facilities to automatically
+    manage the lifecycle of a {@code EntityManager} or {@code Session} and its association with
+    container-managed transactions.
 </p>
 
 <h3>Popular extension points</h3>
@@ -105,6 +135,11 @@
         {@link org.hibernate.context.spi} defines support for context-bound "current" sessions
         and contextual multi-tenancy,
     </li>
+</ul>
+<p>
+    More advanced extension points include:
+</p>
+<ul>
     <li>
         {@link org.hibernate.cache.spi} defines an SPI for integrating with second-level cache
         providers,

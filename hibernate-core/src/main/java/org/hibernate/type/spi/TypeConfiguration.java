@@ -88,12 +88,13 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * However, a {@code Type} will often want access to the  {@code TypeConfiguration}, which can be
  * achieved by the {@code Type} simply implementing the {@link TypeConfigurationAware} interface.
  * <p>
- * A {@code TypeConfiguration} may be configured via {@link org.hibernate.boot.model.TypeContributions}.
+ * A {@code TypeConfiguration} may be configured by a {@link org.hibernate.boot.model.TypeContributor}.
  *
  * @author Steve Ebersole
  *
  * @since 5.3
  *
+ * @see org.hibernate.boot.model.TypeContributor
  * @see org.hibernate.boot.model.TypeContributions
  */
 @Incubating

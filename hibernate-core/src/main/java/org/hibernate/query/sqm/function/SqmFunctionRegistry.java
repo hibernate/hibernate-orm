@@ -23,7 +23,12 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
- * Defines a registry for {@link SqmFunctionDescriptor} instances
+ * Defines a registry for {@link SqmFunctionDescriptor} instances.
+ * <p>
+ * The {@code SqmFunctionRegistry} may be configured by a {@link org.hibernate.boot.model.FunctionContributor}.
+ *
+ * @see org.hibernate.boot.model.FunctionContributor
+ * @see org.hibernate.boot.model.FunctionContributions
  *
  * @author Steve Ebersole
  */

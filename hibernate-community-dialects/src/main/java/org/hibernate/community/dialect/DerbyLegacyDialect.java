@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
@@ -42,7 +43,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -260,24 +260,24 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"count",
 				new CountFunction(
 						this,
-						queryEngine.getTypeConfiguration(),
+						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 						"||",
-						queryEngine.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
 								.getCastTypeName( stringType, null, null, null ),
 						true
 				)
@@ -290,9 +290,9 @@ public class DerbyLegacyDialect extends Dialect {
 		// sort of to_char() function.
 
 		// We register an emulation instead, that can at least translate integer literals
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"chr",
-				new ChrLiteralEmulation( queryEngine.getTypeConfiguration() )
+				new ChrLiteralEmulation( functionContributions.getTypeConfiguration() )
 		);
 
 		functionFactory.concat_pipeOperator();
@@ -319,23 +319,23 @@ public class DerbyLegacyDialect extends Dialect {
 		functionFactory.octetLength_pattern( "length(?1)" );
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"concat",
 				new CastingConcatFunction(
 						this,
 						"||",
 						true,
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-						queryEngine.getTypeConfiguration()
+						functionContributions.getTypeConfiguration()
 				)
 		);
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
+		functionContributions.getFunctionRegistry().register( "lpad", new DerbyLpadEmulation( functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register( "rpad", new DerbyRpadEmulation( functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( functionContributions.getTypeConfiguration(), true ) );
 	}
 
 	@Override

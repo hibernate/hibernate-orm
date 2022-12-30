@@ -9,9 +9,9 @@ package org.hibernate.dialect.function;
 import java.util.Date;
 import java.util.Arrays;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -45,9 +45,9 @@ public class CommonFunctionFactory {
 	private final SqmFunctionRegistry functionRegistry;
 	private final TypeConfiguration typeConfiguration;
 
-	public CommonFunctionFactory(QueryEngine queryEngine) {
-		functionRegistry = queryEngine.getSqmFunctionRegistry();
-		typeConfiguration = queryEngine.getTypeConfiguration();
+	public CommonFunctionFactory(FunctionContributions functionContributions) {
+		functionRegistry = functionContributions.getFunctionRegistry();
+		typeConfiguration = functionContributions.getTypeConfiguration();
 
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		dateType = basicTypeRegistry.resolve(StandardBasicTypes.DATE);

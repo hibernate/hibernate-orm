@@ -23,6 +23,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
@@ -68,7 +69,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -533,10 +533,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		functionFactory.round_roundFloor(); //Postgres round(x,n) does not accept double
 		functionFactory.trunc_truncFloor();
@@ -553,7 +553,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.moreHyperbolic();
 		}
 		else {
-			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
+			functionContributions.getFunctionRegistry().registerAlternateKey( "log10", "log" );
 		}
 		functionFactory.cbrt();
 		functionFactory.pi();
@@ -602,8 +602,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		}
 
 		if ( !supportsMinMaxOnUuid() ) {
-			queryEngine.getSqmFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
-			queryEngine.getSqmFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+			functionContributions.getFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			functionContributions.getFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
 		}
 	}
 

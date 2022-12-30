@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
@@ -32,7 +33,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -198,10 +198,10 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substring_substr();
@@ -232,8 +232,8 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
 		}

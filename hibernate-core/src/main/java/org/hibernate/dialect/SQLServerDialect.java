@@ -19,6 +19,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
@@ -46,7 +47,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -278,22 +278,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
 		BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
 		BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"count",
 				new CountFunction(
 						this,
-						queryEngine.getTypeConfiguration(),
+						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"count_big",
 						"+",
@@ -318,9 +318,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp_varp();
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
-			queryEngine.getSqmFunctionRegistry().register(
+			functionContributions.getFunctionRegistry().register(
 					"format",
-					new SQLServerFormatEmulation( queryEngine.getTypeConfiguration() )
+					new SQLServerFormatEmulation( functionContributions.getTypeConfiguration() )
 			);
 
 			//actually translate() was added in 2017 but
@@ -329,32 +329,32 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 			functionFactory.median_percentileCont( true );
 
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
 					.setInvariantType( dateType )
 					.setExactArgumentCount( 3 )
 					.setParameterTypes(INTEGER)
 					.register();
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
 					.setInvariantType( timeType )
 					.setExactArgumentCount( 5 )
 					.setParameterTypes(INTEGER)
 					.register();
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 5 )
 					.setParameterTypes(INTEGER)
 					.register();
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 7 )
 					.setParameterTypes(INTEGER)
 					.register();
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 8 )
 					.setParameterTypes(INTEGER)
 					.register();
-			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
+			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 10 )
 					.setParameterTypes(INTEGER)

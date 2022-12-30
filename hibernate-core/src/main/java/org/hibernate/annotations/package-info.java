@@ -131,12 +131,46 @@
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
  * over the compositional approach.
  * <p>
- * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for further
- * discussion. The packages {@link org.hibernate.type.descriptor.java} and
+ * The packages {@link org.hibernate.type.descriptor.java} and
  * {@link org.hibernate.type.descriptor.jdbc} contain the built-in implementations of
  * {@code JavaType} and {@code JdbcType}, respectively.
+ * <p>
+ * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for further
+ * discussion.
  *
- * <h3 id="basic-value-mapping">Dialect-specific native SQL</h3>
+ * <h3 id="second-level-cache">Second level cache</h3>
+ *
+ * When we make a decision to store an entity in the second-level cache, we must decide
+ * much more than just whether "to cache or not to cache". Among other considerations:
+ * <ul>
+ * <li>we must assign cache management policies like an expiry timeout, whether to use
+ *     FIFO-based eviction, whether cached items may be serialized to disk, and
+ * <li>we must also take great care in specifying how
+ *     {@linkplain org.hibernate.annotations.CacheConcurrencyStrategy concurrent access}
+ *     to cached items is managed.
+ * </ul>
+ * <p>
+ * In a multi-user system, these policies always depend quite sensitively on the nature
+ * of the given entity type, and cannot reasonably be fixed at a more global level.
+ * <p>
+ * With all the above considerations in mind, we strongly recommend the use of the
+ * Hibernate-defined annotation {@link org.hibernate.annotations.Cache} to assign
+ * entities to the second-level cache.
+ * <p>
+ * The JPA-defined {@link jakarta.persistence.Cacheable} annotation is almost useless
+ * to us, since:
+ * <ul>
+ * <li>it provides no way to specify any information about the nature of the <em>how</em>
+ *     cached entity and how its cache should be managed, and
+ * <li>it may not be used to annotate associations.
+ * </ul>
+ * <p>
+ * As an aside, the {@link jakarta.persistence.SharedCacheMode} enumeration is even worse:
+ * its only sensible values are {@code NONE} and {@code ENABLE_SELECTIVE}. The options
+ * {@code ALL} and {@code DISABLE_SELECTIVE} fit extremely poorly with the practices
+ * advocated above.
+ *
+ * <h3 id="dialect-specific-sql">Dialect-specific native SQL</h3>
  *
  * Many annotations in this package allow the specification of native SQL expressions or
  * even complete statements. For example:

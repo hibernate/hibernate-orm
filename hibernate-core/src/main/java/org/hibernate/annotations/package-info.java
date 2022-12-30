@@ -170,6 +170,26 @@
  * {@code ALL} and {@code DISABLE_SELECTIVE} fit extremely poorly with the practices
  * advocated above.
  *
+ * <h3 id="filters">Filters</h3>
+ *
+ * Filters are an extremely powerful feature of Hibernate, allowing the definition of
+ * parameterized families of filtered "views" of the domain data. They're also easy
+ * to use, with the minor caveat that they require the developer to express filtering
+ * expressions in native SQL.
+ * <ul>
+ * <li>The {@link org.hibernate.annotations.FilterDef} annotation defines a named
+ *     filter, declares its parameters, and might specify a filtering expression
+ *     used by default. There should be exactly one of these annotations per filter
+ *     name.
+ * <li>The {@link org.hibernate.annotations.Filter} annotation is used to identify
+ *     which entities and associations are affected by the filter, and provide a
+ *     more specific filtering condition.
+ * </ul>
+ * <p>
+ * Note that a filter has no affect unless it is
+ * {@linkplain org.hibernate.Session#enableFilter(java.lang.String) enabled} in a
+ * particular session.
+ *
  * <h3 id="dialect-specific-sql">Dialect-specific native SQL</h3>
  *
  * Many annotations in this package allow the specification of native SQL expressions or

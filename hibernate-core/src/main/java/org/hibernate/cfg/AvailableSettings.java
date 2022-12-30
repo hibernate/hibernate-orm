@@ -747,6 +747,7 @@ public interface AvailableSettings {
 	 *         type when no column type is explicitly specified using
 	 *         {@link jakarta.persistence.Column#columnDefinition()}.
 	 * </ol>
+	 * <p>
 	 * This setting is <em>disabled</em> by default, and so Unicode character data
 	 * may not be persisted correctly for databases with explicit nationalization
 	 * support.

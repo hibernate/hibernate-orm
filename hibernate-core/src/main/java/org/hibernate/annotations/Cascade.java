@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link jakarta.persistence.OneToMany#cascade()}. The only
  * good reason to use it over the standard JPA approach is
  * to enable {@linkplain CascadeType#LOCK lock cascading},
- * by writing, for example, {@code Cascade(LOCK)}.
+ * by writing, for example, {@code @Cascade(LOCK)}.
  * <p>
  * If an association specified cascade types using both the
  * JPA association mapping annotations and this annotation,

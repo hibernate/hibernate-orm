@@ -7,6 +7,9 @@
 
 /**
  * A set of mapping annotations which extend the O/R mapping annotations defined by JPA.
+ * <p>
+ * The JPA specification perfectly nails many aspects of the O/R persistence problem, but
+ * here we address some areas where it falls short.
  *
  * <h3 id="basic-value-mapping">Basic value type mappings</h3>
  *
@@ -76,14 +79,16 @@
  * </tbody>
  * </table>
  * <p>
- * JPA provides only {@linkplain jakarta.persistence.AttributeConverter converters} as a
- * solution when the built-in types are insufficient.
+ * JPA does provide {@linkplain jakarta.persistence.AttributeConverter converters} as an
+ * extensibility mechanism, but its converters are only useful for classes which have an
+ * equivalent representation as one of the types listed above.
  * <p>
  * By contrast, Hibernate has an embarrassingly rich set of abstractions for modelling
- * basic types, which can be initially confusing. Note that the venerable interface
- * {@link org.hibernate.type.Type} abstracts over all sorts of field and property types,
- * not only basic types. In modern Hibernate, programs should avoid directly implementing
- * this interface.
+ * basic types, which can be initially confusing.
+ * <p>
+ * Note that the venerable interface {@link org.hibernate.type.Type} abstracts over all
+ * sorts of field and property types, not only basic types. In modern Hibernate, programs
+ * should avoid direct use of this interface.
  * <p>
  * Instead, a program should use either a "compositional" basic type, or in more extreme
  * cases, a {@code UserType}.
@@ -124,6 +129,7 @@
  *     interface and associate it with a field or property explicitly using the
  *     {@link org.hibernate.annotations.Type @Type} annotation, or implicitly using the
  *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration} annotation.
+ *     <p>
  *     There are some specialized flavors of the {@code @Type} annotation too.
  *     </li>
  * </ul>
@@ -135,7 +141,7 @@
  * {@link org.hibernate.type.descriptor.jdbc} contain the built-in implementations of
  * {@code JavaType} and {@code JdbcType}, respectively.
  * <p>
- * Please see the <em>User Guide</em> or the package {@link org.hibernate.type} for further
+ * See the <em>User Guide</em> or the package {@link org.hibernate.type} for further
  * discussion.
  *
  * <h3 id="second-level-cache">Second level cache</h3>
@@ -169,6 +175,55 @@
  * its only sensible values are {@code NONE} and {@code ENABLE_SELECTIVE}. The options
  * {@code ALL} and {@code DISABLE_SELECTIVE} fit extremely poorly with the practices
  * advocated above.
+ *
+ * <h3 id="generated-values-natural-ids">Generated values</h3>
+ *
+ * JPA supports {@linkplain jakarta.persistence.GeneratedValue generated} identifiers,
+ * that is, surrogate primary keys, with four useful built-in
+ * {@linkplain jakarta.persistence.GenerationType types} of id generation.
+ * <p>
+ * In JPA, an id generator is identified on the basis of a stringly-typed name, and
+ * this provides a reasonably natural way to integrate
+ * {@linkplain org.hibernate.annotations.GenericGenerator custom generators}.
+ * <p>
+ * JPA does not define any way to generate the values of other fields or properties
+ * of the entity.
+ * <p>
+ * Hibernate 6 takes a different route, which is both more typesafe, and much more
+ * extensible.
+ * <ol>
+ * <li>The interfaces {@link org.hibernate.generator.BeforeExecutionGenerator}
+ *     and {@link org.hibernate.generator.OnExecutionGenerator} provide an extremely
+ *     open-ended way to incorporate custom generators.
+ * <li>The meta-annotations {@link org.hibernate.annotations.IdGeneratorType} and
+ *     {@link org.hibernate.annotations.ValueGenerationType} may be used to associate
+ *     a generator with a user-defined annotation. This annotation is an indirection
+ *     between the generator itself, and the persistent attributes it generates.
+ * <li>This <em>generator annotation</em> may then by used to annotate {@code @Id}
+ *     attributes, {@code @Version} attributes, and other {@code @Basic} attributes to
+ *     specify how their values are generated.
+ * </ol>
+ * <p>
+ * This package includes a number built-in generator annotations, including
+ * {@link org.hibernate.annotations.UuidGenerator},
+ * {@link org.hibernate.annotations.CurrentTimestamp},
+ * {@link org.hibernate.annotations.TenantId},
+ * {@link org.hibernate.annotations.Generated}, and
+ * {@link org.hibernate.annotations.GeneratedColumn}.
+ *
+ * <h3 id="natural-ids">Natural ids</h3>
+ *
+ * The use of surrogate keys is highly recommended, making it much easier to evolve
+ * a database schema over time. But every entity should also have a "natural" unique
+ * key: a subset of fields which, taken together, uniquely identify an instance of
+ * the entity in the business or scientific domain.
+ * <p>
+ * The {@link org.hibernate.annotations.NaturalId} annotation is used to identify
+ * the natural key of an entity, and urge its use.
+ * <p>
+ * The {@link org.hibernate.annotations.NaturalIdCache} annotation enables the use
+ * of the second-level cache for when an entity is loaded by natural id. Retrieval
+ * by natural id is a very common thing to do, and so the cache can often be helpful.
  *
  * <h3 id="filters">Filters</h3>
  *

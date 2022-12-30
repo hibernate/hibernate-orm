@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
@@ -23,7 +24,6 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -56,10 +56,10 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();

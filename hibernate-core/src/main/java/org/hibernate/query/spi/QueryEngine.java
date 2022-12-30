@@ -103,8 +103,7 @@ public class QueryEngine {
 			contributor.contributeFunctions( functionContributions );
 		}
 
-		// can't move this here just yet!
-		//dialect.initializeFunctionRegistry( this );
+		dialect.initializeFunctionRegistry( functionContributions );
 
 		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
 			sqmFunctionRegistry.getFunctionsByName().forEach(
@@ -149,8 +148,6 @@ public class QueryEngine {
 				sessionFactory.getServiceRegistry(),
 				() -> sessionFactory
 		);
-		// TODO: move into createFunctionRegistry()
-		sessionFactory.getJdbcServices().getDialect().initializeFunctionRegistry( this );
 	}
 
 	/**
@@ -172,7 +169,8 @@ public class QueryEngine {
 		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();
-		dialect.initializeFunctionRegistry( this );
+
+		dialect.contributeFunctions( new FunctionContributionsImpl( serviceRegistry, typeConfiguration, sqmFunctionRegistry ) );
 
 		this.interpretationCache = buildInterpretationCache(
 				() -> serviceRegistry.getService( StatisticsImplementor.class ),
@@ -372,4 +370,5 @@ public class QueryEngine {
 			return serviceRegistry;
 		}
 	}
+
 }

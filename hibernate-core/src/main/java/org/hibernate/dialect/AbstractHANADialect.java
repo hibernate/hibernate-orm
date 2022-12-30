@@ -43,6 +43,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -79,7 +80,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
@@ -375,11 +375,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"locate(?2,?1)",
@@ -388,7 +388,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
@@ -428,7 +428,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.radians_acos();
 		functionFactory.degrees_acos();
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+		functionContributions.getFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, typeConfiguration ) );
 	}
 

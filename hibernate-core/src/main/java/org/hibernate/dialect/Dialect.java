@@ -46,7 +46,10 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -120,7 +123,6 @@ import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.Query;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -255,7 +257,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * <ul>
  *     <li>{@link #columnType(int)} to define a mapping from SQL
  *     {@linkplain SqlTypes type codes} to database column types, and
- *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
+ *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to register
  *     mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  * </ul>
@@ -282,7 +284,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Gavin King, David Channon
  */
-public abstract class Dialect implements ConversionContext {
+public abstract class Dialect implements ConversionContext, TypeContributor, FunctionContributor {
 
 	/**
 	 * Characters used as opening for quoting SQL identifiers
@@ -761,6 +763,17 @@ public abstract class Dialect implements ConversionContext {
 		return columnName + " between " + min + " and " + max;
 	}
 
+	@Override
+	public final void contributeFunctions(FunctionContributions functionContributions) {
+		initializeFunctionRegistry( functionContributions );
+	}
+
+	@Override
+	public int ordinal() {
+		// dialect-contributed functions come first
+		return 0;
+	}
+
 	/**
 	 * Initialize the given registry with any dialect-specific functions.
 	 * <p>
@@ -906,8 +919,8 @@ public abstract class Dialect implements ConversionContext {
 	 * Thus, we don't just naively map these HQL functions to the native SQL
 	 * functions with the same names.
 	 */
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
@@ -918,7 +931,7 @@ public abstract class Dialect implements ConversionContext {
 		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
 		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		//standard aggregate functions count(), sum(), max(), min(), avg(),
 		//supported on every database
@@ -1001,20 +1014,20 @@ public abstract class Dialect implements ConversionContext {
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		queryEngine.getSqmFunctionRegistry().register( "position",
+		functionContributions.getFunctionRegistry().register( "position",
 				new LocatePositionEmulation( typeConfiguration ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register( "overlay",
+		functionContributions.getFunctionRegistry().register( "overlay",
 				new InsertSubstringOverlayEmulation( typeConfiguration, false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		queryEngine.getSqmFunctionRegistry().register( "trim",
+		functionContributions.getFunctionRegistry().register( "trim",
 				new TrimFunction( this, typeConfiguration ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
@@ -1025,11 +1038,11 @@ public abstract class Dialect implements ConversionContext {
 		// - casts to and from Boolean, and
 		// - casting Double or Float to String.
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"cast",
 				new CastFunction(
 						this,
-						queryEngine.getTypeConfiguration()
+						functionContributions.getTypeConfiguration()
 								.getCurrentBaseSqlTypeIndicators()
 								.getPreferredSqlTypeCodeForBoolean()
 				)
@@ -1044,7 +1057,7 @@ public abstract class Dialect implements ConversionContext {
 		//additional non-standard temporal field types, which must be emulated in
 		//a very dialect-specific way
 
-		queryEngine.getSqmFunctionRegistry().register( "extract",
+		functionContributions.getFunctionRegistry().register( "extract",
 				new ExtractFunction( this, typeConfiguration ) );
 
 		//comparison functions supported on most databases, emulated on others
@@ -1055,7 +1068,7 @@ public abstract class Dialect implements ConversionContext {
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
-		queryEngine.getSqmFunctionRegistry().register( "ifnull",
+		functionContributions.getFunctionRegistry().register( "ifnull",
 				new CoalesceIfnullEmulation() );
 
 		//rpad() and pad() are supported on almost every database, and emulated
@@ -1066,13 +1079,13 @@ public abstract class Dialect implements ConversionContext {
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		queryEngine.getSqmFunctionRegistry().register( "pad",
+		functionContributions.getFunctionRegistry().register( "pad",
 				new LpadRpadPadEmulation( typeConfiguration ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		queryEngine.getSqmFunctionRegistry().register( "str",
+		functionContributions.getFunctionRegistry().register( "str",
 				new CastStrEmulation( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
@@ -1084,17 +1097,17 @@ public abstract class Dialect implements ConversionContext {
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
+		functionContributions.getFunctionRegistry().register( "timestampadd",
 				new TimestampaddFunction( this, typeConfiguration ) );
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff",
+		functionContributions.getFunctionRegistry().register( "timestampdiff",
 				new TimestampdiffFunction( this, typeConfiguration ) );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 
 		//ANSI SQL (and JPA) current date/time/timestamp functions, supported
 		//natively on almost every database, delegated back to the Dialect
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"current_date",
 				new CurrentFunction(
 						"current_date",
@@ -1102,7 +1115,7 @@ public abstract class Dialect implements ConversionContext {
 						dateType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"current_time",
 				new CurrentFunction(
 						"current_time",
@@ -1110,7 +1123,7 @@ public abstract class Dialect implements ConversionContext {
 						timeType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"current_timestamp",
 				new CurrentFunction(
 						"current_timestamp",
@@ -1118,12 +1131,12 @@ public abstract class Dialect implements ConversionContext {
 						timestampType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current date", "current_date" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current time", "current_time" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current timestamp", "current_timestamp" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "current date", "current_date" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "current time", "current_time" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "current timestamp", "current_timestamp" );
 		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"local_date",
 				new CurrentFunction(
 						"local_date",
@@ -1131,7 +1144,7 @@ public abstract class Dialect implements ConversionContext {
 						localDateType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"local_time",
 				new CurrentFunction(
 						"local_time",
@@ -1139,7 +1152,7 @@ public abstract class Dialect implements ConversionContext {
 						localTimeType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"local_datetime",
 				new CurrentFunction(
 						"local_datetime",
@@ -1147,7 +1160,7 @@ public abstract class Dialect implements ConversionContext {
 						localDateTimeType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"offset_datetime",
 				new CurrentFunction(
 						"offset_datetime",
@@ -1155,12 +1168,12 @@ public abstract class Dialect implements ConversionContext {
 						offsetDateTimeType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local date", "local_date" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local time", "local_time" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local datetime", "local_datetime" );
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "offset datetime", "offset_datetime" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "local date", "local_date" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "local time", "local_time" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "local datetime", "local_datetime" );
+		functionContributions.getFunctionRegistry().registerAlternateKey( "offset datetime", "offset_datetime" );
 
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"instant",
 				new CurrentFunction(
 						"instant",
@@ -1168,9 +1181,9 @@ public abstract class Dialect implements ConversionContext {
 						instantType
 				)
 		);
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
+		functionContributions.getFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
-		queryEngine.getSqmFunctionRegistry().register( "sql", new SqlFunction() );
+		functionContributions.getFunctionRegistry().register( "sql", new SqlFunction() );
 	}
 
 	/**
@@ -1505,6 +1518,11 @@ public abstract class Dialect implements ConversionContext {
 
 
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public final void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		contributeTypes( typeContributions, serviceRegistry );
+	}
 
 	/**
 	 * A callback which allows the {@code Dialect} to contribute types.
@@ -4149,7 +4167,7 @@ public abstract class Dialect implements ConversionContext {
 	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.hql.internal.StandardHqlTranslator
-	 * @see QueryEngine#getHqlTranslator()
+	 * @see org.hibernate.query.spi.QueryEngine#getHqlTranslator()
 	 */
 	public HqlTranslator getHqlTranslator() {
 		return null;
@@ -4163,7 +4181,7 @@ public abstract class Dialect implements ConversionContext {
 	 * has higher precedence since it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmTranslator
-	 * @see QueryEngine#getSqmTranslatorFactory()
+	 * @see org.hibernate.query.spi.QueryEngine#getSqmTranslatorFactory()
 	 */
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return null;

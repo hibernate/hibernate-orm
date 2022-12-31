@@ -464,7 +464,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.getEntityInstance();
 		if ( proxy != null && ( proxy instanceof MapProxy
 				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) ) ) {
-			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -481,8 +481,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this.isInitialized = true;
 				}
 			}
-			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
-				this.entityInstance = entityInstanceFromExecutionContext;
+			else if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
+				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
 			else {
@@ -528,6 +528,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		return true;
+	}
+
+	private boolean useEntityInstanceFromExecutionContext(
+			Object entityInstanceFromExecutionContext,
+			SharedSessionContractImplementor session) {
+		if ( this instanceof EntityResultInitializer
+				&& entityInstanceFromExecutionContext != null
+				&& entityKey.getIdentifier()
+				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) )
+		) {
+			return true;
+		}
+		return false;
 	}
 
 	/**

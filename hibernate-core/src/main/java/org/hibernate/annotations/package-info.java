@@ -144,6 +144,20 @@
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
  * over the compositional approach.
  * <p>
+ * All the typing annotations just mentioned may be used as meta-annotations. That is,
+ * it's possible to define a new typing annotation like this:
+ * <pre>
+ * &#64;JavaType(ThingJavaType.class)
+ * &#64;JdbcTypeCode(JSON)
+ * &#64;Target({METHOD, FIELD})
+ * &#64;Retention(RUNTIME)
+ * public &#64;interface JsonThing {}
+ * </pre>
+ * The annotation may then be applied to fields and properties of entities and embeddable
+ * objects:
+ * <pre>
+ * &#64;JsonThing Thing myThing;
+ * </pre>
  * The packages {@link org.hibernate.type.descriptor.java} and
  * {@link org.hibernate.type.descriptor.jdbc} contain the built-in implementations of
  * {@code JavaType} and {@code JdbcType}, respectively.

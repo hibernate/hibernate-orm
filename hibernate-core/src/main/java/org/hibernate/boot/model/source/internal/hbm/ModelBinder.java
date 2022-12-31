@@ -96,6 +96,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -203,22 +204,18 @@ public class ModelBinder {
 				.addEntityBinding( rootEntityDescriptor );
 
 		switch ( hierarchySource.getHierarchyInheritanceType() ) {
-			case NO_INHERITANCE: {
+			case NO_INHERITANCE:
 				// nothing to do
 				break;
-			}
-			case DISCRIMINATED: {
+			case DISCRIMINATED:
 				bindDiscriminatorSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
-			case JOINED: {
+			case JOINED:
 				bindJoinedSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
-			case UNION: {
+			case UNION:
 				bindUnionSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
 		}
 	}
 
@@ -293,49 +290,40 @@ public class ModelBinder {
 	}
 
 	private void applyCaching(MappingDocument mappingDocument, Caching caching, RootClass rootEntityDescriptor) {
-		if ( caching == null || caching.getRequested() == TruthValue.UNKNOWN ) {
-			// see if JPA's SharedCacheMode indicates we should implicitly apply caching
-			//
-			// here we only really look for ALL.  Ideally we could look at NONE too as a means
-			// to selectively disable all caching, but historically hbm.xml mappings were processed
-			// outside this concept and whether to cache or not was defined wholly by what
-			// is defined in the mapping document.  So for backwards compatibility we
-			// do not consider ENABLE_SELECTIVE nor DISABLE_SELECTIVE here.
-			//
-			// Granted, ALL was not historically considered either, but I have a practical
-			// reason for wanting to support this... our legacy tests built using
-			// Configuration applied a similar logic but that capability is no longer
-			// accessible from Configuration
-			switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
-				case ALL:
-					caching = new Caching(
-							null,
-							mappingDocument.getBuildingOptions().getImplicitCacheAccessType(),
-							false,
-							TruthValue.UNKNOWN
-					);
-					break;
-				case NONE: // Ideally we'd disable all caching...
-				case ENABLE_SELECTIVE: // this is default behavior for hbm.xml
-				case DISABLE_SELECTIVE: // really makes no sense for hbm.xml
-				default: // null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent to ENABLE_SELECTIVE
-					// do nothing
-			}
+		if ( isCacheEnabled( mappingDocument, caching ) ) {
+			rootEntityDescriptor.setCacheConcurrencyStrategy( getConcurrencyStrategy( mappingDocument, caching ).getExternalName() );
+			rootEntityDescriptor.setCacheRegionName( caching == null ? null : caching.getRegion() );
+			rootEntityDescriptor.setLazyPropertiesCacheable( caching == null || caching.isCacheLazyProperties() );
+			rootEntityDescriptor.setCached( true );
 		}
+	}
 
-		if ( caching == null || caching.getRequested() == TruthValue.FALSE ) {
-			return;
-		}
+	private static AccessType getConcurrencyStrategy(MappingDocument mappingDocument, Caching caching) {
+		return caching == null || caching.getAccessType() == null
+				? mappingDocument.getBuildingOptions().getImplicitCacheAccessType()
+				: caching.getAccessType();
+	}
 
-		if ( caching.getAccessType() != null ) {
-			rootEntityDescriptor.setCacheConcurrencyStrategy( caching.getAccessType().getExternalName() );
+	private static boolean isCacheEnabled(MappingDocument mappingDocument, Caching caching) {
+		switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
+			case UNSPECIFIED:
+			case ENABLE_SELECTIVE:
+				// this is default behavior for hbm.xml
+				return caching != null && caching.getRequested().toBoolean(false);
+			case NONE:
+				// this option is actually really useful
+				return false;
+			case ALL:
+				// goes completely against the whole ideology we have for
+				// caching, and so it hurts me to support it here
+				return true;
+			case DISABLE_SELECTIVE:
+				// makes no sense for hbm.xml, and also goes against our
+				// ideology, and so it hurts me to support it here
+				return caching == null || caching.getRequested().toBoolean(true);
+			default:
+				throw new AssertionFailure( "unknown SharedCacheMode" );
 		}
-		else {
-			rootEntityDescriptor.setCacheConcurrencyStrategy( mappingDocument.getBuildingOptions().getImplicitCacheAccessType().getExternalName() );
-		}
-		rootEntityDescriptor.setCacheRegionName( caching.getRegion() );
-		rootEntityDescriptor.setLazyPropertiesCacheable( caching.isCacheLazyProperties() );
-		rootEntityDescriptor.setCached( caching.getRequested() != TruthValue.UNKNOWN );
 	}
 
 	private void bindEntityIdentifier(
@@ -1553,50 +1541,10 @@ public class ModelBinder {
 	}
 
 	private void applyCaching(MappingDocument mappingDocument, Caching caching, Collection collection) {
-		if ( caching == null || caching.getRequested() == TruthValue.UNKNOWN ) {
-			// see if JPA's SharedCacheMode indicates we should implicitly apply caching
-			switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
-				case ALL: {
-					caching = new Caching(
-							null,
-							mappingDocument.getBuildingOptions().getImplicitCacheAccessType(),
-							false,
-							TruthValue.UNKNOWN
-					);
-					break;
-				}
-				case NONE: {
-					// Ideally we'd disable all caching...
-					break;
-				}
-				case ENABLE_SELECTIVE: {
-					// this is default behavior for hbm.xml
-					break;
-				}
-				case DISABLE_SELECTIVE: {
-					// really makes no sense for hbm.xml
-					break;
-				}
-				default: {
-					// null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent
-					// to ENABLE_SELECTIVE
-					break;
-				}
-			}
+		if ( isCacheEnabled( mappingDocument, caching ) ) {
+			collection.setCacheConcurrencyStrategy( getConcurrencyStrategy( mappingDocument, caching ).getExternalName() );
+			collection.setCacheRegionName( caching == null ? null : caching.getRegion() );
 		}
-
-		if ( caching == null || caching.getRequested() == TruthValue.FALSE ) {
-			return;
-		}
-
-		if ( caching.getAccessType() != null ) {
-			collection.setCacheConcurrencyStrategy( caching.getAccessType().getExternalName() );
-		}
-		else {
-			collection.setCacheConcurrencyStrategy( mappingDocument.getBuildingOptions().getImplicitCacheAccessType().getExternalName() );
-		}
-		collection.setCacheRegionName( caching.getRegion() );
-//		collection.setCachingExplicitlyRequested( caching.getRequested() != TruthValue.UNKNOWN );
 	}
 
 	private Identifier determineTable(

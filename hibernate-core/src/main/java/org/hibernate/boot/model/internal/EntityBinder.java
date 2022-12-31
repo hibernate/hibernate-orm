@@ -1470,37 +1470,30 @@ public class EntityBinder {
 			return false;
 		}
 		switch ( effectiveCache.include().toLowerCase( Locale.ROOT ) ) {
-			case "all": {
+			case "all":
 				return true;
-			}
-			case "non-lazy": {
+			case "non-lazy":
 				return false;
-			}
-			default: {
+			default:
 				throw new AnnotationException( "Class '" + annotatedClass.getName()
 						+ "' has a '@Cache' with undefined option 'include=\"" + effectiveCache.include() + "\"'" );
-			}
 		}
 	}
 
 	private static boolean isCacheable(SharedCacheMode sharedCacheMode, Cacheable explicitCacheableAnn) {
-		switch (sharedCacheMode) {
-			case ALL: {
+		switch ( sharedCacheMode ) {
+			case ALL:
 				// all entities should be cached
 				return true;
-			}
-			case ENABLE_SELECTIVE: {
+			case ENABLE_SELECTIVE:
 				// only entities with @Cacheable(true) should be cached
 				return explicitCacheableAnn != null && explicitCacheableAnn.value();
-			}
-			case DISABLE_SELECTIVE: {
+			case DISABLE_SELECTIVE:
 				// only entities with @Cacheable(false) should not be cached
 				return explicitCacheableAnn == null || explicitCacheableAnn.value();
-			}
-			default: {
+			default:
 				// treat both NONE and UNSPECIFIED the same
 				return false;
-			}
 		}
 	}
 

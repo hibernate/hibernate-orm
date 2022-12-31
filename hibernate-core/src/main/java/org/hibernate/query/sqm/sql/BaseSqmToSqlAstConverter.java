@@ -4524,7 +4524,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) lhs;
 			final Class<?> treatTargetJavaType = treatedPath.getTreatTarget().getJavaType();
-			final Class<?> originalJavaType = treatedPath.getWrappedPath().getJavaType();
+			final SqmPath<?> wrappedPath = treatedPath.getWrappedPath();
+			final Class<?> originalJavaType = wrappedPath.getJavaType();
 			if ( treatTargetJavaType.isAssignableFrom( originalJavaType ) ) {
 				// Treating a node to a super type can be ignored
 				return expression;
@@ -4539,12 +4540,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(
 						treatedPath.getTreatTarget().getHibernateEntityName()
 				);
-				conjunctTreatUsages.computeIfAbsent( treatedPath.getWrappedPath(), p -> new HashSet<>( 1 ) )
+				conjunctTreatUsages.computeIfAbsent( wrappedPath, p -> new HashSet<>( 1 ) )
 								.addAll( entityDescriptor.getSubclassEntityNames() );
 				return expression;
 			}
-			// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
-			return createCaseExpression( treatedPath.getWrappedPath(), treatedPath.getTreatTarget(), expression );
+			if ( wrappedPath instanceof DiscriminatorSqmPath ) {
+				// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
+				return createCaseExpression( wrappedPath, treatedPath.getTreatTarget(), expression );
+			}
+			return expression;
 		}
 		return expression;
 	}

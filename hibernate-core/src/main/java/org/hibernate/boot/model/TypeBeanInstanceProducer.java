@@ -9,6 +9,7 @@ package org.hibernate.boot.model;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.ReflectHelper;
@@ -17,11 +18,11 @@ import org.hibernate.type.spi.TypeBootstrapContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * BeanInstanceProducer implementation for building beans related with
- * custom types.
+ * {@link BeanInstanceProducer} implementation for building beans related to custom types.
  *
  * @author Christian Beikov
  */
+@Internal //TODO: move this to org.hibernate.boot.internal, where its only usage is
 public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBootstrapContext {
 	private final TypeConfiguration typeConfiguration;
 

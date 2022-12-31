@@ -21,6 +21,7 @@ import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
@@ -36,23 +37,37 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface MetadataBuildingOptions {
 	/**
-	 * Access to the service registry.
-	 *
-	 * @return The service registry
+	 * Access to the {@link StandardServiceRegistry}.
 	 */
 	StandardServiceRegistry getServiceRegistry();
 
 	/**
-	 * Access to the mapping defaults.
-	 *
-	 * @return The mapping defaults
+	 * Access to the {@link MappingDefaults}.
 	 */
 	MappingDefaults getMappingDefaults();
 
+	/**
+	 * The service implementing {@link IdentifierGeneratorFactory}.
+	 * <p>
+	 * @implNote Almost always a {@link org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory}.
+	 */
 	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
+	/**
+	 * @return the {@link TimeZoneStorageStrategy} determined by the global configuration
+	 *         property and the {@linkplain #getTimeZoneSupport() time zone support} of
+	 *         the configured {@link org.hibernate.dialect.Dialect}
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE
+	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
+	 */
 	TimeZoneStorageStrategy getDefaultTimeZoneStorage();
 
+	/**
+	 * @return the {@link TimeZoneSupport} of the configured {@link org.hibernate.dialect.Dialect}
+	 *
+	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
+	 */
 	TimeZoneSupport getTimeZoneSupport();
 
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
@@ -79,35 +94,59 @@ public interface MetadataBuildingOptions {
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
+	 */
 	ImplicitNamingStrategy getImplicitNamingStrategy();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY
+	 */
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY
+	 */
 	ColumnOrderingStrategy getColumnOrderingStrategy();
 
 	/**
 	 * Access to the {@link SharedCacheMode} to determine if the second-level cache is enabled.
 	 *
-	 * @return The {@code SharedCacheMode}
+	 * @return The {@link SharedCacheMode}
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_SHARED_CACHE_MODE
 	 */
 	SharedCacheMode getSharedCacheMode();
 
 	/**
-	 * Access to any implicit cache AccessType.
+	 * Access to any implicit cache {@link AccessType}.
 	 *
-	 * @return The implicit cache AccessType
+	 * @return The implicit cache {@link AccessType}
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 */
 	AccessType getImplicitCacheAccessType();
 
 	/**
-	 * Access to the MultiTenancyStrategy for this environment.
+	 * Is multi-tenancy enabled?
+	 * <p>
+	 * Multi-tenancy is enabled implicitly if a {@link MultiTenantConnectionProvider} is available.
 	 *
-	 * @return The MultiTenancyStrategy
+	 * @return {@code true} is multi-tenancy is enabled
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
 
+	/**
+	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
+	 */
+	@Deprecated(since = "6")
 	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 
+	/**
+	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
+	 */
 	TypeConfiguration getTypeConfiguration();
 
 	/**
@@ -145,8 +184,9 @@ public interface MetadataBuildingOptions {
 	boolean shouldImplicitlyForceDiscriminatorInSelect();
 
 	/**
-	 * Should we use nationalized variants of character data (e.g. NVARCHAR rather than VARCHAR)
-	 * by default?
+	 * Should we use nationalized variants of character data by default?
+	 * <p>
+	 * For example, should {@code NVARCHAR} be used in preference to  {@code VARCHAR}?
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport
 	 * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
@@ -158,26 +198,36 @@ public interface MetadataBuildingOptions {
 	boolean isSpecjProprietarySyntaxEnabled();
 
 	/**
-	 * Should we create constraint by default?
+	 * Should we <em>disable</em> constraint creation when
+	 * {@link jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT}?
 	 *
 	 * @see jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT
 	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DEFAULT_CONSTRAINT_MODE
 	 *
-	 * @return {@code true} if not create constraint by default; {@code false} otherwise.
+	 * @return {@code true} if we should <em>not</em> create constraints by default;
+	 *         {@code false} if we should.
 	 */
 	boolean isNoConstraintByDefault();
 
 	/**
-	 * Retrieve the ordering in which sources should be processed.
+	 * Retrieve the ordering in which {@linkplain MetadataSourceType sources} should be processed.
 	 *
 	 * @return The order in which sources should be processed.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
 	 */
 	List<MetadataSourceType> getSourceProcessOrdering();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CHARSET_NAME
+	 */
 	default String getSchemaCharset() {
 		return null;
 	}
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#XML_MAPPING_ENABLED
+	 */
 	default boolean isXmlMappingEnabled() {
 		return true;
 	}

@@ -780,7 +780,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						.getDialect()
 						.getTimeZoneSupport();
 			}
-			catch (ServiceException se) {
+			catch ( ServiceException se ) {
 				return TimeZoneSupport.NONE;
 			}
 		}

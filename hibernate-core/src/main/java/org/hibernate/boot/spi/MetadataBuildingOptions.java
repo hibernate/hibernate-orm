@@ -66,14 +66,16 @@ public interface MetadataBuildingOptions {
 	}
 
 	/**
-	 * Access the list of BasicType registrations.  These are the BasicTypes explicitly
-	 * registered via calls to:<ul>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType, String[])}</li>
-	 *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, String[])}</li>
+	 * Access the list of {@link org.hibernate.type.BasicType} registrations.
+	 * <p>
+	 * These are the {@code BasicTypes} explicitly registered via calls to:
+	 * <ul>
+	 * <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}
+	 * <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType, String[])}
+	 * <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, String[])}
 	 * </ul>
 	 *
-	 * @return The BasicType registrations
+	 * @return The {@code BasicTypes} registrations
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
 
@@ -84,10 +86,9 @@ public interface MetadataBuildingOptions {
 	ColumnOrderingStrategy getColumnOrderingStrategy();
 
 	/**
-	 * Access to the SharedCacheMode for determining whether we should perform second level
-	 * caching or not.
+	 * Access to the {@link SharedCacheMode} to determine if the second-level cache is enabled.
 	 *
-	 * @return The SharedCacheMode
+	 * @return The {@code SharedCacheMode}
 	 */
 	SharedCacheMode getSharedCacheMode();
 

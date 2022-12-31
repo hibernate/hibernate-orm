@@ -269,8 +269,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getFastSessionServices();
 	}
 
-	@Override
-	public DeserializationResolver getDeserializationResolver() {
+	@Override @Deprecated
+	public DeserializationResolver<?> getDeserializationResolver() {
 		return delegate.getDeserializationResolver();
 	}
 

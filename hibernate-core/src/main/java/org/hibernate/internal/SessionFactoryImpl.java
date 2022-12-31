@@ -125,6 +125,7 @@ import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
@@ -138,14 +139,16 @@ import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
  * <p>
  * Exposes two interfaces:
  * <ul>
- * <li>{@link SessionFactory} to the application, and</li>
- * <li>{@link SessionImplementor} (an SPI interface) to other subsystems.</li>
+ * <li>{@link SessionFactory} to the application, and
+ * <li>{@link SessionImplementor} (an SPI interface) to other subsystems.
  * </ul>
  * <p>
- * This class is not thread-safe.
- * This class must appear immutable to clients, even if it does all kinds of caching
- * and pooling under the covers. It is crucial that the class is not only thread-safe,
- * but also highly concurrent. Synchronization must be used extremely sparingly.
+ * This class is thread-safe.
+ *
+ * @implNote This class must appear immutable to clients, even if it does
+ *           all kinds of caching and pooling under the covers. It is crucial
+ *           that the class is not only thread-safe, but also highly concurrent.
+ *           Synchronization must be used extremely sparingly.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -189,7 +192,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilderImpl defaultSessionOpenOptions;
 	private final transient SessionBuilderImpl temporarySessionOpenOptions;
-	private final transient StatelessSessionBuilder defaultStatelessOptions;
+	private final transient StatelessSessionBuilder<?> defaultStatelessOptions;
 	private final transient EntityNameResolver entityNameResolver;
 
 	private final transient SchemaManager schemaManager;
@@ -531,7 +534,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		final Set<DomainDataRegionConfig> regionConfigs;
 		if ( regionConfigBuilders.isEmpty() ) {
-			regionConfigs = Collections.emptySet();
+			regionConfigs = emptySet();
 		}
 		else {
 			regionConfigs = new HashSet<>();
@@ -650,15 +653,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	@Override
-	public DeserializationResolver getDeserializationResolver() {
-		return () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
-				uuid,
-				name
-		);
+	@Override @Deprecated
+	public DeserializationResolver<?> getDeserializationResolver() {
+		return () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE
+				.findSessionFactory( uuid, name );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes","unchecked"})
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return (List) getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
@@ -690,7 +691,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return session;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Session createEntityManager(Map map) {
 		validateNotClosed();
 		return buildEntityManager( SynchronizationType.SYNCHRONIZED, map );
@@ -715,7 +716,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
 		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
@@ -1210,7 +1211,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private List<SessionEventListener> listeners;
 
 		//todo : expose setting
-		private SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
+		private final SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
 
 		public SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1502,7 +1503,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Custom serialization hook defined by Java spec.  Used when the factory is directly serialized
+	 * Custom serialization hook used when the factory is directly serialized
 	 *
 	 * @param out The stream into which the object is being serialized.
 	 *
@@ -1517,7 +1518,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	/**
-	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized
+	 * Custom serialization hook used when the factory is directly deserialized.
 	 *
 	 * @param in The stream from which the object is being deserialized.
 	 *
@@ -1533,9 +1534,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	/**
-	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized.
-	 * Here we resolve the uuid/name read from the stream previously to resolve the SessionFactory
-	 * instance to use based on the registrations with the {@link SessionFactoryRegistry}
+	 * Custom serialization hook used when the factory is directly deserialized.
+	 * <p>
+	 * Here we resolve the uuid/name read from the stream previously to resolve
+	 * the {@code SessionFactory} instance to use based on the registrations with
+	 * the {@link SessionFactoryRegistry}.
 	 *
 	 * @return The resolved factory to use.
 	 *
@@ -1567,7 +1570,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	/**
-	 * Custom serialization hook used during Session serialization.
+	 * Custom serialization hook used during {@code Session} serialization.
 	 *
 	 * @param oos The stream to which to write the factory
 	 * @throws IOException Indicates problems writing out the serial data stream
@@ -1581,7 +1584,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	/**
-	 * Custom deserialization hook used during Session deserialization.
+	 * Custom deserialization hook used during {@code Session} deserialization.
 	 *
 	 * @param ois The stream from which to "read" the factory
 	 * @return The deserialized factory
@@ -1619,7 +1622,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	/**
-	 * @return the FastSessionServices for this SessionFactory.
+	 * @return the {@link FastSessionServices} for this {@code SessionFactory}.
 	 */
 	@Override
 	public FastSessionServices getFastSessionServices() {

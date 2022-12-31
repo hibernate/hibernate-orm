@@ -987,16 +987,26 @@ public abstract class CollectionBinder {
 			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
 		}
 		else {
+			if ( property.isAnnotationPresent( OrderColumn.class ) ) {
+				throw new AnnotationException( "Attribute '"
+						+ qualify( property.getDeclaringClass().getName(), property.getName() )
+						+ "' is annotated '@Bag' and may not also be annotated '@OrderColumn'" );
+			}
+			if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
+				throw new AnnotationException( "Attribute '"
+						+ qualify( property.getDeclaringClass().getName(), property.getName() )
+						+ "' is annotated '@Bag' and may not also be annotated '@ListIndexBase'" );
+			}
 			final Class<?> collectionJavaType = property.getCollectionClass();
 			if ( java.util.List.class.equals( collectionJavaType )
 					|| java.util.Collection.class.equals( collectionJavaType ) ) {
 				return CollectionClassification.BAG;
 			}
 			else {
-				throw new MappingException(
+				throw new AnnotationException(
 						String.format(
 								Locale.ROOT,
-								"@Bag annotation encountered on an attribute `%s#%s` of type `%s`; only `%s` and `%s` are supported",
+								"Attribute '%s.%s' of type '%s' is annotated '@Bag' (bags are of type '%s' or '%s')",
 								property.getDeclaringClass().getName(),
 								property.getName(),
 								collectionJavaType.getName(),

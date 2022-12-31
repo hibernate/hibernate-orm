@@ -60,7 +60,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Type {
 	/**
-	 * The implementation class which implements {@link UserType}.
+	 * The class which implements {@link UserType}.
 	 */
 	Class<? extends UserType<?>> value();
 

@@ -929,8 +929,16 @@ public interface AvailableSettings {
 	 *     <li>the (case insensitive) name of a {@code CollectionClassification} (list e.g.)
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
 	 * </ul>
+	 * <p>
+	 * By default, when this property is not set, an attribute of type {@code List}
+	 * is taken to have the semantics of a
+	 * {@linkplain org.hibernate.metamodel.CollectionClassification#BAG bag} unless
+	 * it is annotated {@link jakarta.persistence.OrderColumn} or
+	 * {@link org.hibernate.annotations.ListIndexBase}.
 	 *
 	 * @since 6.0
+	 *
+	 * @see org.hibernate.annotations.Bag
 	 */
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 

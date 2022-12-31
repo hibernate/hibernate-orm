@@ -41,7 +41,7 @@ import org.jboss.jandex.IndexView;
 @Incubating
 public interface BootstrapContext {
 	/**
-	 * The service-registry available to bootstrapping
+	 * The service registry available to bootstrapping
 	 */
 	StandardServiceRegistry getServiceRegistry();
 
@@ -51,6 +51,8 @@ public interface BootstrapContext {
 	MutableJpaCompliance getJpaCompliance();
 
 	/**
+	 * The {@link TypeConfiguration} belonging to this {@code BootstrapContext}.
+	 *
 	 * @see TypeConfiguration
 	 */
 	TypeConfiguration getTypeConfiguration();
@@ -81,11 +83,10 @@ public interface BootstrapContext {
 	boolean isJpaBootstrap();
 
 	/**
-	 *
 	 * Indicates that bootstrap was initiated from JPA bootstrapping.
 	 *
 	 * @implSpec Internally, {@code false} is the assumed value.
-	 *           We only need to call this to mark that as {@code true}.
+	 *           We only need to call this to mark it {@code true}.
 	 */
 	void markAsJpaBootstrap();
 
@@ -94,12 +95,12 @@ public interface BootstrapContext {
 	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()},
 	 * if any.
 	 *
-	 * @return The tempo ClassLoader
+	 * @return The temporary {@code ClassLoader}
 	 */
 	ClassLoader getJpaTempClassLoader();
 
 	/**
-	 * Access to class loading capabilities
+	 * Access to class loading capabilities.
 	 */
 	ClassLoaderAccess getClassLoaderAccess();
 
@@ -119,7 +120,7 @@ public interface BootstrapContext {
 	ArchiveDescriptorFactory getArchiveDescriptorFactory();
 
 	/**
-	 * Access to the options to be used for scanning
+	 * Access to the options to be used for scanning.
 	 *
 	 * @return The scan options
 	 */
@@ -135,12 +136,14 @@ public interface BootstrapContext {
 	ScanEnvironment getScanEnvironment();
 
 	/**
-	 * Access to the Scanner to be used for scanning.
+	 * Access to the {@link org.hibernate.boot.archive.scan.spi.Scanner} to be used
+	 * for scanning.
+	 * <p>
 	 * Can be:
 	 * <ul>
-	 *     <li>A Scanner instance</li>
-	 *     <li>A Class reference to the Scanner implementor</li>
-	 *     <li>A String naming the Scanner implementor</li>
+	 *     <li>An instance of {@link org.hibernate.boot.archive.scan.spi.Scanner},
+	 *     <li>a {@code Class} reference to the {@code Scanner} implementor, or
+	 *     <li>a string naming the {@code Scanner} implementor.
 	 * </ul>
 	 *
 	 * @return The scanner
@@ -160,7 +163,7 @@ public interface BootstrapContext {
 	/**
 	 * Access to the Jandex index passed by call to
 	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
-	 * <p>
+	 *
 	 * @apiNote Jandex is currently not used, see
 	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
 	 *
@@ -170,8 +173,8 @@ public interface BootstrapContext {
 
 	/**
 	 * Access to any SQL functions explicitly registered with the
-	 * {@code MetadataBuilder}.
-	 * This does not include {@code Dialect}-defined functions, etc.
+	 * {@link org.hibernate.boot.MetadataBuilder}.
+	 * This does not include {@code Dialect}-registered functions.
 	 * <p>
 	 * Should never return {@code null}.
 	 *
@@ -181,7 +184,7 @@ public interface BootstrapContext {
 
 	/**
 	 * Access to any {@link AuxiliaryDatabaseObject}s explicitly registered with
-	 * the {@code MetadataBuilder}.
+	 * the {@link org.hibernate.boot.MetadataBuilder}.
 	 * This does not include {@link AuxiliaryDatabaseObject}s defined in mappings.
 	 * <p>
 	 * Should never return {@code null}.

@@ -188,7 +188,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @param typeDefinition The named type definition to add.
 	 *
-	 * @throws DuplicateMappingException If a TypeDefinition already exists with that name.
+	 * @throws DuplicateMappingException If a {@link TypeDefinition} already exists with that name.
 	 *
 	 * @deprecated Use {@link #getTypeDefinitionRegistry()} instead
 	 *
@@ -197,6 +197,10 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	@Deprecated
 	void addTypeDefinition(TypeDefinition typeDefinition);
 
+	/**
+	 * Access to the {@link TypeDefinitionRegistry}, which may be used to add
+	 * type definitions to this metadata repository.
+	 */
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**
@@ -204,7 +208,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @param definition The filter definition to add.
 	 *
-	 * @throws DuplicateMappingException If a FilterDefinition already exists with that name.
+	 * @throws DuplicateMappingException If a {@link FilterDefinition} already exists with that name.
 	 */
 	void addFilterDefinition(FilterDefinition definition);
 
@@ -215,6 +219,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 */
 	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
+	/**
+	 * Add a {@link FetchProfile}.
+	 */
 	void addFetchProfile(FetchProfile profile);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

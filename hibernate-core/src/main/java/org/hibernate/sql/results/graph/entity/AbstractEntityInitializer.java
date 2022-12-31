@@ -411,7 +411,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entityInstanceFromExecutionContext =
 				rowProcessingState.getJdbcValuesSourceProcessingState().getExecutionContext().getEntityInstance();
 		if ( isProxyInstance( proxy ) ) {
-			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -428,7 +428,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this.isInitialized = true;
 				}
 			}
-			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			else if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -440,6 +440,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			upgradeLockMode( rowProcessingState );
 		}
+	}
+
+	private boolean useEntityInstanceFromExecutionContext(
+			Object entityInstanceFromExecutionContext,
+			SharedSessionContractImplementor session) {
+		if ( this instanceof EntityResultInitializer
+				&& entityInstanceFromExecutionContext != null
+				&& entityKey.getIdentifier()
+				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) )
+		) {
+			return true;
+		}
+		return false;
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {

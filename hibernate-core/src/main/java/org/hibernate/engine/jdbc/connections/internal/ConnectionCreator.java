@@ -22,9 +22,9 @@ interface ConnectionCreator {
 	String getUrl();
 
 	/**
-	 * Create a Connection
+	 * Create a {@link Connection}
 	 *
-	 * @return The created Connection
+	 * @return The newly-created {@link Connection}
 	 */
 	Connection createConnection();
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.service.spi;
 
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
 

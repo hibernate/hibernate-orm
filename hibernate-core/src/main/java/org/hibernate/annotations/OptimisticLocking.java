@@ -14,6 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies how optimistic lock checking works for the annotated entity.
+ * <p>
  * Optimistic lock checking may detect that an optimistic lock has failed,
  * and that the transaction should be aborted, by comparing either:
  * <ul>

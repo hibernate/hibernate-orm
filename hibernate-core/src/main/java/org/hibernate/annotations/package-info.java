@@ -266,6 +266,31 @@
  * {@linkplain org.hibernate.Session#enableFilter(java.lang.String) enabled} in a
  * particular session.
  *
+ * <h3 id="optimistic-locking">Optimistic locking</h3>
+ *
+ * JPA defines the {@link jakarta.persistence.Version} annotation for optimistic
+ * locking based on an integral version number or {@link java.sql.Timestamp}.
+ * Hibernate allows this annotation to be used with other datetime types including
+ * {@link java.time.Instant}.
+ * <p>
+ * A field may be explicitly excluded from optimistic lock checking using
+ * {@link org.hibernate.annotations.OptimisticLock @OptimisticLock(excluded=true)}.
+ * <p>
+ * This standard JPA approach is the recommended approach when working with a
+ * newly-designed database schema. But when working with a legacy database with
+ * tables having no version or update timestamp column, an alternative approach is
+ * supported:
+ * <ul>
+ * <li>{@link org.hibernate.annotations.OptimisticLockType#ALL @OptimisticLocking(ALL)}
+ *     specifies that optimistic lock checking should be done by comparing the values
+ *     of all columns, and
+ * <li>{@link org.hibernate.annotations.OptimisticLockType#DIRTY @OptimisticLocking(DIRTY)}
+ *     specifies that optimistic lock checking should be done by checking the values
+ *     of only the columns which are being set to new values.
+ * </ul>
+ * <p>
+ * For more detail, see {@link org.hibernate.annotations.OptimisticLocking}.
+ *
  * <h3 id="dialect-specific-sql">Dialect-specific native SQL</h3>
  * <p>
  * Many annotations in this package allow the specification of native SQL expressions or

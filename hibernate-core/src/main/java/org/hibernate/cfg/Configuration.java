@@ -97,13 +97,13 @@ import jakarta.persistence.SharedCacheMode;
  * </pre>
  * <p>
  * In addition, there are convenience methods for adding
- * {@link #addAttributeConverter attribute converters},
- * {@link #registerTypeContributor type contributors},
- * {@link #addEntityNameResolver entity name resolvers},
- * {@link #addSqlFunction SQL function descriptors}, and
- * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
- * setting {@link #setImplicitNamingStrategy naming strategies} and a
- * {@link #setCurrentTenantIdentifierResolver tenant id resolver},
+ * {@linkplain #addAttributeConverter attribute converters},
+ * {@linkplain #registerTypeContributor type contributors},
+ * {@linkplain #addEntityNameResolver entity name resolvers},
+ * {@linkplain #addSqlFunction SQL function descriptors}, and
+ * {@linkplain #addAuxiliaryDatabaseObject auxiliary database objects}, for
+ * setting {@linkplain #setImplicitNamingStrategy naming strategies} and a
+ * {@linkplain #setCurrentTenantIdentifierResolver tenant id resolver},
  * and more.
  * <p>
  * Finally, an instance of {@link SessionFactoryBuilder} is obtained by

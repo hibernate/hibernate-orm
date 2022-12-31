@@ -12,7 +12,11 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines the target contributing functions, whether via dialects or {@link FunctionContributor}
+ * Allows custom function descriptors to be contributed to the eventual
+ * {@link SqmFunctionRegistry}, either by a {@link org.hibernate.dialect.Dialect}
+ * or by a {@link FunctionContributor}.
+ *
+ * @see FunctionContributor
  *
  * @author Christian Beikov
  */

@@ -13,7 +13,7 @@ import org.hibernate.boot.model.TypeContributor;
 /**
  * An object that provides a list of {@link TypeContributor}s to the JPA persistence provider.
  * <p>
- * In implementation may be registered with the JPA provider using the property
+ * An implementation may be registered with the JPA provider using the property
  * {@value org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS}.
  *
  * @author Brett Meyer

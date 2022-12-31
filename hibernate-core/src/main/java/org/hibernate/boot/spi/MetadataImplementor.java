@@ -27,16 +27,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface MetadataImplementor extends Metadata {
 	/**
-	 * Access to the options used to build this Metadata
+	 * Access to the options used to build this {@code Metadata}
 	 *
-	 * @return Access to the MetadataBuildingOptions
+	 * @return The {@link MetadataBuildingOptions}
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	/**
-	 * Access to the TypeConfiguration
-	 *
-	 * @return Access to the TypeConfiguration
+	 * Access to the {@link TypeConfiguration}
 	 */
 	TypeConfiguration getTypeConfiguration();
 

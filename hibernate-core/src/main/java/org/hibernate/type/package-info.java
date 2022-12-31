@@ -40,6 +40,11 @@
  * of {@code BigInteger} to and from {@code String} when writing to and reading from
  * JDBC statements and result sets.
  * <p>
+ * An important point is that the set of available {@code JavaType}s and of available
+ * {@code JdbcType}s is not fixed&mdash;a {@link org.hibernate.type.spi.TypeConfiguration}
+ * is {@linkplain org.hibernate.boot.model.TypeContributions customizable during the
+ * bootstrap process}.
+ * <p>
  * This approach provides quite some flexibility in allowing a given Java type to
  * map to a range of JDBC types. However, when the built-in conversions don't handle
  * a particular mapping, a

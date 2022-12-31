@@ -15,8 +15,9 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 /**
  * Contract for extensions that integrate with Hibernate.
  * <p>
- * An implementation of {@code Integrator} is discoverable via the standard Java
- * {@link java.util.ServiceLoader} facility.
+ * The best way to make an implementation of {@code Integrator} available to Hibernate
+ * is by making it discoverable via the standard Java {@link java.util.ServiceLoader}
+ * facility.
  *
  * @implNote {@link #integrate(Metadata, BootstrapContext, SessionFactoryImplementor)}
  *           is called during the process of {@linkplain SessionFactoryImplementor

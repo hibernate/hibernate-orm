@@ -20,9 +20,11 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
- * Repository for references to named things related with queries.  This includes
- * named HQL, JPAQL, native and procedure queries as well as named result-set
- * mappings
+ * Repository for references to named things related to queries. This includes:
+ * <ul>
+ * <li>named HQL, JPQL, native, and procedure queries,
+ * <li>along with named result set mappings.
+ * </ul>
  *
  * @author Steve Ebersole
  */

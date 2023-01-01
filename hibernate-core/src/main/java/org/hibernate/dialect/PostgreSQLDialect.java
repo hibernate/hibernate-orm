@@ -1349,7 +1349,17 @@ public class PostgreSQLDialect extends Dialect {
 	// disabled foreign key constraints still prevent 'truncate table'
 	// (these would help if we used 'delete' instead of 'truncate')
 
-//	@Override
+	@Override
+	public String rowId() {
+		return "ctid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return OTHER;
+	}
+
+	//	@Override
 //	public String getDisableConstraintsStatement() {
 //		return "set constraints all deferred";
 //	}

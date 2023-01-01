@@ -15,6 +15,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies that an Oracle-style {@code rowid} should be used in SQL
  * {@code update} statements for an entity, instead of the primary key.
+ * <p>
+ * If the {@linkplain org.hibernate.dialect.Dialect SQL dialect} does
+ * not support some sort of {@code rowid}, this annotation is ignored.
  *
  * @author Steve Ebersole
  */
@@ -25,6 +28,10 @@ public @interface RowId {
 	 * Specifies the {@code rowid} identifier.
 	 * <p>
 	 * For example, on Oracle, this should be just {@code "rowid"}.
+	 *
+	 * @deprecated the {@code rowid} identifier is now inferred
+	 * automatically from the {@link org.hibernate.dialect.Dialect}
 	 */
-	String value();
+	@Deprecated(since = "6.2")
+	String value() default "";
 }

@@ -25,6 +25,7 @@ import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
+import org.hibernate.type.descriptor.jdbc.RowIdJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
@@ -84,5 +85,7 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
 		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32NVARCHAR) );
+
+		target.addDescriptor( RowIdJdbcType.INSTANCE );
 	}
 }

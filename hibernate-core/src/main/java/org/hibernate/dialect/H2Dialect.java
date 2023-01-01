@@ -75,6 +75,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -855,5 +856,15 @@ public class H2Dialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public String rowId() {
+		return "_rowid_";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return BIGINT;
 	}
 }

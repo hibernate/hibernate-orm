@@ -45,7 +45,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Check;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
@@ -1678,10 +1677,10 @@ public class EntityBinder {
 		if ( rowId != null ) {
 			table.setRowId( rowId.value() );
 		}
-		final Comment comment = annotatedClass.getAnnotation( Comment.class );
-		if ( comment != null ) {
-			table.setComment( comment.value() );
-		}
+//		final Comment comment = annotatedClass.getAnnotation( Comment.class );
+//		if ( comment != null ) {
+//			table.setComment( comment.value() );
+//		}
 
 		context.getMetadataCollector().addEntityTableXref(
 				persistentClass.getEntityName(),

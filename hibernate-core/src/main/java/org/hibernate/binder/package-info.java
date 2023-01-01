@@ -21,6 +21,7 @@
  * 	    with a user-written annotation which targets
  * 	    {@linkplain java.lang.annotation.ElementType#FIELD fields} and
  * 	    properties of entity types and embeddable classes.
+ * </ul>
  *
  * @see org.hibernate.binder.AttributeBinder
  * @see org.hibernate.binder.TypeBinder

@@ -11,11 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -138,8 +138,7 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 		return jdbcServices.getSqlExceptionHelper();
 	}
 
-	protected final SessionFactoryOptions settings() {
-		//noinspection resource
-		return jdbcCoordinator.sessionFactory().getSessionFactoryOptions();
+	protected final JdbcSessionContext settings() {
+		return jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext();
 	}
 }

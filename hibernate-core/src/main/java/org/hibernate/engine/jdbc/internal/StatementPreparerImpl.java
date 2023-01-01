@@ -14,11 +14,11 @@ import java.sql.Statement;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -42,8 +42,8 @@ class StatementPreparerImpl implements StatementPreparer {
 		this.jdbcServices = jdbcServices;
 	}
 
-	protected final SessionFactoryOptions settings() {
-		return jdbcCoordinator.sessionFactory().getSessionFactoryOptions();
+	protected final JdbcSessionContext settings() {
+		return jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext();
 	}
 
 	protected final Connection connection() {
@@ -214,8 +214,8 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	private void setStatementFetchSize(PreparedStatement statement) throws SQLException {
-		if ( settings().getJdbcFetchSize() != null ) {
-			statement.setFetchSize( settings().getJdbcFetchSize() );
+		if ( settings().getFetchSizeOrNull() != null ) {
+			statement.setFetchSize( settings().getFetchSizeOrNull() );
 		}
 	}
 

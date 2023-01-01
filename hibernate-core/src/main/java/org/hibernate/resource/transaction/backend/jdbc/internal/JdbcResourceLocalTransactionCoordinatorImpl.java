@@ -7,7 +7,6 @@
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import jakarta.persistence.RollbackException;
@@ -16,7 +15,6 @@ import jakarta.transaction.Status;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
@@ -27,6 +25,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -66,12 +65,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.jdbcResourceTransactionAccess = jdbcResourceTransactionAccess;
 		this.transactionCoordinatorOwner = owner;
-
-		this.jpaCompliance = owner.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getSessionFactory()
-				.getSessionFactoryOptions()
-				.getJpaCompliance();
+		this.jpaCompliance = owner.getJdbcSessionOwner().getJdbcSessionContext().getJpaCompliance();
 	}
 
 	/**
@@ -81,12 +75,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 * @return TransactionObserver
 	 */
 	private Iterable<TransactionObserver> observers() {
-		if ( observers == null || observers.isEmpty() ) {
-			return Collections.emptyList();
-		}
-		else {
-			return new ArrayList<>( observers );
-		}
+		return observers == null || observers.isEmpty() ? emptyList() : new ArrayList<>( observers );
 	}
 
 	@Override
@@ -95,7 +84,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		// coordinator.  We lazily build it as we invalidate each delegate after each transaction (a delegate is
 		// valid for just one transaction)
 		if ( physicalTransactionDelegate == null ) {
-			physicalTransactionDelegate = new TransactionDriverControlImpl( jdbcResourceTransactionAccess.getResourceLocalTransaction() );
+			physicalTransactionDelegate =
+					new TransactionDriverControlImpl( jdbcResourceTransactionAccess.getResourceLocalTransaction() );
 		}
 		return physicalTransactionDelegate;
 	}
@@ -108,7 +98,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public boolean isJoined() {
-		return physicalTransactionDelegate != null && getTransactionDriverControl().isActive( true );
+		return physicalTransactionDelegate != null
+			&& getTransactionDriverControl().isActive( true );
 	}
 
 	@Override
@@ -133,17 +124,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public IsolationDelegate createIsolationDelegate() {
-		final JdbcSessionOwner jdbcSessionOwner = transactionCoordinatorOwner.getJdbcSessionOwner();
-
-		return new JdbcIsolationDelegate(
-				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getJdbcSessionContext().getSessionFactory().getFastSessionServices().jdbcServices.getSqlExceptionHelper()
-		);
+		return new JdbcIsolationDelegate( transactionCoordinatorOwner );
 	}
 
 	@Override
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
-		return this.transactionCoordinatorBuilder;
+		return transactionCoordinatorBuilder;
 	}
 
 	@Override
@@ -153,14 +139,14 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public int getTimeOut() {
-		return this.timeOut;
+		return timeOut;
 	}
 
 	// PhysicalTransactionDelegate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void afterBeginCallback() {
-		if(this.timeOut > 0) {
-			transactionCoordinatorOwner.setTransactionTimeOut( this.timeOut );
+		if ( timeOut > 0 ) {
+			transactionCoordinatorOwner.setTransactionTimeOut( timeOut );
 		}
 
 

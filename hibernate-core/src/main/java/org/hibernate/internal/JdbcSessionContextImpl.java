@@ -7,8 +7,10 @@
 package org.hibernate.internal;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -22,22 +24,26 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	private final SessionFactoryImplementor sessionFactory;
 	private final StatementInspector statementInspector;
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
+	private final JdbcServices jdbcServices;
+	private final BatchBuilder batchBuilder;
 
-	private final transient ServiceRegistry serviceRegistry;
 	private final transient JdbcObserver jdbcObserver;
 
 	public JdbcSessionContextImpl(
-			SharedSessionContractImplementor session,
+			SessionFactoryImplementor sessionFactory,
 			StatementInspector statementInspector,
 			PhysicalConnectionHandlingMode connectionHandlingMode,
-			FastSessionServices fastSessionServices) {
-		this.sessionFactory = session.getFactory();
+			JdbcServices jdbcServices,
+			BatchBuilder batchBuilder,
+			JdbcObserver jdbcObserver) {
+		this.sessionFactory = sessionFactory;
 		this.statementInspector = statementInspector;
 		this.connectionHandlingMode = connectionHandlingMode;
-		this.serviceRegistry = sessionFactory.getServiceRegistry();
-		this.jdbcObserver = new JdbcObserverImpl( session, fastSessionServices );
+		this.jdbcServices = jdbcServices;
+		this.batchBuilder = batchBuilder;
+		this.jdbcObserver = jdbcObserver;
 
-		if ( this.statementInspector == null ) {
+		if ( statementInspector == null ) {
 			throw new IllegalArgumentException( "StatementInspector cannot be null" );
 		}
 	}
@@ -52,9 +58,29 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return settings().isGetGeneratedKeysEnabled();
 	}
 
-	@Override
+	@Override @Deprecated
 	public int getFetchSize() {
 		return settings().getJdbcFetchSize();
+	}
+
+	@Override
+	public Integer getFetchSizeOrNull() {
+		return settings().getJdbcFetchSize();
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return settings().getJpaCompliance();
+	}
+
+	@Override
+	public boolean isPreferUserTransaction() {
+		return settings().isPreferUserTransaction();
+	}
+
+	@Override
+	public boolean isJtaTrackByThread() {
+		return settings().isJtaTrackByThread();
 	}
 
 	@Override
@@ -72,22 +98,37 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return statementInspector;
 	}
 
-	@Override
+	@Override @Deprecated
 	public JdbcObserver getObserver() {
-		return this.jdbcObserver;
+		return jdbcObserver;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryImplementor getSessionFactory() {
-		return this.sessionFactory;
+		return sessionFactory;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ServiceRegistry getServiceRegistry() {
-		return this.serviceRegistry;
+		return sessionFactory.getServiceRegistry();
 	}
 
 	private SessionFactoryOptions settings() {
-		return this.sessionFactory.getSessionFactoryOptions();
+		return sessionFactory.getSessionFactoryOptions();
+	}
+
+	@Override
+	public JdbcServices getJdbcServices() {
+		return jdbcServices;
+	}
+
+	@Override
+	public BatchBuilder getBatchBuilder() {
+		return batchBuilder;
+	}
+
+	@Override
+	public boolean isActive() {
+		return !sessionFactory.isClosed();
 	}
 }

@@ -9,22 +9,27 @@ package org.hibernate.internal;
 import java.sql.Connection;
 
 import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link JdbcObserver} is deprecated
  */
+@Deprecated(since = "5.4", forRemoval = true)
 public final class JdbcObserverImpl implements JdbcObserver {
 
 	private final ConnectionObserverStatsBridge observer;
 	private final SessionEventListenerManager eventListenerManager;
-	private final SharedSessionContractImplementor session;
+	private final Runnable abortBatch;
 
-	public JdbcObserverImpl(SharedSessionContractImplementor session, FastSessionServices fastSessionServices) {
-		this.session = session;
-		this.observer = fastSessionServices.getDefaultJdbcObserver();
-		this.eventListenerManager = session.getEventListenerManager();
+	public JdbcObserverImpl(
+			ConnectionObserverStatsBridge observer,
+			SessionEventListenerManager eventListenerManager,
+			Runnable abortBatch) {
+		this.observer = observer;
+		this.eventListenerManager = eventListenerManager;
+		this.abortBatch = abortBatch;
 	}
 
 	@Override
@@ -78,7 +83,7 @@ public final class JdbcObserverImpl implements JdbcObserver {
 
 	@Override
 	public void jdbcReleaseRegistryResourcesStart() {
-		session.getJdbcCoordinator().abortBatch();
+		abortBatch.run();
 	}
 
 	@Override

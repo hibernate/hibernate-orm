@@ -620,17 +620,7 @@ public class EntityBinder {
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( inheritanceState.hasTable() ) {
-			final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
-			bindTable(
-					schema,
-					catalog,
-					table,
-					uniqueConstraints,
-					check == null ? null : check.constraints(),
-					inheritanceState.hasDenormalizedTable()
-							? collector.getEntityTableXref( superEntity.getEntityName() )
-							: null
-			);
+			createTable( inheritanceState, superEntity, schema, table, catalog, uniqueConstraints, collector );
 		}
 		else {
 			if ( hasTableAnnotation ) {
@@ -643,6 +633,29 @@ public class EntityBinder {
 				bindTableForDiscriminatedSubclass( collector.getEntityTableXref( superEntity.getEntityName() ) );
 			}
 		}
+	}
+
+	private void createTable(
+			InheritanceState inheritanceState,
+			PersistentClass superEntity,
+			String schema,
+			String table,
+			String catalog,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			InFlightMetadataCollector collector) {
+		final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
+		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
+		bindTable(
+				schema,
+				catalog,
+				table,
+				uniqueConstraints,
+				check == null ? null : check.constraints(),
+				rowId == null ? null : rowId.value(),
+				inheritanceState.hasDenormalizedTable()
+						? collector.getEntityTableXref( superEntity.getEntityName() )
+						: null
+		);
 	}
 
 	private void handleInheritance(
@@ -1649,7 +1662,8 @@ public class EntityBinder {
 			String catalog,
 			String tableName,
 			List<UniqueConstraintHolder> uniqueConstraints,
-			String constraints,
+			String checkConstraint,
+			String rowId,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 
 		final EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper(
@@ -1667,16 +1681,16 @@ public class EntityBinder {
 				logicalName,
 				persistentClass.isAbstract(),
 				uniqueConstraints,
-				null,
-				constraints,
 				context,
 				subselect,
 				denormalizedSuperTableXref
 		);
-		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
-		if ( rowId != null ) {
-			table.setRowId( rowId.value() );
+
+		table.setRowId( rowId );
+		if ( checkConstraint != null ) {
+			table.addCheckConstraint( checkConstraint );
 		}
+
 //		final Comment comment = annotatedClass.getAnnotation( Comment.class );
 //		if ( comment != null ) {
 //			table.setComment( comment.value() );
@@ -1964,8 +1978,8 @@ public class EntityBinder {
 			Object joinColumns,
 			UniqueConstraint[] uniqueConstraints) {
 		final QualifiedTableName logicalName = new QualifiedTableName(
-				Identifier.toIdentifier(catalog),
-				Identifier.toIdentifier(schema),
+				Identifier.toIdentifier( catalog ),
+				Identifier.toIdentifier( schema ),
 				context.getMetadataCollector()
 						.getDatabase()
 						.getJdbcEnvironment()
@@ -1984,11 +1998,7 @@ public class EntityBinder {
 						logicalName.getTableName(),
 						false,
 						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
-						null,
-						null,
-						context,
-						null,
-						null
+						context
 				)
 		);
 	}

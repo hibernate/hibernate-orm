@@ -4628,8 +4628,17 @@ public abstract class Dialect implements ConversionContext {
 	 * The name of a {@code rowid}-like pseudo-column which
 	 * acts as a high-performance row locator, or null if
 	 * this dialect has no such pseudo-column.
+	 * <p>
+	 * If the {@code rowid}-like value is an explicitly-declared
+	 * named column instead of an implicit pseudo-column, and if
+	 * the given name is nonempty, return the given name.
+	 *
+	 * @param rowId the name specified by
+	 *        {@link org.hibernate.annotations.RowId#value()},
+	 *        which is ignored if {@link #getRowIdColumnString}
+	 *        is not overridden
 	 */
-	public String rowId() {
+	public String rowId(String rowId) {
 		return null;
 	}
 
@@ -4641,5 +4650,16 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public int rowIdSqlType() {
 		return ROWID;
+	}
+
+	/**
+	 * If this dialect requires that the {@code rowid} column be
+	 * declared explicitly, return the DDL column definition.
+	 *
+	 * @return the DDL column definition, or {@code null} if
+	 *         the {@code rowid} is an implicit pseudo-column
+	 */
+	public String getRowIdColumnString(String rowId) {
+		return null;
 	}
 }

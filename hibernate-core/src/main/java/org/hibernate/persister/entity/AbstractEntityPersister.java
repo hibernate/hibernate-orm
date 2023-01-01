@@ -545,12 +545,7 @@ public abstract class AbstractEntityPersister
 		identifierAliases = new String[identifierColumnSpan];
 
 		final String rowId = persistentClass.getRootTable().getRowId();
-		if ( rowId == null ) {
-			rowIdName = null;
-		}
-		else {
-			rowIdName = rowId.isEmpty() ? dialect.rowId() : rowId;
-		}
+		rowIdName = rowId == null ? null : dialect.rowId( rowId );
 
 		if ( persistentClass.getLoaderName() != null ) {
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet

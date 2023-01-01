@@ -859,7 +859,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String rowId() {
+	public String rowId(String rowId) {
 		return "_rowid_";
 	}
 

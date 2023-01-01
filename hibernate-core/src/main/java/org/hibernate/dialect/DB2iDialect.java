@@ -28,8 +28,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.ROWID;
+
 /**
- * A SQL dialect for DB2 for iSeries version 7.1 and above, previously known as "DB2/400".
+ * A SQL dialect for DB2 for IBM i version 7.1 and above, previously known as "DB2/400".
  *
  * @author Peter DeGregorio (pdegregorio)
  * @author Christian Beikov
@@ -148,5 +150,24 @@ public class DB2iDialect extends DB2Dialect {
 				return new DB2iSqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
+	}
+
+	// I speculate that this is a correct implementation of rowids for DB2 for i,
+	// just on the basis of the DB2 docs, but I currently have no way to test it
+	// Note that the implementation inherited from DB2Dialect for LUW will not work!
+
+	@Override
+	public String rowId(String rowId) {
+		return rowId.isEmpty() ? "rowid_" : rowId;
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return ROWID;
+	}
+
+	@Override
+	public String getRowIdColumnString(String rowId) {
+		return rowId( rowId ) + " rowid not null generated always";
 	}
 }

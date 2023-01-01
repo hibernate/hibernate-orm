@@ -1350,7 +1350,7 @@ public class PostgreSQLDialect extends Dialect {
 	// (these would help if we used 'delete' instead of 'truncate')
 
 	@Override
-	public String rowId() {
+	public String rowId(String rowId) {
 		return "ctid";
 	}
 

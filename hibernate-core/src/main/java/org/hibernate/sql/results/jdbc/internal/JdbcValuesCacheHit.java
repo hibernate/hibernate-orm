@@ -16,7 +16,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
- * A JdbcValuesSource implementation for cases where we had a cache hit.
+ * An {@link AbstractJdbcValues} implementation for cases where we had a cache hit.
  *
  * @author Steve Ebersole
  */
@@ -71,7 +71,11 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i", position, numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
+				"JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i",
+				position,
+				numberOfRows
+		);
 
 		// NOTE : explicitly skipping limit handling because the cached state ought
 		// 		already be the limited size since the cache key includes limits
@@ -88,7 +92,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i", position, numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
+				"JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i",
+				position, numberOfRows
+		);
 
 		// NOTE : explicitly skipping limit handling because the cached state ought
 		// 		already be the limited size since the cache key includes limits
@@ -105,7 +112,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i", numberOfRows, position, this.numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
+				"JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i",
+				numberOfRows, position, this.numberOfRows
+		);
 
 		// NOTE : explicitly skipping limit handling because the cached state should
 		// 		already be the limited size since the cache key includes limits
@@ -127,7 +137,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef( "JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i", position, this.position, this.numberOfRows );
+		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
+				"JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i",
+				position, this.position, this.numberOfRows
+		);
 
 		// NOTE : explicitly skipping limit handling because the cached state should
 		// 		already be the limited size since the cache key includes limits

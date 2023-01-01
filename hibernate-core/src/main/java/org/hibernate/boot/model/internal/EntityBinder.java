@@ -77,10 +77,12 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
+import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
@@ -131,6 +133,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
@@ -233,6 +236,20 @@ public class EntityBinder {
 		// comment, checkConstraint, and indexes are processed here
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
+		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private void callTypeBinders(PersistentClass persistentClass) {
+		for ( Annotation containingAnnotation : findContainingAnnotations( annotatedClass, TypeBinderType.class ) ) {
+			final TypeBinderType binderType = containingAnnotation.annotationType().getAnnotation( TypeBinderType.class );
+			try {
+				final TypeBinder binder = binderType.binder().newInstance();
+				binder.bind( containingAnnotation, context, persistentClass );
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "error processing @TypeBinderType annotation '" + containingAnnotation + "'", e );
+			}
+		}
 	}
 
 	private void handleIdentifier(

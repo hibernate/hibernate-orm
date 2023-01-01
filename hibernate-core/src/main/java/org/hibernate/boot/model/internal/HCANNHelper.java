@@ -9,6 +9,8 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -156,21 +158,20 @@ public final class HCANNHelper {
 	 *
 	 * @implNote Searches only one level deep
 	 */
-	public static <A extends Annotation, T extends Annotation> A findContainingAnnotation(
+	public static List<Annotation> findContainingAnnotations(
 			XAnnotatedElement annotatedElement,
-			Class<T> annotationType) {
+			Class<? extends Annotation> annotationType) {
+
+		final List<Annotation> result = new ArrayList<>();
 
 		final Annotation[] annotations = annotatedElement.getAnnotations();
 		for ( Annotation annotation : annotations ) {
-			// annotation = @Sequence
-
-			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
+			final Annotation metaAnn = annotation.annotationType().getAnnotation( annotationType );
 			if ( metaAnn != null ) {
-				//noinspection unchecked
-				return (A) annotation;
+				result.add( annotation );
 			}
 		}
 
-		return null;
+		return result;
 	}
 }

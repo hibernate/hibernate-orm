@@ -19,10 +19,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Instantiator;
+import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -37,6 +39,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -45,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
@@ -109,22 +113,31 @@ public class EmbeddableBinder {
 			actualColumns = null;
 		}
 
-		return bindEmbeddable(
+		return createEmbeddedProperty(
 				inferredData,
 				propertyHolder,
-				entityBinder.getPropertyAccessor( property ),
 				entityBinder,
-				isIdentifierMapper,
 				context,
 				isComponentEmbedded,
 				propertyBinder.isId(),
 				inheritanceStatePerClass,
-				referencedEntityName,
-				propertyName,
-				determineCustomInstantiator( property, returnedClass, context ),
-				compositeUserType,
-				actualColumns,
-				columns
+				bindEmbeddable(
+						inferredData,
+						propertyHolder,
+						entityBinder.getPropertyAccessor( property ),
+						entityBinder,
+						isIdentifierMapper,
+						context,
+						isComponentEmbedded,
+						propertyBinder.isId(),
+						inheritanceStatePerClass,
+						referencedEntityName,
+						propertyName,
+						determineCustomInstantiator( property, returnedClass, context ),
+						compositeUserType,
+						actualColumns,
+						columns
+				)
 		);
 	}
 
@@ -134,7 +147,7 @@ public class EmbeddableBinder {
 			|| returnedClass.isAnnotationPresent( Embeddable.class );
 	}
 
-	private static PropertyBinder bindEmbeddable(
+	private static Component bindEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,
 			AccessType propertyAccessor,
@@ -189,18 +202,44 @@ public class EmbeddableBinder {
 			component.setKey( true );
 			checkEmbeddedId( inferredData, propertyHolder, referencedEntityName, component );
 		}
+		callTypeBinders( component, context, inferredData.getPropertyClass() );
+		return component;
+	}
+
+	private static void callTypeBinders(Component component, MetadataBuildingContext context, XClass annotatedClass ) {
+		for ( Annotation containingAnnotation : findContainingAnnotations( annotatedClass, TypeBinderType.class) ) {
+			final TypeBinderType binderType = containingAnnotation.annotationType().getAnnotation( TypeBinderType.class );
+			try {
+				final TypeBinder binder = binderType.binder().newInstance();
+				binder.bind( containingAnnotation, context, component );
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "error processing @TypeBinderType annotation '" + containingAnnotation + "'", e );
+			}
+		}
+	}
+
+	private static PropertyBinder createEmbeddedProperty(
+			PropertyData inferredData,
+			PropertyHolder propertyHolder,
+			EntityBinder entityBinder,
+			MetadataBuildingContext context,
+			boolean isComponentEmbedded,
+			boolean isId,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			Component component) {
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setDeclaringClass( inferredData.getDeclaringClass() );
 		binder.setName( inferredData.getPropertyName() );
-		binder.setValue( component );
+		binder.setValue(component);
 		binder.setProperty( inferredData.getProperty() );
 		binder.setAccessType( inferredData.getDefaultAccess() );
-		binder.setEmbedded( isComponentEmbedded );
-		binder.setHolder( propertyHolder );
-		binder.setId( isId );
-		binder.setEntityBinder( entityBinder );
-		binder.setInheritanceStatePerClass( inheritanceStatePerClass );
-		binder.setBuildingContext( context );
+		binder.setEmbedded(isComponentEmbedded);
+		binder.setHolder(propertyHolder);
+		binder.setId(isId);
+		binder.setEntityBinder(entityBinder);
+		binder.setInheritanceStatePerClass(inheritanceStatePerClass);
+		binder.setBuildingContext(context);
 		binder.makePropertyAndBind();
 		return binder;
 	}

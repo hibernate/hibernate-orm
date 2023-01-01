@@ -37,6 +37,5 @@ public class AttributeAccessorBinder implements AttributeBinder<AttributeAccesso
 		else {
 			throw new AnnotationException("'@AttributeAccessor' annotation must specify a 'strategy'");
 		}
-
 	}
 }

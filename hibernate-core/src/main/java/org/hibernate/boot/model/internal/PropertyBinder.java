@@ -84,11 +84,12 @@ import static org.hibernate.boot.model.internal.EmbeddableBinder.createComposite
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
-import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotation;
+import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.mapping.Constraint.hashedName;
 
 /**
@@ -269,15 +270,14 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property prop) {
-		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class);
-		if ( containingAnnotation != null ) {
+		for ( Annotation containingAnnotation : findContainingAnnotations(property, AttributeBinderType.class ) ) {
 			final AttributeBinderType binderType = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
 			try {
 				final AttributeBinder binder = binderType.binder().newInstance();
 				binder.bind( containingAnnotation, buildingContext, entityBinder.getPersistentClass(), prop );
 			}
-			catch (Exception e) {
-				throw new AnnotationException( "error processing @AttributeBinderType annotation", e );
+			catch ( Exception e ) {
+				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + containingAnnotation + "'", e );
 			}
 		}
 	}
@@ -1270,16 +1270,21 @@ public class PropertyBinder {
 					+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 		}
 		final XProperty idProperty = inferredData.getProperty();
-		final Annotation idGeneratorAnnotation = findContainingAnnotation( idProperty, IdGeneratorType.class );
-		final Annotation generatorAnnotation = findContainingAnnotation( idProperty, ValueGenerationType.class );
-		//TODO: validate that we don't have too many generator annotations and throw
-		if ( idGeneratorAnnotation != null ) {
-			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, idGeneratorAnnotation ) );
+		final List<Annotation> idGeneratorAnnotations = findContainingAnnotations( idProperty, IdGeneratorType.class );
+		final List<Annotation> generatorAnnotations = findContainingAnnotations( idProperty, ValueGenerationType.class );
+		generatorAnnotations.removeAll( idGeneratorAnnotations );
+		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
+			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
+					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
 		}
-		else if ( generatorAnnotation != null ) {
+		if ( !idGeneratorAnnotations.isEmpty() ) {
+			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, idGeneratorAnnotations.get(0) ) );
+		}
+		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );
 			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
-					+ "' is annotated '" + generatorAnnotation.annotationType() + "' which is not an '@IdGeneratorType'" );
+					+ "' is annotated '" + generatorAnnotations.get(0).annotationType()
+					+ "' which is not an '@IdGeneratorType'" );
 		}
 		else {
 			final XClass entityClass = inferredData.getClassOrElement();

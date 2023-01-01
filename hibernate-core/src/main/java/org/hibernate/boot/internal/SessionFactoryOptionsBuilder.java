@@ -1133,7 +1133,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isPreferUserTransaction() {
-		return this.preferUserTransaction;
+		return preferUserTransaction;
 	}
 
 	@Override

@@ -16,30 +16,31 @@ import org.hibernate.service.Service;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**
- * Contract for services around JDBC operations.  These represent shared resources, aka not varied by session/use.
+ * Provides access to services related to JDBC operations.
+ * <p>
+ * These services represent shared resources that do not vary by session.
  *
  * @author Steve Ebersole
  */
 public interface JdbcServices extends Service {
 	/**
-	 * Obtain the JdbcEnvironment backing this JdbcServices instance.
+	 * Obtain the {@link JdbcEnvironment} backing this {@code JdbcServices} instance.
 	 */
 	JdbcEnvironment getJdbcEnvironment();
 
 	/**
-	 * Obtain a JdbcConnectionAccess usable from bootstrap actions
-	 * (hbm2ddl.auto, Dialect resolution, etc).
+	 * Obtain a {@link JdbcConnectionAccess} usable from bootstrap actions
+	 * (hbm2ddl.auto, {@code Dialect} resolution, etc).
 	 */
 	JdbcConnectionAccess getBootstrapJdbcConnectionAccess();
 
 	/**
 	 * Obtain the dialect of the database.
-	 *
-	 * @return The database dialect.
 	 */
 	Dialect getDialect();
 
@@ -60,15 +61,19 @@ public interface JdbcServices extends Service {
 	/**
 	 * Obtain information about supported behavior reported by the JDBC driver.
 	 * <p>
-	 * Yuck, yuck, yuck!  Much prefer this to be part of a "basic settings" type object.
+	 * Yuck, yuck, yuck! Much prefer this to be part of a "basic settings" type object.
 	 * 
 	 * @return The extracted database metadata, oddly enough :)
 	 */
 	ExtractedDatabaseMetaData getExtractedMetaDataSupport();
 
 	/**
-	 * Create an instance of a {@link LobCreator} appropriate for the current environment, mainly meant to account for
-	 * variance between JDBC 4 (&lt;= JDK 1.6) and JDBC3 (&gt;= JDK 1.5).
+	 * Create an instance of a {@link LobCreator} appropriate for the current environment,
+	 * mainly meant to account for variance between:
+	 * <ul>
+	 * <li>JDBC 4 (&lt;= JDK 1.6) and
+	 * <li>JDBC 3 (&gt;= JDK 1.5).
+	 * </ul>
 	 *
 	 * @param lobCreationContext The context in which the LOB is being created
 	 * @return The LOB creator.
@@ -76,12 +81,15 @@ public interface JdbcServices extends Service {
 	LobCreator getLobCreator(LobCreationContext lobCreationContext);
 
 	/**
-	 * Access the executor for {@link JdbcOperationQuerySelect} operations
+	 * Access the executor for {@link JdbcOperationQuerySelect} operations.
 	 */
 	default JdbcSelectExecutor getJdbcSelectExecutor() {
 		return JdbcSelectExecutorStandardImpl.INSTANCE;
 	}
 
+	/**
+	 * Access the executor for {@link JdbcOperationQueryMutation} operations.
+	 */
 	default JdbcMutationExecutor getJdbcMutationExecutor() {
 		return StandardJdbcMutationExecutor.INSTANCE;
 	}

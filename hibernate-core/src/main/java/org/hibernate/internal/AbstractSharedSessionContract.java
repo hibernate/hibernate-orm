@@ -226,7 +226,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private JdbcSessionContextImpl createJdbcSessionContext(StatementInspector statementInspector) {
-		return new JdbcSessionContextImpl(this, statementInspector, connectionHandlingMode, fastSessionServices );
+		return new JdbcSessionContextImpl(
+				factory,
+				statementInspector,
+				connectionHandlingMode,
+				fastSessionServices.jdbcServices,
+				fastSessionServices.batchBuilder,
+				// TODO: this object is deprecated and should be removed
+				new JdbcObserverImpl(
+						fastSessionServices.getDefaultJdbcObserver(),
+						sessionEventsManager,
+						() -> jdbcCoordinator.abortBatch() // since jdbcCoordinator not yet initialized here
+				)
+		);
 	}
 
 	private String getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {

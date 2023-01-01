@@ -2180,7 +2180,7 @@ public interface AvailableSettings {
 	 * transaction timeout handled by a background reaper thread.  The ability
 	 * to handle this situation requires checking the Thread ID every time
 	 * Session is called.  This can certainly have performance considerations.
-	 *
+	 * <p>
 	 * Default is {@code true} (enabled).
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJtaTrackingByThread(boolean)

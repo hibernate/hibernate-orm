@@ -9,11 +9,12 @@ package org.hibernate.resource.jdbc.spi;
 import java.sql.Connection;
 
 /**
- * @deprecated It is no longer possible to plug custom implementations of
- * this SPI. It will be removed.
+ * @deprecated It is no longer possible to plug custom implementations
+ *             of this SPI. It will be removed.
+ *
  * @author Steve Ebersole
  */
-@Deprecated
+@Deprecated(since = "5.4", forRemoval = true)
 public interface JdbcObserver {
 	void jdbcConnectionAcquisitionStart();
 	void jdbcConnectionAcquisitionEnd(Connection connection);

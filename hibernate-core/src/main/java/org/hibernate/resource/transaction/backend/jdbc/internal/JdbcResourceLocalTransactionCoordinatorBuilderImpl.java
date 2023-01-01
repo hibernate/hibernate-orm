@@ -15,6 +15,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+
 /**
  * Concrete builder for resource-local {@link TransactionCoordinator} instances.
  *
@@ -50,7 +52,7 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 
 	@Override
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
-		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 	}
 
 	@Override

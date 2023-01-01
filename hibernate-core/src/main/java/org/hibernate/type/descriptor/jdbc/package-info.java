@@ -19,7 +19,6 @@
  * <ul>
  *     <li>{@link java.sql.Types#DATALINK DATALINK}</li>
  *     <li>{@link java.sql.Types#DISTINCT DISTINCT}</li>
- *     <li>{@link java.sql.Types#ROWID ROWID}</li>
  *     <li>{@link java.sql.Types#REF REF}</li>
  *     <li>{@link java.sql.Types#REF_CURSOR REF_CURSOR}</li>
  * </ul>

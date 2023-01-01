@@ -13,11 +13,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.RowId;
-import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,14 +31,13 @@ import static org.junit.Assert.assertThat;
  */
 @DomainModel( annotatedClasses = RowIdTest.Product.class )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-@RequiresDialect( value = OracleDialect.class)
 public class RowIdTest {
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Product product = new Product();
-			product.setId( 1L );
+			product.setId( "1L" );
 			product.setName( "Mobile phone" );
 			product.setNumber( "123-456-7890" );
 			session.persist( product );
@@ -51,15 +48,19 @@ public class RowIdTest {
 	void testRowId(SessionFactoryScope scope) {
 		final String updatedName = "Smart phone";
 		scope.inTransaction( session -> {
+			String rowId = scope.getSessionFactory().getJdbcServices().getDialect().rowId();
+
 			SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 			statementInspector.clear();
 
-			Product product = session.find( Product.class, 1L );
+			Product product = session.find( Product.class, "1L" );
 
 			List<String> sqls = statementInspector.getSqlQueries();
 
 			assertThat( sqls, hasSize( 1 ) );
-			assertThat( sqls.get(0).matches( "(?i).*\\bselect\\b.+\\.ROWID.*\\bfrom\\s+product\\b.*" ), is( true ) );
+			assertThat( rowId == null
+					|| sqls.get(0).matches( "(?i).*\\bselect\\b.+\\." + rowId + ".*\\bfrom\\s+product\\b.*" ),
+					is( true ) );
 
 			assertThat( product.getName(), not( is( updatedName ) ) );
 
@@ -71,7 +72,9 @@ public class RowIdTest {
 			sqls = statementInspector.getSqlQueries();
 
 			assertThat( sqls, hasSize( 1 ) );
-			assertThat( sqls.get( 0 ).matches( "(?i).*\\bupdate\\s+product\\b.+?\\bwhere\\s+ROWID\\s*=.*" ), is( true ) );
+			assertThat(  rowId == null
+					|| sqls.get( 0 ).matches( "(?i).*\\bupdate\\s+product\\b.+?\\bwhere\\s+" + rowId + "\\s*=.*" ),
+					is( true ) );
 		} );
 
 		scope.inTransaction( session -> {
@@ -82,11 +85,11 @@ public class RowIdTest {
 
 	@Entity(name = "Product")
 	@Table(name = "product")
-	@RowId("ROWID")
+	@RowId
 	public static class Product {
 
 		@Id
-		private Long id;
+		private String id;
 
 		@Column(name = "`name`")
 		private String name;
@@ -94,11 +97,11 @@ public class RowIdTest {
 		@Column(name = "`number`")
 		private String number;
 
-		public Long getId() {
+		public String getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		public void setId(String id) {
 			this.id = id;
 		}
 

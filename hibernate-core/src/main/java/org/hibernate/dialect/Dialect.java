@@ -215,6 +215,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
+import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
@@ -4621,5 +4622,24 @@ public abstract class Dialect implements ConversionContext {
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry) {
 		return new HibernateSchemaManagementTool();
+	}
+
+	/**
+	 * The name of a {@code rowid}-like pseudo-column which
+	 * acts as a high-performance row locator, or null if
+	 * this dialect has no such pseudo-column.
+	 */
+	public String rowId() {
+		return null;
+	}
+
+	/**
+	 * The JDBC type code of the {@code rowid}-like pseudo-column
+	 * which acts as a high-performance row locator.
+	 *
+	 * @return {@link Types#ROWID} by default
+	 */
+	public int rowIdSqlType() {
+		return ROWID;
 	}
 }

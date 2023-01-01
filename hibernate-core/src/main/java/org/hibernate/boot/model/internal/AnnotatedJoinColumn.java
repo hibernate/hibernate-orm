@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
@@ -84,7 +83,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			throw new AnnotationException( "Property '" + path
 					+ "' overrides mapping specified using '@JoinColumnOrFormula'" );
 		}
-		return buildJoinColumn( joinColumn, null, mappedBy, parent, propertyHolder, inferredData, "" );
+		return buildJoinColumn( joinColumn, /*null,*/ mappedBy, parent, propertyHolder, inferredData, "" );
 	}
 
 	public static AnnotatedJoinColumn buildJoinFormula(
@@ -104,7 +103,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	static AnnotatedJoinColumn buildJoinColumn(
 			JoinColumn joinColumn,
-			Comment comment,
+//			Comment comment,
 			String mappedBy,
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
@@ -116,7 +115,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						+ getRelativePath( propertyHolder, inferredData.getPropertyName() )
 						+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" );
 			}
-			return explicitJoinColumn( joinColumn, comment, parent, inferredData, defaultColumnSuffix );
+			return explicitJoinColumn( joinColumn, /*comment,*/ parent, inferredData, defaultColumnSuffix );
 		}
 		else {
 			return implicitJoinColumn( parent, inferredData, defaultColumnSuffix );
@@ -125,12 +124,12 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	private static AnnotatedJoinColumn explicitJoinColumn(
 			JoinColumn joinColumn,
-			Comment comment,
+//			Comment comment,
 			AnnotatedJoinColumns parent,
 			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
-		column.setComment( comment != null ? comment.value() : null );
+//		column.setComment( comment != null ? comment.value() : null );
 //		column.setContext( context );
 //		column.setJoins( joins );
 //		column.setPropertyHolder( propertyHolder );

@@ -69,7 +69,7 @@ public class IdBagBinder extends BagBinder {
 
 		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
 				new Column[] { collectionIdAnn.column() },
-				null,
+//				null,
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
 				propertyData,

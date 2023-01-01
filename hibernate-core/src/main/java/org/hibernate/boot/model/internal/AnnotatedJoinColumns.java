@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -117,7 +116,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	public static AnnotatedJoinColumns buildJoinColumns(
 			JoinColumn[] joinColumns,
-			Comment comment,
+//			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -125,7 +124,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			MetadataBuildingContext buildingContext) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
 				joinColumns,
-				comment,
+//				comment,
 				mappedBy,
 				joins,
 				propertyHolder,
@@ -137,7 +136,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	public static AnnotatedJoinColumns buildJoinColumnsWithDefaultColumnSuffix(
 			JoinColumn[] joinColumns,
-			Comment comment,
+//			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -158,7 +157,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		if ( actualColumns == null || actualColumns.length == 0 ) {
 			AnnotatedJoinColumn.buildJoinColumn(
 					null,
-					comment,
+//					comment,
 					mappedBy,
 					parent,
 					propertyHolder,
@@ -171,7 +170,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			for ( JoinColumn actualColumn : actualColumns ) {
 				AnnotatedJoinColumn.buildJoinColumn(
 						actualColumn,
-						comment,
+//						comment,
 						mappedBy,
 						parent,
 						propertyHolder,

@@ -29,7 +29,6 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
@@ -282,7 +281,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
-		final Comment comment = property.getAnnotation( Comment.class );
+//		final Comment comment = property.getAnnotation( Comment.class );
 		final Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 
 		collectionBinder.setElementColumns( elementColumns(
@@ -291,8 +290,8 @@ public abstract class CollectionBinder {
 				entityBinder,
 				context,
 				property,
-				virtualPropertyData( inferredData, property ),
-				comment
+				virtualPropertyData( inferredData, property )
+//				comment
 		) );
 
 		collectionBinder.setMapKeyColumns( mapKeyColumns(
@@ -300,8 +299,8 @@ public abstract class CollectionBinder {
 				inferredData,
 				entityBinder,
 				context,
-				property,
-				comment
+				property
+//				comment
 		) );
 
 		collectionBinder.setMapKeyManyToManyColumns( mapKeyJoinColumns(
@@ -309,8 +308,8 @@ public abstract class CollectionBinder {
 				inferredData,
 				entityBinder,
 				context,
-				property,
-				comment
+				property
+//				comment
 		) );
 
 		bindJoinedTableAssociation(
@@ -370,11 +369,11 @@ public abstract class CollectionBinder {
 			PropertyData inferredData,
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
-			XProperty property,
-			Comment comment) {
+			XProperty property) {
+//			Comment comment) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
 				mapKeyJoinColumnAnnotations( propertyHolder, inferredData, property ),
-				comment,
+//				comment,
 				null,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
@@ -528,12 +527,12 @@ public abstract class CollectionBinder {
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
 			XProperty property,
-			PropertyData virtualProperty,
-			Comment comment) {
+			PropertyData virtualProperty) {
+//			Comment comment) {
 		if ( property.isAnnotationPresent( jakarta.persistence.Column.class ) ) {
 			return buildColumnFromAnnotation(
 					property.getAnnotation( jakarta.persistence.Column.class ),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					virtualProperty,
@@ -544,7 +543,7 @@ public abstract class CollectionBinder {
 		else if ( property.isAnnotationPresent( Formula.class ) ) {
 			return buildFormulaFromAnnotation(
 					getOverridableAnnotation(property, Formula.class, context),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					virtualProperty,
@@ -555,7 +554,7 @@ public abstract class CollectionBinder {
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			return buildColumnsFromAnnotations(
 					property.getAnnotation( Columns.class ).columns(),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					virtualProperty,
@@ -565,7 +564,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			return buildColumnFromNoAnnotation(
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					virtualProperty,
@@ -606,15 +605,15 @@ public abstract class CollectionBinder {
 			PropertyData inferredData,
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
-			XProperty property,
-			Comment comment) {
+			XProperty property) {
+//			Comment comment) {
 		return buildColumnsFromAnnotations(
 				property.isAnnotationPresent( MapKeyColumn.class )
 						? new jakarta.persistence.Column[] {
 								new MapKeyColumnDelegator( property.getAnnotation( MapKeyColumn.class ) )
 						}
 						: null,
-				comment,
+//				comment,
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
 				inferredData,

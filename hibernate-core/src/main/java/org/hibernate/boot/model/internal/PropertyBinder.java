@@ -61,7 +61,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import org.hibernate.usertype.CompositeUserType;
 import org.jboss.logging.Logger;
@@ -120,7 +119,7 @@ public class PropertyBinder {
 	private EntityBinder entityBinder;
 	private boolean toMany;
 	private String referencedEntityName;
-	private PropertyAccessStrategy propertyAccessStrategy;
+//	private PropertyAccessStrategy propertyAccessStrategy;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -190,10 +189,10 @@ public class PropertyBinder {
 		this.buildingContext = buildingContext;
 	}
 
-	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
-		this.propertyAccessStrategy = propertyAccessStrategy;
-	}
-
+//	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
+//		this.propertyAccessStrategy = propertyAccessStrategy;
+//	}
+//
 	public void setDeclaringClass(XClass declaringClass) {
 		this.declaringClass = declaringClass;
 		this.declaringClassSet = true;
@@ -389,7 +388,7 @@ public class PropertyBinder {
 		property.setCascade( cascade );
 		property.setPropertyAccessorName( accessType.getType() );
 		property.setReturnedClassName( returnedClassName );
-		property.setPropertyAccessStrategy( propertyAccessStrategy );
+//		property.setPropertyAccessStrategy( propertyAccessStrategy );
 		handleValueGeneration( property );
 		handleNaturalId( property );
 		handleLob( property );

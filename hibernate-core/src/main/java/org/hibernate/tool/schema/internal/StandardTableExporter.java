@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -151,8 +152,8 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			for ( String constraint : table.getCheckConstraints() ) {
-				buf.append( ", check (" ).append( constraint ).append( ')' );
+			for ( CheckConstraint constraint : table.getChecks() ) {
+				buf.append( "," ).append( constraint.constraintString() );
 			}
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
@@ -231,7 +232,8 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 		else {
 			for ( Column subColumn : value.getColumns() ) {
-				final String checkConstraint = subColumn.getCheckConstraint();
+				final CheckConstraint check = subColumn.getCheck();
+				final String checkConstraint = check == null ? null : check.getConstraint();
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
 					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(

@@ -45,12 +45,14 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
@@ -101,6 +103,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -210,6 +213,7 @@ public class EntityBinder {
 		entityBinder.bindEntity();
 		entityBinder.handleClassTable( inheritanceState, superEntity );
 		entityBinder.handleSecondaryTables();
+		entityBinder.handleCheck();
 		final PropertyHolder holder = buildPropertyHolder(
 				clazzToProcess,
 				persistentClass,
@@ -236,6 +240,33 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private void handleCheck() {
+		if ( annotatedClass.isAnnotationPresent( Checks.class ) ) {
+			// if we have more than one of them they are not overrideable :-/
+			for ( Check check : annotatedClass.getAnnotation( Checks.class ).value() ) {
+				addCheckToEntity( check );
+			}
+		}
+		else {
+			final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
+			if ( check != null ) {
+				addCheckToEntity( check );
+			}
+		}
+	}
+
+	/**
+	 * For now, we store it on the entity.
+	 * Later we will come back and figure out which table it belongs to.
+	 */
+	private void addCheckToEntity(Check check) {
+		final String name = check.name();
+		final String constraint = check.constraints();
+		persistentClass.addCheckConstraint( name.isEmpty()
+				? new CheckConstraint( constraint )
+				: new CheckConstraint( name, constraint ) );
 	}
 
 	private void callTypeBinders(PersistentClass persistentClass) {
@@ -643,14 +674,12 @@ public class EntityBinder {
 			String catalog,
 			List<UniqueConstraintHolder> uniqueConstraints,
 			InFlightMetadataCollector collector) {
-		final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
 		bindTable(
 				schema,
 				catalog,
 				table,
 				uniqueConstraints,
-				check == null ? null : check.constraints(),
 				rowId == null ? null : rowId.value(),
 				inheritanceState.hasDenormalizedTable()
 						? collector.getEntityTableXref( superEntity.getEntityName() )
@@ -1662,7 +1691,6 @@ public class EntityBinder {
 			String catalog,
 			String tableName,
 			List<UniqueConstraintHolder> uniqueConstraints,
-			String checkConstraint,
 			String rowId,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 
@@ -1687,9 +1715,6 @@ public class EntityBinder {
 		);
 
 		table.setRowId( rowId );
-		if ( checkConstraint != null ) {
-			table.addCheckConstraint( checkConstraint );
-		}
 
 //		final Comment comment = annotatedClass.getAnnotation( Comment.class );
 //		if ( comment != null ) {

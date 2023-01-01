@@ -101,7 +101,7 @@ class ColumnDefinitions {
 		}
 
 		if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
-			definition.append( column.checkConstraint() );
+			definition.append( column.getCheck().constraintString() );
 		}
 	}
 

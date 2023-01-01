@@ -38,6 +38,7 @@ import org.jboss.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A mapping model object representing a relational database {@linkplain jakarta.persistence.Table table}.
@@ -64,7 +65,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private final Map<String, Index> indexes = new LinkedHashMap<>();
 	private final Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private final List<String> checkConstraints = new ArrayList<>();
+	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -593,8 +594,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return idValue;
 	}
 
+	@Deprecated(since = "6.2")
 	public void addCheckConstraint(String constraint) {
-		checkConstraints.add( constraint );
+		addCheck( new CheckConstraint( constraint ) );
+	}
+
+	public void addCheck(CheckConstraint check) {
+		checkConstraints.add( check );
 	}
 
 	public boolean containsColumn(Column column) {
@@ -672,7 +678,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return getCheckConstraints().iterator();
 	}
 
+	@Deprecated(since = "6.2")
 	public List<String> getCheckConstraints() {
+		return checkConstraints.stream().map( CheckConstraint::getConstraint ).collect( toList() );
+	}
+
+	public List<CheckConstraint> getChecks() {
 		return unmodifiableList( checkConstraints );
 	}
 

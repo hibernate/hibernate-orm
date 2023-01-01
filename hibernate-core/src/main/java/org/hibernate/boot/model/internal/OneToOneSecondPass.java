@@ -182,19 +182,8 @@ public class OneToOneSecondPass implements SecondPass {
 			manyToOne.markAsLogicalOneToOne();
 			property.setValue( manyToOne );
 			for ( Column column: otherSideJoin.getKey().getColumns() ) {
-				Column copy = new Column();
-				copy.setLength( column.getLength() );
-				copy.setScale( column.getScale() );
+				Column copy = column.clone();
 				copy.setValue( manyToOne );
-				copy.setName( column.getQuotedName() );
-				copy.setNullable( column.isNullable() );
-				copy.setPrecision( column.getPrecision() );
-				copy.setUnique( column.isUnique() );
-				copy.setSqlType( column.getSqlType() );
-				copy.setCheckConstraint( column.getCheckConstraint() );
-				copy.setComment( column.getComment() );
-				copy.setDefaultValue( column.getDefaultValue() );
-				copy.setGeneratedAs( column.getGeneratedAs() );
 				manyToOne.addColumn( copy );
 			}
 			mappedByJoin.addProperty( property );
@@ -275,24 +264,15 @@ public class OneToOneSecondPass implements SecondPass {
 		join.setOptional( true );
 		key.setOnDeleteAction( null );
 		for ( Column column: otherSideProperty.getValue().getColumns() ) {
-			Column copy = new Column();
-			copy.setLength( column.getLength() );
-			copy.setScale( column.getScale() );
+			Column copy = column.clone();
 			copy.setValue( key );
-			copy.setName( column.getQuotedName() );
-			copy.setNullable( column.isNullable() );
-			copy.setPrecision( column.getPrecision() );
-			copy.setUnique( column.isUnique() );
-			copy.setSqlType( column.getSqlType() );
-			copy.setCheckConstraint( column.getCheckConstraint() );
-			copy.setComment( column.getComment() );
-			copy.setDefaultValue( column.getDefaultValue() );
-			column.setGeneratedAs( column.getGeneratedAs() );
 			key.addColumn( copy );
 		}
-		if ( otherSideProperty.getValue() instanceof SortableValue
-				&& !( (SortableValue) otherSideProperty.getValue() ).isSorted() ) {
-			key.sortProperties();
+		if ( otherSideProperty.getValue() instanceof SortableValue ) {
+			final SortableValue value = (SortableValue) otherSideProperty.getValue();
+			if ( !value.isSorted() ) {
+				key.sortProperties();
+			}
 		}
 		persistentClass.addJoin( join );
 		return join;

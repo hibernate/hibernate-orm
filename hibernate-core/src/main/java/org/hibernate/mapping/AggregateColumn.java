@@ -31,7 +31,7 @@ public class AggregateColumn extends Column {
 		setSqlType( column.getSqlType() );
 		setSqlTypeCode( column.getSqlTypeCode() );
 		uniqueInteger = column.uniqueInteger; //usually useless
-		setCheckConstraint( column.getCheckConstraint() );
+		checkConstraint = column.checkConstraint;
 		setComment( column.getComment() );
 		setDefaultValue( column.getDefaultValue() );
 		setGeneratedAs( column.getGeneratedAs() );

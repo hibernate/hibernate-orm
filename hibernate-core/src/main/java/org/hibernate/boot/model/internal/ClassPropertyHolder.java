@@ -226,7 +226,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return join;
 	}
 
-	private void addPropertyToPersistentClass(Property prop, XClass declaringClass) {
+	private void addPropertyToPersistentClass(Property property, XClass declaringClass) {
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -235,15 +235,15 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				persistentClass.addMappedSuperclassProperty( prop );
-				addPropertyToMappedSuperclass( prop, declaringClass );
+				persistentClass.addMappedSuperclassProperty( property );
+				addPropertyToMappedSuperclass( property, declaringClass );
 			}
 			else {
-				persistentClass.addProperty( prop );
+				persistentClass.addProperty( property );
 			}
 		}
 		else {
-			persistentClass.addProperty( prop );
+			persistentClass.addProperty( property );
 		}
 	}
 
@@ -359,7 +359,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private void addPropertyToJoin(Property prop, XClass declaringClass, Join join) {
+	private void addPropertyToJoin(Property property, XClass declaringClass, Join join) {
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -368,15 +368,15 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				join.addMappedsuperclassProperty(prop);
-				addPropertyToMappedSuperclass( prop, declaringClass );
+				join.addMappedsuperclassProperty( property );
+				addPropertyToMappedSuperclass( property, declaringClass );
 			}
 			else {
-				join.addProperty( prop );
+				join.addProperty( property );
 			}
 		}
 		else {
-			join.addProperty( prop );
+			join.addProperty( property );
 		}
 	}
 

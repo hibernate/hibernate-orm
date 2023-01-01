@@ -9,7 +9,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -26,19 +25,24 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
+import org.hibernate.sql.Template;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparing;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 
 /**
@@ -97,6 +101,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
 	private List<CallbackDefinition> callbackDefinitions;
+
+	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -725,9 +731,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			if ( !prop.isValid( mapping ) ) {
 				final Type type = prop.getType();
 				final int actualColumns = prop.getColumnSpan();
-				final int requiredColumns = type.getColumnSpan(mapping);
+				final int requiredColumns = type.getColumnSpan( mapping );
 				throw new MappingException(
-						"Property '" + StringHelper.qualify( getEntityName(), prop.getName() )
+						"Property '" + qualify( getEntityName(), prop.getName() )
 								+ "' maps to " + actualColumns + " columns but " + requiredColumns
 								+ " columns are required (type '" + type.getName()
 								+ "' spans " + requiredColumns + " columns)"
@@ -1219,7 +1225,52 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	// End of @MappedSuperclass support
 
 	public void prepareForMappingModel() {
-		properties.sort( Comparator.comparing( Property::getName ) );
+		properties.sort( comparing( Property::getName ) );
 	}
 
+	public void mappingModelReady(MappingMetamodel mappingMetamodel) {
+		for ( CheckConstraint checkConstraint : checkConstraints ) {
+			final TypeConfiguration typeConfiguration = mappingMetamodel.getTypeConfiguration();
+			final SessionFactoryImplementor sessionFactory = typeConfiguration.getSessionFactory();
+			final List<String> constrainedColumnNames =
+					Template.collectColumnNames( checkConstraint.getConstraint(), typeConfiguration, sessionFactory );
+			final Table primary = getTable();
+			long matches = matchesInTable( constrainedColumnNames, primary );
+			if ( matches == constrainedColumnNames.size() ) {
+				// perfect, all columns matched in the primary table
+				primary.addCheck( checkConstraint );
+			}
+			else {
+				// go searching for a secondary table which better matches
+				Table table = primary;
+				long max = matches;
+				for ( Join join : getJoins() ) {
+					final Table secondary = join.getTable();
+					long secondaryMatches = matchesInTable( constrainedColumnNames, secondary );
+					if ( secondaryMatches > max ) {
+						table = secondary;
+						max = secondaryMatches;
+					}
+				}
+				table.addCheck( checkConstraint );
+			}
+		}
+	}
+
+	private static long matchesInTable(List<String> names, Table table) {
+		return table.getColumns().stream()
+				.filter( col -> col.isQuoted()
+						? names.contains( col.getName() )
+						: names.stream().anyMatch( name -> name.equalsIgnoreCase( col.getName() ) )
+				)
+				.count();
+	}
+
+	public void addCheckConstraint(CheckConstraint checkConstraint) {
+		checkConstraints.add( checkConstraint );
+	}
+
+	public List<CheckConstraint> getCheckConstraints() {
+		return checkConstraints;
+	}
 }

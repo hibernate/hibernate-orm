@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,7 +26,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
- * JdbcValuesSource implementation for a JDBC ResultSet as the source
+ * {@link AbstractJdbcValues} implementation for a JDBC {@link ResultSet} as the source
  *
  * @author Steve Ebersole
  */
@@ -247,7 +246,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	private ExecutionException makeExecutionException(String message, SQLException cause) {
 		return new ExecutionException(
-				message,
+				message + " [" + cause.getMessage() + "]",
 				executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
 						cause,
 						message
@@ -266,10 +265,11 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 						session
 				);
 			}
-			catch (Exception e) {
-				throw new HibernateException(
-						"Unable to extract JDBC value for position `" + sqlSelection.getJdbcResultSetIndex() + "`",
-						e
+			catch ( SQLException e ) {
+				// do not want to wrap in ExecutionException here
+				throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+						e,
+						"Could not extract column [" + sqlSelection.getJdbcResultSetIndex() + "] from JDBC ResultSet"
 				);
 			}
 		}
@@ -293,9 +293,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public void setFetchSize(int fetchSize) {
 		try {
-			resultSetAccess.getResultSet().setFetchSize(fetchSize);
+			resultSetAccess.getResultSet().setFetchSize( fetchSize );
 		}
-		catch (SQLException e) {
+		catch ( SQLException e ) {
 			throw makeExecutionException( "Error calling ResultSet.setFetchSize()", e );
 		}
 	}

@@ -18,7 +18,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
@@ -65,9 +64,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
 			if ( handleIdType( persister, event, loadType, idClass) ) {
 				throw new TypeMismatchException(
-						"Provided id of the wrong type for class " + persister.getEntityName()
-								+ ". Expected: " + idClass
-								+ ", got " + event.getEntityId().getClass()
+						"Supplied id had wrong type: entity '" + persister.getEntityName()
+								+ "' has id type '" + idClass
+								+ "' but supplied id was of type '" + event.getEntityId().getClass() + "'"
 				);
 			}
 		}

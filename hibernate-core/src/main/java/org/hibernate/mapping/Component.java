@@ -51,9 +51,9 @@ import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
- * <p>
- * Note that the name of this class is historical and unfortunate. An embeddable class holds a "component"
- * of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
+ *
+ * @apiNote The name of this class is historical and unfortunate. An embeddable class holds a "component"
+ *          of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
  *
  * @author Gavin King
  * @author Steve Ebersole

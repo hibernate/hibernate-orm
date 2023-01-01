@@ -6,6 +6,7 @@
  */
 
 /**
- * 	Built-in implementations of {@link org.hibernate.binder.AttributeBinder}.
+ * 	Built-in implementations of {@link org.hibernate.binder.AttributeBinder}
+ * 	and {@link org.hibernate.binder.TypeBinder}.
  */
 package org.hibernate.binder.internal;

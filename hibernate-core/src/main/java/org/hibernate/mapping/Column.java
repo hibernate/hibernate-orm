@@ -58,7 +58,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Integer sqlTypeCode;
 	private boolean quoted;
 	int uniqueInteger;
-	private String checkConstraint;
+	CheckConstraint checkConstraint;
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
@@ -404,15 +404,15 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		int typeStartIndex = 0;
 		for ( Type subtype : subtypes ) {
 			final int columnSpan = subtype.getColumnSpan(mapping);
-			if (typeStartIndex + columnSpan > typeIndex) {
+			if ( typeStartIndex + columnSpan > typeIndex ) {
 				final int subtypeIndex = typeIndex - typeStartIndex;
-				if (subtype instanceof EntityType) {
+				if ( subtype instanceof EntityType ) {
 					return getTypeForEntityValue(mapping, subtype, subtypeIndex);
 				}
-				if (subtype instanceof ComponentType) {
+				if ( subtype instanceof ComponentType ) {
 					return getTypeForComponentValue(mapping, subtype, subtypeIndex);
 				}
-				if (subtypeIndex == 0) {
+				if ( subtypeIndex == 0 ) {
 					return subtype;
 				}
 				break;
@@ -437,7 +437,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
 		else if ( type instanceof ComponentType ) {
-			for (Type subtype : ((ComponentType) type).getSubtypes() ) {
+			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
 				final Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
 				if ( result != null ) {
 					return result;
@@ -490,20 +490,31 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return specializedTypeDeclaration != null;
 	}
 
+	@Deprecated(since = "6.2")
 	public String getCheckConstraint() {
-		return checkConstraint;
+		return checkConstraint == null ? null : checkConstraint.getConstraint();
 	}
 
-	public void setCheckConstraint(String checkConstraint) {
-		this.checkConstraint = checkConstraint;
+	@Deprecated(since = "6.2")
+	public void setCheckConstraint(String constraint) {
+		checkConstraint = constraint == null ? null : new CheckConstraint( constraint );
+	}
+
+	public void setCheck(CheckConstraint check) {
+		checkConstraint = check;
 	}
 
 	public boolean hasCheckConstraint() {
 		return checkConstraint != null;
 	}
 
+	@Deprecated(since = "6.2")
 	public String checkConstraint() {
-		return checkConstraint == null ? null : " check (" + checkConstraint + ")";
+		return checkConstraint == null ? null : checkConstraint.constraintString();
+	}
+
+	public CheckConstraint getCheck() {
+		return checkConstraint;
 	}
 
 	@Override
@@ -632,24 +643,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	@Override
 	public Column clone() {
 		Column copy = new Column();
-		copy.setLength( length );
-		copy.setScale( scale );
-		copy.setValue( value );
-		copy.setTypeIndex( typeIndex );
-		copy.setName( getQuotedName() );
-		copy.setNullable( nullable );
-		copy.setPrecision( precision );
-		copy.setUnique( unique );
-		copy.setSqlType( sqlTypeName );
-		copy.setSqlTypeCode( sqlTypeCode );
+		copy.length = length;
+		copy.precision = precision;
+		copy.scale = scale;
+		copy.value = value;
+		copy.typeIndex = typeIndex;
+		copy.name = name;
+		copy.quoted = quoted;
+		copy.nullable = nullable;
+		copy.unique = unique;
+		copy.sqlTypeName = sqlTypeName;
+		copy.sqlTypeCode = sqlTypeCode;
 		copy.uniqueInteger = uniqueInteger; //usually useless
-		copy.setCheckConstraint( checkConstraint );
-		copy.setComment( comment );
-		copy.setDefaultValue( defaultValue );
-		copy.setGeneratedAs( generatedAs );
-		copy.setAssignmentExpression( assignmentExpression );
-		copy.setCustomRead( customRead );
-		copy.setCustomWrite( customWrite );
+		copy.checkConstraint =  checkConstraint;
+		copy.comment = comment;
+		copy.defaultValue = defaultValue;
+		copy.generatedAs = generatedAs;
+		copy.assignmentExpression = assignmentExpression;
+		copy.customRead = customRead;
+		copy.customWrite = customWrite;
+		copy.specializedTypeDeclaration = specializedTypeDeclaration;
+		copy.columnSize = columnSize;
 		return copy;
 	}
 

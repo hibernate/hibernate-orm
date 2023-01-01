@@ -13,18 +13,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of {@link Table}s.
- *
- * @author Emmanuel Bernard
- *
- * @deprecated since {@link Table} is deprecated
+ * A list of {@link Check}s.
  */
 @Target(TYPE)
 @Retention(RUNTIME)
-@Deprecated(since = "6.2", forRemoval = true)
-public @interface Tables {
-	/**
-	 * The table grouping.
-	 */
-	Table[] value();
+public @interface Checks {
+	Check[] value();
 }

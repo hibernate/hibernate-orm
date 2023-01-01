@@ -23,6 +23,7 @@ import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
@@ -84,6 +85,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -1616,7 +1618,7 @@ public abstract class CollectionBinder {
 				foreignJoinColumns.getBuildingContext(),
 				inheritanceStatePerClass
 		) );
-		foreignJoinColumns.setJoins( joins);
+		foreignJoinColumns.setJoins( joins );
 		collection.setCollectionTable( foreignJoinColumns.getTable() );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
@@ -1626,7 +1628,7 @@ public abstract class CollectionBinder {
 		handleWhere( false );
 
 		final PersistentClass targetEntity = persistentClasses.get( getElementType().getName() );
-		bindCollectionSecondPass( targetEntity, foreignJoinColumns, onDeleteAction);
+		bindCollectionSecondPass( targetEntity, foreignJoinColumns );
 
 		if ( !collection.isInverse() && !collection.getKey().isNullable() ) {
 			createOneToManyBackref( oneToMany );
@@ -2056,84 +2058,35 @@ public abstract class CollectionBinder {
 		logManyToManySecondPass( oneToMany, isCollectionOfEntities, isManyToAny );
 
 		//check for user error
-		detectManyToManyProblems(
-				elementType,
-				property,
-				propertyHolder,
-				isCollectionOfEntities,
-				isManyToAny
-		);
+		detectManyToManyProblems( elementType, isCollectionOfEntities, isManyToAny );
 
-		if (isUnownedCollection()) {
-			handleUnownedManyToMany(
-					collection,
-					joinColumns,
-					elementType,
-					targetEntity,
-					isCollectionOfEntities
-			);
+		if ( isUnownedCollection() ) {
+			handleUnownedManyToMany( elementType, targetEntity, isCollectionOfEntities );
 		}
 		else {
-			handleOwnedManyToMany(
-					collection,
-					joinColumns,
-					tableBinder,
-					property,
-					buildingContext,
-					targetEntity,
-					isCollectionOfEntities
-			);
+			handleOwnedManyToMany( targetEntity, isCollectionOfEntities );
 		}
 		bindFilters( isCollectionOfEntities );
 		handleWhere( isCollectionOfEntities );
 
-		bindCollectionSecondPass( targetEntity, joinColumns, onDeleteAction);
+		bindCollectionSecondPass( targetEntity, joinColumns );
 
 		if ( isCollectionOfEntities ) {
-			final ManyToOne element = handleCollectionOfEntities(
-					collection,
-					elementType,
-					notFoundAction,
-					property,
-					buildingContext,
-					targetEntity,
-					hqlOrderBy
-			);
+			final ManyToOne element = handleCollectionOfEntities( elementType, targetEntity, hqlOrderBy );
 			bindManyToManyInverseForeignKey( targetEntity, inverseJoinColumns, element, oneToMany );
 		}
 		else if ( isManyToAny ) {
-			handleManyToAny(
-					collection,
-					inverseJoinColumns,
-					onDeleteAction,
-					property,
-					buildingContext
-			);
+			handleManyToAny();
 		}
 		else {
-			handleElementCollection(
-					collection,
-					elementColumns,
-					isEmbedded,
-					elementType,
-					property,
-					propertyHolder,
-					hqlOrderBy
-			);
+			handleElementCollection( elementType, hqlOrderBy );
 		}
 
 		checkFilterConditions( collection );
 	}
 
-	private void handleElementCollection(
-			Collection collection,
-			AnnotatedColumns elementColumns,
-			boolean isEmbedded,
-			XClass elementType,
-			XProperty property,
-			PropertyHolder parentPropertyHolder,
-			String hqlOrderBy) {
-		// 'parentPropertyHolder' is the PropertyHolder for the owner of the collection
+	private void handleElementCollection(XClass elementType, String hqlOrderBy) {
+		// 'propertyHolder' is the PropertyHolder for the owner of the collection
 		// 'holder' is the CollectionPropertyHolder.
 		// 'property' is the collection XProperty
 
@@ -2141,7 +2094,7 @@ public abstract class CollectionBinder {
 		final AnnotatedClassType classType = annotatedElementType( isEmbedded, property, elementType );
 		final boolean primitive = classType == NONE;
 		if ( !primitive ) {
-			parentPropertyHolder.startingProperty( property );
+			propertyHolder.startingProperty( property );
 		}
 
 		final CollectionPropertyHolder holder = buildPropertyHolder(
@@ -2149,7 +2102,7 @@ public abstract class CollectionBinder {
 				collection.getRole(),
 				elementClass,
 				property,
-				parentPropertyHolder,
+				propertyHolder,
 				buildingContext
 		);
 		holder.prepare( property );
@@ -2157,18 +2110,15 @@ public abstract class CollectionBinder {
 		final Class<? extends CompositeUserType<?>> compositeUserType =
 				resolveCompositeUserType( property, elementClass, buildingContext );
 		if ( classType == EMBEDDABLE || compositeUserType != null ) {
-			handleCompositeCollectionElement( collection, property, hqlOrderBy, elementClass, holder, compositeUserType );
+			handleCompositeCollectionElement( hqlOrderBy, elementClass, holder, compositeUserType );
 		}
 		else {
-			handleCollectionElement( collection, elementColumns, elementType, property, hqlOrderBy, elementClass, holder );
+			handleCollectionElement(  elementType, hqlOrderBy, elementClass, holder );
 		}
 	}
 
 	private void handleCollectionElement(
-			Collection collection,
-			AnnotatedColumns elementColumns,
 			XClass elementType,
-			XProperty property,
 			String hqlOrderBy,
 			XClass elementClass,
 			CollectionPropertyHolder holder) {
@@ -2187,20 +2137,18 @@ public abstract class CollectionBinder {
 				property,
 				elementClass,
 				collection.getOwnerEntityName(),
-				holder.resolveElementAttributeConverterDescriptor(property, elementClass)
+				holder.resolveElementAttributeConverterDescriptor( property, elementClass )
 		);
 		elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 		elementBinder.setAccessType( accessType );
 		collection.setElement( elementBinder.make() );
-		final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment(hqlOrderBy);
+		final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 		if ( orderBy != null ) {
 			collection.setOrderBy( orderBy );
 		}
 	}
 
 	private void handleCompositeCollectionElement(
-			Collection collection,
-			XProperty property,
 			String hqlOrderBy,
 			XClass elementClass,
 			CollectionPropertyHolder holder,
@@ -2256,7 +2204,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	AnnotatedClassType annotatedElementType(
+	private AnnotatedClassType annotatedElementType(
 			boolean isEmbedded,
 			XProperty property,
 			XClass elementType) {
@@ -2301,14 +2249,7 @@ public abstract class CollectionBinder {
 		return elementColumns;
 	}
 
-	private ManyToOne handleCollectionOfEntities(
-			Collection collection,
-			XClass elementType,
-			NotFoundAction notFoundAction,
-			XProperty property,
-			MetadataBuildingContext buildingContext,
-			PersistentClass collectionEntity,
-			String hqlOrderBy) {
+	private ManyToOne handleCollectionOfEntities(XClass elementType, PersistentClass collectionEntity, String hqlOrderBy) {
 		final ManyToOne element = new ManyToOne( buildingContext,  collection.getCollectionTable() );
 		collection.setElement( element );
 		element.setReferencedEntityName( elementType.getName() );
@@ -2339,8 +2280,9 @@ public abstract class CollectionBinder {
 						foreignKeyDefinition = joinColumnAnn.foreignKey().foreignKeyDefinition();
 					}
 				}
-				if ( joinTableAnn.inverseForeignKey().value() == NO_CONSTRAINT
-						|| joinTableAnn.inverseForeignKey().value() == PROVIDER_DEFAULT
+				final ConstraintMode constraintMode = joinTableAnn.inverseForeignKey().value();
+				if ( constraintMode == NO_CONSTRAINT
+						|| constraintMode == PROVIDER_DEFAULT
 								&& buildingContext.getBuildingOptions().isNoConstraintByDefault() ) {
 					element.disableForeignKey();
 				}
@@ -2353,12 +2295,7 @@ public abstract class CollectionBinder {
 		return element;
 	}
 
-	private void handleManyToAny(
-			Collection collection,
-			AnnotatedJoinColumns inverseJoinColumns,
-			OnDeleteAction onDeleteAction,
-			XProperty property,
-			MetadataBuildingContext buildingContext) {
+	private void handleManyToAny() {
 		//@ManyToAny
 		//Make sure that collTyp is never used during the @ManyToAny branch: it will be set to void.class
 		final PropertyData inferredData = new PropertyInferredData(
@@ -2414,25 +2351,20 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleOwnedManyToMany(
-			Collection collection,
-			AnnotatedJoinColumns joinColumns,
-			TableBinder associationTableBinder,
-			XProperty property,
-			MetadataBuildingContext context,
 			PersistentClass collectionEntity,
 			boolean isCollectionOfEntities) {
 		//TODO: only for implicit columns?
 		//FIXME NamingStrategy
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
+		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
 		final PersistentClass owner = collection.getOwner();
 		joinColumns.setMappedBy(
 				owner.getEntityName(),
 				collector.getLogicalTableName( owner.getTable() ),
 				collector.getFromMappedBy( owner.getEntityName(), joinColumns.getPropertyName() )
 		);
-		if ( isEmpty( associationTableBinder.getName() ) ) {
+		if ( isEmpty( tableBinder.getName() ) ) {
 			//default value
-			associationTableBinder.setDefaultName(
+			tableBinder.setDefaultName(
 					owner.getClassName(),
 					owner.getEntityName(),
 					owner.getJpaEntityName(),
@@ -2444,15 +2376,26 @@ public abstract class CollectionBinder {
 					joinColumns.getPropertyName()
 			);
 		}
-		associationTableBinder.setJPA2ElementCollection(
-				!isCollectionOfEntities && property.isAnnotationPresent(ElementCollection.class)
+		tableBinder.setJPA2ElementCollection(
+				!isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class )
 		);
-		collection.setCollectionTable( associationTableBinder.bind() );
+		Table collectionTable = tableBinder.bind();
+		collection.setCollectionTable( collectionTable );
+		handleCheck( collectionTable );
+	}
+
+	private void handleCheck(Table collectionTable) {
+		final Check check = getOverridableAnnotation( property, Check.class, buildingContext );
+		if ( check != null ) {
+			final String name = check.name();
+			final String constraint = check.constraints();
+			collectionTable.addCheck( name.isEmpty()
+					? new CheckConstraint( constraint )
+					: new CheckConstraint( name, constraint ) );
+		}
 	}
 
 	private void handleUnownedManyToMany(
-			Collection collection,
-			AnnotatedJoinColumns joinColumns,
 			XClass elementType,
 			PersistentClass collectionEntity,
 			boolean isCollectionOfEntities) {
@@ -2468,7 +2411,7 @@ public abstract class CollectionBinder {
 		try {
 			otherSideProperty = collectionEntity.getRecursiveProperty( mappedBy );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole() +
 					"is 'mappedBy' a property named '" + mappedBy
 					+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
@@ -2484,8 +2427,6 @@ public abstract class CollectionBinder {
 
 	private void detectManyToManyProblems(
 			XClass elementType,
-			XProperty property,
-			PropertyHolder parentPropertyHolder,
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
 
@@ -2495,13 +2436,13 @@ public abstract class CollectionBinder {
 						+ "' targets the type '" + elementType.getName() + "' which is not an '@Entity' type" );
 			}
 			else if (isManyToAny) {
-				if ( parentPropertyHolder.getJoinTable( property ) == null ) {
+				if ( propertyHolder.getJoinTable( property ) == null ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
 							+ "' is a '@ManyToAny' and must specify a '@JoinTable'" );
 				}
 			}
 			else {
-				final JoinTable joinTableAnn = parentPropertyHolder.getJoinTable( property );
+				final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
 				if ( joinTableAnn != null && joinTableAnn.inverseJoinColumns().length > 0 ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
 							+ " has a '@JoinTable' with 'inverseJoinColumns' and targets the type '"
@@ -2576,10 +2517,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void bindCollectionSecondPass(
-			PersistentClass targetEntity,
-			AnnotatedJoinColumns joinColumns,
-			OnDeleteAction onDeleteAction) {
+	private void bindCollectionSecondPass(PersistentClass targetEntity, AnnotatedJoinColumns joinColumns) {
 
 		if ( !isUnownedCollection() ) {
 			createSyntheticPropertyReference(
@@ -2710,8 +2648,8 @@ public abstract class CollectionBinder {
 		this.foreignJoinColumns = annotatedJoinColumns;
 	}
 
-	public void setExplicitAssociationTable(boolean explicitAssocTable) {
-		this.isExplicitAssociationTable = explicitAssocTable;
+	public void setExplicitAssociationTable(boolean isExplicitAssociationTable) {
+		this.isExplicitAssociationTable = isExplicitAssociationTable;
 	}
 
 	public void setElementColumns(AnnotatedColumns elementColumns) {

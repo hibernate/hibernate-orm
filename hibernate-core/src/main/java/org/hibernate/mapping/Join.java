@@ -48,15 +48,15 @@ public class Join implements AttributeContainer, Serializable {
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
 	@Override
-	public void addProperty(Property prop) {
-		properties.add(prop);
-		declaredProperties.add(prop);
-		prop.setPersistentClass( getPersistentClass() );
+	public void addProperty(Property property) {
+		properties.add( property );
+		declaredProperties.add( property );
+		property.setPersistentClass( getPersistentClass() );
 	}
 
-	public void addMappedsuperclassProperty(Property prop) {
-		properties.add(prop);
-		prop.setPersistentClass( getPersistentClass() );
+	public void addMappedsuperclassProperty( Property property ) {
+		properties.add( property );
+		property.setPersistentClass( getPersistentClass() );
 	}
 
 	public List<Property> getDeclaredProperties() {
@@ -72,8 +72,8 @@ public class Join implements AttributeContainer, Serializable {
 		return declaredProperties.iterator();
 	}
 
-	public boolean containsProperty(Property prop) {
-		return properties.contains(prop);
+	public boolean containsProperty(Property property) {
+		return properties.contains( property );
 	}
 
 	@Deprecated(since = "6.0")
@@ -84,6 +84,7 @@ public class Join implements AttributeContainer, Serializable {
 	public Table getTable() {
 		return table;
 	}
+
 	public void setTable(Table table) {
 		this.table = table;
 	}
@@ -91,6 +92,7 @@ public class Join implements AttributeContainer, Serializable {
 	public KeyValue getKey() {
 		return key;
 	}
+
 	public void setKey(KeyValue key) {
 		this.key = key;
 	}
@@ -116,11 +118,11 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey( table );
-		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		table.setPrimaryKey(pk);
+		PrimaryKey primaryKey = new PrimaryKey( table );
+		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
+		table.setPrimaryKey(primaryKey);
 
-		pk.addColumns( getKey() );
+		primaryKey.addColumns( getKey() );
 	}
 
 	public int getPropertySpan() {
@@ -194,9 +196,8 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public boolean isLazy() {
-		Iterator<Property> iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			if ( !iter.next().isLazy() ) {
+		for ( Property property : properties ) {
+			if ( !property.isLazy() ) {
 				return false;
 			}
 		}

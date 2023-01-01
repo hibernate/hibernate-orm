@@ -252,6 +252,9 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 				bootModel.getNamedEntityGraphs().values(),
 				runtimeModelCreationContext
 		);
+
+		bootModel.getEntityBindings().forEach( persistentClass -> persistentClass.mappingModelReady( this ) );
+
 	}
 
 	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {

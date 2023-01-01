@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -31,6 +32,8 @@ public final class Template {
 	private static final Set<String> KEYWORDS = new HashSet<>();
 	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<>();
 	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<>();
+	public static final String PUNCTUATION = "=><!+-*/()',|&`";
+
 	static {
 		KEYWORDS.add("and");
 		KEYWORDS.add("or");
@@ -128,7 +131,7 @@ public final class Template {
 		//		identifier references.
 
 		String symbols = new StringBuilder()
-				.append( "=><!+-*/()',|&`" )
+				.append( PUNCTUATION )
 				.append( WHITESPACE )
 				.append( dialect.openQuote() )
 				.append( dialect.closeQuote() )
@@ -356,6 +359,40 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	public static List<String> collectColumnNames(
+			String checkConstraint,
+			TypeConfiguration typeConfiguration,
+			SessionFactoryImplementor sessionFactory) {
+		final String template = renderWhereStringTemplate(
+				checkConstraint,
+				sessionFactory.getJdbcServices().getDialect(),
+				typeConfiguration,
+				sessionFactory.getQueryEngine().getSqmFunctionRegistry()
+		);
+		final List<String> names = new ArrayList<>();
+		int begin = 0;
+		int match;
+		while ( ( match = template.indexOf(TEMPLATE, begin) ) >= 0 ) {
+			int start = match + TEMPLATE.length() + 1;
+			for ( int loc = start;; loc++ ) {
+				if ( loc == template.length() - 1 ) {
+					names.add( template.substring( start ) );
+					begin = template.length();
+					break;
+				}
+				else {
+					char ch = template.charAt( loc );
+					if ( PUNCTUATION.indexOf(ch) >= 0 || WHITESPACE.indexOf(ch) >= 0 ) {
+						names.add( template.substring( start, loc ) );
+						begin = loc;
+						break;
+					}
+				}
+			}
+		}
+		return names;
 	}
 
 //	/**

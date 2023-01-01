@@ -27,6 +27,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -83,6 +84,7 @@ public class AnnotatedColumn {
 	private String generatedAs;
 
 //	private String comment;
+	private String checkConstraintName;
 	private String checkConstraint;
 
 	private AnnotatedColumns parent;
@@ -122,10 +124,6 @@ public class AnnotatedColumn {
 
 	public boolean isFormula() {
 		return isNotEmpty( formulaString );
-	}
-
-	public String getFormulaString() {
-		return formulaString;
 	}
 
 	public String getExplicitTableName() {
@@ -188,16 +186,13 @@ public class AnnotatedColumn {
 		return defaultValue;
 	}
 
-	public String getCheckConstraint() {
-		return checkConstraint;
-	}
-
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 
-	public void setCheckConstraint(String checkConstraint) {
-		this.checkConstraint = checkConstraint;
+	public void setCheckConstraint(String name, String constraint) {
+		this.checkConstraintName = name;
+		this.checkConstraint = constraint;
 	}
 
 //	public String getComment() {
@@ -240,8 +235,8 @@ public class AnnotatedColumn {
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
 			}
-			if ( checkConstraint !=null ) {
-				mappingColumn.setCheckConstraint( checkConstraint );
+			if ( checkConstraint != null ) {
+				mappingColumn.setCheck( new CheckConstraint( checkConstraintName, checkConstraint ) );
 			}
 //			if ( isNotEmpty( comment ) ) {
 //				mappingColumn.setComment( comment );
@@ -280,7 +275,9 @@ public class AnnotatedColumn {
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
 			mappingColumn.setUnique( unique );
-			mappingColumn.setCheckConstraint( checkConstraint );
+			if ( checkConstraint != null ) {
+				mappingColumn.setCheck( new CheckConstraint( checkConstraintName, checkConstraint ) );
+			}
 			mappingColumn.setDefaultValue( defaultValue );
 
 			if ( writeExpression != null ) {
@@ -817,7 +814,7 @@ public class AnnotatedColumn {
 					throw new AnnotationException("'@Check' may only be applied to single-column mappings but '"
 							+ property.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
 				}
-				setCheckConstraint( check.constraints() );
+				setCheckConstraint( check.name().isEmpty() ? null : check.name(), check.constraints() );
 			}
 		}
 		else {

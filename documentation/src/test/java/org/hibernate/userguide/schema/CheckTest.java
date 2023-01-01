@@ -6,10 +6,12 @@
  */
 package org.hibernate.userguide.schema;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 
+import jakarta.persistence.SecondaryTable;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
@@ -19,6 +21,8 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
+
+import java.time.LocalDate;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -120,7 +124,9 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::schema-generation-database-checks-example[]
 	@Entity(name = "Book")
-	@Check(constraints = "CASE WHEN isbn IS NOT NULL THEN LENGTH(isbn) = 13 ELSE true END")
+	@Check(name = "ValidIsbn", constraints = "CASE WHEN isbn IS NOT NULL THEN LENGTH(isbn) = 13 ELSE true END")
+	@SecondaryTable(name = "BookEdition")
+	@Check(name = "PositiveEdition", constraints = "edition > 0")
 	public static class Book {
 
 		@Id
@@ -132,6 +138,12 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 		private String isbn;
 
 		private Double price;
+
+		@Column(table = "BookEdition")
+		private int edition = 1;
+
+		@Column(table = "BookEdition")
+		private LocalDate editionDate;
 
 		//Getters and setters omitted for brevity
 

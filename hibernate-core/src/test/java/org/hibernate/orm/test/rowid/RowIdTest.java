@@ -48,7 +48,7 @@ public class RowIdTest {
 	void testRowId(SessionFactoryScope scope) {
 		final String updatedName = "Smart phone";
 		scope.inTransaction( session -> {
-			String rowId = scope.getSessionFactory().getJdbcServices().getDialect().rowId();
+			String rowId = scope.getSessionFactory().getJdbcServices().getDialect().rowId("");
 
 			SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 			statementInspector.clear();

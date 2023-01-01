@@ -1408,7 +1408,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String rowId() {
+	public String rowId(String rowId) {
 		return "rowid";
 	}
 }

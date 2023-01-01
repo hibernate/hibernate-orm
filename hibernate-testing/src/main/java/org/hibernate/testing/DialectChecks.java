@@ -314,7 +314,7 @@ abstract public class DialectChecks {
 	public static class SupportsRowId implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
-			return dialect.rowId() != null;
+			return dialect.rowId("") != null;
 		}
 	}
 }

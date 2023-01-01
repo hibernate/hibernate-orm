@@ -948,8 +948,8 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		builder.setAutoQuoteInitialUnderscore( true );
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override
@@ -975,5 +975,21 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getCreateUserDefinedTypeExtensionsString() {
 		return " instantiable mode db2sql";
+	}
+
+	/**
+	 * The more "standard" syntax is {@code rid_bit(alias)} but here we use {@code alias.rowid}.
+	 * <p>
+	 * There is also an alternative {@code rid()} of type {@code bigint}, but it cannot be used
+	 * with partitioning.
+	 */
+	@Override
+	public String rowId(String rowId) {
+		return "rowid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return VARBINARY;
 	}
 }

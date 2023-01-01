@@ -9,7 +9,6 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
@@ -779,8 +778,9 @@ public class AnnotatedColumn {
 			final ColumnDefault columnDefault =
 					getOverridableAnnotation( property, ColumnDefault.class, getBuildingContext() );
 			if ( columnDefault != null ) {
-				if ( length!=1 ) {
-					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
+				if ( length != 1 ) {
+					throw new AnnotationException( "'@ColumnDefault' may only be applied to single-column mappings but '"
+							+ property.getName() + "' maps to " + length + " columns" );
 				}
 				setDefaultValue( columnDefault.value() );
 			}
@@ -797,7 +797,8 @@ public class AnnotatedColumn {
 					getOverridableAnnotation( property, GeneratedColumn.class, getBuildingContext() );
 			if ( generatedColumn != null ) {
 				if (length!=1) {
-					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
+					throw new AnnotationException("'@GeneratedColumn' may only be applied to single-column mappings but '"
+							+ property.getName() + "' maps to " + length + " columns" );
 				}
 				setGeneratedAs( generatedColumn.value() );
 			}
@@ -812,8 +813,9 @@ public class AnnotatedColumn {
 		if ( property != null ) {
 			final Check check = getOverridableAnnotation( property, Check.class, getBuildingContext() );
 			if ( check != null ) {
-				if (length!=1) {
-					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");
+				if ( length != 1 ) {
+					throw new AnnotationException("'@Check' may only be applied to single-column mappings but '"
+							+ property.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
 				}
 				setCheckConstraint( check.constraints() );
 			}

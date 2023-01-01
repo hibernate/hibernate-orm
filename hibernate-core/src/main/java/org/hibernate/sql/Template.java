@@ -15,10 +15,11 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.StringHelper.WHITESPACE;
 
 /**
  * Parses SQL fragments specified in mapping documents.
@@ -100,7 +101,7 @@ public final class Template {
 			Dialect dialect,
 			TypeConfiguration typeConfiguration,
 			SqmFunctionRegistry functionRegistry) {
-		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, typeConfiguration, functionRegistry);
+		return renderWhereStringTemplate( sqlWhereString, TEMPLATE, dialect, typeConfiguration, functionRegistry );
 	}
 
 	/**
@@ -128,7 +129,7 @@ public final class Template {
 
 		String symbols = new StringBuilder()
 				.append( "=><!+-*/()',|&`" )
-				.append( StringHelper.WHITESPACE )
+				.append( WHITESPACE )
 				.append( dialect.openQuote() )
 				.append( dialect.closeQuote() )
 				.toString();

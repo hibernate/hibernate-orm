@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -27,6 +27,8 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -170,10 +172,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public void prepare(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor bootMetamodel,
-			BootstrapContext bootstrapContext) {
+	public void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel) {
 		bootMetamodel.visitNamedHqlQueryDefinitions(
 				namedHqlQueryDefinition -> {
 					final NamedSqmQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
@@ -207,6 +206,22 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query checking
+
+	public void validateNamedQueries(QueryEngine queryEngine) {
+		final Map<String, HibernateException> errors = checkNamedQueries( queryEngine );
+		if ( !errors.isEmpty() ) {
+			final StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+			String sep = "";
+			for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+				QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
+				failingQueries.append( sep ).append( entry.getKey() );
+				sep = ", ";
+			}
+			final HibernateException exception = new HibernateException( failingQueries.toString() );
+			errors.values().forEach( exception::addSuppressed );
+			throw exception;
+		}
+	}
 
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();

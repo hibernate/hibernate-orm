@@ -155,12 +155,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// Scoping
 
 	/**
-	 * Obtain the {@link MetadataBuildingContext} currently scoping this
-	 * {@code TypeConfiguration}.
+	 * Obtain the {@link MetadataBuildingContext} currently scoping this {@code TypeConfiguration}.
 	 *
-	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
-	 * a TypeConfiguration goes through
+	 * @apiNote Throws an exception if the {@code TypeConfiguration} is no longer scoped to the
+	 *          {@link MetadataBuildingContext}. See {@link Scope} for more details regarding the
+	 *          stages a {@code TypeConfiguration} passes through.
 	 *
 	 * @return The {@link MetadataBuildingContext}
 	 */
@@ -199,7 +198,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Obtain the {@link SessionFactory} currently scoping the {@code TypeConfiguration}.
+	 * Obtain the {@link SessionFactory} currently scoping this {@code TypeConfiguration}.
 	 *
 	 * @apiNote Throws an exception if the {@code TypeConfiguration} is not yet scoped to
 	 *          a factory. See {@link Scope} for more details regarding the stages a
@@ -215,7 +214,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Obtain the {@link ServiceRegistry} scoped to the {@code TypeConfiguration}.
+	 * Obtain the {@link ServiceRegistry} scoped to this {@code TypeConfiguration}.
 	 *
 	 * @apiNote The current {@link Scope} will determine from where the {@link ServiceRegistry}
 	 *          is obtained.

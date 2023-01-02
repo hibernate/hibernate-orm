@@ -29,6 +29,7 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -92,6 +93,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				null,
 				null,
 				null,
+				null,
 				insertability,
 				updateability,
 				embeddedPartBuilder,
@@ -105,6 +107,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			Property componentProperty,
+			DependantValue dependantValue,
 			boolean[] insertability,
 			boolean[] updateability,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
@@ -130,6 +133,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
+								dependantValue,
 								insertability,
 								updateability,
 								creationProcess
@@ -294,6 +298,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			DependantValue dependantValue,
 			boolean[] insertability,
 			boolean[] updateability,
 			MappingModelCreationProcess creationProcess) {
@@ -344,7 +349,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final Value value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
 				final BasicValue basicValue = (BasicValue) value;
-				final Selectable selectable = basicValue.getColumn();
+				final Selectable selectable = dependantValue != null ?
+						dependantValue.getColumns().get( columnPosition ) :
+						basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
 				if ( rootTableKeyColumnNames == null ) {

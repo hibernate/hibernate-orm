@@ -1715,7 +1715,7 @@ public abstract class CollectionBinder {
 		final String whereClause = getWhereClause();
 		if ( hasAssociationTable ) {
 			// A many-to-many association has an association (join) table
-			// Collection#setManytoManyWhere is used to set the "where" clause that applies to
+			// Collection#setManytoManyWhere is used to set the "where" clause that applies
 			// to the many-to-many associated entity table (not the join table).
 			collection.setManyToManyWhere( whereClause );
 		}

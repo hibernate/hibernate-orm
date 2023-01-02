@@ -16,6 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies an expression written in native SQL that is used to read the value of
  * an attribute instead of storing the value in a {@link jakarta.persistence.Column}.
+ * <p>
  * A {@code Formula} mapping defines a "derived" attribute, whose state is determined
  * from other columns and functions when an entity is read from the database.
  * <p>
@@ -25,6 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;Formula("sub_total + (sub_total * tax)")
  * long getTotalCost() { ... }
  * </pre>
+ * <p>
  * It may even call SQL functions:
  * <pre>
  * // call native SQL functions

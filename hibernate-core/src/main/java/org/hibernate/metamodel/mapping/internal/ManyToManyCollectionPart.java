@@ -471,7 +471,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					true,
 					false,
 					false,
-					creationProcess.getCreationContext().getJdbcServices().getDialect(),
+					creationProcess.getCreationContext().getDialect(),
 					creationProcess.getSqmFunctionRegistry()
 			);
 

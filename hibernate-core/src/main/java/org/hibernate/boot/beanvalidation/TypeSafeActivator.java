@@ -31,7 +31,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -309,13 +309,14 @@ class TypeSafeActivator {
 	}
 
 	private static void applySQLCheck(Column col, String checkConstraint) {
-		String existingCheck = col.getCheckConstraint();
-		// need to check whether the new check is already part of the existing check, because applyDDL can be called
-		// multiple times
-		if ( StringHelper.isNotEmpty( existingCheck ) && !existingCheck.contains( checkConstraint ) ) {
-			checkConstraint = col.getCheckConstraint() + " AND " + checkConstraint;
+		// need to check whether the new check is already part of the existing check,
+		// because applyDDL can be called multiple times
+		for ( CheckConstraint constraint : col.getCheckConstraints() ) {
+			if ( constraint.getConstraint().equalsIgnoreCase( checkConstraint ) ) {
+				return; //EARLY EXIT
+			}
 		}
-		col.setCheckConstraint( checkConstraint );
+		col.addCheckConstraint( new CheckConstraint( checkConstraint ) );
 	}
 
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {

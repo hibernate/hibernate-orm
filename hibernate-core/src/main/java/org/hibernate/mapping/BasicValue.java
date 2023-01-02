@@ -340,11 +340,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 		}
 
-		if ( dialect.supportsColumnCheck() && !column.hasCheckConstraint() ) {
+		if ( dialect.supportsColumnCheck() ) {
 			final String checkCondition = resolution.getLegacyResolvedBasicType()
 					.getCheckCondition( column.getQuotedName( dialect ), dialect );
 			if ( checkCondition != null ) {
-				column.setCheck( new CheckConstraint( checkCondition ) );
+				column.addCheckConstraint( new CheckConstraint( checkCondition ) );
 			}
 		}
 	}

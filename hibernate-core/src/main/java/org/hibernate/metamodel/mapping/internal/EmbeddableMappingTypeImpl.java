@@ -30,9 +30,11 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
@@ -83,7 +85,16 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
-		return from( bootDescriptor, compositeType, null, null, embeddedPartBuilder, creationProcess );
+		return from(
+				bootDescriptor,
+				compositeType,
+				null,
+				null,
+				null,
+				null,
+				embeddedPartBuilder,
+				creationProcess
+		);
 	}
 
 	public static EmbeddableMappingTypeImpl from(
@@ -91,6 +102,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			Property componentProperty,
+			DependantValue dependantValue,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
@@ -113,6 +126,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
+								dependantValue,
 								creationProcess
 						)
 		);
@@ -199,6 +213,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			DependantValue dependantValue,
 			MappingModelCreationProcess creationProcess) {
 // for some reason I cannot get this to work, though only a single test fails - `CompositeElementTest`
 //		return finishInitialization(
@@ -245,9 +260,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
+			final Value value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
-				final BasicValue basicValue = (BasicValue) bootPropertyDescriptor.getValue();
-				final Selectable selectable = basicValue.getColumn();
+				final BasicValue basicValue = (BasicValue) value;
+				final Selectable selectable = dependantValue != null ?
+						dependantValue.getColumns().get( columnPosition ) :
+						basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
 				if ( rootTableKeyColumnNames == null ) {

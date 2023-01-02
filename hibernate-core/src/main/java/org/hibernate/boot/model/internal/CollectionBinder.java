@@ -24,6 +24,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
@@ -2381,18 +2382,30 @@ public abstract class CollectionBinder {
 		);
 		Table collectionTable = tableBinder.bind();
 		collection.setCollectionTable( collectionTable );
-		handleCheck( collectionTable );
+		handleCheckConstraints( collectionTable );
 	}
 
-	private void handleCheck(Table collectionTable) {
-		final Check check = getOverridableAnnotation( property, Check.class, buildingContext );
-		if ( check != null ) {
-			final String name = check.name();
-			final String constraint = check.constraints();
-			collectionTable.addCheck( name.isEmpty()
-					? new CheckConstraint( constraint )
-					: new CheckConstraint( name, constraint ) );
+	private void handleCheckConstraints(Table collectionTable) {
+		if ( property.isAnnotationPresent( Checks.class ) ) {
+			// if there are multiple annotations, they're not overrideable
+			for ( Check check : property.getAnnotation( Checks.class ).value() ) {
+				addCheckToCollection( collectionTable, check );
+			}
 		}
+		else {
+			final Check check = getOverridableAnnotation( property, Check.class, buildingContext );
+			if ( check != null ) {
+				addCheckToCollection( collectionTable, check );
+			}
+		}
+	}
+
+	private static void addCheckToCollection(Table collectionTable, Check check) {
+		final String name = check.name();
+		final String constraint = check.constraints();
+		collectionTable.addCheck( name.isEmpty()
+				? new CheckConstraint( constraint )
+				: new CheckConstraint( name, constraint ) );
 	}
 
 	private void handleUnownedManyToMany(
@@ -2412,8 +2425,8 @@ public abstract class CollectionBinder {
 			otherSideProperty = collectionEntity.getRecursiveProperty( mappedBy );
 		}
 		catch ( MappingException e ) {
-			throw new AnnotationException( "Association '" + safeCollectionRole() +
-					"is 'mappedBy' a property named '" + mappedBy
+			throw new AnnotationException( "Association '" + safeCollectionRole()
+					+ "is 'mappedBy' a property named '" + mappedBy
 					+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
 		}
 		final Value otherSidePropertyValue = otherSideProperty.getValue();
@@ -2423,6 +2436,12 @@ public abstract class CollectionBinder {
 				// this is a ToOne with a @JoinTable or a regular property
 				: otherSidePropertyValue.getTable();
 		collection.setCollectionTable( table );
+
+		if ( property.isAnnotationPresent( Checks.class )
+				|| property.isAnnotationPresent( Check.class ) ) {
+			throw new AnnotationException( "Association '" + safeCollectionRole()
+					+ " is an unowned collection and may not be annotated '@Check'" );
+		}
 	}
 
 	private void detectManyToManyProblems(

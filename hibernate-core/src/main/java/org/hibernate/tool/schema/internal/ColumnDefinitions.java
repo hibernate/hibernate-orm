@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
@@ -100,8 +101,10 @@ class ColumnDefinitions {
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );
 		}
 
-		if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
-			definition.append( column.getCheck().constraintString() );
+		if ( dialect.supportsColumnCheck() ) {
+			for ( CheckConstraint checkConstraint : column.getCheckConstraints() ) {
+				definition.append( checkConstraint.constraintString() );
+			}
 		}
 	}
 

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -33,6 +34,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.lastIndexOfLetter;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -58,7 +60,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Integer sqlTypeCode;
 	private boolean quoted;
 	int uniqueInteger;
-	CheckConstraint checkConstraint;
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
@@ -67,6 +68,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customRead;
 	private Size columnSize;
 	private String specializedTypeDeclaration;
+	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	public Column() {
 	}
@@ -490,31 +492,52 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return specializedTypeDeclaration != null;
 	}
 
+	public void addCheckConstraint(CheckConstraint checkConstraint) {
+		this.checkConstraints.add( checkConstraint );
+	}
+
+	public java.util.List<CheckConstraint> getCheckConstraints() {
+		return unmodifiableList( checkConstraints );
+	}
+
 	@Deprecated(since = "6.2")
 	public String getCheckConstraint() {
-		return checkConstraint == null ? null : checkConstraint.getConstraint();
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new IllegalStateException( "column has multiple check constraints" );
+		}
+		else {
+			return checkConstraints.get(0).getConstraint();
+		}
 	}
 
 	@Deprecated(since = "6.2")
 	public void setCheckConstraint(String constraint) {
-		checkConstraint = constraint == null ? null : new CheckConstraint( constraint );
-	}
-
-	public void setCheck(CheckConstraint check) {
-		checkConstraint = check;
+		if ( constraint != null ) {
+			if ( !checkConstraints.isEmpty() ) {
+				throw new IllegalStateException( "column already has a check constraint" );
+			}
+			checkConstraints.add( new CheckConstraint( constraint ) );
+		}
 	}
 
 	public boolean hasCheckConstraint() {
-		return checkConstraint != null;
+		return !checkConstraints.isEmpty();
 	}
 
 	@Deprecated(since = "6.2")
 	public String checkConstraint() {
-		return checkConstraint == null ? null : checkConstraint.constraintString();
-	}
-
-	public CheckConstraint getCheck() {
-		return checkConstraint;
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new IllegalStateException( "column has multiple check constraints" );
+		}
+		else {
+			return checkConstraints.get(0).constraintString();
+		}
 	}
 
 	@Override
@@ -655,7 +678,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.sqlTypeName = sqlTypeName;
 		copy.sqlTypeCode = sqlTypeCode;
 		copy.uniqueInteger = uniqueInteger; //usually useless
-		copy.checkConstraint =  checkConstraint;
+		copy.checkConstraints = checkConstraints;
 		copy.comment = comment;
 		copy.defaultValue = defaultValue;
 		copy.generatedAs = generatedAs;

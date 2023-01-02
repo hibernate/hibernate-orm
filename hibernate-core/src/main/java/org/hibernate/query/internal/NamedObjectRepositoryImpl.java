@@ -207,6 +207,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query checking
 
+	@Override
 	public void validateNamedQueries(QueryEngine queryEngine) {
 		final Map<String, HibernateException> errors = checkNamedQueries( queryEngine );
 		if ( !errors.isEmpty() ) {
@@ -223,6 +224,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 	}
 
+	@Override
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();
 

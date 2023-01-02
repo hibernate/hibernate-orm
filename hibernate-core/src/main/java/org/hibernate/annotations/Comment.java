@@ -45,6 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *          secondary table. Therefore, {@link #on} may be ambiguous.
  *
  * @author Yanming Zhou
+ * @author Gavin King
  */
 @TypeBinderType(binder = CommentBinder.class)
 @AttributeBinderType(binder = CommentBinder.class)

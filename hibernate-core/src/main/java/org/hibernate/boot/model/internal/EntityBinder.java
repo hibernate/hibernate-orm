@@ -53,7 +53,6 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
@@ -213,7 +212,7 @@ public class EntityBinder {
 		entityBinder.bindEntity();
 		entityBinder.handleClassTable( inheritanceState, superEntity );
 		entityBinder.handleSecondaryTables();
-		entityBinder.handleCheck();
+		entityBinder.handleCheckConstraints();
 		final PropertyHolder holder = buildPropertyHolder(
 				clazzToProcess,
 				persistentClass,
@@ -242,7 +241,7 @@ public class EntityBinder {
 		entityBinder.callTypeBinders( persistentClass );
 	}
 
-	private void handleCheck() {
+	private void handleCheckConstraints() {
 		if ( annotatedClass.isAnnotationPresent( Checks.class ) ) {
 			// if we have more than one of them they are not overrideable :-/
 			for ( Check check : annotatedClass.getAnnotation( Checks.class ).value() ) {

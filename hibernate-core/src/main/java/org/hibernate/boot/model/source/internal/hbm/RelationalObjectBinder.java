@@ -19,6 +19,7 @@ import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.source.spi.RelationalValueSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.OneToOne;
@@ -155,7 +156,10 @@ public class RelationalObjectBinder {
 
 		column.setUnique( columnSource.isUnique() );
 
-		column.setCheckConstraint( columnSource.getCheckCondition() );
+		String checkCondition = columnSource.getCheckCondition();
+		if ( checkCondition != null ) {
+			column.addCheckConstraint( new CheckConstraint(checkCondition) );
+		}
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 

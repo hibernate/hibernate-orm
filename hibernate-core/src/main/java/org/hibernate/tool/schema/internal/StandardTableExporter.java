@@ -232,8 +232,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 		else {
 			for ( Column subColumn : value.getColumns() ) {
-				final CheckConstraint check = subColumn.getCheck();
-				final String checkConstraint = check == null ? null : check.getConstraint();
+				final String checkConstraint = getCheckConstraint( subColumn );
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
 					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(
@@ -273,6 +272,19 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 		}
 		return separator;
+	}
+
+	private static String getCheckConstraint(Column subColumn) {
+		final List<CheckConstraint> checkConstraints = subColumn.getCheckConstraints();
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new MappingException( "Multiple check constraints not supported for aggregate columns" );
+		}
+		else {
+			return checkConstraints.get(0).getConstraint();
+		}
 	}
 
 	protected String tableCreateString(boolean hasPrimaryKey) {

@@ -32,8 +32,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     on which columns are involved in the constraint expression specified by
  *     {@link #constraints()}.
  * </ul>
+ * <p>
+ * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},
+ * a check constraint may involve columns of the primary table, or columns of any one
+ * of the secondary tables. But it may not involve columns of more than one table.
+ * <p>
+ * An entity may have multiple {@code @Check} annotations, each defining a different
+ * constraint.
  *
  * @author Emmanuel Bernard
+ * @author Gavin King
  *
  * @see DialectOverride.Check
  */

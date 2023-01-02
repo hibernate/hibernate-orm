@@ -18,7 +18,7 @@ import java.lang.annotation.Annotation;
  * <p>
  * An implementation of this interface interacts directly with model objects
  * like {@link PersistentClass} and {@link Property} to implement the
- * semantics of some {@link org.hibernate.annotations.AttributeBinderType
+ * semantics of some {@linkplain org.hibernate.annotations.AttributeBinderType
  * custom mapping annotation}.
  *
  * @see org.hibernate.annotations.AttributeBinderType

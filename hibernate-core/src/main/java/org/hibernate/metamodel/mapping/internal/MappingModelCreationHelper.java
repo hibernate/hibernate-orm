@@ -31,6 +31,7 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -134,6 +135,7 @@ public class MappingModelCreationHelper {
 				rootTableName,
 				rootTableKeyColumnNames,
 				bootProperty,
+				null,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				embeddable -> new EmbeddedIdentifierMappingImpl(
@@ -266,13 +268,21 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		final Component component = (Component) bootProperty.getValue();
+		Value componentValue = bootProperty.getValue();
+		DependantValue dependantValue = null;
+		if ( componentValue instanceof DependantValue ) {
+			dependantValue = ( (DependantValue) componentValue );
+			componentValue = dependantValue.getWrappedValue();
+		}
+
+		final Component component = (Component) componentValue;
 		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
 				tableExpression,
 				rootTableKeyColumnNames,
 				bootProperty,
+				dependantValue,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				attributeMappingType -> {

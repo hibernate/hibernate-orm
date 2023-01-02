@@ -9,7 +9,6 @@ package org.hibernate.tuple.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -55,6 +53,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
+import static java.util.Collections.singleton;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
@@ -170,7 +169,8 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = persistentClass.isVersioned();
 
-		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		final boolean collectionsInDefaultFetchGroupEnabled =
+				creationContext.getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled();
 
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
@@ -186,14 +186,14 @@ public class EntityMetamodel implements Serializable {
 			}
 			else {
 				nonAggregatedCidMapper = null;
-				idAttributeNames = Collections.singleton( identifierAttribute.getName() );
+				idAttributeNames = singleton( identifierAttribute.getName() );
 			}
 
 			bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from(
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled(),
+					collectionsInDefaultFetchGroupEnabled,
 					creationContext.getMetadata()
 			);
 		}
@@ -285,7 +285,7 @@ public class EntityMetamodel implements Serializable {
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},
-					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+					collectionsInDefaultFetchGroupEnabled
 			);
 
 			if ( lazy ) {
@@ -479,7 +479,7 @@ public class EntityMetamodel implements Serializable {
 			}
 		}
 		if ( mappingProperty.getValue() instanceof Component ) {
-			final Dialect dialect = context.getSessionFactory().getJdbcServices().getDialect();
+			final Dialect dialect = context.getDialect();
 			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
 			final Component component = (Component) mappingProperty.getValue();
 			for ( Property property : component.getProperties() ) {

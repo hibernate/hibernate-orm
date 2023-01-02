@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.spi;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -15,6 +16,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -56,4 +58,8 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 	SessionFactoryOptions getSessionFactoryOptions();
 
 	JdbcServices getJdbcServices();
+
+	SqlStringGenerationContext getSqlStringGenerationContext();
+
+	ServiceRegistry getServiceRegistry();
 }

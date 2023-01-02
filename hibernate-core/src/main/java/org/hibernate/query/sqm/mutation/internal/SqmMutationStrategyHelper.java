@@ -10,10 +10,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -50,8 +48,7 @@ public class SqmMutationStrategyHelper {
 			EntityMappingType rootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
+		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 
 		final SqmMultiTableMutationStrategy specifiedStrategy = options.getCustomSqmMultiTableMutationStrategy();
 		if ( specifiedStrategy != null ) {
@@ -60,10 +57,7 @@ public class SqmMutationStrategyHelper {
 
 		// todo (6.0) : add capability define strategy per-hierarchy
 
-		return sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getDialect()
-				.getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
+		return creationContext.getDialect().getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	/**
@@ -75,8 +69,7 @@ public class SqmMutationStrategyHelper {
 			EntityMappingType rootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
+		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
 
 		final SqmMultiTableInsertStrategy specifiedStrategy = options.getCustomSqmMultiTableInsertStrategy();
 		if ( specifiedStrategy != null ) {
@@ -84,7 +77,7 @@ public class SqmMutationStrategyHelper {
 		}
 
 		// todo (6.0) : add capability define strategy per-hierarchy
-		return sessionFactory.getJdbcServices().getDialect().getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
+		return creationContext.getDialect().getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	public static void visitCollectionTables(

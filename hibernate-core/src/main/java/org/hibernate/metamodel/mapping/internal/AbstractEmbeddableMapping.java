@@ -18,7 +18,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -223,9 +222,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			Consumer<AttributeMapping> attributeConsumer,
 			SuccessfulCompletionCallback completionCallback,
 			MappingModelCreationProcess creationProcess) {
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
+		final JdbcServices jdbcServices = creationProcess.getCreationContext().getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -332,42 +330,10 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean updateable = value.isColumnUpdateable( 0 );
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
-				final MutabilityPlan<?> mutabilityPlan;
-
-				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan<>() {
-						@Override
-						public boolean isMutable() {
-							return true;
-						}
-
-						@Override
-						public Object deepCopy(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							return anyType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
-						}
-
-						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new UnsupportedOperationException();
-						}
-
-						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new UnsupportedOperationException();
-						}
-					};
-				}
-				else {
-					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
-				}
 
 				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
-						mutabilityPlan,
+						getMutabilityPlan( updateable ),
 						nullable,
 						insertable,
 						updateable,
@@ -392,7 +358,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
+				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
 				if ( rootTableKeyColumnNames == null ) {
@@ -475,5 +441,34 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		completionCallback.success();
 
 		return true;
+	}
+
+	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {
+		if ( updateable ) {
+			return new MutabilityPlan<>() {
+				@Override
+				public boolean isMutable() {
+					return true;
+				}
+
+				@Override
+				public Object deepCopy(Object value) {
+					return value;
+				}
+
+				@Override
+				public Serializable disassemble(Object value, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public Object assemble(Serializable cached, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+		else {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
 	}
 }
